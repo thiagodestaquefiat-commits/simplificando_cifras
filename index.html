@@ -462,11 +462,16 @@ function importarIA(cifra){
 function isChordLine(linha){
   const t = linha.trim();
   if(!t) return false;
-  // remove asteriscos pra checar
-  const sem = t.replace(/\*/g,'').trim();
-  // se começa com nota musical seguida de espaço, número, #, b, m, / = é acorde
-  return /^[A-G][#b]?[0-9m#bM\/\s()\[\]x+dim aug sus]*$/i.test(sem) ||
-         /^([A-G][#b]?[a-z0-9()\/]*\s+)+/.test(sem);
+  // remove pontos, vírgulas, x, parênteses, colchetes, números soltos — deixa só acordes e espaços
+  const limpa = t.replace(/[.,\(\)\[\]x0-9]/gi,'').trim();
+  // divide em tokens e verifica se todos são acordes reconhecíveis
+  const tokens = limpa.split(/\s+/).filter(Boolean);
+  if(!tokens.length) return false;
+  const chordPattern = /^[A-G][#b]?(m|M|maj|min|dim|aug|sus)?[0-9]?(\/[A-G][#b]?)?$/;
+  const todosAcordes = tokens.every(tok => chordPattern.test(tok));
+  // se pelo menos 60% dos tokens parecem acordes = linha de acorde
+  const acordes = tokens.filter(tok => chordPattern.test(tok));
+  return acordes.length > 0 && (acordes.length / tokens.length) >= 0.6;
 }
 
 function bold(txt){
@@ -482,7 +487,9 @@ function renderLinha(linha, totalShift){
   }
   // detecta automaticamente
   if(isChordLine(t)){
-    return `<div class="chord-line">${shiftText(t, totalShift)}</div>`;
+    // remove pontos dos acordes antes de exibir e transpor
+    const semPontos = t.replace(/\./g,' ').replace(/\s+/g,' ').trim();
+    return `<div class="chord-line">${shiftText(semPontos, totalShift)}</div>`;
   }
   // tudo que não é acorde = letra em negrito automático
   return `<div class="letra-linha">${t}</div>`;
