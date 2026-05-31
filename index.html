@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Cifras Inteligente</title>
+  <style>
+    :root {
+      --bg1: #0e0e1a;
+      --bg2: #131324;
+      --bg3: #1b203a;
+      --border: #2e355c;
+      --text1: #ffffff;
+      --text2: #8e9bb0;
+      --accent: #e27853;
+      --accent2: rgba(226, 120, 83, 0.15);
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background: var(--bg1); color: var(--text1); padding: 16px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* Topbar & Tabs */
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; background: var(--bg2); padding: 4px; border-radius: 8px; }
+    .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text2); font-weight: 600; border-radius: 6px; cursor: pointer; }
+    .tab-btn.active { background: var(--bg3); color: var(--text1); border: 1px solid var(--border); }
+    
+    /* Content Panes */
+    .pane { display: none; flex-direction: column; flex: 1; overflow-y: auto; }
+    .pane.active { display: flex; }
+    
+    /* Instrument Tabs */
+    .instrument-tabs { display: flex; gap: 8px; margin-bottom: 15px; background: var(--bg2); padding: 6px; border-radius: 10px; border: 1px solid var(--border); }
+    .inst-tab { flex: 1; padding: 10px 6px; border: none; background: transparent; color: var(--text2); font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .inst-tab.active { background: var(--accent); color: var(--text1); }
+
+    /* Capo Selector Wrapper */
+    #capo-selector-wrapper { background: var(--bg2); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
+    .capo-opts { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
+    .capo-opt { padding: 6px 12px; background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+    .capo-opt.active { border-color: var(--accent); color: var(--accent); background: var(--accent2); }
+
+    /* Lists & Items */
+    .search-wrap { position: relative; margin-bottom: 16px; }
+    .search-input { width: 100%; padding: 12px 12px 12px 40px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text1); font-size: 14px; }
+    .search-icon { position: absolute; left: 14px; top: 12px; color: var(--text2); }
+    .music-item, .setlist-item { display: flex; align-items: center; padding: 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+    .music-info { flex: 1; margin-left: 12px; min-width: 0; }
+    .music-title { font-weight: bold; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .music-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .key-badge { padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; color: var(--accent); font-weight: bold; font-size: 12px; font-family: monospace; }
+    
+    /* Strips & Cards */
+    .chord-strip-wrap { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 12px 0; margin-bottom: 15px; min-height: 120px; }
+    .chord-card { flex-shrink: 0; display: inline-block; }
+    
+    /* View Detail Overlay */
+    .view-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg1); display: none; flex-direction: column; padding: 16px; overflow-y: auto; }
+    .chord-line { font-family: monospace; font-size: 15px; font-weight: bold; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; white-space: pre-wrap; word-spacing: 4px; }
+    .letra-linha { font-size: 15px; color: var(--text1); margin-bottom: 12px; line-height: 1.5; }
+    .wa-block { margin-bottom: 20px; background: var(--bg2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+    
+    /* Buttons & Utilities */
+    .btn { padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-align: center; font-size: 14px; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+    
+    /* FAB */
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h2 style="font-size: 18px;">Minhas Cifras</h2>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-musicas" onclick="switchTab('musicas')">Músicas</button>
+    <button class="tab-btn" id="tab-setlists" onclick="switchTab('setlists')">Playlists</button>
+    <button class="tab-btn" id="tab-medley" onclick="switchTab('medley')">Medley</button>
+  </div>
+
+  <div id="pane-musicas" class="pane active">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-music" class="search-input" placeholder="Buscar por título ou tom..." oninput="renderMusicas()">
+    </div>
+    <div id="count-label" style="font-size: 12px; color: var(--text2); margin-bottom: 8px;">0 músicas</div>
+    <div id="lista-musicas" style="display: flex; flex-direction: column; gap: 4px;"></div>
+  </div>
+
+  <div id="pane-setlists" class="pane">
+    <div id="lista-setlists"></div>
+  </div>
+
+  <div id="pane-medley" class="pane">
+    <div id="medley-content"></div>
+  </div>
+
+  <button class="fab" onclick="openFab()">+</button>
+
+  <div id="view-detail" class="view-overlay">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+      <div>
+        <h2 id="detail-title">Título</h2>
+        <div id="detail-artist-label" style="color: var(--text2); font-size: 14px; margin-top: 2px;">Artista</div>
+      </div>
+      <button class="btn btn-outline" style="padding: 6px 12px;" onclick="closeDetail()">Voltar</button>
+    </div>
+
+    <div class="instrument-tabs">
+      <button class="inst-tab active" id="itab-violao" onclick="setInstrument('violao')">🎸 Violão</button>
+      <button class="inst-tab" id="itab-cavaco" onclick="setInstrument('cavaco')">🪕 Cavaco</button>
+      <button class="inst-tab" id="itab-teclado" onclick="setInstrument('teclado')">🎹 Teclado</button>
+      <button class="inst-tab" id="itab-ukulele" onclick="setInstrument('ukulele')">🎶 Ukulele</button>
+    </div>
+
+    <div id="capo-selector-wrapper">
+      <div style="font-size: 12px; font-weight: bold; color: var(--text2);" id="detail-key">Tom: -</div>
+      <div class="capo-opts">
+        <button class="capo-opt active" id="capo-opt-0" onclick="selectCapo(0)">Sem Capo</button>
+        <button class="capo-opt" id="capo-opt-1" onclick="selectCapo(1)">C.1</button>
+        <button class="capo-opt" id="capo-opt-2" onclick="selectCapo(2)">C.2</button>
+        <button class="capo-opt" id="capo-opt-3" onclick="selectCapo(3)">C.3</button>
+        <button class="capo-opt" id="capo-opt-4" onclick="selectCapo(4)">C.4</button>
+        <button class="capo-opt" id="capo-opt-5" onclick="selectCapo(5)">C.5</button>
+        <button class="capo-opt" id="capo-opt-6" onclick="selectCapo(6)">C.6</button>
+        <button class="capo-opt" id="capo-opt-7" onclick="selectCapo(7)">C.7</button>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 15px; align-items: center; background: var(--bg2); padding: 8px; border-radius: 8px; border:1px solid var(--border);">
+      <span style="font-size: 12px; color: var(--text2); font-weight: bold; flex: 1;">Tom atual: <span id="transposed-key" style="color:var(--accent);"></span></span>
+      <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="transpose(-1)">-1 Semitom</button>
+      <span id="semitone-label" style="font-weight: bold; font-family: monospace; font-size: 14px;">+0</span>
+      <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="transpose(1)">+1 Semitom</button>
+      <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; color: var(--danger);" onclick="resetTranspose()">Reset</button>
+    </div>
+
+    <div id="chord-strip"></div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+      <button class="btn btn-outline" id="btn-palco" style="flex:1;" onclick="toggleStageModeBtn()">🎭 Modo Palco</button>
+      <button class="btn btn-outline" id="btn-scroll" style="flex:1;" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
+    </div>
+
+    <div id="detail-content"></div>
+  </div>
+
+  <script>
+    const SK_M = 'cifras_musicas', SK_S = 'cifras_setlists';
+    let musicas = [];
+    let setlists = [];
+    let currentTab = 'musicas', currentDetailId = null, currentSemitones = 0, currentInstrument = 'violao';
+    let selectedCapo = 0, storedCapo = 0, editingId = null;
+
+    // BANCO DE DADOS COMPLETO DE ACORDES
+    const CHORD_DB = {
+      violao: {
+        'C': { f: [-1,3,2,0,1,0], fi: [0,3,2,0,1,0], b: 1 },
+        'C#': { f: [-1,4,3,1,2,1], fi: [0,4,3,1,2,1], b: 1, bar: {fr:1, s:3, e:5} },
+        'Db': { f: [-1,4,3,1,2,1], fi: [0,4,3,1,2,1], b: 1, bar: {fr:1, s:3, e:5} },
+        'D': { f: [-1,-1,0,2,3,2], fi: [0,0,0,1,3,2], b: 1 },
+        'D#': { f: [-1,-1,5,3,4,3], fi: [0,0,3,1,2,1], b: 3, bar: {fr:3, s:3, e:5} },
+        'Eb': { f: [-1,-1,5,3,4,3], fi: [0,0,3,1,2,1], b: 3, bar: {fr:3, s:3, e:5} },
+        'E': { f: [0,2,2,1,0,0], fi: [0,2,3,1,0,0], b: 1 },
+        'F': { f: [1,3,3,2,1,1], fi: [1,3,4,2,1,1], b: 1, bar: {fr:1, s:0, e:5} },
+        'F#': { f: [2,4,4,3,2,2], fi: [1,3,4,2,1,1], b: 2, bar: {fr:2, s:0, e:5} },
+        'Gb': { f: [2,4,4,3,2,2], fi: [1,3,4,2,1,1], b: 2, bar: {fr:2, s:0, e:5} },
+        'G': { f: [3,2,0,0,0,3], fi: [2,1,0,0,0,3], b: 1 },
+        'G#': { f: [4,6,6,5,4,4], fi: [1,3,4,2,1,1], b: 4, bar: {fr:4, s:0, e:5} },
+        'Ab': { f: [4,6,6,5,4,4], fi: [1,3,4,2,1,1], b: 4, bar: {fr:4, s:0, e:5} },
+        'A': { f: [-1,0,2,2,2,0], fi: [0,0,1,2,3,0], b: 1 },
+        'A#': { f: [-1,1,3,3,3,1], fi: [0,1,2,3,4,1], b: 1, bar: {fr:1, s:1, e:5} },
+        'Bb': { f: [-1,1,3,3,3,1], fi: [0,1,2,3,4,1], b: 1, bar: {fr:1, s:1, e:5} },
+        'B': { f: [-1,2,4,4,4,2], fi: [1,2,3,4,5,1], b: 2, bar: {fr:2, s:1, e:5} },
+        
+        'Cm': { f: [-1,3,5,5,4,3], fi: [1,2,4,3,2,1], b: 3, bar: {fr:3, s:1, e:5} },
+        'C#m': { f: [-1,4,6,6,5,4], fi: [1,2,4,3,2,1], b: 4, bar: {fr:4, s:1, e:5} },
+        'Dm': { f: [-1,-1,0,2,3,1], fi: [0,0,0,2,3,1], b: 1 },
+        'D#m': { f: [-1,-1,4,3,4,2], fi: [0,0,3,2,4,1], b: 1 },
+        'Ebm': { f: [-1,-1,4,3,4,2], fi: [0,0,3,2,4,1], b: 1 },
+        'Em': { f: [0,2,2,0,0,0], fi: [0,1,2,0,0,0], b: 1 },
+        'Fm': { f: [1,3,3,1,1,1], fi: [1,3,4,1,1,1], b: 1, bar: {fr:1, s:0, e:5} },
+        'F#m': { f: [2,4,4,2,2,2], fi: [1,3,4,1,1,1], b: 2, bar: {fr:2, s:0, e:5} },
+        'Gm': { f: [3,5,5,3,3,3], fi: [1,3,4,1,1,1], b: 3, bar: {fr:3, s:0, e:5} },
+        'G#m': { f: [4,6,6,4,4,4], fi: [1,3,4,1,1,1], b: 4, bar: {fr:4, s:0, e:5} },
+        'Am': { f: [-1,0,2,2,1,0], fi: [0,0,2,3,1,0], b: 1 },
+        'Bbm': { f: [-1,1,3,3,2,1], fi: [1,2,4,3,2,1], b: 1, bar: {fr:1, s:1, e:5} },
+        'Bm': { f: [-1,2,4,4,3,2], fi: [1,2,4,3,2,1], b: 2, bar: {fr:2, s:1, e:5} }
+      },
+      ukulele: {
+        'C': { f: [0,0,0,3], fi: [0,0,0,3], b: 1 },
+        'C#': { f: [1,1,1,4], fi: [1,1,1,4], b: 1, bar: {fr:1, s:0, e:2} },
+        'D': { f: [2,2,2,0], fi: [1,2,3,0], b: 1 },
+        'D#': { f: [3,3,3,1], fi: [2,3,4,1], b: 1 },
+        'E': { f: [4,4,4,2], fi: [2,3,4,1], b: 1 },
+        'F': { f: [2,0,1,0], fi: [2,0,1,0], b: 1 },
+        'F#': { f: [3,1,2,1], fi: [3,1,2,1], b: 1, bar: {fr:1, s:1, e:3} },
+        'G': { f: [0,2,3,2], fi: [0,1,3,2], b: 1 },
+        'G#': { f: [5,3,4,3], fi: [4,1,2,1], b: 1, bar: {fr:3, s:1, e:3} },
+        'A': { f: [2,1,0,0], fi: [2,1,0,0], b: 1 },
+        'Bb': { f: [3,2,1,1], fi: [3,2,1,1], b: 1, bar: {fr:1, s:2, e:3} },
+        'B': { f: [4,3,2,2], fi: [3,2,1,1], b: 1, bar: {fr:2, s:2, e:3} },
+        'Cm': { f: [0,3,3,3], fi: [0,1,2,3], b: 1 },
+        'C#m': { f: [1,4,4,4], fi: [1,2,3,4], b: 1 },
+        'Dm': { f: [2,2,1,0], fi: [2,3,1,0], b: 1 },
+        'Em': { f: [0,4,3,2], fi: [0,3,2,1], b: 1 },
+        'Fm': { f: [1,0,1,3], fi: [1,0,2,4], b: 1 },
+        'F#m': { f: [2,1,2,0], fi: [2,1,3,0], b: 1 },
+        'Gm': { f: [0,2,3,1], fi: [0,2,3,1], b: 1 },
+        'Am': { f: [2,0,0,0], fi: [2,0,0,0], b: 1 },
+        'Bm': { f: [4,2,2,2], fi: [3,1,1,1], b: 1, bar: {fr:2, s:1, e:3} }
+      },
+      cavaco: {
+        'G': { f: [0,0,1,2], fi: [0,0,1,2], b: 1 },
+        'C': { f: [2,0,1,0], fi: [2,0,1,0], b: 1 }
+      }
+    };
+
+    const CHORD_NOTES = {
+      'C':'C - E - G','Cm':'C - Eb - G','G':'G - B - D','D':'D - F# - A','Em':'E - G - B','Am':'A - C - E'
+    };
+
+    const SCALE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+    function salvar() {
+      localStorage.setItem(SK_M, JSON.stringify(musicas));
+      localStorage.setItem(SK_S, JSON.stringify(setlists));
+    }
+
+    function shiftChord(chord, semitones) {
+      if (!semitones) return chord;
+      return chord.replace(/[A-G][#b]?/g, match => {
+        let note = match;
+        if(note.endsWith('b') && note.length > 1) {
+          const mapB = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+          note = mapB[note] || note;
+        }
+        let idx = SCALE.indexOf(note);
+        if (idx === -1) return match;
+        let newIdx = (idx + semitones) % 12;
+        if (newIdx < 0) newIdx += 12;
+        return SCALE[newIdx];
+      });
+    }
+
+    function shiftText(text, semitones) {
+      if(!semitones || !text) return text;
+      return text.replace(/\b[A-G][#b]?(?:m|M|maj|7|9|sus\d)?(?:\/[A-G][#b]?)?\b/g, m => {
+        const parts = m.split('/');
+        return parts.map(p => shiftChord(p, semitones)).join('/');
+      });
+    }
+
+    // SVG ENGINE DE ALTA QUALIDADE
+    function drawChordSVG(data, name, strings=6){
+      const {f:frets,fi:fingers=[],b:baseFret=1,bar}=data;
+      const S=strings, FRETS=4;
+      const SW=strings===4?16:13, FH=18;
+      const PADL=22, PADR=22, PADT=32, PADB=18;
+      const gridW=(S-1)*SW, gridH=FRETS*FH;
+      const W=PADL+gridW+PADR, H=PADT+gridH+PADB;
+      let g='';
+      
+      g+=`<rect width="${W}" height="${H}" rx="12" fill="#1b203a" stroke="#2e355c" stroke-width="1"/>`;
+      g+=`<text x="${W/2}" y="22" fill="#ffffff" font-size="15" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">${name}</text>`;
+      
+      if(baseFret>1){
+        g+=`<text x="${PADL-6}" y="${PADT+FH*0.7}" fill="#8e9bb0" font-size="11" text-anchor="end" font-family="Arial">${baseFret}ª</text>`;
+      } else {
+        g+=`<line x1="${PADL}" y1="${PADT}" x2="${PADL+gridW}" y2="${PADT}" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>`;
+      }
+      
+      for(let f=1;f<=FRETS;f++) g+=`<line x1="${PADL}" y1="${PADT+f*FH}" x2="${PADL+gridW}" y2="${PADT+f*FH}" stroke="#4f597d" stroke-width="1"/>`;
+      for(let s=0;s<S;s++) g+=`<line x1="${PADL+s*SW}" y1="${PADT}" x2="${PADL+s*SW}" y2="${PADT+gridH}" stroke="#4f597d" stroke-width="1"/>`;
+      
+      if(bar){
+        const by=PADT+(bar.fr-baseFret)*FH+FH/2;
+        const bx1=PADL+bar.s*SW, bx2=PADL+bar.e*SW;
+        g+=`<line x1="${bx1}" y1="${by}" x2="${bx2}" y2="${by}" stroke="#e27853" stroke-width="8" stroke-linecap="round"/>`;
+      }
+      
+      frets.forEach((fr,si)=>{
+        const x=PADL+si*SW;
+        if(fr<0){
+          g+=`<text x="${x}" y="${PADT-6}" fill="#8e9bb0" font-size="11" text-anchor="middle" font-family="Arial">×</text>`;
+        } else if(fr===0){
+          g+=`<circle cx="${x}" cy="${PADT-8}" r="3.5" fill="none" stroke="#8e9bb0" stroke-width="1.5"/>`;
+        } else {
+          const fy=PADT+(fr-baseFret)*FH+FH/2;
+          g+=`<circle cx="${x}" cy="${fy}" r="6" fill="#e27853"/>`;
+          if(fingers[si]) g+=`<text x="${x}" y="${fy+3.5}" fill="#ffffff" font-size="9" text-anchor="middle" font-family="Arial" font-weight="bold">${fingers[si]}</text>`;
+        }
+      });
+      
+      return `<div class="chord-card"><svg width="${W}" height="${H}" style="display:block;">${g}</svg></div>`;
+    }
+
+    function drawPianoSVG(noteString, name){
+      const WKW=18, WKH=50, BKW=10, BKH=32;
+      const totalW=7*WKW+2;
+      const raw=(noteString||'').split(' - ').map(n=>n.trim());
+      const notes=new Set(raw);
+      const whites=['C','D','E','F','G','A','B'];
+      const blacks=[{n:'C#',p:0.65},{n:'D#',p:1.65},{n:'F#',p:3.65},{n:'G#',p:4.65},{n:'A#',p:5.65}];
+      let g=`<rect width="${totalW}" height="${WKH+2}" rx="6" fill="#1b203a" stroke="#2e355c"/>`;
+      
+      whites.forEach((note,i)=>{
+        const on=notes.has(note);
+        g+=`<rect x="${1+i*WKW}" y="1" width="${WKW-1}" height="${WKH}" fill="${on?'#e27853':'#e9edef'}" stroke="#3a4042"/>`;
+      });
+      blacks.forEach(({n,p})=>{
+        const on=notes.has(n);
+        g+=`<rect x="${1+p*WKW-BKW/2}" y="1" width="${BKW}" height="${BKH}" fill="${on?'#e27853':'#2a2a2a'}"/>`;
+      });
+      return `<div class="chord-card" style="padding:6px; background:#1b203a; border-radius:12px; border:1px solid var(--border); text-align:center;">
+        <div style="color:white; font-size:12px; font-weight:bold; margin-bottom:4px;">${name}</div>
+        <svg width="${totalW}" height="${WKH+2}">${g}</svg>
+      </div>`;
+    }
+
+    function getChordData(name){
+      const db=CHORD_DB[currentInstrument]||CHORD_DB.violao;
+      return db[name] || null;
+    }
+
+    function extractChords(m){
+      const txt=m.blocos.map(b=>b.c).join('\n');
+      const seen=new Set(), result=[];
+      const re=/\b([A-G][#b]?(?:m|M|maj|7|9)?)\b/g;
+      let match;
+      while((match=re.exec(txt))!==null){
+        if(!seen.has(match[1])){seen.add(match[1]);result.push(match[1]);}
+      }
+      return result;
+    }
+
+    function renderChordStrip(m){
+      const el=document.getElementById('chord-strip');
+      if(!el) return;
+      const totalShift=currentSemitones+storedCapo-selectedCapo;
+      const rawChords=extractChords(m);
+      const chords=[...new Set(rawChords.map(c=>shiftText(c,totalShift)))];
+      if(!chords.length){el.innerHTML='';return;}
+      
+      let html='';
+      if(currentInstrument==='teclado'){
+        html=chords.map(name=>drawPianoSVG(CHORD_NOTES[name]||'', name)).join('');
+      } else {
+        const strings = currentInstrument==='ukulele'||currentInstrument==='cavaco'?4:6;
+        html=chords.map(name=>{
+          const data=getChordData(name);
+          if(!data) return `<div class="chord-card" style="padding:14px 20px; background:#1b203a; border-radius:12px; border:1px solid var(--border); text-align:center; min-width:75px;"><div style="color:white; font-size:14px; font-weight:bold;">${name}</div><div style="color:var(--text2); font-size:11px; margin-top:8px;">—</div></div>`;
+          return drawChordSVG(data, name, strings);
+        }).join('');
+      }
+      el.innerHTML=`<div class="chord-strip-wrap">${html}</div>`;
+    }
+
+    function setInstrument(inst){
+      currentInstrument=inst;
+      document.querySelectorAll('.inst-tab').forEach(b=>b.classList.remove('active'));
+      document.getElementById('itab-'+inst)?.classList.add('active');
+      
+      const capoSelector = document.getElementById('capo-selector-wrapper');
+      if(inst === 'violao') {
+        if(capoSelector) capoSelector.style.display = 'block';
+        selectedCapo = storedCapo; 
+      } else {
+        if(capoSelector) capoSelector.style.display = 'none';
+        selectedCapo = 0; 
+      }
+      
+      const m=musicas.find(x=>x.id===currentDetailId);
+      if(m) {
+        renderDetail();
+        renderChordStrip(m);
+      }
+    }
+
+    function selectCapo(n){
+      selectedCapo=n;
+      document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
+      document.getElementById('capo-opt-'+n)?.classList.add('active');
+      renderDetail();
+      const m=musicas.find(x=>x.id===currentDetailId);
+      if(m) renderChordStrip(m);
+    }
+
+    function transpose(delta){
+      currentSemitones=Math.max(-11,Math.min(11,currentSemitones+delta));
+      renderDetail();
+      const m=musicas.find(x=>x.id===currentDetailId);
+      if(m) renderChordStrip(m);
+    }
+    
+    function resetTranspose(){currentSemitones=0; renderDetail(); const m=musicas.find(x=>x.id===currentDetailId); if(m) renderChordStrip(m);}
+
+    function isChordLine(linha){
+      const t = linha.trim(); if(!t) return false;
+      const limpa = t.replace(/[.,\(\)\[\]x0-9]/gi,'').trim();
+      const tokens = limpa.split(/\s+/).filter(Boolean);
+      if(!tokens.length) return false;
+      const chordPattern = /^[A-G][#b]?(m|M|maj|min|7|9)?(\/[A-G][#b]?)?$/;
+      return tokens.every(tok => chordPattern.test(tok));
+    }
+
+    function renderLinha(linha, totalShift){
+      const t = linha.trim(); if(!t) return '<br>';
+      if(isChordLine(linha)){
+        return `<div class="chord-line">${shiftText(linha, totalShift)}</div>`;
+      }
+      return `<div class="letra-linha">${linha}</div>`;
+    }
+
+    function renderDetail(){
+      const m=musicas.find(x=>x.id===currentDetailId); if(!m) return;
+      const soundingKey=shiftText(m.key, currentSemitones);
+      const shapeKey=shiftText(soundingKey, -selectedCapo);
+      
+      if(selectedCapo>0 && currentInstrument==='violao'){
+        document.getElementById('detail-key').textContent=`Tom: ${soundingKey} (forma de ${shapeKey})`;
+      } else {
+        document.getElementById('detail-key').textContent='Tom: '+soundingKey;
+      }
+      
+      document.getElementById('transposed-key').textContent=soundingKey;
+      document.getElementById('semitone-label').textContent=(currentSemitones>=0?'+':'')+currentSemitones;
+      
+      const totalShift=currentSemitones+storedCapo-selectedCapo;
+      document.getElementById('detail-content').innerHTML = m.blocos.map(b=>{
+        const corpo = b.c.split('\n').map(l => renderLinha(l, totalShift)).join('');
+        return `<div class="wa-block">${b.l?`<div style="font-size:12px; color:var(--text2); font-weight:bold; margin-bottom:6px;">[${b.l}]</div>`:''}${corpo}</div>`;
+      }).join('');
+    }
+
+    function openDetail(id){
+      currentDetailId=id; currentSemitones=0;
+      const m=musicas.find(x=>x.id===id); if(!m) return;
+      document.getElementById('detail-title').textContent=m.title;
+      document.getElementById('detail-artist-label').textContent=m.artist||'';
+      
+      const capoNum=m.capo?parseInt((m.capo.match(/(\d+)/)||[0,0])[1])||0:0;
+      storedCapo=capoNum;
+      
+      setInstrument('violao'); 
+      document.getElementById('view-detail').style.display='flex';
+    }
+
+    function closeDetail(){ document.getElementById('view-detail').style.display='none'; stopAutoScroll(); }
+
+    let scrollTimer=null;
+    function toggleAutoScroll(){
+      const btn=document.getElementById('btn-scroll');
+      if(scrollTimer){
+        clearInterval(scrollTimer); scrollTimer=null;
+        btn.textContent='▶ Auto-Scroll'; btn.style.background='';
+      } else {
+        btn.textContent='⏹ Parar Scroll'; btn.style.background='var(--danger)';
+        scrollTimer=setInterval(()=>{ document.getElementById('view-detail').scrollTop += 1; }, 50);
+      }
+    }
+    function stopAutoScroll(){ if(scrollTimer) { clearInterval(scrollTimer); scrollTimer=null; document.getElementById('btn-scroll').textContent='▶ Auto-Scroll'; }}
+
+    function switchTab(tab){
+      currentTab=tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      document.getElementById('pane-'+tab).classList.add('active');
+      if(tab==='musicas') renderMusicas();
+    }
+
+    function renderMusicas(){
+      const q=document.getElementById('search-music').value.toLowerCase();
+      const filtradas=musicas.filter(m=>m.title.toLowerCase().includes(q) || (m.key||'').toLowerCase().includes(q));
+      document.getElementById('count-label').textContent=filtradas.length+' música(s)';
+      
+      document.getElementById('lista-musicas').innerHTML=filtradas.map(m=>`
+        <div class="music-item" onclick="openDetail(${m.id})">
+          <div class="music-info">
+            <div class="music-title">${m.title}</div>
+            <div class="music-sub">${m.artist||'Desconhecido'}</div>
+          </div>
+          <span class="key-badge">${m.key || 'G'}</span>
+        </div>`).join('');
+    }
+
+    function openFab(){ alert('Função para adicionar nova música/playlist.'); }
+
+    // DATA LOADING ENGINE (Recuperação Automática LocalStorage)
+    try {
+      const sm = localStorage.getItem(SK_M);
+      if (sm) musicas = JSON.parse(sm);
+    } catch(e) { console.error(e); }
+    try {
+      const ss = localStorage.getItem(SK_S);
+      if (ss) setlists = JSON.parse(ss);
+    } catch(e) { console.error(e); }
+
+    renderMusicas();
+  </script>
+</body>
+</html>
