@@ -1,0 +1,50 @@
+# Simplificando Cifras
+
+Aplicação web progressiva para organizar, estudar e executar repertórios musicais com cifras resumidas.
+
+## Como executar
+
+O projeto usa HTML, CSS e JavaScript puro. Para que o service worker funcione, abra-o por um servidor HTTP local, e não diretamente como arquivo.
+
+Exemplo com Python 3:
+
+```bash
+python -m http.server 4173
+```
+
+Depois, acesse `http://localhost:4173`.
+
+## Dados e persistência
+
+- O catálogo padrão contém 86 músicas no formato legado compatível `{ l, c }`.
+- Músicas e playlists alteradas pelo usuário ficam no armazenamento local do navegador.
+- `js/storage.js` é a única camada autorizada a acessar diretamente o `localStorage`.
+- Limpar os dados do navegador remove alterações locais. Faça uma cópia antes de limpar.
+
+## Funcionalidades
+
+- biblioteca e busca por título, artista ou tom;
+- transposição e retorno ao tom original;
+- seleção de capotraste e diagramas de acordes;
+- criação, edição, exclusão, ordenação e compartilhamento de playlists;
+- medley;
+- modo palco com navegação, auto-scroll, velocidade e tamanho de fonte;
+- funcionamento offline após o primeiro carregamento bem-sucedido.
+
+## IA
+
+A busca por IA está intencionalmente desativada no frontend. Uma versão futura deverá chamar um backend autenticado, que manterá chaves e segredos fora do navegador.
+
+## Verificação antes de publicar
+
+1. Abrir a aplicação e confirmar que são exibidas 86 músicas em uma instalação limpa.
+2. Buscar por título, artista e tom.
+3. Abrir uma música, transpor, selecionar capotraste e retornar ao original.
+4. Criar, ordenar, atualizar e excluir uma playlist; recarregar a página e confirmar a persistência.
+5. Ativar o modo palco e testar anterior, próxima, fonte, velocidade e auto-scroll.
+6. No painel de aplicação do navegador, validar manifesto, service worker e modo offline.
+7. Testar em retrato e paisagem, nos tamanhos de celular, tablet e computador.
+
+## Arquivos antigos
+
+A versão alternativa encontrada na auditoria foi preservada em `_legacy/`. Ela serve apenas como histórico e não é carregada pela aplicação.

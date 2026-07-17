@@ -19,7 +19,7 @@
   --danger:#e05c6a;
 }
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;justify-content:center;min-height:100vh;}
-.app{width:420px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.app{width:100%;max-width:420px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
 /* TOPBAR */
 .topbar{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
 .topbar-icon{font-size:22px;}
@@ -50,7 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .fab{position:fixed;bottom:22px;right:calc(50% - 210px + 16px);width:54px;height:54px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(217,119,87,.4);transition:transform .15s;font-size:26px;color:#fff;font-weight:300;}
 .fab:hover{transform:scale(1.06);}
 /* DETAIL VIEW */
-.detail-view{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:420px;height:100vh;background:var(--bg);overflow-y:auto;flex-direction:column;z-index:10;}
+.detail-view{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;height:100vh;background:var(--bg);overflow-y:auto;flex-direction:column;z-index:10;}
 .detail-header{background:var(--bg2);padding:13px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;}
 .back-btn{color:var(--accent);font-size:24px;cursor:pointer;flex-shrink:0;line-height:1;}
 .detail-title-wrap{flex:1;min-width:0;}
@@ -123,7 +123,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .stage-mode .stage-hide{display:none!important;}
 .stage-mode .chord-block{background:transparent;border:none;margin-bottom:8px;}
 .stage-mode .chord-block summary{font-size:20px;padding:6px 0;}
-.stage-mode .chord-line{font-size:28px;line-height:2.2;}
+.stage-mode .chord-line{font-size:var(--stage-chord-size,28px);line-height:2.2;}
 .stage-mode .detail-body{padding:8px;}
 /* TOOLBAR PALCO */
 .stage-toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;}
@@ -157,7 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .sl-count{font-size:11px;background:var(--bg3);color:var(--text2);padding:3px 8px;border-radius:10px;flex-shrink:0;}
 /* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);z-index:30;display:none;align-items:flex-end;justify-content:center;}
-.modal{background:var(--bg2);border-radius:18px 18px 0 0;width:420px;padding:18px 16px 24px;max-height:92vh;overflow-y:auto;}
+.modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding:18px 16px 24px;max-height:92vh;overflow-y:auto;}
 .modal-handle{width:34px;height:3px;background:var(--bg3);border-radius:2px;margin:0 auto 16px;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;}
 .form-group{margin-bottom:11px;}
@@ -243,7 +243,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
     <!-- MODAL DE INSTRUMENTOS -->
     <div id="inst-modal" onclick="closeInstModal(event)" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:40;align-items:flex-end;justify-content:center;">
-      <div onclick="event.stopPropagation()" style="background:var(--bg2);border-radius:18px 18px 0 0;width:420px;padding-bottom:24px;border-top:1px solid var(--border);">
+      <div onclick="event.stopPropagation()" style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:24px;border-top:1px solid var(--border);">
         <div style="padding:16px 20px 8px;display:flex;align-items:center;gap:10px;">
           <span onclick="closeInstModal()" style="color:var(--accent);font-size:20px;cursor:pointer;">←</span>
           <span style="font-size:16px;font-weight:700;">Acordes</span>
@@ -274,6 +274,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <button class="t-btn" onclick="transpose(+1)">+</button>
       <button class="t-reset" onclick="resetTranspose()">Original</button>
     </div>
+    <div class="stage-toolbar">
+      <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()">🎭 Modo Palco</button>
+      <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
+    </div>
+    <div class="stage-toolbar" aria-label="Controles de apresentação">
+      <button class="stage-btn" onclick="navigateSong(-1)" title="Música anterior">← Anterior</button>
+      <button class="stage-btn" id="btn-speed" onclick="cycleScrollSpeed()" title="Velocidade do auto-scroll">Vel. 1x</button>
+      <button class="stage-btn" id="btn-font" onclick="cycleStageFont()" title="Tamanho das cifras">Fonte M</button>
+      <button class="stage-btn" onclick="navigateSong(1)" title="Próxima música">Próxima →</button>
+    </div>
     <div class="detail-body" id="detail-content"></div>
   </div>
 
@@ -298,6 +308,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   </div>
 </div>
 
+<script src="js/storage.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -338,8 +349,9 @@ function shiftText(text,s){
 // ── SAVE / LOAD ───────────────────────────────────────────────────────
 const SK_M='cifras_musicas_v1', SK_S='cifras_setlists_v1';
 function salvar(){
-  try{localStorage.setItem(SK_M,JSON.stringify(musicas));localStorage.setItem(SK_S,JSON.stringify(setlists));showToast('💾 Salvo!');}
-  catch(e){showToast('⚠️ Erro ao salvar');}
+  const musicasSalvas=storage.set(SK_M,musicas);
+  const setlistsSalvas=storage.set(SK_S,setlists);
+  showToast(musicasSalvas&&setlistsSalvas?'💾 Salvo!':'⚠️ Erro ao salvar');
 }
 function showToast(msg){
   let t=document.getElementById('toast');
@@ -790,11 +802,15 @@ async function buscarIA(){
   if(!q) return;
   const btn=document.getElementById('ai-btn');
   const res=document.getElementById('ai-result');
+  res.style.display='block';
+  res.innerHTML='<div class="ai-result"><div class="ai-result-title">🤖 Recurso em preparação</div><div style="color:var(--text2);font-size:13px;line-height:1.5;">A busca com IA foi desativada nesta etapa para proteger chaves de API. Ela será conectada futuramente por um backend seguro.</div></div>';
+  showToast('IA disponível em uma etapa futura');
+  return;
   btn.disabled=true; btn.textContent='Buscando...';
   res.style.display='block';
   res.innerHTML=`<div class="ai-result"><div class="ai-result-title">🤖 Gerando cifra...</div><div style="color:var(--text2);font-size:13px;">Aguarde um momento...</div></div>`;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch('/api/ai/chords',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -918,12 +934,6 @@ function openDetail(id){
   const vd=document.getElementById('view-detail');
   vd.style.display='flex'; vd.style.zIndex='20';
 }
-function closeDetail(){
-  const vd=document.getElementById('view-detail');
-  vd.style.display='none';
-  vd.style.zIndex='10';
-}
-
 // ── MODO PALCO ────────────────────────────────────────────────────────
 let stageMode=false, scrollTimer=null, scrollSpeed=60;
 
@@ -976,6 +986,33 @@ function stopAutoScroll(){
   if(scrollTimer){clearInterval(scrollTimer);scrollTimer=null;}
   const btn=document.getElementById('btn-scroll');
   if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}
+}
+
+function navigateSong(direction){
+  if(currentDetailId===null) return;
+  const ordered=[...musicas].sort((a,b)=>a.title.localeCompare(b.title,'pt'));
+  const currentIndex=ordered.findIndex(m=>String(m.id)===String(currentDetailId));
+  if(currentIndex===-1) return;
+  const nextIndex=(currentIndex+direction+ordered.length)%ordered.length;
+  openDetail(ordered[nextIndex].id);
+}
+
+const stageSpeeds=[90,60,35];
+let stageSpeedIndex=1;
+function cycleScrollSpeed(){
+  stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;
+  scrollSpeed=stageSpeeds[stageSpeedIndex];
+  const labels=['0.7x','1x','1.5x'];
+  document.getElementById('btn-speed').textContent='Vel. '+labels[stageSpeedIndex];
+  if(scrollTimer){stopAutoScroll();startAutoScroll();}
+}
+
+const stageFontSizes=[22,28,34];
+let stageFontIndex=1;
+function cycleStageFont(){
+  stageFontIndex=(stageFontIndex+1)%stageFontSizes.length;
+  document.getElementById('view-detail').style.setProperty('--stage-chord-size',stageFontSizes[stageFontIndex]+'px');
+  document.getElementById('btn-font').textContent='Fonte '+['P','M','G'][stageFontIndex];
 }
 
 // ── MEDLEY ────────────────────────────────────────────────────────────
@@ -1063,7 +1100,6 @@ function tocarMedley(){
   const vd=document.getElementById('view-detail');
   document.getElementById('detail-title').textContent='🎛️ Medley';
   document.getElementById('detail-key').textContent='';
-  document.getElementById('capo-banner').innerHTML='';
   document.getElementById('transposed-key').textContent='';
   document.getElementById('semitone-label').textContent='+0';
   document.querySelectorAll('.stage-hide').forEach(el=>el.style.display='');
@@ -1092,7 +1128,7 @@ function switchTab(tab){
 
 function renderMusicas(){
   const q=(document.getElementById('search-music').value||'').toLowerCase();
-  const sorted=[...musicas].filter(m=>m.title.toLowerCase().includes(q)||(m.key||'').toLowerCase().includes(q)).sort((a,b)=>a.title.localeCompare(b.title,'pt'));
+  const sorted=[...musicas].filter(m=>m.title.toLowerCase().includes(q)||(m.artist||'').toLowerCase().includes(q)||(m.key||'').toLowerCase().includes(q)).sort((a,b)=>a.title.localeCompare(b.title,'pt'));
   document.getElementById('count-label').textContent=musicas.length+' músicas';
   const el=document.getElementById('lista-musicas');
   if(!sorted.length){el.innerHTML='<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma encontrada</p></div>';return;}
@@ -1145,7 +1181,9 @@ function saveMusica(){
 function deleteMusica(id){
   const nid=isNaN(+id)?id:+id;
   if(!confirm('Excluir esta música?')) return;
-  musicas=musicas.filter(m=>m.id!==nid); salvar(); closeDetail(); renderMusicas();
+  musicas=musicas.filter(m=>m.id!==nid);
+  setlists=setlists.map(s=>({...s,musicas:s.musicas.filter(mid=>String(mid)!==String(nid))}));
+  salvar(); closeDetail(); renderMusicas();
 }
 function parseBlocks(raw){
   const lines=raw.trim().split('\n');
@@ -1412,8 +1450,8 @@ function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')
 function closeModal(){document.getElementById('modal-overlay').style.display='none'; editingId=null;}
 
 // carrega dados salvos
-try{const sm=localStorage.getItem(SK_M);if(sm)musicas=JSON.parse(sm);}catch(e){}
-try{const ss=localStorage.getItem(SK_S);if(ss)setlists=JSON.parse(ss);}catch(e){}
+musicas=storage.get(SK_M,musicas);
+setlists=storage.get(SK_S,setlists);
 renderMusicas();
 checkShareParam();
 </script>
