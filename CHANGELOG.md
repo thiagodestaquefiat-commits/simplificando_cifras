@@ -1,5 +1,14 @@
 # Changelog
 
+## Sprint — exportação da biblioteca
+
+- Adicionado o botão **Exportar Biblioteca**.
+- Adicionada exportação JSON do catálogo padrão e dos dados do usuário com origem identificada.
+- Incluídos músicas, playlists, medleys, favoritos, configurações e armazenamento bruto.
+- Mantida compatibilidade com as chaves atuais e legadas do armazenamento local.
+- Adicionado teste automatizado de preservação do formato e das origens.
+- Atualizado o cache PWA para incluir o módulo de exportação.
+
 ## Etapa 1 — estabilização (17/07/2026)
 
 ### Organização

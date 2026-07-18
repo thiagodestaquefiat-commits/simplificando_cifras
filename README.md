@@ -29,7 +29,18 @@ Depois, acesse `http://localhost:4173`.
 - criação, edição, exclusão, ordenação e compartilhamento de playlists;
 - medley;
 - modo palco com navegação, auto-scroll, velocidade e tamanho de fonte;
+- exportação completa da biblioteca em JSON, incluindo catálogo padrão, dados persistidos e estado atual da sessão;
 - funcionamento offline após o primeiro carregamento bem-sucedido.
+
+## Exportar biblioteca
+
+Use o botão **Exportar Biblioteca** no topo da aplicação. O arquivo JSON separa explicitamente:
+
+- o catálogo padrão incluído no aplicativo;
+- os valores persistidos no navegador, preservados também em formato bruto por chave;
+- o estado atual de músicas, playlists, medleys, favoritos e configurações.
+
+A exportação é local, não envia dados para backend e não altera nem remove informações do navegador.
 
 ## IA
 

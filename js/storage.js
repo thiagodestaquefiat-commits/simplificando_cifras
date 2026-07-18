@@ -31,5 +31,18 @@
     }
   }
 
-  global.storage = Object.freeze({ get, set, remove });
+  function snapshotRaw() {
+    const snapshot = {};
+    try {
+      for (let index = 0; index < global.localStorage.length; index += 1) {
+        const key = global.localStorage.key(index);
+        if (key !== null) snapshot[key] = global.localStorage.getItem(key);
+      }
+    } catch (error) {
+      console.error("Não foi possível ler todo o armazenamento local:", error);
+    }
+    return snapshot;
+  }
+
+  global.storage = Object.freeze({ get, set, remove, snapshotRaw });
 })(window);
