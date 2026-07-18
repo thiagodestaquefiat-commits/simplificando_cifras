@@ -1,5 +1,17 @@
 # Changelog
 
+## Sprint — responsividade, palco e diagramas
+
+- Ampliada a largura máxima de leitura no computador, mantendo o aplicativo centralizado e em largura total no celular.
+- Corrigidos limites de viewport, modais, FAB e controles em telas a partir de 320 px.
+- Isolada a rolagem horizontal dos diagramas, com cartões legíveis e espaçamento completo nas extremidades.
+- Adicionada normalização segura para busca de acordes equivalentes e baixos invertidos, sem alterar o texto musical.
+- Acordes sem desenho agora exibem “Diagrama não disponível” e são registrados no console uma única vez.
+- Diagramas e seletor de instrumento são ocultados somente no Modo Palco; tom, capotraste e transposição permanecem disponíveis.
+- Anterior e Próxima agora aparecem apenas no contexto de uma playlist e respeitam sua ordem e seus limites.
+- Adicionados testes automatizados para normalização de acordes e contexto de playlist.
+- Atualizado o cache PWA para incluir os novos módulos.
+
 ## Sprint — exportação da biblioteca
 
 - Adicionado o botão **Exportar Biblioteca**.

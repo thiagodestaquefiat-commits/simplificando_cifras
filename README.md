@@ -29,6 +29,7 @@ Depois, acesse `http://localhost:4173`.
 - criação, edição, exclusão, ordenação e compartilhamento de playlists;
 - medley;
 - modo palco com navegação, auto-scroll, velocidade e tamanho de fonte;
+- diagramas em faixa horizontal própria, com indicação clara quando um desenho não está disponível;
 - exportação completa da biblioteca em JSON, incluindo catálogo padrão, dados persistidos e estado atual da sessão;
 - funcionamento offline após o primeiro carregamento bem-sucedido.
 
@@ -41,6 +42,10 @@ Use o botão **Exportar Biblioteca** no topo da aplicação. O arquivo JSON sepa
 - o estado atual de músicas, playlists, medleys, favoritos e configurações.
 
 A exportação é local, não envia dados para backend e não altera nem remove informações do navegador.
+
+## Navegação e Modo Palco
+
+Os botões **Anterior** e **Próxima** aparecem somente quando a música é aberta a partir de uma playlist. Eles seguem a ordem definida pelo usuário e param na primeira e na última música. No Modo Palco, os diagramas são ocultados para priorizar a leitura, enquanto tom, capotraste, transposição, fonte, velocidade e auto-scroll continuam disponíveis.
 
 ## IA
 

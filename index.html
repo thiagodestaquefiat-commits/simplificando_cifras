@@ -18,13 +18,14 @@
   --border:rgba(255,255,255,0.08);
   --danger:#e05c6a;
 }
+html,body{width:100%;min-height:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;justify-content:center;min-height:100vh;}
-.app{width:100%;max-width:420px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.app{width:100%;max-width:720px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 32px rgba(0,0,0,.18);}
 /* TOPBAR */
 .topbar{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
 .topbar-icon{font-size:22px;}
-.topbar-info{flex:1;}
-.topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+.topbar-info{flex:1;min-width:0;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-sub{font-size:11px;color:var(--accent);margin-top:1px;}
 .export-library-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:7px 9px;font:600 11px/1.2 inherit;cursor:pointer;white-space:nowrap;}
 .export-library-btn:hover{background:var(--accent2);}
@@ -49,10 +50,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .music-sub{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .key-badge{font-size:13px;background:var(--accent2);color:var(--accent);padding:4px 10px;border-radius:10px;font-weight:700;flex-shrink:0;}
 /* FAB */
-.fab{position:fixed;bottom:22px;right:calc(50% - 210px + 16px);width:54px;height:54px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(217,119,87,.4);transition:transform .15s;font-size:26px;color:#fff;font-weight:300;}
+.fab{position:fixed;bottom:22px;right:max(16px,calc((100vw - 720px)/2 + 16px));width:54px;height:54px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(217,119,87,.4);transition:transform .15s;font-size:26px;color:#fff;font-weight:300;}
 .fab:hover{transform:scale(1.06);}
 /* DETAIL VIEW */
-.detail-view{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;height:100vh;background:var(--bg);overflow-y:auto;flex-direction:column;z-index:10;}
+.detail-view{display:none;position:fixed;inset:0 auto 0 50%;transform:translateX(-50%);width:100%;max-width:720px;height:100dvh;background:var(--bg);overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;flex-direction:column;z-index:10;box-shadow:0 0 32px rgba(0,0,0,.28);}
 .detail-header{background:var(--bg2);padding:13px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;}
 .back-btn{color:var(--accent);font-size:24px;cursor:pointer;flex-shrink:0;line-height:1;}
 .detail-title-wrap{flex:1;min-width:0;}
@@ -109,8 +110,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .inst-tab{background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
 .inst-tab.active{background:var(--accent2);border-color:rgba(217,119,87,0.4);}
 /* CHORD STRIP */
-.chord-strip-wrap{display:flex;overflow-x:auto;padding:12px 14px;gap:6px;background:var(--bg2);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;}
-.chord-card{text-align:center;flex-shrink:0;}
+.chord-strip-wrap{display:flex;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:12px 16px 15px;scroll-padding-inline:16px;gap:10px;background:var(--bg2);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;touch-action:pan-x;scrollbar-width:thin;scrollbar-color:var(--accent) var(--bg3);}
+.chord-strip-wrap::-webkit-scrollbar{height:6px;}
+.chord-strip-wrap::-webkit-scrollbar-track{background:var(--bg3);border-radius:6px;}
+.chord-strip-wrap::-webkit-scrollbar-thumb{background:var(--accent);border-radius:6px;}
+.chord-card{display:flex;flex:0 0 auto;min-width:112px;max-width:none;min-height:118px;padding:7px 10px;text-align:center;align-items:center;justify-content:flex-start;flex-direction:column;border:1px solid var(--border);border-radius:10px;background:var(--bg);}
+.chord-card-name{width:100%;min-height:20px;margin-bottom:5px;color:var(--accent);font:700 13px/1.25 Arial,sans-serif;white-space:nowrap;overflow:visible;text-align:center;}
+.chord-card svg{display:block;flex:none;max-width:none;}
+.chord-card-unavailable{min-width:144px;justify-content:center;}
+.chord-unavailable-message{max-width:120px;color:var(--text2);font-size:11px;line-height:1.35;}
 /* CHORD BLOCKS - estilo WhatsApp com blocos */
 .detail-body{padding:16px 20px;}
 .wa-block{background:var(--bg3);border-radius:10px;border:1px solid var(--border);padding:14px 16px;margin-bottom:14px;}
@@ -118,17 +126,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .letra-linha{font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:#ffffff;margin:4px 0 0;}
 /* MODO PALCO */
 .stage-mode .detail-header .back-btn,
-.stage-mode .detail-header .detail-key-badge,
-.stage-mode .transpose-bar,
 .stage-mode #capo-banner,
 .stage-mode .btn-row,
 .stage-mode .stage-hide{display:none!important;}
+.stage-mode #chord-diagrams-section,
+.stage-mode #inst-modal{display:none!important;}
 .stage-mode .chord-block{background:transparent;border:none;margin-bottom:8px;}
 .stage-mode .chord-block summary{font-size:20px;padding:6px 0;}
 .stage-mode .chord-line{font-size:var(--stage-chord-size,28px);line-height:2.2;}
-.stage-mode .detail-body{padding:8px;}
+.stage-mode .detail-body{padding:12px clamp(10px,3vw,28px);}
 /* TOOLBAR PALCO */
 .stage-toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;}
+.stage-toolbar[hidden]{display:none!important;}
+.stage-btn[hidden]{display:none!important;}
+.stage-btn:disabled{opacity:.38;cursor:not-allowed;}
 .stage-btn{flex:1;padding:8px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;}
 .stage-btn-palco{background:rgba(217,119,87,.15);color:var(--accent);border:1.5px solid var(--accent);}
 .stage-btn-palco.active{background:var(--accent);color:#fff;}
@@ -159,7 +170,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .sl-count{font-size:11px;background:var(--bg3);color:var(--text2);padding:3px 8px;border-radius:10px;flex-shrink:0;}
 /* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);z-index:30;display:none;align-items:flex-end;justify-content:center;}
-.modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding:18px 16px 24px;max-height:92vh;overflow-y:auto;}
+.modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:620px;padding:18px 16px 24px;max-height:92dvh;overflow-x:hidden;overflow-y:auto;}
 .modal-handle{width:34px;height:3px;background:var(--bg3);border-radius:2px;margin:0 auto 16px;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;}
 .form-group{margin-bottom:11px;}
@@ -179,6 +190,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 /* SD numbered */
 .sd-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .sd-num{width:24px;height:24px;background:var(--accent2);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+@media (max-width:520px){
+  .app{box-shadow:none;}
+  .detail-view{box-shadow:none;}
+}
+@media (max-width:360px){
+  .topbar{padding:11px 8px;gap:7px;}
+  .topbar-icon{font-size:19px;}
+  .topbar-title{font-size:15px;}
+  .export-library-btn{padding:6px 7px;font-size:10px;}
+  .tab{font-size:12px;padding-inline:2px;}
+  .transpose-bar{margin-inline:8px;padding:8px;gap:5px;}
+  .transpose-label{display:none;}
+  .stage-toolbar{padding:8px;gap:4px;}
+  .stage-btn{min-width:0;padding:7px 4px;font-size:11px;}
+  .detail-body{padding-inline:12px;}
+}
 </style>
 </head>
 <body>
@@ -234,7 +261,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <span class="detail-key-badge" id="detail-key"></span>
     </div>
     <!-- ACORDES + INSTRUMENTO -->
-    <div style="background:var(--bg2);border-bottom:1px solid var(--border);">
+    <div id="chord-diagrams-section" style="background:var(--bg2);border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px 4px;">
         <span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase;">Acordes</span>
         <button id="inst-btn" onclick="openInstModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:5px;">
@@ -282,10 +309,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
     </div>
     <div class="stage-toolbar" aria-label="Controles de apresentação">
-      <button class="stage-btn" onclick="navigateSong(-1)" title="Música anterior">← Anterior</button>
+      <button class="stage-btn" id="btn-previous-song" onclick="navigateSong(-1)" title="Música anterior" hidden>← Anterior</button>
       <button class="stage-btn" id="btn-speed" onclick="cycleScrollSpeed()" title="Velocidade do auto-scroll">Vel. 1x</button>
       <button class="stage-btn" id="btn-font" onclick="cycleStageFont()" title="Tamanho das cifras">Fonte M</button>
-      <button class="stage-btn" onclick="navigateSong(1)" title="Próxima música">Próxima →</button>
+      <button class="stage-btn" id="btn-next-song" onclick="navigateSong(1)" title="Próxima música" hidden>Próxima →</button>
     </div>
     <div class="detail-body" id="detail-content"></div>
   </div>
@@ -313,6 +340,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 <script src="js/storage.js"></script>
 <script src="js/export-library.js"></script>
+<script src="js/chord-utils.js"></script>
+<script src="js/navigation-context.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -594,28 +623,7 @@ const CHORD_NOTES={
 
 function getChordData(name){
   const db=CHORD_DB[currentInstrument]||CHORD_DB.violao;
-  if(db[name]) return db[name];
-  // mapa enarmônico completo (maior e menor)
-  const enarMap={
-    // maiores
-    'C#':'Db','Db':'C#','D#':'Eb','Eb':'D#',
-    'F#':'Gb','Gb':'F#','G#':'Ab','Ab':'G#','A#':'Bb','Bb':'A#',
-    // menores
-    'C#m':'Dbm','Dbm':'C#m','D#m':'Ebm','Ebm':'D#m',
-    'F#m':'Gbm','Gbm':'F#m','G#m':'Abm','Abm':'G#m','A#m':'Bbm','Bbm':'A#m'
-  };
-  const alias=enarMap[name];
-  if(alias&&db[alias]) return db[alias];
-  // tenta remover sufixo e recolocar (ex: 'Gbm7' → busca 'F#m7')
-  const roots=['C#','Db','D#','Eb','F#','Gb','G#','Ab','A#','Bb'];
-  for(const r of roots){
-    if(name.startsWith(r)){
-      const suf=name.slice(r.length);
-      const alt=enarMap[r]||r;
-      if(db[alt+suf]) return db[alt+suf];
-    }
-  }
-  return null;
+  return chordUtils.findEquivalent(db,name)?.value||null;
 }
 
 // Adiciona acordes enarmônicos faltantes ao banco
@@ -637,13 +645,12 @@ function drawChordSVG(data, name, strings=6){
   const S=strings,FRETS=4;
   const SW=strings===4?15:12, FH=14;
   const PADL=strings>4?(baseFret>1?16:10):8, PADR=8;
-  const NAME_H=18, MARK_H=14, NUT_H=3, GRID_H=FRETS*FH, PADB=8;
+  const NAME_H=0, MARK_H=14, NUT_H=3, GRID_H=FRETS*FH, PADB=8;
   const gridW=(S-1)*SW;
   const W=PADL+gridW+PADR, H=NAME_H+MARK_H+NUT_H+GRID_H+PADB;
   const gridX=PADL, gridY=NAME_H+MARK_H+NUT_H;
   let g='';
   g+=`<rect width="${W}" height="${H}" rx="8" fill="#1a1a2e"/>`;
-  g+=`<text x="${gridX+gridW/2}" y="13" fill="#d97757" font-size="13" text-anchor="middle" font-family="Arial" font-weight="bold">${name}</text>`;
   if(baseFret>1) g+=`<text x="${gridX-3}" y="${gridY+FH*0.7}" fill="#aaa" font-size="9" text-anchor="end" font-family="Arial">${baseFret}</text>`;
   if(baseFret===1) g+=`<rect x="${gridX}" y="${NAME_H+MARK_H}" width="${gridW}" height="${NUT_H}" fill="#e9edef" rx="1.5"/>`;
   for(let f=1;f<=FRETS;f++) g+=`<line x1="${gridX}" y1="${gridY+f*FH}" x2="${gridX+gridW}" y2="${gridY+f*FH}" stroke="#2a2a4a" stroke-width="1"/>`;
@@ -662,7 +669,7 @@ function drawChordSVG(data, name, strings=6){
       if(fingers[si]>0) g+=`<text x="${x}" y="${fy+3.5}" fill="#fff" font-size="8.5" text-anchor="middle" font-family="Arial" font-weight="bold">${fingers[si]}</text>`;
     }
   });
-  return `<div class="chord-card" style="flex-shrink:0;display:inline-block;margin:0 4px;"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;">${g}</svg></div>`;
+  return `<div class="chord-card"><div class="chord-card-name">${name}</div><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg></div>`;
 }
 
 
@@ -689,8 +696,8 @@ function drawPianoSVG(noteString, name){
     g+=`<rect x="${x}" y="0" width="${BKW}" height="${BKH}" rx="2" fill="${on?'#d97757':'#2a2a2a'}" stroke="${on?'#b05030':'#111'}" stroke-width="0.5"/>`;
     if(on) g+=`<text x="${x+BKW/2}" y="${BKH-4}" fill="#fff" font-size="7" text-anchor="middle" font-family="Arial" font-weight="bold">${n.replace('#','#')}</text>`;
   });
-  return `<div class="chord-card" style="flex-shrink:0;padding:4px 10px;text-align:center;">
-    <div style="color:#d97757;font-size:13px;font-weight:700;font-family:Arial;margin-bottom:5px;">${name}</div>
+  return `<div class="chord-card" style="min-width:${totalW+22}px;">
+    <div class="chord-card-name">${name}</div>
     <svg width="${totalW}" height="${WKH+2}" viewBox="0 0 ${totalW} ${WKH+2}" xmlns="http://www.w3.org/2000/svg">${g}</svg>
     <div style="color:#8696a0;font-size:10px;margin-top:3px;font-family:Arial;">${raw.join(' · ')}</div>
   </div>`;
@@ -699,13 +706,26 @@ function drawPianoSVG(noteString, name){
 function extractChords(m){
   const txt=m.blocos.map(b=>b.c).join('\n');
   const seen=new Set(), result=[];
-  const re=/\b([A-G][#b]?(?:m(?:aj)?7?|M7|7|9|11|4|sus[24]?|dim|aug|add9)?)\b/g;
+  const re=/\b([A-Ga-g][#b♯♭]?(?:m(?:aj)?7?|M7|7m?|9|11|4|2|sus[24]?|dim|aug|add9)?(?:\([^)]+\))?(?:\/[A-Ga-g][#b♯♭]?)?)\b/g;
   let match;
   while((match=re.exec(txt))!==null){
-    const base=match[1].split('/')[0];
-    if(!seen.has(base)){seen.add(base);result.push(base);}
+    const chord=chordUtils.normalizeChordName(match[1]);
+    if(!seen.has(chord)){seen.add(chord);result.push(chord);}
   }
   return result;
+}
+
+const missingDiagramRegistry=new Map();
+function registerMissingDiagram(name){
+  const key=currentInstrument+':'+name;
+  if(missingDiagramRegistry.has(key)) return;
+  missingDiagramRegistry.set(key,{instrumento:currentInstrument,acorde:name});
+  console.info('[Diagramas] Diagrama não disponível:',currentInstrument,name);
+}
+function getMissingDiagramReport(){return [...missingDiagramRegistry.values()];}
+function renderUnavailableChord(name){
+  registerMissingDiagram(name);
+  return `<div class="chord-card chord-card-unavailable"><div class="chord-card-name">${name}</div><div class="chord-unavailable-message">Diagrama não disponível</div></div>`;
 }
 
 function renderChordStrip(m){
@@ -719,21 +739,18 @@ function renderChordStrip(m){
   let html='';
   if(currentInstrument==='teclado'){
     html=chords.map(name=>{
-      const notes=CHORD_NOTES[name];
-      if(!notes) return `<div class="chord-card" style="padding:4px 10px;text-align:center;flex-shrink:0;"><div style="color:#d97757;font-size:13px;font-weight:700;font-family:Arial;">${name}</div><div style="color:#555;font-size:10px;margin-top:4px;">—</div></div>`;
-      return drawPianoSVG(notes, name);
+      const notes=chordUtils.findEquivalent(CHORD_NOTES,name)?.value;
+      return notes?drawPianoSVG(notes,name):renderUnavailableChord(name);
     }).join('');
   } else if(currentInstrument==='cavaco'){
     html=chords.map(name=>{
       const data=getChordData(name);
-      if(!data) return `<div class="chord-card" style="padding:4px 10px;text-align:center;flex-shrink:0;"><div style="color:#d97757;font-size:13px;font-weight:700;">${name}</div><div style="color:#555;font-size:10px;margin-top:2px;">—</div></div>`;
-      return drawChordSVG(data, name, 4);
+      return data?drawChordSVG(data,name,4):renderUnavailableChord(name);
     }).join('');
   } else {
     html=chords.map(name=>{
       const data=getChordData(name);
-      if(!data) return `<div class="chord-card" style="padding:4px 10px;text-align:center;flex-shrink:0;"><div style="color:#d97757;font-size:13px;font-weight:700;">${name}</div><div style="color:#555;font-size:10px;margin-top:2px;">—</div></div>`;
-      return drawChordSVG(data, name, strings);
+      return data?drawChordSVG(data,name,strings):renderUnavailableChord(name);
     }).join('');
   }
   el.innerHTML=`<div class="chord-strip-wrap">${html}</div>`;
@@ -915,7 +932,23 @@ function renderDetail(){
     </div>`;
 }
 
-function openDetail(id){
+function updatePlaylistNavigation(){
+  const availability=navigationContext.availability();
+  const previousButton=document.getElementById('btn-previous-song');
+  const nextButton=document.getElementById('btn-next-song');
+  if(!previousButton||!nextButton) return;
+  previousButton.hidden=!availability.active;
+  nextButton.hidden=!availability.active;
+  previousButton.disabled=!availability.canPrevious;
+  nextButton.disabled=!availability.canNext;
+}
+
+function openDetail(id,options={}){
+  if(options.playlistContext){
+    navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
+  } else if(!options.preserveNavigation){
+    navigationContext.clear();
+  }
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0; currentInstrument='violao';
   const m=musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!m) return;
@@ -935,8 +968,18 @@ function openDetail(id){
   if(capoRow) capoRow.style.display='flex';
   renderDetail();
   renderChordStrip(m);
+  updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');
   vd.style.display='flex'; vd.style.zIndex='20';
+}
+
+function openDetailFromPlaylist(playlistId,index){
+  const playlist=setlists.find(item=>String(item.id)===String(playlistId));
+  if(!playlist) return;
+  const orderedIds=playlist.musicas.filter(songId=>musicas.some(song=>String(song.id)===String(songId)));
+  const songId=orderedIds[index];
+  if(songId===undefined) return;
+  openDetail(songId,{playlistContext:{playlistId:playlist.id,songIds:orderedIds,currentIndex:index}});
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
 let stageMode=false, scrollTimer=null, scrollSpeed=60;
@@ -963,6 +1006,8 @@ function toggleStageModeBtn(){
 function closeDetail(){
   stopAutoScroll();
   stageMode=false;
+  navigationContext.clear();
+  updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');
   vd.classList.remove('stage-mode');
   vd.style.display='none';
@@ -993,12 +1038,9 @@ function stopAutoScroll(){
 }
 
 function navigateSong(direction){
-  if(currentDetailId===null) return;
-  const ordered=[...musicas].sort((a,b)=>a.title.localeCompare(b.title,'pt'));
-  const currentIndex=ordered.findIndex(m=>String(m.id)===String(currentDetailId));
-  if(currentIndex===-1) return;
-  const nextIndex=(currentIndex+direction+ordered.length)%ordered.length;
-  openDetail(ordered[nextIndex].id);
+  const target=navigationContext.move(direction);
+  if(!target){updatePlaylistNavigation();return;}
+  openDetail(target.songId,{preserveNavigation:true});
 }
 
 const stageSpeeds=[90,60,35];
@@ -1378,7 +1420,7 @@ function openSD(id){
   document.getElementById('sd-content').innerHTML=
     (ms.length===0?'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música nesta playlist</p></div>':
     ms.map((m,i)=>`
-    <div class="sd-row" style="cursor:pointer;" onclick="openDetail('${m.id}')">
+    <div class="sd-row" style="cursor:pointer;" onclick="openDetailFromPlaylist('${id}',${i})">
       <span class="sd-num">${i+1}</span>
       <div style="flex:1;min-width:0;pointer-events:none;">
         <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.title}</div>
