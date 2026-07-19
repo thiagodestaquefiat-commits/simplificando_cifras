@@ -9,3 +9,5 @@ Estas propostas não fazem parte da estabilização atual e não foram implement
 - Integrar IA exclusivamente por backend seguro, com limites, auditoria e confirmação antes de importar conteúdo musical.
 - Adicionar testes automatizados de interação e auditoria de acessibilidade.
 - Avaliar favoritos e modo de estudo após validação da base estabilizada.
+- Ampliar o banco de diagramas somente com posições musicalmente revisadas, priorizando acordes registrados como indisponíveis em uso real.
+- Criar bancos validados específicos para viola caipira e demais afinações, evitando reutilização automática de desenhos de outro instrumento.
