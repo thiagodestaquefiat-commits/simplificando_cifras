@@ -1,9 +1,10 @@
-const CACHE_NAME = "simplificando-cifras-v8";
+const CACHE_NAME = "simplificando-cifras-v10";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/export-library.js",
+  "./js/chord-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
   "./manifest.webmanifest",
