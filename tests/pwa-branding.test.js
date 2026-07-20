@@ -6,15 +6,27 @@ const { chromium } = require("playwright");
 
 const projectRoot = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.webmanifest"), "utf8"));
+const html = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
+const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
 const requiredSizes = [48, 72, 96, 128, 192, 256, 512];
 
 for (const size of requiredSizes) {
   const icon = manifest.icons.find((item) => item.sizes === `${size}x${size}`);
   assert.ok(icon, `Ícone ${size}x${size} ausente no manifesto`);
+  assert.equal(icon.src, `assets/icons/pwa-icon-v9-${size}.png`);
   assert.ok(fs.existsSync(path.join(projectRoot, icon.src)), `Arquivo ${icon.src} ausente`);
 }
 assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
+assert.equal(manifest.shortcuts, undefined);
+assert.match(html, /manifest\.webmanifest\?v=9/);
+assert.match(html, /logo-simplificando-cifras-v9\.png/);
+assert.match(html, /pwa-icon-v9-48\.png/);
+assert.match(html, /pwa-icon-v9-96\.png/);
+assert.match(html, /pwa-icon-v9-192\.png/);
+assert.doesNotMatch(html, /mask-icon/i);
+assert.match(serviceWorker, /simplificando-cifras-v9/);
+assert.doesNotMatch(serviceWorker, /icon\.svg|assets\/icons\/icon-|simplificando-cifras-v8/);
 
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;

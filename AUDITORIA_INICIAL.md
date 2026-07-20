@@ -8,7 +8,7 @@ Base auditada: commit `291f590` (`main`)
 
 - `index.html`: versão mais completa e atualmente executada; contém HTML, CSS, JavaScript e as 86 músicas embutidas.
 - `app.js`, `data.js` e `styles.css`: segunda versão do aplicativo, separada por arquivos, mas não referenciada pelo `index.html`.
-- `manifest.webmanifest`, `service-worker.js` e `icon.svg`: camada PWA.
+- `manifest.webmanifest`, `service-worker.js` e `assets/icons/`: camada PWA.
 
 ## Versão principal identificada
 

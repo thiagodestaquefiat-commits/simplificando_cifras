@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v8";
+const CACHE_NAME = "simplificando-cifras-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,16 +6,15 @@ const ASSETS = [
   "./js/export-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
-  "./manifest.webmanifest",
-  "./icon.svg",
-  "./assets/logo-simplificando-cifras.png",
-  "./assets/icons/icon-48.png",
-  "./assets/icons/icon-72.png",
-  "./assets/icons/icon-96.png",
-  "./assets/icons/icon-128.png",
-  "./assets/icons/icon-192.png",
-  "./assets/icons/icon-256.png",
-  "./assets/icons/icon-512.png"
+  "./manifest.webmanifest?v=9",
+  "./assets/logo-simplificando-cifras-v9.png",
+  "./assets/icons/pwa-icon-v9-48.png",
+  "./assets/icons/pwa-icon-v9-72.png",
+  "./assets/icons/pwa-icon-v9-96.png",
+  "./assets/icons/pwa-icon-v9-128.png",
+  "./assets/icons/pwa-icon-v9-192.png",
+  "./assets/icons/pwa-icon-v9-256.png",
+  "./assets/icons/pwa-icon-v9-512.png"
 ];
 
 self.addEventListener("install", (event) => {
