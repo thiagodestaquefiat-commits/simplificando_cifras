@@ -6,15 +6,34 @@ const { chromium } = require("playwright");
 
 const projectRoot = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.webmanifest"), "utf8"));
-const requiredSizes = [48, 72, 96, 128, 192, 256, 512];
+const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
+const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
+const requiredIcons = [
+  ["assets/icons/pwa-icon-v10-192.png", "192x192", "any"],
+  ["assets/icons/pwa-icon-v10-512.png", "512x512", "any"],
+  ["assets/icons/pwa-icon-v10-maskable-192.png", "192x192", "maskable"],
+  ["assets/icons/pwa-icon-v10-maskable-512.png", "512x512", "maskable"]
+];
+assert.equal(manifest.icons.length, requiredIcons.length);
 
-for (const size of requiredSizes) {
-  const icon = manifest.icons.find((item) => item.sizes === `${size}x${size}`);
-  assert.ok(icon, `Ícone ${size}x${size} ausente no manifesto`);
+for (const [src, sizes, purpose] of requiredIcons) {
+  const icon = manifest.icons.find((item) => item.src === src && item.sizes === sizes && item.purpose === purpose);
+  assert.ok(icon, `Ícone ${src} (${purpose}) ausente no manifesto`);
   assert.ok(fs.existsSync(path.join(projectRoot, icon.src)), `Arquivo ${icon.src} ausente`);
 }
+assert.equal(manifest.name, "Simplificando Cifras");
+assert.equal(manifest.short_name, "Cifras");
+assert.equal(manifest.start_url, ".");
+assert.equal(manifest.scope, ".");
+assert.equal(manifest.display, "standalone");
 assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
+assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
+assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
+assert.match(serviceWorker, /simplificando-cifras-v11/);
+assert.match(serviceWorker, /self\.skipWaiting\(\)/);
+assert.match(serviceWorker, /self\.clients\.claim\(\)/);
+assert.doesNotMatch(serviceWorker, /\.\/icon\.svg|\.\/assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|"\.\/manifest\.webmanifest"/);
 
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
@@ -53,6 +72,15 @@ const server = http.createServer((request, response) => {
   try {
     const url = `http://127.0.0.1:${server.address().port}/`;
     await page.goto(url, { waitUntil: "domcontentloaded" });
+    const devtools = await context.newCDPSession(page);
+    const appManifest = await devtools.send("Page.getAppManifest");
+    assert.deepEqual(appManifest.errors, [], `Manifesto inválido no Chrome DevTools: ${JSON.stringify(appManifest.errors)}`);
+    assert.match(appManifest.url, /manifest\.webmanifest\?v=10$/);
+    for (const [src] of requiredIcons) {
+      const response = await page.request.get(new URL(src, url).href);
+      assert.equal(response.status(), 200, `${src} não retornou HTTP 200`);
+      assert.match(response.headers()["content-type"], /^image\/png(?:;|$)/, `${src} sem Content-Type image/png`);
+    }
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     page.once("dialog", (dialog) => dialog.dismiss());
@@ -61,7 +89,12 @@ const server = http.createServer((request, response) => {
       page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).click()
     ]);
     assert.match(download.suggestedFilename(), /^simplificando-cifras-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
-    await page.evaluate(() => navigator.serviceWorker.ready);
+    const serviceWorkerState = await page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.ready;
+      return { state: registration.active?.state, scriptURL: registration.active?.scriptURL };
+    });
+    assert.equal(serviceWorkerState.state, "activated");
+    assert.match(serviceWorkerState.scriptURL, /service-worker\.js$/);
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
     assert.equal(await page.title(), "Simplificando Cifras");

@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v10";
+const CACHE_NAME = "simplificando-cifras-v11";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,30 +7,28 @@ const ASSETS = [
   "./js/chord-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
-  "./manifest.webmanifest",
-  "./icon.svg",
+  "./manifest.webmanifest?v=10",
   "./assets/logo-simplificando-cifras.png",
-  "./assets/icons/icon-48.png",
-  "./assets/icons/icon-72.png",
-  "./assets/icons/icon-96.png",
-  "./assets/icons/icon-128.png",
-  "./assets/icons/icon-192.png",
-  "./assets/icons/icon-256.png",
-  "./assets/icons/icon-512.png"
+  "./assets/icons/pwa-icon-v10-192.png",
+  "./assets/icons/pwa-icon-v10-512.png",
+  "./assets/icons/pwa-icon-v10-maskable-192.png",
+  "./assets/icons/pwa-icon-v10-maskable-512.png"
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(ASSETS);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    ))
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
