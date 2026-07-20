@@ -30,8 +30,13 @@
     };
   }
 
+  function normalizeForLookup(value) {
+    const parsed = global.chordLibrary && global.chordLibrary.parseChord(value);
+    return parsed ? parsed.canonicalName : normalizeChordName(value);
+  }
+
   function lookupCandidates(value) {
-    const { shapeName } = splitChord(value);
+    const { shapeName } = splitChord(normalizeForLookup(value));
     const candidates = [shapeName];
     const rootMatch = shapeName.match(/^([A-G](?:#|b)?)(.*)$/);
     if (rootMatch) {
@@ -59,6 +64,7 @@
 
   global.chordUtils = Object.freeze({
     normalizeChordName,
+    normalizeForLookup,
     splitChord,
     lookupCandidates,
     findEquivalent

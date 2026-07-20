@@ -93,6 +93,11 @@ async function openApp(browser, baseUrl, width, height) {
 
     const { context, page, errors } = await openApp(browser, baseUrl, 320, 640);
 
+    const missingCatalogChords = await page.evaluate(() => [...new Set(
+      musicas.flatMap((musica) => extractChords(musica)).filter((name) => !chordLibrary.resolve(name))
+    )]);
+    assert.deepEqual(missingCatalogChords, [], `Acordes do catálogo sem diagrama: ${missingCatalogChords.join(", ")}`);
+
     await page.getByPlaceholder("Buscar música ou tom...").fill("A alegria");
     await page.getByText("A alegria", { exact: true }).click();
     assert.equal(await page.locator("#btn-previous-song").isVisible(), false);
@@ -133,8 +138,10 @@ async function openApp(browser, baseUrl, width, height) {
     await page.locator(".back-btn").first().click();
     await page.getByPlaceholder("Buscar música ou tom...").fill("");
     await page.getByText("Quem é esse", { exact: true }).click();
-    assert.ok(await page.locator(".chord-card-unavailable").count() > 0);
-    assert.ok(await page.getByText("Diagrama não disponível", { exact: true }).count() > 0);
+    assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
+    assert.ok(await page.getByText("A9", { exact: true }).count() > 0);
+    assert.ok(await page.getByText("B2", { exact: true }).count() > 0);
+    assert.ok(await page.getByText("F#11", { exact: true }).count() > 0);
     await page.locator(".back-btn").first().click();
 
     await page.getByText("Playlists", { exact: false }).click();
