@@ -1,5 +1,15 @@
 # Changelog
 
+## Sprint 4 — evolução da identidade visual
+
+- Aplicado o novo logo oficial com nota musical, circuitos tecnológicos e degradê verde-azul.
+- Adotada a tipografia Inter e a paleta azul `#2563EB`, verde `#22C55E`, branco e cinzas neutros sobre fundo escuro.
+- Atualizados visualmente cabeçalho, biblioteca, busca, playlists, medleys, música, Modo Palco, formulários, modais, abas, botões, FAB e mensagens.
+- Reorganizados espaçamentos, contraste, foco de teclado, sombras, cantos e estados interativos, sem alterar fluxos ou regras de negócio.
+- Gerados ícones PNG da PWA nos tamanhos 48, 72, 96, 128, 192, 256 e 512 pixels.
+- Atualizados favicon, manifesto, cores de instalação e cache offline para a versão 8.
+- Preservados integralmente catálogo, playlists, medleys, favoritos, busca, exportação, diagramas, transposição e Modo Palco.
+
 ## Sprint — responsividade, palco e diagramas
 
 - Ampliada a largura máxima de leitura no computador, mantendo o aplicativo centralizado e em largura total no celular.

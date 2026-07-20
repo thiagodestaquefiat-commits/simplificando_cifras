@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simplificando Cifras</title>
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#07111f">
 <meta name="description" content="App de cifras simplificadas com playlists, medley, transposição e modo palco.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icon-48.png" sizes="48x48" type="image/png">
+<link rel="icon" href="assets/icons/icon-96.png" sizes="96x96" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png" sizes="192x192">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#1a1a2e;--bg2:#22223b;--bg3:#2d2d44;
@@ -206,6 +208,43 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   .stage-btn{min-width:0;padding:7px 4px;font-size:11px;}
   .detail-body{padding-inline:12px;}
 }
+/* IDENTIDADE VISUAL 2026 — somente apresentação */
+:root{--bg:#07111f;--bg2:#0b1728;--bg3:#111f33;--surface:#0e1c2f;--surface-hover:#142640;--accent:#2563eb;--accent-hover:#3b82f6;--accent2:rgba(37,99,235,.16);--success:#22c55e;--success-soft:rgba(34,197,94,.13);--text:#f8fafc;--text2:#94a3b8;--border:rgba(148,163,184,.15);--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.28)}
+html{background:#050b14}
+body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 12% 4%,rgba(37,99,235,.15),transparent 30rem),radial-gradient(circle at 88% 96%,rgba(34,197,94,.08),transparent 26rem),#050b14}
+button,input,textarea,select{font:inherit}
+button,.tab,.music-item,.setlist-item,.fab,.chip,.capo-opt{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.music-item:focus-visible{outline:3px solid rgba(59,130,246,.45);outline-offset:2px}
+.app{max-width:720px;background:linear-gradient(180deg,rgba(11,23,40,.98),var(--bg) 22%);border-inline:1px solid rgba(148,163,184,.08);box-shadow:0 0 70px rgba(0,0,0,.42)}
+.topbar{min-height:78px;padding:14px 18px;gap:13px;background:rgba(7,17,31,.88);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/logo-simplificando-cifras.png') center/cover no-repeat;box-shadow:0 7px 22px rgba(37,99,235,.26),inset 0 0 0 1px rgba(255,255,255,.1)}
+.topbar-title{font-size:18px;font-weight:800;letter-spacing:-.35px}.topbar-sub{font-size:11px;color:var(--success);font-weight:600;margin-top:3px}
+.export-library-btn{min-height:36px;padding:8px 12px;color:#dbeafe;background:rgba(37,99,235,.1);border:1px solid rgba(96,165,250,.32);border-radius:11px;font-size:10.5px;transition:background .2s,border-color .2s,transform .2s}
+.export-library-btn:hover{background:rgba(37,99,235,.2);border-color:#3b82f6;transform:translateY(-1px)}
+.tab-bar{position:relative;gap:6px;padding:7px 12px 9px;background:rgba(7,17,31,.92);border-bottom:1px solid var(--border)}
+.tab{min-height:42px;padding:11px 8px;border:1px solid transparent;border-radius:12px;color:var(--text2);font-size:12.5px;font-weight:600;transition:background .2s,color .2s,border-color .2s}
+.tab:hover{background:rgba(148,163,184,.06);color:#cbd5e1}.tab.active{color:#fff;border-color:rgba(59,130,246,.3);background:linear-gradient(135deg,rgba(37,99,235,.28),rgba(37,99,235,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.search-bar{padding:14px 14px 7px;background:transparent;border:0}.search-wrap::after{content:'⌘ K';position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:3px 6px;border:1px solid var(--border);border-radius:6px;color:#64748b;font-size:9px;pointer-events:none}.search-icon{left:14px;color:#64748b}
+.search-input{min-height:45px;padding:10px 52px 10px 40px;border:1px solid var(--border);border-radius:13px;background:rgba(17,31,51,.82);color:var(--text);font-size:13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025);transition:border-color .2s,box-shadow .2s,background .2s}
+.search-input:focus{background:var(--bg3);border-color:rgba(59,130,246,.65);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.ai-search-bar{margin:7px 14px 12px;min-height:46px;padding:7px 8px 7px 13px;border:1px solid var(--border);border-radius:13px;background:rgba(17,31,51,.62)}.ai-search-bar:focus-within{border-color:rgba(59,130,246,.65);box-shadow:0 0 0 3px rgba(37,99,235,.1)}.ai-search-btn{min-height:32px;padding:7px 14px;border-radius:9px;background:var(--accent)}.ai-search-btn:hover{background:var(--accent-hover);opacity:1}
+.content{padding:4px 12px 84px;scrollbar-width:thin;scrollbar-color:#243752 transparent}.section-label{position:sticky;top:0;z-index:2;padding:12px 6px 7px;color:#60a5fa;background:rgba(7,17,31,.94);backdrop-filter:blur(12px);font-size:10px;letter-spacing:1.1px}
+.music-item,.setlist-item{gap:13px;min-height:66px;margin-bottom:7px;padding:11px 12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.82),rgba(11,23,40,.88));box-shadow:0 5px 16px rgba(0,0,0,.1);transition:transform .18s,border-color .18s,background .18s,box-shadow .18s}
+.music-item:hover,.setlist-item:hover{background:var(--surface-hover);border-color:rgba(96,165,250,.28);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.16)}
+.music-avatar,.sl-avatar{width:42px;height:42px;border-radius:12px;color:#93c5fd;background:linear-gradient(145deg,rgba(37,99,235,.22),rgba(34,197,94,.08));border:1px solid rgba(96,165,250,.16)}
+.music-title,.sl-title{font-size:14px;font-weight:700;letter-spacing:-.1px}.music-sub,.sl-sub{color:var(--text2);font-size:11.5px;margin-top:4px}.key-badge,.detail-key-badge{color:#bfdbfe;background:rgba(37,99,235,.16);border:1px solid rgba(96,165,250,.22);border-radius:9px;padding:5px 9px}.sl-count{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.18)}
+.fab{right:max(18px,calc((100vw - 720px)/2 + 18px));bottom:22px;width:58px;height:58px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 12px 32px rgba(37,99,235,.42)}.fab:hover{transform:translateY(-2px) scale(1.03)}
+.detail-view{max-width:720px;background:linear-gradient(180deg,#0b1728,var(--bg) 24%);box-shadow:var(--shadow)}.detail-header{min-height:68px;padding:12px 16px;background:rgba(7,17,31,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.back-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:rgba(37,99,235,.1);font-size:20px}.detail-title{font-size:16px;font-weight:800;letter-spacing:-.25px}.detail-capo,.detail-artist{font-size:11.5px;color:var(--text2)}
+#chord-diagrams-section,#capo-row{background:rgba(11,23,40,.75)!important}.chord-strip-wrap{padding:12px 14px 15px;background:transparent;gap:9px}.chord-card{min-width:114px;min-height:120px;border-color:var(--border);border-radius:14px;background:linear-gradient(155deg,rgba(17,31,51,.96),rgba(8,20,35,.96));box-shadow:0 7px 20px rgba(0,0,0,.16)}.chord-card-name{color:#60a5fa}.capo-opt{border-radius:9px;background:var(--bg3)}.capo-opt.active{background:var(--accent);border-color:#60a5fa;box-shadow:0 4px 12px rgba(37,99,235,.24)}
+.transpose-bar,.ai-result{border:1px solid var(--border);background:linear-gradient(145deg,rgba(17,31,51,.9),rgba(11,23,40,.92));box-shadow:0 7px 20px rgba(0,0,0,.12)}.transpose-key{color:#60a5fa}.t-btn{background:#16263c;border-color:rgba(148,163,184,.18)}.t-btn:hover{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}
+.stage-toolbar{gap:7px;padding:9px 14px;background:transparent;border-bottom:0}.stage-btn{min-height:38px;border-radius:10px;background:#132238;color:#cbd5e1;border:1px solid var(--border)}.stage-btn-palco{color:#93c5fd;background:rgba(37,99,235,.12);border-color:rgba(96,165,250,.32)}.stage-btn-palco.active{background:var(--accent)}.stage-btn-scroll{color:#86efac;background:var(--success-soft);border-color:rgba(34,197,94,.3)}.stage-btn-scroll.active{background:var(--success)}
+.detail-body{padding:14px 16px 28px}.wa-block,.medley-block{padding:16px;margin-bottom:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92));box-shadow:0 6px 20px rgba(0,0,0,.1)}.chord-line{color:#60a5fa}.letra-linha{color:#f8fafc}
+.btn{min-height:43px;border-radius:11px;transition:transform .18s,background .18s,border-color .18s,opacity .18s}.btn:hover{transform:translateY(-1px);opacity:1}.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 7px 18px rgba(37,99,235,.2)}.btn-outline{color:#93c5fd;border-color:rgba(96,165,250,.5)}
+.modal-overlay{background:rgba(2,6,13,.8);backdrop-filter:blur(6px)}.modal{max-width:640px;padding:20px 18px 28px;border:1px solid rgba(148,163,184,.16);border-bottom:0;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#12233a,#0b1728);box-shadow:0 -20px 60px rgba(0,0,0,.36)}.modal-handle{width:42px;background:#334155}.modal-title{font-size:17px;font-weight:800;letter-spacing:-.2px}.form-input,.form-textarea{min-height:43px;border-color:var(--border);border-radius:11px;background:#0d1b2e}.form-input:focus,.form-textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(37,99,235,.12)}.chip{border-radius:9px;background:#132238}.chip.selected{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}.empty-state{padding:64px 22px}.stage-mode .detail-header{background:rgba(5,11,20,.92)}.stage-mode .chord-block{box-shadow:none}
+@media (min-width:721px){.modal-overlay{align-items:center;padding:24px}.modal{border-radius:22px;border-bottom:1px solid rgba(148,163,184,.16);max-height:88dvh}}
+@media (max-width:520px){.app,.detail-view{border:0}.topbar{min-height:70px;padding:11px 12px}.topbar-icon{width:42px;height:42px;flex-basis:42px;border-radius:12px}.topbar-title{font-size:16px}.tab-bar{padding-inline:9px}.content{padding-inline:9px}.music-item,.setlist-item{min-height:63px;margin-bottom:6px}.search-wrap::after{display:none}.search-input{padding-right:14px}}
+@media (max-width:360px){.topbar{gap:8px}.topbar-icon{width:38px;height:38px;flex-basis:38px}.export-library-btn{max-width:72px;white-space:normal;line-height:1.05}.tab{font-size:11px;padding:9px 3px}.music-item{padding-inline:9px;gap:9px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
