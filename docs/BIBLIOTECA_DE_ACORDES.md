@@ -1,6 +1,13 @@
 # Biblioteca de Acordes
 
-## Visão geral
+## Estado atual
+
+> A interface passou a utilizar a arquitetura multi-instrumentos documentada em
+> `docs/COBERTURA_MULTI_INSTRUMENTOS.md`. O arquivo `js/chord-library.js` permanece
+> temporariamente como camada legada de compatibilidade e referência dos 2.016
+> registros anteriores; ele não é mais a fonte dos diagramas selecionados na interface.
+
+## Biblioteca legada de violão
 
 O Simplificando Cifras possui uma biblioteca própria de diagramas para violão. Ela é carregada por `js/chord-library.js` e não depende do catálogo de músicas, de playlists nem do armazenamento do usuário.
 
