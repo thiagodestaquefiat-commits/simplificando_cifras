@@ -43,6 +43,10 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.getByText("Liberta-me de mim", { exact: true }).click();
+    assert.equal(await page.locator("#btn-speed").isVisible(), false);
+    assert.equal(await page.locator("#btn-font").isVisible(), false);
+    assert.equal(await page.locator("#btn-palco").textContent(), "Modo Palco");
+    assert.doesNotMatch(await page.locator("#btn-palco").textContent(), /🎭/);
     for (const instrument of instruments) {
       await page.locator("#inst-btn").click();
       await page.locator(`#inst-list [onclick="setInstrument('${instrument.id}')"]`).click();
@@ -53,6 +57,12 @@ const server = http.createServer((request, response) => {
       if (instrument.courses) assert.equal(await page.locator(".chord-card").first().getAttribute("data-courses"), instrument.courses);
       assert.equal(await page.locator(".chord-card-name", { hasText: "A9" }).count(), 1, `${instrument.name}: A9`);
       assert.equal(await page.locator(".chord-card-name", { hasText: "B4" }).count(), 1, `${instrument.name}: B4`);
+      if(instrument.id==="guitar"){
+        const b4=page.locator('.chord-card').filter({has:page.locator('.chord-card-name',{hasText:'B4'})});
+        assert.equal(await b4.locator('svg text').filter({hasText:/^1$/}).count(),1,'B4: pestana deve exibir um único dedo 1');
+        const a9=page.locator('.chord-card').filter({has:page.locator('.chord-card-name',{hasText:'A9'})});
+        assert.equal(await a9.locator('svg text').filter({hasText:/^[1-4]$/}).count(),4,'A9: quatro dedos independentes');
+      }
       assert.equal(await page.locator(".chord-card-name").first().evaluate((element) => getComputedStyle(element).color), "rgb(232, 137, 107)");
       assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("sc_instrument_v1"))), instrument.id);
       await page.locator("#view-detail").evaluate((element) => { element.scrollTop = 0; });
@@ -64,6 +74,17 @@ const server = http.createServer((request, response) => {
     await page.locator('button[onclick="transpose(+1)"]').click();
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.equal(await page.locator(".chord-card").first().getAttribute("data-instrument"), "viola-caipira-cebolao-e");
+
+    const savedSpeed=await page.locator("#btn-speed").textContent();
+    const savedFont=await page.locator("#btn-font").textContent();
+    await page.locator("#btn-palco").click();
+    assert.equal(await page.locator("#btn-speed").isVisible(), true);
+    assert.equal(await page.locator("#btn-font").isVisible(), true);
+    await page.locator("#btn-palco").click();
+    assert.equal(await page.locator("#btn-speed").isVisible(), false);
+    assert.equal(await page.locator("#btn-font").isVisible(), false);
+    assert.equal(await page.locator("#btn-speed").textContent(), savedSpeed);
+    assert.equal(await page.locator("#btn-font").textContent(), savedFont);
 
     await page.evaluate(() => {
       musicas.push({ id: "future-test", title: "Música futura", artist: "Importada ou IA", key: "C", capo: "", blocos: [{ l: "Letra preservada", c: "Cmaj9  Cm7(b5)  D/F#  Gadd9" }] });

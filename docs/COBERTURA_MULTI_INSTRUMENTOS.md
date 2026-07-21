@@ -44,6 +44,12 @@ Para instrumentos de corda, o resolvedor:
 
 Isso não transforma shapes de seis cordas em quatro cordas. Ukulele, cavaco e viola são resolvidos diretamente em suas próprias afinações.
 
+## Digitação e formas preferenciais
+
+As formas básicas de violão são curadas explicitamente e têm prioridade sobre o resolvedor avançado: `C`, `D`, `E`, `F`, `G`, `A`, `B`, seus menores, `A7`, `B7`, `C7`, `D7`, `E7`, `G7`, `C7M`, `D/F#`, `G/B`, `A9`, `B4`, `C#m7` e `F#m7(11)`.
+
+`validateFingering()` verifica dedos de 1 a 4, dedos em cordas pressionadas, repetição somente com pestana declarada, alcance da barra, dedos livres, ordem das casas e abertura da mão. Posições algorítmicas nunca inferem pestana por coincidência de casa e usam no máximo quatro dedos independentes. Formas curadas com pestana desenham uma barra contínua com um único número de dedo.
+
 O teclado usa renderer próprio. As notas são ordenadas a partir do baixo solicitado e a fundamental recebe destaque separado. Há suporte a posição fundamental e inversões compatíveis com a formação do acorde.
 
 ## Viola Caipira

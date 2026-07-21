@@ -12,6 +12,7 @@ const mandatory = [
   "C/E", "A9", "A4", "Asus4", "B4", "Bsus4", "C#m7", "F#m7(11)", "D/F#",
   "E/G#", "G/B", "Am/C", "Bb7M", "C#9", "Gadd9"
 ];
+const reviewedGuitar = ["C","D","E","F","G","A","B","Cm","Dm","Em","Fm","Gm","Am","Bm","A7","B7","C7","D7","E7","G7","C7M","D/F#","G/B","A9","B4","C#m7","F#m7(11)"];
 
 assert.equal(definitions.defaultId, "guitar");
 assert.equal(definitions.all.length, 5);
@@ -64,6 +65,12 @@ for (const alias of Object.keys(library.aliases).filter((value) => !["#5"].inclu
 }
 
 for (const instrument of definitions.all) {
+  assert.equal(library.preferredChords[instrument.id].length, reviewedGuitar.length);
+  for(const chord of library.preferredChords[instrument.id]){
+    const result=library.resolve(instrument.id,chord);
+    assert.ok(result,`${instrument.id}: preferencial ${chord}`);
+    assert.deepEqual(library.validateFingering(result.diagram),[],`${instrument.id}: digitação preferencial ${chord}`);
+  }
   for (const chord of ["A9", "B4", "E", "C#m7", "F#m7(11)", "Em", "Bm", "G", "D", "A"]) {
     assert.ok(library.resolve(instrument.id, chord), `${instrument.id}: repertório obrigatório ${chord}`);
   }
@@ -73,5 +80,22 @@ const keyboardInversion = library.resolve("keyboard", "C/E").diagram;
 assert.equal(keyboardInversion.notes[0], "E");
 assert.equal(keyboardInversion.renderer, "keyboard");
 assert.equal("frets" in keyboardInversion, false);
+
+for (const chord of reviewedGuitar) {
+  const diagram = library.resolve("guitar", chord).diagram;
+  assert.equal(diagram.curated, true, `${chord}: forma de violão não curada`);
+  assert.deepEqual(library.validateFingering(diagram), [], `${chord}: digitação`);
+  const uses = new Map();
+  diagram.fingers.forEach((finger, string) => { if (finger > 0) { if (!uses.has(finger)) uses.set(finger, []); uses.get(finger).push(string); } });
+  for (const [finger, strings] of uses) {
+    if (strings.length < 2) continue;
+    assert.ok(diagram.barres.some((barre) => barre.finger === finger && strings.every((string) => string >= barre.start && string <= barre.end)), `${chord}: dedo ${finger} repetido sem pestana`);
+  }
+}
+assert.deepEqual(library.resolve("guitar", "E").diagram.fingers, [0,2,3,1,0,0]);
+assert.deepEqual(library.resolve("guitar", "Em").diagram.fingers, [0,2,3,0,0,0]);
+assert.deepEqual(library.resolve("guitar", "G").diagram.fingers, [2,1,0,0,3,4]);
+assert.equal(library.resolve("guitar", "Bm").diagram.barres.length, 1);
+assert.deepEqual(library.resolve("guitar", "Bm").diagram.openStrings, []);
 
 console.log("multi-instrument-chords.test.js: OK (5 instrumentos, 252 canônicos por instrumento, cobertura 100%)");

@@ -8,16 +8,16 @@
     { suffix: "", label: "Maior", intervals: [0, 4, 7], required: [0, 4, 7] },
     { suffix: "m", label: "Menor", intervals: [0, 3, 7], required: [0, 3, 7] },
     { suffix: "5", label: "Quinta", intervals: [0, 7], required: [0, 7] },
-    { suffix: "6", label: "Sexta", intervals: [0, 4, 7, 9], required: [0, 4, 9, 7] },
-    { suffix: "m6", label: "Menor sexta", intervals: [0, 3, 7, 9], required: [0, 3, 9, 7] },
-    { suffix: "7", label: "Sétima dominante", intervals: [0, 4, 7, 10], required: [0, 4, 10, 7] },
-    { suffix: "maj7", label: "Sétima maior", intervals: [0, 4, 7, 11], required: [0, 4, 11, 7] },
-    { suffix: "m7", label: "Menor com sétima", intervals: [0, 3, 7, 10], required: [0, 3, 10, 7] },
-    { suffix: "mMaj7", label: "Menor com sétima maior", intervals: [0, 3, 7, 11], required: [0, 3, 11, 7] },
+    { suffix: "6", label: "Sexta", intervals: [0, 4, 7, 9], required: [0, 4, 9] },
+    { suffix: "m6", label: "Menor sexta", intervals: [0, 3, 7, 9], required: [0, 3, 9] },
+    { suffix: "7", label: "Sétima dominante", intervals: [0, 4, 7, 10], required: [0, 4, 10] },
+    { suffix: "maj7", label: "Sétima maior", intervals: [0, 4, 7, 11], required: [0, 4, 11] },
+    { suffix: "m7", label: "Menor com sétima", intervals: [0, 3, 7, 10], required: [0, 3, 10] },
+    { suffix: "mMaj7", label: "Menor com sétima maior", intervals: [0, 3, 7, 11], required: [0, 3, 11] },
     { suffix: "9", label: "Nona dominante", intervals: [0, 2, 4, 7, 10], required: [0, 4, 10, 2] },
     { suffix: "maj9", label: "Maior com nona", intervals: [0, 2, 4, 7, 11], required: [0, 4, 11, 2] },
     { suffix: "m9", label: "Menor com nona", intervals: [0, 2, 3, 7, 10], required: [0, 3, 10, 2] },
-    { suffix: "add9", label: "Add9", intervals: [0, 2, 4, 7], required: [0, 4, 2, 7] },
+    { suffix: "add9", label: "Add9", intervals: [0, 2, 4, 7], required: [0, 4, 2] },
     { suffix: "11", label: "Décima primeira", intervals: [0, 2, 4, 5, 7, 10], required: [0, 4, 10, 5] },
     { suffix: "m11", label: "Menor com décima primeira", intervals: [0, 2, 3, 5, 7, 10], required: [0, 3, 10, 5] },
     { suffix: "13", label: "Décima terceira", intervals: [0, 2, 4, 7, 9, 10], required: [0, 4, 10, 9] },
@@ -41,6 +41,41 @@
     "m7(b5)": "m7b5", "m7b5": "m7b5", "ø": "m7b5",
     aug: "aug", "+": "aug", "#5": "aug", "(#5)": "aug"
   });
+  const CURATED_FRETTED = Object.freeze({
+    guitar: Object.freeze({
+      C:{frets:[-1,3,2,0,1,0],fingers:[0,3,2,0,1,0]},
+      D:{frets:[-1,-1,0,2,3,2],fingers:[0,0,0,1,3,2]},
+      E:{frets:[0,2,2,1,0,0],fingers:[0,2,3,1,0,0]},
+      F:{frets:[1,3,3,2,1,1],fingers:[1,3,4,2,1,1],barres:[{fret:1,start:0,end:5,finger:1}]},
+      G:{frets:[3,2,0,0,3,3],fingers:[2,1,0,0,3,4]},
+      A:{frets:[-1,0,2,2,2,0],fingers:[0,0,1,2,3,0]},
+      B:{frets:[-1,2,4,4,4,2],fingers:[0,1,2,3,4,1],barres:[{fret:2,start:1,end:5,finger:1}]},
+      Cm:{frets:[-1,3,5,5,4,3],fingers:[0,1,3,4,2,1],barres:[{fret:3,start:1,end:5,finger:1}]},
+      Dm:{frets:[-1,-1,0,2,3,1],fingers:[0,0,0,2,3,1]},
+      Em:{frets:[0,2,2,0,0,0],fingers:[0,2,3,0,0,0]},
+      Fm:{frets:[1,3,3,1,1,1],fingers:[1,3,4,1,1,1],barres:[{fret:1,start:0,end:5,finger:1}]},
+      Gm:{frets:[3,5,5,3,3,3],fingers:[1,3,4,1,1,1],barres:[{fret:3,start:0,end:5,finger:1}]},
+      Am:{frets:[-1,0,2,2,1,0],fingers:[0,0,2,3,1,0]},
+      Bm:{frets:[-1,2,4,4,3,2],fingers:[0,1,3,4,2,1],barres:[{fret:2,start:1,end:5,finger:1}]},
+      A7:{frets:[-1,0,2,0,2,0],fingers:[0,0,1,0,2,0]},
+      B7:{frets:[-1,2,1,2,0,2],fingers:[0,2,1,3,0,4]},
+      C7:{frets:[-1,3,2,3,1,0],fingers:[0,3,2,4,1,0]},
+      D7:{frets:[-1,-1,0,2,1,2],fingers:[0,0,0,2,1,3]},
+      E7:{frets:[0,2,0,1,0,0],fingers:[0,2,0,1,0,0]},
+      G7:{frets:[3,2,0,0,0,1],fingers:[3,2,0,0,0,1]},
+      Cmaj7:{frets:[-1,3,2,0,0,0],fingers:[0,2,1,0,0,0]},
+      'D/F#':{frets:[2,-1,0,2,3,2],fingers:[1,0,0,2,4,3]},
+      'G/B':{frets:[-1,2,0,0,3,3],fingers:[0,1,0,0,3,4]},
+      A9:{frets:[-1,0,2,4,2,3],fingers:[0,0,1,4,2,3]},
+      Bsus4:{frets:[-1,2,4,4,5,2],fingers:[0,1,2,3,4,1],barres:[{fret:2,start:1,end:5,finger:1}]},
+      'C#m7':{frets:[-1,4,6,4,5,4],fingers:[0,1,3,1,2,1],barres:[{fret:4,start:1,end:5,finger:1}]},
+      'F#m11':{frets:[2,0,2,2,0,0],fingers:[1,0,2,3,0,0]}
+    })
+  });
+  const PREFERRED_CHORDS = Object.freeze(Object.fromEntries(global.instrumentDefinitions.all.map(instrument=>[
+    instrument.id,
+    Object.freeze(["C","D","E","F","G","A","B","Cm","Dm","Em","Fm","Gm","Am","Bm","A7","B7","C7","D7","E7","G7","Cmaj7","D/F#","G/B","A9","Bsus4","C#m7","F#m11"])
+  ])));
   const cache = new Map();
 
   function mod(value, divisor = 12) { return ((value % divisor) + divisor) % divisor; }
@@ -72,17 +107,37 @@
     return positive.length < 2 ? 0 : Math.max(...positive) - Math.min(...positive);
   }
   function fingerData(frets) {
-    const positive = [...new Set(frets.filter((fret) => fret > 0))].sort((a, b) => a - b);
-    const fingerByFret = new Map(positive.map((fret, index) => [fret, Math.min(4, index + 1)]));
-    const fingers = frets.map((fret) => fret > 0 ? fingerByFret.get(fret) : 0);
-    const barres = [];
-    for (const fret of positive) {
-      const indexes = frets.map((value, index) => value === fret ? index : -1).filter((index) => index >= 0);
-      if (indexes.length >= 2 && Math.max(...indexes) - Math.min(...indexes) + 1 === indexes.length) {
-        barres.push({ fret, start: Math.min(...indexes), end: Math.max(...indexes), finger: fingerByFret.get(fret) });
-      }
+    const positions = frets.map((fret, string) => ({ fret, string })).filter(({ fret }) => fret > 0).sort((left, right) => left.fret-right.fret||left.string-right.string);
+    const fingers = Array(frets.length).fill(0);
+    positions.forEach((position,index) => { fingers[position.string]=index+1; });
+    return { fingers, barres: [] };
+  }
+  function validateFingering(diagram) {
+    const errors=[];
+    if(!diagram||diagram.renderer==='keyboard') return errors;
+    const frets=diagram.frets||[], fingers=diagram.fingers||[], barres=diagram.barres||[];
+    if(frets.length!==fingers.length) errors.push('quantidade de dedos');
+    frets.forEach((fret,index)=>{
+      if(fret>0&&(fingers[index]<1||fingers[index]>4)) errors.push('dedo ausente/inválido');
+      if(fret<=0&&fingers[index]!==0) errors.push('dedo em corda aberta ou abafada');
+    });
+    const uses=new Map();
+    fingers.forEach((finger,index)=>{if(finger>0){if(!uses.has(finger))uses.set(finger,[]);uses.get(finger).push(index);}});
+    for(const [finger,indexes] of uses){
+      if(indexes.length<2) continue;
+      const barre=barres.find(item=>item.finger===finger&&indexes.every(index=>index>=item.start&&index<=item.end&&frets[index]>=item.fret));
+      if(!barre) errors.push(`dedo ${finger} repetido sem pestana`);
     }
-    return { fingers, barres };
+    for(const barre of barres){
+      if(barre.finger<1||barre.finger>4||barre.start<0||barre.end>=frets.length||barre.start>=barre.end||barre.fret<1) errors.push('pestana inválida');
+      for(let index=barre.start;index<=barre.end;index+=1) if(frets[index]>=0&&frets[index]<barre.fret) errors.push('pestana cruza casa incompatível');
+    }
+    const freeFingers=[...uses.keys()].filter(finger=>!barres.some(barre=>barre.finger===finger));
+    if(freeFingers.length>4-barres.length) errors.push('dedos livres insuficientes');
+    if(visualSpan(frets)>7) errors.push('distância inviável');
+    const ordered=frets.map((fret,index)=>({fret,finger:fingers[index]})).filter(item=>item.fret>0&&!barres.some(barre=>barre.finger===item.finger)).sort((a,b)=>a.fret-b.fret);
+    for(let index=1;index<ordered.length;index+=1) if(ordered[index].fret>ordered[index-1].fret&&ordered[index].finger<ordered[index-1].finger) errors.push('ordem de dedos');
+    return [...new Set(errors)];
   }
   function requiredIntervals(quality, capacity, bassInterval) {
     const bassConsumesSlot = !quality.required.slice(0, capacity).includes(bassInterval);
@@ -109,6 +164,24 @@
       difficulty: 1, variant: "posição compacta", validationStatus: "valid"
     });
   }
+  function makeCuratedDiagram(instrument,parsed,quality,shape){
+    const positive=shape.frets.filter(fret=>fret>0);
+    const played=shape.frets.map((fret,index)=>fret<0?null:instrument.tuning[index]+fret).filter(note=>note!==null);
+    const bassInterval=mod(ROOTS.indexOf(parsed.bass)-ROOTS.indexOf(parsed.root));
+    const barres=(shape.barres||[]).map(barre=>({...barre}));
+    return Object.freeze({
+      instrumentId:instrument.id,renderer:instrument.renderer,canonicalChord:parsed.canonicalName,displayName:parsed.displayName,
+      tuning:instrument.tuningLabel,strings:instrument.physicalStrings,courses:instrument.courses,
+      frets:shape.frets.slice(),f:shape.frets.slice(),fingers:shape.fingers.slice(),fi:shape.fingers.slice(),barres,
+      ...(barres[0]?{bar:{fr:barres[0].fret,s:barres[0].start,e:barres[0].end}}:{}),
+      openStrings:shape.frets.map((fret,index)=>fret===0?index:null).filter(index=>index!==null),
+      mutedStrings:shape.frets.map((fret,index)=>fret<0?index:null).filter(index=>index!==null),
+      baseFret:positive.length?Math.max(1,Math.min(...positive)):1,b:positive.length?Math.max(1,Math.min(...positive)):1,
+      root:parsed.root,bass:parsed.bass,suffix:parsed.suffix,intervals:quality.intervals.slice(),
+      requiredIntervals:requiredIntervals(quality,instrument.courses,bassInterval),producedNotes:played.map(pitchName),
+      difficulty:barres.length?3:1,variant:'forma tradicional revisada',validationStatus:'valid',curated:true
+    });
+  }
   function solveFretted(instrument, parsed, quality) {
     const rootPc = ROOTS.indexOf(parsed.root);
     const bassPc = ROOTS.indexOf(parsed.bass);
@@ -133,6 +206,8 @@
         if (required.some((interval) => !intervals.has(interval))) return;
         const span = visualSpan(frets);
         if (span > 7) return;
+        const frettedCount=frets.filter((fret)=>fret>0).length;
+        if(frettedCount>4) return;
         const uniqueFrets = new Set(frets.filter((fret) => fret > 0));
         if (uniqueFrets.size > 4) return;
         const maxFret = Math.max(0, ...frets);
@@ -156,7 +231,9 @@
       instrumentId: instrument.id, renderer: instrument.renderer, canonicalChord: parsed.canonicalName,
       displayName: parsed.displayName, tuning: instrument.tuningLabel, strings: instrument.physicalStrings,
       courses: instrument.courses, frets: best.frets, f: best.frets, fingers, fi: fingers,
-      barres, ...(barres[0] ? { bar: { fr: barres[0].fret, s: barres[0].start, e: barres[0].end } } : {}),
+      barres,
+      openStrings:best.frets.map((fret,index)=>fret===0?index:null).filter(index=>index!==null),
+      mutedStrings:best.frets.map((fret,index)=>fret<0?index:null).filter(index=>index!==null),
       baseFret: positive.length ? Math.max(1, Math.min(...positive)) : 1,
       b: positive.length ? Math.max(1, Math.min(...positive)) : 1,
       root: parsed.root, bass: parsed.bass, suffix: parsed.suffix,
@@ -172,7 +249,10 @@
     const quality = QUALITY_BY_SUFFIX[parsed.suffix];
     if (!quality) return null;
     const key = instrument.id + ":" + parsed.canonicalName;
-    if (!cache.has(key)) cache.set(key, instrument.renderer === "keyboard" ? makeKeyboardDiagram(instrument, parsed, quality) : solveFretted(instrument, parsed, quality));
+    if (!cache.has(key)) {
+      const curated=CURATED_FRETTED[instrument.id]?.[parsed.canonicalName];
+      cache.set(key,instrument.renderer === "keyboard" ? makeKeyboardDiagram(instrument,parsed,quality) : curated ? makeCuratedDiagram(instrument,parsed,quality,curated) : solveFretted(instrument,parsed,quality));
+    }
     const diagram = cache.get(key);
     return diagram ? { ...parsed, instrument, diagram } : null;
   }
@@ -198,7 +278,7 @@
     if (diagram.requiredIntervals.some((interval) => !present.has(interval))) errors.push("intervalos");
     const allowed = new Set(diagram.intervals.concat([mod(ROOTS.indexOf(diagram.bass) - rootPc)]));
     if ([...present].some((interval) => !allowed.has(interval))) errors.push("nota incompatível");
-    for (const barre of diagram.barres) if (barre.start < 0 || barre.end >= instrument.courses || barre.start >= barre.end || barre.fret < 1) errors.push("pestana");
+    errors.push(...validateFingering(diagram));
     return [...new Set(errors)];
   }
   function logicalCount() { return ROOTS.length * QUALITY_LIST.length * ROOTS.length; }
@@ -206,7 +286,8 @@
   global.multiInstrumentChordLibrary = Object.freeze({
     roots: ROOTS, qualities: QUALITY_LIST, aliases: ALIASES,
     canonicalCountPerInstrument: ROOTS.length * QUALITY_LIST.length,
-    logicalCountPerInstrument: logicalCount(), parseChord, resolve, validateDiagram,
+    logicalCountPerInstrument: logicalCount(), parseChord, resolve, validateDiagram, validateFingering,
+    curatedChords:CURATED_FRETTED, preferredChords:PREFERRED_CHORDS,
     coverage(instrumentId) {
       let valid = 0, invalid = 0;
       for (const root of ROOTS) for (const quality of QUALITY_LIST) {
