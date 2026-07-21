@@ -18,6 +18,7 @@
   --accent:#d97757;--accent2:rgba(217,119,87,0.18);
   --text:#ede8e3;--text2:#9b95a3;
   --chord-color:#E8896B;
+  --music-accent:#E8896B;
   --border:rgba(255,255,255,0.08);
   --danger:#e05c6a;
 }
@@ -51,7 +52,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .music-info{flex:1;min-width:0;}
 .music-title{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .music-sub{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.key-badge{font-size:13px;background:var(--accent2);color:var(--accent);padding:4px 10px;border-radius:10px;font-weight:700;flex-shrink:0;}
+.key-badge{font-size:13px;background:rgba(232,137,107,.14);color:var(--music-accent);padding:4px 10px;border-radius:10px;font-weight:700;flex-shrink:0;}
 /* FAB */
 .fab{position:fixed;bottom:22px;right:max(16px,calc((100vw - 720px)/2 + 16px));width:54px;height:54px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(217,119,87,.4);transition:transform .15s;font-size:26px;color:#fff;font-weight:300;}
 .fab:hover{transform:scale(1.06);}
@@ -63,14 +64,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .detail-title{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .detail-artist{font-size:13px;color:var(--text2);margin-top:2px;}
 .detail-capo{font-size:12px;color:var(--text2);margin-top:2px;}
-.detail-key-badge{font-size:13px;background:var(--accent2);color:var(--accent);padding:4px 11px;border-radius:10px;font-weight:700;flex-shrink:0;}
+.detail-key-badge{font-size:13px;background:rgba(232,137,107,.14);color:var(--music-accent);padding:4px 11px;border-radius:10px;font-weight:700;flex-shrink:0;}
 /* TRANSPOSITOR */
 .transpose-bar{margin:12px 14px 4px;background:var(--bg3);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
 .transpose-label{font-size:13px;color:var(--text2);flex:1;}
 .transpose-semitone{font-size:12px;color:var(--text2);min-width:24px;text-align:center;}
 .t-btn{width:34px;height:34px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-family:inherit;}
 .t-btn:hover{background:var(--accent2);color:var(--accent);border-color:var(--accent);}
-.transpose-key{font-size:17px;font-weight:700;color:var(--accent);min-width:40px;text-align:center;}
+.transpose-key{font-size:17px;font-weight:700;color:var(--music-accent);min-width:40px;text-align:center;}
 .t-reset{font-size:12px;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;font-family:inherit;transition:all .15s;}
 .t-reset:hover{border-color:var(--accent);color:var(--accent);}
 /* CAPO BANNER */
@@ -108,7 +109,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .pl-add-row:hover{background:var(--bg2);}
 /* CAPO SELECTOR */
 .capo-opt{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:16px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:500;transition:all .15s;flex-shrink:0;}
-.capo-opt.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.capo-opt.active{background:var(--music-accent);color:#fff;border-color:var(--music-accent);}
 /* INSTRUMENT TABS (compacto) */
 .inst-tab{background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
 .inst-tab.active{background:var(--accent2);border-color:rgba(217,119,87,0.4);}
@@ -117,8 +118,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .chord-strip-wrap::-webkit-scrollbar{height:6px;}
 .chord-strip-wrap::-webkit-scrollbar-track{background:var(--bg3);border-radius:6px;}
 .chord-strip-wrap::-webkit-scrollbar-thumb{background:var(--accent);border-radius:6px;}
-.chord-card{display:flex;flex:0 0 auto;min-width:112px;max-width:none;min-height:118px;padding:7px 10px;text-align:center;align-items:center;justify-content:flex-start;flex-direction:column;border:1px solid var(--border);border-radius:10px;background:var(--bg);}
+.chord-card{display:flex;flex:0 0 auto;min-width:146px;max-width:none;min-height:176px;padding:10px 12px;text-align:center;align-items:center;justify-content:flex-start;flex-direction:column;border:1px solid var(--border);border-radius:14px;background:var(--bg);scroll-snap-align:start;}
 .chord-card-name{width:100%;min-height:20px;margin-bottom:5px;color:var(--chord-color);font:700 13px/1.25 Arial,sans-serif;white-space:nowrap;overflow:visible;text-align:center;}
+.chord-tuning{max-width:240px;margin-top:7px;color:var(--music-accent);font:600 9px/1.35 Inter,Arial,sans-serif;text-align:center;}
+.keyboard-card{min-width:278px;}
 .chord-card svg{display:block;flex:none;max-width:none;}
 .chord-card-unavailable{min-width:144px;justify-content:center;}
 .chord-unavailable-message{max-width:120px;color:var(--text2);font-size:11px;line-height:1.35;}
@@ -210,7 +213,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   .detail-body{padding-inline:12px;}
 }
 /* IDENTIDADE VISUAL 2026 — somente apresentação */
-:root{--bg:#07111f;--bg2:#0b1728;--bg3:#111f33;--surface:#0e1c2f;--surface-hover:#142640;--accent:#2563eb;--accent-hover:#3b82f6;--accent2:rgba(37,99,235,.16);--success:#22c55e;--success-soft:rgba(34,197,94,.13);--text:#f8fafc;--text2:#94a3b8;--border:rgba(148,163,184,.15);--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.28)}
+:root{--bg:#07111f;--bg2:#0b1728;--bg3:#111f33;--surface:#0e1c2f;--surface-hover:#142640;--accent:#2563eb;--accent-hover:#3b82f6;--accent2:rgba(37,99,235,.16);--success:#22c55e;--success-soft:rgba(34,197,94,.13);--text:#f8fafc;--text2:#94a3b8;--border:rgba(148,163,184,.15);--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.28);--music-accent:#E8896B}
 html{background:#050b14}
 body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 12% 4%,rgba(37,99,235,.15),transparent 30rem),radial-gradient(circle at 88% 96%,rgba(34,197,94,.08),transparent 26rem),#050b14}
 button,input,textarea,select{font:inherit}
@@ -233,11 +236,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .music-item,.setlist-item{gap:13px;min-height:66px;margin-bottom:7px;padding:11px 12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.82),rgba(11,23,40,.88));box-shadow:0 5px 16px rgba(0,0,0,.1);transition:transform .18s,border-color .18s,background .18s,box-shadow .18s}
 .music-item:hover,.setlist-item:hover{background:var(--surface-hover);border-color:rgba(96,165,250,.28);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.16)}
 .music-avatar,.sl-avatar{width:42px;height:42px;border-radius:12px;color:#93c5fd;background:linear-gradient(145deg,rgba(37,99,235,.22),rgba(34,197,94,.08));border:1px solid rgba(96,165,250,.16)}
-.music-title,.sl-title{font-size:14px;font-weight:700;letter-spacing:-.1px}.music-sub,.sl-sub{color:var(--text2);font-size:11.5px;margin-top:4px}.key-badge,.detail-key-badge{color:#bfdbfe;background:rgba(37,99,235,.16);border:1px solid rgba(96,165,250,.22);border-radius:9px;padding:5px 9px}.sl-count{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.18)}
+.music-title,.sl-title{font-size:14px;font-weight:700;letter-spacing:-.1px}.music-sub,.sl-sub{color:var(--text2);font-size:11.5px;margin-top:4px}.key-badge,.detail-key-badge{color:var(--music-accent);background:rgba(232,137,107,.13);border:1px solid rgba(232,137,107,.3);border-radius:9px;padding:5px 9px}.sl-count{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.18)}
 .fab{right:max(18px,calc((100vw - 720px)/2 + 18px));bottom:22px;width:58px;height:58px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 12px 32px rgba(37,99,235,.42)}.fab:hover{transform:translateY(-2px) scale(1.03)}
 .detail-view{max-width:720px;background:linear-gradient(180deg,#0b1728,var(--bg) 24%);box-shadow:var(--shadow)}.detail-header{min-height:68px;padding:12px 16px;background:rgba(7,17,31,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.back-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:rgba(37,99,235,.1);font-size:20px}.detail-title{font-size:16px;font-weight:800;letter-spacing:-.25px}.detail-capo,.detail-artist{font-size:11.5px;color:var(--text2)}
-#chord-diagrams-section,#capo-row{background:rgba(11,23,40,.75)!important}.chord-strip-wrap{padding:12px 14px 15px;background:transparent;gap:9px}.chord-card{min-width:114px;min-height:120px;border-color:var(--border);border-radius:14px;background:linear-gradient(155deg,rgba(17,31,51,.96),rgba(8,20,35,.96));box-shadow:0 7px 20px rgba(0,0,0,.16)}.chord-card-name{color:var(--chord-color)}.capo-opt{border-radius:9px;background:var(--bg3)}.capo-opt.active{background:var(--accent);border-color:#60a5fa;box-shadow:0 4px 12px rgba(37,99,235,.24)}
-.transpose-bar,.ai-result{border:1px solid var(--border);background:linear-gradient(145deg,rgba(17,31,51,.9),rgba(11,23,40,.92));box-shadow:0 7px 20px rgba(0,0,0,.12)}.transpose-key{color:#60a5fa}.t-btn{background:#16263c;border-color:rgba(148,163,184,.18)}.t-btn:hover{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}
+#chord-diagrams-section,#capo-row{background:rgba(11,23,40,.75)!important}.chord-strip-wrap{padding:14px 14px 18px;background:transparent;gap:12px;scroll-snap-type:x proximity}.chord-card{min-width:146px;min-height:176px;border-color:var(--border);border-radius:14px;background:linear-gradient(155deg,rgba(8,16,28,.98),rgba(5,11,20,.98));box-shadow:0 7px 20px rgba(0,0,0,.2)}.chord-card-name{color:var(--chord-color);font-size:15px}.capo-opt{border-radius:9px;background:var(--bg3)}.capo-opt.active{background:var(--music-accent);border-color:var(--music-accent);box-shadow:0 4px 12px rgba(232,137,107,.24)}
+.transpose-bar,.ai-result{border:1px solid var(--border);background:linear-gradient(145deg,rgba(17,31,51,.9),rgba(11,23,40,.92));box-shadow:0 7px 20px rgba(0,0,0,.12)}.transpose-key{color:var(--music-accent)}.t-btn{background:#16263c;border-color:rgba(148,163,184,.18)}.t-btn:hover{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}
 .stage-toolbar{gap:7px;padding:9px 14px;background:transparent;border-bottom:0}.stage-btn{min-height:38px;border-radius:10px;background:#132238;color:#cbd5e1;border:1px solid var(--border)}.stage-btn-palco{color:#93c5fd;background:rgba(37,99,235,.12);border-color:rgba(96,165,250,.32)}.stage-btn-palco.active{background:var(--accent)}.stage-btn-scroll{color:#86efac;background:var(--success-soft);border-color:rgba(34,197,94,.3)}.stage-btn-scroll.active{background:var(--success)}
 .detail-body{padding:14px 16px 28px}.wa-block,.medley-block{padding:16px;margin-bottom:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92));box-shadow:0 6px 20px rgba(0,0,0,.1)}.chord-line{color:var(--chord-color)}.letra-linha{color:#f8fafc}
 .btn{min-height:43px;border-radius:11px;transition:transform .18s,background .18s,border-color .18s,opacity .18s}.btn:hover{transform:translateY(-1px);opacity:1}.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 7px 18px rgba(37,99,235,.2)}.btn-outline{color:#93c5fd;border-color:rgba(96,165,250,.5)}
@@ -381,6 +384,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/export-library.js"></script>
 <script src="js/chord-library.js"></script>
+<script src="js/instruments/instrument-definitions.js"></script>
+<script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
 <script>
@@ -526,7 +531,8 @@ let musicas=[
 ];
 
 // ── DIAGRAMAS DE ACORDES ──────────────────────────────────────────────
-let currentInstrument='violao';
+const SK_INSTRUMENT='sc_instrument_v1';
+let currentInstrument=instrumentDefinitions.defaultId;
 
 // Formato: f=frets[6 strings, low E to high E], fi=fingers, b=baseFret, bar={fr,s,e}
 // -1=mudo, 0=corda solta, N=casa N
@@ -663,9 +669,7 @@ const CHORD_NOTES={
 };
 
 function getChordData(name){
-  if(currentInstrument==='violao') return chordLibrary.resolve(name)?.diagram||null;
-  const db=CHORD_DB[currentInstrument]||CHORD_DB.violaoLegado;
-  return chordUtils.findEquivalent(db,name)?.value||null;
+  return multiInstrumentChordLibrary.resolve(currentInstrument,name)?.diagram||null;
 }
 
 function drawChordSVG(data, name, strings=6){
@@ -732,10 +736,59 @@ function drawPianoSVG(noteString, name){
   </div>`;
 }
 
+function drawValidatedFrettedSVG(data,name){
+  const frets=data.frets, fingers=data.fingers||[], courses=data.courses;
+  const baseFret=data.baseFret||1, shownFrets=5, spacing=courses>=6?18:22, fretHeight=20;
+  const padLeft=baseFret>1?24:15, padRight=15, markerHeight=22;
+  const gridWidth=(courses-1)*spacing, gridTop=markerHeight+5, gridHeight=shownFrets*fretHeight;
+  const width=padLeft+gridWidth+padRight, height=gridTop+gridHeight+26;
+  let svg=`<rect width="${width}" height="${height}" rx="10" fill="#050b14"/>`;
+  if(baseFret===1) svg+=`<rect x="${padLeft}" y="${gridTop-3}" width="${gridWidth}" height="4" rx="2" fill="#f8fafc"/>`;
+  else svg+=`<text x="${padLeft-5}" y="${gridTop+14}" fill="#cbd5e1" font-size="11" text-anchor="end" font-family="Inter,Arial">${baseFret}ª</text>`;
+  for(let fret=0;fret<=shownFrets;fret++) svg+=`<line x1="${padLeft}" y1="${gridTop+fret*fretHeight}" x2="${padLeft+gridWidth}" y2="${gridTop+fret*fretHeight}" stroke="#94a3b8" stroke-width="1.6"/>`;
+  for(let course=0;course<courses;course++) svg+=`<line x1="${padLeft+course*spacing}" y1="${gridTop}" x2="${padLeft+course*spacing}" y2="${gridTop+gridHeight}" stroke="#cbd5e1" stroke-width="1.7"/>`;
+  for(const barre of data.barres||[]){
+    const y=gridTop+(barre.fret-baseFret)*fretHeight+fretHeight/2;
+    const x1=padLeft+barre.start*spacing, x2=padLeft+barre.end*spacing;
+    svg+=`<rect x="${x1-7}" y="${y-8}" width="${x2-x1+14}" height="16" rx="8" fill="var(--music-accent)"/>`;
+  }
+  frets.forEach((fret,index)=>{
+    const x=padLeft+index*spacing;
+    if(fret<0) svg+=`<text x="${x}" y="17" fill="#fff" font-size="16" text-anchor="middle" font-family="Inter,Arial">×</text>`;
+    else if(fret===0) svg+=`<circle cx="${x}" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2"/>`;
+    else {
+      const y=gridTop+(fret-baseFret)*fretHeight+fretHeight/2;
+      svg+=`<circle cx="${x}" cy="${y}" r="8" fill="var(--music-accent)"/>`;
+      if(fingers[index]) svg+=`<text x="${x}" y="${y+4}" fill="#fff" font-size="11" text-anchor="middle" font-family="Inter,Arial" font-weight="800">${fingers[index]}</text>`;
+    }
+  });
+  const courseLabel=data.renderer==='double-course-fretted'?'5 ordens duplas':`${courses} cordas`;
+  return `<div class="chord-card" data-instrument="${data.instrumentId}" data-renderer="${data.renderer}" data-courses="${courses}"><div class="chord-card-name">${name}</div><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-label="Diagrama ${name} para ${data.instrumentId}">${svg}</svg><div class="chord-tuning">${courseLabel} · ${data.tuning}</div></div>`;
+}
+
+function drawValidatedKeyboardSVG(data,name){
+  const whiteNotes=['C','D','E','F','G','A','B'];
+  const blackNotes=[{note:'C#',left:26},{note:'D#',left:62},{note:'F#',left:134},{note:'G#',left:170},{note:'A#',left:206}];
+  const active=new Set(data.notes), root=data.root, bass=data.bass;
+  const keyColor=(note)=>note===bass&&bass!==root?'#22C55E':note===root?'var(--music-accent)':'#F2A48B';
+  let svg='<rect width="252" height="116" rx="10" fill="#050b14"/>';
+  whiteNotes.forEach((note,index)=>{
+    const on=active.has(note), x=4+index*35;
+    svg+=`<rect x="${x}" y="5" width="34" height="96" rx="3" fill="${on?keyColor(note):'#f8fafc'}" stroke="#334155" stroke-width="1.5"/>`;
+    svg+=`<text x="${x+17}" y="94" fill="${on?'#fff':'#475569'}" font-size="11" text-anchor="middle" font-family="Inter,Arial" font-weight="700">${note}</text>`;
+  });
+  blackNotes.forEach(({note,left})=>{
+    const on=active.has(note);
+    svg+=`<rect x="${left}" y="5" width="22" height="61" rx="3" fill="${on?keyColor(note):'#111827'}" stroke="#020617" stroke-width="1.5"/>`;
+    if(on) svg+=`<text x="${left+11}" y="57" fill="#fff" font-size="9" text-anchor="middle" font-family="Inter,Arial" font-weight="800">${note}</text>`;
+  });
+  return `<div class="chord-card keyboard-card" data-instrument="${data.instrumentId}" data-renderer="keyboard"><div class="chord-card-name">${name}</div><svg width="252" height="116" viewBox="0 0 252 116" aria-label="Teclas do acorde ${name}">${svg}</svg><div class="chord-tuning">${data.notes.join(' · ')}${bass!==root?` · baixo ${bass}`:''}</div></div>`;
+}
+
 function extractChords(m){
   const txt=m.blocos.map(b=>b.c).join('\n');
   const seen=new Set(), result=[];
-  const re=/\b([A-Ga-g][#b♯♭]?(?:maj7|M7|7M|7m|m7?|5|6|7|9|11|add9|sus[24]|[24]|dim|aug|\+|°)?(?:\([^)]+\))?(?:\/[A-Ga-g][#b♯♭]?)?)\b/g;
+  const re=/\b([A-Ga-g][#b♯♭]?(?:m7\(b5\)|m7\(11\)|mMaj7|maj9|maj7|M7|7M|7m|m11|m9|m7|m6|m|13|11|9|7|6|5|add9|sus[24]|[24]|dim|aug|\+|°)?(?:\/[A-Ga-g][#b♯♭]?)?)\b/g;
   let match;
   while((match=re.exec(txt))!==null){
     const chord=chordUtils.normalizeChordName(match[1]);
@@ -764,34 +817,15 @@ function renderChordStrip(m){
   const rawChords=extractChords(m);
   const chords=[...new Set(rawChords.map(c=>shiftText(c,totalShift)))];
   if(!chords.length){el.innerHTML='';return;}
-  const strings=currentInstrument==='ukulele'?4:6;
-  let html='';
-  if(currentInstrument==='teclado'){
-    html=chords.map(name=>{
-      const notes=chordUtils.findEquivalent(CHORD_NOTES,name)?.value;
-      return notes?drawPianoSVG(notes,name):renderUnavailableChord(name);
-    }).join('');
-  } else if(currentInstrument==='cavaco'){
-    html=chords.map(name=>{
-      const data=getChordData(name);
-      return data?drawChordSVG(data,name,4):renderUnavailableChord(name);
-    }).join('');
-  } else {
-    html=chords.map(name=>{
-      const data=getChordData(name);
-      return data?drawChordSVG(data,name,strings):renderUnavailableChord(name);
-    }).join('');
-  }
+  const html=chords.map(name=>{
+    const data=getChordData(name);
+    if(!data) return renderUnavailableChord(name);
+    return data.renderer==='keyboard'?drawValidatedKeyboardSVG(data,name):drawValidatedFrettedSVG(data,name);
+  }).join('');
   el.innerHTML=`<div class="chord-strip-wrap">${html}</div>`;
 }
 
-const INSTRUMENTS=[
-  {id:'violao', label:'Violão & Guitarra', icon:'🎸'},
-  {id:'ukulele', label:'Ukulele', icon:'🪕'},
-  {id:'teclado', label:'Teclado', icon:'🎹'},
-  {id:'cavaco',  label:'Cavaco', icon:'🎵'},
-  {id:'viola',   label:'Viola Caipira', icon:'🎻'},
-];
+const INSTRUMENTS=instrumentDefinitions.all.map(instrument=>({id:instrument.id,label:instrument.name,icon:instrument.icon,tuning:instrument.tuningLabel,renderer:instrument.renderer}));
 
 function openInstModal(){
   const list=document.getElementById('inst-list');
@@ -799,7 +833,7 @@ function openInstModal(){
   list.innerHTML=INSTRUMENTS.map(inst=>`
     <div onclick="setInstrument('${inst.id}')" style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;">
       <span style="font-size:20px;margin-right:14px;">${inst.icon}</span>
-      <span style="flex:1;font-size:15px;font-weight:500;">${inst.label}</span>
+      <span style="flex:1;font-size:15px;font-weight:500;">${inst.label}<small style="display:block;color:var(--music-accent);margin-top:3px;">${inst.tuning}</small></span>
       <span style="width:20px;height:20px;border-radius:50%;border:2px solid ${currentInstrument===inst.id?'var(--accent)':'var(--text2)'};background:${currentInstrument===inst.id?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;">${currentInstrument===inst.id?'<span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block;"></span>':''}</span>
     </div>`).join('');
   document.getElementById('inst-modal').style.display='flex';
@@ -811,13 +845,14 @@ function closeInstModal(e){
 }
 
 function setInstrument(inst){
-  currentInstrument=inst;
+  currentInstrument=instrumentDefinitions.normalizeId(inst);
+  storage.set(SK_INSTRUMENT,currentInstrument);
   document.getElementById('inst-modal').style.display='none';
-  const info=INSTRUMENTS.find(x=>x.id===inst)||INSTRUMENTS[0];
+  const info=INSTRUMENTS.find(x=>x.id===currentInstrument)||INSTRUMENTS[0];
   const lbl=document.getElementById('inst-label');
   if(lbl) lbl.textContent=info.icon+' '+info.label.split(' ')[0];
   const capoRow=document.getElementById('capo-row');
-  if(capoRow) capoRow.style.display=(inst==='teclado'||inst==='cavaco'||inst==='viola')?'none':'flex';
+  if(capoRow) capoRow.style.display=(info.renderer==='keyboard'||currentInstrument==='cavaquinho'||currentInstrument==='viola-caipira-cebolao-e')?'none':'flex';
   const m=musicas.find(x=>x.id===currentDetailId);
   if(m) renderChordStrip(m);
 }
@@ -979,8 +1014,9 @@ function openDetail(id,options={}){
     navigationContext.clear();
   }
   const nid = isNaN(+id) ? id : +id;
-  currentDetailId=nid; currentSemitones=0; currentInstrument='violao';
+  currentDetailId=nid; currentSemitones=0;
   const m=musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!m) return;
+  currentInstrument=instrumentDefinitions.normalizeId(m.instrumento||instrumentDefinitions.defaultId);
   document.getElementById('detail-title').textContent=m.title;
   document.getElementById('detail-artist-label').textContent=m.artist||'';
   // extrai capo armazenado
@@ -989,12 +1025,12 @@ function openDetail(id,options={}){
   selectedCapo=capoNum;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+Math.min(capoNum,7))?.classList.add('active');
-  // reset instrumento para violão
-  currentInstrument='violao';
+  // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
   const lbl=document.getElementById('inst-label');
-  if(lbl) lbl.textContent='🎸 Violão';
+  const instrumentInfo=instrumentDefinitions.get(currentInstrument);
+  if(lbl) lbl.textContent=instrumentInfo.icon+' '+instrumentInfo.shortName;
   const capoRow=document.getElementById('capo-row');
-  if(capoRow) capoRow.style.display='flex';
+  if(capoRow) capoRow.style.display=(instrumentInfo.renderer==='keyboard'||currentInstrument==='cavaquinho'||currentInstrument==='viola-caipira-cebolao-e')?'none':'flex';
   renderDetail();
   renderChordStrip(m);
   updatePlaylistNavigation();
