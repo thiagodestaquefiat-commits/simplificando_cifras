@@ -37,7 +37,8 @@ Depois, acesse `http://localhost:4173`.
 - modo palco com navegação, auto-scroll, velocidade e tamanho de fonte;
 - diagramas em faixa horizontal própria, com indicação clara quando um desenho não está disponível;
 - exportação completa da biblioteca em JSON, incluindo catálogo padrão, dados persistidos e estado atual da sessão;
-- funcionamento offline após o primeiro carregamento bem-sucedido.
+- funcionamento offline após o primeiro carregamento bem-sucedido;
+- editor dedicado de cifras com modos Editar, Visualizar e Resumo, histórico da sessão, rascunhos e formato preparado para importação e IA.
 
 ## Exportar biblioteca
 
@@ -56,6 +57,8 @@ Os botões **Anterior** e **Próxima** aparecem somente quando a música é aber
 ## IA
 
 A busca por IA está intencionalmente desativada no frontend. Uma versão futura deverá chamar um backend autenticado, que manterá chaves e segredos fora do navegador.
+
+O editor não depende dessa integração e já aceita dados das origens `manual`, `imported`, `ai` e `existing`. Consulte `docs/EDITOR_DE_CIFRAS.md`.
 
 ## Verificação antes de publicar
 
