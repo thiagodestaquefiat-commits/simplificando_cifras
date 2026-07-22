@@ -30,7 +30,9 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v12/);
+assert.match(serviceWorker, /simplificando-cifras-v13/);
+assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
+assert.match(serviceWorker, /js\/editor\/song-editor\.css/);
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
 assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js/);
 assert.match(serviceWorker, /self\.skipWaiting\(\)/);
@@ -93,6 +95,11 @@ const server = http.createServer((request, response) => {
     assert.match(download.suggestedFilename(), /^simplificando-cifras-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
     const serviceWorkerState = await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
+      if (registration.active && registration.active.state !== "activated") {
+        await new Promise((resolve) => registration.active.addEventListener("statechange", () => {
+          if (registration.active.state === "activated") resolve();
+        }, { once: false }));
+      }
       return { state: registration.active?.state, scriptURL: registration.active?.scriptURL };
     });
     assert.equal(serviceWorkerState.state, "activated");
@@ -101,6 +108,9 @@ const server = http.createServer((request, response) => {
     await page.reload({ waitUntil: "domcontentloaded" });
     assert.equal(await page.title(), "Simplificando Cifras");
     assert.equal(await page.locator(".music-item").count(), 86);
+    await page.getByText("Liberta-me de mim", { exact: true }).click();
+    await page.getByRole("button", { name: "Editar cifra" }).click();
+    assert.equal(await page.locator("#song-editor").isVisible(), true);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     assert.equal(errors.length, 0, errors.join(" | "));

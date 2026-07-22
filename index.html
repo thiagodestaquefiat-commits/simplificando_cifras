@@ -10,6 +10,7 @@
 <link rel="icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
+<link rel="stylesheet" href="js/editor/song-editor.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -390,6 +391,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
+<script src="js/editor/song-format.js"></script>
+<script src="js/editor/song-editor-history.js"></script>
+<script src="js/editor/song-editor-validation.js"></script>
+<script src="js/editor/chord-simplifier.js"></script>
+<script src="js/editor/song-editor-state.js"></script>
+<script src="js/editor/song-editor-renderer.js"></script>
+<script src="js/editor/song-editor.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -996,7 +1004,7 @@ function renderDetail(){
   }).join('');
   document.getElementById('detail-content').innerHTML = blocosHtml +
     `<div class="btn-row">
-      <button class="btn btn-outline" onclick="editMusica('${m.id}')">✏️ Editar</button>
+      <button class="btn btn-outline" onclick="editMusica('${m.id}')">Editar cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
     </div>`;
 }
@@ -1266,34 +1274,16 @@ function renderMusicas(){
 // ── EDIT / ADD ────────────────────────────────────────────────────────
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
-  const m=musicas.find(x=>x.id===nid); editingId=nid;
-  const raw=m.blocos.map(b=>(b.l?`${b.l}\n`:'')+b.c).join('\n\n');
-  document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">Editar música</div>
-    <div class="form-group"><label class="form-label">Título</label><input class="form-input" id="fm-title" value="${m.title}"></div>
-    <div class="form-group"><label class="form-label">Artista / Compositor</label><input class="form-input" id="fm-artist" value="${m.artist||''}" placeholder="ex: Fernandinho, Aline Barros..."></div>
-    <div class="form-group"><label class="form-label">Tom original</label><input class="form-input" id="fm-key" value="${m.key||''}"></div>
-    <div class="form-group"><label class="form-label">Capotraste</label><input class="form-input" id="fm-capo" value="${m.capo||''}"></div>
-    <div class="form-group">
-      <label class="form-label">Cifras</label>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">Use *texto* para negrito. Linha em branco separa estrofes.</div>
-      <textarea class="form-textarea" id="fm-blocos" style="min-height:180px;">${raw}</textarea>
-    </div>
-    <button class="btn btn-primary" onclick="saveMusica()">Salvar</button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
-  document.getElementById('modal-overlay').style.display='flex';
+  const m=musicas.find(x=>x.id===nid||String(x.id)===String(id));
+  if(!m) return;
+  openSongEditor(m,{source:'existing',onSave:(saved)=>{
+    const idx=musicas.findIndex(item=>String(item.id)===String(saved.id));
+    if(idx<0) return false;
+    musicas[idx]=saved;
+    salvar(); renderMusicas(); openDetail(saved.id); return true;
+  }});
 }
 
-function saveMusica(){
-  const t=document.getElementById('fm-title').value.trim(); if(!t) return;
-  const raw=document.getElementById('fm-blocos').value;
-  const blocos=parseBlocks(raw);
-  if(!blocos.length){alert('Adicione pelo menos um acorde!'); return;}
-  const idx=musicas.findIndex(m=>m.id===editingId);
-  if(idx===-1) return;
-  musicas[idx]={...musicas[idx],title:t,artist:document.getElementById('fm-artist').value.trim(),key:document.getElementById('fm-key').value.trim(),capo:document.getElementById('fm-capo').value.trim(),blocos};
-  salvar(); closeModal(); renderMusicas(); openDetail(musicas[idx].id); showToast('✅ '+t+' salva!');
-}
 function deleteMusica(id){
   const nid=isNaN(+id)?id:+id;
   if(!confirm('Excluir esta música?')) return;
@@ -1301,56 +1291,12 @@ function deleteMusica(id){
   setlists=setlists.map(s=>({...s,musicas:s.musicas.filter(mid=>String(mid)!==String(nid))}));
   salvar(); closeDetail(); renderMusicas();
 }
-function parseBlocks(raw){
-  const lines=raw.trim().split('\n');
-  const blocks=[]; let cur=null;
-  lines.forEach(l=>{
-    const lt=l.trim();
-    if(!lt){ // linha vazia = nova estrofe
-      if(cur && cur.c.trim()) { blocks.push(cur); cur=null; }
-      return;
-    }
-    // [Bloco] ou *Bloco* = label
-    if((lt.startsWith('[')&&lt.endsWith(']'))||(lt.startsWith('*')&&lt.endsWith('*')&&!lt.slice(1,-1).includes('*'))){
-      if(cur && cur.c.trim()) blocks.push(cur);
-      const label = lt.startsWith('[') ? lt.slice(1,-1) : lt;
-      cur={l:label, c:''};
-    } else {
-      if(!cur) cur={l:'',c:''};
-      cur.c+=(cur.c?'\n':'')+lt;
-    }
-  });
-  if(cur && cur.c.trim()) blocks.push(cur);
-  return blocks.length?blocks:[{l:'',c:raw}];
-}
 function openFab(){if(currentTab==='musicas') openAddMusica(); else openAddSetlist();}
 function openAddMusica(){
-  editingId=null;
-  document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">Nova música</div>
-    <div class="form-group"><label class="form-label">Título</label><input class="form-input" id="fm-title" placeholder="Nome da música"></div>
-    <div class="form-group"><label class="form-label">Artista / Compositor</label><input class="form-input" id="fm-artist" placeholder="ex: Fernandinho, Aline Barros..."></div>
-    <div class="form-group"><label class="form-label">Tom</label><input class="form-input" id="fm-key" placeholder="ex: G, Am, C#m"></div>
-    <div class="form-group"><label class="form-label">Capotraste</label><input class="form-input" id="fm-capo" placeholder="ex: Capotraste casa 2"></div>
-    <div class="form-group">
-      <label class="form-label">Cifras</label>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.5;">
-        Digite a cifra e a letra alternadas. Linha em branco separa estrofes.<br>
-        <span style="color:var(--accent);">Ex:<br>G9  Em7  C9  Am7<br>Ao que está assentado<br><br>C9  D9  Bm7  Em<br>Quem já pisou</span>
-      </div>
-      <textarea class="form-textarea" id="fm-blocos" style="min-height:200px;" placeholder="G9  Em7  C9  Am7&#10;Ao que está assentado&#10;&#10;C9  D9  Bm7  Em&#10;Quem já pisou"></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="addMusica()">Adicionar</button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
-  document.getElementById('modal-overlay').style.display='flex';
+  const newId='local-'+Date.now();
+  openSongEditor({id:newId,source:'manual',status:'draft',originalKey:'C',currentKey:'C',instrument:currentInstrument,sections:[{type:'verse',label:'Verso',lines:[{lyrics:'',chords:[]}]}]},
+  {source:'manual',onSave:(saved)=>{musicas.push(saved);salvar();renderMusicas();openDetail(saved.id);return true;}});
 }
-function addMusica(){
-  const t=document.getElementById('fm-title').value.trim(); if(!t) return;
-  const blocos=parseBlocks(document.getElementById('fm-blocos').value);
-  musicas.push({id:Date.now(),title:t,artist:document.getElementById('fm-artist').value.trim(),key:document.getElementById('fm-key').value.trim(),capo:document.getElementById('fm-capo').value.trim(),blocos});
-  salvar(); closeModal(); renderMusicas();
-}
-
 // ── SETLISTS ──────────────────────────────────────────────────────────
 function openAddSetlist(prefill){
   editingId=prefill?prefill.id:null;
