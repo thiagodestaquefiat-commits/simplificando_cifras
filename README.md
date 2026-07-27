@@ -8,6 +8,14 @@ A Sprint 4 estabelece uma identidade visual escura, moderna e centrada no uso po
 
 A atualização é exclusivamente visual: arquitetura, navegação, catálogo, persistência, regras de negócio e funcionalidades permanecem inalterados. Os ícones PNG da PWA são fornecidos em 48, 72, 96, 128, 192, 256 e 512 pixels.
 
+## Compatibilidade PWA e iOS
+
+- Suporte à instalação pelo Safari no iPhone.
+- Open Graph para compartilhamento.
+- Manifest com MIME correto.
+- Service Worker versionado.
+- Quando o link vier do WhatsApp, é necessário abri-lo no Safari para instalar no iPhone.
+
 ## Como executar
 
 O projeto usa HTML, CSS e JavaScript puro. Para que o service worker funcione, abra-o por um servidor HTTP local, e não diretamente como arquivo.
