@@ -26,7 +26,7 @@ for (const [src, sizes, purpose] of requiredIcons) {
   assert.ok(fs.existsSync(path.join(projectRoot, icon.src)), `Arquivo ${icon.src} ausente`);
 }
 assert.equal(manifest.name, "Simplificando Cifras");
-assert.equal(manifest.short_name, "Cifras");
+assert.equal(manifest.short_name, "Simp. Cifras");
 assert.equal(manifest.id, "/");
 assert.equal(manifest.start_url, "/");
 assert.equal(manifest.scope, "/");
@@ -41,7 +41,8 @@ for (const tag of ["twitter:card", "twitter:title", "twitter:description", "twit
 assert.match(indexHtml, /rel="canonical" href="https:\/\/simplificandocifras\.netlify\.app\/"/);
 assert.match(indexHtml, /rel="apple-touch-icon"[^>]+pwa-icon-v10-192\.png/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v15/);
+assert.match(serviceWorker, /simplificando-cifras-v16/);
+assert.match(indexHtml, /name="apple-mobile-web-app-title" content="Simp\. Cifras"/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.css/);
 for (const asset of ["js/ai/ai-harmonic-summary.css", "js/ai/api-config.js", "js/ai/harmonic-summary-client.js", "js/ai/ai-harmonic-summary.js"]) {

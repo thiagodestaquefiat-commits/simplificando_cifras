@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v15";
+const CACHE_NAME = "simplificando-cifras-v16";
 const ASSETS = [
   "./",
   "./index.html",
