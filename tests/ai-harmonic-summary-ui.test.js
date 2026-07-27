@@ -5,6 +5,7 @@ const path = require("node:path");
 const { chromium } = require("playwright");
 
 const root = path.resolve(__dirname, "..");
+const apiEndpoint = "https://simplificandocifras-production.up.railway.app/api/resumo-harmonico";
 const executablePath = [process.env.BROWSER_EXECUTABLE, "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"].find((candidate) => candidate && fs.existsSync(candidate));
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
@@ -39,7 +40,7 @@ const success = {
 
     let pendingRoute;
     let requestBody;
-    await page.route("http://127.0.0.1:5000/api/resumo-harmonico", async (route) => { pendingRoute = route; requestBody = route.request().postDataJSON(); });
+    await page.route(apiEndpoint, async (route) => { pendingRoute = route; requestBody = route.request().postDataJSON(); });
     const researchForm = page.locator("[data-ai-form=pesquisa]");
     await researchForm.getByLabel("Título da música").fill("Rugido do Leão");
     await researchForm.getByLabel("Artista (opcional)").fill("Artista teste");
@@ -67,13 +68,13 @@ const success = {
     async function verifyError(status, code, expected) {
       await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
       await page.locator("[data-ai-form=pesquisa]").getByLabel("Título da música").fill("Teste");
-      await page.route("http://127.0.0.1:5000/api/resumo-harmonico", (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ erro: { codigo: code } }) }), { times: 1 });
+      await page.route(apiEndpoint, (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ erro: { codigo: code } }) }), { times: 1 });
       await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
       await page.waitForTimeout(80);
       assert.match(await page.locator("[data-ai-status]").innerText(), expected);
       await page.getByRole("button", { name: "Fechar", exact: true }).click();
     }
-    await page.unroute("http://127.0.0.1:5000/api/resumo-harmonico");
+    await page.unroute(apiEndpoint);
     await verifyError(422, "resultado_nao_confiavel", /Não foi possível gerar um resumo harmônico confiável/);
     await verifyError(429, "limite_excedido", /limite de solicitações/);
     await verifyError(500, "erro_interno", /servidor não conseguiu/);
@@ -82,7 +83,7 @@ const success = {
     await page.getByRole("tab", { name: "Texto", exact: true }).click();
     await page.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
     let textPayload;
-    await page.route("http://127.0.0.1:5000/api/resumo-harmonico", (route) => { textPayload = route.request().postDataJSON(); return route.abort("failed"); }, { times: 1 });
+    await page.route(apiEndpoint, (route) => { textPayload = route.request().postDataJSON(); return route.abort("failed"); }, { times: 1 });
     await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     await page.waitForTimeout(80);
     assert.deepEqual(textPayload, { tipo: "texto", conteudo: "Dm Bb C G" });
