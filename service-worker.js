@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v12";
+const CACHE_NAME = "simplificando-cifras-v16";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,7 +9,21 @@ const ASSETS = [
   "./js/instruments/multi-instrument-chord-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
-  "./manifest.webmanifest?v=10",
+  "./js/editor/song-editor.css",
+  "./js/editor/song-format.js",
+  "./js/editor/song-editor-history.js",
+  "./js/editor/song-editor-validation.js",
+  "./js/editor/chord-simplifier.js",
+  "./js/editor/song-editor-state.js",
+  "./js/editor/song-editor-renderer.js",
+  "./js/editor/song-editor.js",
+  "./js/ai/ai-harmonic-summary.css",
+  "./js/ai/api-config.js",
+  "./js/ai/harmonic-summary-client.js",
+  "./js/ai/ai-harmonic-summary.js",
+  "./manifest.webmanifest?v=11",
+  "./robots.txt",
+  "./sitemap.xml",
   "./assets/logo-simplificando-cifras.png",
   "./assets/icons/pwa-icon-v10-192.png",
   "./assets/icons/pwa-icon-v10-512.png",

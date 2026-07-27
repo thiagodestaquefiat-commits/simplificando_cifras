@@ -1,9 +1,10 @@
 {
   "name": "Simplificando Cifras",
-  "short_name": "Cifras",
-  "description": "Cifras simplificadas com playlists, transposição e modo palco.",
-  "start_url": ".",
-  "scope": ".",
+  "short_name": "Simp. Cifras",
+  "description": "Organize cifras, repertórios e playlists, transponha acordes e use o Modo Palco em qualquer dispositivo.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#07111f",
   "theme_color": "#07111f",
@@ -32,6 +33,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "docs/screenshots/sprint-4/01-principal-mobile-390x844.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Biblioteca de músicas no celular"
+    },
+    {
+      "src": "docs/screenshots/sprint-4/05-principal-desktop-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Biblioteca de músicas no desktop"
     }
   ]
 }
