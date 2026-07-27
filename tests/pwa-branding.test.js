@@ -41,9 +41,13 @@ for (const tag of ["twitter:card", "twitter:title", "twitter:description", "twit
 assert.match(indexHtml, /rel="canonical" href="https:\/\/simplificandocifras\.netlify\.app\/"/);
 assert.match(indexHtml, /rel="apple-touch-icon"[^>]+pwa-icon-v10-192\.png/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v14/);
+assert.match(serviceWorker, /simplificando-cifras-v15/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.css/);
+for (const asset of ["js/ai/ai-harmonic-summary.css", "js/ai/api-config.js", "js/ai/harmonic-summary-client.js", "js/ai/ai-harmonic-summary.js"]) {
+  assert.match(serviceWorker, new RegExp(asset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${asset} ausente do precache`);
+  assert.match(indexHtml, new RegExp(asset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${asset} ausente do HTML`);
+}
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
 assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js/);
 assert.match(serviceWorker, /self\.skipWaiting\(\)/);
