@@ -28,7 +28,7 @@ def test_text_request_returns_versioned_json(generate, client):
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "texto", "titulo": "Canção teste", "conteudo": "Db B4 Gb/Bb"},
-        headers={"Origin": "http://localhost:8080"},
+        headers={"Origin": "http://localhost:5500"},
     )
 
     assert response.status_code == 200
@@ -87,7 +87,7 @@ def test_cors_is_not_wildcard(client):
     allowed = client.options(
         "/api/resumo-harmonico",
         headers={
-            "Origin": "http://localhost:8080",
+            "Origin": "http://localhost:5500",
             "Access-Control-Request-Method": "POST",
         },
     )
@@ -98,7 +98,7 @@ def test_cors_is_not_wildcard(client):
             "Access-Control-Request-Method": "POST",
         },
     )
-    assert allowed.headers["Access-Control-Allow-Origin"] == "http://localhost:8080"
+    assert allowed.headers["Access-Control-Allow-Origin"] == "http://localhost:5500"
     assert "Access-Control-Allow-Origin" not in denied.headers
 
 

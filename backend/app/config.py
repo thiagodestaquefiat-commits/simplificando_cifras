@@ -23,7 +23,7 @@ class Config:
 
     CORS_ALLOWED_ORIGINS = _csv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:8080,http://127.0.0.1:8080",
+        "http://127.0.0.1:5500,http://localhost:5500,https://deploy-preview-8--simplificandocifras.netlify.app,https://simplificandocifras.netlify.app",
     )
     RESUMO_RATE_LIMIT = os.getenv("RESUMO_RATE_LIMIT", "10 per minute")
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
