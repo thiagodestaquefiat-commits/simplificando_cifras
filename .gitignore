@@ -1,0 +1,13 @@
+# Segredos e ambientes Python
+.env
+backend/.env
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+*.py[cod]
+
+# Dependências e artefatos locais
+node_modules/
+playwright-report/
+test-results/
