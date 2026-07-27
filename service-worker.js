@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v13";
+const CACHE_NAME = "simplificando-cifras-v14";
 const ASSETS = [
   "./",
   "./index.html",
@@ -17,7 +17,9 @@ const ASSETS = [
   "./js/editor/song-editor-state.js",
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
-  "./manifest.webmanifest?v=10",
+  "./manifest.webmanifest?v=11",
+  "./robots.txt",
+  "./sitemap.xml",
   "./assets/logo-simplificando-cifras.png",
   "./assets/icons/pwa-icon-v10-192.png",
   "./assets/icons/pwa-icon-v10-512.png",
