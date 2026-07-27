@@ -94,6 +94,7 @@
       status: value.status === "published" ? "published" : "draft",
       source: ["manual", "imported", "ai", "existing"].includes(value.source) ? value.source : (fallback.source || "manual"),
       aiGenerated: Boolean(value.aiGenerated), reviewedByUser: Boolean(value.reviewedByUser),
+      aiConfidence: ["alta", "media", "baixa"].includes(value.aiConfidence) ? value.aiConfidence : null,
       sections: Array.isArray(value.sections) && value.sections.length ? value.sections.map(normalizeSection) : [normalizeSection({}, 0)],
       notes: cleanText(value.notes || ""), createdAt: value.createdAt || now, updatedAt: now
     };
@@ -139,7 +140,8 @@
       instrumento: normalized.instrument, bpm: normalized.bpm, notes: normalized.notes, blocos,
       songFormatVersion: 3, originalKey: normalized.originalKey, currentKey: normalized.currentKey,
       status: normalized.status, source: normalized.source, aiGenerated: normalized.aiGenerated,
-      reviewedByUser: normalized.reviewedByUser, createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
+      reviewedByUser: normalized.reviewedByUser, aiConfidence: normalized.aiConfidence,
+      createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
       editorData: normalized
     };
   }

@@ -21,7 +21,7 @@
     const baseline = copy(model);
     const history = global.songEditorHistory.create(model);
     let dirty = false;
-    function commit(mutator) { const next = copy(model); mutator(next); next.updatedAt = new Date().toISOString(); model = global.songFormat.normalize(next); history.push(model); dirty = true; return copy(model); }
+    function commit(mutator) { const next = copy(model); mutator(next); if(next.aiGenerated)next.reviewedByUser=true;next.updatedAt = new Date().toISOString(); model = global.songFormat.normalize(next); history.push(model); dirty = true; return copy(model); }
     function replace(value, changed) { model = global.songFormat.normalize(value); dirty = changed !== false; return copy(model); }
     return Object.freeze({
       get: () => copy(model), isDirty: () => dirty,

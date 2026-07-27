@@ -6,7 +6,7 @@
   function readDrafts() { return global.storage.get(DRAFT_KEY, {}); }
   function writeDraft(model) { const drafts=readDrafts();drafts[String(model.id)]=model;return global.storage.set(DRAFT_KEY,drafts); }
   function context(target) { const section=target.closest("[data-section]");const line=target.closest("[data-line]");const chord=target.closest("[data-chord]");return {sectionId:section?.dataset.section,lineId:line?.dataset.line,chordId:chord?.dataset.chord}; }
-  function render() { if(!session)return;const old=document.getElementById("song-editor");const next=global.songEditorRenderer.shell(session.state.get(),session.mode);if(old)old.replaceWith(next);else document.body.appendChild(next);next.addEventListener("click",handleClick);next.addEventListener("change",handleChange); }
+  function render() { if(!session)return;const old=document.getElementById("song-editor");const next=global.songEditorRenderer.shell(session.state.get(),session.mode);if(old)old.replaceWith(next);else document.body.appendChild(next);next.addEventListener("click",handleClick);next.addEventListener("change",(event)=>{handleChange(event);const notice=next.querySelector(".se-ai-notice");if(notice&&session?.state.get().reviewedByUser)notice.textContent="Revisado";}); }
   function flash(message,error) { if(typeof global.showToast==="function")global.showToast((error?"⚠️ ":"✅ ")+message); }
   function setMode(mode) { session.mode=mode;render(); }
 
