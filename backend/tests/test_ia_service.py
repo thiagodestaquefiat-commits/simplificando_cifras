@@ -46,3 +46,23 @@ def test_request_preserves_musical_line_breaks():
         conteudo="C  G\nPrimeira frase\nAm  F",
     )
     assert request.conteudo == "C  G\nPrimeira frase\nAm  F"
+
+
+def test_research_prompt_allows_known_song_without_external_source():
+    provider = FakeProvider()
+    service = IaService(provider)
+    request = ResumoHarmonicoRequest(
+        tipo="pesquisa",
+        titulo="O Tempo Não Para",
+        artista="Cazuza",
+    )
+
+    result = service.generate(request)
+
+    assert result.titulo == "Teste"
+    assert "música amplamente conhecida" in provider.user_prompt
+    assert "versão harmônica mais conhecida" in provider.user_prompt
+    assert "Não exija uma fonte externa" in provider.user_prompt
+    assert "Retorne trechos vazios somente quando" in provider.user_prompt
+    assert "não conhecer acordes suficientes" in provider.user_prompt
+    assert "não tente completar lacunas" not in provider.user_prompt

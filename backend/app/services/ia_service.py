@@ -49,7 +49,11 @@ class IaService:
                 "Gere um resumo harmônico por conhecimento do modelo.\n"
                 f"Título: {payload.titulo}\n"
                 f"Artista: {payload.artista or 'não informado'}\n"
-                "Se a identificação ou harmonia não for confiável, não tente completar lacunas."
+                "Quando título e artista identificarem inequivocamente uma música amplamente conhecida "
+                "e você conhecer sua harmonia, forneça um resumo da versão harmônica mais conhecida, "
+                "com confiança média e aviso de revisão. Não exija uma fonte externa. Retorne trechos "
+                "vazios somente quando não reconhecer a música, houver ambiguidade sobre sua identidade "
+                "ou você não conhecer acordes suficientes para formar ao menos um trecho confiável."
             )
         else:
             user_prompt = (
