@@ -61,9 +61,11 @@
   }
 
   function normalizeLine(line) {
+    const repeatValue = Number(line && line.repeticoes);
     return {
       id: cleanText(line && line.id || id("line"), 100),
       lyrics: cleanText(line && line.lyrics || ""),
+      repeticoes: Number.isInteger(repeatValue) && repeatValue >= 1 && repeatValue <= 99 ? repeatValue : null,
       chords: Array.isArray(line && line.chords) ? line.chords.map((item) => ({
         id: cleanText(item && item.id || id("chord"), 100),
         chord: cleanText(item && item.chord || "", 40).replace(/\s+/g, ""),
@@ -123,7 +125,10 @@
     const blocos = normalized.sections.map((section) => {
       const rows = [];
       section.lines.forEach((line) => {
-        if (line.chords.length) rows.push(renderChordLine(line.chords));
+        if (line.chords.length) {
+          const repeatLabel = line.repeticoes ? `  (${line.repeticoes}x)` : "";
+          rows.push(renderChordLine(line.chords) + repeatLabel);
+        }
         if (line.lyrics) rows.push(line.lyrics);
       });
       return { l: section.label, c: rows.join("\n") };
