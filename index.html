@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
+<meta name="sc-api-base-url" content="">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Simplificando Cifras">
@@ -38,6 +39,7 @@
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -305,13 +307,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
           <input class="search-input" type="text" placeholder="Buscar música ou tom..." id="search-music" oninput="renderMusicas()">
         </div>
       </div>
-      <!-- BUSCA IA -->
-      <div class="ai-search-bar">
-        <span style="font-size:16px;">🤖</span>
-        <input class="ai-search-input" id="ai-input" placeholder="Buscar cifra com IA... ex: Oceans Hillsong" onkeydown="if(event.key==='Enter')buscarIA()">
-        <button class="ai-search-btn" id="ai-btn" onclick="buscarIA()">Buscar</button>
-      </div>
-      <div id="ai-result" style="display:none;"></div>
+      <button class="ai-generate-action" type="button" onclick="aiHarmonicSummary.open()">Gerar com IA</button>
       <div class="content" id="lista-musicas"></div>
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;">
@@ -425,6 +421,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
+<script src="js/ai/api-config.js"></script>
+<script src="js/ai/harmonic-summary-client.js"></script>
+<script src="js/ai/ai-harmonic-summary.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -921,53 +920,6 @@ function resetTranspose(){
   if(m) renderChordStrip(m);
 }
 
-// ── BUSCA IA ──────────────────────────────────────────────────────────
-async function buscarIA(){
-  const q=document.getElementById('ai-input').value.trim();
-  if(!q) return;
-  const btn=document.getElementById('ai-btn');
-  const res=document.getElementById('ai-result');
-  res.style.display='block';
-  res.innerHTML='<div class="ai-result"><div class="ai-result-title">🤖 Recurso em preparação</div><div style="color:var(--text2);font-size:13px;line-height:1.5;">A busca com IA foi desativada nesta etapa para proteger chaves de API. Ela será conectada futuramente por um backend seguro.</div></div>';
-  showToast('IA disponível em uma etapa futura');
-  return;
-  btn.disabled=true; btn.textContent='Buscando...';
-  res.style.display='block';
-  res.innerHTML=`<div class="ai-result"><div class="ai-result-title">🤖 Gerando cifra...</div><div style="color:var(--text2);font-size:13px;">Aguarde um momento...</div></div>`;
-  try{
-    const resp=await fetch('/api/ai/chords',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:`Gere as cifras simplificadas da música "${q}" no formato abaixo. Responda APENAS o JSON, sem texto extra, sem markdown.\n\n{"title":"Nome","artist":"Artista","key":"Tom ex: G","capo":"Capotraste casa X ou deixe vazio","blocos":[{"l":"Verso","c":"G  Em  C  D"},{"l":"Refrão","c":"C  G  Am  F"}]}`}]
-      })
-    });
-    const data=await resp.json();
-    const text=data.content.map(i=>i.text||'').join('');
-    const clean=text.replace(/```json|```/g,'').trim();
-    const cifra=JSON.parse(clean);
-    res.innerHTML=`<div class="ai-result">
-      <div class="ai-result-title">🎵 ${cifra.title} — ${cifra.artist||''} | Tom: ${cifra.key}${cifra.capo?' | '+cifra.capo:''}</div>
-      <pre>${cifra.blocos.map(b=>(b.l?'['+b.l+']\n':'')+b.c).join('\n\n')}</pre>
-      <button class="btn btn-primary" style="margin-top:10px;" onclick='importarIA(${JSON.stringify(cifra).replace(/'/g,"&#39;")})'>➕ Adicionar ao repertório</button>
-      <button class="btn btn-outline" onclick="document.getElementById('ai-result').style.display='none'">Fechar</button>
-    </div>`;
-  } catch(e){
-    res.innerHTML=`<div class="ai-result"><div class="ai-result-title" style="color:var(--danger);">⚠️ Erro ao buscar</div><div style="color:var(--text2);font-size:13px;">Verifique sua conexão e tente novamente.</div></div>`;
-  }
-  btn.disabled=false; btn.textContent='Buscar';
-}
-
-function importarIA(cifra){
-  musicas.push({id:Date.now(),title:cifra.title,key:cifra.key,capo:cifra.capo||'',blocos:cifra.blocos});
-  salvar(); renderMusicas();
-  document.getElementById('ai-result').style.display='none';
-  document.getElementById('ai-input').value='';
-  showToast('✅ '+cifra.title+' adicionada!');
-}
-
 // detecta se uma linha é de acordes ou letra
 function isChordLine(linha){
   const t = linha.trim();
@@ -1323,6 +1275,10 @@ function openAddMusica(){
   const newId='local-'+Date.now();
   openSongEditor({id:newId,source:'manual',status:'draft',originalKey:'C',currentKey:'C',instrument:currentInstrument,sections:[{type:'verse',label:'Verso',lines:[{lyrics:'',chords:[]}]}]},
   {source:'manual',onSave:(saved)=>{musicas.push(saved);salvar();renderMusicas();openDetail(saved.id);return true;}});
+}
+function openAiDraft(model){
+  model.instrument=currentInstrument;
+  openSongEditor(model,{source:'ai',onSave:(saved)=>{musicas.push(saved);salvar();renderMusicas();openDetail(saved.id);return true;}});
 }
 // ── SETLISTS ──────────────────────────────────────────────────────────
 function openAddSetlist(prefill){
