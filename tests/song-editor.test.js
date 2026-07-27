@@ -69,6 +69,17 @@ assert.ok(Array.isArray(saved.blocos));
 assert.ok(Array.isArray(saved.editorData.sections));
 assert.equal(saved.key, "E");
 
+const repeated = context.songFormat.normalize({
+  title: "Resumo IA", source: "ai",
+  sections: [{ label: "Trecho", lines: [{ lyrics: "Frase curta", repeticoes: 7, chords: [
+    { chord: "D", position: 0 }, { chord: "C", position: 3 }, { chord: "D", position: 6 }
+  ] }] }]
+});
+assert.equal(repeated.sections[0].lines[0].repeticoes, 7);
+const repeatedLegacy = context.songFormat.toLegacy(repeated);
+assert.match(repeatedLegacy.blocos[0].c, /D\s+C\s+D\s+\(7x\)/);
+assert.equal(repeatedLegacy.editorData.sections[0].lines[0].repeticoes, 7);
+
 for (const instrument of context.instrumentDefinitions.all) {
   assert.equal(context.songEditorValidation.chord("A9", instrument.id).valid, true, instrument.id);
   assert.equal(context.songEditorValidation.chord("D/F#", instrument.id).valid, true, instrument.id);
