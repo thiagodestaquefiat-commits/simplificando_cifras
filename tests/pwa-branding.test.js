@@ -8,6 +8,10 @@ const projectRoot = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.webmanifest"), "utf8"));
 const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
 const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
+const netlifyHeaders = fs.readFileSync(path.join(projectRoot, "_headers"), "utf8");
+const redirects = fs.readFileSync(path.join(projectRoot, "_redirects"), "utf8");
+const robots = fs.readFileSync(path.join(projectRoot, "robots.txt"), "utf8");
+const sitemap = fs.readFileSync(path.join(projectRoot, "sitemap.xml"), "utf8");
 const requiredIcons = [
   ["assets/icons/pwa-icon-v10-192.png", "192x192", "any"],
   ["assets/icons/pwa-icon-v10-512.png", "512x512", "any"],
@@ -23,14 +27,21 @@ for (const [src, sizes, purpose] of requiredIcons) {
 }
 assert.equal(manifest.name, "Simplificando Cifras");
 assert.equal(manifest.short_name, "Cifras");
-assert.equal(manifest.start_url, ".");
-assert.equal(manifest.scope, ".");
+assert.equal(manifest.id, "/");
+assert.equal(manifest.start_url, "/");
+assert.equal(manifest.scope, "/");
 assert.equal(manifest.display, "standalone");
+assert.ok(Array.isArray(manifest.screenshots) && manifest.screenshots.length >= 2);
+for (const screenshot of manifest.screenshots) assert.ok(fs.existsSync(path.join(projectRoot, screenshot.src)), `Screenshot ${screenshot.src} ausente`);
 assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
-assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
+assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=11"/);
+for (const tag of ["og:title", "og:description", "og:image", "og:url", "og:type", "og:site_name"]) assert.match(indexHtml, new RegExp(`property="${tag}"`), `${tag} ausente`);
+for (const tag of ["twitter:card", "twitter:title", "twitter:description", "twitter:image", "apple-mobile-web-app-capable", "apple-mobile-web-app-title", "apple-mobile-web-app-status-bar-style", "format-detection"]) assert.match(indexHtml, new RegExp(`name="${tag}"`), `${tag} ausente`);
+assert.match(indexHtml, /rel="canonical" href="https:\/\/simplificandocifras\.netlify\.app\/"/);
+assert.match(indexHtml, /rel="apple-touch-icon"[^>]+pwa-icon-v10-192\.png/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v13/);
+assert.match(serviceWorker, /simplificando-cifras-v14/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.css/);
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
@@ -38,6 +49,11 @@ assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js
 assert.match(serviceWorker, /self\.skipWaiting\(\)/);
 assert.match(serviceWorker, /self\.clients\.claim\(\)/);
 assert.doesNotMatch(serviceWorker, /\.\/icon\.svg|\.\/assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|"\.\/manifest\.webmanifest"/);
+assert.match(netlifyHeaders, /\/manifest\.webmanifest[\s\S]*Content-Type: application\/manifest\+json; charset=UTF-8/);
+assert.match(netlifyHeaders, /\/service-worker\.js[\s\S]*Cache-Control: no-cache, no-store, must-revalidate/);
+assert.match(redirects, /\/cifras_violao\.html\s+\/\s+301!/);
+assert.match(robots, /Sitemap: https:\/\/simplificandocifras\.netlify\.app\/sitemap\.xml/);
+assert.match(sitemap, /<loc>https:\/\/simplificandocifras\.netlify\.app\/<\/loc>/);
 
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
@@ -79,7 +95,7 @@ const server = http.createServer((request, response) => {
     const devtools = await context.newCDPSession(page);
     const appManifest = await devtools.send("Page.getAppManifest");
     assert.deepEqual(appManifest.errors, [], `Manifesto inválido no Chrome DevTools: ${JSON.stringify(appManifest.errors)}`);
-    assert.match(appManifest.url, /manifest\.webmanifest\?v=10$/);
+    assert.match(appManifest.url, /manifest\.webmanifest\?v=11$/);
     for (const [src] of requiredIcons) {
       const response = await page.request.get(new URL(src, url).href);
       assert.equal(response.status(), 200, `${src} não retornou HTTP 200`);
