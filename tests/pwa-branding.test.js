@@ -30,7 +30,16 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v12/);
+assert.match(serviceWorker, /simplificando-cifras-v39/);
+assert.match(serviceWorker, /js\/song-model\.js/);
+assert.match(serviceWorker, /js\/song-repository\.js/);
+assert.match(serviceWorker, /js\/spotify-config\.js/);
+assert.match(serviceWorker, /js\/spotify-auth\.js/);
+assert.match(serviceWorker, /js\/spotify-api\.js/);
+assert.match(serviceWorker, /js\/spotify-song-linker\.js/);
+assert.match(serviceWorker, /js\/spotify-player\.js/);
+assert.match(serviceWorker, /js\/spotify-player-ui\.js/);
+assert.match(serviceWorker, /js\/spotify-ui\.js/);
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
 assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js/);
 assert.match(serviceWorker, /self\.skipWaiting\(\)/);
@@ -93,6 +102,11 @@ const server = http.createServer((request, response) => {
     assert.match(download.suggestedFilename(), /^simplificando-cifras-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
     const serviceWorkerState = await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
+      if (registration.active && registration.active.state !== "activated") {
+        await new Promise((resolve) => registration.active.addEventListener("statechange", () => {
+          if (registration.active.state === "activated") resolve();
+        }));
+      }
       return { state: registration.active?.state, scriptURL: registration.active?.scriptURL };
     });
     assert.equal(serviceWorkerState.state, "activated");

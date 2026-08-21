@@ -26,6 +26,7 @@ require("../js/export-library.js");
 const context = {
   catalogoPadrao: [{ id: 1 }],
   musicas: [{ id: 1 }, { id: 99 }],
+  events: [{ id: 7, title: "Culto", musicas: [99] }],
   playlists: [{ id: 7, musicas: [99] }],
   medleys: [{ musicId: 99 }],
   favoritos: ["99"],
@@ -52,6 +53,7 @@ assert.equal(
   2
 );
 assert.deepEqual(payload.origens.sessaoAtual.playlists, context.playlists);
+assert.deepEqual(payload.origens.sessaoAtual.eventos, context.events);
 assert.deepEqual(payload.origens.sessaoAtual.medleys, context.medleys);
 assert.deepEqual(payload.origens.sessaoAtual.favoritos, context.favoritos);
 assert.deepEqual(payload.origens.sessaoAtual.configuracoes, context.configuracoes);
