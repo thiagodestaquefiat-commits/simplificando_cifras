@@ -50,7 +50,7 @@ require("../js/spotify-config.js");
 require("../js/spotify-auth.js");
 
 (async () => {
-  assert.equal(window.spotifyConfig.clientId, "f3ea3239c97644de99789061ad9a94b6");
+  assert.equal(window.spotifyConfig.clientId, "3b3df0f654164c56be04cd1d21460979");
   assert.equal(window.spotifyConfig.redirectUri, "http://127.0.0.1:4173/");
   assert.ok(window.spotifyConfig.scopes.includes("streaming"));
 
