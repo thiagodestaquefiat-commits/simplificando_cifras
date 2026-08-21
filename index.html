@@ -6,10 +6,13 @@
 <title>Simplificando Cifras</title>
 <meta name="theme-color" content="#07111f">
 <meta name="description" content="App de cifras com playlist musical, eventos, repertórios, membros, chat, medley e modo palco.">
+<meta name="sc-api-base-url" content="https://simplificandocifras-production.up.railway.app">
 <link rel="manifest" href="manifest.webmanifest?v=10">
 <link rel="icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
+<link rel="stylesheet" href="js/editor/song-editor.css">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -323,6 +326,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         </div>
       </div>
       <div class="spotify-results" id="spotify-results" style="display:none;"></div>
+      <button class="ai-generate-action" type="button" onclick="aiHarmonicSummary.open()">Gerar com IA</button>
       <div class="content" id="lista-musicas"></div>
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;">
@@ -457,6 +461,16 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
+<script src="js/editor/song-format.js"></script>
+<script src="js/editor/song-editor-history.js"></script>
+<script src="js/editor/song-editor-validation.js"></script>
+<script src="js/editor/chord-simplifier.js"></script>
+<script src="js/editor/song-editor-state.js"></script>
+<script src="js/editor/song-editor-renderer.js"></script>
+<script src="js/editor/song-editor.js"></script>
+<script src="js/ai/api-config.js"></script>
+<script src="js/ai/harmonic-summary-client.js"></script>
+<script src="js/ai/ai-harmonic-summary.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1015,8 +1029,9 @@ function renderDetail(){
   }).join('');
   const chordSheetHtml=blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`;
   document.getElementById('detail-content').innerHTML = chordSheetHtml +
+    `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong('${m.id}')">Gerar resumo com IA</button>`+
     `<div class="btn-row">
-      <button class="btn btn-outline" onclick="editMusica('${m.id}')">✏️ Editar</button>
+      <button class="btn btn-outline" onclick="openAdvancedSongEditor('${m.id}')">Editar cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
     </div>`;
 }
@@ -1304,6 +1319,23 @@ function editMusica(id){
     <button class="btn btn-primary" onclick="saveMusica()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
+}
+function openAiDraft(model,sourceSong){
+  model.instrument=currentInstrument;
+  openSongEditor(model,{source:'ai',existingSong:sourceSong||null,onSave:(saved)=>{
+    const candidate={...saved,...(sourceSong?{album:sourceSong.album,coverUrl:sourceSong.coverUrl,spotifyTrackId:sourceSong.spotifyTrackId,spotifyUri:sourceSong.spotifyUri,isrc:sourceSong.isrc,duration:sourceSong.duration}:{})};
+    const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate); musicas=result.songs; salvar(); renderMusicas(); openDetail(result.song.id); return true;
+  }});
+}
+function openAdvancedSongEditor(id){
+  const song=musicas.find(item=>String(item.id)===String(id)); if(!song) return;
+  openSongEditor(song,{source:'existing',existingSong:song,onSave:(saved)=>{
+    const result=songRepository.update(musicas,song.id,{...saved,id:song.id}); if(!result.song) return false;
+    musicas=result.songs; salvar(); renderMusicas(); openDetail(result.song.id); return true;
+  }});
+}
+function generateAiForSong(id){
+  const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
 
 function saveMusica(){
