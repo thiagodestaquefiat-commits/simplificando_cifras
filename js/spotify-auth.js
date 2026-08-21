@@ -4,7 +4,10 @@
   const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
   const TOKEN_URL = "https://accounts.spotify.com/api/token";
   const SESSION_KEY = "sc_spotify_auth_v1";
+  const PENDING_KEY = "sc_spotify_pkce_pending_v1";
   const EXPIRY_MARGIN_MS = 60000;
+  const PENDING_MAX_AGE_MS = 10 * 60 * 1000;
+  let authorizationPromise = null;
 
   function requireConfig() {
     if (!global.spotifyConfig || !global.spotifyConfig.clientId) {
@@ -40,6 +43,23 @@
     }
   }
 
+  function readPending() {
+    const shared = global.storage ? global.storage.get(PENDING_KEY, null) : null;
+    return shared || readSession().pending || null;
+  }
+
+  function writePending(pending) {
+    const session = readSession();
+    writeSession({ ...session, pending });
+    if (global.storage) global.storage.set(PENDING_KEY, pending);
+  }
+
+  function clearPending() {
+    const session = readSession();
+    writeSession({ ...session, pending: null });
+    if (global.storage) global.storage.remove(PENDING_KEY);
+  }
+
   function randomBase64Url(byteLength) {
     const bytes = new Uint8Array(byteLength);
     global.crypto.getRandomValues(bytes);
@@ -61,8 +81,7 @@
     const verifier = randomBase64Url(64);
     const state = randomBase64Url(24);
     const challenge = await createChallenge(verifier);
-    const session = readSession();
-    writeSession({ ...session, pending: { verifier, state, createdAt: Date.now() } });
+    writePending({ verifier, state, createdAt: Date.now() });
 
     const url = new URL(AUTHORIZE_URL);
     url.search = new URLSearchParams({
@@ -77,9 +96,15 @@
     return { url: url.toString(), state, verifier };
   }
 
-  async function startAuthorization() {
-    const request = await createAuthorizationRequest();
-    global.location.assign(request.url);
+  function startAuthorization() {
+    if (authorizationPromise) return authorizationPromise;
+    authorizationPromise = createAuthorizationRequest()
+      .then((request) => {
+        global.location.assign(request.url);
+        return request;
+      })
+      .finally(() => { authorizationPromise = null; });
+    return authorizationPromise;
   }
 
   async function requestToken(parameters) {
@@ -104,6 +129,7 @@
       expiresAt: Date.now() + Number(payload.expires_in || 3600) * 1000
     };
     writeSession({ ...current, pending: null, tokens });
+    if (global.storage) global.storage.remove(PENDING_KEY);
     return tokens;
   }
 
@@ -124,11 +150,11 @@
     try {
       if (error) throw new Error(error === "access_denied" ? "A conexão com o Spotify foi cancelada." : error);
       const state = parameters.get("state");
-      const session = readSession();
-      if (!session.pending || !state || state !== session.pending.state) {
+      const pending = readPending();
+      if (!pending || !state || state !== pending.state) {
         throw new Error("A validação de segurança do Spotify falhou. Tente conectar novamente.");
       }
-      if (!session.pending.createdAt || Date.now() - session.pending.createdAt > 10 * 60 * 1000) {
+      if (!pending.createdAt || Date.now() - pending.createdAt > PENDING_MAX_AGE_MS) {
         throw new Error("A tentativa de conexão com o Spotify expirou. Tente novamente.");
       }
       const payload = await requestToken({
@@ -136,11 +162,12 @@
         grant_type: "authorization_code",
         code,
         redirect_uri: global.spotifyConfig.redirectUri,
-        code_verifier: session.pending.verifier
+        code_verifier: pending.verifier
       });
       storeTokens(payload);
       return { handled: true, connected: true };
     } finally {
+      clearPending();
       cleanCallbackUrl();
     }
   }
@@ -172,6 +199,7 @@
   }
 
   function disconnect() {
+    clearPending();
     clearSession();
   }
 

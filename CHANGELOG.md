@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.1 — Reprodução completa no Spotify
+
+- Substitui o Spotify Embed escondido pelo Web Playback SDK oficial.
+- Usa o token OAuth PKCE já autenticado para criar um dispositivo Spotify Connect no navegador.
+- Inicia a faixa selecionada nesse dispositivo por meio da Web API.
+- Preserva mini player, player maximizado, linha do tempo, atalhos de 15 segundos e repetição.
+- Remove a limitação de prévia de 30 segundos do Embed para contas Premium autorizadas.
+- Adiciona mensagens específicas para sessão expirada, conta sem Premium, mídia protegida e autoplay bloqueado.
+- Torna pause e retomada determinísticos e refaz o fluxo protegido ao avançar ou retroceder, evitando áudio mudo e carregamento infinito após um seek.
+- Preserva temporariamente a transação PKCE entre abas, mantendo os tokens somente na sessão e removendo o verificador após o callback.
+- Impede que cliques concorrentes iniciem duas autorizações e invalidem o `state` esperado.
+- Atualiza o cache da PWA para `v42`.
+
 ## 0.4.0 — Eventos colaborativos (MVP local-first)
 
 - Renomeia a aba principal para **Playlist** e a antiga área de playlists para **Eventos**.

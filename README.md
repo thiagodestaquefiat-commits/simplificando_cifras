@@ -1,6 +1,6 @@
 # Simplificando Cifras
 
-O detalhe de cada música agora inclui um player de estudo do Spotify. Músicas importadas já chegam vinculadas; músicas antigas tentam uma associação exata por título e artista e, quando isso não for seguro, exibem uma busca manual. A reprodução usa o controle oficial do Spotify Embed para evitar falhas de dispositivo e autoplay.
+O detalhe de cada música agora inclui um player de estudo do Spotify. Músicas importadas já chegam vinculadas; músicas antigas tentam uma associação exata por título e artista e, quando isso não for seguro, exibem uma busca manual. A reprodução completa usa o Web Playback SDK e requer uma conta Spotify Premium autorizada no aplicativo.
 
 Aplicação web progressiva para organizar, estudar e executar repertórios musicais, criar eventos, escalar membros e conversar com a equipe.
 
@@ -66,11 +66,17 @@ O aplicativo Spotify deve possuir a Redirect URI de desenvolvimento abaixo, cada
 http://127.0.0.1:4173/
 ```
 
+Para a versão publicada no Netlify, cadastre também:
+
+```text
+https://simplificandocifras.netlify.app/
+```
+
 O Spotify não aceita `localhost` para esse fluxo. Execute o projeto em `127.0.0.1`, conecte a conta pelo botão **Conectar** e autorize os escopos solicitados.
 
 A integração usa PKCE no navegador. O Client ID é público; `Client Secret`, access tokens e refresh tokens não devem ser adicionados ao repositório. Os tokens da conta conectada ficam somente em `sessionStorage` e não fazem parte da exportação da biblioteca.
 
-Esta etapa implementa autenticação, renovação de token, pesquisa e importação. O Web Playback SDK será integrado separadamente e exigirá uma conta Spotify Premium.
+Esta etapa implementa autenticação, renovação de token, pesquisa, importação e reprodução completa pelo Web Playback SDK. No modo de desenvolvimento do Spotify, o proprietário precisa ter Premium e cada usuário de teste precisa estar autorizado no painel do aplicativo.
 
 ## Exportar biblioteca
 

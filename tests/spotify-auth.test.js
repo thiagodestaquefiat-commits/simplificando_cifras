@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { webcrypto } = require("node:crypto");
 
 const session = new Map();
+const shared = new Map();
 let assignedUrl = null;
 let replacedUrl = null;
 let tokenRequest = null;
@@ -21,6 +22,11 @@ global.window = {
     getItem(key) { return session.has(key) ? session.get(key) : null; },
     setItem(key, value) { session.set(key, value); },
     removeItem(key) { session.delete(key); }
+  },
+  storage: {
+    get(key, fallback) { return shared.has(key) ? shared.get(key) : fallback; },
+    set(key, value) { shared.set(key, value); return true; },
+    remove(key) { shared.delete(key); return true; }
   },
   crypto: webcrypto,
   btoa(value) { return Buffer.from(value, "binary").toString("base64"); },
@@ -61,6 +67,8 @@ require("../js/spotify-auth.js");
   assert.ok(assignedUrl.startsWith("https://accounts.spotify.com/authorize?"));
 
   const pending = JSON.parse(session.get("sc_spotify_auth_v1")).pending;
+  assert.deepEqual(shared.get("sc_spotify_pkce_pending_v1"), pending);
+  session.delete("sc_spotify_auth_v1"); // simula callback aberto em uma nova aba
   window.location.search = `?code=authorization-code&state=${encodeURIComponent(pending.state)}`;
   window.location.href = `http://127.0.0.1:4173/${window.location.search}`;
   const callback = await window.spotifyAuth.handleCallback();
@@ -73,6 +81,7 @@ require("../js/spotify-auth.js");
   assert.equal(tokenRequest.options.body.get("code_verifier"), pending.verifier);
   assert.equal(replacedUrl, "http://127.0.0.1:4173/");
   assert.equal(window.spotifyAuth.isAuthenticated(), true);
+  assert.equal(shared.has("sc_spotify_pkce_pending_v1"), false);
   assert.equal(await window.spotifyAuth.getAccessToken(), "access-1");
 
   window.spotifyAuth.disconnect();

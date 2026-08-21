@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v39/);
+assert.match(serviceWorker, /simplificando-cifras-v42/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
 assert.match(serviceWorker, /js\/spotify-config\.js/);
