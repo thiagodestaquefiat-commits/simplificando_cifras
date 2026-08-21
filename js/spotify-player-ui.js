@@ -338,8 +338,7 @@
     const container = element("spotify-song-player");
     const song = getSong();
     if (!container || !song) return;
-    // O iframe fica carregado fora da tela apenas como motor. A interface
-    // visível é sempre a versão personalizada, compacta ou maximizada.
+    // A interface visível controla o dispositivo criado pelo Web Playback SDK.
     global.spotifyPlayer.setNativeVisible(false);
     removeExpandedPanel();
     clear(container);

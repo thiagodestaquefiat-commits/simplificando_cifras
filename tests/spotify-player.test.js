@@ -1,47 +1,72 @@
 const assert = require("node:assert/strict");
 
 const actions = [];
-let fakeController = null;
+let fakePlayer = null;
 
-class FakeController {
-  constructor() { this.listeners = {}; }
-  addListener(name, listener) { this.listeners[name] = listener; }
-  loadEntity(uri) { actions.push("load:" + uri); }
-  play() {
-    actions.push("play");
-    this.listeners.playback_started({ data: { playingURI: "spotify:track:one" } });
-    this.listeners.playback_update({ data: { playingURI: "spotify:track:one", isPaused: false, isBuffering: false, position: 1000, duration: 180000 } });
+class FakePlayer {
+  constructor(options) {
+    this.options = options;
+    this.listeners = {};
+    fakePlayer = this;
+    actions.push("create:" + options.name);
   }
+  addListener(name, listener) { this.listeners[name] = listener; }
+  connect() {
+    actions.push("connect");
+    queueMicrotask(() => this.listeners.ready({ device_id: "browser-device" }));
+    return Promise.resolve(true);
+  }
+  activateElement() { actions.push("activate"); return Promise.resolve(); }
   pause() {
     actions.push("pause");
-    this.listeners.playback_update({ data: { playingURI: "spotify:track:one", isPaused: true, isBuffering: false, position: 1000, duration: 180000 } });
+    this.listeners.player_state_changed({
+      paused: true,
+      position: 1000,
+      duration: 180000,
+      repeat_mode: 0,
+      track_window: { current_track: { uri: "spotify:track:one" } }
+    });
+    return Promise.resolve();
   }
-  togglePlay() {
-    actions.push("togglePlay");
-    if (actions.filter((action) => action === "togglePlay").length % 2 === 1) this.play();
-    else this.pause();
+  resume() {
+    actions.push("resume");
+    this.listeners.player_state_changed({
+      paused: false,
+      position: 1000,
+      duration: 180000,
+      repeat_mode: 0,
+      track_window: { current_track: { uri: "spotify:track:one" } }
+    });
+    return Promise.resolve();
   }
-  seek(seconds) { actions.push("seek:" + seconds); }
-  restart() { actions.push("restart"); }
 }
 
 const fakeDocument = {
   querySelector() { return null; },
-  getElementById() { return null; },
-  createElement() { return { setAttribute() {}, addEventListener() {}, appendChild() {} }; },
-  head: { appendChild() {} },
-  body: { appendChild() {} }
+  createElement() { return { setAttribute() {}, addEventListener() {} }; },
+  head: { appendChild() {} }
 };
 
 global.window = {
   document: fakeDocument,
-  SpotifyIframeApi: {
-    createController(element, options, callback) {
-      actions.push("create:" + options.uri);
-      fakeController = new FakeController();
-      callback(fakeController);
-      queueMicrotask(() => fakeController.listeners.ready());
-    }
+  Spotify: { Player: FakePlayer },
+  spotifyAuth: {
+    isAuthenticated() { return true; },
+    async getAccessToken() { return "access-token"; }
+  },
+  spotifyApi: {
+    async startPlayback(deviceId, uri, position) {
+      actions.push("start:" + deviceId + ":" + uri + ":" + (position === undefined ? "initial" : position));
+      fakePlayer.listeners.player_state_changed({
+        paused: false,
+        position: Number(position) || 0,
+        duration: 180000,
+        repeat_mode: 0,
+        track_window: { current_track: { uri } }
+      });
+    },
+    async seekPlayback(deviceId, position) { actions.push("seek:" + deviceId + ":" + position); },
+    async setRepeatMode(deviceId, enabled) { actions.push("repeat:" + deviceId + ":" + enabled); }
   }
 };
 
@@ -54,16 +79,21 @@ require("../js/spotify-player.js");
   const duplicate = window.spotifyPlayer.toggle(song);
   assert.equal(first, duplicate, "cliques concorrentes devem compartilhar uma única operação");
   await first;
-  assert.equal(actions.filter((action) => action === "togglePlay").length, 1);
-  assert.equal(actions.filter((action) => action === "play").length, 1);
+  assert.equal(actions.filter((action) => action.startsWith("start:")).length, 1);
   assert.equal(actions.filter((action) => action.startsWith("create:")).length, 1);
+  assert.ok(actions.includes("start:browser-device:spotify:track:one:initial"));
 
+  await window.spotifyPlayer.seek(15000);
+  assert.ok(actions.includes("start:browser-device:spotify:track:one:15000"));
   await window.spotifyPlayer.toggle(song);
-  assert.equal(actions.filter((action) => action === "togglePlay").length, 2);
   assert.equal(actions.filter((action) => action === "pause").length, 1);
   await window.spotifyPlayer.seek(30000);
+  await window.spotifyPlayer.toggle(song);
   await window.spotifyPlayer.setRepeat(true);
-  assert.ok(actions.includes("seek:30"));
+  assert.ok(actions.includes("seek:browser-device:30000"));
+  assert.equal(actions.filter((action) => action === "resume").length, 1);
+  assert.ok(actions.includes("repeat:browser-device:true"));
+  assert.equal(fakePlayer.options.enableMediaSession, true);
   console.log("spotify-player.test.js: OK");
 })().catch((error) => {
   console.error(error);

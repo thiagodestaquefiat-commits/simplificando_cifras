@@ -63,14 +63,16 @@
     });
   }
 
-  async function startPlayback(deviceId, spotifyUri) {
+  async function startPlayback(deviceId, spotifyUri, positionMs) {
     if (!deviceId) throw new TypeError("O dispositivo do player Spotify é obrigatório.");
     if (!spotifyUri) throw new TypeError("A URI da música Spotify é obrigatória.");
     const parameters = new URLSearchParams({ device_id: deviceId });
+    const body = { uris: [spotifyUri] };
+    if (Number.isFinite(Number(positionMs))) body.position_ms = Math.max(0, Math.round(Number(positionMs)));
     return request("/me/player/play?" + parameters.toString(), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uris: [spotifyUri] })
+      body: JSON.stringify(body)
     });
   }
 
@@ -80,11 +82,20 @@
     return request("/me/player/play?" + parameters.toString(), { method: "PUT" });
   }
 
+  async function seekPlayback(deviceId, positionMs) {
+    if (!deviceId) throw new TypeError("O dispositivo do player Spotify é obrigatório.");
+    const parameters = new URLSearchParams({
+      device_id: deviceId,
+      position_ms: String(Math.max(0, Math.round(Number(positionMs) || 0)))
+    });
+    return request("/me/player/seek?" + parameters.toString(), { method: "PUT" });
+  }
+
   async function setRepeatMode(deviceId, enabled) {
     if (!deviceId) throw new TypeError("O dispositivo do player Spotify é obrigatório.");
     const parameters = new URLSearchParams({ state: enabled ? "track" : "off", device_id: deviceId });
     return request("/me/player/repeat?" + parameters.toString(), { method: "PUT" });
   }
 
-  global.spotifyApi = Object.freeze({ mapTrack, request, searchTracks, transferPlayback, startPlayback, resumePlayback, setRepeatMode });
+  global.spotifyApi = Object.freeze({ mapTrack, request, searchTracks, transferPlayback, startPlayback, resumePlayback, seekPlayback, setRepeatMode });
 })(window);

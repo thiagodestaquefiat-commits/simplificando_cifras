@@ -260,7 +260,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 @media (max-width:360px){.topbar{gap:8px}.topbar-icon{width:38px;height:38px;flex-basis:38px}.export-library-btn{max-width:72px;white-space:normal;line-height:1.05}.tab{font-size:11px;padding:9px 3px}.music-item{padding-inline:9px;gap:9px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 /* PLAYER SPOTIFY — barra fixa e tela expandida */
-#spotify-embed-engine{position:fixed;bottom:0;left:50%;z-index:-1;width:min(calc(100vw - 36px),480px);height:80px;overflow:hidden;opacity:.01;pointer-events:none;transform:translate(-50%,calc(100% + 120px))}#spotify-embed-engine iframe{width:100%!important;height:80px!important;border:0;border-radius:12px}#spotify-embed-engine.is-visible{bottom:max(12px,env(safe-area-inset-bottom));z-index:75;overflow:visible;opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 #view-detail:has(.song-player-shell.is-linked){padding-bottom:106px}
 #view-detail.stage-mode{padding-bottom:0}
 .song-player-shell.is-linked{position:fixed;right:0;bottom:0;left:0;z-index:26;width:100%;margin:0;padding:0;border:1px solid rgba(255,255,255,.14);border-right:0;border-bottom:0;border-left:0;border-radius:18px 18px 0 0;background:rgba(13,29,48,.65);box-shadow:0 -12px 36px rgba(0,0,0,.34);backdrop-filter:blur(14px) saturate(125%);-webkit-backdrop-filter:blur(14px) saturate(125%)}
@@ -446,11 +445,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/event-repository.js?v=1"></script>
 <script src="js/event-chat.js?v=1"></script>
 <script src="js/spotify-config.js"></script>
-<script src="js/spotify-auth.js"></script>
-<script src="js/spotify-api.js"></script>
+<script src="js/spotify-auth.js?v=2"></script>
+<script src="js/spotify-api.js?v=2"></script>
 <script src="js/spotify-song-linker.js?v=1"></script>
-<script src="js/spotify-player.js?v=12"></script>
-<script src="js/spotify-player-ui.js?v=12"></script>
+<script src="js/spotify-player.js?v=14"></script>
+<script src="js/spotify-player-ui.js?v=13"></script>
 <script src="js/spotify-ui.js?v=3"></script>
 <script src="js/export-library.js"></script>
 <script src="js/chord-library.js"></script>

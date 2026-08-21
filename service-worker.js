@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v39";
+const CACHE_NAME = "simplificando-cifras-v42";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,11 +9,11 @@ const ASSETS = [
   "./js/event-repository.js?v=1",
   "./js/event-chat.js?v=1",
   "./js/spotify-config.js",
-  "./js/spotify-auth.js",
-  "./js/spotify-api.js",
+  "./js/spotify-auth.js?v=2",
+  "./js/spotify-api.js?v=2",
   "./js/spotify-song-linker.js?v=1",
-  "./js/spotify-player.js?v=12",
-  "./js/spotify-player-ui.js?v=12",
+  "./js/spotify-player.js?v=14",
+  "./js/spotify-player-ui.js?v=13",
   "./js/spotify-ui.js?v=3",
   "./js/export-library.js",
   "./js/chord-library.js",
