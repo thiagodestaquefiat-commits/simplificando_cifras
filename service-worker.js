@@ -1,8 +1,20 @@
-const CACHE_NAME = "simplificando-cifras-v12";
+const CACHE_NAME = "simplificando-cifras-v39";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
+  "./js/song-model.js",
+  "./js/song-repository.js",
+  "./js/event-model.js?v=1",
+  "./js/event-repository.js?v=1",
+  "./js/event-chat.js?v=1",
+  "./js/spotify-config.js",
+  "./js/spotify-auth.js",
+  "./js/spotify-api.js",
+  "./js/spotify-song-linker.js?v=1",
+  "./js/spotify-player.js?v=12",
+  "./js/spotify-player-ui.js?v=12",
+  "./js/spotify-ui.js?v=3",
   "./js/export-library.js",
   "./js/chord-library.js",
   "./js/instruments/instrument-definitions.js",
@@ -37,6 +49,20 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+        }
+        return response;
+      }).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {
@@ -44,7 +70,7 @@ self.addEventListener("fetch", (event) => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         return response;
-      }).catch(() => event.request.mode === "navigate" ? caches.match("./index.html") : Response.error());
+      }).catch(() => Response.error());
     })
   );
 });

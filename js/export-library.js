@@ -2,8 +2,10 @@
   "use strict";
 
   const KNOWN_KEYS = Object.freeze({
-    musicas: ["cifras_musicas_v1", "sc_musicas_v2"],
+    musicas: ["cifras_musicas_v1", "sc_musicas_v2", "sc_songs_v1"],
     playlists: ["cifras_setlists_v1", "sc_playlists_v2"],
+    eventos: ["sc_events_v1"],
+    chatEventos: ["sc_event_messages_v1", "sc_event_chat_read_v1"],
     medleys: ["cifras_medleys_v1", "sc_medleys_v2", "cifras_medley_v1"],
     favoritos: ["cifras_favoritos_v1", "sc_favorites_v2"],
     configuracoes: ["cifras_configuracoes_v1", "sc_settings_v2", "cifras_settings_v1"]
@@ -58,6 +60,7 @@
         sessaoAtual: {
           descricao: "Estado em memória no momento da exportação",
           musicas: context.musicas,
+          eventos: context.events || context.playlists,
           playlists: context.playlists,
           medleys: context.medleys,
           favoritos: context.favoritos,

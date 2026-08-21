@@ -144,7 +144,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.ok(await page.getByText("F#11", { exact: true }).count() > 0);
     await page.locator(".back-btn").first().click();
 
-    await page.getByText("Playlists", { exact: false }).click();
+    await page.getByText("Eventos", { exact: false }).click();
     await page.getByText("Playlist de teste", { exact: true }).click();
     await page.locator(".sd-row").first().click();
     assert.equal(await page.locator("#btn-previous-song").isVisible(), true);
@@ -160,7 +160,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#btn-next-song").isDisabled(), true);
 
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.getByText("Playlists", { exact: false }).click();
+    await page.getByText("Eventos", { exact: false }).click();
     assert.equal(await page.getByText("Playlist de teste", { exact: true }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 1);
     assert.equal(errors.length, 0, `Erros no console: ${errors.join(" | ")}`);
