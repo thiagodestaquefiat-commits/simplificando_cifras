@@ -60,6 +60,19 @@ def canonicalize_chord(value: str) -> str:
     return _parse_chord(value)[1]
 
 
+def _compress_exact_repetition(chords: list[str]) -> tuple[list[str], int | None]:
+    """Comprime apenas quando o trecho inteiro é a repetição exata de um padrão."""
+    total = len(chords)
+    for unit_size in range(2, (total // 2) + 1):
+        if total % unit_size:
+            continue
+        repetitions = total // unit_size
+        unit = chords[:unit_size]
+        if repetitions <= 99 and unit * repetitions == chords:
+            return unit, repetitions
+    return chords, None
+
+
 def normalize_response(result: ResumoHarmonicoResponse, source_type: str) -> ResumoHarmonicoResponse:
     normalized = result.model_copy(deep=True)
     invalid = []
@@ -79,6 +92,8 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str) -> Res
             except ValueError:
                 invalid.append(chord)
         trecho.acordes = chords
+        if trecho.repeticoes is None:
+            trecho.acordes, trecho.repeticoes = _compress_exact_repetition(trecho.acordes)
 
     if invalid:
         normalized.observacoes.append(
