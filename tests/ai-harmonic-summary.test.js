@@ -55,4 +55,29 @@ assert.deepEqual(JSON.parse(JSON.stringify(model.sections[0].lines[0].chords.map
 assert.doesNotMatch(model.title + model.sections[0].lines[0].lyrics, /[<>]/);
 assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, trechos: [{ acordes: ["H7"], fraseGuia: "x" }] }), (error) => error.kind === "invalid_data");
 
-console.log("ai-harmonic-summary.test.js: OK (configuração, payload, conversão, repetições, frases e segurança)");
+(async () => {
+  const oversizedJson = {
+    ok: false,
+    status: 413,
+    json: async () => ({ erro: { codigo: "requisicao_muito_grande" } })
+  };
+  await assert.rejects(
+    context.harmonicSummaryClient.generate("pesquisa", { titulo: "Teste" }, { fetch: async () => oversizedJson }),
+    (error) => error.kind === "file_too_large" && /10 MB/.test(error.message)
+  );
+
+  const oversizedHtml = {
+    ok: false,
+    status: 413,
+    json: async () => { throw new SyntaxError("HTML response"); }
+  };
+  await assert.rejects(
+    context.harmonicSummaryClient.generate("pesquisa", { titulo: "Teste" }, { fetch: async () => oversizedHtml }),
+    (error) => error.kind === "file_too_large" && /10 MB/.test(error.message)
+  );
+
+  console.log("ai-harmonic-summary.test.js: OK (configuração, payload, 413, conversão, repetições, frases e segurança)");
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

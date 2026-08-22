@@ -111,9 +111,19 @@
       throw new HarmonicSummaryError("network", "Não foi possível conectar ao servidor.");
     }
     let data;
-    try { data = await response.json(); } catch (_) { throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status); }
+    try {
+      data = await response.json();
+    } catch (_) {
+      if (response.status === 413) {
+        throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
+      }
+      throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status);
+    }
     if (!response.ok) {
       const code = data?.erro?.codigo;
+      if (response.status === 413 || code === "requisicao_muito_grande" || code === "arquivo_muito_grande") {
+        throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
+      }
       if (response.status === 422 || code === "resultado_nao_confiavel") throw new HarmonicSummaryError("untrusted", "Não foi possível gerar um resumo harmônico confiável apenas com essas informações.", response.status);
       if (response.status === 429) throw new HarmonicSummaryError("rate_limit", "O limite de solicitações foi atingido. Aguarde um pouco e tente novamente.", response.status);
       if (response.status >= 500) throw new HarmonicSummaryError("server", "O servidor não conseguiu concluir a análise. Tente novamente mais tarde.", response.status);
