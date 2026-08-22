@@ -520,7 +520,7 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',1800);
 }
 // ── STATE ─────────────────────────────────────────────────────────────
-let currentDetailId=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, aiReviewDraft=null;
+let currentDetailId=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null;
 let setlists=[];
 
 let musicas=[
@@ -1031,7 +1031,7 @@ function renderDetail(){
   document.getElementById('detail-content').innerHTML = chordSheetHtml +
     `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong('${m.id}')">Gerar resumo com IA</button>`+
     `<div class="btn-row">
-      <button class="btn btn-outline" onclick="openAdvancedSongEditor('${m.id}')">Editar cifra</button>
+      <button class="btn btn-outline" onclick="editMusica('${m.id}')">Editar cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
     </div>`;
 }
@@ -1303,62 +1303,44 @@ function renderMusicas(){
 // ── EDIT / ADD ────────────────────────────────────────────────────────
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
-  const m=musicas.find(x=>x.id===nid); editingId=nid;
-  const raw=m.blocos.map(b=>(b.l?`${b.l}\n`:'')+b.c).join('\n\n');
-  document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">Editar música</div>
-    <div class="form-group"><label class="form-label">Título</label><input class="form-input" id="fm-title" value="${m.title}"></div>
-    <div class="form-group"><label class="form-label">Artista / Compositor</label><input class="form-input" id="fm-artist" value="${m.artist||''}" placeholder="ex: Fernandinho, Aline Barros..."></div>
-    <div class="form-group"><label class="form-label">Tom original</label><input class="form-input" id="fm-key" value="${m.key||''}"></div>
-    <div class="form-group"><label class="form-label">Capotraste</label><input class="form-input" id="fm-capo" value="${m.capo||''}"></div>
-    <div class="form-group">
-      <label class="form-label">Cifras</label>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">Use *texto* para negrito. Linha em branco separa estrofes.</div>
-      <textarea class="form-textarea" id="fm-blocos" style="min-height:180px;">${raw}</textarea>
-    </div>
-    <button class="btn btn-primary" onclick="saveMusica()">Salvar</button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
-  document.getElementById('modal-overlay').style.display='flex';
+  const song=musicas.find(item=>String(item.id)===String(nid));
+  if(song) openSimpleSongEditor(songFormat.fromLegacy(song),song);
 }
-function openAiDraft(model,sourceSong){
-  const normalized=songFormat.normalize({...model,instrument:currentInstrument,status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false});
+function openSimpleSongEditor(model,sourceSong,options={}){
+  const isAi=options.isAi===true||model.aiGenerated===true;
+  const normalized=songFormat.normalize({...model,instrument:model.instrument||currentInstrument,...(isAi?{status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false}:{})});
   if(sourceSong) normalized.id=sourceSong.id;
-  aiReviewDraft={model:normalized,sourceSong:sourceSong||null};
+  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null};
   const safe=value=>eventEsc(value==null?'':value);
   document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">Revisar resumo harmônico</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>
+    <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
+    ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
     <div class="form-group"><label class="form-label" for="ai-review-title">Título</label><input class="form-input" id="ai-review-title" value="${safe(normalized.title)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-artist">Artista</label><input class="form-input" id="ai-review-artist" value="${safe(normalized.artist)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-key">Tom original</label><input class="form-input" id="ai-review-key" value="${safe(normalized.originalKey)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-capo">Capotraste</label><input class="form-input" id="ai-review-capo" value="${normalized.capo||''}" placeholder="ex: 2"></div>
     <div class="form-group"><label class="form-label" for="ai-review-text">Cifra / Resumo</label><textarea class="form-textarea" id="ai-review-text" style="min-height:300px;">${safe(songFormat.simpleText(normalized))}</textarea></div>
-    <button class="btn btn-primary" onclick="saveAiDraftReview()">Salvar</button>
-    <button class="btn btn-outline" onclick="cancelAiDraftReview()">Cancelar</button>`;
+    <button class="btn btn-primary" onclick="saveSimpleSongReview()">Salvar</button>
+    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
-function saveAiDraftReview(){
-  if(!aiReviewDraft) return;
+function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
+function saveSimpleSongReview(){
+  if(!simpleReviewDraft) return;
   const title=document.getElementById('ai-review-title').value.trim();
   const raw=document.getElementById('ai-review-text').value;
   if(!title){showToast('⚠️ Informe o título');return;}
-  const sections=songFormat.sectionsFromSimpleText(raw,aiReviewDraft.model);
+  const sections=songFormat.sectionsFromSimpleText(raw,simpleReviewDraft.model);
   if(!sections.some(section=>section.lines.some(line=>line.chords.length))){showToast('⚠️ Adicione pelo menos um acorde');return;}
-  const originalKey=document.getElementById('ai-review-key').value.trim()||aiReviewDraft.model.originalKey;
-  const reviewed=songFormat.normalize({...aiReviewDraft.model,title,artist:document.getElementById('ai-review-artist').value.trim(),originalKey,currentKey:originalKey,capo:songFormat.parseCapo(document.getElementById('ai-review-capo').value),sections,status:'published',reviewedByUser:true});
-  const sourceSong=aiReviewDraft.sourceSong;
+  const originalKey=document.getElementById('ai-review-key').value.trim()||simpleReviewDraft.model.originalKey;
+  const reviewed=songFormat.normalize({...simpleReviewDraft.model,title,artist:document.getElementById('ai-review-artist').value.trim(),originalKey,currentKey:originalKey,capo:songFormat.parseCapo(document.getElementById('ai-review-capo').value),sections,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
+  const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
   const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
   musicas=result.songs;salvar();closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+title+' salva!');
 }
-function cancelAiDraftReview(){closeModal();}
 function openAdvancedSongEditor(id){
-  const song=musicas.find(item=>String(item.id)===String(id)); if(!song) return;
-  if(song.aiGenerated){openAiDraft(songFormat.fromLegacy(song),song);return;}
-  openSongEditor(song,{source:'existing',existingSong:song,onSave:(saved)=>{
-    const result=songRepository.update(musicas,song.id,{...saved,id:song.id}); if(!result.song) return false;
-    musicas=result.songs; salvar(); renderMusicas(); openDetail(result.song.id); return true;
-  }});
+  editMusica(id);
 }
 function generateAiForSong(id){
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
@@ -1654,6 +1636,21 @@ function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,
 function findEvent(id){return setlists.find(item=>String(item.id)===String(id));}
 function eventInitials(name){return String(name||'?').split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toUpperCase();}
 function eventDateTime(value){try{return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value));}catch(error){return '';}}
+function eventDateISO(value){
+  const text=String(value||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text))return text;
+  const br=text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return br?`${br[3]}-${br[2]}-${br[1]}`:'';
+}
+function eventDisplayDate(value){
+  const iso=eventDateISO(value);if(!iso)return String(value||'A definir');
+  const [year,month,day]=iso.split('-');return `${day}/${month}/${year}`;
+}
+function eventSortValue(event){
+  const iso=eventDateISO(event&&event.date);if(!iso)return Number.NEGATIVE_INFINITY;
+  const [year,month,day]=iso.split('-').map(Number),time=String(event.time||'').match(/^(\d{2}):(\d{2})$/);
+  return new Date(year,month-1,day,time?Number(time[1]):0,time?Number(time[2]):0).getTime();
+}
 function eventMemberAvatar(member){return member.avatarUrl?`<img src="${eventEsc(member.avatarUrl)}" alt="">`:eventEsc(eventInitials(member.name));}
 
 function openAddSetlist(prefill){
@@ -1687,7 +1684,7 @@ function openAddSetlist(prefill){
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${editingId?'Editar':'Novo'} evento</div>
     <div class="form-group"><label class="form-label">Nome do evento</label><input class="form-input" id="fs-title" value="${eventEsc(source.title==='Novo evento'?'':source.title)}" placeholder="Ex: Culto de domingo"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="form-group"><label class="form-label">Data</label><input class="form-input" id="fs-date" value="${eventEsc(source.date)}" placeholder="DD/MM/AAAA"></div><div class="form-group"><label class="form-label">Horário</label><input class="form-input" id="fs-time" type="time" value="${eventEsc(source.time)}"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="form-group"><label class="form-label" for="fs-date">Data</label><input class="form-input" id="fs-date" type="date" value="${eventEsc(eventDateISO(source.date))}"><div style="font-size:9px;color:var(--text2);margin-top:4px;">Toque para escolher no calendário</div></div><div class="form-group"><label class="form-label" for="fs-time">Horário</label><input class="form-input" id="fs-time" type="time" value="${eventEsc(source.time)}"></div></div>
     <div class="form-group"><label class="form-label">Local</label><input class="form-input" id="fs-location" value="${eventEsc(source.location)}" placeholder="Igreja, salão ou endereço"></div>
     <div class="form-group"><label class="form-label">Informações</label><textarea class="form-textarea" id="fs-description" placeholder="Orientações, passagem de som, observações...">${eventEsc(source.description)}</textarea></div>
     <div class="form-group"><label class="form-label">Repertório compartilhado — arraste para ordenar</label><div id="pl-selected"></div></div>
@@ -1720,10 +1717,10 @@ function openAddSetlist(prefill){
 function renderSetlists(){
   const target=document.getElementById('lista-setlists');
   if(!setlists.length){target.innerHTML='<div class="empty-state"><div class="emoji">📅</div><p>Nenhum evento ainda</p><p style="font-size:12px;margin-top:6px;">Toque no + para criar um evento</p></div>';return;}
-  target.innerHTML=[...setlists].sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(event=>{
+  target.innerHTML=[...setlists].sort((a,b)=>eventSortValue(b)-eventSortValue(a)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).map(event=>{
     const songs=event.musicas.map(id=>musicas.find(song=>String(song.id)===String(id))).filter(Boolean);
     const unread=(()=>{try{return eventChat.unreadCount(event.id);}catch(error){return 0;}})();
-    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}</div><div class="sl-sub">${eventEsc([event.date,event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
+    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
   }).join('');
 }
 
@@ -1731,7 +1728,7 @@ function openSD(id){
   const event=findEvent(id);if(!event)return;currentSdId=event.id;
   document.querySelector('#view-main .fab').style.display='none';
   document.getElementById('sd-title').textContent=event.title;
-  document.getElementById('sd-date').textContent=[event.date,event.time,event.location].filter(Boolean).join(' · ');
+  document.getElementById('sd-date').textContent=[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ');
   const rows=event.repertoire.map((item,index)=>{
     const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return'';
     const personal=item.personalEdits&&item.personalEdits[appCurrentUser.id]||{};
@@ -1742,7 +1739,7 @@ function openSD(id){
   const memberCards=event.members.length?event.members.map(member=>`<div class="event-member-card"><div class="event-member-avatar">${eventMemberAvatar(member)}</div><div><strong>${eventEsc(member.name)}</strong><span>${eventEsc(member.role)}</span></div></div>`).join(''):'<div style="color:var(--text2);font-size:11px;">Nenhum membro escalado.</div>';
   const notices=event.notifications.slice(-5).reverse().map(notice=>`<div class="event-notification"><strong>${eventEsc(notice.actorName)}</strong> ${eventEsc(notice.summary)} · ${eventEsc(eventDateTime(notice.createdAt))}</div>`).join('');
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
-  document.getElementById('sd-content').innerHTML=`<div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(event.date||'A definir')}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div class="event-section-title">Repertório compartilhado</div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-section-title">Membros participantes</div><div class="event-member-list">${memberCards}</div>${notices?`<div class="event-section-title">Alterações recentes</div>${notices}`:''}<div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div><button type="button" class="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento">💬${unread?`<span class="event-chat-fab-badge">${unread}</span>`:''}</button>`;
+  document.getElementById('sd-content').innerHTML=`<div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div class="event-section-title">Repertório compartilhado</div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-section-title">Membros participantes</div><div class="event-member-list">${memberCards}</div>${notices?`<div class="event-section-title">Alterações recentes</div>${notices}`:''}<div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div><button type="button" class="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento">💬${unread?`<span class="event-chat-fab-badge">${unread}</span>`:''}</button>`;
   document.getElementById('view-sd').style.display='flex';document.getElementById('view-sd').style.zIndex='15';
 }
 
@@ -1759,7 +1756,7 @@ function saveEventSongEdit(eventId,itemId){
   setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast(scope==='shared'?'🔔 Alteração compartilhada':'👤 Alteração pessoal salva');
 }
 
-function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[event.date,event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
+function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
 function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;setlists=eventRepository.remove(setlists,id);eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
 function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
@@ -1800,7 +1797,7 @@ function openPollModal(){document.getElementById('modal-body').innerHTML='<div c
 function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:document.getElementById('poll-question').value,options:document.getElementById('poll-options').value.split(/\n/),multiple:document.getElementById('poll-multiple').checked,showVoters:document.getElementById('poll-voters').checked});closeModal();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
 
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
-function closeModal(){document.getElementById('modal-overlay').style.display='none';editingId=null;aiReviewDraft=null;}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;}
 
 function exportarBiblioteca(){
   const result=libraryExporter.export({
