@@ -80,6 +80,23 @@ const repeatedLegacy = context.songFormat.toLegacy(repeated);
 assert.match(repeatedLegacy.blocos[0].c, /D\s+C\s+D\s+\(7x\)/);
 assert.equal(repeatedLegacy.editorData.sections[0].lines[0].repeticoes, 7);
 
+const simple = context.songFormat.simpleText(context.songFormat.normalize({
+  title: "Cultura do Céu", originalKey: "C", source: "ai",
+  sections: [
+    { type: "intro", label: "Intro", lines: [{ lyrics: "", repeticoes: null, chords: [{ chord: "F", position: 0 }, { chord: "Am", position: 3 }, { chord: "G", position: 7 }] }] },
+    { type: "custom", label: "Trecho 2", lines: [{ lyrics: "Aqui na terra como no céu", repeticoes: 3, chords: [{ chord: "F", position: 0 }, { chord: "Am", position: 3 }, { chord: "G", position: 7 }] }] },
+    { type: "outro", label: "Final", lines: [{ lyrics: "", repeticoes: null, chords: [{ chord: "Am", position: 0 }, { chord: "G", position: 4 }, { chord: "Em", position: 7 }] }] }
+  ]
+}));
+assert.match(simple, /^Intro\nF\s+Am\s+G/m);
+assert.match(simple, /Aqui na terra como no céu\nF\s+Am\s+G\s+\(3x\)/);
+assert.match(simple, /Final\nAm\s+G\s+Em$/);
+const simpleSections = context.songFormat.sectionsFromSimpleText(simple.replace("Aqui na terra", "Aqui nesta terra"), repeated);
+assert.equal(simpleSections[0].label, "Intro");
+assert.equal(simpleSections[1].lines[0].lyrics, "Aqui nesta terra como no céu");
+assert.equal(simpleSections[1].lines[0].repeticoes, 3);
+assert.deepEqual(JSON.parse(JSON.stringify(simpleSections[1].lines[0].chords.map((item) => item.chord))), ["F", "Am", "G"]);
+
 for (const instrument of context.instrumentDefinitions.all) {
   assert.equal(context.songEditorValidation.chord("A9", instrument.id).valid, true, instrument.id);
   assert.equal(context.songEditorValidation.chord("D/F#", instrument.id).valid, true, instrument.id);

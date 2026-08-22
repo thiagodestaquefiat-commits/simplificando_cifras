@@ -121,6 +121,66 @@
     return output.trimEnd();
   }
 
+  function repeatFromText(value) {
+    const match = String(value || "").match(/\s*\((\d{1,2})x\)\s*$/i);
+    if (!match) return { text: String(value || "").trim(), repeticoes: null };
+    const repeticoes = Number(match[1]);
+    return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
+  }
+
+  function simpleText(model) {
+    const normalized = normalize(model);
+    return normalized.sections.map((section, index) => {
+      const rows = [];
+      const label = cleanText(section.label, 120);
+      if (label && !new RegExp(`^(Trecho|Seção)\\s+${index + 1}$`, "i").test(label)) rows.push(label);
+      section.lines.forEach((line) => {
+        if (line.lyrics) rows.push(line.lyrics);
+        if (line.chords.length) rows.push(renderChordLine(line.chords) + (line.repeticoes ? `  (${line.repeticoes}x)` : ""));
+      });
+      return rows.join("\n").trim();
+    }).filter(Boolean).join("\n\n");
+  }
+
+  function sectionTypeFromLabel(label, fallback) {
+    const normalizedLabel = cleanText(label, 120).toLocaleLowerCase("pt-BR");
+    const found = TYPES.find(([key, title]) => normalizedLabel === key || normalizedLabel === title.toLocaleLowerCase("pt-BR"));
+    return found ? found[0] : (fallback || "custom");
+  }
+
+  function sectionsFromSimpleText(value, baseModel) {
+    const base = normalize(baseModel || {});
+    const groups = String(value || "").replace(/\r\n?/g, "\n").trim().split(/\n\s*\n+/).map((group) => group.split("\n").map((line) => line.trim()).filter(Boolean)).filter((group) => group.length);
+    return groups.map((sourceLines, index) => {
+      const baseSection = base.sections[index];
+      const lines = sourceLines.slice();
+      let label = baseSection?.label || `Trecho ${index + 1}`;
+      const first = lines[0] || "";
+      const bracketed = first.match(/^\[(.+)]$/) || first.match(/^\*(.+)\*$/);
+      const knownLabel = TYPES.some(([key, title]) => first.toLocaleLowerCase("pt-BR") === key || first.toLocaleLowerCase("pt-BR") === title.toLocaleLowerCase("pt-BR"));
+      const sameLabel = baseSection && first.toLocaleLowerCase("pt-BR") === String(baseSection.label || "").toLocaleLowerCase("pt-BR");
+      if (bracketed || knownLabel || sameLabel) {
+        label = cleanText(bracketed ? bracketed[1] : first, 120);
+        lines.shift();
+      }
+      const parsedLines = [];
+      let pendingLyrics = "";
+      lines.forEach((rawLine) => {
+        const candidate = repeatFromText(rawLine);
+        if (chordLine(candidate.text)) {
+          parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: candidate.repeticoes, chords: chordsFromText(candidate.text) });
+          pendingLyrics = "";
+        } else if (pendingLyrics) {
+          parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: null, chords: [] });
+          pendingLyrics = rawLine;
+        } else pendingLyrics = rawLine;
+      });
+      if (pendingLyrics) parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: null, chords: [] });
+      if (!parsedLines.length) parsedLines.push(normalizeLine({}));
+      return { id: baseSection?.id || id("section"), type: sectionTypeFromLabel(label, baseSection?.type), label, lines: parsedLines };
+    });
+  }
+
   function toLegacy(model, existing) {
     const normalized = normalize(model);
     const blocos = normalized.sections.map((section) => {
@@ -146,5 +206,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalize, fromLegacy, toLegacy, renderChordLine });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText });
 })(window);
