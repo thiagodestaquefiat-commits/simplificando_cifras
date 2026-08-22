@@ -15,5 +15,5 @@ class ProviderRefusal(ProviderError):
 
 class AiProvider(ABC):
     @abstractmethod
-    def generate(self, system_prompt: str, user_prompt: str) -> ResumoHarmonicoResponse:
+    def generate(self, system_prompt: str, user_prompt: str, media=None) -> ResumoHarmonicoResponse:
         raise NotImplementedError

@@ -1,8 +1,8 @@
 # Backend de resumo harmônico
 
-Backend Flask da primeira versão da IA do Simplificando Cifras. Nesta sprint,
-aceita pesquisa por título/artista e texto colado. Não recebe arquivos e não
-salva músicas ou conteúdo enviado.
+Backend Flask da IA do Simplificando Cifras. Aceita pesquisa por título/artista,
+texto colado e arquivos enviados pelo próprio usuário. Não salva músicas nem
+mantém cópias dos arquivos recebidos.
 
 ## Execução local
 
@@ -53,6 +53,12 @@ Texto:
   "conteudo": "Dm  Bb  C  G\nFrase curta"
 }
 ```
+
+Arquivo (`multipart/form-data`): campos `arquivo`, `titulo` opcional e `artista`
+opcional. São aceitos PDF (até 20 páginas), PNG, JPG/JPEG, WebP e TXT, com limite
+padrão de 10 MB. O backend valida extensão, MIME e assinatura dos bytes. PDFs
+textuais e TXT são extraídos localmente; imagens e PDFs escaneados usam a entrada
+visual do modelo. Todo o processamento intermediário ocorre em memória.
 
 Resultados de pesquisa são limitados a confiança média, recebem aviso de
 incerteza e nunca são salvos pelo backend. O frontend deverá abrir o resultado

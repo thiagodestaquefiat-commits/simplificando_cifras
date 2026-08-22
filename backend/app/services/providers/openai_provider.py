@@ -21,13 +21,21 @@ class OpenAIProvider(AiProvider):
         self._model = model
         self._max_output_tokens = max_output_tokens
 
-    def generate(self, system_prompt: str, user_prompt: str) -> ResumoHarmonicoResponse:
+    def generate(self, system_prompt: str, user_prompt: str, media=None) -> ResumoHarmonicoResponse:
+        user_content = [{"type": "input_text", "text": user_prompt}]
+        if media:
+            input_type = "input_file" if media.kind == "pdf" else "input_image"
+            key = "file_data" if input_type == "input_file" else "image_url"
+            item = {"type": input_type, key: media.data_url}
+            if input_type == "input_file":
+                item["filename"] = media.filename or "cifra.pdf"
+            user_content.append(item)
         try:
             response = self._client.responses.parse(
                 model=self._model,
                 input=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
+                    {"role": "user", "content": user_content},
                 ],
                 text_format=ResumoHarmonicoResponse,
                 max_output_tokens=self._max_output_tokens,

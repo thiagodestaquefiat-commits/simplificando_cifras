@@ -11,8 +11,8 @@ Retorne somente o objeto estruturado solicitado.
 
 Regras obrigatórias:
 - Nunca reproduza letra completa, estrofes completas ou longos trechos protegidos.
-- Cada fraseGuia deve usar somente o início mínimo necessário para reconhecer o trecho,
-  preferencialmente até 12 palavras e obrigatoriamente até 80 caracteres.
+- Cada fraseGuia deve vir exclusivamente do conteúdo fornecido, usar preferencialmente o início
+  do trecho, conter aproximadamente 3 a 8 palavras e nunca uma estrofe completa.
 - Preserve a ordem musical dos acordes.
 - Preserve sustenidos e bemóis musicalmente válidos da fonte na grafia exibida.
 - Não invente acordes, tom, frases ou repetições.
@@ -43,7 +43,7 @@ class IaService:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         return cls(provider)
 
-    def generate(self, payload: ResumoHarmonicoRequest) -> ResumoHarmonicoResponse:
+    def generate(self, payload: ResumoHarmonicoRequest, extracted=None) -> ResumoHarmonicoResponse:
         if payload.tipo == "pesquisa":
             user_prompt = (
                 "Gere um resumo harmônico por conhecimento do modelo.\n"
@@ -56,17 +56,24 @@ class IaService:
                 "ou você não conhecer acordes suficientes para formar ao menos um trecho confiável."
             )
         else:
+            source_text = extracted.text if extracted is not None else payload.conteudo
             user_prompt = (
-                "Extraia um resumo harmônico exclusivamente do conteúdo delimitado abaixo.\n"
+                "Extraia somente um resumo harmônico curto do conteúdo fornecido. Não transcreva o documento.\n"
                 f"Título informado: {payload.titulo or 'não informado'}\n"
                 f"Artista informado: {payload.artista or 'não informado'}\n"
+                "Identifique tom, seções, acordes e repetições; reduza redundâncias sem unir partes musicais diferentes.\n"
+                "fraseGuia deve ter 3 a 8 palavras copiadas literalmente do início do trecho correspondente; use vazio se não houver texto.\n"
                 "<conteudo_usuario>\n"
-                f"{payload.conteudo}\n"
+                f"{source_text or '[conteúdo visual anexado]'}\n"
                 "</conteudo_usuario>"
             )
 
         try:
-            result = self._provider.generate(SYSTEM_PROMPT, user_prompt)
+            result = self._provider.generate(
+                SYSTEM_PROMPT,
+                user_prompt,
+                extracted if extracted is not None and extracted.data_url else None,
+            )
         except ProviderRefusal as error:
             raise ApiError(
                 "resultado_nao_confiavel",
@@ -80,4 +87,11 @@ class IaService:
                 502,
             ) from error
 
-        return normalize_response(result, payload.tipo)
+        normalized = normalize_response(result, payload.tipo)
+        if payload.tipo != "pesquisa" and source_text:
+            source_folded = " ".join(source_text.casefold().split())
+            for trecho in normalized.trechos:
+                guide = " ".join((trecho.fraseGuia or "").casefold().split())
+                if guide and guide not in source_folded:
+                    trecho.fraseGuia = None
+        return normalized

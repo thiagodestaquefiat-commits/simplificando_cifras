@@ -14,7 +14,9 @@ def _csv(name: str, default: str) -> list[str]:
 
 class Config:
     JSON_SORT_KEYS = False
-    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(64 * 1024)))
+    MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", str(10 * 1024 * 1024)))
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(MAX_UPLOAD_SIZE + 64 * 1024)))
+    MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "20"))
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")

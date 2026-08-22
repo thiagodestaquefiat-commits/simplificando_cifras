@@ -22,7 +22,7 @@ def _clean_content(value: str | None) -> str | None:
 class ResumoHarmonicoRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    tipo: Literal["pesquisa", "texto"]
+    tipo: Literal["pesquisa", "texto", "arquivo"]
     titulo: str | None = Field(default=None, max_length=160)
     artista: str | None = Field(default=None, max_length=160)
     conteudo: str | None = None
@@ -54,14 +54,16 @@ class TrechoHarmonico(BaseModel):
 
     acordes: list[str] = Field(default_factory=list, max_length=64)
     repeticoes: int | None = Field(default=None, ge=1, le=99)
-    fraseGuia: str = Field(default="", max_length=80)
+    fraseGuia: str | None = Field(default=None, max_length=80)
     secao: str | None = Field(default=None, max_length=80)
 
     @field_validator("fraseGuia")
     @classmethod
-    def limit_guide_words(cls, value: str) -> str:
+    def limit_guide_words(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         words = value.split()
-        return " ".join(words[:12])[:80].strip()
+        return " ".join(words[:8])[:80].strip()
 
 
 class ResumoHarmonicoResponse(BaseModel):
