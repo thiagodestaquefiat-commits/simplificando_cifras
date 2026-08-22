@@ -263,8 +263,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 @media (max-width:360px){.topbar{gap:8px}.topbar-icon{width:38px;height:38px;flex-basis:38px}.export-library-btn{max-width:72px;white-space:normal;line-height:1.05}.tab{font-size:11px;padding:9px 3px}.music-item{padding-inline:9px;gap:9px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 /* PLAYER SPOTIFY — barra fixa e tela expandida */
-#view-detail:has(.song-player-shell.is-linked){padding-bottom:106px}
-#view-detail.stage-mode{padding-bottom:0}
+.detail-view.has-global-player{padding-bottom:calc(106px + env(safe-area-inset-bottom))}
 .song-player-shell.is-linked{position:fixed;right:0;bottom:0;left:0;z-index:26;width:100%;margin:0;padding:0;border:1px solid rgba(255,255,255,.14);border-right:0;border-bottom:0;border-left:0;border-radius:18px 18px 0 0;background:rgba(13,29,48,.65);box-shadow:0 -12px 36px rgba(0,0,0,.34);backdrop-filter:blur(14px) saturate(125%);-webkit-backdrop-filter:blur(14px) saturate(125%)}
 .song-player-shell.is-search{position:relative;margin:12px 14px 3px;padding:14px;border:1px solid rgba(34,197,94,.22);border-radius:15px;background:linear-gradient(145deg,rgba(12,34,36,.92),rgba(11,23,40,.96));box-shadow:0 8px 24px rgba(0,0,0,.14)}
 .song-player-compact{position:relative;display:flex;width:min(100%,920px);min-height:84px;margin-inline:auto;align-items:center;gap:12px;padding:9px max(14px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));overflow:hidden;border-radius:18px 18px 0 0;cursor:pointer}.song-player-compact:hover{background:rgba(255,255,255,.035)}
@@ -348,6 +347,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       </div>
       <span class="detail-key-badge" id="detail-key"></span>
     </div>
+    <span id="spotify-song-player-anchor" hidden></span>
     <section class="song-player-shell" id="spotify-song-player" aria-label="Player Spotify da música"></section>
     <!-- ACORDES + INSTRUMENTO -->
     <div id="chord-diagrams-section" style="background:var(--bg2);border-bottom:1px solid var(--border);">
