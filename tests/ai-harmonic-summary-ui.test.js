@@ -90,6 +90,20 @@ const success = {
     assert.match(await page.locator("[data-ai-status]").innerText(), /conectar ao servidor/);
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
 
+    await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
+    await page.getByRole("tab", { name: "Arquivo", exact: true }).click();
+    const fileForm = page.locator("[data-ai-form=arquivo]");
+    assert.equal(await fileForm.isVisible(), true);
+    await fileForm.getByLabel(/PDF, PNG, JPG/).setInputFiles({ name: "cifra.txt", mimeType: "text/plain", buffer: Buffer.from("Tom: Dm\nDm Bb C G") });
+    let multipartRequest;
+    await page.route(apiEndpoint, async (route) => { multipartRequest = route.request(); await route.abort("failed"); }, { times: 1 });
+    await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
+    await page.waitForTimeout(80);
+    assert.match(multipartRequest.headers()["content-type"], /multipart\/form-data; boundary=/);
+    assert.match(multipartRequest.postData(), /cifra\.txt/);
+    assert.match(await page.locator("[data-ai-status]").innerText(), /conectar ao servidor/);
+    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+
     assert.equal(errors.length, 0, errors.join(" | "));
     console.log("ai-harmonic-summary-ui.test.js: OK (modal, modos, loading, sucesso, erros, rascunho, transposição e XSS)");
   } finally { await context.close(); await browser.close(); server.close(); }

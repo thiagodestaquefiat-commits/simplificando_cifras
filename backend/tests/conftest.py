@@ -13,6 +13,8 @@ class TestConfig:
     TESTING = True
     MAX_CONTENT_LENGTH = 64 * 1024
     MAX_TEXT_LENGTH = 50000
+    MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+    MAX_PDF_PAGES = 20
     CORS_ALLOWED_ORIGINS = ["http://localhost:5500"]
     RESUMO_RATE_LIMIT = "1000 per minute"
     RATELIMIT_STORAGE_URI = "memory://"

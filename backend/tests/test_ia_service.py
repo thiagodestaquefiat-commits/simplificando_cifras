@@ -11,9 +11,10 @@ class FakeProvider:
         self.system_prompt = ""
         self.user_prompt = ""
 
-    def generate(self, system_prompt, user_prompt):
+    def generate(self, system_prompt, user_prompt, media=None):
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
+        self.media = media
         return ResumoHarmonicoResponse(
             titulo="Teste",
             artista=None,
@@ -46,6 +47,14 @@ def test_request_preserves_musical_line_breaks():
         conteudo="C  G\nPrimeira frase\nAm  F",
     )
     assert request.conteudo == "C  G\nPrimeira frase\nAm  F"
+
+
+def test_text_clears_guide_not_present_in_user_content():
+    provider = FakeProvider()
+    service = IaService(provider)
+    request = ResumoHarmonicoRequest(tipo="texto", titulo="Teste", conteudo="C G\nOutra frase real")
+    result = service.generate(request)
+    assert result.trechos[0].fraseGuia is None
 
 
 def test_research_prompt_allows_known_song_without_external_source():

@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from io import BytesIO
 
 from app.schemas.resumo_harmonico import ResumoHarmonicoResponse, TrechoHarmonico
 
@@ -81,6 +82,28 @@ def test_rejects_malformed_json_with_json_error(client):
     assert response.status_code == 400
     assert response.is_json
     assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
+
+
+@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+def test_txt_upload_returns_same_structured_contract(generate, client):
+    generate.return_value = sample_result()
+    response = client.post(
+        "/api/resumo-harmonico",
+        data={
+            "titulo": "Canção teste",
+            "arquivo": (BytesIO(b"Tom: Db\nDb B4 Gb/Bb"), "cifra.txt", "text/plain"),
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert response.get_json()["schemaVersion"] == 1
+    assert generate.call_args.args[2] is None
+
+
+def test_upload_requires_file(client):
+    response = client.post("/api/resumo-harmonico", data={"titulo": "Sem arquivo"}, content_type="multipart/form-data")
+    assert response.status_code == 400
+    assert response.get_json()["erro"]["codigo"] == "arquivo_obrigatorio"
 
 
 def test_cors_is_not_wildcard(client):

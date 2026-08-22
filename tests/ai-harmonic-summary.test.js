@@ -22,8 +22,14 @@ context.SIMPLIFICANDO_CIFRAS_CONFIG = { API_BASE_URL: "https://backend.example/"
 assert.equal(context.apiConfig.harmonicSummaryEndpoint(), "https://backend.example/api/resumo-harmonico");
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Rugido do Leão ", artista: "" }))), { tipo: "pesquisa", titulo: "Rugido do Leão" });
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("texto", { conteudo: "Dm Bb C" }))), { tipo: "texto", conteudo: "Dm Bb C" });
+const upload = { name: "cifra.png", size: 1024 };
+const uploadPayload = context.harmonicSummaryClient.validatePayload("arquivo", { arquivo: upload, titulo: " Música " });
+assert.equal(uploadPayload.tipo, "arquivo");
+assert.equal(uploadPayload.arquivo, upload);
+assert.equal(uploadPayload.titulo, "Música");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
+assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
 
 const response = {
   schemaVersion: 1,
