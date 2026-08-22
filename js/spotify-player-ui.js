@@ -14,6 +14,18 @@
   const attemptedSongs = new Set();
 
   function element(id) { return global.document.getElementById(id); }
+  function detailView() { return element("view-detail"); }
+  function mountGlobalPlayer(container) {
+    if (global.document.body && container.parentNode !== global.document.body) global.document.body.appendChild(container);
+    const detail = detailView();
+    if (detail) detail.classList.add("has-global-player");
+  }
+  function mountInlinePlayer(container) {
+    const anchor = element("spotify-song-player-anchor");
+    if (anchor && anchor.parentNode && container.previousElementSibling !== anchor) anchor.parentNode.insertBefore(container, anchor.nextSibling);
+    const detail = detailView();
+    if (detail) detail.classList.remove("has-global-player");
+  }
   function getSong() {
     return context && context.getSongs().find((song) => String(song.id) === String(currentSongId));
   }
@@ -157,6 +169,7 @@
   }
 
   function renderCompact(container, song) {
+    mountGlobalPlayer(container);
     container.className = "song-player-shell is-linked";
     const compact = global.document.createElement("div");
     compact.className = "song-player-compact";
@@ -313,6 +326,7 @@
   }
 
   function renderSearch(container, message) {
+    mountInlinePlayer(container);
     container.className = "song-player-shell is-search";
     const heading = global.document.createElement("div");
     heading.className = "song-player-heading";
@@ -349,7 +363,7 @@
     }
     if (song.spotifyUri && !manualMode) {
       renderCompact(container, song);
-      if (expanded) renderExpanded(element("view-detail"), song);
+      if (expanded) renderExpanded(global.document.body, song);
     }
     else renderSearch(container, message);
   }
@@ -403,6 +417,12 @@
     removeExpandedPanel();
     requestVersion += 1;
     clearTimeout(searchTimer);
+    const container = element("spotify-song-player");
+    if (container) {
+      clear(container);
+      container.className = "song-player-shell";
+      mountInlinePlayer(container);
+    }
   }
 
   function showManualSearch() {

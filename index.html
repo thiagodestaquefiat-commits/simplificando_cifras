@@ -6,10 +6,13 @@
 <title>Simplificando Cifras</title>
 <meta name="theme-color" content="#07111f">
 <meta name="description" content="App de cifras com playlist musical, eventos, repertórios, membros, chat, medley e modo palco.">
+<meta name="sc-api-base-url" content="https://simplificandocifras-production.up.railway.app">
 <link rel="manifest" href="manifest.webmanifest?v=10">
 <link rel="icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
+<link rel="stylesheet" href="js/editor/song-editor.css">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -260,8 +263,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 @media (max-width:360px){.topbar{gap:8px}.topbar-icon{width:38px;height:38px;flex-basis:38px}.export-library-btn{max-width:72px;white-space:normal;line-height:1.05}.tab{font-size:11px;padding:9px 3px}.music-item{padding-inline:9px;gap:9px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 /* PLAYER SPOTIFY — barra fixa e tela expandida */
-#view-detail:has(.song-player-shell.is-linked){padding-bottom:106px}
-#view-detail.stage-mode{padding-bottom:0}
+.detail-view.has-global-player{padding-bottom:calc(106px + env(safe-area-inset-bottom))}
 .song-player-shell.is-linked{position:fixed;right:0;bottom:0;left:0;z-index:26;width:100%;margin:0;padding:0;border:1px solid rgba(255,255,255,.14);border-right:0;border-bottom:0;border-left:0;border-radius:18px 18px 0 0;background:rgba(13,29,48,.65);box-shadow:0 -12px 36px rgba(0,0,0,.34);backdrop-filter:blur(14px) saturate(125%);-webkit-backdrop-filter:blur(14px) saturate(125%)}
 .song-player-shell.is-search{position:relative;margin:12px 14px 3px;padding:14px;border:1px solid rgba(34,197,94,.22);border-radius:15px;background:linear-gradient(145deg,rgba(12,34,36,.92),rgba(11,23,40,.96));box-shadow:0 8px 24px rgba(0,0,0,.14)}
 .song-player-compact{position:relative;display:flex;width:min(100%,920px);min-height:84px;margin-inline:auto;align-items:center;gap:12px;padding:9px max(14px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));overflow:hidden;border-radius:18px 18px 0 0;cursor:pointer}.song-player-compact:hover{background:rgba(255,255,255,.035)}
@@ -323,6 +325,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         </div>
       </div>
       <div class="spotify-results" id="spotify-results" style="display:none;"></div>
+      <button class="ai-generate-action" type="button" onclick="aiHarmonicSummary.open()">Gerar com IA</button>
       <div class="content" id="lista-musicas"></div>
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;">
@@ -344,6 +347,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       </div>
       <span class="detail-key-badge" id="detail-key"></span>
     </div>
+    <span id="spotify-song-player-anchor" hidden></span>
     <section class="song-player-shell" id="spotify-song-player" aria-label="Player Spotify da música"></section>
     <!-- ACORDES + INSTRUMENTO -->
     <div id="chord-diagrams-section" style="background:var(--bg2);border-bottom:1px solid var(--border);">
@@ -444,7 +448,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/event-model.js?v=1"></script>
 <script src="js/event-repository.js?v=1"></script>
 <script src="js/event-chat.js?v=1"></script>
-<script src="js/spotify-config.js"></script>
+<script src="js/spotify-config.js?v=2"></script>
 <script src="js/spotify-auth.js?v=2"></script>
 <script src="js/spotify-api.js?v=2"></script>
 <script src="js/spotify-song-linker.js?v=1"></script>
@@ -457,6 +461,16 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
+<script src="js/editor/song-format.js"></script>
+<script src="js/editor/song-editor-history.js"></script>
+<script src="js/editor/song-editor-validation.js"></script>
+<script src="js/editor/chord-simplifier.js"></script>
+<script src="js/editor/song-editor-state.js"></script>
+<script src="js/editor/song-editor-renderer.js"></script>
+<script src="js/editor/song-editor.js"></script>
+<script src="js/ai/api-config.js"></script>
+<script src="js/ai/harmonic-summary-client.js"></script>
+<script src="js/ai/ai-harmonic-summary.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -506,7 +520,7 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',1800);
 }
 // ── STATE ─────────────────────────────────────────────────────────────
-let currentDetailId=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null;
+let currentDetailId=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, aiReviewDraft=null;
 let setlists=[];
 
 let musicas=[
@@ -1015,8 +1029,9 @@ function renderDetail(){
   }).join('');
   const chordSheetHtml=blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`;
   document.getElementById('detail-content').innerHTML = chordSheetHtml +
+    `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong('${m.id}')">Gerar resumo com IA</button>`+
     `<div class="btn-row">
-      <button class="btn btn-outline" onclick="editMusica('${m.id}')">✏️ Editar</button>
+      <button class="btn btn-outline" onclick="openAdvancedSongEditor('${m.id}')">Editar cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
     </div>`;
 }
@@ -1304,6 +1319,49 @@ function editMusica(id){
     <button class="btn btn-primary" onclick="saveMusica()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
+}
+function openAiDraft(model,sourceSong){
+  const normalized=songFormat.normalize({...model,instrument:currentInstrument,status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false});
+  if(sourceSong) normalized.id=sourceSong.id;
+  aiReviewDraft={model:normalized,sourceSong:sourceSong||null};
+  const safe=value=>eventEsc(value==null?'':value);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-title">Revisar resumo harmônico</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>
+    <div class="form-group"><label class="form-label" for="ai-review-title">Título</label><input class="form-input" id="ai-review-title" value="${safe(normalized.title)}"></div>
+    <div class="form-group"><label class="form-label" for="ai-review-artist">Artista</label><input class="form-input" id="ai-review-artist" value="${safe(normalized.artist)}"></div>
+    <div class="form-group"><label class="form-label" for="ai-review-key">Tom original</label><input class="form-input" id="ai-review-key" value="${safe(normalized.originalKey)}"></div>
+    <div class="form-group"><label class="form-label" for="ai-review-capo">Capotraste</label><input class="form-input" id="ai-review-capo" value="${normalized.capo||''}" placeholder="ex: 2"></div>
+    <div class="form-group"><label class="form-label" for="ai-review-text">Cifra / Resumo</label><textarea class="form-textarea" id="ai-review-text" style="min-height:300px;">${safe(songFormat.simpleText(normalized))}</textarea></div>
+    <button class="btn btn-primary" onclick="saveAiDraftReview()">Salvar</button>
+    <button class="btn btn-outline" onclick="cancelAiDraftReview()">Cancelar</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function saveAiDraftReview(){
+  if(!aiReviewDraft) return;
+  const title=document.getElementById('ai-review-title').value.trim();
+  const raw=document.getElementById('ai-review-text').value;
+  if(!title){showToast('⚠️ Informe o título');return;}
+  const sections=songFormat.sectionsFromSimpleText(raw,aiReviewDraft.model);
+  if(!sections.some(section=>section.lines.some(line=>line.chords.length))){showToast('⚠️ Adicione pelo menos um acorde');return;}
+  const originalKey=document.getElementById('ai-review-key').value.trim()||aiReviewDraft.model.originalKey;
+  const reviewed=songFormat.normalize({...aiReviewDraft.model,title,artist:document.getElementById('ai-review-artist').value.trim(),originalKey,currentKey:originalKey,capo:songFormat.parseCapo(document.getElementById('ai-review-capo').value),sections,status:'published',reviewedByUser:true});
+  const sourceSong=aiReviewDraft.sourceSong;
+  const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
+  const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
+  musicas=result.songs;salvar();closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+title+' salva!');
+}
+function cancelAiDraftReview(){closeModal();}
+function openAdvancedSongEditor(id){
+  const song=musicas.find(item=>String(item.id)===String(id)); if(!song) return;
+  if(song.aiGenerated){openAiDraft(songFormat.fromLegacy(song),song);return;}
+  openSongEditor(song,{source:'existing',existingSong:song,onSave:(saved)=>{
+    const result=songRepository.update(musicas,song.id,{...saved,id:song.id}); if(!result.song) return false;
+    musicas=result.songs; salvar(); renderMusicas(); openDetail(result.song.id); return true;
+  }});
+}
+function generateAiForSong(id){
+  const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
 
 function saveMusica(){
@@ -1742,7 +1800,7 @@ function openPollModal(){document.getElementById('modal-body').innerHTML='<div c
 function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:document.getElementById('poll-question').value,options:document.getElementById('poll-options').value.split(/\n/),multiple:document.getElementById('poll-multiple').checked,showVoters:document.getElementById('poll-voters').checked});closeModal();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
 
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
-function closeModal(){document.getElementById('modal-overlay').style.display='none'; editingId=null;}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';editingId=null;aiReviewDraft=null;}
 
 function exportarBiblioteca(){
   const result=libraryExporter.export({

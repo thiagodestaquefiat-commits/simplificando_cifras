@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v42";
+const CACHE_NAME = "simplificando-cifras-v48";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const ASSETS = [
   "./js/event-model.js?v=1",
   "./js/event-repository.js?v=1",
   "./js/event-chat.js?v=1",
-  "./js/spotify-config.js",
+  "./js/spotify-config.js?v=2",
   "./js/spotify-auth.js?v=2",
   "./js/spotify-api.js?v=2",
   "./js/spotify-song-linker.js?v=1",
@@ -21,6 +21,18 @@ const ASSETS = [
   "./js/instruments/multi-instrument-chord-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
+  "./js/editor/song-format.js",
+  "./js/editor/song-editor-history.js",
+  "./js/editor/song-editor-validation.js",
+  "./js/editor/chord-simplifier.js",
+  "./js/editor/song-editor-state.js",
+  "./js/editor/song-editor-renderer.js",
+  "./js/editor/song-editor.js",
+  "./js/editor/song-editor.css",
+  "./js/ai/api-config.js",
+  "./js/ai/harmonic-summary-client.js",
+  "./js/ai/ai-harmonic-summary.js",
+  "./js/ai/ai-harmonic-summary.css",
   "./manifest.webmanifest?v=10",
   "./assets/logo-simplificando-cifras.png",
   "./assets/icons/pwa-icon-v10-192.png",
