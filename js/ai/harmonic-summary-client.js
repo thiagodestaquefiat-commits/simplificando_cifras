@@ -31,6 +31,12 @@
       if (artista) payload.artista = artista;
       return payload;
     }
+    if (mode === "arquivo") {
+      const arquivo = data.arquivo;
+      if (!arquivo || typeof arquivo.name !== "string") throw new HarmonicSummaryError("invalid_input", "Selecione um arquivo para analisar.");
+      if (arquivo.size > 10 * 1024 * 1024) throw new HarmonicSummaryError("invalid_input", "O arquivo deve ter no máximo 10 MB.");
+      return { tipo: "arquivo", arquivo, titulo: clean(data.titulo, 160).trim(), artista: clean(data.artista, 160).trim() };
+    }
     throw new HarmonicSummaryError("invalid_input", "Modo de análise inválido.");
   }
 
@@ -39,7 +45,7 @@
       throw new HarmonicSummaryError("invalid_data", "O servidor retornou dados inválidos.");
     }
     data.trechos.forEach((trecho) => {
-      if (!trecho || !Array.isArray(trecho.acordes) || typeof trecho.fraseGuia !== "string") throw new HarmonicSummaryError("invalid_data", "O servidor retornou um trecho inválido.");
+      if (!trecho || !Array.isArray(trecho.acordes) || (trecho.fraseGuia != null && typeof trecho.fraseGuia !== "string")) throw new HarmonicSummaryError("invalid_data", "O servidor retornou um trecho inválido.");
       trecho.acordes.forEach((chord) => {
         if (typeof chord !== "string" || !global.multiInstrumentChordLibrary.parseChord(chord)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou um acorde inválido.");
       });
@@ -86,11 +92,18 @@
     const settings = options || {};
     const payload = validatePayload(mode, values);
     let response;
+    const isFile = mode === "arquivo";
+    const body = isFile ? new FormData() : JSON.stringify(payload);
+    if (isFile) {
+      body.append("arquivo", payload.arquivo);
+      if (payload.titulo) body.append("titulo", payload.titulo);
+      if (payload.artista) body.append("artista", payload.artista);
+    }
     try {
       response = await (settings.fetch || global.fetch)(global.apiConfig.harmonicSummaryEndpoint(), {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload),
+        headers: isFile ? { "Accept": "application/json" } : { "Content-Type": "application/json", "Accept": "application/json" },
+        body,
         signal: settings.signal
       });
     } catch (error) {
