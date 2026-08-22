@@ -34,9 +34,20 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.getByText("Eventos", { exact: false }).click();
+    await page.evaluate(() => {
+      setlists = eventModel.normalizeCollection([
+        { id: "older", title: "Evento antigo", date: "05/07/2026", time: "20:00" },
+        { id: "newest", title: "Evento mais recente", date: "2026-09-10", time: "19:00" },
+        { id: "middle", title: "Evento intermediário", date: "23/08/2026", time: "09:00" }
+      ]);
+      renderSetlists();
+    });
+    assert.deepEqual(await page.locator("#lista-setlists .sl-title").allTextContents(), ["Evento mais recente", "Evento intermediário", "Evento antigo"]);
     await page.locator(".fab").click();
+    assert.equal(await page.locator("#fs-date").getAttribute("type"), "date");
+    assert.equal(await page.getByText("Toque para escolher no calendário", { exact: true }).count(), 1);
     await page.locator("#fs-title").fill("Culto de teste");
-    await page.locator("#fs-date").fill("23/08/2026");
+    await page.locator("#fs-date").fill("2026-08-23");
     await page.locator("#fs-time").fill("19:30");
     await page.locator("#fs-location").fill("Igreja Central");
     await page.locator("#fs-description").fill("Passagem de som às 18h");
@@ -47,6 +58,7 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Salvar evento" }).click();
 
     await page.getByText("Culto de teste", { exact: true }).click();
+    assert.equal(await page.locator(".event-meta-item").getByText("23/08/2026", { exact: true }).count(), 1);
     assert.equal(await page.getByText("Igreja Central", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Ana Souza", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Vocal", { exact: true }).count(), 1);
