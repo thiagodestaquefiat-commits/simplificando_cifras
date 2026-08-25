@@ -31,7 +31,8 @@ const response = {
 };
 
 (async () => {
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const previewUrl = process.env.PREVIEW_BASE_URL;
+  if (!previewUrl) await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const browser = await chromium.launch({ headless: true, executablePath });
   try {
     const snapshots = [];
@@ -42,7 +43,7 @@ const response = {
       page.on("pageerror", (error) => errors.push(error.message));
       page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
       await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
-      await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+      await page.goto(previewUrl || `http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
       await page.evaluate((raw) => {
         const model = harmonicSummaryClient.responseToEditorModel(raw, "guitar");
         const song = songModel.create({
@@ -92,5 +93,5 @@ const response = {
     assert.deepEqual(snapshots[1], snapshots[0]);
     assert.deepEqual(snapshots[2], snapshots[0]);
     console.log("full-chord-sheet-ui.test.js: OK (privacidade, seletor, editor simples, palco, transposição, Spotify e 3 viewports)");
-  } finally { await browser.close(); server.close(); }
+  } finally { await browser.close(); if (!previewUrl) server.close(); }
 })().catch((error) => { console.error(error); process.exitCode = 1; });
