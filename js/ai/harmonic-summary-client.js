@@ -51,6 +51,12 @@
       });
       if (trecho.repeticoes != null && (!Number.isInteger(trecho.repeticoes) || trecho.repeticoes < 1 || trecho.repeticoes > 99)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou repetições inválidas.");
     });
+    if (data.fullChordSheet != null) {
+      const sheet = data.fullChordSheet;
+      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
+        throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
+      }
+    }
     return data;
   }
 
@@ -84,6 +90,7 @@
       reviewedByUser: false,
       aiConfidence: data.confianca,
       notes: [`Confiança da IA: ${confidenceLabel}.`, ...observations].join("\n"),
+      fullChordSheet: data.fullChordSheet || null,
       sections: sections.length ? sections : [{ type: "custom", label: "Trecho 1", lines: [{ lyrics: "", chords: [] }] }]
     }, { source: "ai" });
   }

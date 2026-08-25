@@ -97,6 +97,24 @@ assert.equal(simpleSections[1].lines[0].lyrics, "Aqui nesta terra como no céu")
 assert.equal(simpleSections[1].lines[0].repeticoes, 3);
 assert.deepEqual(JSON.parse(JSON.stringify(simpleSections[1].lines[0].chords.map((item) => item.chord))), ["F", "Am", "G"]);
 
+const legacySummary = context.songFormat.harmonicSummary({
+  id: "legacy", title: "Manual", artist: "Equipe", key: "A", capo: "Capotraste casa 2",
+  blocos: [{ l: "Refrão", c: "A E F#m D  (3x)\nFrase manual" }]
+});
+assert.equal(legacySummary.currentKey, "A");
+assert.equal(legacySummary.capo, 2);
+assert.equal(legacySummary.sections[0].lines[0].repeticoes, 3);
+assert.deepEqual(JSON.parse(JSON.stringify(legacySummary.sections[0].lines[0].chords.map((item) => item.chord))), ["A", "E", "F#m", "D"]);
+assert.equal(legacySummary.sections[0].lines[0].lyrics, "Frase manual");
+
+const structuredSummary = context.songFormat.harmonicSummary({
+  ...repeatedLegacy,
+  blocos: [{ l: "Versão legada conflitante", c: "A B C" }]
+});
+assert.equal(structuredSummary.sections[0].label, "Trecho");
+assert.equal(structuredSummary.sections[0].lines[0].repeticoes, 7);
+assert.deepEqual(JSON.parse(JSON.stringify(structuredSummary.sections[0].lines[0].chords.map((item) => item.chord))), ["D", "C", "D"]);
+
 for (const instrument of context.instrumentDefinitions.all) {
   assert.equal(context.songEditorValidation.chord("A9", instrument.id).valid, true, instrument.id);
   assert.equal(context.songEditorValidation.chord("D/F#", instrument.id).valid, true, instrument.id);

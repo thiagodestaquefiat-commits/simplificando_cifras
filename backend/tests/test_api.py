@@ -38,6 +38,11 @@ def test_text_request_returns_versioned_json(generate, client):
     assert data["tom"] == "Db"
     assert data["trechos"][0]["acordes"] == ["Db", "Bsus4", "Gb/Bb"]
     assert data["trechos"][0]["repeticoes"] == 2
+    assert data["fullChordSheet"] == {
+        "visibility": "private",
+        "source": "user_text",
+        "content": "Db B4 Gb/Bb",
+    }
     assert response.headers["Cache-Control"] == "no-store"
     assert response.headers["X-Request-ID"]
 
@@ -97,6 +102,11 @@ def test_txt_upload_returns_same_structured_contract(generate, client):
     )
     assert response.status_code == 200
     assert response.get_json()["schemaVersion"] == 1
+    assert response.get_json()["fullChordSheet"] == {
+        "visibility": "private",
+        "source": "user_upload",
+        "content": "Tom: Db\nDb B4 Gb/Bb",
+    }
     assert generate.call_args.args[2] is None
 
 
