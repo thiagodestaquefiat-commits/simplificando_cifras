@@ -63,8 +63,9 @@ async function snapshot(browser, baseUrl, viewport) {
 }
 
 (async () => {
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const baseUrl = `http://127.0.0.1:${server.address().port}/`;
+  const previewUrl = process.env.PREVIEW_BASE_URL;
+  if (!previewUrl) await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const baseUrl = previewUrl || `http://127.0.0.1:${server.address().port}/`;
   const browser = await chromium.launch({ headless: true, executablePath });
   try {
     const viewports = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1366, height: 768 }];
@@ -82,6 +83,6 @@ async function snapshot(browser, baseUrl, viewport) {
     console.log("harmonic-summary-consistency.test.js: OK (5 origens semanticamente idênticas em 390x844, 768x1024 e 1366x768)");
   } finally {
     await browser.close();
-    server.close();
+    if (!previewUrl) server.close();
   }
 })().catch((error) => { console.error(error); process.exitCode = 1; });
