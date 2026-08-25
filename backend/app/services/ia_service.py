@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..errors import ApiError
-from ..schemas.resumo_harmonico import ResumoHarmonicoRequest, ResumoHarmonicoResponse
+from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
 from .harmonic_normalizer import normalize_response
 from .providers import OpenAIProvider, ProviderError, ProviderRefusal
 
@@ -10,7 +10,8 @@ SYSTEM_PROMPT = """Você gera resumos harmônicos curtos para músicos, em portu
 Retorne somente o objeto estruturado solicitado.
 
 Regras obrigatórias:
-- Nunca reproduza letra completa, estrofes completas ou longos trechos protegidos.
+- Nunca reproduza letra completa em pesquisa ou no resumo. A única exceção é fullChordSheet,
+  que pode transcrever integralmente apenas o conteúdo enviado pelo próprio usuário.
 - Cada fraseGuia deve vir exclusivamente do conteúdo fornecido, usar preferencialmente o início
   do trecho, conter aproximadamente 3 a 8 palavras e nunca uma estrofe completa.
 - Preserve a ordem musical dos acordes.
@@ -23,6 +24,10 @@ Regras obrigatórias:
 - repeticoes é um inteiro somente quando estiver explicitamente indicada ou for conhecida com segurança.
 - secao pode ser nula; não force rótulos como verso ou refrão.
 - schemaVersion é sempre 1.
+- Para texto ou arquivo fornecido pelo usuário, retorne também fullChordSheet privado com a
+  transcrição completa, preservando letra, acordes, seções, tom, capo e ordem da fonte.
+- Nunca acrescente na cifra completa conteúdo que não esteja na fonte do usuário.
+- Para pesquisa sem fonte enviada, fullChordSheet deve ser nulo.
 """
 
 
@@ -57,8 +62,14 @@ class IaService:
             )
         else:
             source_text = extracted.text if extracted is not None else payload.conteudo
+            full_sheet_instruction = (
+                "O servidor preservará o texto integral diretamente; deixe fullChordSheet nulo e gere apenas o resumo."
+                if source_text else
+                "Transcreva a fonte visual em fullChordSheet e gere o resumo a partir dessa mesma leitura."
+            )
             user_prompt = (
-                "Extraia somente um resumo harmônico curto do conteúdo fornecido. Não transcreva o documento.\n"
+                "Analise uma única vez o conteúdo e retorne a cifra completa privada e o resumo harmônico curto.\n"
+                f"{full_sheet_instruction}\n"
                 f"Título informado: {payload.titulo or 'não informado'}\n"
                 f"Artista informado: {payload.artista or 'não informado'}\n"
                 "Identifique tom, seções, acordes e repetições; reduza redundâncias sem unir partes musicais diferentes.\n"
@@ -88,6 +99,13 @@ class IaService:
             ) from error
 
         normalized = normalize_response(result, payload.tipo)
+        if payload.tipo == "pesquisa":
+            normalized.fullChordSheet = None
+        elif source_text:
+            normalized.fullChordSheet = CifraCompleta(
+                source="user_upload" if payload.tipo == "arquivo" else "user_text",
+                content=source_text,
+            )
         if payload.tipo != "pesquisa" and source_text:
             source_folded = " ".join(source_text.casefold().split())
             for trecho in normalized.trechos:
