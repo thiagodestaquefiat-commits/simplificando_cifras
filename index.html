@@ -461,7 +461,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
-<script src="js/editor/song-format.js"></script>
+<script src="js/editor/song-format.js?v=2"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -871,14 +871,11 @@ function drawValidatedKeyboardSVG(data,name){
 }
 
 function extractChords(m){
-  const txt=m.blocos.map(b=>b.c).join('\n');
-  const seen=new Set(), result=[];
-  const re=/\b([A-Ga-g][#b♯♭]?(?:m7\(b5\)|m7\(11\)|mMaj7|maj9|maj7|M7|7M|7m|m11|m9|m7|m6|m|13|11|9|7|6|5|add9|sus[24]|[24]|dim|aug|\+|°)?(?:\/[A-Ga-g][#b♯♭]?)?)\b/g;
-  let match;
-  while((match=re.exec(txt))!==null){
-    const chord=chordUtils.normalizeChordName(match[1]);
-    if(!seen.has(chord)){seen.add(chord);result.push(chord);}
-  }
+  const summary=songFormat.harmonicSummary(m),seen=new Set(),result=[];
+  summary.sections.forEach(section=>section.lines.forEach(line=>line.chords.forEach(item=>{
+    const chord=chordUtils.normalizeChordName(item.chord);
+    if(chord&&!seen.has(chord)){seen.add(chord);result.push(chord);}
+  })));
   return result;
 }
 
@@ -1005,8 +1002,9 @@ function renderLinha(linha, totalShift){
 
 function renderDetail(){
   const m=musicas.find(x=>x.id===currentDetailId); if(!m) return;
+  const summary=songFormat.harmonicSummary(m);
   // tom que SONA = tom original + transpose
-  const soundingKey=shiftText(m.key, currentSemitones);
+  const soundingKey=shiftText(summary.currentKey, currentSemitones);
   // tom das formas tocadas = sounding - capo selecionado
   const shapeKey=shiftText(soundingKey, -selectedCapo);
   // display do badge igual Cifra Club: "Tom: A (forma de G)"
@@ -1021,11 +1019,17 @@ function renderDetail(){
   sl.style.color=currentSemitones===0?'var(--text2)':currentSemitones>0?'var(--accent)':'#e2954b';
   // shapes exibidos: storedCapo - selectedCapo + transpose
   const totalShift=currentSemitones+storedCapo-selectedCapo;
-  const blocosHtml = m.blocos.map(b=>{
-    const linhas = b.c.split('\n');
-    const corpo = linhas.map(l => renderLinha(l, totalShift)).join('');
-    const letraBloco = b.l ? `<div class="letra-linha">${b.l}</div>` : '';
-    return `<div class="wa-block">${corpo}${letraBloco}</div>`;
+  const blocosHtml = summary.sections.map(section=>{
+    const corpo=section.lines.map(line=>{
+      const chords=line.chords.length?songFormat.renderChordLine(line.chords):'';
+      const repeat=line.repeticoes?` (${line.repeticoes}x)`:'';
+      const chordHtml=chords?`<div class="chord-line">${eventEsc(shiftText(chords,totalShift))}${repeat}</div>`:'';
+      const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
+      const lyricHtml=lyricText?`<div class="letra-linha">${eventEsc(lyricText)}</div>`:'';
+      return chordHtml+lyricHtml;
+    }).join('');
+    const labelHtml=section.showLabel&&section.label?`<div class="letra-linha">${eventEsc(section.label)}</div>`:'';
+    return `<div class="wa-block">${corpo}${labelHtml}</div>`;
   }).join('');
   const chordSheetHtml=blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`;
   document.getElementById('detail-content').innerHTML = chordSheetHtml +
@@ -1056,11 +1060,12 @@ function openDetail(id,options={}){
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0;
   const m=musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!m) return;
-  currentInstrument=instrumentDefinitions.normalizeId(m.instrumento||instrumentDefinitions.defaultId);
-  document.getElementById('detail-title').textContent=m.title;
-  document.getElementById('detail-artist-label').textContent=m.artist||'';
+  const summary=songFormat.harmonicSummary(m);
+  currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
+  document.getElementById('detail-title').textContent=summary.title;
+  document.getElementById('detail-artist-label').textContent=summary.artist||'';
   // extrai capo armazenado
-  const capoNum=m.capo?parseInt((m.capo.match(/(\d+)/)||[0,0])[1])||0:0;
+  const capoNum=summary.capo;
   storedCapo=capoNum;
   selectedCapo=capoNum;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));

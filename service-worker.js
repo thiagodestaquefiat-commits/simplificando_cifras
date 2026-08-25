@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v50";
+const CACHE_NAME = "simplificando-cifras-v51";
 const ASSETS = [
   "./",
   "./index.html",
@@ -21,7 +21,7 @@ const ASSETS = [
   "./js/instruments/multi-instrument-chord-library.js",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
-  "./js/editor/song-format.js",
+  "./js/editor/song-format.js?v=2",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",

@@ -43,9 +43,10 @@
     const lines = [];
     let pending = null;
     rawLines.forEach((raw) => {
-      if (chordLine(raw)) {
+      const candidate = repeatFromText(raw);
+      if (chordLine(candidate.text)) {
         if (pending) lines.push(pending);
-        pending = { id: id("line"), lyrics: "", chords: chordsFromText(raw) };
+        pending = { id: id("line"), lyrics: "", repeticoes: candidate.repeticoes, chords: chordsFromText(candidate.text) };
       } else if (pending && !pending.lyrics) {
         pending.lyrics = cleanText(raw);
         lines.push(pending);
@@ -181,6 +182,30 @@
     });
   }
 
+  function harmonicSummary(song) {
+    const normalized = fromLegacy(song || {});
+    const hasStructuredSource = Boolean(song && song.editorData && Array.isArray(song.editorData.sections));
+    return {
+      id: normalized.id,
+      title: normalized.title,
+      artist: normalized.artist,
+      originalKey: normalized.originalKey,
+      currentKey: normalized.currentKey,
+      capo: normalized.capo,
+      instrument: normalized.instrument,
+      sections: normalized.sections.map((section, sectionIndex) => ({
+        type: section.type,
+        label: section.label,
+        showLabel: hasStructuredSource || Boolean(song && song.blocos && song.blocos[sectionIndex] && song.blocos[sectionIndex].l),
+        lines: section.lines.map((line) => ({
+          lyrics: line.lyrics,
+          repeticoes: line.repeticoes,
+          chords: line.chords.map((item) => ({ chord: item.chord, position: item.position }))
+        }))
+      }))
+    };
+  }
+
   function toLegacy(model, existing) {
     const normalized = normalize(model);
     const blocos = normalized.sections.map((section) => {
@@ -206,5 +231,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);
