@@ -43,7 +43,10 @@ const response = {
     { acordes: ["Dm", "Bb", "C", "G"], repeticoes: null, fraseGuia: "Ouçam o grito da vitória", secao: null }
   ]
 };
+response.fullChordSheet = { visibility: "private", source: "user_upload", content: "INTRO\nDm Bb C G\nLetra completa fornecida" };
 const model = context.harmonicSummaryClient.responseToEditorModel(response, "guitar");
+assert.equal(model.fullChordSheet.visibility, "private");
+assert.equal(model.fullChordSheet.content, response.fullChordSheet.content);
 assert.equal(model.source, "ai");
 assert.equal(model.status, "draft");
 assert.equal(model.aiGenerated, true);
