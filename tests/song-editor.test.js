@@ -68,6 +68,16 @@ assert.equal(saved.songFormatVersion, 3);
 assert.ok(Array.isArray(saved.blocos));
 assert.ok(Array.isArray(saved.editorData.sections));
 assert.equal(saved.key, "E");
+assert.deepEqual(JSON.parse(JSON.stringify(saved.accessContext)), { scope: "personal", ownerId: null, teamId: null });
+
+const teamModel = context.songFormat.fromLegacy({
+  ...legacy,
+  accessContext: { scope: "team", ownerId: "user-1", teamId: "team-7" }
+});
+const teamSaved = context.songFormat.toLegacy(teamModel, legacy);
+assert.deepEqual(JSON.parse(JSON.stringify(teamSaved.accessContext)), { scope: "team", ownerId: "user-1", teamId: "team-7" });
+assert.deepEqual(JSON.parse(JSON.stringify(teamSaved.editorData.accessContext)), JSON.parse(JSON.stringify(teamSaved.accessContext)));
+assert.deepEqual(JSON.parse(JSON.stringify(context.songFormat.harmonicSummary(teamSaved).accessContext)), JSON.parse(JSON.stringify(teamSaved.accessContext)));
 
 const repeated = context.songFormat.normalize({
   title: "Resumo IA", source: "ai",
