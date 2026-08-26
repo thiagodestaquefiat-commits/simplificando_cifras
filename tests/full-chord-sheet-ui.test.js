@@ -42,7 +42,12 @@ const response = {
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
       page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+      page.on("requestfailed", (request) => errors.push(`${request.failure()?.errorText || "request failed"}: ${request.url()}`));
       await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
+      await page.route("https://fonts.gstatic.com/**", (route) => route.fulfill({ status: 200, contentType: "font/woff2", body: Buffer.alloc(0) }));
+      await page.route("https://sdk.scdn.co/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
+      await page.route("https://cdn.segment.com/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
+      await page.route("https://example.test/**", (route) => route.fulfill({ status: 200, contentType: "image/png", body: Buffer.alloc(0) }));
       await page.goto(previewUrl || `http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
       await page.evaluate((raw) => {
         const model = harmonicSummaryClient.responseToEditorModel(raw, "guitar");
