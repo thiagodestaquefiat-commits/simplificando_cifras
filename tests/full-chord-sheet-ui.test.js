@@ -49,7 +49,8 @@ const response = {
         const song = songModel.create({
           ...songFormat.toLegacy(model), id: "private-song", spotifyTrackId: "track-private",
           spotifyUri: "spotify:track:track-private", album: "Álbum", coverUrl: "https://example.test/capa.jpg",
-          isrc: "BRABC1234567", duration: 240000
+          isrc: "BRABC1234567", duration: 240000,
+          accessContext: { scope: "team", ownerId: "user-1", teamId: "team-1" }
         });
         musicas.push(song); setlists.push({ id: "event-private", title: "Evento", musicas: [song.id] }); openDetail(song.id);
       }, response);
@@ -83,6 +84,7 @@ const response = {
       assert.equal(saved.song.isrc, "BRABC1234567");
       assert.equal(saved.song.duration, 240000);
       assert.equal(saved.song.fullChordSheet.visibility, "private");
+      assert.deepEqual(saved.song.accessContext, { scope: "team", ownerId: "user-1", teamId: "team-1" });
       assert.match(saved.song.fullChordSheet.content, /FINAL\nC$/);
       assert.equal(saved.referenced, true);
 

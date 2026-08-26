@@ -30,6 +30,20 @@
     return { visibility: "private", source: value.source === "user_text" ? "user_text" : "user_upload", content };
   }
 
+  function normalizeAccessContext(value) {
+    const context = value && typeof value === "object" ? value : {};
+    const scope = context.scope === "team" ? "team" : "personal";
+    const optionalId = (idValue) => {
+      const result = cleanText(idValue || "", 160).trim();
+      return result || null;
+    };
+    return {
+      scope,
+      ownerId: optionalId(context.ownerId),
+      teamId: scope === "team" ? optionalId(context.teamId) : null
+    };
+  }
+
   function chordLine(value) {
     const tokens = String(value || "").trim().split(/\s+/).filter(Boolean);
     return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token));
@@ -101,6 +115,7 @@
       bpm: value.bpm === null || value.bpm === "" || value.bpm === undefined ? null : Math.max(20, Math.min(300, Number(value.bpm) || 0)),
       status: value.status === "published" ? "published" : "draft",
       source: ["manual", "imported", "ai", "existing"].includes(value.source) ? value.source : (fallback.source || "manual"),
+      accessContext: normalizeAccessContext(value.accessContext || fallback.accessContext),
       aiGenerated: Boolean(value.aiGenerated), reviewedByUser: Boolean(value.reviewedByUser),
       aiConfidence: ["alta", "media", "baixa"].includes(value.aiConfidence) ? value.aiConfidence : null,
       sections: Array.isArray(value.sections) && value.sections.length ? value.sections.map(normalizeSection) : [normalizeSection({}, 0)],
@@ -110,12 +125,13 @@
   }
 
   function fromLegacy(song) {
-    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet });
+    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet });
     return normalize({
       id: song && song.id, title: song && song.title, artist: song && song.artist,
       originalKey: song && song.key, currentKey: song && song.key, capo: parseCapo(song && song.capo),
       instrument: song && song.instrumento, status: "draft", source: "existing",
       sections: Array.isArray(song && song.blocos) ? song.blocos.map(legacyBlockToSection) : undefined,
+      accessContext: song && song.accessContext,
       fullChordSheet: song && song.fullChordSheet,
       notes: song && song.notes, bpm: song && song.bpm, createdAt: song && song.createdAt
     });
@@ -202,6 +218,7 @@
       currentKey: normalized.currentKey,
       capo: normalized.capo,
       instrument: normalized.instrument,
+      accessContext: normalized.accessContext,
       sections: normalized.sections.map((section, sectionIndex) => ({
         type: section.type,
         label: section.label,
@@ -235,11 +252,12 @@
       songFormatVersion: 3, originalKey: normalized.originalKey, currentKey: normalized.currentKey,
       status: normalized.status, source: normalized.source, aiGenerated: normalized.aiGenerated,
       reviewedByUser: normalized.reviewedByUser, aiConfidence: normalized.aiConfidence,
+      accessContext: normalized.accessContext,
       createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
       fullChordSheet: normalized.fullChordSheet,
       editorData: normalized
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeAccessContext, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);
