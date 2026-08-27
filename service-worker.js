@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v58";
+const CACHE_NAME = "simplificando-cifras-v59";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,8 +10,8 @@ const ASSETS = [
   "./js/event-collaboration-client.js?v=2",
   "./js/app-auth.js?v=1",
   "./js/band-client.js?v=1",
-  "./js/location-service.js?v=1",
-  "./js/map-preview.js?v=1",
+  "./js/location-service.js?v=2",
+  "./js/map-preview.js?v=2",
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=1",
   "./js/spotify-config.js?v=2",

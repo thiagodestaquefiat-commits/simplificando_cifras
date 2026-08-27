@@ -1,6 +1,8 @@
 (function (global) {
   "use strict";
 
+  let mapConfigPromise = null;
+
   function endpoint(path) {
     return global.apiConfig && global.apiConfig.locationEndpoint ? global.apiConfig.locationEndpoint(path) : "";
   }
@@ -32,5 +34,21 @@
     return query ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query) : "";
   }
 
-  global.locationService = Object.freeze({ search, mapUrl, externalMapUrl, normalize });
+  async function interactiveMapConfig() {
+    if (mapConfigPromise) return mapConfigPromise;
+    mapConfigPromise = (async () => {
+      try {
+        const response = await global.fetch(endpoint("/config"), { headers: { Accept: "application/json" } });
+        const body = await response.json().catch(() => null);
+        const styleUrl = String(body && body.styleUrl || "").trim();
+        const enabled = Boolean(response.ok && body && body.interactiveEnabled && /^https:\/\/maps\.geoapify\.com\//.test(styleUrl));
+        return { enabled, provider: "geoapify", styleUrl: enabled ? styleUrl : "" };
+      } catch (_error) {
+        return { enabled: false, provider: "geoapify", styleUrl: "" };
+      }
+    })();
+    return mapConfigPromise;
+  }
+
+  global.locationService = Object.freeze({ search, mapUrl, externalMapUrl, interactiveMapConfig, normalize });
 })(window);

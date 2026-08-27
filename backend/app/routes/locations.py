@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 from flask import Blueprint, current_app, jsonify, request
 
 from .. import limiter
@@ -16,6 +18,23 @@ def _provider() -> GeoapifyLocationProvider:
 
 def _provider_error(error: LocationProviderError):
     raise ApiError("provedor_localizacao_indisponivel", str(error), 503) from error
+
+
+@blueprint.get("/config")
+@limiter.limit(lambda: current_app.config["LOCATION_CONFIG_RATE_LIMIT"])
+def location_config():
+    """Entrega somente a chave pública restrita usada pelos tiles no navegador."""
+    browser_key = str(current_app.config.get("GEOAPIFY_BROWSER_KEY") or "").strip()
+    style_url = ""
+    if browser_key:
+        style_url = "https://maps.geoapify.com/v1/styles/osm-bright/style.json?" + urlencode({"apiKey": browser_key})
+    response = jsonify({
+        "provider": "geoapify",
+        "interactiveEnabled": bool(browser_key),
+        "styleUrl": style_url,
+    })
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return response, 200
 
 
 @blueprint.get("/search")

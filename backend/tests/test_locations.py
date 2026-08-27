@@ -16,6 +16,19 @@ class FakeLocationProvider:
         return MapImage(body=b"fake-png", content_type="image/png")
 
 
+def test_interactive_map_config_requires_a_separate_public_key(client, app):
+    disabled = client.get("/api/locations/config")
+    assert disabled.status_code == 200
+    assert disabled.get_json() == {"interactiveEnabled": False, "provider": "geoapify", "styleUrl": ""}
+
+    app.config["GEOAPIFY_BROWSER_KEY"] = "public browser/key"
+    enabled = client.get("/api/locations/config")
+    assert enabled.status_code == 200
+    assert enabled.get_json()["interactiveEnabled"] is True
+    assert enabled.get_json()["styleUrl"] == "https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=public+browser%2Fkey"
+    assert enabled.headers["Cache-Control"] == "public, max-age=300"
+
+
 def test_location_search_is_normalized_and_rejects_short_queries(client, app):
     app.extensions["location_provider"] = FakeLocationProvider()
     short = client.get("/api/locations/search?q=abc")
