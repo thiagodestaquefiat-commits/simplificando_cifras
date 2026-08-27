@@ -28,11 +28,12 @@ Depois, acesse `http://127.0.0.1:4173/`.
 
 - O catálogo padrão contém 86 músicas no formato legado compatível `{ l, c }`.
 - Toda música é normalizada pelo modelo `Song`, com metadados próprios e campos externos opcionais.
-- Músicas, eventos, repertórios e conversas ficam no armazenamento local do navegador neste MVP.
+- Músicas e conversas continuam locais neste MVP. Eventos e repertórios também possuem uma cópia local para uso offline, mas podem ser sincronizados com a API colaborativa.
 - Playlists legadas em `cifras_setlists_v1` são migradas para eventos em `sc_events_v1` sem perda do repertório.
 - A coleção de músicas usa `sc_songs_v1` e mantém uma cópia compatível em `cifras_musicas_v1` durante a migração.
 - `js/storage.js` é a única camada autorizada a acessar diretamente o `localStorage`.
-- Limpar os dados do navegador remove alterações locais. Faça uma cópia antes de limpar.
+- A versão oficial de um repertório fica no banco; tom e observações pessoais são salvos como sobreposições vinculadas ao usuário, sem duplicar o repertório.
+- Limpar os dados do navegador remove dados que ainda não foram sincronizados. Faça uma cópia antes de limpar.
 
 ### Modelo Song
 
@@ -46,9 +47,12 @@ O modelo central preserva `key`, `capo` e `blocos` usados pela interface atual e
 - transposição e retorno ao tom original;
 - seleção de capotraste e diagramas de acordes;
 - playlist principal com biblioteca e pesquisa musical;
-- criação, edição, exclusão, ordenação e compartilhamento de eventos com repertório;
+- criação, edição, exclusão, ordenação e compartilhamento de eventos com repertório, restritos ao Líder do evento;
 - membros participantes com função ou instrumento por evento;
-- ajustes pessoais e compartilhados de tom e observações por música do evento;
+- contas opcionais com Google e migração progressiva da identidade local;
+- Bandas/Equipes com proprietário, líderes, integrantes e Eventos vinculados;
+- versões pessoais completas — título, artista, tom, capotraste, cifra e observações — visíveis somente ao integrante;
+- versões compartilhadas completas visíveis a todos e editáveis somente pelo Líder;
 - notificações essenciais de alterações compartilhadas;
 - chat do evento com mensagens, respostas, reações, edição, exclusão, cópia, não lidas e enquetes;
 - sincronização local do chat entre abas abertas por `BroadcastChannel`;
@@ -92,9 +96,15 @@ A exportação é local, não envia dados para backend e não altera nem remove 
 
 Os botões **Anterior** e **Próxima** aparecem somente quando a música é aberta a partir do repertório de um evento. Eles seguem a ordem definida pelo usuário e param na primeira e na última música. No Modo Palco, os diagramas são ocultados para priorizar a leitura, enquanto tom, capotraste, transposição, fonte, velocidade e auto-scroll continuam disponíveis.
 
-## Limites do MVP colaborativo
+## Eventos colaborativos e permissões
 
-O projeto ainda não possui backend nem autenticação própria. Por isso, chat em tempo real, permissões, notificações e edições pessoais funcionam localmente no navegador e entre abas da mesma origem. Os módulos `event-model`, `event-repository` e `event-chat` isolam essas fronteiras para que armazenamento, autorização e sincronização possam ser substituídos futuramente por uma API autenticada e banco de dados sem reescrever a interface.
+Ao sincronizar pela primeira vez, o aplicativo cria uma identidade local protegida por um token secreto. O identificador mostrado na tela de Eventos pode ser informado ao Líder para que a mesma pessoa seja reconhecida em outro evento. O token não deve ser compartilhado.
+
+Para sincronizar a escala, o Líder deve adicionar cada colega usando o identificador exibido no aplicativo desse colega. Um membro criado apenas pelo nome continua útil na cópia local do evento, mas não recebe acesso remoto até ser associado a uma identidade registrada.
+
+Cada evento possui exatamente um Líder. Ele pode editar o evento e o repertório oficial, adicionar ou remover músicas, alterar a ordem, gerenciar membros e salvar ajustes compartilhados. Demais integrantes visualizam a versão oficial e podem salvar somente seus próprios tom e observações. A API repete todas essas validações; esconder controles na interface não é a única barreira de segurança.
+
+A sincronização usa a API Flask e o banco configurado por `DATABASE_URL`. Se a API estiver indisponível, alterações compatíveis permanecem locais e o botão **Sincronizar** permite enviá-las depois. Chat e enquetes ainda usam armazenamento local e `BroadcastChannel`, portanto ainda não são conversas em tempo real entre dispositivos.
 
 ## IA
 
