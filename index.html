@@ -142,7 +142,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 /* MODO PALCO */
 .stage-mode .detail-header .back-btn,
 .stage-mode #capo-banner,
-.stage-mode .btn-row,
 .stage-mode .stage-hide{display:none!important;}
 .stage-mode #chord-diagrams-section,
 .stage-mode #inst-modal,
@@ -291,7 +290,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .location-combobox{position:relative}.location-status{display:block;min-height:15px;margin-top:5px;color:var(--text2);font-size:9px;line-height:1.4}.location-status.error{color:#fca5a5}.location-results{position:absolute;z-index:18;top:calc(100% - 18px);left:0;right:0;max-height:230px;margin:0;padding:5px;overflow-y:auto;border:1px solid rgba(96,165,250,.28);border-radius:12px;background:#0b192b;box-shadow:0 18px 36px rgba(0,0,0,.38)}.location-results[hidden]{display:none}.location-option{display:flex;width:100%;padding:10px;border:0;border-radius:9px;background:transparent;color:#fff;text-align:left;cursor:pointer;flex-direction:column;gap:3px}.location-option:hover,.location-option[aria-selected="true"]{background:rgba(59,130,246,.18)}.location-option strong{font-size:11px}.location-option span{color:#a7b4c7;font-size:9px;line-height:1.4}.event-map-preview[hidden]{display:none}.event-map-card{margin:10px 0 15px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#0b192b}.event-map-card img{display:block;width:100%;height:auto;min-height:180px;max-height:330px;object-fit:cover;background:#132238}.event-map-card.compact img{min-height:130px;max-height:210px}.event-map-card figcaption{display:grid;padding:9px 11px;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}.event-map-card figcaption span{overflow:hidden;color:#dbeafe;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.event-map-card figcaption>a{color:#86efac;font-size:10px;font-weight:800;text-decoration:none}.event-map-card figcaption small{grid-column:1/-1;color:#64748b;font-size:7px}.event-map-card figcaption small a{color:#7c8da5}.event-map-error{padding:24px 14px;color:#94a3b8;font-size:10px;text-align:center}
 .event-map-viewport{position:relative;height:260px;overflow:hidden;background:#132238}.event-map-card.compact .event-map-viewport{height:190px}.event-map-viewport>img{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;object-fit:cover}.event-map-canvas{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s ease}.event-map-card.interactive-ready .event-map-canvas{opacity:1;pointer-events:auto}.event-map-loading{position:absolute;z-index:1;inset:0;display:grid;color:#94a3b8;font-size:10px;place-items:center;background:linear-gradient(110deg,#0e2035,#152b45,#0e2035);background-size:220% 100%;animation:event-map-pulse 1.5s ease infinite}.event-map-loading[hidden],.event-map-recenter[hidden]{display:none}.event-map-recenter{position:absolute;z-index:3;right:10px;bottom:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(7,17,31,.86);color:#fff;font-size:9px;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.25);cursor:pointer}.event-map-recenter:hover{background:#10243d}.event-map-canvas .maplibregl-ctrl-attrib{font-size:8px}.event-map-canvas .maplibregl-ctrl-top-right{top:8px;right:8px}@keyframes event-map-pulse{0%,100%{background-position:0 0}50%{background-position:100% 0}}@media(max-width:520px){.event-map-viewport{height:230px}.event-map-card.compact .event-map-viewport{height:175px}}
 .app-account-btn{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.25);border-radius:50%;background:#10233a;color:#dbeafe;font-size:10px;font-weight:900;cursor:pointer}.app-account-btn.authenticated{border-color:rgba(34,197,94,.42);background:#0d352e;color:#86efac}.band-toolbar{display:grid;padding:7px 12px;grid-template-columns:minmax(0,1fr) auto;gap:7px;border-bottom:1px solid var(--border);background:rgba(8,20,35,.9)}.band-toolbar select{min-width:0;height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:#10233a;color:#dbeafe;font-size:10px}.band-toolbar button{min-height:34px;padding:0 10px;border:1px solid rgba(96,165,250,.3);border-radius:9px;background:rgba(37,99,235,.1);color:#bfdbfe;font-size:9px;font-weight:800;cursor:pointer}.band-card{margin-bottom:9px;padding:11px;border:1px solid var(--border);border-radius:12px;background:#0d1d30}.band-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}.band-card header strong{font-size:13px}.band-card header span{color:#86efac;font-size:8px;font-weight:900;text-transform:uppercase}.band-member-row{display:flex;margin-top:7px;padding-top:7px;align-items:center;gap:7px;border-top:1px solid rgba(148,163,184,.12);font-size:10px}.band-member-row span:first-child{flex:1}.band-member-row small{color:#94a3b8}.band-inline-actions{display:flex;margin-top:9px;gap:6px;flex-wrap:wrap}.band-inline-actions button{min-height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:#132238;color:#cbd5e1;font-size:9px;cursor:pointer}
-.song-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 17px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:13px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}.stage-mode .full-chord-sheet{display:none}
+.song-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 17px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:13px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
+
+/* MODO PALCO PROFISSIONAL — FASE 1 */
+.stage-config-intro{margin:-2px 0 14px;color:#a9b7ca;font-size:11px;line-height:1.5}.stage-config-section{margin-top:17px}.stage-config-section h3{margin:0 0 9px;color:#dbeafe;font-size:10px;letter-spacing:.9px;text-transform:uppercase}.stage-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stage-preset{min-height:78px;padding:10px;border:1px solid var(--border);border-radius:12px;background:#0b192b;color:#fff;text-align:left;cursor:pointer}.stage-preset strong,.stage-preset small{display:block}.stage-preset strong{font-size:11px}.stage-preset small{margin-top:5px;color:#8ea0b8;font-size:8px;line-height:1.35}.stage-preset.selected{border-color:#60a5fa;background:rgba(37,99,235,.16);box-shadow:inset 0 0 0 1px rgba(96,165,250,.2)}.stage-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.stage-choice,.stage-toggle{display:flex;min-height:44px;padding:8px 10px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:11px;background:#0b192b;color:#dbeafe;font-size:9px;font-weight:700;cursor:pointer}.stage-choice input,.stage-toggle input{accent-color:#3b82f6}.stage-choice.selected{border-color:#60a5fa;background:rgba(37,99,235,.14)}.stage-range-row{display:grid;grid-template-columns:90px 1fr 45px;align-items:center;gap:8px;padding:9px 0;color:#cbd5e1;font-size:9px}.stage-range-row input{width:100%;accent-color:#3b82f6}.stage-config-ready{display:flex;margin-top:14px;padding:9px 10px;align-items:center;gap:8px;border:1px solid rgba(34,197,94,.25);border-radius:11px;background:rgba(34,197,94,.08);color:#86efac;font-size:9px;line-height:1.35}.stage-config-actions{position:sticky;bottom:-24px;margin:18px -16px -24px;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,23,40,.78),#0b1728 28%)}
+.stage-performance-header,.stage-next-preview,.stage-floating-controls,.stage-quick-panel{display:none}.stage-mode{--stage-text:#f8fafc;--stage-muted:#94a3b8;--stage-surface:#07111f;--stage-panel:rgba(9,24,41,.94);--stage-accent:#60a5fa;background:var(--stage-surface);color:var(--stage-text);scrollbar-color:#334155 transparent}.stage-mode.stage-theme-light{--stage-text:#102033;--stage-muted:#526274;--stage-surface:#f8fafc;--stage-panel:rgba(255,255,255,.95);--stage-accent:#1d4ed8;--chord-color:#9a3412}.stage-mode.stage-theme-contrast{--stage-text:#fff;--stage-muted:#e2e8f0;--stage-surface:#000;--stage-panel:rgba(0,0,0,.98);--stage-accent:#facc15;--chord-color:#facc15}.stage-mode .detail-header,.stage-mode #capo-row,.stage-mode .transpose-bar,.stage-mode>.stage-toolbar{display:none!important}.stage-mode .stage-performance-header{position:sticky;z-index:26;top:0;display:grid;min-height:64px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));grid-template-columns:44px minmax(0,1fr) auto 44px;align-items:center;gap:8px;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 12%,transparent);background:var(--stage-panel);backdrop-filter:blur(14px);transition:opacity .2s,transform .2s}.stage-nav-icon{display:grid;width:42px;height:42px;padding:0;place-items:center;border:1px solid color-mix(in srgb,var(--stage-text) 18%,transparent);border-radius:12px;background:transparent;color:var(--stage-text);font-size:20px;cursor:pointer}.stage-nav-icon:disabled{opacity:.24;cursor:not-allowed}.stage-heading{min-width:0}.stage-heading strong,.stage-heading span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-heading strong{font-size:clamp(13px,2.4vw,18px)}.stage-heading span{margin-top:2px;color:var(--stage-muted);font-size:9px}.stage-meta{display:flex;align-items:center;gap:7px}.stage-position,.stage-key{padding:5px 8px;border-radius:999px;background:color-mix(in srgb,var(--stage-text) 9%,transparent);color:var(--stage-text);font-size:9px;font-weight:900;white-space:nowrap}.stage-online-status{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.13)}.stage-online-status.offline{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.13)}.stage-mode .stage-next-preview{display:flex;margin:8px clamp(10px,3vw,28px) 0;padding:8px 11px;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);border-radius:11px;background:color-mix(in srgb,var(--stage-text) 5%,transparent);color:var(--stage-muted);font-size:9px}.stage-next-preview strong{min-width:0;overflow:hidden;color:var(--stage-text);font-size:10px;text-overflow:ellipsis;white-space:nowrap}.stage-next-preview span:last-child{margin-left:auto;white-space:nowrap}.stage-mode .detail-body{padding-top:14px;padding-bottom:112px;background:var(--stage-surface);color:var(--stage-text)}.stage-mode .wa-block,.stage-mode .full-chord-sheet{border:0;background:transparent;box-shadow:none}.stage-mode .wa-block{padding:4px 0;margin-bottom:16px}.stage-mode .full-chord-sheet{display:block;padding:4px 0}.stage-mode .full-chord-private{display:none}.stage-mode .letra-linha,.stage-mode .full-chord-line:not(.is-chord):not(.is-section){color:var(--stage-text);font-size:var(--stage-lyric-size,var(--stage-chord-size,28px));line-height:1.55}.stage-mode .full-chord-line.is-chord{font-size:var(--stage-chord-size,28px);line-height:1.7}.stage-mode .full-chord-line.is-section{color:var(--stage-accent);font-size:calc(var(--stage-chord-size,28px) * .55)}.stage-content-lyrics .chord-line,.stage-content-lyrics .full-chord-line.is-chord{display:none}.stage-content-chords .letra-linha,.stage-content-chords .full-chord-line:not(.is-chord):not(.is-section){display:none}.stage-structure-view{display:grid;gap:10px}.stage-structure-card{padding:14px;border-left:4px solid var(--stage-accent);border-radius:9px;background:color-mix(in srgb,var(--stage-text) 5%,transparent)}.stage-structure-card strong{display:block;color:var(--stage-accent);font-size:12px;text-transform:uppercase}.stage-structure-card span{display:block;margin-top:7px;color:var(--stage-text);font:700 var(--stage-chord-size,28px)/1.5 Arial,sans-serif}.stage-mode .stage-floating-controls{position:fixed;z-index:28;right:50%;bottom:max(12px,env(safe-area-inset-bottom));display:flex;max-width:calc(100% - 24px);padding:7px;align-items:center;gap:5px;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-panel);box-shadow:0 14px 34px rgba(0,0,0,.34);backdrop-filter:blur(15px);transform:translateX(50%);transition:opacity .2s,transform .2s}.stage-control{display:grid;min-width:42px;height:42px;padding:0 10px;place-items:center;border:0;border-radius:11px;background:transparent;color:var(--stage-text);font-size:15px;font-weight:900;cursor:pointer}.stage-control:hover,.stage-control.active{background:color-mix(in srgb,var(--stage-text) 12%,transparent)}.stage-control.primary{min-width:52px;background:var(--stage-accent);color:var(--stage-surface)}.stage-controls-hidden .stage-performance-header{opacity:0;pointer-events:none;transform:translateY(-105%)}.stage-controls-hidden .stage-floating-controls{opacity:0;pointer-events:none;transform:translate(50%,130%)}.stage-controls-always .stage-performance-header,.stage-controls-always .stage-floating-controls{opacity:1!important;pointer-events:auto!important}.stage-controls-hidden-permanent .stage-performance-header,.stage-controls-hidden-permanent .stage-floating-controls{display:none!important}.stage-mode .stage-quick-panel{position:fixed;z-index:32;inset:0;display:flex;padding:clamp(12px,4vw,28px);align-items:stretch;justify-content:flex-end;background:rgba(0,0,0,.58);backdrop-filter:blur(5px)}.stage-quick-panel[hidden]{display:none!important}.stage-quick-sheet{display:flex;width:min(430px,100%);padding:14px;overflow:hidden;flex-direction:column;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-surface);box-shadow:0 20px 55px rgba(0,0,0,.45)}.stage-quick-header{display:flex;align-items:center;gap:8px}.stage-quick-header strong{flex:1}.stage-quick-list{min-height:0;margin-top:10px;overflow-y:auto}.stage-quick-row{display:grid;width:100%;padding:10px;border:0;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:8px;background:transparent;color:var(--stage-text);text-align:left;cursor:pointer}.stage-quick-row.current{border-radius:10px;background:color-mix(in srgb,var(--stage-accent) 18%,transparent)}.stage-quick-row strong,.stage-quick-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-quick-row strong{font-size:11px}.stage-quick-row small{margin-top:2px;color:var(--stage-muted);font-size:8px}.stage-quick-row>span:last-child{color:var(--stage-accent);font-size:9px;font-weight:900}.stage-mode.stage-edit-locked .ai-generate-action,.stage-mode.stage-edit-locked .btn-row{display:none!important}
+@media(min-width:760px){.stage-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stage-option-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stage-mode .detail-body{width:min(100%,960px);margin-inline:auto}.stage-mode .stage-next-preview{width:min(calc(100% - 56px),904px);margin-inline:auto}}
+@media(max-width:560px){.stage-preset-grid,.stage-option-grid{grid-template-columns:1fr 1fr}.stage-mode .stage-performance-header{grid-template-columns:38px minmax(0,1fr) auto 38px}.stage-nav-icon{width:38px;height:38px}.stage-position,.stage-key{padding-inline:6px;font-size:8px}.stage-mode .detail-body{padding-inline:14px}.stage-mode .stage-next-preview{margin-inline:8px}.stage-floating-controls .stage-control{min-width:34px;padding-inline:5px}.stage-floating-controls .stage-control.primary{min-width:42px}.stage-speed-control{display:none!important}}
+@media(orientation:landscape) and (max-height:560px){.stage-mode .stage-performance-header{min-height:50px;padding-block:4px}.stage-nav-icon{width:36px;height:36px}.stage-mode .stage-next-preview{display:none}.stage-mode .detail-body{padding-top:8px;padding-bottom:76px}.stage-mode .stage-floating-controls{bottom:6px;padding:4px}.stage-control{height:36px;min-width:36px}}
+.stage-heading{cursor:pointer}
 </style>
 </head>
 <body>
@@ -355,6 +362,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       </div>
       <span class="detail-key-badge" id="detail-key"></span>
     </div>
+    <header class="stage-performance-header" id="stage-performance-header" aria-label="Informações da apresentação">
+      <button type="button" class="stage-nav-icon" id="stage-prev" onclick="navigateSong(-1)" aria-label="Música anterior">‹</button>
+      <div class="stage-heading" onclick="openStageQuickPanel()" title="Abrir repertório"><strong id="stage-song-title">Música</strong><span id="stage-song-artist"></span></div>
+      <div class="stage-meta"><span class="stage-position" id="stage-position">1 / 1</span><span class="stage-key" id="stage-key">Tom —</span><span class="stage-online-status" id="stage-online-status" title="Pacote pronto para uso offline"></span></div>
+      <button type="button" class="stage-nav-icon" id="stage-next" onclick="navigateSong(1)" aria-label="Próxima música">›</button>
+    </header>
+    <div class="stage-next-preview" id="stage-next-preview"><span>Próxima</span><strong id="stage-next-title">Fim do repertório</strong><span id="stage-next-key"></span></div>
     <span id="spotify-song-player-anchor" hidden></span>
     <section class="song-player-shell" id="spotify-song-player" aria-label="Player Spotify da música"></section>
     <!-- ACORDES + INSTRUMENTO -->
@@ -411,6 +425,22 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       <button class="stage-btn stage-only-control" id="btn-font" onclick="cycleStageFont()" title="Tamanho das cifras">Fonte M</button>
       <button class="stage-btn" id="btn-next-song" onclick="navigateSong(1)" title="Próxima música" hidden>Próxima →</button>
     </div>
+    <div class="stage-quick-panel" id="stage-quick-panel" hidden onclick="closeStageQuickPanel(event)">
+      <section class="stage-quick-sheet" onclick="event.stopPropagation()">
+        <div class="stage-quick-header"><strong>Repertório</strong><button type="button" class="stage-nav-icon" onclick="reconfigureStageMode()" aria-label="Reconfigurar Modo Palco">⚙</button><button type="button" class="stage-nav-icon" onclick="closeStageQuickPanel()" aria-label="Fechar repertório">×</button></div>
+        <div class="stage-quick-list" id="stage-quick-list"></div>
+      </section>
+    </div>
+    <nav class="stage-floating-controls" aria-label="Controles do Modo Palco">
+      <button type="button" class="stage-control" onclick="adjustStageFont(-2)" aria-label="Diminuir fonte">A−</button>
+      <button type="button" class="stage-control" onclick="transpose(-1)" aria-label="Descer o tom">♭</button>
+      <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar auto-scroll">▶</button>
+      <button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">♯</button>
+      <button type="button" class="stage-control" onclick="adjustStageFont(2)" aria-label="Aumentar fonte">A+</button>
+      <button type="button" class="stage-control stage-speed-control" data-stage-wide onclick="cycleScrollSpeed()" aria-label="Alterar velocidade do auto-scroll">1×</button>
+      <button type="button" class="stage-control" data-stage-wide onclick="openStageQuickPanel()" aria-label="Abrir repertório">☷</button>
+      <button type="button" class="stage-control" onclick="exitStageMode()" aria-label="Sair do Modo Palco">×</button>
+    </nav>
     <div class="detail-body" id="detail-content"></div>
   </div>
 
@@ -469,6 +499,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
+<script src="js/stage-preferences.js?v=1"></script>
+<script src="js/stage-offline.js?v=1"></script>
 <script src="js/editor/song-format.js?v=4"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
@@ -1032,6 +1064,15 @@ function setSongView(view){
   renderDetail();
 }
 
+function renderStageStructure(summary,totalShift){
+  const sections=(summary&&summary.sections)||[];
+  if(!sections.length)return '<div class="empty-state"><div class="emoji">🎼</div><p>Estrutura ainda não cadastrada</p></div>';
+  return `<section class="stage-structure-view" aria-label="Estrutura da música">${sections.map((section,index)=>{
+    const progression=section.lines.map(line=>songFormat.renderChordLine(line.chords||[])).filter(Boolean).join(' · ');
+    return `<article class="stage-structure-card"><strong>${eventEsc(section.label||`Parte ${index+1}`)}</strong><span>${eventEsc(shiftText(progression,totalShift)||'—')}</span></article>`;
+  }).join('')}</section>`;
+}
+
 function renderDetail(){
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId); if(!m) return;
   const summary=songFormat.harmonicSummary(m);
@@ -1053,6 +1094,7 @@ function renderDetail(){
   const totalShift=currentSemitones+storedCapo-selectedCapo;
   const hasFull=Boolean(m.fullChordSheet?.content);
   if(!hasFull) currentSongView='summary';
+  if(stageMode&&hasFull&&activeStagePreferences?.contentMode!=='structure')currentSongView='full';
   const switchHtml=hasFull?`<div class="song-view-switch" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo</button><button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Cifra completa</button></div>`:'';
   const blocosHtml = summary.sections.map(section=>{
     const corpo=section.lines.map(line=>{
@@ -1066,13 +1108,16 @@ function renderDetail(){
     const labelHtml=section.showLabel&&section.label?`<div class="letra-linha">${eventEsc(section.label)}</div>`:'';
     return `<div class="wa-block">${corpo}${labelHtml}</div>`;
   }).join('');
-  const chordSheetHtml=currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`);
+  const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
+    ?renderStageStructure(summary,totalShift)
+    :currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`);
   document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml +
     `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong('${m.id}')">Gerar resumo com IA</button>`+
     `<div class="btn-row">
       <button class="btn btn-outline" onclick="editMusica('${m.id}')">Editar cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
     </div>`;
+  if(stageMode)updateStagePresentation();
 }
 
 function updatePlaylistNavigation(){
@@ -1084,6 +1129,9 @@ function updatePlaylistNavigation(){
   nextButton.hidden=!availability.active;
   previousButton.disabled=!availability.canPrevious;
   nextButton.disabled=!availability.canNext;
+  const stagePrevious=document.getElementById('stage-prev'),stageNext=document.getElementById('stage-next');
+  if(stagePrevious){stagePrevious.disabled=!availability.canPrevious;stagePrevious.style.visibility=activeStagePreferences?.showPrevious===false?'hidden':'visible';}
+  if(stageNext){stageNext.disabled=!availability.canNext;stageNext.style.visibility=activeStagePreferences?.showNext===false?'hidden':'visible';}
 }
 
 function openDetail(id,options={}){
@@ -1121,7 +1169,7 @@ function openDetail(id,options={}){
   updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');
   vd.style.display='flex'; vd.style.zIndex='20';
-  spotifyPlayerUI.showSong(m);
+  if(stageMode)spotifyPlayerUI.hide();else spotifyPlayerUI.showSong(m);
 }
 
 function openDetailFromPlaylist(playlistId,index){
@@ -1134,88 +1182,160 @@ function openDetailFromPlaylist(playlistId,index){
   openDetail(songId,{playlistContext:{playlistId:playlist.id,songIds:orderedIds,currentIndex:index},songOverride:eventSongVariant(playlist,item,appCurrentUser.id)});
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-let stageMode=false, scrollTimer=null, scrollSpeed=60;
+let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageConfigDraft=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0;
 
-function toggleStageModeBtn(){
-  stageMode=!stageMode;
-  const vd=document.getElementById('view-detail');
-  const btn=document.getElementById('btn-palco');
-  if(stageMode){
-    currentSongView='summary';
-    renderDetail();
-    vd.classList.add('stage-mode');
-    btn.classList.add('active');
-    btn.textContent='✕ Sair do Palco';
-    // abre todos os blocos
-    vd.querySelectorAll('details').forEach(d=>d.open=true);
-    showToast('Modo Palco ativado');
-  } else {
-    vd.classList.remove('stage-mode');
-    btn.classList.remove('active');
-    btn.textContent='Modo Palco';
-    stopAutoScroll();
-  }
+function currentStageRole(){
+  const context=navigationContext.get(),event=context&&findEvent(context.playlistId);
+  const member=event&&event.members.find(value=>String(value.id)===String(appCurrentUser.id));
+  if(member?.role)return member.role;
+  const band=appBands.find(value=>String(value.id)===String(event?.bandId)),bandMember=band&&band.members.find(value=>String(value.id)===String(appCurrentUser.id));
+  return bandMember?.musicalRole||appCurrentUser.role||'';
 }
+
+function stagePresetIcon(id){return ({vocal:'🎤',guitar:'🎸',bass:'🎵',keys:'🎹',drums:'🥁',custom:'⚙️'})[id]||'⚙️';}
+function stageContentLabel(id){return ({'lyrics-chords':'Letra + acordes',lyrics:'Somente letra',chords:'Somente acordes',structure:'Estrutura'})[id]||id;}
+
+function openStageConfiguration(){
+  const role=currentStageRole();
+  stageConfigDraft=stagePreferences.load(appCurrentUser.id,role);
+  renderStageConfiguration(role);
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+function renderStageConfiguration(role){
+  const p=stageConfigDraft;
+  const presets=Object.entries(stagePreferences.presets).map(([id,preset])=>`<button type="button" class="stage-preset ${p.preset===id?'selected':''}" onclick="selectStagePreset('${id}')"><strong>${stagePresetIcon(id)} ${eventEsc(preset.label)}</strong><small>${eventEsc(preset.description)}</small></button>`).join('');
+  const contentModes=stagePreferences.CONTENT_MODES.map(id=>`<label class="stage-choice ${p.contentMode===id?'selected':''}"><input type="radio" name="stage-content-mode" value="${id}" ${p.contentMode===id?'checked':''} onchange="updateStageDraftFromForm()">${stageContentLabel(id)}</label>`).join('');
+  const toggles=[['showPrevious','Música anterior'],['showNext','Próxima música'],['showPosition','Posição no repertório'],['showSetlist','Lista rápida'],['showNextPreview','Preview da próxima'],['showKey','Tom da música'],['autoScroll','Auto-scroll ao entrar'],['fullscreen','Tela cheia'],['wakeLock','Manter tela ligada'],['editLock','Bloquear edições']].map(([key,label])=>`<label class="stage-toggle"><input type="checkbox" name="${key}" ${p[key]?'checked':''} onchange="updateStageDraftFromForm()">${label}</label>`).join('');
+  const themes=[['dark','Escuro'],['light','Claro'],['contrast','Alto contraste']].map(([id,label])=>`<label class="stage-choice ${p.theme===id?'selected':''}"><input type="radio" name="stage-theme" value="${id}" ${p.theme===id?'checked':''} onchange="updateStageDraftFromForm()">${label}</label>`).join('');
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Configurar Modo Palco</div><p class="stage-config-intro">A configuração é pessoal e não altera a versão oficial do repertório.${role?` Preset sugerido para <strong>${eventEsc(role)}</strong>.`:''}</p><section class="stage-config-section"><h3>Preset por função</h3><div class="stage-preset-grid">${presets}</div></section><section class="stage-config-section"><h3>Conteúdo principal</h3><div class="stage-option-grid">${contentModes}</div></section><section class="stage-config-section"><h3>Informações e segurança</h3><div class="stage-option-grid">${toggles}</div></section><section class="stage-config-section"><h3>Aparência</h3><div class="stage-option-grid">${themes}</div><label class="stage-range-row"><span>Tamanho da fonte</span><input id="stage-config-font" type="range" min="18" max="48" step="2" value="${p.fontSize}" oninput="updateStageDraftFromForm()"><output id="stage-config-font-output">${p.fontSize}px</output></label><label class="stage-range-row"><span>Velocidade</span><input id="stage-config-speed" type="range" min="24" max="140" step="4" value="${p.autoScrollSpeed}" oninput="updateStageDraftFromForm()"><output id="stage-config-speed-output">${p.autoScrollSpeed}</output></label></section><div class="stage-config-ready">✓ O repertório será preparado neste dispositivo para reduzir dependência da internet durante a apresentação.</div><div class="stage-config-actions"><button type="button" class="btn btn-primary" onclick="enterStageModeFromConfiguration()">Entrar no Modo Palco</button><button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button></div>`;
+}
+
+function selectStagePreset(id){stageConfigDraft=stagePreferences.applyPreset(id,stageConfigDraft);renderStageConfiguration(currentStageRole());}
+function updateStageDraftFromForm(){
+  if(!stageConfigDraft)return;
+  const checked=name=>Boolean(document.querySelector(`[name="${name}"]`)?.checked),radio=name=>document.querySelector(`[name="${name}"]:checked`)?.value;
+  stageConfigDraft=stagePreferences.normalize({...stageConfigDraft,contentMode:radio('stage-content-mode')||stageConfigDraft.contentMode,theme:radio('stage-theme')||stageConfigDraft.theme,fontSize:Number(document.getElementById('stage-config-font')?.value||stageConfigDraft.fontSize),autoScrollSpeed:Number(document.getElementById('stage-config-speed')?.value||stageConfigDraft.autoScrollSpeed),showPrevious:checked('showPrevious'),showNext:checked('showNext'),showPosition:checked('showPosition'),showSetlist:checked('showSetlist'),showNextPreview:checked('showNextPreview'),showKey:checked('showKey'),autoScroll:checked('autoScroll'),fullscreen:checked('fullscreen'),wakeLock:checked('wakeLock'),editLock:checked('editLock')});
+  const fontOutput=document.getElementById('stage-config-font-output'),speedOutput=document.getElementById('stage-config-speed-output');
+  if(fontOutput)fontOutput.textContent=stageConfigDraft.fontSize+'px';if(speedOutput)speedOutput.textContent=stageConfigDraft.autoScrollSpeed;
+  document.querySelectorAll('.stage-choice').forEach(label=>label.classList.toggle('selected',Boolean(label.querySelector('input:checked'))));
+}
+
+function stageContextData(){
+  const context=navigationContext.get(),event=context&&findEvent(context.playlistId);
+  if(!context)return {context:null,event:null,songs:[currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId))].filter(Boolean),contextId:`song:${currentDetailId}`};
+  const songs=context.songIds.map((songId,index)=>{
+    const item=event&&event.repertoire.find(value=>String(value.songId)===String(songId));
+    return event&&item?eventSongVariant(event,item,appCurrentUser.id):musicas.find(song=>String(song.id)===String(songId));
+  }).filter(Boolean);
+  return {context,event,songs,contextId:String(context.playlistId)};
+}
+
+async function enterStageModeFromConfiguration(){
+  updateStageDraftFromForm();
+  activeStagePreferences=stagePreferences.save(appCurrentUser.id,stageConfigDraft);
+  const packData=stageContextData();
+  try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
+  closeModal();
+  await enterStageMode();
+}
+
+async function enterStageMode(){
+  const vd=document.getElementById('view-detail');if(!vd)return;
+  activeStagePreferences=activeStagePreferences||stagePreferences.load(appCurrentUser.id,currentStageRole());
+  stageMode=true;scrollSpeed=activeStagePreferences.autoScrollSpeed;
+  vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
+  vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
+  vd.classList.toggle('stage-controls-always',activeStagePreferences.controlsMode==='always');
+  vd.classList.toggle('stage-controls-hidden-permanent',activeStagePreferences.controlsMode==='hidden');
+  vd.style.setProperty('--stage-chord-size',activeStagePreferences.fontSize+'px');
+  vd.style.setProperty('--stage-lyric-size',Math.max(18,activeStagePreferences.fontSize-2)+'px');
+  const btn=document.getElementById('btn-palco');btn.classList.add('active');btn.textContent='✕ Sair do Palco';
+  spotifyPlayerUI.hide();
+  renderDetail();updatePlaylistNavigation();updateStagePresentation();vd.scrollTop=0;
+  vd.addEventListener('pointerdown',revealStageControls,{passive:true});
+  if(activeStagePreferences.fullscreen&&vd.requestFullscreen){try{await vd.requestFullscreen({navigationUI:'hide'});}catch(error){}}
+  if(activeStagePreferences.wakeLock)await acquireStageWakeLock();
+  if(activeStagePreferences.autoScroll)startAutoScroll();
+  revealStageControls();showToast('🎤 Modo Palco preparado');
+}
+
+async function acquireStageWakeLock(){if(!stageMode||!navigator.wakeLock?.request)return;try{stageWakeLock=await navigator.wakeLock.request('screen');stageWakeLock.addEventListener('release',()=>{stageWakeLock=null;});}catch(error){stageWakeLock=null;}}
+async function exitStageMode(restorePlayer=true){
+  const vd=document.getElementById('view-detail');stopAutoScroll();clearTimeout(stageControlsTimer);vd.removeEventListener('pointerdown',revealStageControls);
+  if(stageWakeLock){try{await stageWakeLock.release();}catch(error){}stageWakeLock=null;}
+  if(document.fullscreenElement===vd&&document.exitFullscreen){try{await document.exitFullscreen();}catch(error){}}
+  stageMode=false;vd.className=vd.className.split(/\s+/).filter(name=>!name.startsWith('stage-')).join(' ');vd.style.removeProperty('--stage-chord-size');vd.style.removeProperty('--stage-lyric-size');
+  const btn=document.getElementById('btn-palco');if(btn){btn.classList.remove('active');btn.textContent='Modo Palco';}
+  document.getElementById('stage-quick-panel').hidden=true;renderDetail();updatePlaylistNavigation();const currentSong=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId));if(restorePlayer&&currentSong)spotifyPlayerUI.showSong(currentSong);
+}
+
+function toggleStageModeBtn(){if(stageMode)exitStageMode();else openStageConfiguration();}
 
 function closeDetail(){
-  stopAutoScroll();
-  spotifyPlayerUI.hide();
-  stageMode=false;
-  navigationContext.clear();
-  currentDetailSongOverride=null;
-  updatePlaylistNavigation();
-  const vd=document.getElementById('view-detail');
-  vd.classList.remove('stage-mode');
-  vd.style.display='none';
-  vd.style.zIndex='10';
+  if(stageMode)exitStageMode(false);else stopAutoScroll();
+  spotifyPlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
+  const vd=document.getElementById('view-detail');vd.style.display='none';vd.style.zIndex='10';
 }
+
+function revealStageControls(){
+  if(!stageMode||activeStagePreferences?.controlsMode!=='auto')return;
+  const vd=document.getElementById('view-detail');vd.classList.remove('stage-controls-hidden');clearTimeout(stageControlsTimer);
+  stageControlsTimer=setTimeout(()=>{if(stageMode&&document.getElementById('stage-quick-panel').hidden)vd.classList.add('stage-controls-hidden');},3600);
+}
+
+function currentStageSongAt(index){
+  const context=navigationContext.get();if(!context)return null;
+  const event=findEvent(context.playlistId),songId=context.songIds[index],item=event&&event.repertoire.find(value=>String(value.songId)===String(songId));
+  return event&&item?eventSongVariant(event,item,appCurrentUser.id):musicas.find(song=>String(song.id)===String(songId));
+}
+
+function updateStagePresentation(){
+  if(!stageMode)return;
+  const m=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId)),context=navigationContext.get(),prefs=activeStagePreferences||{};
+  document.getElementById('stage-song-title').textContent=m?.title||'Música';document.getElementById('stage-song-artist').textContent=m?.artist||'';
+  const position=document.getElementById('stage-position');position.hidden=prefs.showPosition===false;position.textContent=context?`${String(context.currentIndex+1).padStart(2,'0')} / ${String(context.songIds.length).padStart(2,'0')}`:'Música avulsa';
+  const key=document.getElementById('stage-key');key.hidden=prefs.showKey===false;key.textContent='Tom '+shiftText(m?.key||'—',currentSemitones);
+  const next=context?currentStageSongAt(context.currentIndex+1):null,preview=document.getElementById('stage-next-preview');preview.style.display=prefs.showNextPreview===false?'none':'';document.getElementById('stage-next-title').textContent=next?.title||'Fim do repertório';document.getElementById('stage-next-key').textContent=next?.key?`Tom ${next.key}`:'';
+  document.getElementById('stage-online-status').classList.toggle('offline',!navigator.onLine);
+  const listButton=document.querySelector('.stage-floating-controls [onclick="openStageQuickPanel()"]');if(listButton)listButton.style.display=prefs.showSetlist===false?'none':'';
+  updateStageQuickList();
+}
+
+function updateStageQuickList(){
+  const list=document.getElementById('stage-quick-list'),context=navigationContext.get();if(!list)return;
+  if(!context){list.innerHTML='<div class="empty-state"><p>Música avulsa</p></div>';return;}
+  list.innerHTML=context.songIds.map((id,index)=>{const song=currentStageSongAt(index);return `<button type="button" class="stage-quick-row ${index===context.currentIndex?'current':''}" onclick="navigateStageTo(${index})"><span>${String(index+1).padStart(2,'0')}</span><span><strong>${eventEsc(song?.title||'Música')}</strong><small>${eventEsc(song?.artist||'')}</small></span><span>${eventEsc(song?.key||'')}</span></button>`;}).join('');
+}
+function openStageQuickPanel(){if(!activeStagePreferences?.showSetlist)return;document.getElementById('stage-quick-panel').hidden=false;document.getElementById('view-detail').classList.remove('stage-controls-hidden');updateStageQuickList();}
+function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarget)return;document.getElementById('stage-quick-panel').hidden=true;revealStageControls();}
+async function reconfigureStageMode(){await exitStageMode(false);openStageConfiguration();}
+function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
-function toggleAutoScroll(){
-  if(scrollTimer) stopAutoScroll();
-  else startAutoScroll();
-}
-
+function toggleAutoScroll(){if(scrollTimer)stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
-  const vd=document.getElementById('view-detail');
-  const btn=document.getElementById('btn-scroll');
-  btn.classList.add('active');
-  btn.textContent='⏹ Parar Scroll';
-  scrollTimer=setInterval(()=>{
-    vd.scrollTop+=1;
-    if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight) stopAutoScroll();
-  }, scrollSpeed);
+  const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
+  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Scroll';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar auto-scroll');}
+  stageLastFrame=performance.now();
+  const tick=now=>{if(!scrollTimer)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;vd.scrollTop+=scrollSpeed*elapsed/60000;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
+  scrollTimer=requestAnimationFrame(tick);
 }
-
 function stopAutoScroll(){
-  if(scrollTimer){clearInterval(scrollTimer);scrollTimer=null;}
-  const btn=document.getElementById('btn-scroll');
-  if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}
+  if(scrollTimer){cancelAnimationFrame(scrollTimer);scrollTimer=null;}
+  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar auto-scroll');}
 }
+function adjustStageScrollSpeed(delta){scrollSpeed=Math.max(24,Math.min(140,scrollSpeed+delta));if(activeStagePreferences){activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});}showToast(`Auto-scroll: ${scrollSpeed}`);revealStageControls();}
+function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});document.getElementById('view-detail').scrollTop=0;if(stageMode&&activeStagePreferences?.autoScroll)startAutoScroll();}
 
-function navigateSong(direction){
-  const target=navigationContext.move(direction);
-  if(!target){updatePlaylistNavigation();return;}
-  openDetail(target.songId,{preserveNavigation:true});
-}
+const stageSpeeds=[36,60,96];let stageSpeedIndex=1;
+function cycleScrollSpeed(){stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;scrollSpeed=stageSpeeds[stageSpeedIndex];document.getElementById('btn-speed').textContent='Vel. '+['0.7x','1x','1.5x'][stageSpeedIndex];const stageSpeedButton=document.querySelector('.stage-speed-control');if(stageSpeedButton)stageSpeedButton.textContent=['0.7×','1×','1.5×'][stageSpeedIndex];if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});if(scrollTimer){stopAutoScroll();startAutoScroll();}}
+const stageFontSizes=[22,28,34];let stageFontIndex=1;
+function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});return normalized;}
+function adjustStageFont(delta){const size=applyStageFont((activeStagePreferences?.fontSize||28)+delta);activeStagePreferences={...activeStagePreferences,fontSize:size};showToast(`Fonte: ${size}px`);revealStageControls();}
+function cycleStageFont(){stageFontIndex=(stageFontIndex+1)%stageFontSizes.length;applyStageFont(stageFontSizes[stageFontIndex]);document.getElementById('btn-font').textContent='Fonte '+['P','M','G'][stageFontIndex];}
 
-const stageSpeeds=[90,60,35];
-let stageSpeedIndex=1;
-function cycleScrollSpeed(){
-  stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;
-  scrollSpeed=stageSpeeds[stageSpeedIndex];
-  const labels=['0.7x','1x','1.5x'];
-  document.getElementById('btn-speed').textContent='Vel. '+labels[stageSpeedIndex];
-  if(scrollTimer){stopAutoScroll();startAutoScroll();}
-}
-
-const stageFontSizes=[22,28,34];
-let stageFontIndex=1;
-function cycleStageFont(){
-  stageFontIndex=(stageFontIndex+1)%stageFontSizes.length;
-  document.getElementById('view-detail').style.setProperty('--stage-chord-size',stageFontSizes[stageFontIndex]+'px');
-  document.getElementById('btn-font').textContent='Fonte '+['P','M','G'][stageFontIndex];
-}
+window.addEventListener('online',()=>updateStagePresentation());window.addEventListener('offline',()=>updateStagePresentation());document.addEventListener('visibilitychange',()=>{if(stageMode&&document.visibilityState==='visible'&&activeStagePreferences?.wakeLock&&!stageWakeLock)acquireStageWakeLock();});
 
 // ── MEDLEY ────────────────────────────────────────────────────────────
 let medleyBlocos=[];
@@ -1588,7 +1708,7 @@ function eventSongModel(song,edit,fallbackEdit){
 function eventSongVariant(event,item,userId){
   const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
-  return songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song);
+  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song),personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
 }
 
 function openAddSetlist(prefill){

@@ -122,14 +122,17 @@ Objetivo: entregar o primeiro grande valor online do produto.
 
 Objetivo: tornar a PWA segura para uso durante uma apresentação.
 
-- pré-carregar offline todas as músicas do evento;
-- indicar claramente quando o repertório está pronto para uso offline;
-- navegação por gesto e por botões grandes;
-- impedir o bloqueio da tela com Screen Wake Lock quando disponível;
-- preservar transposição, capo, fonte, velocidade e posição de leitura por músico;
+- [x] pré-carregar offline as músicas e preferências essenciais do evento;
+- [x] indicar conectividade e preparação do repertório no cabeçalho do palco;
+- [ ] navegação por gestos configuráveis;
+- [x] navegação por botões grandes e lista rápida do repertório;
+- [x] impedir o bloqueio da tela com Screen Wake Lock quando disponível;
+- [x] preservar transposição, fonte, velocidade e configuração visual por músico;
+- [ ] preservar posição de leitura e capo por músico;
 - notas pessoais por música;
-- modo de alto contraste e controle de luminosidade visual da interface;
-- testes em celular, tablet, retrato, paisagem e tela cheia.
+- [x] tema claro, escuro e de alto contraste;
+- [ ] controle adicional de luminosidade visual da interface;
+- [x] testes responsivos em celular, tablet, retrato, paisagem e tela cheia;
 
 **Pronto quando:** um repertório inteiro pode ser apresentado em modo avião, sem recarregar a página e sem perder as preferências pessoais.
 

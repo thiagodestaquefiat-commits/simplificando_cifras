@@ -72,9 +72,10 @@ const response = {
       await page.locator(".transpose-bar .t-btn").last().click();
       assert.match(await page.locator(".full-chord-sheet .is-chord").first().innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
       await page.getByRole("button", { name: "Modo Palco", exact: true }).click();
-      assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 0);
-      assert.match(await page.locator("#detail-content .wa-block").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
-      await page.getByRole("button", { name: "✕ Sair do Palco", exact: true }).click();
+      await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
+      assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
+      assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
+      await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
 
       await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
       assert.equal(await page.getByLabel("Cifra / Resumo", { exact: true }).count(), 1);

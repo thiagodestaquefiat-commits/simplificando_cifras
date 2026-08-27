@@ -58,7 +58,7 @@ O modelo central preserva `key`, `capo` e `blocos` usados pela interface atual e
 - chat do evento com mensagens, respostas, reações, edição, exclusão, cópia, não lidas e enquetes;
 - sincronização local do chat entre abas abertas por `BroadcastChannel`;
 - medley;
-- modo palco com navegação, auto-scroll, velocidade e tamanho de fonte;
+- modo palco configurável com presets por instrumento, repertório rápido, próxima música, temas, auto-scroll, tela cheia, Wake Lock e preparação offline;
 - diagramas em faixa horizontal própria, com indicação clara quando um desenho não está disponível;
 - exportação completa da biblioteca em JSON, incluindo catálogo padrão, dados persistidos e estado atual da sessão;
 - funcionamento offline após o primeiro carregamento bem-sucedido.
@@ -95,7 +95,9 @@ A exportação é local, não envia dados para backend e não altera nem remove 
 
 ## Navegação e Modo Palco
 
-Os botões **Anterior** e **Próxima** aparecem somente quando a música é aberta a partir do repertório de um evento. Eles seguem a ordem definida pelo usuário e param na primeira e na última música. No Modo Palco, os diagramas são ocultados para priorizar a leitura, enquanto tom, capotraste, transposição, fonte, velocidade e auto-scroll continuam disponíveis.
+Os botões **Anterior** e **Próxima** aparecem somente quando a música é aberta a partir do repertório de um evento. Eles seguem a ordem definida pelo usuário e param na primeira e na última música. Antes de entrar no Modo Palco, cada músico escolhe um preset e suas preferências pessoais. Durante a apresentação, diagramas e integrações externas são ocultados para priorizar a leitura; tom, transposição, fonte, velocidade, auto-scroll, posição, próxima música e repertório rápido continuam acessíveis. A configuração e um pacote compacto do repertório ficam salvos no aparelho.
+
+As decisões e os limites desta primeira fase estão em [docs/modo-palco-fase-1.md](docs/modo-palco-fase-1.md).
 
 ## Eventos colaborativos e permissões
 
