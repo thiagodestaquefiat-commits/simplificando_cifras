@@ -113,6 +113,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".event-member-card").getByText("Vocal", { exact: true }).count(), 1);
     assert.equal(await page.getByText("Você lidera", { exact: true }).count(), 1);
     assert.equal(await page.locator("button", { hasText: "Editar oficial" }).count(), 1);
+    assert.equal(await page.locator(".event-scope-badge").count(), 0);
 
     await page.locator(".event-song-edit").first().click();
     assert.equal(await page.getByText("Editar música", { exact: true }).count(), 1);
@@ -130,7 +131,7 @@ const server = http.createServer((request, response) => {
     await page.getByText(/Começar somente com violão/).waitFor();
     assert.equal(await page.getByText("A alegria oficial", { exact: true }).count(), 1);
     assert.equal(await page.getByText(/Começar somente com violão/).count(), 1);
-    assert.equal(await page.getByText(/Oficial — todos do evento/).count(), 1);
+    assert.equal(await page.getByText(/Oficial — todos do evento/).count(), 0);
 
     await page.locator(".event-song-edit").first().click();
     await page.locator('input[name="event-edit-scope"][value="personal"]').check();
@@ -142,7 +143,7 @@ const server = http.createServer((request, response) => {
     await page.locator("#modal-body").getByRole("button", { name: "Salvar", exact: true }).click();
     await page.getByText(/Somente para minha execução/).waitFor();
     assert.equal(await page.getByText(/Somente para minha execução/).count(), 1);
-    assert.equal(await page.locator(".event-scope-badge.personal").count(), 1);
+    assert.equal(await page.locator(".event-scope-badge.personal").count(), 0);
     assert.equal(await page.getByText("A alegria pessoal", { exact: true }).count(), 1);
     await page.locator(".sd-row").first().click();
     assert.equal(await page.locator("#detail-title").textContent(), "A alegria pessoal");

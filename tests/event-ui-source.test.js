@@ -12,6 +12,7 @@ assert.match(html, /event-chat\.js/);
 assert.match(html, /id="event-chat-view"/);
 assert.match(html, /Pessoal — somente para mim/);
 assert.match(html, /Compartilhada — todos do evento/);
+assert.doesNotMatch(html, /event-scope-badge/);
 assert.match(html, /simpleSongEditorFields/);
 assert.match(html, /eventSongVariant/);
 assert.match(html, /Somente o líder/);
