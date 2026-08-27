@@ -114,6 +114,12 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText("Você lidera", { exact: true }).count(), 1);
     assert.equal(await page.locator("button", { hasText: "Editar oficial" }).count(), 1);
     assert.equal(await page.locator(".event-scope-badge").count(), 0);
+    assert.equal(await page.locator(".event-notification-badge").textContent(), "1");
+    await page.locator("#event-notification-button").click();
+    assert.equal(await page.getByText("Alterações recentes", { exact: true }).count(), 1);
+    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 1);
+    assert.equal(await page.locator(".event-notification-badge").count(), 0);
+    await page.getByRole("button", { name: "Fechar", exact: true }).click();
 
     await page.locator(".event-song-edit").first().click();
     assert.equal(await page.getByText("Editar música", { exact: true }).count(), 1);
@@ -132,6 +138,13 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText("A alegria oficial", { exact: true }).count(), 1);
     assert.equal(await page.getByText(/Começar somente com violão/).count(), 1);
     assert.equal(await page.getByText(/Oficial — todos do evento/).count(), 0);
+    assert.equal(await page.locator(".event-notification-badge").textContent(), "1");
+    await page.locator("#event-notification-button").click();
+    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 2);
+    assert.equal(await page.locator(".event-notification-badge").count(), 0);
+    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+    await page.evaluate(() => { closeSD(); openSD(setlists.find(event => event.title === "Culto de teste").id); });
+    assert.equal(await page.locator(".event-notification-badge").count(), 0);
 
     await page.locator(".event-song-edit").first().click();
     await page.locator('input[name="event-edit-scope"][value="personal"]').check();
