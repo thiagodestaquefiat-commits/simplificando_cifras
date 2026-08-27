@@ -55,6 +55,7 @@ async function capture(page, name) {
     await page.locator(".sd-row").first().click();
     await capture(page, "03-musica-mobile-390x844.png");
     await page.locator("#btn-palco").click();
+    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
     await capture(page, "04-modo-palco-mobile-390x844.png");
 
     await page.setViewportSize({ width: 1366, height: 768 });

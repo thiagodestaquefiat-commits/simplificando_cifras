@@ -77,9 +77,10 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-card-name").first().evaluate((element) => getComputedStyle(element).color), chordColor);
 
     await page.locator("#btn-palco").click();
+    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
     assert.equal(await page.locator(".chord-line").first().evaluate((element) => getComputedStyle(element).color), chordColor);
     await page.screenshot({ path: path.join(chordColorOutputDir, "03-modo-palco-mobile-390x844.png"), fullPage: false });
-    await page.locator("#btn-palco").click();
+    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
 
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.screenshot({ path: path.join(outputDir, "03-biblioteca-desktop-1366x768.png"), fullPage: false });
