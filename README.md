@@ -49,6 +49,7 @@ O modelo central preserva `key`, `capo` e `blocos` usados pela interface atual e
 - playlist principal com biblioteca e pesquisa musical;
 - criação, edição, exclusão, ordenação e compartilhamento de eventos com repertório, restritos ao Líder do evento;
 - membros participantes com função ou instrumento por evento;
+- endereço com autocomplete, mapa interativo, marcador, controles de navegação e abertura no Google Maps;
 - contas opcionais com Google e migração progressiva da identidade local;
 - Bandas/Equipes com proprietário, líderes, integrantes e Eventos vinculados;
 - versões pessoais completas — título, artista, tom, capotraste, cifra e observações — visíveis somente ao integrante;

@@ -143,16 +143,24 @@ backend exige que criador, Líder do Evento e participantes pertençam a ela.
 
 `GET /api/locations/search?q=...` pesquisa até cinco endereços brasileiros e
 devolve somente o modelo normalizado usado pelo frontend. `GET
+/api/locations/config` informa se os tiles interativos estão habilitados e
+entrega a URL pública de estilo. `GET
 /api/locations/map?latitude=...&longitude=...` entrega uma imagem estática com
-marcador. As duas rotas são limitadas por IP; buscas repetidas e mapas são
-mantidos em cache no processo para reduzir consumo externo.
+marcador usada como fallback. As rotas são limitadas por IP; buscas repetidas e
+mapas estáticos são mantidos em cache no processo para reduzir consumo externo.
 
-A chave do Geoapify fica em `GEOAPIFY_API_KEY` no Railway e não é enviada ao
-navegador. O frontend espera 400 ms, ignora buscas menores que quatro caracteres
-e cancela a requisição anterior. Eventos guardam o endereço textual legado e,
-quando uma sugestão é escolhida, os campos estruturados, coordenadas, `placeId`
-e provedor. As novas colunas de `events` são criadas pela migration interna
-aditiva; eventos antigos continuam válidos e apenas não exibem o mapa.
+A chave privada do Geoapify fica em `GEOAPIFY_API_KEY` no Railway e não é enviada
+ao navegador. O mapa interativo usa uma segunda chave, `GEOAPIFY_BROWSER_KEY`,
+que deve ser restrita no painel do Geoapify aos domínios oficiais, previews do
+Netlify e origens locais autorizadas. Essa chave é pública por natureza e serve
+somente para os tiles. Sem ela, o frontend mantém a imagem estática atual.
+
+O mapa usa MapLibre GL JS, gestos cooperativos no celular, marcador, zoom e
+recentralização. O frontend espera 400 ms, ignora buscas menores que quatro
+caracteres e cancela a requisição anterior. Eventos guardam o endereço textual
+legado e, quando uma sugestão é escolhida, os campos estruturados, coordenadas,
+`placeId` e provedor. As novas colunas de `events` são criadas pela migration
+interna aditiva; eventos antigos continuam válidos e apenas não exibem o mapa.
 
 ## Modelo OpenAI
 

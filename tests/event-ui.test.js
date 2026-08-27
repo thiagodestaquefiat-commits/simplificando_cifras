@@ -27,15 +27,36 @@ const server = http.createServer((request, response) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
   const page = await context.newPage();
   const errors = [];
+  let staticMapRequests = 0;
+  let interactiveMapEnabled = true;
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error" && !message.text().includes("Failed to load resource: the server responded with a status of 404")) errors.push(message.text());
   });
   await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
+  await page.route("https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.css", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
+  await page.route("https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.js", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: `
+    (() => {
+      class FakeMap {
+        constructor(options) { this.options = options; this.listeners = {}; this.zoom = options.zoom; window.__eventMapOptions = options; }
+        addControl() { return this; }
+        once(name, callback) { this.listeners[name] = callback; if (name === "load") setTimeout(callback, 0); return this; }
+        on(name, callback) { this.listeners[name] = callback; return this; }
+        resize() { window.__eventMapResizeCount = (window.__eventMapResizeCount || 0) + 1; }
+        getZoom() { return this.zoom; }
+        easeTo(options) { window.__eventMapRecenter = options; }
+        remove() { this.removed = true; }
+      }
+      class FakeMarker { setLngLat(value) { this.value = value; return this; } addTo() { return this; } }
+      class FakeNavigationControl { constructor(options) { this.options = options; } }
+      window.maplibregl = { Map: FakeMap, Marker: FakeMarker, NavigationControl: FakeNavigationControl };
+    })();
+  ` }));
   await page.route("**/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local", supabaseUrl: "", supabaseAnonKey: "" }) }));
   await page.route("**/api/collaboration/**", (route) => route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ erro: { codigo: "erro_http", mensagem: "Backend ainda não publicado" } }) }));
+  await page.route("**/api/locations/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ interactiveEnabled: interactiveMapEnabled, provider: "geoapify", styleUrl: interactiveMapEnabled ? "https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=public-test" : "" }) }));
   await page.route("**/api/locations/search**", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ results: [{ placeId: "place-central", name: "Igreja Central", formattedAddress: "Igreja Central, Rua das Flores, 100, Blumenau, SC, Brasil", street: "Rua das Flores", streetNumber: "100", district: "Centro", city: "Blumenau", state: "Santa Catarina", postalCode: "89000-000", country: "Brasil", latitude: -26.9187, longitude: -49.066, provider: "geoapify" }] }) }));
-  await page.route("**/api/locations/map**", (route) => route.fulfill({ status: 200, contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="320"><rect width="100%" height="100%" fill="#17324d"/></svg>' }));
+  await page.route("**/api/locations/map**", (route) => { staticMapRequests += 1; return route.fulfill({ status: 200, contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="320"><rect width="100%" height="100%" fill="#17324d"/></svg>' }); });
 
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
@@ -68,6 +89,11 @@ const server = http.createServer((request, response) => {
     await page.locator("#fs-location").press("Enter");
     assert.equal(await page.locator("#fs-location").inputValue(), "Igreja Central, Rua das Flores, 100, Blumenau, SC, Brasil");
     assert.equal(await page.locator("#fs-location-preview .event-map-card").count(), 1);
+    await page.locator("#fs-location-preview .event-map-card.interactive-ready").waitFor();
+    assert.equal(await page.evaluate(() => window.__eventMapOptions.cooperativeGestures), true);
+    assert.equal(staticMapRequests, 0, "o mapa estático não deve consumir créditos quando o interativo carregou");
+    await page.locator("#fs-location-preview .event-map-recenter").click();
+    assert.deepEqual(await page.evaluate(() => window.__eventMapRecenter.center), [-49.066, -26.9187]);
     await page.locator("#fs-description").fill("Passagem de som às 18h");
     await page.locator("#pl-all .pl-add-row").first().click();
     await page.locator("#event-member-name").fill("Ana Souza");
@@ -81,6 +107,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".event-meta-item").getByText("23/08/2026", { exact: true }).count(), 1);
     assert.equal(await page.getByText("Igreja Central, Rua das Flores, 100, Blumenau, SC, Brasil", { exact: true }).count() >= 1, true);
     assert.equal(await page.locator("#event-detail-map .event-map-card").count(), 1);
+    await page.locator("#event-detail-map .event-map-card.interactive-ready").waitFor();
     assert.match(await page.locator("#event-detail-map a", { hasText: "Abrir no mapa" }).getAttribute("href"), /google\.com\/maps\/search/);
     assert.equal(await page.locator(".event-member-card").getByText("Ana Souza", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Vocal", { exact: true }).count(), 1);
@@ -148,6 +175,19 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText(/Qual música abre o evento/).count(), 1);
     await page.locator(".event-poll-option").first().click();
     assert.match(await page.locator(".event-poll-total").last().textContent(), /1 participante/);
+
+    interactiveMapEnabled = false;
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      const container = document.createElement("div");
+      container.id = "fallback-map-test";
+      document.body.append(container);
+      eventMapPreview.render(container, { formattedAddress: "Rua de fallback, 10", latitude: -26.9, longitude: -49.06, provider: "geoapify" });
+    });
+    await page.locator("#fallback-map-test .event-map-card.static-fallback img").waitFor();
+    await page.waitForFunction(() => document.querySelector("#fallback-map-test img")?.complete);
+    assert.equal(staticMapRequests, 1, "sem chave pública deve carregar somente o fallback estático");
+    assert.match(await page.locator("#fallback-map-test a", { hasText: "Abrir no mapa" }).getAttribute("href"), /google\.com\/maps\/search/);
     assert.deepEqual(errors, []);
     console.log("event-ui.test.js: OK");
   } finally {

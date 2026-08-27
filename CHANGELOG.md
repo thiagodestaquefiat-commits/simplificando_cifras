@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1 — Mapa interativo nos eventos
+
+- Substitui a prévia estática por mapa interativo MapLibre com tiles Geoapify quando a chave pública restrita está configurada.
+- Permite arrastar, ampliar, reduzir e recentralizar o mapa sem capturar a rolagem comum da página no celular.
+- Mantém o botão para abrir o endereço no Google Maps.
+- Preserva automaticamente o mapa estático como fallback quando a chave pública ou a biblioteca interativa não estão disponíveis.
+- Separa a chave pública de tiles da chave privada usada pelo Railway para autocomplete e geocodificação.
+- Atualiza o cache da PWA para `v59`.
+
 ## 0.7.0 — Contas e Bandas/Equipes
 
 - Adiciona login opcional com Google por meio do Supabase Auth, mantendo o modo local quando não configurado.
