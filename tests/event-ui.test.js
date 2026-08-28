@@ -117,11 +117,18 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") === null), true);
     assert.equal(await page.locator("#event-chat-fab").evaluate((button) => getComputedStyle(button).position), "fixed");
     const chatPositionBeforeScroll = await page.locator("#event-chat-fab").boundingBox();
+    assert.ok(chatPositionBeforeScroll.x > 300, `o chat deve ficar à direita, posição atual: ${chatPositionBeforeScroll.x}`);
     await page.evaluate(() => { document.getElementById("sd-content").style.minHeight = "1600px"; document.getElementById("view-sd").scrollTop = 450; });
     const chatPositionAfterScroll = await page.locator("#event-chat-fab").boundingBox();
     assert.equal(Math.round(chatPositionAfterScroll.x), Math.round(chatPositionBeforeScroll.x));
     assert.equal(Math.round(chatPositionAfterScroll.y), Math.round(chatPositionBeforeScroll.y));
     await page.evaluate(() => { document.getElementById("view-sd").scrollTop = 0; document.getElementById("sd-content").style.minHeight = ""; });
+    await page.getByRole("button", { name: "Modo Palco", exact: false }).click();
+    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 1);
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
+    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+    await page.locator("#view-detail .back-btn").click();
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
     assert.equal(await page.locator(".event-notification-badge").textContent(), "1");
     await page.locator("#event-notification-button").click();
     assert.equal(await page.getByText("Alterações recentes", { exact: true }).count(), 1);
