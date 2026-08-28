@@ -1184,7 +1184,8 @@ function openDetailFromPlaylist(playlistId,index){
   openDetail(songId,{playlistContext:{playlistId:playlist.id,songIds:orderedIds,currentIndex:index},songOverride:eventSongVariant(playlist,item,appCurrentUser.id)});
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageConfigDraft=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0;
+let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageConfigDraft=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
+const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
 function currentStageRole(){
   const context=navigationContext.get(),event=context&&findEvent(context.playlistId);
@@ -1315,23 +1316,23 @@ async function reconfigureStageMode(){await exitStageMode(false);openStageConfig
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
-function toggleAutoScroll(){if(scrollTimer)stopAutoScroll();else startAutoScroll();revealStageControls();}
+function toggleAutoScroll(){if(scrollTimer!==null)stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
   if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Scroll';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar auto-scroll');}
-  stageLastFrame=performance.now();
-  const tick=now=>{if(!scrollTimer)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;vd.scrollTop+=scrollSpeed*elapsed/60000;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
+  stageLastFrame=performance.now();stageScrollRemainder=0;
+  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);
 }
 function stopAutoScroll(){
-  if(scrollTimer){cancelAnimationFrame(scrollTimer);scrollTimer=null;}
+  if(scrollTimer!==null){cancelAnimationFrame(scrollTimer);scrollTimer=null;}stageScrollRemainder=0;
   const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar auto-scroll');}
 }
 function adjustStageScrollSpeed(delta){scrollSpeed=Math.max(24,Math.min(140,scrollSpeed+delta));if(activeStagePreferences){activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});}showToast(`Auto-scroll: ${scrollSpeed}`);revealStageControls();}
 function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});document.getElementById('view-detail').scrollTop=0;if(stageMode&&activeStagePreferences?.autoScroll)startAutoScroll();}
 
 const stageSpeeds=[36,60,96];let stageSpeedIndex=1;
-function cycleScrollSpeed(){stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;scrollSpeed=stageSpeeds[stageSpeedIndex];document.getElementById('btn-speed').textContent='Vel. '+['0.7x','1x','1.5x'][stageSpeedIndex];const stageSpeedButton=document.querySelector('.stage-speed-control');if(stageSpeedButton)stageSpeedButton.textContent=['0.7×','1×','1.5×'][stageSpeedIndex];if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});if(scrollTimer){stopAutoScroll();startAutoScroll();}}
+function cycleScrollSpeed(){stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;scrollSpeed=stageSpeeds[stageSpeedIndex];document.getElementById('btn-speed').textContent='Vel. '+['0.7x','1x','1.5x'][stageSpeedIndex];const stageSpeedButton=document.querySelector('.stage-speed-control');if(stageSpeedButton)stageSpeedButton.textContent=['0.7×','1×','1.5×'][stageSpeedIndex];if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});if(scrollTimer!==null){stopAutoScroll();startAutoScroll();}}
 const stageFontSizes=[22,28,34];let stageFontIndex=1;
 function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});return normalized;}
 function adjustStageFont(delta){const size=applyStageFont((activeStagePreferences?.fontSize||28)+delta);activeStagePreferences={...activeStagePreferences,fontSize:size};showToast(`Fonte: ${size}px`);revealStageControls();}

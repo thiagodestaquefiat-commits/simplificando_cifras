@@ -130,9 +130,19 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), false);
     assert.equal(await page.locator(".transpose-bar").isVisible(), false);
     await page.getByRole("button", { name: "Aumentar fonte", exact: true }).click();
+    await page.locator("#detail-content").evaluate((element) => { element.style.minHeight = "2000px"; element.style.flexShrink = "0"; });
+    const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.getByRole("button", { name: "Iniciar auto-scroll", exact: true }).click();
     assert.ok(await page.locator("#stage-scroll-toggle").evaluate((element) => element.classList.contains("active")));
+    await page.waitForTimeout(400);
+    const scrollWhilePlaying = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
+    const scrollMetrics = await page.locator("#view-detail").evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
+    assert.ok(scrollWhilePlaying >= scrollBeforePlay + 8, `auto-scroll deveria avançar visivelmente: ${scrollBeforePlay} -> ${scrollWhilePlaying}; área ${scrollMetrics.clientHeight}/${scrollMetrics.scrollHeight}`);
     await page.getByRole("button", { name: "Pausar auto-scroll", exact: true }).click();
+    const scrollWhenPaused = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
+    await page.waitForTimeout(250);
+    const scrollAfterPause = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
+    assert.ok(Math.abs(scrollAfterPause - scrollWhenPaused) <= 1, `auto-scroll deveria permanecer pausado: ${scrollWhenPaused} -> ${scrollAfterPause}`);
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), true);
 
