@@ -131,13 +131,16 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator(".transpose-bar").isVisible(), false);
     await page.getByRole("button", { name: "Aumentar fonte", exact: true }).click();
     await page.locator("#detail-content").evaluate((element) => { element.style.minHeight = "2000px"; element.style.flexShrink = "0"; });
+    const controlsBeforeScroll = await page.locator(".stage-floating-controls").boundingBox();
     const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.getByRole("button", { name: "Iniciar auto-scroll", exact: true }).click();
     assert.ok(await page.locator("#stage-scroll-toggle").evaluate((element) => element.classList.contains("active")));
     await page.waitForTimeout(400);
     const scrollWhilePlaying = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
+    const controlsWhileScrolling = await page.locator(".stage-floating-controls").boundingBox();
     const scrollMetrics = await page.locator("#view-detail").evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
     assert.ok(scrollWhilePlaying >= scrollBeforePlay + 8, `auto-scroll deveria avançar visivelmente: ${scrollBeforePlay} -> ${scrollWhilePlaying}; área ${scrollMetrics.clientHeight}/${scrollMetrics.scrollHeight}`);
+    assert.equal(Math.round(controlsWhileScrolling.y), Math.round(controlsBeforeScroll.y), "os controles devem permanecer fixos no rodapé durante a rolagem");
     await page.getByRole("button", { name: "Pausar auto-scroll", exact: true }).click();
     const scrollWhenPaused = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.waitForTimeout(250);
@@ -157,7 +160,9 @@ async function openApp(browser, baseUrl, width, height) {
 
     await page.locator("#tab-setlists").click();
     await page.locator("#lista-setlists .sl-title", { hasText: "Playlist de teste" }).click();
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
     await page.locator(".sd-row").first().click();
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
     assert.equal(await page.locator("#btn-previous-song").isVisible(), true);
     assert.equal(await page.locator("#btn-previous-song").isDisabled(), true);
     assert.equal(await page.locator("#btn-next-song").isEnabled(), true);
@@ -170,6 +175,10 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#detail-title").textContent(), "A casa é sua");
     assert.ok(await page.locator("#view-detail").evaluate((element) => element.classList.contains("stage-mode")));
     assert.equal(await page.locator("#btn-next-song").isDisabled(), true);
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
+    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
+    await page.locator("#view-detail .back-btn").click();
+    assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.locator("#tab-setlists").click();
