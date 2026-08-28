@@ -13,10 +13,11 @@ class FakeProvider:
         self.system_prompt = ""
         self.user_prompt = ""
 
-    def generate(self, system_prompt, user_prompt, media=None):
+    def generate(self, system_prompt, user_prompt, media=None, context=None):
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
         self.media = media
+        self.context = context
         return ResumoHarmonicoResponse(
             titulo="Teste",
             artista=None,
@@ -91,8 +92,8 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
     )
     original_generate = provider.generate
 
-    def generate(system_prompt, user_prompt, media=None):
-        result = original_generate(system_prompt, user_prompt, media)
+    def generate(system_prompt, user_prompt, media=None, context=None):
+        result = original_generate(system_prompt, user_prompt, media, context)
         result.fullChordSheet = provider_result
         return result
 

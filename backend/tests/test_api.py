@@ -1,7 +1,17 @@
 from unittest.mock import patch
 from io import BytesIO
 
+import pytest
+
 from app.schemas.resumo_harmonico import ResumoHarmonicoResponse, TrechoHarmonico
+from app.services.providers import (
+    ProviderInvalidResponse,
+    ProviderRateLimit,
+    ProviderRequestRejected,
+    ProviderStructuredResponseError,
+    ProviderTimeout,
+    ProviderUnavailable,
+)
 
 
 def sample_result():
@@ -45,6 +55,7 @@ def test_text_request_returns_versioned_json(generate, client):
     }
     assert response.headers["Cache-Control"] == "no-store"
     assert response.headers["X-Request-ID"]
+    assert generate.call_args.kwargs["context"]["request_id"] == response.headers["X-Request-ID"]
 
 
 @patch("app.services.providers.openai_provider.OpenAIProvider.generate")
@@ -156,3 +167,28 @@ def test_rate_limit_returns_standard_json(generate, app, client):
     assert second.status_code == 429
     assert second.is_json
     assert second.get_json()["erro"]["codigo"] == "limite_excedido"
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code"),
+    [
+        (ProviderTimeout("timeout"), 504, "provedor_timeout"),
+        (ProviderRateLimit("rate"), 429, "provedor_rate_limit"),
+        (ProviderRequestRejected("rejected"), 422, "provedor_rejeitou_requisicao"),
+        (ProviderStructuredResponseError("parse"), 502, "resposta_estruturada_invalida"),
+        (ProviderInvalidResponse("invalid"), 502, "resposta_provedor_invalida"),
+        (ProviderUnavailable("offline"), 503, "provedor_indisponivel"),
+    ],
+)
+@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+def test_provider_errors_are_publicly_classified(generate, error, status, code, client):
+    generate.side_effect = error
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "texto", "conteudo": "C G"},
+    )
+
+    assert response.status_code == status
+    assert response.get_json()["erro"]["codigo"] == code
+    assert response.get_json()["erro"]["requestId"] == response.headers["X-Request-ID"]
+    assert "traceback" not in response.get_data(as_text=True).lower()
