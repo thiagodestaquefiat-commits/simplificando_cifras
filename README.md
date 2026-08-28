@@ -107,7 +107,7 @@ Para sincronizar a escala, o Líder deve adicionar cada colega usando o identifi
 
 Cada evento possui exatamente um Líder. Ele pode editar o evento e o repertório oficial, adicionar ou remover músicas, alterar a ordem, gerenciar membros e salvar ajustes compartilhados. Demais integrantes visualizam a versão oficial e podem salvar somente seus próprios tom e observações. A API repete todas essas validações; esconder controles na interface não é a única barreira de segurança.
 
-A sincronização usa a API Flask e o banco configurado por `DATABASE_URL`. Se a API estiver indisponível, alterações compatíveis permanecem locais e o botão **Sincronizar** permite enviá-las depois. Chat e enquetes ainda usam armazenamento local e `BroadcastChannel`, portanto ainda não são conversas em tempo real entre dispositivos.
+A sincronização usa a API Flask e o banco configurado por `DATABASE_URL`. Se a API estiver indisponível, alterações compatíveis permanecem locais e o botão **Postar** permite enviá-las depois. Chat e enquetes ainda usam armazenamento local e `BroadcastChannel`, portanto ainda não são conversas em tempo real entre dispositivos.
 
 ## IA
 

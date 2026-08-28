@@ -343,7 +343,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
       <div class="band-toolbar"><select id="active-band-select" onchange="selectActiveBand(this.value)" aria-label="Equipe ativa"><option value="">Todos os eventos</option></select><button type="button" onclick="openBandManager()">👥 Equipes</button></div>
-      <div class="event-sync-toolbar"><div><strong id="event-sync-status">Eventos disponíveis offline</strong><small id="event-current-user-id"></small></div><button type="button" class="event-sync-action" id="event-sync-action" onclick="syncEventsNow()">Sincronizar</button></div>
+      <div class="event-sync-toolbar"><div><strong id="event-sync-status">Eventos disponíveis offline</strong><small id="event-current-user-id"></small></div><button type="button" class="event-sync-action" id="event-sync-action" onclick="syncEventsNow()">Postar</button></div>
       <div class="content" id="lista-setlists"></div>
     </div>
     <div id="pane-medley" style="display:none;flex:1;overflow:hidden;">
@@ -1804,14 +1804,13 @@ function renderSetlists(){
   target.innerHTML=[...visible].sort((a,b)=>eventSortValue(b)-eventSortValue(a)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).map(event=>{
     const songs=event.musicas.map(id=>musicas.find(song=>String(song.id)===String(id))).filter(Boolean);
     const unread=(()=>{try{return eventChat.unreadCount(event.id);}catch(error){return 0;}})();
-    const leader=event.members.find(member=>String(member.id)===String(event.leaderId));
-    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}${eventModel.isLeader(event,appCurrentUser.id)?'<span class="event-leader-badge">Você lidera</span>':''}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div><div class="event-sync-badge ${eventEsc(event.syncState)}">${event.syncState==='synced'?'● Sincronizado':'● Disponível offline · sincronização pendente'}${leader?' · Líder: '+eventEsc(leader.name):''}</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
+    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}${eventModel.isLeader(event,appCurrentUser.id)?'<span class="event-leader-badge">Você lidera</span>':''}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div><div class="event-sync-badge ${eventEsc(event.syncState)}">${event.syncState==='synced'?'● Sincronizado':'● Compartilhamento Pendente'}</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
   }).join('');
 }
 
 async function syncEventsNow(silent){
   const button=document.getElementById('event-sync-action'),status=document.getElementById('event-sync-status');
-  if(button)button.disabled=true;if(status)status.textContent='Sincronizando eventos…';
+  if(button)button.disabled=true;if(status)status.textContent='Postando alterações…';
   try{
     await eventCollaboration.ensureRegistered(appCurrentUser);
     for(const localEvent of [...setlists]){
@@ -1822,7 +1821,7 @@ async function syncEventsNow(silent){
     const remote=await eventCollaboration.listEvents(appCurrentUser);
     setlists=eventRepository.mergeRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
     await refreshBands(true);
-    if(status)status.textContent='Eventos sincronizados com segurança';if(!silent)showToast('✅ Eventos sincronizados');
+    if(status)status.textContent='Compartilhamento concluído';if(!silent)showToast('✅ Alterações compartilhadas');
   }catch(error){if(status)status.textContent='Modo offline — dados preservados neste dispositivo';if(!silent)showToast('⚠️ '+(error.message||'Sincronização indisponível'));}
   finally{if(button)button.disabled=false;}
 }
