@@ -18,6 +18,7 @@
     return {
       enabled: Boolean(config.enabled),
       authenticated: Boolean(user),
+      error: config.error || null,
       user: user ? {
         id: String(user.id),
         name: String(metadata.full_name || metadata.name || user.email || "Usuário"),
@@ -26,6 +27,18 @@
         role: "Liderança"
       } : null
     };
+  }
+
+  function callbackCode() {
+    try { return new URL(global.location.href).searchParams.get("code"); }
+    catch (_error) { return null; }
+  }
+
+  function cleanCallbackUrl() {
+    if (!global.history || typeof global.history.replaceState !== "function") return;
+    const url = new URL(global.location.href);
+    ["code", "error", "error_code", "error_description"].forEach((name) => url.searchParams.delete(name));
+    global.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
   }
 
   function loadSdk() {
@@ -44,7 +57,7 @@
     try {
       const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
       if (!forceRefresh && cached && cached.enabled) config = cached;
-      else if (forceRefresh) {
+      else {
         if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para verificar o login.");
         const response = await global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error("Configuração de login indisponível.");
@@ -54,13 +67,21 @@
       if (!config.enabled) { emit(); return getState(); }
       await loadSdk();
       client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } });
-      const result = await client.auth.getSession();
-      session = result.data && result.data.session || null;
       client.auth.onAuthStateChange((_event, nextSession) => { session = nextSession; emit(); });
+      const result = await client.auth.getSession();
+      if (result.error) throw result.error;
+      session = result.data && result.data.session || null;
+      const code = callbackCode();
+      if (code && !session) {
+        const exchange = await client.auth.exchangeCodeForSession(code);
+        if (exchange.error) throw exchange.error;
+        session = exchange.data && exchange.data.session || null;
+      }
+      if (code && session) cleanCallbackUrl();
       emit();
       return getState();
     } catch (error) {
-      config = { enabled: false, provider: "local", error: error.message };
+      config = { ...config, error: "Não foi possível concluir o login com Google. Tente novamente." };
       emit();
       return getState();
     }
