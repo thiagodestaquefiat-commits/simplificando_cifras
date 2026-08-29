@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v63";
+const CACHE_NAME = "simplificando-cifras-v64";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const ASSETS = [
   "./js/event-model.js?v=3",
   "./js/event-repository.js?v=2",
   "./js/event-collaboration-client.js?v=2",
-  "./js/app-auth.js?v=3",
+  "./js/app-auth.js?v=4",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
   "./js/map-preview.js?v=2",

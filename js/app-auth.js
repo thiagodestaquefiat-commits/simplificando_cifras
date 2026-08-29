@@ -98,8 +98,8 @@
       }
       if (!config.enabled) { emit(); return getState(); }
       await loadSdk();
-      client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } });
       const code = callbackCode();
+      client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
       let authEventBeforeManualExchange = false;
       diagnostic("client-created", { hasCallbackCode: Boolean(code), ...authStorageState() });
       client.auth.onAuthStateChange((event, nextSession) => {

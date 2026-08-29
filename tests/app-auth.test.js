@@ -68,7 +68,7 @@ function createAuthHarness(options = {}) {
   assert.equal(callback.calls.replaceState.length, 1);
   assert.equal(callback.calls.replaceState[0][2], "/");
   assert.deepEqual(JSON.parse(JSON.stringify(callback.calls.createOptions)), {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" }
   });
   assert.ok(states.some((state) => state.authenticated), "a interface deve receber o estado autenticado");
   assert.ok(callback.calls.logs.some((entry) => entry[1] === "manual-exchange-result" && JSON.parse(entry[2]).hasSession), "o diagnóstico deve confirmar a sessão sem registrar credenciais");
