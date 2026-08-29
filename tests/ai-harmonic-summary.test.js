@@ -79,7 +79,27 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
     (error) => error.kind === "file_too_large" && /10 MB/.test(error.message)
   );
 
-  console.log("ai-harmonic-summary.test.js: OK (configuração, payload, 413, conversão, repetições, frases e segurança)");
+  async function expectApiError(status, code, kind, message) {
+    const apiResponse = {
+      ok: false,
+      status,
+      json: async () => ({ erro: { codigo: code, requestId: "request-test" } })
+    };
+    await assert.rejects(
+      context.harmonicSummaryClient.generate("pesquisa", { titulo: "Teste" }, { fetch: async () => apiResponse }),
+      (error) => error.kind === kind && message.test(error.message) && !/OpenAI|traceback|request-test/i.test(error.message)
+    );
+  }
+
+  await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
+  await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);
+  await expectApiError(422, "provedor_rejeitou_requisicao", "provider_rejected", /processar este arquivo/);
+  await expectApiError(502, "resposta_estruturada_invalida", "structured_response", /organizar esta cifra/);
+  await expectApiError(502, "resposta_provedor_invalida", "provider_invalid_response", /resposta inválida/);
+  await expectApiError(503, "provedor_indisponivel", "provider_unavailable", /temporariamente indisponível/);
+  await expectApiError(400, "arquivo_invalido", "invalid_file", /Não foi possível ler este arquivo/);
+
+  console.log("ai-harmonic-summary.test.js: OK (configuração, payload, erros classificados, conversão, repetições, frases e segurança)");
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

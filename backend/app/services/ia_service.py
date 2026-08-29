@@ -48,7 +48,7 @@ class IaService:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         return cls(provider)
 
-    def generate(self, payload: ResumoHarmonicoRequest, extracted=None) -> ResumoHarmonicoResponse:
+    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None) -> ResumoHarmonicoResponse:
         if payload.tipo == "pesquisa":
             user_prompt = (
                 "Gere um resumo harmônico por conhecimento do modelo.\n"
@@ -84,19 +84,20 @@ class IaService:
                 SYSTEM_PROMPT,
                 user_prompt,
                 extracted if extracted is not None and extracted.data_url else None,
+                context={
+                    "request_id": request_id or "",
+                    "input_type": payload.tipo,
+                    "classification": (
+                        "visual" if extracted is not None and extracted.data_url else
+                        "textual" if extracted is not None else payload.tipo
+                    ),
+                    "media_type": extracted.media_type if extracted is not None else None,
+                    "page_count": extracted.page_count if extracted is not None else None,
+                    "size_bytes": extracted.size_bytes if extracted is not None else None,
+                },
             )
-        except ProviderRefusal as error:
-            raise ApiError(
-                "resultado_nao_confiavel",
-                "Não foi possível produzir um resultado confiável para esta solicitação.",
-                422,
-            ) from error
         except ProviderError as error:
-            raise ApiError(
-                "provedor_indisponivel",
-                "O serviço de IA está temporariamente indisponível.",
-                502,
-            ) from error
+            raise ApiError(error.code, error.public_message, error.status_code) from error
 
         normalized = normalize_response(result, payload.tipo)
         if payload.tipo == "pesquisa":

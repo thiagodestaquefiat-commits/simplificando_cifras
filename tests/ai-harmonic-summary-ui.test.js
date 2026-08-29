@@ -113,6 +113,12 @@ const success = {
     await page.unroute(apiEndpoint);
     await verifyError(422, "resultado_nao_confiavel", /Não foi possível gerar um resumo harmônico confiável/);
     await verifyError(429, "limite_excedido", /limite de solicitações/);
+    await verifyError(504, "provedor_timeout", /demorou mais que o esperado/);
+    await verifyError(429, "provedor_rate_limit", /temporariamente ocupado/);
+    await verifyError(422, "provedor_rejeitou_requisicao", /processar este arquivo/);
+    await verifyError(502, "resposta_estruturada_invalida", /organizar esta cifra corretamente/);
+    await verifyError(502, "resposta_provedor_invalida", /resposta inválida/);
+    await verifyError(503, "provedor_indisponivel", /temporariamente indisponível/);
     await verifyError(500, "erro_interno", /servidor não conseguiu/);
 
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();

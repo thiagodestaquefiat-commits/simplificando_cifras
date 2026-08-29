@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 
 from .. import limiter
 from ..errors import ApiError
@@ -48,5 +48,5 @@ def resumo_harmonico():
         context={"max_text_length": current_app.config["MAX_TEXT_LENGTH"]},
     )
     service = IaService.from_config(current_app.config)
-    result = service.generate(payload, extracted)
+    result = service.generate(payload, extracted, request_id=g.get("request_id", ""))
     return jsonify(result.model_dump(mode="json")), 200
