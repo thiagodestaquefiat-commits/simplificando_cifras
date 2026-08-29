@@ -94,7 +94,7 @@ async function openApp(browser, baseUrl, width, height) {
     const { context, page, errors } = await openApp(browser, baseUrl, 320, 640);
 
     const missingCatalogChords = await page.evaluate(() => [...new Set(
-      musicas.flatMap((musica) => extractChords(musica)).filter((name) => !getChordData(name))
+      musicas.flatMap((musica) => extractChords(musica)).filter((name) => !chordLibrary.resolve(name))
     )]);
     assert.deepEqual(missingCatalogChords, [], `Acordes do catálogo sem diagrama: ${missingCatalogChords.join(", ")}`);
 
