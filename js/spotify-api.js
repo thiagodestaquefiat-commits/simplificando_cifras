@@ -32,12 +32,10 @@
     });
     const payload = response.status === 204 ? null : await response.json().catch(() => ({}));
     if (!response.ok) {
-      const details = payload && typeof payload.error === "object" ? payload.error : payload || {};
-      const message = details.message || payload?.error_description || (typeof payload?.error === "string" ? payload.error : "");
-      const error = new Error(message || `O Spotify não conseguiu concluir a solicitação (HTTP ${response.status}).`);
+      const error = new Error(payload && payload.error && payload.error.message
+        ? payload.error.message
+        : "O Spotify não conseguiu concluir a solicitação.");
       error.status = response.status;
-      error.reason = details.reason || payload?.reason || null;
-      error.retryAfter = response.headers?.get?.("Retry-After") || null;
       throw error;
     }
     return payload;

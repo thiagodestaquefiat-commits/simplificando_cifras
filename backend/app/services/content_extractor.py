@@ -34,7 +34,6 @@ class ExtractedContent:
     data_url: str | None = None
     page_count: int | None = None
     filename: str | None = None
-    size_bytes: int | None = None
 
 
 def _detected_mime(data: bytes) -> str | None:
@@ -87,10 +86,10 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
             raise ApiError("arquivo_invalido", "O arquivo de texto estÃ¡ vazio.", 400)
         if len(text) > max_text_length:
             raise ApiError("arquivo_muito_grande", "O texto extraÃ­do excede o limite permitido.", 413)
-        return ExtractedContent("text", text, detected, size_bytes=len(data))
+        return ExtractedContent("text", text, detected)
 
     if detected.startswith("image/"):
-        return ExtractedContent("image", None, detected, _data_url(data, detected), size_bytes=len(data))
+        return ExtractedContent("image", None, detected, _data_url(data, detected))
 
     try:
         reader = PdfReader(BytesIO(data), strict=False)
@@ -104,5 +103,5 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
         raise ApiError("arquivo_invalido", "NÃ£o foi possÃ­vel ler este PDF.", 400) from error
 
     if text and len(text) <= max_text_length and len(text) >= 40:
-        return ExtractedContent("text", text, detected, page_count=pages, size_bytes=len(data))
-    return ExtractedContent("pdf", None, detected, _data_url(data, detected), pages, file_storage.filename, len(data))
+        return ExtractedContent("text", text, detected, page_count=pages)
+    return ExtractedContent("pdf", None, detected, _data_url(data, detected), pages, file_storage.filename)

@@ -45,27 +45,6 @@
     }));
   }
 
-  function normalizeFullChordSheet(value) {
-    if (!value || typeof value !== "object") return null;
-    const content = preserveText(value.content).replace(/\r\n?/g, "\n").trim();
-    if (!content) return null;
-    return {
-      visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
-      content
-    };
-  }
-
-  function normalizeAccessContext(value) {
-    const context = value && typeof value === "object" ? value : {};
-    const scope = context.scope === "team" ? "team" : "personal";
-    return {
-      scope,
-      ownerId: optionalText(context.ownerId),
-      teamId: scope === "team" ? optionalText(context.teamId) : null
-    };
-  }
-
   function create(input, options) {
     const source = input || {};
     const settings = options || {};
@@ -91,8 +70,6 @@
       key: cleanText(source.key),
       capo: cleanText(source.capo),
       blocos: normalizeBlocks(source.blocos),
-      accessContext: normalizeAccessContext(source.accessContext),
-      fullChordSheet: normalizeFullChordSheet(source.fullChordSheet),
       createdAt: source.createdAt || now,
       updatedAt: source.updatedAt || source.createdAt || now
     };
@@ -152,7 +129,6 @@
   global.songModel = Object.freeze({
     create,
     normalizeCollection,
-    normalizeAccessContext,
     normalizeForIdentity,
     findDuplicate,
     enrich

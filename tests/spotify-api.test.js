@@ -3,7 +3,6 @@ const assert = require("node:assert/strict");
 let requestedUrl = null;
 let requestedOptions = null;
 const requests = [];
-let forcedResponse = null;
 
 global.window = {
   spotifyAuth: {
@@ -13,11 +12,6 @@ global.window = {
     requestedUrl = url;
     requestedOptions = options;
     requests.push({ url, options });
-    if (forcedResponse) {
-      const response = forcedResponse;
-      forcedResponse = null;
-      return response;
-    }
     if (url.includes("/me/player")) {
       return { ok: true, status: 204 };
     }
@@ -85,28 +79,6 @@ require("../js/spotify-api.js");
   assert.equal(requests[4].options.method, "PUT");
   assert.match(requests[5].url, /\/me\/player\/repeat\?state=track&device_id=device-1$/);
   assert.equal(requests[5].options.method, "PUT");
-
-  forcedResponse = {
-    ok: false,
-    status: 403,
-    headers: { get() { return null; } },
-    async json() { return {}; }
-  };
-  await assert.rejects(
-    () => window.spotifyApi.searchTracks("bloqueada", 10),
-    (error) => error.status === 403 && /HTTP 403/.test(error.message)
-  );
-
-  forcedResponse = {
-    ok: false,
-    status: 429,
-    headers: { get(name) { return name === "Retry-After" ? "30" : null; } },
-    async json() { return { error: { status: 429, message: "Too many requests", reason: "QUOTA_EXCEEDED" } }; }
-  };
-  await assert.rejects(
-    () => window.spotifyApi.searchTracks("quota", 10),
-    (error) => error.status === 429 && error.reason === "QUOTA_EXCEEDED" && error.retryAfter === "30"
-  );
   console.log("spotify-api.test.js: OK");
 })().catch((error) => {
   console.error(error);

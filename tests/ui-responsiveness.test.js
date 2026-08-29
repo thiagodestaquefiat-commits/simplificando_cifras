@@ -53,7 +53,6 @@ async function openApp(browser, baseUrl, width, height) {
     contentType: "text/css; charset=utf-8",
     body: ""
   }));
-  await page.route("**/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local", supabaseUrl: "", supabaseAnonKey: "" }) }));
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
@@ -126,27 +125,14 @@ async function openApp(browser, baseUrl, width, height) {
     assert.ok(await page.locator("#capo-opt-1").evaluate((element) => element.classList.contains("active")));
 
     await page.locator("#btn-palco").click();
-    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), false);
-    assert.equal(await page.locator(".transpose-bar").isVisible(), false);
-    await page.getByRole("button", { name: "Aumentar fonte", exact: true }).click();
-    await page.locator("#detail-content").evaluate((element) => { element.style.minHeight = "2000px"; element.style.flexShrink = "0"; });
-    const controlsBeforeScroll = await page.locator(".stage-floating-controls").boundingBox();
-    const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
-    await page.getByRole("button", { name: "Iniciar auto-scroll", exact: true }).click();
-    assert.ok(await page.locator("#stage-scroll-toggle").evaluate((element) => element.classList.contains("active")));
-    await page.waitForTimeout(400);
-    const scrollWhilePlaying = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
-    const controlsWhileScrolling = await page.locator(".stage-floating-controls").boundingBox();
-    const scrollMetrics = await page.locator("#view-detail").evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
-    assert.ok(scrollWhilePlaying >= scrollBeforePlay + 8, `auto-scroll deveria avançar visivelmente: ${scrollBeforePlay} -> ${scrollWhilePlaying}; área ${scrollMetrics.clientHeight}/${scrollMetrics.scrollHeight}`);
-    assert.equal(Math.round(controlsWhileScrolling.y), Math.round(controlsBeforeScroll.y), "os controles devem permanecer fixos no rodapé durante a rolagem");
-    await page.getByRole("button", { name: "Pausar auto-scroll", exact: true }).click();
-    const scrollWhenPaused = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
-    await page.waitForTimeout(250);
-    const scrollAfterPause = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
-    assert.ok(Math.abs(scrollAfterPause - scrollWhenPaused) <= 1, `auto-scroll deveria permanecer pausado: ${scrollWhenPaused} -> ${scrollAfterPause}`);
-    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
+    assert.equal(await page.locator(".transpose-bar").isVisible(), true);
+    await page.locator("#btn-speed").click();
+    await page.locator("#btn-font").click();
+    await page.locator("#btn-scroll").click();
+    assert.ok(await page.locator("#btn-scroll").evaluate((element) => element.classList.contains("active")));
+    await page.locator("#btn-scroll").click();
+    await page.locator("#btn-palco").click();
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), true);
 
     await page.locator(".back-btn").first().click();
@@ -158,11 +144,9 @@ async function openApp(browser, baseUrl, width, height) {
     assert.ok(await page.getByText("F#11", { exact: true }).count() > 0);
     await page.locator(".back-btn").first().click();
 
-    await page.locator("#tab-setlists").click();
-    await page.locator("#lista-setlists .sl-title", { hasText: "Playlist de teste" }).click();
-    assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
+    await page.getByText("Eventos", { exact: false }).click();
+    await page.getByText("Playlist de teste", { exact: true }).click();
     await page.locator(".sd-row").first().click();
-    assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
     assert.equal(await page.locator("#btn-previous-song").isVisible(), true);
     assert.equal(await page.locator("#btn-previous-song").isDisabled(), true);
     assert.equal(await page.locator("#btn-next-song").isEnabled(), true);
@@ -170,19 +154,14 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#detail-title").textContent(), "A Ele a glória");
     assert.equal(await page.locator("#btn-previous-song").isEnabled(), true);
     await page.locator("#btn-palco").click();
-    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
-    await page.locator("#stage-next").click();
+    await page.locator("#btn-next-song").click();
     assert.equal(await page.locator("#detail-title").textContent(), "A casa é sua");
     assert.ok(await page.locator("#view-detail").evaluate((element) => element.classList.contains("stage-mode")));
     assert.equal(await page.locator("#btn-next-song").isDisabled(), true);
-    assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
-    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
-    await page.locator("#view-detail .back-btn").click();
-    assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
 
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#tab-setlists").click();
-    assert.equal(await page.locator("#lista-setlists .sl-title", { hasText: "Playlist de teste" }).count(), 1);
+    await page.getByText("Eventos", { exact: false }).click();
+    assert.equal(await page.getByText("Playlist de teste", { exact: true }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 1);
     assert.equal(errors.length, 0, `Erros no console: ${errors.join(" | ")}`);
 

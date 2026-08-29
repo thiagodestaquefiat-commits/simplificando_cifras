@@ -42,22 +42,6 @@
     return { songId: nextSongId, context: get() };
   }
 
-  function select(index) {
-    if (!state) return null;
-    const selectedIndex = Number(index);
-    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= state.songIds.length) return null;
-    const songId = state.songIds[selectedIndex];
-    state = Object.freeze({ ...state, currentIndex: selectedIndex });
-    return { songId, context: get() };
-  }
-
-  function peek(offset) {
-    if (!state) return null;
-    const index = state.currentIndex + Number(offset || 0);
-    if (!Number.isInteger(index) || index < 0 || index >= state.songIds.length) return null;
-    return { songId: state.songIds[index], index };
-  }
-
   function availability() {
     if (!state) return { active: false, canPrevious: false, canNext: false };
     return {
@@ -67,5 +51,5 @@
     };
   }
 
-  global.navigationContext = Object.freeze({ clear, setPlaylist, get, move, select, peek, availability });
+  global.navigationContext = Object.freeze({ clear, setPlaylist, get, move, availability });
 })(window);

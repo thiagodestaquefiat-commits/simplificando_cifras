@@ -66,19 +66,6 @@ class TrechoHarmonico(BaseModel):
         return " ".join(words[:8])[:80].strip()
 
 
-class CifraCompleta(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-
-    visibility: Literal["private"] = "private"
-    source: Literal["user_upload", "user_text"]
-    content: str = Field(min_length=1, max_length=50000)
-
-    @field_validator("content", mode="before")
-    @classmethod
-    def clean_full_content(cls, value):
-        return _clean_content(value)
-
-
 class ResumoHarmonicoResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -89,4 +76,3 @@ class ResumoHarmonicoResponse(BaseModel):
     trechos: list[TrechoHarmonico] = Field(default_factory=list, max_length=40)
     observacoes: list[str] = Field(default_factory=list, max_length=20)
     confianca: Literal["alta", "media", "baixa"]
-    fullChordSheet: CifraCompleta | None = None

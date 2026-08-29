@@ -7,7 +7,7 @@
   }
 
   global.spotifyConfig = Object.freeze({
-    clientId: "f3ea3239c97644de99789061ad9a94b6",
+    clientId: "3b3df0f654164c56be04cd1d21460979",
     redirectUri: defaultRedirectUri(),
     scopes: Object.freeze([
       "streaming",

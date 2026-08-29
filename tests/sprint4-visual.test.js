@@ -49,13 +49,12 @@ async function capture(page, name) {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await capture(page, "01-principal-mobile-390x844.png");
 
-    await page.locator("#tab-setlists").click();
+    await page.getByText("Eventos", { exact: false }).click();
     await capture(page, "02-playlists-mobile-390x844.png");
-    await page.locator("#lista-setlists .sl-title", { hasText: "Ensaio de domingo" }).click();
+    await page.getByText("Ensaio de domingo", { exact: true }).click();
     await page.locator(".sd-row").first().click();
     await capture(page, "03-musica-mobile-390x844.png");
     await page.locator("#btn-palco").click();
-    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
     await capture(page, "04-modo-palco-mobile-390x844.png");
 
     await page.setViewportSize({ width: 1366, height: 768 });

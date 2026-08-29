@@ -33,10 +33,6 @@ assert.deepEqual(navigation.availability(), {
 assert.equal(navigation.move(1), null);
 assert.equal(navigation.get().playlistId, "culto");
 assert.deepEqual(navigation.get().songIds, [10, 20, 30]);
-assert.deepEqual(navigation.peek(-1), { songId: 20, index: 1 });
-assert.equal(navigation.select(0).songId, 10);
-assert.equal(navigation.get().currentIndex, 0);
-assert.equal(navigation.select(99), null);
 
 navigation.clear();
 assert.equal(navigation.get(), null);

@@ -51,12 +51,6 @@
       });
       if (trecho.repeticoes != null && (!Number.isInteger(trecho.repeticoes) || trecho.repeticoes < 1 || trecho.repeticoes > 99)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou repetições inválidas.");
     });
-    if (data.fullChordSheet != null) {
-      const sheet = data.fullChordSheet;
-      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
-        throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
-      }
-    }
     return data;
   }
 
@@ -90,7 +84,6 @@
       reviewedByUser: false,
       aiConfidence: data.confianca,
       notes: [`Confiança da IA: ${confidenceLabel}.`, ...observations].join("\n"),
-      fullChordSheet: data.fullChordSheet || null,
       sections: sections.length ? sections : [{ type: "custom", label: "Trecho 1", lines: [{ lyrics: "", chords: [] }] }]
     }, { source: "ai" });
   }
@@ -131,15 +124,6 @@
       if (response.status === 413 || code === "requisicao_muito_grande" || code === "arquivo_muito_grande") {
         throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
       }
-      if (["arquivo_invalido", "tipo_arquivo_invalido", "pdf_paginas_invalidas"].includes(code)) {
-        throw new HarmonicSummaryError("invalid_file", "Não foi possível ler este arquivo. Tente outro PDF, imagem ou TXT.", response.status);
-      }
-      if (code === "provedor_timeout" || response.status === 504) throw new HarmonicSummaryError("provider_timeout", "A análise demorou mais que o esperado. Tente novamente.", response.status);
-      if (code === "provedor_rate_limit") throw new HarmonicSummaryError("provider_rate_limit", "O serviço de IA está temporariamente ocupado. Tente novamente em alguns instantes.", response.status);
-      if (code === "provedor_rejeitou_requisicao") throw new HarmonicSummaryError("provider_rejected", "Não foi possível processar este arquivo. Tente outro PDF ou imagem.", response.status);
-      if (code === "resposta_estruturada_invalida") throw new HarmonicSummaryError("structured_response", "A IA não conseguiu organizar esta cifra corretamente. Tente novamente.", response.status);
-      if (code === "resposta_provedor_invalida") throw new HarmonicSummaryError("provider_invalid_response", "O serviço de IA retornou uma resposta inválida. Tente novamente.", response.status);
-      if (["provedor_indisponivel", "provedor_erro_inesperado"].includes(code)) throw new HarmonicSummaryError("provider_unavailable", "O serviço de IA está temporariamente indisponível.", response.status);
       if (response.status === 422 || code === "resultado_nao_confiavel") throw new HarmonicSummaryError("untrusted", "Não foi possível gerar um resumo harmônico confiável apenas com essas informações.", response.status);
       if (response.status === 429) throw new HarmonicSummaryError("rate_limit", "O limite de solicitações foi atingido. Aguarde um pouco e tente novamente.", response.status);
       if (response.status >= 500) throw new HarmonicSummaryError("server", "O servidor não conseguiu concluir a análise. Tente novamente mais tarde.", response.status);

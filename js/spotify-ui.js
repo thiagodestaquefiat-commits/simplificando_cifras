@@ -43,14 +43,6 @@
     container.appendChild(element("div", "spotify-message " + (type || ""), message));
   }
 
-  function friendlyRequestError(error) {
-    if (error?.status === 401) return "Sua sessão do Spotify expirou. Desconecte e conecte novamente.";
-    if (error?.status === 403) return "O Spotify recusou o acesso (403). Confirme que você conectou a mesma conta proprietária do aplicativo e que ela possui Premium ativo.";
-    if (error?.status === 429 && error?.reason === "QUOTA_EXCEEDED") return "A cota de desenvolvimento do Spotify foi atingida. Aguarde a renovação da cota para pesquisar novamente.";
-    if (error?.status === 429) return "O limite temporário do Spotify foi atingido. Tente novamente em alguns instantes.";
-    return error?.message || "O Spotify não conseguiu concluir a solicitação.";
-  }
-
   function updateConnectionState() {
     const connected = global.spotifyAuth.isAuthenticated();
     const button = document.getElementById("spotify-auth-btn");
@@ -156,7 +148,9 @@
         global.spotifyAuth.disconnect();
         updateConnectionState();
       }
-      renderMessage(friendlyRequestError(error), "error");
+      renderMessage(error.status === 429
+        ? "O limite temporário do Spotify foi atingido. Tente novamente em alguns instantes."
+        : error.message, "error");
     } finally {
       if (version === searchVersion && button) {
         button.disabled = false;
@@ -214,5 +208,5 @@
     appContext.openSong(result.song.id);
   }
 
-  global.spotifyUI = Object.freeze({ initialize, toggleConnection, search, scheduleSearch, searchFromInternal, addTrack, friendlyRequestError });
+  global.spotifyUI = Object.freeze({ initialize, toggleConnection, search, scheduleSearch, searchFromInternal, addTrack });
 })(window);
