@@ -36,7 +36,7 @@
 
   function diagnostic(step, details) {
     if (!global.console || typeof global.console.info !== "function") return;
-    global.console.info(DIAGNOSTIC_PREFIX, step, details);
+    global.console.info(DIAGNOSTIC_PREFIX, step, JSON.stringify(details));
   }
 
   function emit() {

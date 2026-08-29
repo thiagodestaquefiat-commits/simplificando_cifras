@@ -71,7 +71,7 @@ function createAuthHarness(options = {}) {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
   });
   assert.ok(states.some((state) => state.authenticated), "a interface deve receber o estado autenticado");
-  assert.ok(callback.calls.logs.some((entry) => entry[1] === "manual-exchange-result" && entry[2].hasSession), "o diagnóstico deve confirmar a sessão sem registrar credenciais");
+  assert.ok(callback.calls.logs.some((entry) => entry[1] === "manual-exchange-result" && JSON.parse(entry[2]).hasSession), "o diagnóstico deve confirmar a sessão sem registrar credenciais");
   assert.doesNotMatch(JSON.stringify(callback.calls.logs), /access-token|pkce-code|anon-public/, "o diagnóstico não pode registrar tokens, code ou anon key");
 
   const detected = createAuthHarness({ href: "https://simplificandocifras.netlify.app/?code=already-detected", initialSession: { access_token: "existing", user: callback.user } });
@@ -88,7 +88,7 @@ function createAuthHarness(options = {}) {
   assert.doesNotMatch(failedState.error, /provider|Supabase|traceback/i);
   assert.equal(failed.calls.replaceState.length, 0, "o code só deve ser removido após uma sessão válida");
   const failedExchangeLog = failed.calls.logs.find((entry) => entry[1] === "manual-exchange-result");
-  assert.equal(failedExchangeLog[2].error.message, "erro técnico do provider");
+  assert.equal(JSON.parse(failedExchangeLog[2]).error.message, "erro técnico do provider");
 
   await callback.window.appAuth.signInWithGoogle();
   assert.equal(callback.calls.oauth[0].provider, "google");
