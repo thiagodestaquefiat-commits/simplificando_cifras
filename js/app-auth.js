@@ -86,6 +86,7 @@
   }
 
   async function initialize(forceRefresh) {
+    const initialCallbackCode = callbackCode();
     try {
       const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
       if (!forceRefresh && cached && cached.enabled) config = cached;
@@ -98,7 +99,7 @@
       }
       if (!config.enabled) { emit(); return getState(); }
       await loadSdk();
-      const code = callbackCode();
+      const code = initialCallbackCode;
       client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
       let authEventBeforeManualExchange = false;
       diagnostic("client-created", { hasCallbackCode: Boolean(code), ...authStorageState() });
