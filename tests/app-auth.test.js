@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, "..", "js/app-auth.js"), 
 function createAuthHarness(options = {}) {
   const storage = new Map();
   const listeners = [];
-  const calls = { exchange: [], oauth: [], replaceState: [], createOptions: null, configFetches: 0 };
+  const calls = { exchange: [], oauth: [], replaceState: [], createOptions: null, configFetches: 0, logs: [] };
   const user = { id: "user-1", email: "musico@example.com", user_metadata: { full_name: "Músico" } };
   const exchangedSession = { access_token: "access-token", user };
   let currentSession = options.initialSession || null;
@@ -35,8 +35,11 @@ function createAuthHarness(options = {}) {
     navigator: { onLine: true },
     localStorage: {
       getItem: (key) => storage.get(key) || null,
-      setItem: (key, value) => storage.set(key, value)
+      setItem: (key, value) => storage.set(key, value),
+      key: (index) => Array.from(storage.keys())[index] || null,
+      get length() { return storage.size; }
     },
+    console: { info: (...args) => calls.logs.push(args) },
     supabase: {
       createClient(_url, _key, createOptions) { calls.createOptions = createOptions; return { auth }; }
     }
@@ -68,6 +71,8 @@ function createAuthHarness(options = {}) {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
   });
   assert.ok(states.some((state) => state.authenticated), "a interface deve receber o estado autenticado");
+  assert.ok(callback.calls.logs.some((entry) => entry[1] === "manual-exchange-result" && entry[2].hasSession), "o diagnóstico deve confirmar a sessão sem registrar credenciais");
+  assert.doesNotMatch(JSON.stringify(callback.calls.logs), /access-token|pkce-code|anon-public/, "o diagnóstico não pode registrar tokens, code ou anon key");
 
   const detected = createAuthHarness({ href: "https://simplificandocifras.netlify.app/?code=already-detected", initialSession: { access_token: "existing", user: callback.user } });
   const detectedState = await detected.window.appAuth.initialize();
@@ -82,6 +87,8 @@ function createAuthHarness(options = {}) {
   assert.match(failedState.error, /Não foi possível concluir o login/);
   assert.doesNotMatch(failedState.error, /provider|Supabase|traceback/i);
   assert.equal(failed.calls.replaceState.length, 0, "o code só deve ser removido após uma sessão válida");
+  const failedExchangeLog = failed.calls.logs.find((entry) => entry[1] === "manual-exchange-result");
+  assert.equal(failedExchangeLog[2].error.message, "erro técnico do provider");
 
   await callback.window.appAuth.signInWithGoogle();
   assert.equal(callback.calls.oauth[0].provider, "google");
