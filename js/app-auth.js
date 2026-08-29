@@ -6,37 +6,18 @@
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
   const CONFIG_KEY = "sc_public_auth_config_v1";
-  const DIAGNOSTIC_PREFIX = "[app-auth:pkce]";
 
   function safeError(error) {
     if (!error) return null;
-    const message = String(error.message || error).replace(/([?&](?:code|token|key)=)[^&\s]+/gi, "$1[redacted]");
+    const message = String(error.message || error)
+      .replace(/([?&](?:code|token|key)=)[^&\s]+/gi, "$1[redacted]")
+      .replace(/[A-Za-z0-9_-]{32,}/g, "[redacted]");
     return {
       name: String(error.name || "Error"),
       message,
       code: error.code == null ? null : String(error.code),
       status: error.status == null ? null : Number(error.status)
     };
-  }
-
-  function authStorageState() {
-    const result = { hasCodeVerifier: false, hasStoredSession: false };
-    try {
-      const storage = global.localStorage;
-      if (!storage || typeof storage.key !== "function") return result;
-      for (let index = 0; index < storage.length; index += 1) {
-        const key = String(storage.key(index) || "");
-        if (!/^sb-.+-auth-token/i.test(key)) continue;
-        if (/-code-verifier$/i.test(key)) result.hasCodeVerifier = Boolean(storage.getItem(key));
-        else result.hasStoredSession = Boolean(storage.getItem(key));
-      }
-    } catch (_error) {}
-    return result;
-  }
-
-  function diagnostic(step, details) {
-    if (!global.console || typeof global.console.info !== "function") return;
-    global.console.info(DIAGNOSTIC_PREFIX, step, JSON.stringify(details));
   }
 
   function emit() {
@@ -101,22 +82,15 @@
       await loadSdk();
       const code = initialCallbackCode;
       client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
-      let authEventBeforeManualExchange = false;
-      diagnostic("client-created", { hasCallbackCode: Boolean(code), ...authStorageState() });
-      client.auth.onAuthStateChange((event, nextSession) => {
-        if (code && !session) authEventBeforeManualExchange = true;
+      client.auth.onAuthStateChange((_event, nextSession) => {
         session = nextSession;
-        diagnostic("auth-state-change", { event: String(event || "unknown"), hasSession: Boolean(nextSession), ...authStorageState() });
         emit();
       });
       const result = await client.auth.getSession();
-      diagnostic("get-session", { hasSession: Boolean(result.data && result.data.session), error: safeError(result.error), authEventBeforeManualExchange, ...authStorageState() });
       if (result.error) throw result.error;
       session = result.data && result.data.session || null;
       if (code && !session) {
-        diagnostic("manual-exchange-start", { authEventBeforeManualExchange, ...authStorageState() });
         const exchange = await client.auth.exchangeCodeForSession(code);
-        diagnostic("manual-exchange-result", { hasSession: Boolean(exchange.data && exchange.data.session), error: safeError(exchange.error), ...authStorageState() });
         if (exchange.error) throw exchange.error;
         session = exchange.data && exchange.data.session || null;
       }
@@ -124,6 +98,7 @@
       emit();
       return getState();
     } catch (error) {
+      if (global.console && typeof global.console.error === "function") global.console.error("[app-auth] authentication failed", JSON.stringify(safeError(error)));
       config = { ...config, error: "Não foi possível concluir o login com Google. Tente novamente." };
       emit();
       return getState();
