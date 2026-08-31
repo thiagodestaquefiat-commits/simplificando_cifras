@@ -27,6 +27,10 @@ const success = {
   const browser = await chromium.launch({ headless: true, executablePath });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    const fakeAuth = { initialize: async () => ({ authenticated: true }), subscribe: () => () => {}, getState: () => ({ authenticated: true }), getAccessToken: () => "test-access-token" };
+    Object.defineProperty(window, "appAuth", { configurable: false, get: () => fakeAuth, set: () => {} });
+  });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) errors.push(message.text()); });

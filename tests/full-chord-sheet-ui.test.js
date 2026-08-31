@@ -16,17 +16,21 @@ const server = http.createServer((request, response) => {
 });
 
 const response = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   titulo: "Canção privada",
   artista: "Equipe",
   tom: "C",
   confianca: "media",
   observacoes: ["Revisar antes de salvar."],
-  trechos: [{ secao: "Refrão", acordes: ["C", "G", "Am", "F"], fraseGuia: "Frase curta do refrão", repeticoes: 2 }],
+  harmonicSummary: { blocos: [{ secao: "Refrão", acordes: ["C", "G", "Am", "F"], fraseGuia: "Frase curta do refrão", repeticoes: 2 }] },
   fullChordSheet: {
     visibility: "private",
     source: "user_upload",
-    content: "INTRO\nC  G  Am  F\nPrimeira linha completa fornecida pelo usuário\nSegunda linha completa fornecida pelo usuário\n\nREFRÃO\nC  G  Am  F\nFrase curta do refrão"
+    content: "INTRO\nC  G  Am  F\nPrimeira linha completa fornecida pelo usuário\nSegunda linha completa fornecida pelo usuário\n\nREFRÃO\nC  G  Am  F\nFrase curta do refrão",
+    sections: [
+      { nome: "Introdução", linhas: [{ letra: "Primeira linha completa fornecida pelo usuário", acordes: [{ acorde: "C", posicao: 0 }, { acorde: "G", posicao: 3 }, { acorde: "Am", posicao: 7 }, { acorde: "F", posicao: 11 }] }, { letra: "Segunda linha completa fornecida pelo usuário", acordes: [] }] },
+      { nome: "Refrão", linhas: [{ letra: "Frase curta do refrão", acordes: [{ acorde: "C", posicao: 0 }, { acorde: "G", posicao: 3 }, { acorde: "Am", posicao: 7 }, { acorde: "F", posicao: 11 }] }] }
+    ]
   }
 };
 
@@ -60,13 +64,13 @@ const response = {
         musicas.push(song); setlists.push({ id: "event-private", title: "Evento", musicas: [song.id] }); openDetail(song.id);
       }, response);
 
-      assert.equal(await page.getByRole("tab", { name: "Resumo", exact: true }).getAttribute("aria-selected"), "true");
+      assert.equal(await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).getAttribute("aria-selected"), "true");
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 0);
       const summary = await page.locator("#detail-content .wa-block").innerText();
       assert.match(summary, /C\s+G\s+Am\s+F \(2x\)/);
       assert.match(summary, /Frase curta do refrão/);
 
-      await page.getByRole("tab", { name: "Cifra completa", exact: true }).click();
+      await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
       const fullBefore = await page.locator(".full-chord-sheet").innerText();
       await page.locator(".transpose-bar .t-btn").last().click();
@@ -79,8 +83,10 @@ const response = {
 
       await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
       assert.equal(await page.getByLabel("Cifra / Resumo", { exact: true }).count(), 1);
-      assert.equal(await page.getByLabel("Cifra completa privada", { exact: true }).inputValue(), response.fullChordSheet.content);
-      await page.getByLabel("Cifra completa privada", { exact: true }).fill(response.fullChordSheet.content + "\nFINAL\nC");
+      const editorModal = page.locator("#modal-body");
+      await editorModal.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();
+      assert.equal(await page.getByLabel("Letra + Cifras", { exact: true }).inputValue(), response.fullChordSheet.content);
+      await page.getByLabel("Letra + Cifras", { exact: true }).fill(response.fullChordSheet.content + "\nFINAL\nC");
       await page.getByRole("button", { name: "Salvar", exact: true }).click();
       const saved = await page.evaluate(() => ({ song: musicas.find((item) => item.id === "private-song"), referenced: setlists[0].musicas.includes("private-song") }));
       assert.equal(saved.song.spotifyTrackId, "track-private");
@@ -92,6 +98,7 @@ const response = {
       assert.equal(saved.song.fullChordSheet.visibility, "private");
       assert.deepEqual(saved.song.accessContext, { scope: "team", ownerId: "user-1", teamId: "team-1" });
       assert.match(saved.song.fullChordSheet.content, /FINAL\nC$/);
+      assert.equal(saved.song.fullChordSheet.sections.length, 0, "editar o texto invalida posições estruturadas antigas");
       assert.equal(saved.referenced, true);
 
       snapshots.push({ summary, fullBefore });

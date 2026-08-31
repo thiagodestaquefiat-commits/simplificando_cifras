@@ -5,7 +5,7 @@ require("../js/song-model.js");
 
 const model = window.songModel;
 const privateSheet = model.create({ title: "Privada", fullChordSheet: { visibility: "public", source: "user_text", content: "C G\r\nLetra fornecida" } });
-assert.deepEqual(JSON.parse(JSON.stringify(privateSheet.fullChordSheet)), { visibility: "private", source: "user_text", content: "C G\nLetra fornecida" });
+assert.deepEqual(JSON.parse(JSON.stringify(privateSheet.fullChordSheet)), { visibility: "private", source: "user_text", content: "C G\nLetra fornecida", sections: [] });
 assert.deepEqual(JSON.parse(JSON.stringify(privateSheet.accessContext)), { scope: "personal", ownerId: null, teamId: null });
 
 const teamSong = model.create({ title: "Equipe", accessContext: { scope: "team", ownerId: "user-1", teamId: "team-7" } });

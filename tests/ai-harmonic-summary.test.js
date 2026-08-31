@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const context = { console, Date, Math, JSON, Object, Array, String, Number, Boolean, RegExp, Error };
 context.window = context;
 context.location = { hostname: "localhost" };
+context.appAuth = { getAccessToken: () => "test-access-token" };
 vm.createContext(context);
 [
   "js/instruments/instrument-definitions.js",
@@ -35,18 +36,18 @@ assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), 
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
 
 const response = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   titulo: "<img>Rugido do Leão</img>",
   artista: "Artista teste",
   tom: "Dm",
   confianca: "media",
   observacoes: ["Revisar antes de salvar"],
-  trechos: [
+  harmonicSummary: { blocos: [
     { acordes: ["D", "C", "D"], repeticoes: 7, fraseGuia: "<b>Ouçam as trombetas</b>", secao: "Introdução" },
     { acordes: ["Dm", "Bb", "C", "G"], repeticoes: null, fraseGuia: "Ouçam o grito da vitória", secao: null }
-  ]
+  ] }
 };
-response.fullChordSheet = { visibility: "private", source: "user_upload", content: "INTRO\nDm Bb C G\nLetra completa fornecida" };
+response.fullChordSheet = { visibility: "private", source: "user_upload", content: "INTRO\nDm Bb C G\nLetra completa fornecida", sections: [{ nome: "Introdução", linhas: [{ letra: "Letra completa fornecida", acordes: [{ acorde: "Dm", posicao: 0 }, { acorde: "Bb", posicao: 6 }] }] }] };
 const model = context.harmonicSummaryClient.responseToEditorModel(response, "guitar");
 assert.equal(model.fullChordSheet.visibility, "private");
 assert.equal(model.fullChordSheet.content, response.fullChordSheet.content);
@@ -59,7 +60,7 @@ assert.equal(model.sections[0].lines[0].repeticoes, 7);
 assert.equal(model.sections[0].lines[0].lyrics, "bOuçam as trombetas/b");
 assert.deepEqual(JSON.parse(JSON.stringify(model.sections[0].lines[0].chords.map((item) => item.chord))), ["D", "C", "D"]);
 assert.doesNotMatch(model.title + model.sections[0].lines[0].lyrics, /[<>]/);
-assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, trechos: [{ acordes: ["H7"], fraseGuia: "x" }] }), (error) => error.kind === "invalid_data");
+assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, harmonicSummary: { blocos: [{ acordes: ["H7"], fraseGuia: "x" }] } }), (error) => error.kind === "invalid_data");
 
 (async () => {
   const oversizedJson = {
@@ -93,6 +94,13 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
       (error) => error.kind === kind && message.test(error.message) && !/OpenAI|traceback|request-test/i.test(error.message)
     );
   }
+
+  let sentAuthorization;
+  await context.harmonicSummaryClient.generate("pesquisa", { titulo: "Teste" }, { fetch: async (_url, options) => {
+    sentAuthorization = options.headers.Authorization;
+    return { ok: true, status: 200, json: async () => response };
+  } });
+  assert.equal(sentAuthorization, "Bearer test-access-token");
 
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);
