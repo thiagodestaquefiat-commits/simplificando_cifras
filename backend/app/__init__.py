@@ -25,6 +25,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     limiter.init_app(app)
     from .services.location_provider import GeoapifyLocationProvider
     from .services.supabase_auth import SupabaseAuthProvider
+    from .services.music_sources import AuthorizedMusicSourceRegistry
     app.extensions["location_provider"] = GeoapifyLocationProvider(
         api_key=app.config.get("GEOAPIFY_API_KEY", ""),
         timeout_seconds=app.config.get("LOCATION_TIMEOUT_SECONDS", 6),
@@ -34,6 +35,13 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
         url=app.config.get("SUPABASE_URL", ""),
         anon_key=app.config.get("SUPABASE_ANON_KEY", ""),
         timeout_seconds=app.config.get("SUPABASE_AUTH_TIMEOUT_SECONDS", 6),
+    )
+    # Providers externos só entram aqui após contrato/API e allowlist aprovados.
+    app.extensions["music_source_registry"] = AuthorizedMusicSourceRegistry(
+        [],
+        min_score=app.config.get("MUSIC_SOURCE_MIN_SCORE", 0.62),
+        max_results=app.config.get("MUSIC_SOURCE_MAX_RESULTS", 8),
+        max_content_chars=app.config.get("MAX_TEXT_LENGTH", 50_000),
     )
     CORS(
         app,
@@ -65,6 +73,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.locations import blueprint as locations_blueprint
     from .routes.auth import blueprint as auth_blueprint
     from .routes.bands import blueprint as bands_blueprint
+    from .routes.music_sources import blueprint as music_sources_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
@@ -72,6 +81,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(locations_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(bands_blueprint)
+    app.register_blueprint(music_sources_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

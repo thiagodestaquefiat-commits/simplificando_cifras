@@ -26,8 +26,10 @@ class ResumoHarmonicoRequest(BaseModel):
     titulo: str | None = Field(default=None, max_length=160)
     artista: str | None = Field(default=None, max_length=160)
     conteudo: str | None = None
+    sourceProvider: str | None = Field(default=None, max_length=80)
+    sourceId: str | None = Field(default=None, max_length=300)
 
-    @field_validator("titulo", "artista", mode="before")
+    @field_validator("titulo", "artista", "sourceProvider", "sourceId", mode="before")
     @classmethod
     def clean_strings(cls, value):
         return _clean(value)
@@ -42,6 +44,8 @@ class ResumoHarmonicoRequest(BaseModel):
         max_text_length = (info.context or {}).get("max_text_length", 50000)
         if self.tipo == "pesquisa" and not self.titulo:
             raise ValueError("titulo é obrigatório para pesquisa")
+        if bool(self.sourceProvider) != bool(self.sourceId):
+            raise ValueError("sourceProvider e sourceId devem ser enviados juntos")
         if self.tipo == "texto" and not self.conteudo:
             raise ValueError("conteudo é obrigatório para texto")
         if self.conteudo and len(self.conteudo) > max_text_length:

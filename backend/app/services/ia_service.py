@@ -51,8 +51,10 @@ class IaService:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         return cls(provider)
 
-    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None) -> ResumoHarmonicoResponse:
-        if payload.tipo == "pesquisa":
+    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
+        has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
+        source_text = None
+        if payload.tipo == "pesquisa" and not has_online_source:
             user_prompt = (
                 "Gere somente um resumo harmônico por conhecimento do modelo, sem letra ou frases-guia.\n"
                 f"Título: {payload.titulo}\n"
@@ -103,8 +105,8 @@ class IaService:
         except ProviderError as error:
             raise ApiError(error.code, error.public_message, error.status_code) from error
 
-        normalized = normalize_response(result, payload.tipo)
-        if payload.tipo == "pesquisa":
+        normalized = normalize_response(result, "online" if has_online_source else payload.tipo)
+        if payload.tipo == "pesquisa" and not has_online_source:
             normalized.fullChordSheet = None
         elif source_text:
             normalized.fullChordSheet = CifraCompleta(
@@ -112,13 +114,13 @@ class IaService:
                 content=source_text,
                 sections=normalized.fullChordSheet.sections if normalized.fullChordSheet else [],
             )
-        if payload.tipo != "pesquisa" and source_text:
+        if source_text:
             source_folded = " ".join(source_text.casefold().split())
             for trecho in normalized.harmonicSummary.blocos:
                 guide = " ".join((trecho.fraseGuia or "").casefold().split())
                 if guide and guide not in source_folded:
                     trecho.fraseGuia = None
-        if payload.tipo == "pesquisa":
+        if payload.tipo == "pesquisa" and not has_online_source:
             for trecho in normalized.harmonicSummary.blocos:
                 trecho.fraseGuia = None
         return normalized
