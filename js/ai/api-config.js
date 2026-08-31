@@ -4,8 +4,12 @@
   function configuredBaseUrl() {
     const runtime = global.SIMPLIFICANDO_CIFRAS_CONFIG && global.SIMPLIFICANDO_CIFRAS_CONFIG.API_BASE_URL;
     const meta = global.document && global.document.querySelector('meta[name="sc-api-base-url"]')?.content;
-    if (runtime || meta) return String(runtime || meta).trim().replace(/\/$/, "");
-    return /^(localhost|127\.0\.0\.1)$/.test(global.location?.hostname || "") ? "http://127.0.0.1:5000" : "";
+    const hostname = String(global.location?.hostname || "");
+    const preview = hostname.match(/^deploy-preview-(\d+)--simplificandocifras\.netlify\.app$/);
+    if (runtime) return String(runtime).trim().replace(/\/$/, "");
+    if (preview) return `https://simplificandocifras-simplificandocifras-pr-${preview[1]}.up.railway.app`;
+    if (meta) return String(meta).trim().replace(/\/$/, "");
+    return /^(localhost|127\.0\.0\.1)$/.test(hostname) ? "http://127.0.0.1:5000" : "";
   }
 
   function endpoint(path) {

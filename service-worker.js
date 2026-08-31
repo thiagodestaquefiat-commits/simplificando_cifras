@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v66";
+const CACHE_NAME = "simplificando-cifras-v67";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const ASSETS = [
   "./js/event-model.js?v=3",
   "./js/event-repository.js?v=2",
   "./js/event-collaboration-client.js?v=2",
-  "./js/app-auth.js?v=6",
+  "./js/app-auth.js?v=7",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
   "./js/map-preview.js?v=2",
@@ -37,7 +37,7 @@ const ASSETS = [
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
-  "./js/ai/api-config.js?v=2",
+  "./js/ai/api-config.js?v=3",
   "./js/ai/harmonic-summary-client.js?v=2",
   "./js/ai/ai-harmonic-summary.js",
   "./js/ai/ai-harmonic-summary.css",

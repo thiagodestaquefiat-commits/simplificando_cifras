@@ -18,6 +18,9 @@ vm.createContext(context);
 
 assert.equal(context.apiConfig.API_BASE_URL, "http://127.0.0.1:5000");
 assert.equal(context.apiConfig.harmonicSummaryEndpoint(), "http://127.0.0.1:5000/api/resumo-harmonico");
+context.location.hostname = "deploy-preview-31--simplificandocifras.netlify.app";
+assert.equal(context.apiConfig.API_BASE_URL, "https://simplificandocifras-simplificandocifras-pr-31.up.railway.app");
+assert.equal(context.apiConfig.authEndpoint("/config"), "https://simplificandocifras-simplificandocifras-pr-31.up.railway.app/api/auth/config");
 context.SIMPLIFICANDO_CIFRAS_CONFIG = { API_BASE_URL: "https://backend.example/" };
 assert.equal(context.apiConfig.harmonicSummaryEndpoint(), "https://backend.example/api/resumo-harmonico");
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Rugido do Leão ", artista: "" }))), { tipo: "pesquisa", titulo: "Rugido do Leão" });
