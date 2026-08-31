@@ -41,28 +41,44 @@
   }
 
   function assertResponse(data) {
-    if (!data || data.schemaVersion !== 1 || typeof data.titulo !== "string" || !Array.isArray(data.trechos) || !["alta", "media", "baixa"].includes(data.confianca)) {
+    const normalized = data && data.schemaVersion === 1
+      ? { ...data, schemaVersion: 2, capotraste: null, harmonicSummary: { blocos: data.trechos } }
+      : data;
+    const blocks = normalized?.harmonicSummary?.blocos;
+    if (!normalized || normalized.schemaVersion !== 2 || typeof normalized.titulo !== "string" || !Array.isArray(blocks) || !["alta", "media", "baixa"].includes(normalized.confianca)) {
       throw new HarmonicSummaryError("invalid_data", "O servidor retornou dados inválidos.");
     }
-    data.trechos.forEach((trecho) => {
+    blocks.forEach((trecho) => {
       if (!trecho || !Array.isArray(trecho.acordes) || (trecho.fraseGuia != null && typeof trecho.fraseGuia !== "string")) throw new HarmonicSummaryError("invalid_data", "O servidor retornou um trecho inválido.");
       trecho.acordes.forEach((chord) => {
         if (typeof chord !== "string" || !global.multiInstrumentChordLibrary.parseChord(chord)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou um acorde inválido.");
       });
       if (trecho.repeticoes != null && (!Number.isInteger(trecho.repeticoes) || trecho.repeticoes < 1 || trecho.repeticoes > 99)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou repetições inválidas.");
     });
-    if (data.fullChordSheet != null) {
-      const sheet = data.fullChordSheet;
+    if (normalized.fullChordSheet != null) {
+      const sheet = normalized.fullChordSheet;
       if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
         throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
       }
+      if (sheet.sections != null && !Array.isArray(sheet.sections)) throw new HarmonicSummaryError("invalid_data", "A cifra estruturada é inválida.");
+      (sheet.sections || []).forEach((section) => {
+        if (!section || !Array.isArray(section.linhas)) throw new HarmonicSummaryError("invalid_data", "Uma seção da cifra é inválida.");
+        section.linhas.forEach((line) => {
+          if (!line || typeof line.letra !== "string" || !Array.isArray(line.acordes)) throw new HarmonicSummaryError("invalid_data", "Uma linha da cifra é inválida.");
+          line.acordes.forEach((item) => {
+            if (!item || typeof item.acorde !== "string" || !global.multiInstrumentChordLibrary.parseChord(item.acorde) || !Number.isInteger(item.posicao) || item.posicao < 0 || item.posicao > 500) {
+              throw new HarmonicSummaryError("invalid_data", "A relação entre acorde e letra é inválida.");
+            }
+          });
+        });
+      });
     }
-    return data;
+    return normalized;
   }
 
-  function responseToEditorModel(raw, instrument) {
+  function responseToEditorModel(raw, instrument, source) {
     const data = assertResponse(raw);
-    const sections = data.trechos.map((trecho, index) => {
+    const sections = data.harmonicSummary.blocos.map((trecho, index) => {
       let position = 0;
       const chords = trecho.acordes.map((chord) => {
         const item = { chord, position };
@@ -83,8 +99,10 @@
       artist: clean(data.artista, 160),
       originalKey: clean(data.tom || "C", 12),
       currentKey: clean(data.tom || "C", 12),
+      capo: Number.isInteger(data.capotraste) ? data.capotraste : 0,
       instrument: instrument || "guitar",
       source: "ai",
+      sourceInfo: source && typeof source === "object" ? source : { type: "online", name: null, url: null },
       status: "draft",
       aiGenerated: true,
       reviewedByUser: false,
@@ -106,10 +124,14 @@
       if (payload.titulo) body.append("titulo", payload.titulo);
       if (payload.artista) body.append("artista", payload.artista);
     }
+    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
+    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para usar a IA musical.", 401);
     try {
       response = await (settings.fetch || global.fetch)(global.apiConfig.harmonicSummaryEndpoint(), {
         method: "POST",
-        headers: isFile ? { "Accept": "application/json" } : { "Content-Type": "application/json", "Accept": "application/json" },
+        headers: isFile
+          ? { "Accept": "application/json", "Authorization": `Bearer ${accessToken}` }
+          : { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${accessToken}` },
         body,
         signal: settings.signal
       });
@@ -128,6 +150,9 @@
     }
     if (!response.ok) {
       const code = data?.erro?.codigo;
+      if (response.status === 401 || ["autenticacao_necessaria", "token_invalido", "usuario_invalido"].includes(code)) {
+        throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente para usar a IA musical.", response.status);
+      }
       if (response.status === 413 || code === "requisicao_muito_grande" || code === "arquivo_muito_grande") {
         throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
       }

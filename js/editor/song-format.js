@@ -27,7 +27,21 @@
     if (!value || typeof value !== "object") return null;
     const content = String(value.content || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").replace(/\r\n?/g, "\n").slice(0, 50000).trim();
     if (!content) return null;
-    return { visibility: "private", source: value.source === "user_text" ? "user_text" : "user_upload", content };
+    return {
+      visibility: "private",
+      source: value.source === "user_text" ? "user_text" : "user_upload",
+      content,
+      sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
+        nome: cleanText(section && section.nome || "", 80) || null,
+        linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
+          letra: cleanText(line && line.letra || "", 2000),
+          acordes: Array.isArray(line && line.acordes) ? line.acordes.map((item) => ({
+            acorde: cleanText(item && item.acorde || "", 40).replace(/\s+/g, ""),
+            posicao: Math.max(0, Math.min(500, Number(item && item.posicao) || 0))
+          })).filter((item) => item.acorde) : []
+        })) : []
+      })) : []
+    };
   }
 
   function normalizeAccessContext(value) {
@@ -42,6 +56,14 @@
       ownerId: optionalId(context.ownerId),
       teamId: scope === "team" ? optionalId(context.teamId) : null
     };
+  }
+
+  function normalizeSourceInfo(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const type = ["upload", "text", "online", "manual"].includes(source.type) ? source.type : "manual";
+    const name = cleanText(source.name || "", 255).trim() || null;
+    const url = cleanText(source.url || "", 1000).trim() || null;
+    return { type, name, url };
   }
 
   function chordLine(value) {
@@ -115,6 +137,7 @@
       bpm: value.bpm === null || value.bpm === "" || value.bpm === undefined ? null : Math.max(20, Math.min(300, Number(value.bpm) || 0)),
       status: value.status === "published" ? "published" : "draft",
       source: ["manual", "imported", "ai", "existing"].includes(value.source) ? value.source : (fallback.source || "manual"),
+      sourceInfo: normalizeSourceInfo(value.sourceInfo || fallback.sourceInfo),
       accessContext: normalizeAccessContext(value.accessContext || fallback.accessContext),
       aiGenerated: Boolean(value.aiGenerated), reviewedByUser: Boolean(value.reviewedByUser),
       aiConfidence: ["alta", "media", "baixa"].includes(value.aiConfidence) ? value.aiConfidence : null,
@@ -131,7 +154,7 @@
       originalKey: song && song.key, currentKey: song && song.key, capo: parseCapo(song && song.capo),
       instrument: song && song.instrumento, status: "draft", source: "existing",
       sections: Array.isArray(song && song.blocos) ? song.blocos.map(legacyBlockToSection) : undefined,
-      accessContext: song && song.accessContext,
+      accessContext: song && song.accessContext, sourceInfo: song && song.sourceInfo,
       fullChordSheet: song && song.fullChordSheet,
       notes: song && song.notes, bpm: song && song.bpm, createdAt: song && song.createdAt
     });
@@ -252,12 +275,12 @@
       songFormatVersion: 3, originalKey: normalized.originalKey, currentKey: normalized.currentKey,
       status: normalized.status, source: normalized.source, aiGenerated: normalized.aiGenerated,
       reviewedByUser: normalized.reviewedByUser, aiConfidence: normalized.aiConfidence,
-      accessContext: normalized.accessContext,
+      accessContext: normalized.accessContext, sourceInfo: normalized.sourceInfo,
       createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
       fullChordSheet: normalized.fullChordSheet,
       editorData: normalized
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeAccessContext, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);

@@ -1,9 +1,9 @@
-const CACHE_NAME = "simplificando-cifras-v69";
+const CACHE_NAME = "simplificando-cifras-v70";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
-  "./js/song-model.js?v=3",
+  "./js/song-model.js?v=4",
   "./js/song-repository.js",
   "./js/event-model.js?v=3",
   "./js/event-repository.js?v=2",
@@ -29,7 +29,7 @@ const ASSETS = [
   "./js/navigation-context.js",
   "./js/stage-preferences.js?v=1",
   "./js/stage-offline.js?v=1",
-  "./js/editor/song-format.js?v=4",
+  "./js/editor/song-format.js?v=5",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",
@@ -38,7 +38,7 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=3",
-  "./js/ai/harmonic-summary-client.js?v=2",
+  "./js/ai/harmonic-summary-client.js?v=3",
   "./js/ai/ai-harmonic-summary.js",
   "./js/ai/ai-harmonic-summary.css",
   "./manifest.webmanifest?v=10",

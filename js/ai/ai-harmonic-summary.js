@@ -69,7 +69,12 @@
     setStatus("loading", mode === "arquivo" ? "Analisando cifra..." : "Analisando a estrutura harmônica…");
     try {
       const result = await global.harmonicSummaryClient.generate(mode, values());
-      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar");
+      const sourceInfo = mode === "arquivo"
+        ? { type: "upload", name: result.payload.arquivo?.name || null, url: null }
+        : mode === "texto"
+          ? { type: "text", name: null, url: null }
+          : { type: "online", name: "Conhecimento harmônico do modelo", url: null };
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
       close();

@@ -483,7 +483,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 </div>
 
 <script src="js/storage.js"></script>
-<script src="js/song-model.js?v=3"></script>
+<script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
 <script src="js/event-model.js?v=3"></script>
 <script src="js/event-repository.js?v=2"></script>
@@ -503,7 +503,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=1"></script>
 <script src="js/stage-offline.js?v=1"></script>
-<script src="js/editor/song-format.js?v=4"></script>
+<script src="js/editor/song-format.js?v=5"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -517,7 +517,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=2"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=2"></script>
+<script src="js/ai/harmonic-summary-client.js?v=3"></script>
 <script src="js/ai/ai-harmonic-summary.js"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -1050,6 +1050,25 @@ function renderLinha(linha, totalShift){
 
 function renderFullChordSheet(sheet,totalShift){
   if(!sheet?.content) return '';
+  if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
+    const structured=sheet.sections.map(section=>{
+      const heading=section.nome?`<div class="full-chord-line is-section">${eventEsc(section.nome)}</div>`:'';
+      const lines=(section.linhas||[]).map(line=>{
+        const ordered=[...(line.acordes||[])].sort((a,b)=>a.posicao-b.posicao);
+        let chordLine='';
+        ordered.forEach(item=>{
+          const chord=shiftText(item.acorde,totalShift);
+          const position=Math.max(chordLine.length,Number(item.posicao)||0);
+          chordLine+=' '.repeat(position-chordLine.length)+chord;
+        });
+        const chords=chordLine?`<div class="full-chord-line is-chord">${eventEsc(chordLine)}</div>`:'';
+        const lyric=line.letra?`<div class="full-chord-line">${eventEsc(line.letra)}</div>`:'';
+        return chords+lyric;
+      }).join('');
+      return heading+lines;
+    }).join('');
+    return `<div class="full-chord-private">Privada · conteúdo fornecido por você</div><article class="full-chord-sheet">${structured}</article>`;
+  }
   const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
     const text=raw.trimEnd();
     if(!text) return '<div class="full-chord-line">&nbsp;</div>';
@@ -1062,7 +1081,7 @@ function renderFullChordSheet(sheet,totalShift){
 
 function setSongView(view){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
-  currentSongView=view==='full'&&song?.fullChordSheet?.content?'full':'summary';
+  currentSongView=view==='full'&&song?.fullChordSheet?'full':'summary';
   renderDetail();
 }
 
@@ -1097,7 +1116,7 @@ function renderDetail(){
   const hasFull=Boolean(m.fullChordSheet?.content);
   if(!hasFull) currentSongView='summary';
   if(stageMode&&hasFull&&activeStagePreferences?.contentMode!=='structure')currentSongView='full';
-  const switchHtml=hasFull?`<div class="song-view-switch" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo</button><button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Cifra completa</button></div>`:'';
+  const switchHtml=hasFull?`<div class="song-view-switch" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button></div>`:'';
   const blocosHtml = summary.sections.map(section=>{
     const corpo=section.lines.map(line=>{
       const chords=line.chords.length?songFormat.renderChordLine(line.chords):'';
@@ -1491,7 +1510,7 @@ function simpleSongEditorFields(model,options={}){
     <div class="form-group"><label class="form-label" for="ai-review-artist">Artista</label><input class="form-input" id="ai-review-artist" value="${safe(model.artist)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-key">Tom original</label><input class="form-input" id="ai-review-key" value="${safe(model.originalKey)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-capo">Capotraste</label><input class="form-input" id="ai-review-capo" value="${model.capo||''}" placeholder="ex: 2"></div>
-    <div class="form-group"><label class="form-label" for="ai-review-text">Cifra / Resumo</label><textarea class="form-textarea" id="ai-review-text" style="min-height:300px;">${safe(options.chordSheet==null?songFormat.simpleText(model):options.chordSheet)}</textarea></div>
+    <div class="form-group" id="simple-editor-summary"><label class="form-label" for="ai-review-text">Cifra / Resumo</label><textarea class="form-textarea" id="ai-review-text" style="min-height:300px;">${safe(options.chordSheet==null?songFormat.simpleText(model):options.chordSheet)}</textarea></div>
     ${options.includeNotes?`<div class="form-group"><label class="form-label" for="event-song-notes">Observações do repertório</label><textarea class="form-textarea" id="event-song-notes">${safe(notes)}</textarea></div>`:''}`;
 }
 function readSimpleSongEditor(model){
@@ -1510,18 +1529,28 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
     ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
+    ${fullSheet?`<div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>`:''}
     ${simpleSongEditorFields(normalized)}
-    ${fullSheet?`<div class="form-group"><label class="form-label" for="ai-review-full-text">Cifra completa privada</label><textarea class="form-textarea" id="ai-review-full-text" style="min-height:360px;">${eventEsc(fullSheet.content)}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;">Disponível somente neste navegador. Não será publicada automaticamente.</div></div>`:''}
+    ${fullSheet?`<div class="form-group" id="simple-editor-full" hidden><label class="form-label" for="ai-review-full-text">Letra + Cifras</label><textarea class="form-textarea" id="ai-review-full-text" style="min-height:360px;">${eventEsc(fullSheet.content)}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;">Conteúdo privado fornecido por você. Revise antes de salvar.</div></div>`:''}
     <button class="btn btn-primary" onclick="saveSimpleSongReview()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
+}
+function setSimpleEditorView(view){
+  const full=view==='full',summary=document.getElementById('simple-editor-summary'),fullPanel=document.getElementById('simple-editor-full');
+  if(summary)summary.hidden=full;if(fullPanel)fullPanel.hidden=!full;
+  document.querySelectorAll('[data-simple-editor-view]').forEach(button=>{
+    const active=button.dataset.simpleEditorView===(full?'full':'summary');
+    button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
+  });
 }
 function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
 function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
   const fullInput=document.getElementById('ai-review-full-text');
-  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...simpleReviewDraft.model.fullChordSheet,content:fullInput.value}):simpleReviewDraft.model.fullChordSheet;
+  const fullChanged=Boolean(fullInput&&fullInput.value.replace(/\r\n?/g,'\n').trim()!==simpleReviewDraft.model.fullChordSheet?.content);
+  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...simpleReviewDraft.model.fullChordSheet,content:fullInput.value,sections:fullChanged?[]:simpleReviewDraft.model.fullChordSheet.sections}):simpleReviewDraft.model.fullChordSheet;
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
