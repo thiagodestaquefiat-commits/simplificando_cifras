@@ -7,6 +7,7 @@ from ..errors import ApiError
 from ..schemas.resumo_harmonico import ResumoHarmonicoRequest
 from ..services.ia_service import IaService
 from ..services.content_extractor import extract_upload
+from ..services.collaboration_auth import authenticated
 
 
 blueprint = Blueprint("resumo_harmonico", __name__, url_prefix="/api")
@@ -18,6 +19,7 @@ def _rate_limit() -> str:
 
 @blueprint.post("/resumo-harmonico")
 @limiter.limit(_rate_limit)
+@authenticated
 def resumo_harmonico():
     extracted = None
     if request.mimetype == "multipart/form-data":

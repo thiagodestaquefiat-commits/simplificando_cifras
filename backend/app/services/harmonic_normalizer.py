@@ -84,7 +84,7 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str) -> Res
             normalized.observacoes.append(f"Tom não validado: {normalized.tom}")
             normalized.tom = None
 
-    for trecho in normalized.trechos:
+    for trecho in normalized.harmonicSummary.blocos:
         chords = []
         for chord in trecho.acordes:
             try:
@@ -95,17 +95,29 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str) -> Res
         if trecho.repeticoes is None:
             trecho.acordes, trecho.repeticoes = _compress_exact_repetition(trecho.acordes)
 
-    if invalid:
-        normalized.observacoes.append(
-            "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(invalid)))
-        )
-
-    normalized.trechos = [item for item in normalized.trechos if item.acordes]
-    if not normalized.trechos:
+    normalized.harmonicSummary.blocos = [item for item in normalized.harmonicSummary.blocos if item.acordes]
+    if not normalized.harmonicSummary.blocos:
         raise ApiError(
             "resultado_nao_confiavel",
             "Não foi possível produzir um resumo harmônico confiável.",
             422,
+        )
+
+    if normalized.fullChordSheet:
+        for section in normalized.fullChordSheet.sections:
+            for line in section.linhas:
+                valid_chords = []
+                for item in line.acordes:
+                    try:
+                        item.acorde = normalize_chord(item.acorde)
+                        valid_chords.append(item)
+                    except ValueError:
+                        invalid.append(item.acorde)
+                line.acordes = valid_chords
+
+    if invalid:
+        normalized.observacoes.append(
+            "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(invalid)))
         )
 
     if source_type == "pesquisa":

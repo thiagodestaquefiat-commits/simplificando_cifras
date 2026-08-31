@@ -1,7 +1,11 @@
 from app.schemas.resumo_harmonico import (
+    AcordePosicionado,
     CifraCompleta,
+    LinhaCifraCompleta,
+    ResumoEstruturado,
     ResumoHarmonicoRequest,
     ResumoHarmonicoResponse,
+    SecaoCifraCompleta,
     TrechoHarmonico,
 )
 from app.services.content_extractor import ExtractedContent
@@ -22,7 +26,7 @@ class FakeProvider:
             titulo="Teste",
             artista=None,
             tom="C",
-            trechos=[TrechoHarmonico(acordes=["C", "G"], fraseGuia="Frase curta")],
+            harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["C", "G"], fraseGuia="Frase curta")]),
             observacoes=[],
             confianca="alta",
         )
@@ -60,7 +64,7 @@ def test_text_clears_guide_not_present_in_user_content():
     service = IaService(provider)
     request = ResumoHarmonicoRequest(tipo="texto", titulo="Teste", conteudo="C G\nOutra frase real")
     result = service.generate(request)
-    assert result.trechos[0].fraseGuia is None
+    assert result.harmonicSummary.blocos[0].fraseGuia is None
 
 
 def test_research_prompt_allows_known_song_without_external_source():
@@ -89,6 +93,10 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
     provider_result = CifraCompleta(
         source="user_upload",
         content="INTRO\nC G\nLetra completa fornecida",
+        sections=[SecaoCifraCompleta(nome="Introdução", linhas=[LinhaCifraCompleta(
+            letra="Letra completa fornecida",
+            acordes=[AcordePosicionado(acorde="C", posicao=0), AcordePosicionado(acorde="G", posicao=8)],
+        )])],
     )
     original_generate = provider.generate
 
@@ -104,4 +112,5 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
 
     assert provider.media is media
     assert result.fullChordSheet.content == "INTRO\nC G\nLetra completa fornecida"
-    assert result.trechos[0].acordes == ["C", "G"]
+    assert result.fullChordSheet.sections[0].linhas[0].acordes[1].posicao == 8
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]

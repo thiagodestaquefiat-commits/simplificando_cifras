@@ -66,12 +66,34 @@ class TrechoHarmonico(BaseModel):
         return " ".join(words[:8])[:80].strip()
 
 
+class AcordePosicionado(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    acorde: str = Field(min_length=1, max_length=40)
+    posicao: int = Field(ge=0, le=500)
+
+
+class LinhaCifraCompleta(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    letra: str = Field(default="", max_length=2000)
+    acordes: list[AcordePosicionado] = Field(default_factory=list, max_length=64)
+
+
+class SecaoCifraCompleta(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    nome: str | None = Field(default=None, max_length=80)
+    linhas: list[LinhaCifraCompleta] = Field(default_factory=list, max_length=200)
+
+
 class CifraCompleta(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     visibility: Literal["private"] = "private"
     source: Literal["user_upload", "user_text"]
     content: str = Field(min_length=1, max_length=50000)
+    sections: list[SecaoCifraCompleta] = Field(default_factory=list, max_length=80)
 
     @field_validator("content", mode="before")
     @classmethod
@@ -79,14 +101,21 @@ class CifraCompleta(BaseModel):
         return _clean_content(value)
 
 
+class ResumoEstruturado(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    blocos: list[TrechoHarmonico] = Field(default_factory=list, max_length=40)
+
+
 class ResumoHarmonicoResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    schemaVersion: Literal[1] = 1
+    schemaVersion: Literal[2] = 2
     titulo: str = Field(min_length=1, max_length=160)
     artista: str | None = Field(default=None, max_length=160)
     tom: str | None = Field(default=None, max_length=20)
-    trechos: list[TrechoHarmonico] = Field(default_factory=list, max_length=40)
+    capotraste: int | None = Field(default=None, ge=0, le=12)
+    harmonicSummary: ResumoEstruturado
     observacoes: list[str] = Field(default_factory=list, max_length=20)
     confianca: Literal["alta", "media", "baixa"]
     fullChordSheet: CifraCompleta | None = None

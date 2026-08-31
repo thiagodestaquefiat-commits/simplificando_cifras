@@ -1,9 +1,10 @@
 from unittest.mock import patch
 from io import BytesIO
+import uuid
 
 import pytest
 
-from app.schemas.resumo_harmonico import ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.providers import (
     ProviderInvalidResponse,
     ProviderRateLimit,
@@ -16,21 +17,26 @@ from app.services.providers import (
 
 def sample_result():
     return ResumoHarmonicoResponse(
-        schemaVersion=1,
+        schemaVersion=2,
         titulo="Canção teste",
         artista=None,
         tom="Db",
-        trechos=[
-            TrechoHarmonico(
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(
                 acordes=["Db", "B4", "Gb/Bb"],
                 repeticoes=2,
                 fraseGuia="Uma frase curta para reconhecer",
                 secao=None,
-            )
-        ],
+            )]),
         observacoes=[],
         confianca="alta",
     )
+
+
+def auth_headers(client, **extra):
+    user_id = f"ai-user-{uuid.uuid4()}"
+    registered = client.post("/api/collaboration/users", json={"id": user_id, "name": "Usuário IA"})
+    assert registered.status_code == 201
+    return {"Authorization": f"Bearer {registered.get_json()['accessToken']}", **extra}
 
 
 @patch("app.services.providers.openai_provider.OpenAIProvider.generate")
@@ -39,19 +45,20 @@ def test_text_request_returns_versioned_json(generate, client):
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "texto", "titulo": "Canção teste", "conteudo": "Db B4 Gb/Bb"},
-        headers={"Origin": "http://localhost:5500"},
+        headers=auth_headers(client, Origin="http://localhost:5500"),
     )
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data["schemaVersion"] == 1
+    assert data["schemaVersion"] == 2
     assert data["tom"] == "Db"
-    assert data["trechos"][0]["acordes"] == ["Db", "Bsus4", "Gb/Bb"]
-    assert data["trechos"][0]["repeticoes"] == 2
+    assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["Db", "Bsus4", "Gb/Bb"]
+    assert data["harmonicSummary"]["blocos"][0]["repeticoes"] == 2
     assert data["fullChordSheet"] == {
         "visibility": "private",
         "source": "user_text",
         "content": "Db B4 Gb/Bb",
+        "sections": [],
     }
     assert response.headers["Cache-Control"] == "no-store"
     assert response.headers["X-Request-ID"]
@@ -64,6 +71,7 @@ def test_research_caps_confidence_and_adds_warning(generate, client):
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "pesquisa", "titulo": "Canção teste"},
+        headers=auth_headers(client),
     )
 
     assert response.status_code == 200
@@ -73,10 +81,16 @@ def test_research_caps_confidence_and_adds_warning(generate, client):
 
 
 def test_rejects_invalid_input_without_calling_provider(client):
-    response = client.post("/api/resumo-harmonico", json={"tipo": "pesquisa"})
+    response = client.post("/api/resumo-harmonico", json={"tipo": "pesquisa"}, headers=auth_headers(client))
     assert response.status_code == 400
     assert response.is_json
     assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
+
+
+def test_requires_authenticated_user(client):
+    response = client.post("/api/resumo-harmonico", json={"tipo": "pesquisa", "titulo": "Canção teste"})
+    assert response.status_code == 401
+    assert response.get_json()["erro"]["codigo"] == "autenticacao_necessaria"
 
 
 def test_rejects_non_json(client):
@@ -84,6 +98,7 @@ def test_rejects_non_json(client):
         "/api/resumo-harmonico",
         data="texto",
         content_type="text/plain",
+        headers=auth_headers(client),
     )
     assert response.status_code == 415
     assert response.get_json()["erro"]["codigo"] == "content_type_invalido"
@@ -94,6 +109,7 @@ def test_rejects_malformed_json_with_json_error(client):
         "/api/resumo-harmonico",
         data="{",
         content_type="application/json",
+        headers=auth_headers(client),
     )
     assert response.status_code == 400
     assert response.is_json
@@ -110,19 +126,21 @@ def test_txt_upload_returns_same_structured_contract(generate, client):
             "arquivo": (BytesIO(b"Tom: Db\nDb B4 Gb/Bb"), "cifra.txt", "text/plain"),
         },
         content_type="multipart/form-data",
+        headers=auth_headers(client),
     )
     assert response.status_code == 200
-    assert response.get_json()["schemaVersion"] == 1
+    assert response.get_json()["schemaVersion"] == 2
     assert response.get_json()["fullChordSheet"] == {
         "visibility": "private",
         "source": "user_upload",
         "content": "Tom: Db\nDb B4 Gb/Bb",
+        "sections": [],
     }
     assert generate.call_args.args[2] is None
 
 
 def test_upload_requires_file(client):
-    response = client.post("/api/resumo-harmonico", data={"titulo": "Sem arquivo"}, content_type="multipart/form-data")
+    response = client.post("/api/resumo-harmonico", data={"titulo": "Sem arquivo"}, content_type="multipart/form-data", headers=auth_headers(client))
     assert response.status_code == 400
     assert response.get_json()["erro"]["codigo"] == "arquivo_obrigatorio"
 
@@ -160,8 +178,9 @@ def test_rate_limit_returns_standard_json(generate, app, client):
     app.config["RESUMO_RATE_LIMIT"] = "1 per minute"
     payload = {"tipo": "pesquisa", "titulo": "Canção teste"}
 
-    first = client.post("/api/resumo-harmonico", json=payload)
-    second = client.post("/api/resumo-harmonico", json=payload)
+    headers = auth_headers(client)
+    first = client.post("/api/resumo-harmonico", json=payload, headers=headers)
+    second = client.post("/api/resumo-harmonico", json=payload, headers=headers)
 
     assert first.status_code == 200
     assert second.status_code == 429
@@ -186,6 +205,7 @@ def test_provider_errors_are_publicly_classified(generate, error, status, code, 
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "texto", "conteudo": "C G"},
+        headers=auth_headers(client),
     )
 
     assert response.status_code == status

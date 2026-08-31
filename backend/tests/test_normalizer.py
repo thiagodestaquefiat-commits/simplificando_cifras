@@ -1,7 +1,7 @@
 import pytest
 
 from app.errors import ApiError
-from app.schemas.resumo_harmonico import ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.harmonic_normalizer import (
     canonicalize_chord,
     normalize_chord,
@@ -35,7 +35,7 @@ def test_unreliable_empty_result_is_rejected():
         titulo="Desconhecida",
         artista=None,
         tom=None,
-        trechos=[],
+        harmonicSummary=ResumoEstruturado(blocos=[]),
         observacoes=["Não há dados suficientes."],
         confianca="baixa",
     )
@@ -56,21 +56,33 @@ def test_exact_repeated_progression_is_safely_compressed():
     result = ResumoHarmonicoResponse(
         titulo="Cultura do Céu",
         tom="C",
-        trechos=[TrechoHarmonico(acordes=["F", "Am", "G", "F", "Am", "G"])],
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["F", "Am", "G", "F", "Am", "G"])]),
         confianca="alta",
     )
     normalized = normalize_response(result, "arquivo")
-    assert normalized.trechos[0].acordes == ["F", "Am", "G"]
-    assert normalized.trechos[0].repeticoes == 2
+    assert normalized.harmonicSummary.blocos[0].acordes == ["F", "Am", "G"]
+    assert normalized.harmonicSummary.blocos[0].repeticoes == 2
 
 
 def test_non_identical_structure_is_not_compressed():
     result = ResumoHarmonicoResponse(
         titulo="Estrutura variável",
         tom="C",
-        trechos=[TrechoHarmonico(acordes=["F", "G", "F", "G", "F", "Am", "G", "Em", "F"])],
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["F", "G", "F", "G", "F", "Am", "G", "Em", "F"])]),
         confianca="alta",
     )
     normalized = normalize_response(result, "arquivo")
-    assert normalized.trechos[0].acordes == ["F", "G", "F", "G", "F", "Am", "G", "Em", "F"]
-    assert normalized.trechos[0].repeticoes is None
+    assert normalized.harmonicSummary.blocos[0].acordes == ["F", "G", "F", "G", "F", "Am", "G", "Em", "F"]
+    assert normalized.harmonicSummary.blocos[0].repeticoes is None
+
+
+def test_exact_progression_can_be_compressed_three_times():
+    result = ResumoHarmonicoResponse(
+        titulo="Repetição segura",
+        tom="D",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["D", "Bm", "D", "Bm", "D", "Bm"])]),
+        confianca="alta",
+    )
+    normalized = normalize_response(result, "texto")
+    assert normalized.harmonicSummary.blocos[0].acordes == ["D", "Bm"]
+    assert normalized.harmonicSummary.blocos[0].repeticoes == 3

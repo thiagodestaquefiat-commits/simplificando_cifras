@@ -6,7 +6,7 @@ import httpx
 import pytest
 from openai import APIConnectionError, APITimeoutError, BadRequestError, RateLimitError
 
-from app.schemas.resumo_harmonico import ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.content_extractor import ExtractedContent
 from app.services.providers import (
     ProviderInvalidResponse,
@@ -39,7 +39,7 @@ class RaisingResponses:
 
 
 def result():
-    return ResumoHarmonicoResponse(titulo="Teste", tom="C", trechos=[TrechoHarmonico(acordes=["C"])], confianca="alta")
+    return ResumoHarmonicoResponse(titulo="Teste", tom="C", harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["C"])]), confianca="alta")
 
 
 def test_image_is_sent_as_multimodal_input_with_structured_output():
