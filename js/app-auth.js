@@ -3,6 +3,8 @@
 
   let client = null;
   let session = null;
+  let initializationPromise = null;
+  let callbackExchangeAttempted = false;
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
   const CONFIG_KEY = "sc_public_auth_config_v1";
@@ -66,8 +68,7 @@
     });
   }
 
-  async function initialize(forceRefresh) {
-    const initialCallbackCode = callbackCode();
+  async function initializeOnce(forceRefresh, initialCallbackCode) {
     try {
       const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
       if (!forceRefresh && cached && cached.enabled) config = cached;
@@ -81,15 +82,18 @@
       if (!config.enabled) { emit(); return getState(); }
       await loadSdk();
       const code = initialCallbackCode;
-      client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
-      client.auth.onAuthStateChange((_event, nextSession) => {
-        session = nextSession;
-        emit();
-      });
+      if (!client) {
+        client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
+        client.auth.onAuthStateChange((_event, nextSession) => {
+          session = nextSession;
+          emit();
+        });
+      }
       const result = await client.auth.getSession();
       if (result.error) throw result.error;
       session = result.data && result.data.session || null;
-      if (code && !session) {
+      if (code && !session && !callbackExchangeAttempted) {
+        callbackExchangeAttempted = true;
         const exchange = await client.auth.exchangeCodeForSession(code);
         if (exchange.error) throw exchange.error;
         session = exchange.data && exchange.data.session || null;
@@ -105,9 +109,19 @@
     }
   }
 
+  function initialize(forceRefresh) {
+    // O callback precisa ser capturado antes de qualquer await para evitar que
+    // outra inicialização ou o carregamento do SDK altere o estado da URL.
+    const initialCallbackCode = callbackCode();
+    if (initializationPromise) return initializationPromise;
+    initializationPromise = initializeOnce(Boolean(forceRefresh), initialCallbackCode)
+      .finally(() => { initializationPromise = null; });
+    return initializationPromise;
+  }
+
   async function signInWithGoogle() {
     if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
-    const redirectTo = new URL("./", global.location.href).href.split("?")[0].split("#")[0];
+    const redirectTo = `${new URL(global.location.href).origin}/`;
     const result = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
     if (result.error) throw result.error;
   }

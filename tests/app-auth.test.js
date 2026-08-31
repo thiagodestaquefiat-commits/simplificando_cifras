@@ -6,23 +6,25 @@ const vm = require("node:vm");
 const source = fs.readFileSync(path.resolve(__dirname, "..", "js/app-auth.js"), "utf8");
 
 function createAuthHarness(options = {}) {
-  const storage = new Map();
+  const storage = options.storage || new Map();
   const listeners = [];
-  const calls = { exchange: [], oauth: [], replaceState: [], createOptions: null, configFetches: 0, logs: [] };
+  const calls = { exchange: [], oauth: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
   const user = { id: "user-1", email: "musico@example.com", user_metadata: { full_name: "Músico" } };
   const exchangedSession = { access_token: "access-token", user };
   let currentSession = options.initialSession || null;
   const auth = {
-    async getSession() { return { data: { session: currentSession }, error: null }; },
+    async getSession() { calls.getSession += 1; return { data: { session: currentSession }, error: null }; },
     async exchangeCodeForSession(code) {
       calls.exchange.push(code);
       if (options.exchangeError) return { data: { session: null }, error: new Error("erro técnico do provider") };
       currentSession = exchangedSession;
+      calls.authEvents.push("SIGNED_IN");
+      listeners.forEach((listener) => listener("SIGNED_IN", currentSession));
       return { data: { session: currentSession }, error: null };
     },
     onAuthStateChange(listener) { listeners.push(listener); return { data: { subscription: { unsubscribe() {} } } }; },
     async signInWithOAuth(payload) { calls.oauth.push(payload); return { error: null }; },
-    async signOut() { currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
+    async signOut() { calls.signOut += 1; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
   };
   const window = {
     apiConfig: { authEndpoint: (suffix) => "http://api.test/api/auth" + suffix },
@@ -41,7 +43,7 @@ function createAuthHarness(options = {}) {
     },
     console: { info: (...args) => calls.logs.push(args), error: (...args) => calls.logs.push(args) },
     supabase: {
-      createClient(_url, _key, createOptions) { calls.createOptions = createOptions; return { auth }; }
+      createClient(_url, _key, createOptions) { calls.createClients += 1; calls.createOptions = createOptions; return { auth }; }
     }
   };
   const context = vm.createContext({ window, URL, Promise, Error, Set, document: { title: "Simplificando Cifras", createElement() {}, head: { appendChild() {} } } });
@@ -64,6 +66,7 @@ function createAuthHarness(options = {}) {
   assert.deepEqual(callback.calls.exchange, ["pkce-code"]);
   assert.equal(callbackState.authenticated, true);
   assert.equal(callbackState.user.id, "user-1");
+  assert.deepEqual(callback.calls.authEvents, ["SIGNED_IN"], "a troca PKCE deve produzir o evento SIGNED_IN");
   assert.equal(callback.window.appAuth.getAccessToken(), "access-token");
   assert.equal(callback.calls.replaceState.length, 1);
   assert.equal(callback.calls.replaceState[0][2], "/");
@@ -89,9 +92,39 @@ function createAuthHarness(options = {}) {
   const failedExchangeLog = failed.calls.logs.find((entry) => entry[0] === "[app-auth] authentication failed");
   assert.equal(JSON.parse(failedExchangeLog[1]).message, "erro técnico do provider");
 
+  const concurrent = createAuthHarness({ href: "https://deploy-preview-29--simplificandocifras.netlify.app/?code=one-exchange" });
+  const [concurrentA, concurrentB] = await Promise.all([
+    concurrent.window.appAuth.initialize(),
+    concurrent.window.appAuth.initialize()
+  ]);
+  assert.equal(concurrentA.authenticated, true);
+  assert.equal(concurrentB.authenticated, true);
+  assert.equal(concurrent.calls.createClients, 1, "deve existir uma única instância do cliente Supabase");
+  assert.equal(concurrent.listeners.length, 1, "deve existir um único listener de autenticação");
+  assert.deepEqual(concurrent.calls.exchange, ["one-exchange"], "o callback PKCE deve ser trocado uma única vez");
+
+  concurrent.listeners[0]("TOKEN_REFRESHED", { access_token: "renewed", user: concurrent.user });
+  assert.equal(concurrent.window.appAuth.getAccessToken(), "renewed", "a renovação deve atualizar a sessão em memória");
+  await concurrent.window.appAuth.signOut();
+  assert.equal(concurrent.calls.signOut, 1);
+  assert.equal(concurrent.window.appAuth.getState().authenticated, false, "logout deve remover a sessão");
+  await concurrent.window.appAuth.signInWithGoogle();
+  assert.equal(concurrent.calls.oauth.length, 1, "um novo login deve poder iniciar após logout");
+
   await callback.window.appAuth.signInWithGoogle();
   assert.equal(callback.calls.oauth[0].provider, "google");
   assert.equal(callback.calls.oauth[0].options.redirectTo, "https://simplificandocifras.netlify.app/");
 
-  console.log("app-auth.test.js: OK (configuração inicial, PKCE, sessão, callback, estado e OAuth Google)");
+  const preview = createAuthHarness({ href: "https://deploy-preview-29--simplificandocifras.netlify.app/music/detail?x=1" });
+  await preview.window.appAuth.initialize();
+  await preview.window.appAuth.signInWithGoogle();
+  assert.equal(preview.calls.oauth[0].options.redirectTo, "https://deploy-preview-29--simplificandocifras.netlify.app/");
+  assert.equal(preview.calls.oauth[0].options.scopes, undefined, "não deve solicitar scopes adicionais");
+
+  const reloaded = createAuthHarness({ initialSession: { access_token: "persisted", user: callback.user } });
+  const reloadState = await reloaded.window.appAuth.initialize();
+  assert.equal(reloadState.authenticated, true, "getSession deve restaurar a sessão persistida após reload/reabertura");
+  assert.equal(reloaded.calls.exchange.length, 0);
+
+  console.log("app-auth.test.js: OK (configuração, instância única, PKCE único, persistência, renovação, logout e redirects)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });
