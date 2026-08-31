@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from io import BytesIO
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 
@@ -13,6 +14,7 @@ from app.services.providers import (
     ProviderTimeout,
     ProviderUnavailable,
 )
+from app.services.music_sources import MusicSourceCandidate, MusicSourceResult, MusicSourceTimeout, MusicSourceUnavailable
 
 
 def sample_result():
@@ -37,6 +39,31 @@ def auth_headers(client, **extra):
     registered = client.post("/api/collaboration/users", json={"id": user_id, "name": "Usuário IA"})
     assert registered.status_code == 201
     return {"Authorization": f"Bearer {registered.get_json()['accessToken']}", **extra}
+
+
+class FakeMusicSourceRegistry:
+    def __init__(self, *, candidates=None, result=None, error=None):
+        self.candidates = candidates or []
+        self.result = result
+        self.error = error
+
+    def search(self, title, artist=None):
+        if self.error:
+            raise self.error
+        return self.candidates
+
+    def fetch(self, provider_id, source_id):
+        if self.error:
+            raise self.error
+        return self.result
+
+
+def selected_source_result():
+    return MusicSourceResult(
+        "licensed", "studio", "Fonte licenciada", "https://licensed.example/song",
+        "Canção teste", "Artista teste", "Db B4 Gb/Bb\nUma frase curta para reconhecer",
+        "lyrics_chords", datetime.now(timezone.utc),
+    )
 
 
 @patch("app.services.providers.openai_provider.OpenAIProvider.generate")
@@ -68,16 +95,50 @@ def test_text_request_returns_versioned_json(generate, client):
 @patch("app.services.providers.openai_provider.OpenAIProvider.generate")
 def test_research_caps_confidence_and_adds_warning(generate, client):
     generate.return_value = sample_result()
+    client.application.extensions["music_source_registry"] = FakeMusicSourceRegistry(result=selected_source_result())
     response = client.post(
         "/api/resumo-harmonico",
-        json={"tipo": "pesquisa", "titulo": "Canção teste"},
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista teste", "sourceProvider": "licensed", "sourceId": "studio"},
         headers=auth_headers(client),
     )
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data["confianca"] == "media"
-    assert any("podem precisar de correção" in item for item in data["observacoes"])
+    assert data["fullChordSheet"]["content"].startswith("Db B4 Gb/Bb")
+    assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] == "Uma frase curta para reconhecer"
+    assert generate.call_count == 1
+
+
+def test_research_requires_explicit_source_selection(client):
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste"},
+        headers=auth_headers(client),
+    )
+    assert response.status_code == 400
+    assert response.get_json()["erro"]["codigo"] == "fonte_nao_selecionada"
+
+
+def test_source_search_returns_ranked_options_without_content(client):
+    candidate = MusicSourceCandidate("licensed", "studio", "Fonte licenciada", "https://licensed.example/song", "Canção teste", "Artista teste", "lyrics_chords", .98)
+    client.application.extensions["music_source_registry"] = FakeMusicSourceRegistry(candidates=[candidate])
+    response = client.post(
+        "/api/music-sources/search", json={"titulo": "Canção teste", "artista": "Artista teste"}, headers=auth_headers(client),
+    )
+    assert response.status_code == 200
+    assert response.get_json()["candidates"][0]["sourceId"] == "studio"
+    assert "content" not in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize(("error", "status", "code"), [
+    (MusicSourceTimeout("slow"), 504, "fonte_timeout"),
+    (MusicSourceUnavailable("offline"), 503, "fonte_indisponivel"),
+])
+def test_source_search_classifies_failures(error, status, code, client):
+    client.application.extensions["music_source_registry"] = FakeMusicSourceRegistry(error=error)
+    response = client.post("/api/music-sources/search", json={"titulo": "Canção"}, headers=auth_headers(client))
+    assert response.status_code == status
+    assert response.get_json()["erro"]["codigo"] == code
 
 
 def test_rejects_invalid_input_without_calling_provider(client):
@@ -176,7 +237,7 @@ def test_cors_is_not_wildcard(client):
 def test_rate_limit_returns_standard_json(generate, app, client):
     generate.return_value = sample_result()
     app.config["RESUMO_RATE_LIMIT"] = "1 per minute"
-    payload = {"tipo": "pesquisa", "titulo": "Canção teste"}
+    payload = {"tipo": "texto", "conteudo": "Db B4 Gb/Bb"}
 
     headers = auth_headers(client)
     first = client.post("/api/resumo-harmonico", json=payload, headers=headers)

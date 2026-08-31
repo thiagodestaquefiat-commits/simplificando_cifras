@@ -30,10 +30,15 @@ rota exige usuário autenticado e o resultado sempre abre como rascunho.
 
 ## Pesquisa online e fontes autorizadas
 
-O módulo `music_sources.py` define um contrato desacoplado e uma lista explícita
-de hosts HTTPS permitidos. Nenhum coletor de site está ativado no MVP. Sem uma
-fonte autorizada, a pesquisa pode produzir apenas informação harmônica conhecida,
-com confiança no máximo média, revisão obrigatória e sem letra ou frase-gancho.
+O módulo `music_sources.py` define o contrato `MusicSourceProvider`, um registro
+de providers aprovados e uma lista explícita de hosts HTTPS permitidos. A busca
+retorna apenas candidatos e metadados. O conteúdo só é obtido no backend depois
+que o usuário escolhe uma versão; só então ele segue pelo mesmo pipeline textual
+do upload e gera `fullChordSheet` + `harmonicSummary` em uma única análise.
+
+Nenhum provider de conteúdo está ativado enquanto não houver API ou parceria
+autorizada. Nesse estado, a interface informa que não encontrou uma fonte
+autorizada e orienta o envio de PDF, imagem ou TXT, sem chamar a OpenAI.
 
 Fontes avaliadas:
 
@@ -43,11 +48,24 @@ Fontes avaliadas:
   oficial de metadados e reprodução; não é usada como fonte de letra+cifra;
 - [Musixmatch API](https://github.com/musixmatch/musixmatch-sdk): catálogo de
   letras licenciadas, sujeito a contrato, termos e credencial própria. Uma
-  integração só deve ser ativada após autorização comercial e jurídica.
+  integração só deve ser ativada após autorização comercial e jurídica; a
+  oferta consultada não garante cifras;
+- Cifra Club: conteúdo acessível ao usuário, mas sem API pública aprovada para
+  este uso; os termos consultados vedam métodos de extração de dados. Exige
+  parceria/autorização específica;
+- Ultimate Guitar: conteúdo sujeito a licença e restrições de reprodução fora
+  do serviço. Exige API/parceria que autorize uso e redistribuição;
+- Songsterr: possível candidato técnico para tablaturas/metadados, mas deve ter
+  contrato, escopo de API e direitos de uso confirmados antes de ser ativado.
 
 Sites de cifra sem API oficial/licença comprovada não entram na allowlist. Não
 são permitidos scraping indiscriminado, bypass de login, CAPTCHA, paywall ou
 proteções anti-bot.
+
+Cada futuro provider deve entregar `sourceName`, `sourceUrl`, `title`, `artist`,
+`content`, `format` e `retrievedAt`. O frontend nunca envia conteúdo ou URL
+arbitrária ao endpoint de geração: envia apenas IDs opacos, que o registro do
+backend resolve em um provider previamente configurado.
 
 ## Segurança e observabilidade
 
@@ -56,4 +74,3 @@ sessão; o backend determina o usuário autenticado. CORS, rate limit, timeout,
 Structured Outputs e classificação segura de erros permanecem ativos. Logs
 podem conter request ID, duração, tipo da entrada, tamanho e páginas, mas nunca
 letra, cifra, arquivo, token ou segredo.
-

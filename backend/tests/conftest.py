@@ -37,6 +37,9 @@ class TestConfig:
     SUPABASE_ANON_KEY = ""
     SUPABASE_AUTH_TIMEOUT_SECONDS = 1
     AUTH_CONFIG_RATE_LIMIT = "1000 per minute"
+    MUSIC_SOURCE_SEARCH_RATE_LIMIT = "1000 per minute"
+    MUSIC_SOURCE_MIN_SCORE = 0.62
+    MUSIC_SOURCE_MAX_RESULTS = 8
 
 
 @pytest.fixture()
