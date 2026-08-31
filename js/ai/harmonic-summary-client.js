@@ -19,7 +19,12 @@
     if (mode === "pesquisa") {
       const titulo = clean(data.titulo, 160).trim();
       if (!titulo) throw new HarmonicSummaryError("invalid_input", "Informe o título da música.");
-      return { tipo: "pesquisa", titulo, ...(clean(data.artista, 160).trim() ? { artista: clean(data.artista, 160).trim() } : {}) };
+      const payload = { tipo: "pesquisa", titulo, ...(clean(data.artista, 160).trim() ? { artista: clean(data.artista, 160).trim() } : {}) };
+      const sourceProvider = clean(data.sourceProvider, 80).trim();
+      const sourceId = clean(data.sourceId, 300).trim();
+      if (Boolean(sourceProvider) !== Boolean(sourceId)) throw new HarmonicSummaryError("invalid_input", "Escolha uma versão válida da fonte.");
+      if (sourceProvider) Object.assign(payload, { sourceProvider, sourceId });
+      return payload;
     }
     if (mode === "texto") {
       const conteudo = clean(data.conteudo, 50000).trim();
@@ -74,6 +79,52 @@
       });
     }
     return normalized;
+  }
+
+  function assertCandidates(data) {
+    if (!data || !Array.isArray(data.candidates)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou fontes inválidas.");
+    return data.candidates.map((item) => {
+      if (!item || typeof item.providerId !== "string" || typeof item.sourceId !== "string" || typeof item.sourceName !== "string" || typeof item.title !== "string" || typeof item.sourceUrl !== "string" || !item.sourceUrl.startsWith("https://")) {
+        throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma fonte inválida.");
+      }
+      return {
+        providerId: clean(item.providerId, 80), sourceId: clean(item.sourceId, 300),
+        sourceName: clean(item.sourceName, 120), sourceUrl: item.sourceUrl,
+        title: clean(item.title, 160), artist: clean(item.artist, 160),
+        format: clean(item.format, 40), score: Number(item.score) || 0
+      };
+    });
+  }
+
+  async function searchSources(values, options) {
+    const settings = options || {};
+    const payload = validatePayload("pesquisa", values);
+    delete payload.sourceProvider;
+    delete payload.sourceId;
+    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
+    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para pesquisar fontes musicais.", 401);
+    let response;
+    try {
+      response = await (settings.fetch || global.fetch)(global.apiConfig.musicSourceEndpoint("/search"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${accessToken}` },
+        body: JSON.stringify(payload), signal: settings.signal
+      });
+    } catch (error) {
+      if (error && error.name === "AbortError") throw new HarmonicSummaryError("source_timeout", "A busca demorou mais que o esperado. Tente novamente.");
+      throw new HarmonicSummaryError("network", "Não foi possível consultar as fontes musicais.");
+    }
+    let data;
+    try { data = await response.json(); }
+    catch (_) { throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status); }
+    if (!response.ok) {
+      const code = data?.erro?.codigo;
+      if (response.status === 401) throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente.", response.status);
+      if (code === "fonte_timeout" || response.status === 504) throw new HarmonicSummaryError("source_timeout", "A busca demorou mais que o esperado. Tente novamente.", response.status);
+      if (code === "fonte_indisponivel" || response.status >= 500) throw new HarmonicSummaryError("source_unavailable", "As fontes musicais estão temporariamente indisponíveis.", response.status);
+      throw new HarmonicSummaryError("invalid_input", "Revise o título e o artista.", response.status);
+    }
+    return { payload, candidates: assertCandidates(data) };
   }
 
   function responseToEditorModel(raw, instrument, source) {
@@ -159,6 +210,10 @@
       if (["arquivo_invalido", "tipo_arquivo_invalido", "pdf_paginas_invalidas"].includes(code)) {
         throw new HarmonicSummaryError("invalid_file", "Não foi possível ler este arquivo. Tente outro PDF, imagem ou TXT.", response.status);
       }
+      if (code === "fonte_nao_selecionada") throw new HarmonicSummaryError("source_required", "Escolha uma fonte antes de gerar com IA.", response.status);
+      if (code === "fonte_timeout") throw new HarmonicSummaryError("source_timeout", "A fonte demorou mais que o esperado. Tente novamente.", response.status);
+      if (code === "fonte_indisponivel") throw new HarmonicSummaryError("source_unavailable", "A fonte musical está temporariamente indisponível.", response.status);
+      if (code === "fonte_invalida") throw new HarmonicSummaryError("source_invalid", "Não foi possível processar esta versão. Escolha outra fonte.", response.status);
       if (code === "provedor_timeout" || response.status === 504) throw new HarmonicSummaryError("provider_timeout", "A análise demorou mais que o esperado. Tente novamente.", response.status);
       if (code === "provedor_rate_limit") throw new HarmonicSummaryError("provider_rate_limit", "O serviço de IA está temporariamente ocupado. Tente novamente em alguns instantes.", response.status);
       if (code === "provedor_rejeitou_requisicao") throw new HarmonicSummaryError("provider_rejected", "Não foi possível processar este arquivo. Tente outro PDF ou imagem.", response.status);
@@ -173,5 +228,5 @@
     return { payload, data: assertResponse(data) };
   }
 
-  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, assertResponse, responseToEditorModel, generate });
+  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, assertCandidates, searchSources, assertResponse, responseToEditorModel, generate });
 })(window);

@@ -12,7 +12,7 @@
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
-<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=2">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -510,15 +510,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=3"></script>
+<script src="js/ai/api-config.js?v=4"></script>
 <script src="js/app-auth.js?v=7"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=2"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=3"></script>
-<script src="js/ai/ai-harmonic-summary.js"></script>
+<script src="js/ai/harmonic-summary-client.js?v=4"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=2"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1529,6 +1529,7 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
     ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
+    ${normalized.sourceInfo?.type==='online'&&normalized.sourceInfo?.name?`<div style="font-size:11px;color:var(--text2);margin:-7px 0 14px;line-height:1.5;">Fonte: ${eventEsc(normalized.sourceInfo.name)}</div>`:''}
     ${fullSheet?`<div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>`:''}
     ${simpleSongEditorFields(normalized)}
     ${fullSheet?`<div class="form-group" id="simple-editor-full" hidden><label class="form-label" for="ai-review-full-text">Letra + Cifras</label><textarea class="form-textarea" id="ai-review-full-text" style="min-height:360px;">${eventEsc(fullSheet.content)}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;">Conteúdo privado fornecido por você. Revise antes de salvar.</div></div>`:''}
