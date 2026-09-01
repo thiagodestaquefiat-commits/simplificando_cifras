@@ -60,6 +60,14 @@ def _data_url(data: bytes, mime: str) -> str:
     return f"data:{mime};base64,{encoded}"
 
 
+def _extract_pdf_layout(page) -> str:
+    """Preserva colunas/posições de cifras textuais em vez de agrupar acordes no fim."""
+    try:
+        return page.extract_text(extraction_mode="layout") or ""
+    except TypeError:  # compatibilidade com leitores/mocks mais antigos
+        return page.extract_text() or ""
+
+
 def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_length: int) -> ExtractedContent:
     if file_storage is None or not file_storage.filename:
         raise ApiError("arquivo_obrigatorio", "Selecione um arquivo para analisar.", 400)
@@ -97,12 +105,12 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
         pages = len(reader.pages)
         if pages < 1 or pages > max_pages:
             raise ApiError("pdf_paginas_invalidas", f"O PDF deve possuir entre 1 e {max_pages} pÃ¡ginas.", 400)
-        text = "\n\n".join((page.extract_text() or "").strip() for page in reader.pages).strip()
+        text = "\n\n".join(_extract_pdf_layout(page).strip() for page in reader.pages).strip()
     except ApiError:
         raise
     except Exception as error:
         raise ApiError("arquivo_invalido", "NÃ£o foi possÃ­vel ler este PDF.", 400) from error
 
     if text and len(text) <= max_text_length and len(text) >= 40:
-        return ExtractedContent("text", text, detected, page_count=pages, size_bytes=len(data))
+        return ExtractedContent("text", text, detected, page_count=pages, filename=file_storage.filename, size_bytes=len(data))
     return ExtractedContent("pdf", None, detected, _data_url(data, detected), pages, file_storage.filename, len(data))
