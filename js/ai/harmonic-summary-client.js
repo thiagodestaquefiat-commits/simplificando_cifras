@@ -138,7 +138,8 @@
       });
       return {
         type: "custom",
-        label: clean(trecho.secao || `Trecho ${index + 1}`, 120),
+        label: clean(trecho.secao || "", 120),
+        hideLabel: !trecho.secao,
         lines: [{ lyrics: clean(trecho.fraseGuia, 80), repeticoes: trecho.repeticoes, chords }]
       };
     });
@@ -160,7 +161,7 @@
       aiConfidence: data.confianca,
       notes: [`Confiança da IA: ${confidenceLabel}.`, ...observations].join("\n"),
       fullChordSheet: data.fullChordSheet || null,
-      sections: sections.length ? sections : [{ type: "custom", label: "Trecho 1", lines: [{ lyrics: "", chords: [] }] }]
+      sections: sections.length ? sections : [{ type: "custom", label: "", hideLabel: true, lines: [{ lyrics: "", chords: [] }] }]
     }, { source: "ai" });
   }
 

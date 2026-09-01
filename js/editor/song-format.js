@@ -121,7 +121,8 @@
   function normalizeSection(section, index) {
     const type = TYPES.some(([key]) => key === section?.type) ? section.type : "custom";
     const lines = Array.isArray(section?.lines) && section.lines.length ? section.lines.map(normalizeLine) : [normalizeLine({})];
-    return { id: cleanText(section?.id || id("section"), 100), type, label: cleanText(section?.label || TYPE_LABELS[type] || `Seção ${index + 1}`, 120), lines };
+    const hideLabel = section?.hideLabel === true;
+    return { id: cleanText(section?.id || id("section"), 100), type, label: hideLabel ? "" : cleanText(section?.label || TYPE_LABELS[type] || `Seção ${index + 1}`, 120), hideLabel, lines };
   }
 
   function normalize(input, defaults) {
@@ -203,7 +204,7 @@
     return groups.map((sourceLines, index) => {
       const baseSection = base.sections[index];
       const lines = sourceLines.slice();
-      let label = baseSection?.label || `Trecho ${index + 1}`;
+      let label = baseSection?.hideLabel ? "" : (baseSection?.label || `Trecho ${index + 1}`);
       const first = lines[0] || "";
       const bracketed = first.match(/^\[(.+)]$/) || first.match(/^\*(.+)\*$/);
       const knownLabel = TYPES.some(([key, title]) => first.toLocaleLowerCase("pt-BR") === key || first.toLocaleLowerCase("pt-BR") === title.toLocaleLowerCase("pt-BR"));
@@ -226,7 +227,7 @@
       });
       if (pendingLyrics) parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: null, chords: [] });
       if (!parsedLines.length) parsedLines.push(normalizeLine({}));
-      return { id: baseSection?.id || id("section"), type: sectionTypeFromLabel(label, baseSection?.type), label, lines: parsedLines };
+      return { id: baseSection?.id || id("section"), type: sectionTypeFromLabel(label, baseSection?.type), label, hideLabel: !label, lines: parsedLines };
     });
   }
 
@@ -245,7 +246,7 @@
       sections: normalized.sections.map((section, sectionIndex) => ({
         type: section.type,
         label: section.label,
-        showLabel: hasStructuredSource || Boolean(song && song.blocos && song.blocos[sectionIndex] && song.blocos[sectionIndex].l),
+        showLabel: !section.hideLabel && (hasStructuredSource || Boolean(song && song.blocos && song.blocos[sectionIndex] && song.blocos[sectionIndex].l)),
         lines: section.lines.map((line) => ({
           lyrics: line.lyrics,
           repeticoes: line.repeticoes,
