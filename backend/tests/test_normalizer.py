@@ -75,6 +75,78 @@ def test_hook_must_exist_in_same_known_section_and_unverified_repeat_is_removed(
     assert normalized.harmonicSummary.blocos[0].repeticoes is None
 
 
+def test_global_recurrence_does_not_prove_local_repetition():
+    progression = [AcordePosicionado(acorde=value, posicao=index * 4) for index, value in enumerate(["C#m7", "B2", "F#m", "A9"])]
+    lines = []
+    for index in range(4):
+        lines.append(LinhaCifraCompleta(letra=f"Ocorrência separada {index + 1}", acordes=progression))
+        lines.append(LinhaCifraCompleta(letra="Progressão diferente", acordes=[AcordePosicionado(acorde="E", posicao=0)]))
+    result = ResumoHarmonicoResponse(
+        titulo="Recorrência global", tom="C#m", confianca="alta",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["C#m7", "B2", "F#m", "A9"], repeticoes=4)]),
+        fullChordSheet=CifraCompleta(source="user_upload", content="fonte", sections=[SecaoCifraCompleta(nome=None, linhas=lines)]),
+    )
+    normalized = normalize_response(result, "arquivo")
+    assert normalized.harmonicSummary.blocos[0].repeticoes is None
+
+
+def test_explicit_local_repetition_is_preserved():
+    repeated = [LinhaCifraCompleta(
+        letra="Estamos batendo à porta",
+        acordes=[AcordePosicionado(acorde=value, posicao=index * 4) for index, value in enumerate(["C#m7", "B2", "F#m", "A9"])],
+    ) for _ in range(4)]
+    result = ResumoHarmonicoResponse(
+        titulo="Batendo à Porta", tom="C#m", confianca="alta",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(
+            acordes=["C#m7", "B2", "F#m", "A9"], repeticoes=4, fraseGuia="Estamos batendo à porta",
+        )]),
+        fullChordSheet=CifraCompleta(source="user_upload", content="fonte", sections=[SecaoCifraCompleta(nome=None, linhas=repeated)]),
+    )
+    normalized = normalize_response(result, "arquivo")
+    assert normalized.harmonicSummary.blocos[0].repeticoes == 4
+
+
+def test_batendo_final_repeat_is_not_borrowed_from_previous_chorus():
+    progression = [AcordePosicionado(acorde=value, posicao=index * 4) for index, value in enumerate(["C#m7", "B2", "F#m", "A9"])]
+    sheet = CifraCompleta(source="user_upload", content="fonte", sections=[SecaoCifraCompleta(nome=None, linhas=[
+        *[LinhaCifraCompleta(letra="Estamos batendo à porta", acordes=progression) for _ in range(4)],
+        LinhaCifraCompleta(letra="Mudança local", acordes=[AcordePosicionado(acorde="E", posicao=0)]),
+        LinhaCifraCompleta(letra="Encerramento", acordes=progression),
+    ])])
+    result = ResumoHarmonicoResponse(
+        titulo="Batendo à Porta", tom="C#m", confianca="alta", fullChordSheet=sheet,
+        harmonicSummary=ResumoEstruturado(blocos=[
+            TrechoHarmonico(acordes=["C#m7", "B2", "F#m", "A9"], repeticoes=4, fraseGuia="Estamos batendo à porta"),
+            TrechoHarmonico(acordes=["E"], fraseGuia="Mudança local"),
+            TrechoHarmonico(acordes=["C#m7", "B2", "F#m", "A9"], repeticoes=4, fraseGuia="Encerramento"),
+        ]),
+    )
+    normalized = normalize_response(result, "arquivo")
+    assert normalized.harmonicSummary.blocos[0].repeticoes == 4
+    assert normalized.harmonicSummary.blocos[2].repeticoes is None
+
+
+def test_legitimate_instrumental_survives_structured_diagram_cleanup():
+    result = ResumoHarmonicoResponse(
+        titulo="Cultura do Céu", tom="C", confianca="alta",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["F", "Am", "G"], secao="Solo")]),
+        fullChordSheet=CifraCompleta(source="user_upload", content="fonte", sections=[
+            SecaoCifraCompleta(nome="Solo", linhas=[LinhaCifraCompleta(letra="", acordes=[
+                AcordePosicionado(acorde="F", posicao=0), AcordePosicionado(acorde="Am", posicao=4), AcordePosicionado(acorde="G", posicao=8),
+            ])]),
+            SecaoCifraCompleta(nome=None, linhas=[
+                LinhaCifraCompleta(letra="", acordes=[AcordePosicionado(acorde=value, posicao=index * 8) for index, value in enumerate(["A9", "B2", "B9", "C#m", "C#m7", "E/G#", "F#/A#"])]),
+                LinhaCifraCompleta(letra="4 4 4", acordes=[]),
+                LinhaCifraCompleta(letra="", acordes=[AcordePosicionado(acorde="F#m", posicao=0)]),
+            ]),
+        ]),
+    )
+    normalized = normalize_response(result, "arquivo")
+    assert len(normalized.fullChordSheet.sections) == 1
+    assert normalized.fullChordSheet.sections[0].nome == "Solo"
+    assert render_full_chord_sheet(normalized.fullChordSheet) == "[Solo]\nF   Am  G"
+
+
 def test_visual_full_sheet_is_rebuilt_from_positions_without_concatenating_chords():
     sheet = CifraCompleta(source="user_upload", content="[reconstruir]", sections=[SecaoCifraCompleta(
         nome="Intro", linhas=[LinhaCifraCompleta(letra="Aqui na terra como no céu", acordes=[AcordePosicionado(acorde="F", posicao=0), AcordePosicionado(acorde="Am", posicao=8), AcordePosicionado(acorde="G", posicao=15)])]

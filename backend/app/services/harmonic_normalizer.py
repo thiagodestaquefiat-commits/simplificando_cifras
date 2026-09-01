@@ -204,16 +204,126 @@ def _text_chords(source_text: str | None) -> list[str]:
     return chords
 
 
-def _sequence_occurrences(source: list[str], sequence: list[str]) -> int:
-    if not source or not sequence or len(sequence) > len(source):
-        return 0
-    wanted = [canonicalize_chord(value) for value in sequence]
-    available = [canonicalize_chord(value) for value in source]
-    return sum(available[index:index + len(wanted)] == wanted for index in range(len(available) - len(wanted) + 1))
+def _canonical_sequence(values: list[str]) -> list[str]:
+    return [canonicalize_chord(value) for value in values]
 
 
-def _repeat_is_explicit(source_text: str | None, repetitions: int) -> bool:
-    return bool(source_text and re.search(rf"\(\s*{repetitions}\s*x\s*\)", source_text, re.IGNORECASE))
+def _line_records(sheet) -> list[dict]:
+    records = []
+    if not sheet:
+        return records
+    for section_index, section in enumerate(sheet.sections):
+        section_name = normalize_section_name(section.nome)
+        for line_index, line in enumerate(section.linhas):
+            records.append({
+                "section_index": section_index,
+                "section_name": section_name,
+                "line_index": line_index,
+                "lyrics": _fold(line.letra),
+                "chords": _canonical_sequence([item.acorde for item in sorted(line.acordes, key=lambda chord: chord.posicao)]),
+            })
+    return records
+
+
+def _section_stream(records: list[dict], start_index: int) -> tuple[list[str], list[int]]:
+    if start_index >= len(records):
+        return [], []
+    section_index = records[start_index]["section_index"]
+    chords, owners = [], []
+    for record_index in range(start_index, len(records)):
+        record = records[record_index]
+        if record["section_index"] != section_index:
+            break
+        chords.extend(record["chords"])
+        owners.extend([record_index] * len(record["chords"]))
+    return chords, owners
+
+
+def _local_repeat_evidence(records: list[dict], trecho, cursor: int) -> tuple[int, int | None]:
+    """Relaciona o bloco ao próximo ponto da cifra e conta apenas sequências consecutivas ali."""
+    wanted = _canonical_sequence(trecho.acordes)
+    guide = _fold(trecho.fraseGuia)
+    section_name = normalize_section_name(trecho.secao)
+    for record_index in range(cursor, len(records)):
+        record = records[record_index]
+        if guide and guide not in record["lyrics"]:
+            continue
+        if section_name and record["section_name"] != section_name:
+            continue
+        stream, owners = _section_stream(records, record_index)
+        if stream[:len(wanted)] != wanted:
+            continue
+        repetitions = 0
+        offset = 0
+        while stream[offset:offset + len(wanted)] == wanted:
+            repetitions += 1
+            offset += len(wanted)
+        consumed = len(wanted) * max(1, repetitions)
+        end_record = owners[min(consumed, len(owners)) - 1] if owners else record_index
+        return repetitions, end_record + 1
+    return 0, None
+
+
+def _local_explicit_repeat(source_text: str | None, trecho, repetitions: int) -> bool:
+    """Aceita marcação Nx somente no mesmo parágrafo da progressão/frase correspondente."""
+    if not source_text:
+        return False
+    wanted = _canonical_sequence(trecho.acordes)
+    guide = _fold(trecho.fraseGuia)
+    section_name = _fold(normalize_section_name(trecho.secao))
+    marker = re.compile(rf"\(\s*{repetitions}\s*x\s*\)", re.IGNORECASE)
+    for paragraph in re.split(r"\n\s*\n", source_text):
+        if not marker.search(paragraph):
+            continue
+        folded = _fold(paragraph)
+        if guide and guide not in folded:
+            continue
+        if not guide and section_name and section_name not in folded:
+            continue
+        available = _canonical_sequence(_text_chords(paragraph))
+        if any(available[index:index + len(wanted)] == wanted for index in range(len(available) - len(wanted) + 1)):
+            return True
+    return False
+
+
+_DIAGRAM_TEXT_RE = re.compile(r"^\s*(?:(?:\d+|[xX]|[-|]{2,})\s*){2,}$")
+
+
+def _clean_trailing_diagram_sections(sheet) -> None:
+    """Remove cauda técnica somente com legenda extensa + linha numérica de diagrama."""
+    if not sheet:
+        return
+    flat = [
+        (section_index, line_index, line)
+        for section_index, section in enumerate(sheet.sections)
+        for line_index, line in enumerate(section.linhas)
+    ]
+    if not flat:
+        return
+    technical_positions = [
+        index for index, (_, _, line) in enumerate(flat[-16:], start=max(0, len(flat) - 16))
+        if _DIAGRAM_TEXT_RE.fullmatch(line.letra or "")
+    ]
+    if not technical_positions:
+        return
+    technical_index = technical_positions[-1]
+    candidate = None
+    for index in range(technical_index - 1, max(-1, technical_index - 6), -1):
+        line = flat[index][2]
+        if not line.letra.strip() and len(line.acordes) >= 5:
+            candidate = index
+            break
+    if candidate is None:
+        return
+    tail = flat[candidate:]
+    if any(line.letra.strip() and not _DIAGRAM_TEXT_RE.fullmatch(line.letra) for _, _, line in tail):
+        return
+    section_index, line_index, _ = flat[candidate]
+    sheet.sections[section_index].linhas = sheet.sections[section_index].linhas[:line_index]
+    sheet.sections = [
+        section for index, section in enumerate(sheet.sections)
+        if index < section_index or section.linhas
+    ]
 
 
 def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source_text: str | None = None) -> ResumoHarmonicoResponse:
@@ -255,6 +365,7 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
             for line in section.linhas:
                 line.acordes, line_invalid = _normalize_chord_items(line.acordes)
                 invalid.extend(line_invalid)
+        _clean_trailing_diagram_sections(normalized.fullChordSheet)
 
     source_chords = _sheet_chords(normalized.fullChordSheet) + _text_chords(source_text)
     if source_chords:
@@ -264,12 +375,19 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         normalized.harmonicSummary.blocos = [item for item in normalized.harmonicSummary.blocos if item.acordes]
         if not normalized.harmonicSummary.blocos:
             raise ApiError("resultado_nao_confiavel", "Os acordes do resumo não pertencem à fonte.", 422)
+    records = _line_records(normalized.fullChordSheet)
+    local_cursor = 0
     for trecho in normalized.harmonicSummary.blocos:
+        local_repetitions, next_cursor = _local_repeat_evidence(records, trecho, local_cursor)
         if trecho.repeticoes == 1:
             trecho.repeticoes = None
-        elif trecho.repeticoes and id(trecho) not in derived_repetitions and not _repeat_is_explicit(source_text, trecho.repeticoes):
-            if _sequence_occurrences(source_chords, trecho.acordes) < trecho.repeticoes:
+        elif trecho.repeticoes and id(trecho) not in derived_repetitions:
+            locally_proven = local_repetitions == trecho.repeticoes
+            explicitly_proven = _local_explicit_repeat(source_text, trecho, trecho.repeticoes)
+            if not (locally_proven or explicitly_proven):
                 trecho.repeticoes = None
+        if next_cursor is not None:
+            local_cursor = next_cursor
 
     for trecho in normalized.harmonicSummary.blocos:
         if not _guide_belongs_to_source(trecho.fraseGuia, trecho.secao, normalized.fullChordSheet, source_text):
