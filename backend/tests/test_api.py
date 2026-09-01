@@ -80,7 +80,7 @@ def test_text_request_returns_versioned_json(generate, client):
     assert data["schemaVersion"] == 2
     assert data["tom"] == "Db"
     assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["Db", "Bsus4", "Gb/Bb"]
-    assert data["harmonicSummary"]["blocos"][0]["repeticoes"] == 2
+    assert data["harmonicSummary"]["blocos"][0]["repeticoes"] is None
     assert data["fullChordSheet"] == {
         "visibility": "private",
         "source": "user_text",

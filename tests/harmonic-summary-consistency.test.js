@@ -34,13 +34,17 @@ async function snapshot(browser, baseUrl, viewport) {
         { type: "intro", label: "Intro", lines: [{ lyrics: "Aqui na terra", repeticoes: 3, chords: [{ chord: "F", position: 0 }, { chord: "Am", position: 3 }, { chord: "G", position: 7 }] }] },
         { type: "outro", label: "Final", lines: [{ lyrics: "", chords: [{ chord: "Am", position: 0 }, { chord: "G", position: 3 }, { chord: "Em", position: 6 }] }] }
       ], true),
+      structuredSong("batendo-a-porta", "Batendo à Porta", "fhop music", "C#m", [
+        { type: "custom", label: "", hideLabel: true, lines: [{ lyrics: "Estamos batendo à porta", repeticoes: 4, chords: [{ chord: "C#m7", position: 0 }, { chord: "B2", position: 6 }, { chord: "F#m", position: 11 }, { chord: "A9", position: 16 }] }] },
+        { type: "interlude", label: "Interlúdio", lines: [{ lyrics: "Ele veio como um cordeiro", chords: [{ chord: "C#m7", position: 0 }, { chord: "E/G#", position: 6 }, { chord: "A9", position: 12 }, { chord: "B2", position: 16 }] }] }
+      ], true),
       songModel.create({ id: "manual", title: "Manual", artist: "Equipe", key: "A", blocos: [{ l: "Refrão", c: "A E F#m D  (2x)\nFrase manual" }] }),
       structuredSong("ia", "Resumo da IA", "Equipe IA", "G", [
         { type: "chorus", label: "Refrão", lines: [{ lyrics: "Frase da IA", repeticoes: 4, chords: [{ chord: "G", position: 0 }, { chord: "D/F#", position: 3 }, { chord: "Em", position: 8 }, { chord: "C", position: 11 }] }] }
       ], true)
     ];
     musicas.push(...fixtures);
-    const ids = [4, "na-sua-estante", "cultura-do-ceu", "manual", "ia"];
+    const ids = [4, "na-sua-estante", "cultura-do-ceu", "batendo-a-porta", "manual", "ia"];
     return ids.map((id) => {
       const song = musicas.find((item) => String(item.id) === String(id));
       const semantic = songFormat.harmonicSummary(song);
@@ -80,7 +84,10 @@ async function snapshot(browser, baseUrl, viewport) {
     const estante = snapshots[0].find((item) => item.id === "na-sua-estante");
     assert.deepEqual(estante.semantic.sections[0].lines[0].chords.map((item) => item.chord), ["C", "G", "Am", "F"]);
     assert.doesNotMatch(JSON.stringify(estante), /Representação legada conflitante|"A","B","C"/);
-    console.log("harmonic-summary-consistency.test.js: OK (5 origens semanticamente idênticas em 390x844, 768x1024 e 1366x768)");
+    const batendo = snapshots[0].find((item) => item.id === "batendo-a-porta");
+    assert.deepEqual(batendo.semantic.sections[0].lines[0].chords.map((item) => item.chord), ["C#m7", "B2", "F#m", "A9"]);
+    assert.equal(batendo.semantic.sections[0].showLabel, false);
+    console.log("harmonic-summary-consistency.test.js: OK (6 origens semanticamente idênticas em 390x844, 768x1024 e 1366x768)");
   } finally {
     await browser.close();
     if (!previewUrl) server.close();

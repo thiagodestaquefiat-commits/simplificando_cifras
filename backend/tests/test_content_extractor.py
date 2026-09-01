@@ -30,12 +30,18 @@ def test_supported_files(data, filename, mime, kind):
 
 
 def test_textual_pdf_uses_local_text(monkeypatch):
-    pages = [SimpleNamespace(extract_text=lambda: "Tom: Dm\nDm Bb C G\nOuçam o grito da vitória")]
+    calls = []
+    def extract_text(**kwargs):
+        calls.append(kwargs)
+        return "Tom: Dm\nDm   Bb   C   G\nOuçam o grito da vitória"
+    pages = [SimpleNamespace(extract_text=extract_text)]
     monkeypatch.setattr(content_extractor, "PdfReader", lambda *_args, **_kwargs: SimpleNamespace(pages=pages))
     result = content_extractor.extract_upload(upload(b"%PDF-1.7 text", "cifra.pdf", "application/pdf"), max_bytes=1024, max_pages=20, max_text_length=50000)
     assert result.kind == "text"
-    assert "Dm Bb C G" in result.text
+    assert "Dm   Bb   C   G" in result.text
     assert result.page_count == 1
+    assert result.filename == "cifra.pdf"
+    assert calls == [{"extraction_mode": "layout"}]
 
 
 def test_image_pdf_uses_visual_input(monkeypatch):

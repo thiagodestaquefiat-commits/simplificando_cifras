@@ -92,7 +92,7 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
     provider = FakeProvider()
     provider_result = CifraCompleta(
         source="user_upload",
-        content="INTRO\nC G\nLetra completa fornecida",
+        content="[reconstruir]",
         sections=[SecaoCifraCompleta(nome="Introdução", linhas=[LinhaCifraCompleta(
             letra="Letra completa fornecida",
             acordes=[AcordePosicionado(acorde="C", posicao=0), AcordePosicionado(acorde="G", posicao=8)],
@@ -111,6 +111,8 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
     result = service.generate(ResumoHarmonicoRequest(tipo="arquivo", titulo="Teste"), media)
 
     assert provider.media is media
-    assert result.fullChordSheet.content == "INTRO\nC G\nLetra completa fornecida"
+    assert result.fullChordSheet.content == "[Introdução]\nC       G\nLetra completa fornecida"
     assert result.fullChordSheet.sections[0].linhas[0].acordes[1].posicao == 8
     assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]
+    assert "[reconstruir]" in provider.user_prompt
+    assert "B2" in provider.system_prompt

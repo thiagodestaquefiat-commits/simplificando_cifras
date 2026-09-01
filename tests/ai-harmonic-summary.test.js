@@ -62,6 +62,9 @@ assert.equal(model.aiConfidence, "media");
 assert.equal(model.sections[0].lines[0].repeticoes, 7);
 assert.equal(model.sections[0].lines[0].lyrics, "bOuçam as trombetas/b");
 assert.deepEqual(JSON.parse(JSON.stringify(model.sections[0].lines[0].chords.map((item) => item.chord))), ["D", "C", "D"]);
+assert.equal(model.sections[1].hideLabel, true);
+assert.equal(model.sections[1].label, "");
+assert.doesNotMatch(context.songFormat.simpleText(model), /Trecho\s+\d+/);
 assert.doesNotMatch(model.title + model.sections[0].lines[0].lyrics, /[<>]/);
 assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, harmonicSummary: { blocos: [{ acordes: ["H7"], fraseGuia: "x" }] } }), (error) => error.kind === "invalid_data");
 
