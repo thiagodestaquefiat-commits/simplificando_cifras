@@ -350,6 +350,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 @media(max-width:560px){.stage-preset-grid,.stage-option-grid{grid-template-columns:1fr 1fr}.stage-mode .stage-performance-header{grid-template-columns:38px minmax(0,1fr) auto 38px}.stage-nav-icon{width:38px;height:38px}.stage-position,.stage-key{padding-inline:6px;font-size:8px}.stage-mode .detail-body{padding-inline:14px}.stage-mode .stage-next-preview{margin-inline:8px}.stage-floating-controls .stage-control{min-width:34px;padding-inline:5px}.stage-floating-controls .stage-control.primary{min-width:42px}.stage-speed-control{display:none!important}}
 @media(orientation:landscape) and (max-height:560px){.stage-mode .stage-performance-header{min-height:50px;padding-block:4px}.stage-nav-icon{width:36px;height:36px}.stage-mode .stage-next-preview{display:none}.stage-mode .detail-body{padding-top:8px;padding-bottom:76px}.stage-mode .stage-floating-controls{bottom:6px;padding:4px}.stage-control{height:36px;min-width:36px}}
 .stage-heading{cursor:pointer}
+.stage-capo-controls{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--stage-muted)}
+.stage-capo-controls output{color:var(--stage-text);font-weight:800}.stage-capo-controls .stage-control{height:44px;min-width:44px;font-size:14px}.stage-capo-controls button:disabled{opacity:.35;cursor:default}
 </style>
 </head>
 <body>
@@ -414,6 +416,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       <div class="stage-heading" onclick="openStageQuickPanel()" title="Abrir repertório"><strong id="stage-song-title">Música</strong><span id="stage-song-artist"></span></div>
       <div class="stage-meta"><span class="stage-position" id="stage-position">1 / 1</span><span class="stage-key" id="stage-key">Tom —</span><span class="stage-online-status" id="stage-online-status" title="Pacote pronto para uso offline"></span></div>
       <button type="button" class="stage-nav-icon" id="stage-next" onclick="navigateSong(1)" aria-label="Próxima música">›</button>
+      <div class="stage-capo-controls" role="group" aria-label="Capotraste no palco">
+        <span>Capo: <output id="stage-capo-value" aria-live="polite">Sem</output></span>
+        <button type="button" class="stage-control" id="stage-capo-minus" onclick="selectCapo(selectedCapo-1)" aria-label="Diminuir capotraste">−</button>
+        <button type="button" class="stage-control" id="stage-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button>
+        <button type="button" class="stage-control" onclick="selectCapo(0)" aria-label="Sem capotraste">Sem</button>
+      </div>
     </header>
     <div class="stage-next-preview" id="stage-next-preview"><span>Próxima</span><strong id="stage-next-title">Fim do repertório</strong><span id="stage-next-key"></span></div>
     <section class="youtube-player-shell" id="youtube-song-player" aria-label="Player do YouTube da música"></section>
@@ -440,7 +448,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     </div>
     <!-- CAPO SELECTOR (estilo Cifra Club) -->
     <div id="capo-row" style="background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;">🎸 Capo</span>
+      <span style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;">🎸 Capo <output id="detail-capo-value" aria-live="polite">Sem</output></span>
       <div style="display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:2px;">
         <button class="capo-opt active" id="capo-opt-0" onclick="selectCapo(0)">Sem</button>
         <button class="capo-opt" id="capo-opt-1" onclick="selectCapo(1)">1ª</button>
@@ -450,6 +458,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <button class="capo-opt" id="capo-opt-5" onclick="selectCapo(5)">5ª</button>
         <button class="capo-opt" id="capo-opt-6" onclick="selectCapo(6)">6ª</button>
         <button class="capo-opt" id="capo-opt-7" onclick="selectCapo(7)">7ª</button>
+        <button class="capo-opt" id="capo-opt-8" onclick="selectCapo(8)">8ª</button>
+        <button class="capo-opt" id="capo-opt-9" onclick="selectCapo(9)">9ª</button>
+        <button class="capo-opt" id="capo-opt-10" onclick="selectCapo(10)">10ª</button>
+        <button class="capo-opt" id="capo-opt-11" onclick="selectCapo(11)">11ª</button>
+        <button class="capo-opt" id="capo-opt-12" onclick="selectCapo(12)">12ª</button>
       </div>
     </div>
     <!-- TRANSPOSITOR -->
@@ -1034,12 +1047,14 @@ function setInstrument(inst){
 let selectedCapo=0, storedCapo=0;
 
 function selectCapo(n){
-  selectedCapo=n;
+  selectedCapo=Math.max(0,Math.min(12,Math.trunc(Number(n)||0)));
+  const view=document.getElementById('view-detail'),position=view?.scrollTop;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
-  document.getElementById('capo-opt-'+n)?.classList.add('active');
+  document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
   renderDetail();
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
   if(m) renderChordStrip(m);
+  if(view)view.scrollTop=position;
 }
 
 function transpose(delta){
@@ -1140,6 +1155,10 @@ function renderStageStructure(summary,totalShift){
 
 function renderDetail(){
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId); if(!m) return;
+  document.getElementById('stage-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
+  document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
+  document.getElementById('stage-capo-minus').disabled=selectedCapo===0;
+  document.getElementById('stage-capo-plus').disabled=selectedCapo===12;
   const summary=songFormat.harmonicSummary(m);
   // tom que SONA = tom original + transpose
   const soundingKey=shiftText(summary.currentKey, currentSemitones);
@@ -1222,7 +1241,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
-  document.getElementById('capo-opt-'+Math.min(capoNum,7))?.classList.add('active');
+  document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
   const lbl=document.getElementById('inst-label');
   const instrumentInfo=instrumentDefinitions.get(currentInstrument);
