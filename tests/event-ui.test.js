@@ -99,7 +99,13 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".event-meta-item").getByText("23/08/2026", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Ana Souza", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Vocal", { exact: true }).count(), 1);
-    assert.equal(await page.getByText("Você lidera", { exact: true }).count(), 1);
+    assert.equal(await page.getByText("Você lidera", { exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Postar", exact: true }).count(), 0);
+    await page.evaluate(() => { const event=setlists.find(event => event.title === "Culto de teste"); event.syncState='synced'; renderSetlists(); });
+    assert.equal(await page.locator('#lista-setlists .event-sync-badge').count(), 0);
+    assert.equal(await page.getByText('● Sincronizado', { exact: true }).count(), 0);
+    assert.match(await page.locator('#lista-setlists').innerText(), /Culto de teste/);
+    assert.match(await page.locator('#lista-setlists').innerText(), /música\(s\).*membro\(s\)/);
     assert.equal(await page.locator("button", { hasText: "Editar oficial" }).count(), 1);
     assert.equal(await page.locator(".event-scope-badge").count(), 0);
     assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") === null), true);

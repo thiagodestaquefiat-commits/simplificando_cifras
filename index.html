@@ -390,7 +390,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       <div class="content" id="lista-musicas"></div>
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
-      <div class="band-toolbar"><select id="active-band-select" onchange="selectActiveBand(this.value)" aria-label="Equipe ativa"><option value="">Todos os eventos</option></select><button type="button" onclick="openBandManager()">👥 Equipes</button><button type="button" id="event-sync-action" onclick="syncEventsNow()">Postar</button></div>
+      <div class="band-toolbar"><select id="active-band-select" onchange="selectActiveBand(this.value)" aria-label="Equipe ativa"><option value="">Todos os eventos</option></select><button type="button" onclick="openBandManager()">👥 Equipes</button></div>
       <div class="content" id="lista-setlists"></div>
     </div>
     <div id="pane-medley" style="display:none;flex:1;overflow:hidden;">
@@ -1830,7 +1830,7 @@ function renderSetlists(){
   target.innerHTML=[...visible].sort((a,b)=>eventSortValue(b)-eventSortValue(a)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).map(event=>{
     const songs=event.musicas.map(id=>musicas.find(song=>String(song.id)===String(id))).filter(Boolean);
     const unread=(()=>{try{return eventChat.unreadCount(event.id);}catch(error){return 0;}})();
-    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}${eventModel.isLeader(event,appCurrentUser.id)?'<span class="event-leader-badge">Você lidera</span>':''}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div><div class="event-sync-badge ${eventEsc(event.syncState)}">${event.syncState==='synced'?'● Sincronizado':'● Compartilhamento Pendente'}</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
+    return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
   }).join('');
 }
 
