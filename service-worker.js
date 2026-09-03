@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v72";
+const CACHE_NAME = "simplificando-cifras-v73-youtube";
 const ASSETS = [
   "./",
   "./index.html",
@@ -14,13 +14,11 @@ const ASSETS = [
   "./js/map-preview.js?v=2",
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=1",
-  "./js/spotify-config.js?v=4",
-  "./js/spotify-auth.js?v=3",
-  "./js/spotify-api.js?v=3",
-  "./js/spotify-song-linker.js?v=1",
-  "./js/spotify-player.js?v=15",
-  "./js/spotify-player-ui.js?v=13",
-  "./js/spotify-ui.js?v=4",
+  "./js/youtube-api.js?v=1",
+  "./js/youtube-song-linker.js?v=1",
+  "./js/youtube-player.js?v=1",
+  "./js/youtube-player-ui.js?v=1",
+  "./js/youtube-ui.js?v=1",
   "./js/export-library.js",
   "./js/chord-library.js",
   "./js/instruments/instrument-definitions.js",

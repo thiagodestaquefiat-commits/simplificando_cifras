@@ -26,6 +26,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .services.location_provider import GeoapifyLocationProvider
     from .services.supabase_auth import SupabaseAuthProvider
     from .services.music_sources import AuthorizedMusicSourceRegistry
+    from .services.youtube_provider import YouTubeProvider
     app.extensions["location_provider"] = GeoapifyLocationProvider(
         api_key=app.config.get("GEOAPIFY_API_KEY", ""),
         timeout_seconds=app.config.get("LOCATION_TIMEOUT_SECONDS", 6),
@@ -35,6 +36,11 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
         url=app.config.get("SUPABASE_URL", ""),
         anon_key=app.config.get("SUPABASE_ANON_KEY", ""),
         timeout_seconds=app.config.get("SUPABASE_AUTH_TIMEOUT_SECONDS", 6),
+    )
+    app.extensions["youtube_provider"] = YouTubeProvider(
+        api_key=app.config.get("YOUTUBE_API_KEY", ""),
+        timeout_seconds=app.config.get("YOUTUBE_TIMEOUT_SECONDS", 8),
+        cache_ttl_seconds=app.config.get("YOUTUBE_CACHE_TTL_SECONDS", 86_400),
     )
     # Providers externos só entram aqui após contrato/API e allowlist aprovados.
     app.extensions["music_source_registry"] = AuthorizedMusicSourceRegistry(
@@ -74,6 +80,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.auth import blueprint as auth_blueprint
     from .routes.bands import blueprint as bands_blueprint
     from .routes.music_sources import blueprint as music_sources_blueprint
+    from .routes.youtube import blueprint as youtube_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
@@ -82,6 +89,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(bands_blueprint)
     app.register_blueprint(music_sources_blueprint)
+    app.register_blueprint(youtube_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

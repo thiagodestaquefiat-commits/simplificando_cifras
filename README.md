@@ -39,6 +39,14 @@ Depois, acesse `http://127.0.0.1:4173/`.
 
 O modelo central preserva `key`, `capo` e `blocos` usados pela interface atual e acrescenta `album`, `duration`, `coverUrl`, `spotifyTrackId`, `spotifyUri`, `isrc`, `createdAt` e `updatedAt`. Os campos externos são opcionais, portanto uma música não depende do Spotify para existir.
 
+## YouTube no MVP
+
+A busca e o player visíveis usam o YouTube temporariamente no lugar do Spotify. A chave da YouTube Data API v3 fica somente no backend, na variável `YOUTUBE_API_KEY`; o navegador chama `/api/youtube/search` e nunca recebe essa chave. As buscas iguais ficam em cache no backend para preservar a cota.
+
+Uma música associada guarda `youtubeVideoId`, `youtubeUrl` e `youtubeChannelTitle` como metadados opcionais, sem alterar o contrato central de `Song`. Na tela da música, uma miniatura pequena abre o player oficial incorporado. O player expandido permanece visível e fixo no topo durante a rolagem; ao recolher ou fechar a música, ele é pausado e removido para não produzir reprodução oculta.
+
+Os arquivos da integração Spotify permanecem preservados no repositório, mas não são carregados pela interface desta versão.
+
 ## Funcionalidades
 
 - biblioteca e busca por título, artista ou tom;

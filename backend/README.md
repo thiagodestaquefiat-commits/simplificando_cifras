@@ -22,7 +22,8 @@ Preencha `OPENAI_API_KEY`, `DATABASE_URL` e ajuste `CORS_ALLOWED_ORIGINS`. Para
 desenvolvimento, o padrão usa SQLite; no Railway, use a URL privada do
 PostgreSQL provisionado. Para habilitar endereços e mapas, preencha também
 `GEOAPIFY_API_KEY`. Para habilitar o login, preencha `SUPABASE_URL` e
-`SUPABASE_ANON_KEY`. Depois:
+`SUPABASE_ANON_KEY`. Para habilitar a pesquisa de vídeos, crie uma chave da
+YouTube Data API v3 e preencha `YOUTUBE_API_KEY`. Depois:
 
 ```powershell
 python run.py
@@ -30,6 +31,18 @@ python run.py
 
 O servidor fica em `http://127.0.0.1:5000`. A chave existe somente no backend.
 O arquivo `.env` é ignorado pelo Git.
+
+## YouTube
+
+`GET /api/youtube/config` informa apenas se a integração está habilitada.
+`GET /api/youtube/search?q=...&limit=8` pesquisa vídeos públicos que permitem
+incorporação e reprodução fora do YouTube. A chave nunca é enviada ao frontend.
+Resultados idênticos ficam em cache por `YOUTUBE_CACHE_TTL_SECONDS` para reduzir
+o uso da cota, e `YOUTUBE_SEARCH_RATE_LIMIT` limita buscas repetitivas por IP.
+
+No Railway, habilite a **YouTube Data API v3** no projeto do Google Cloud e
+cadastre `YOUTUBE_API_KEY` nas variáveis do serviço. Restrinja a chave somente à
+YouTube Data API v3; não coloque essa variável no Netlify nem no código.
 
 O limitador usa `memory://` localmente. Em produção com múltiplas instâncias ou
 workers, configure `RATELIMIT_STORAGE_URI` com a URL privada de um Redis para
