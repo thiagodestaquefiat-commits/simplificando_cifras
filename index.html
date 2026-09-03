@@ -322,7 +322,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 /* TELA INICIAL RESPONSIVA — ferramentas laterais e biblioteca em grade */
 @media (min-width:900px){
 .app{max-width:1180px}
-#pane-musicas:not([style*="display: none"]){display:grid!important;grid-template-columns:360px minmax(0,1fr);grid-template-rows:auto auto auto auto;min-height:0;overflow:hidden}
+#pane-musicas:not([style*="display: none"]){display:grid!important;grid-template-columns:360px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;min-height:0;overflow:hidden}
 #pane-musicas>.search-bar{grid-column:1;grid-row:1}
 #pane-musicas>.youtube-panel{grid-column:1;grid-row:2}
 #pane-musicas>#youtube-results{grid-column:1;grid-row:3;max-height:280px}
