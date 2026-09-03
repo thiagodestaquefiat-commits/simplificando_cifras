@@ -112,9 +112,10 @@ const server = http.createServer((request, response) => {
     assert.equal(Math.round(chatPositionAfterScroll.y), Math.round(chatPositionBeforeScroll.y));
     await page.evaluate(() => { document.getElementById("view-sd").scrollTop = 0; document.getElementById("sd-content").style.minHeight = ""; });
     await page.getByRole("button", { name: "Modo Palco", exact: false }).click();
-    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 1);
+    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
+    assert.equal(await page.locator('#view-detail.stage-mode').count(), 1);
     assert.equal(await page.locator("#event-chat-fab").isVisible(), false);
-    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     await page.locator("#view-detail .back-btn").click();
     assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
     assert.equal(await page.locator(".event-notification-badge").textContent(), "1");

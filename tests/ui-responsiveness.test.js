@@ -126,7 +126,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.ok(await page.locator("#capo-opt-1").evaluate((element) => element.classList.contains("active")));
 
     await page.locator("#btn-palco").click();
-    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
+    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), false);
     assert.equal(await page.locator(".transpose-bar").isVisible(), false);
     await page.getByRole("button", { name: "Aumentar fonte", exact: true }).click();
@@ -170,7 +170,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#detail-title").textContent(), "A Ele a glória");
     assert.equal(await page.locator("#btn-previous-song").isEnabled(), true);
     await page.locator("#btn-palco").click();
-    await page.getByRole("button", { name: "Entrar no Modo Palco", exact: true }).click();
+    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     await page.locator("#stage-next").click();
     assert.equal(await page.locator("#detail-title").textContent(), "A casa é sua");
     assert.ok(await page.locator("#view-detail").evaluate((element) => element.classList.contains("stage-mode")));

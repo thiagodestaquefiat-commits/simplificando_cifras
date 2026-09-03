@@ -345,9 +345,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .song-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 17px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:13px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
 
 /* MODO PALCO PROFISSIONAL — FASE 1 */
-.stage-config-intro{margin:-2px 0 14px;color:#a9b7ca;font-size:11px;line-height:1.5}.stage-config-section{margin-top:17px}.stage-config-section h3{margin:0 0 9px;color:#dbeafe;font-size:10px;letter-spacing:.9px;text-transform:uppercase}.stage-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stage-preset{min-height:78px;padding:10px;border:1px solid var(--border);border-radius:12px;background:#0b192b;color:#fff;text-align:left;cursor:pointer}.stage-preset strong,.stage-preset small{display:block}.stage-preset strong{font-size:11px}.stage-preset small{margin-top:5px;color:#8ea0b8;font-size:8px;line-height:1.35}.stage-preset.selected{border-color:#60a5fa;background:rgba(37,99,235,.16);box-shadow:inset 0 0 0 1px rgba(96,165,250,.2)}.stage-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.stage-choice,.stage-toggle{display:flex;min-height:44px;padding:8px 10px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:11px;background:#0b192b;color:#dbeafe;font-size:9px;font-weight:700;cursor:pointer}.stage-choice input,.stage-toggle input{accent-color:#3b82f6}.stage-choice.selected{border-color:#60a5fa;background:rgba(37,99,235,.14)}.stage-range-row{display:grid;grid-template-columns:90px 1fr 45px;align-items:center;gap:8px;padding:9px 0;color:#cbd5e1;font-size:9px}.stage-range-row input{width:100%;accent-color:#3b82f6}.stage-config-ready{display:flex;margin-top:14px;padding:9px 10px;align-items:center;gap:8px;border:1px solid rgba(34,197,94,.25);border-radius:11px;background:rgba(34,197,94,.08);color:#86efac;font-size:9px;line-height:1.35}.stage-config-actions{position:sticky;bottom:-24px;margin:18px -16px -24px;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,23,40,.78),#0b1728 28%)}
 .stage-performance-header,.stage-next-preview,.stage-floating-controls,.stage-quick-panel{display:none}.stage-mode{--stage-text:#f8fafc;--stage-muted:#94a3b8;--stage-surface:#07111f;--stage-panel:rgba(9,24,41,.94);--stage-accent:#60a5fa;right:0;left:0;margin-inline:auto;background:var(--stage-surface);color:var(--stage-text);scrollbar-color:#334155 transparent;transform:none}.stage-mode.stage-theme-light{--stage-text:#102033;--stage-muted:#526274;--stage-surface:#f8fafc;--stage-panel:rgba(255,255,255,.95);--stage-accent:#1d4ed8;--chord-color:#9a3412}.stage-mode.stage-theme-contrast{--stage-text:#fff;--stage-muted:#e2e8f0;--stage-surface:#000;--stage-panel:rgba(0,0,0,.98);--stage-accent:#facc15;--chord-color:#facc15}.stage-mode .detail-header,.stage-mode #capo-row,.stage-mode .transpose-bar,.stage-mode>.stage-toolbar{display:none!important}.stage-mode .stage-performance-header{position:sticky;z-index:26;top:0;display:grid;min-height:64px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));grid-template-columns:44px minmax(0,1fr) auto 44px;align-items:center;gap:8px;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 12%,transparent);background:var(--stage-panel);backdrop-filter:blur(14px);transition:opacity .2s,transform .2s}.stage-nav-icon{display:grid;width:42px;height:42px;padding:0;place-items:center;border:1px solid color-mix(in srgb,var(--stage-text) 18%,transparent);border-radius:12px;background:transparent;color:var(--stage-text);font-size:20px;cursor:pointer}.stage-nav-icon:disabled{opacity:.24;cursor:not-allowed}.stage-heading{min-width:0}.stage-heading strong,.stage-heading span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-heading strong{font-size:clamp(13px,2.4vw,18px)}.stage-heading span{margin-top:2px;color:var(--stage-muted);font-size:9px}.stage-meta{display:flex;align-items:center;gap:7px}.stage-position,.stage-key{padding:5px 8px;border-radius:999px;background:color-mix(in srgb,var(--stage-text) 9%,transparent);color:var(--stage-text);font-size:9px;font-weight:900;white-space:nowrap}.stage-online-status{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.13)}.stage-online-status.offline{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.13)}.stage-mode .stage-next-preview{display:flex;margin:8px clamp(10px,3vw,28px) 0;padding:8px 11px;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);border-radius:11px;background:color-mix(in srgb,var(--stage-text) 5%,transparent);color:var(--stage-muted);font-size:9px}.stage-next-preview strong{min-width:0;overflow:hidden;color:var(--stage-text);font-size:10px;text-overflow:ellipsis;white-space:nowrap}.stage-next-preview span:last-child{margin-left:auto;white-space:nowrap}.stage-mode .detail-body{padding-top:14px;padding-bottom:112px;background:var(--stage-surface);color:var(--stage-text)}.stage-mode .wa-block,.stage-mode .full-chord-sheet{border:0;background:transparent;box-shadow:none}.stage-mode .wa-block{padding:4px 0;margin-bottom:16px}.stage-mode .full-chord-sheet{display:block;padding:4px 0}.stage-mode .full-chord-private{display:none}.stage-mode .letra-linha,.stage-mode .full-chord-line:not(.is-chord):not(.is-section){color:var(--stage-text);font-size:var(--stage-lyric-size,var(--stage-chord-size,28px));line-height:1.55}.stage-mode .full-chord-line.is-chord{font-size:var(--stage-chord-size,28px);line-height:1.7}.stage-mode .full-chord-line.is-section{color:var(--stage-accent);font-size:calc(var(--stage-chord-size,28px) * .55)}.stage-content-lyrics .chord-line,.stage-content-lyrics .full-chord-line.is-chord{display:none}.stage-content-chords .letra-linha,.stage-content-chords .full-chord-line:not(.is-chord):not(.is-section){display:none}.stage-structure-view{display:grid;gap:10px}.stage-structure-card{padding:14px;border-left:4px solid var(--stage-accent);border-radius:9px;background:color-mix(in srgb,var(--stage-text) 5%,transparent)}.stage-structure-card strong{display:block;color:var(--stage-accent);font-size:12px;text-transform:uppercase}.stage-structure-card span{display:block;margin-top:7px;color:var(--stage-text);font:700 var(--stage-chord-size,28px)/1.5 Arial,sans-serif}.stage-mode .stage-floating-controls{position:fixed;z-index:28;right:50%;bottom:max(12px,env(safe-area-inset-bottom));display:flex;max-width:calc(100% - 24px);padding:7px;align-items:center;gap:5px;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-panel);box-shadow:0 14px 34px rgba(0,0,0,.34);backdrop-filter:blur(15px);transform:translateX(50%);transition:opacity .2s,transform .2s}.stage-control{display:grid;min-width:42px;height:42px;padding:0 10px;place-items:center;border:0;border-radius:11px;background:transparent;color:var(--stage-text);font-size:15px;font-weight:900;cursor:pointer}.stage-control:hover,.stage-control.active{background:color-mix(in srgb,var(--stage-text) 12%,transparent)}.stage-control.primary{min-width:52px;background:var(--stage-accent);color:var(--stage-surface)}.stage-controls-hidden .stage-performance-header{opacity:0;pointer-events:none;transform:translateY(-105%)}.stage-controls-hidden .stage-floating-controls{opacity:0;pointer-events:none;transform:translate(50%,130%)}.stage-controls-always .stage-performance-header,.stage-controls-always .stage-floating-controls{opacity:1!important;pointer-events:auto!important}.stage-controls-hidden-permanent .stage-performance-header,.stage-controls-hidden-permanent .stage-floating-controls{display:none!important}.stage-mode .stage-quick-panel{position:fixed;z-index:32;inset:0;display:flex;padding:clamp(12px,4vw,28px);align-items:stretch;justify-content:flex-end;background:rgba(0,0,0,.58);backdrop-filter:blur(5px)}.stage-quick-panel[hidden]{display:none!important}.stage-quick-sheet{display:flex;width:min(430px,100%);padding:14px;overflow:hidden;flex-direction:column;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-surface);box-shadow:0 20px 55px rgba(0,0,0,.45)}.stage-quick-header{display:flex;align-items:center;gap:8px}.stage-quick-header strong{flex:1}.stage-quick-list{min-height:0;margin-top:10px;overflow-y:auto}.stage-quick-row{display:grid;width:100%;padding:10px;border:0;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:8px;background:transparent;color:var(--stage-text);text-align:left;cursor:pointer}.stage-quick-row.current{border-radius:10px;background:color-mix(in srgb,var(--stage-accent) 18%,transparent)}.stage-quick-row strong,.stage-quick-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-quick-row strong{font-size:11px}.stage-quick-row small{margin-top:2px;color:var(--stage-muted);font-size:8px}.stage-quick-row>span:last-child{color:var(--stage-accent);font-size:9px;font-weight:900}.stage-mode.stage-edit-locked .ai-generate-action,.stage-mode.stage-edit-locked .btn-row{display:none!important}
-@media(min-width:760px){.stage-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stage-option-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stage-mode .detail-body{width:min(100%,960px);margin-inline:auto}.stage-mode .stage-next-preview{width:min(calc(100% - 56px),904px);margin-inline:auto}}
+@media(min-width:760px){.stage-mode .detail-body{width:min(100%,960px);margin-inline:auto}.stage-mode .stage-next-preview{width:min(calc(100% - 56px),904px);margin-inline:auto}}
 @media(max-width:560px){.stage-preset-grid,.stage-option-grid{grid-template-columns:1fr 1fr}.stage-mode .stage-performance-header{grid-template-columns:38px minmax(0,1fr) auto 38px}.stage-nav-icon{width:38px;height:38px}.stage-position,.stage-key{padding-inline:6px;font-size:8px}.stage-mode .detail-body{padding-inline:14px}.stage-mode .stage-next-preview{margin-inline:8px}.stage-floating-controls .stage-control{min-width:34px;padding-inline:5px}.stage-floating-controls .stage-control.primary{min-width:42px}.stage-speed-control{display:none!important}}
 @media(orientation:landscape) and (max-height:560px){.stage-mode .stage-performance-header{min-height:50px;padding-block:4px}.stage-nav-icon{width:36px;height:36px}.stage-mode .stage-next-preview{display:none}.stage-mode .detail-body{padding-top:8px;padding-bottom:76px}.stage-mode .stage-floating-controls{bottom:6px;padding:4px}.stage-control{height:36px;min-width:36px}}
 .stage-heading{cursor:pointer}
@@ -474,7 +473,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     </div>
     <div class="stage-quick-panel" id="stage-quick-panel" hidden onclick="closeStageQuickPanel(event)">
       <section class="stage-quick-sheet" onclick="event.stopPropagation()">
-        <div class="stage-quick-header"><strong>Repertório</strong><button type="button" class="stage-nav-icon" onclick="reconfigureStageMode()" aria-label="Reconfigurar Modo Palco">⚙</button><button type="button" class="stage-nav-icon" onclick="closeStageQuickPanel()" aria-label="Fechar repertório">×</button></div>
+        <div class="stage-quick-header"><strong>Repertório</strong><button type="button" class="stage-nav-icon" onclick="closeStageQuickPanel()" aria-label="Fechar repertório">×</button></div>
         <div class="stage-quick-list" id="stage-quick-list"></div>
       </section>
     </div>
@@ -1251,48 +1250,11 @@ function openDetailFromPlaylist(playlistId,index){
 function openStageFromEvent(eventId){
   const event=findEvent(eventId),hasSongs=event&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
   if(!event||!hasSongs){showToast('Adicione uma música ao repertório antes de abrir o Modo Palco');return;}
-  openDetailFromPlaylist(event.id,0);openStageConfiguration();
+  openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageConfigDraft=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
+let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
-
-function currentStageRole(){
-  const context=navigationContext.get(),event=context&&findEvent(context.playlistId);
-  const member=event&&event.members.find(value=>String(value.id)===String(appCurrentUser.id));
-  if(member?.role)return member.role;
-  const band=appBands.find(value=>String(value.id)===String(event?.bandId)),bandMember=band&&band.members.find(value=>String(value.id)===String(appCurrentUser.id));
-  return bandMember?.musicalRole||appCurrentUser.role||'';
-}
-
-function stagePresetIcon(id){return ({vocal:'🎤',guitar:'🎸',bass:'🎵',keys:'🎹',drums:'🥁',custom:'⚙️'})[id]||'⚙️';}
-function stageContentLabel(id){return ({'lyrics-chords':'Letra + acordes',lyrics:'Somente letra',chords:'Somente acordes',structure:'Estrutura'})[id]||id;}
-
-function openStageConfiguration(){
-  const role=currentStageRole();
-  stageConfigDraft=stagePreferences.load(appCurrentUser.id,role);
-  renderStageConfiguration(role);
-  document.getElementById('modal-overlay').style.display='flex';
-}
-
-function renderStageConfiguration(role){
-  const p=stageConfigDraft;
-  const presets=Object.entries(stagePreferences.presets).map(([id,preset])=>`<button type="button" class="stage-preset ${p.preset===id?'selected':''}" onclick="selectStagePreset('${id}')"><strong>${stagePresetIcon(id)} ${eventEsc(preset.label)}</strong><small>${eventEsc(preset.description)}</small></button>`).join('');
-  const contentModes=stagePreferences.CONTENT_MODES.map(id=>`<label class="stage-choice ${p.contentMode===id?'selected':''}"><input type="radio" name="stage-content-mode" value="${id}" ${p.contentMode===id?'checked':''} onchange="updateStageDraftFromForm()">${stageContentLabel(id)}</label>`).join('');
-  const toggles=[['showPrevious','Música anterior'],['showNext','Próxima música'],['showPosition','Posição no repertório'],['showSetlist','Lista rápida'],['showNextPreview','Preview da próxima'],['showKey','Tom da música'],['autoScroll','Auto-scroll ao entrar'],['fullscreen','Tela cheia'],['wakeLock','Manter tela ligada'],['editLock','Bloquear edições']].map(([key,label])=>`<label class="stage-toggle"><input type="checkbox" name="${key}" ${p[key]?'checked':''} onchange="updateStageDraftFromForm()">${label}</label>`).join('');
-  const themes=[['dark','Escuro'],['light','Claro'],['contrast','Alto contraste']].map(([id,label])=>`<label class="stage-choice ${p.theme===id?'selected':''}"><input type="radio" name="stage-theme" value="${id}" ${p.theme===id?'checked':''} onchange="updateStageDraftFromForm()">${label}</label>`).join('');
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Configurar Modo Palco</div><p class="stage-config-intro">A configuração é pessoal e não altera a versão oficial do repertório.${role?` Preset sugerido para <strong>${eventEsc(role)}</strong>.`:''}</p><section class="stage-config-section"><h3>Preset por função</h3><div class="stage-preset-grid">${presets}</div></section><section class="stage-config-section"><h3>Conteúdo principal</h3><div class="stage-option-grid">${contentModes}</div></section><section class="stage-config-section"><h3>Informações e segurança</h3><div class="stage-option-grid">${toggles}</div></section><section class="stage-config-section"><h3>Aparência</h3><div class="stage-option-grid">${themes}</div><label class="stage-range-row"><span>Tamanho da fonte</span><input id="stage-config-font" type="range" min="18" max="48" step="2" value="${p.fontSize}" oninput="updateStageDraftFromForm()"><output id="stage-config-font-output">${p.fontSize}px</output></label><label class="stage-range-row"><span>Velocidade</span><input id="stage-config-speed" type="range" min="24" max="140" step="4" value="${p.autoScrollSpeed}" oninput="updateStageDraftFromForm()"><output id="stage-config-speed-output">${p.autoScrollSpeed}</output></label></section><div class="stage-config-ready">✓ O repertório será preparado neste dispositivo para reduzir dependência da internet durante a apresentação.</div><div class="stage-config-actions"><button type="button" class="btn btn-primary" onclick="enterStageModeFromConfiguration()">Entrar no Modo Palco</button><button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button></div>`;
-}
-
-function selectStagePreset(id){stageConfigDraft=stagePreferences.applyPreset(id,stageConfigDraft);renderStageConfiguration(currentStageRole());}
-function updateStageDraftFromForm(){
-  if(!stageConfigDraft)return;
-  const checked=name=>Boolean(document.querySelector(`[name="${name}"]`)?.checked),radio=name=>document.querySelector(`[name="${name}"]:checked`)?.value;
-  stageConfigDraft=stagePreferences.normalize({...stageConfigDraft,contentMode:radio('stage-content-mode')||stageConfigDraft.contentMode,theme:radio('stage-theme')||stageConfigDraft.theme,fontSize:Number(document.getElementById('stage-config-font')?.value||stageConfigDraft.fontSize),autoScrollSpeed:Number(document.getElementById('stage-config-speed')?.value||stageConfigDraft.autoScrollSpeed),showPrevious:checked('showPrevious'),showNext:checked('showNext'),showPosition:checked('showPosition'),showSetlist:checked('showSetlist'),showNextPreview:checked('showNextPreview'),showKey:checked('showKey'),autoScroll:checked('autoScroll'),fullscreen:checked('fullscreen'),wakeLock:checked('wakeLock'),editLock:checked('editLock')});
-  const fontOutput=document.getElementById('stage-config-font-output'),speedOutput=document.getElementById('stage-config-speed-output');
-  if(fontOutput)fontOutput.textContent=stageConfigDraft.fontSize+'px';if(speedOutput)speedOutput.textContent=stageConfigDraft.autoScrollSpeed;
-  document.querySelectorAll('.stage-choice').forEach(label=>label.classList.toggle('selected',Boolean(label.querySelector('input:checked'))));
-}
 
 function stageContextData(){
   const context=navigationContext.get(),event=context&&findEvent(context.playlistId);
@@ -1304,18 +1266,12 @@ function stageContextData(){
   return {context,event,songs,contextId:String(context.playlistId)};
 }
 
-async function enterStageModeFromConfiguration(){
-  updateStageDraftFromForm();
-  activeStagePreferences=stagePreferences.save(appCurrentUser.id,stageConfigDraft);
-  const packData=stageContextData();
-  try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
-  closeModal();
-  await enterStageMode();
-}
-
 async function enterStageMode(){
   const vd=document.getElementById('view-detail');if(!vd)return;
-  activeStagePreferences=activeStagePreferences||stagePreferences.load(appCurrentUser.id,currentStageRole());
+  if(stageMode)return;
+  activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),contentMode:'lyrics-chords',theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
+  const packData=stageContextData();
+  try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
   stageMode=true;scrollSpeed=activeStagePreferences.autoScrollSpeed;
   vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
   vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
@@ -1325,7 +1281,7 @@ async function enterStageMode(){
   vd.style.setProperty('--stage-lyric-size',Math.max(18,activeStagePreferences.fontSize-2)+'px');
   const btn=document.getElementById('btn-palco');btn.classList.add('active');btn.textContent='✕ Sair do Palco';
   youtubePlayerUI.hide();
-  renderDetail();updatePlaylistNavigation();updateStagePresentation();vd.scrollTop=0;
+  renderDetail();vd.querySelectorAll('details').forEach(block=>block.open=true);updatePlaylistNavigation();updateStagePresentation();
   vd.addEventListener('pointerdown',revealStageControls,{passive:true});
   if(activeStagePreferences.fullscreen&&vd.requestFullscreen){try{await vd.requestFullscreen({navigationUI:'hide'});}catch(error){}}
   if(activeStagePreferences.wakeLock)await acquireStageWakeLock();
@@ -1343,7 +1299,7 @@ async function exitStageMode(restorePlayer=true){
   document.getElementById('stage-quick-panel').hidden=true;renderDetail();updatePlaylistNavigation();const currentSong=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId));if(restorePlayer&&currentSong)youtubePlayerUI.showSong(currentSong);
 }
 
-function toggleStageModeBtn(){if(stageMode)exitStageMode();else openStageConfiguration();}
+function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode();}
 
 function closeDetail(){
   if(stageMode)exitStageMode(false);else stopAutoScroll();
@@ -1383,7 +1339,6 @@ function updateStageQuickList(){
 }
 function openStageQuickPanel(){if(!activeStagePreferences?.showSetlist)return;document.getElementById('stage-quick-panel').hidden=false;document.getElementById('view-detail').classList.remove('stage-controls-hidden');updateStageQuickList();}
 function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarget)return;document.getElementById('stage-quick-panel').hidden=true;revealStageControls();}
-async function reconfigureStageMode(){await exitStageMode(false);openStageConfiguration();}
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
