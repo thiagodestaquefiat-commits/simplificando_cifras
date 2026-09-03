@@ -46,7 +46,9 @@
         height: "100%",
         videoId: cleaned,
         playerVars: {
+          autoplay: 1,
           controls: 1,
+          enablejsapi: 1,
           playsinline: 1,
           rel: 0,
           origin: global.location && global.location.origin ? global.location.origin : undefined
@@ -55,6 +57,7 @@
           onReady(event) {
             mountedVideoId = cleaned;
             settled = true;
+            try { event.target.playVideo(); } catch (_) { /* O botão nativo continua disponível. */ }
             if (events && typeof events.onReady === "function") events.onReady(event);
             resolve(event.target);
           },
