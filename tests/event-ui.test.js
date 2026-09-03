@@ -61,6 +61,7 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.locator("#tab-setlists").click();
+    assert.equal(await page.getByText("Eventos disponíveis offline", { exact: true }).count(), 0);
     await page.evaluate(() => {
       setlists = eventModel.normalizeCollection([
         { id: "older", title: "Evento antigo", date: "05/07/2026", time: "20:00" },
@@ -80,21 +81,12 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator("#fs-band").inputValue(), "band-test");
     assert.equal(await page.locator("#fs-date").getAttribute("type"), "date");
     assert.equal(await page.getByText("Toque para escolher no calendário", { exact: true }).count(), 1);
+    assert.equal(await page.getByLabel("Local", { exact: true }).count(), 0);
+    assert.equal(await page.getByLabel("Informações", { exact: true }).count(), 0);
+    assert.equal(await page.getByText(/Somente o líder marcado poderá alterar músicas/).count(), 0);
     await page.locator("#fs-title").fill("Culto de teste");
     await page.locator("#fs-date").fill("2026-08-23");
     await page.locator("#fs-time").fill("19:30");
-    await page.locator("#fs-location").fill("Igreja Central");
-    await page.locator(".location-option").waitFor();
-    await page.locator("#fs-location").press("ArrowDown");
-    await page.locator("#fs-location").press("Enter");
-    assert.equal(await page.locator("#fs-location").inputValue(), "Igreja Central, Rua das Flores, 100, Blumenau, SC, Brasil");
-    assert.equal(await page.locator("#fs-location-preview .event-map-card").count(), 1);
-    await page.locator("#fs-location-preview .event-map-card.interactive-ready").waitFor();
-    assert.equal(await page.evaluate(() => window.__eventMapOptions.cooperativeGestures), true);
-    assert.equal(staticMapRequests, 0, "o mapa estático não deve consumir créditos quando o interativo carregou");
-    await page.locator("#fs-location-preview .event-map-recenter").click();
-    assert.deepEqual(await page.evaluate(() => window.__eventMapRecenter.center), [-49.066, -26.9187]);
-    await page.locator("#fs-description").fill("Passagem de som às 18h");
     await page.locator("#pl-all .pl-add-row").first().click();
     await page.locator("#event-member-name").fill("Ana Souza");
     await page.locator("#event-member-role").selectOption({ label: "Vocal" });
@@ -105,10 +97,6 @@ const server = http.createServer((request, response) => {
 
     await page.evaluate(() => openSD(setlists.find(event => event.title === "Culto de teste").id));
     assert.equal(await page.locator(".event-meta-item").getByText("23/08/2026", { exact: true }).count(), 1);
-    assert.equal(await page.getByText("Igreja Central, Rua das Flores, 100, Blumenau, SC, Brasil", { exact: true }).count() >= 1, true);
-    assert.equal(await page.locator("#event-detail-map .event-map-card").count(), 1);
-    await page.locator("#event-detail-map .event-map-card.interactive-ready").waitFor();
-    assert.match(await page.locator("#event-detail-map a", { hasText: "Abrir no mapa" }).getAttribute("href"), /google\.com\/maps\/search/);
     assert.equal(await page.locator(".event-member-card").getByText("Ana Souza", { exact: true }).count(), 1);
     assert.equal(await page.locator(".event-member-card").getByText("Vocal", { exact: true }).count(), 1);
     assert.equal(await page.getByText("Você lidera", { exact: true }).count(), 1);
@@ -204,6 +192,19 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText(/Qual música abre o evento/).count(), 1);
     await page.locator(".event-poll-option").first().click();
     assert.match(await page.locator(".event-poll-total").last().textContent(), /1 participante/);
+
+    await page.evaluate(() => {
+      document.getElementById('event-chat-view').hidden = true;
+      const saved = setlists.find(event => event.title === 'Culto de teste');
+      openAddSetlist({ ...saved, location: 'Local anterior', description: 'Informação anterior' });
+    });
+    assert.equal(await page.locator('#fs-location, #fs-description').count(), 0);
+    await page.getByRole('button', { name: 'Salvar evento', exact: true }).click();
+    await page.waitForFunction(() => document.getElementById('modal-overlay').style.display === 'none');
+    assert.deepEqual(await page.evaluate(() => {
+      const saved = setlists.find(event => event.title === 'Culto de teste');
+      return [saved.location, saved.description];
+    }), ['Local anterior', 'Informação anterior']);
 
     interactiveMapEnabled = false;
     await page.reload({ waitUntil: "domcontentloaded" });

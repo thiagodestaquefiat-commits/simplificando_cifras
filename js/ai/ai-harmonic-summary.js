@@ -1,10 +1,9 @@
 (function (global) {
   "use strict";
   let panel = null;
-  let mode = "pesquisa";
+  let mode = "texto";
   let busy = false;
   let sourceSong = null;
-  let sourceCandidates = [];
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -33,34 +32,6 @@
     status.hidden = !message;
   }
 
-  function clearSourceResults() {
-    sourceCandidates = [];
-    const results = panel?.querySelector("[data-ai-results]");
-    if (results) { results.replaceChildren(); results.hidden = true; }
-  }
-
-  function renderSourceResults(candidates) {
-    const results = panel.querySelector("[data-ai-results]");
-    results.replaceChildren();
-    sourceCandidates = candidates;
-    if (!candidates.length) {
-      results.appendChild(element("p", "ai-source-empty", "Nenhuma fonte autorizada encontrada. Envie um PDF, imagem ou TXT."));
-    } else {
-      results.appendChild(element("h3", "ai-source-heading", candidates.length > 1 ? "Escolha a versão" : "Fonte encontrada"));
-      candidates.forEach((candidate, index) => {
-        const card = element("article", "ai-source-card");
-        const copy = element("div", "ai-source-copy");
-        copy.append(element("strong", "", candidate.title), element("span", "", candidate.artist || "Artista não informado"), element("small", "", candidate.sourceName));
-        const choose = element("button", "ai-source-choose", "Usar esta versão");
-        choose.type = "button";
-        choose.addEventListener("click", () => generateFromSource(sourceCandidates[index]));
-        card.append(copy, choose);
-        results.appendChild(card);
-      });
-    }
-    results.hidden = false;
-  }
-
   function updateMode(nextMode) {
     if (busy) return;
     mode = nextMode;
@@ -69,11 +40,9 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-selected", String(active));
     });
-    panel.querySelector("[data-ai-form=pesquisa]").hidden = mode !== "pesquisa";
     panel.querySelector("[data-ai-form=texto]").hidden = mode !== "texto";
     panel.querySelector("[data-ai-form=arquivo]").hidden = mode !== "arquivo";
-    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Buscar fontes" : mode === "texto" ? "Analisar texto" : "Gerar resumo";
-    clearSourceResults();
+    panel.querySelector("[data-ai-submit]").textContent = mode === "texto" ? "Analisar texto" : "Gerar resumo";
     setStatus("initial", "");
   }
 
@@ -87,7 +56,7 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "pesquisa" ? "Buscando…" : mode === "arquivo" ? "Analisando cifra..." : "Analisando…") : (mode === "pesquisa" ? "Buscar fontes" : mode === "texto" ? "Analisar texto" : "Gerar resumo");
+    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Analisando…") : (mode === "texto" ? "Analisar texto" : "Gerar resumo");
   }
 
   async function submit() {
@@ -96,20 +65,14 @@
     help.hidden = true;
     help.textContent = "";
     setBusy(true);
-    setStatus("loading", mode === "pesquisa" ? "Consultando fontes musicais autorizadas…" : mode === "arquivo" ? "Analisando cifra..." : "Analisando a estrutura harmônica…");
+    setStatus("loading", mode === "arquivo" ? "Analisando cifra..." : "Analisando a estrutura harmônica…");
     try {
-      if (mode === "pesquisa") {
-        const result = await global.harmonicSummaryClient.searchSources(values());
-        renderSourceResults(result.candidates);
-        setStatus(result.candidates.length ? "success" : "initial", result.candidates.length ? "Escolha uma versão para gerar com IA." : "Nenhuma fonte autorizada foi encontrada.");
-        return;
-      }
       const result = await global.harmonicSummaryClient.generate(mode, values());
       const sourceInfo = mode === "arquivo"
         ? { type: "upload", name: result.payload.arquivo?.name || null, url: null }
         : mode === "texto"
           ? { type: "text", name: null, url: null }
-          : { type: "online", name: null, url: null };
+          : { type: "manual", name: null, url: null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
@@ -122,22 +85,6 @@
         help.hidden = false;
         help.textContent = "Corrija o título ou artista, cole uma cifra ou texto e tente novamente.";
       }
-    } finally { setBusy(false); }
-  }
-
-  async function generateFromSource(candidate) {
-    if (busy || !candidate) return;
-    setBusy(true);
-    setStatus("loading", "Analisando a versão escolhida…");
-    try {
-      const result = await global.harmonicSummaryClient.generate("pesquisa", { ...values(), sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
-      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", { type: "online", name: candidate.sourceName, url: candidate.sourceUrl });
-      setStatus("success", "Cifra e resumo gerados. Revise o rascunho antes de salvar.");
-      setBusy(false);
-      close();
-      global.openAiDraft(model, sourceSong);
-    } catch (error) {
-      setStatus(error?.kind || "server", error?.message || "Não foi possível concluir a análise.");
     } finally { setBusy(false); }
   }
 
@@ -162,11 +109,9 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["pesquisa", "Pesquisa"], ["texto", "Texto"], ["arquivo", "Arquivo"]].forEach(([key, label]) => {
+    [["texto", "Texto"], ["arquivo", "Arquivo"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
-    const research = element("div", "ai-summary-form"); research.dataset.aiForm = "pesquisa";
-    research.append(field("Título da música", "titulo", "text", true), field("Artista (opcional)", "artista", "text", false));
     const textForm = element("div", "ai-summary-form"); textForm.dataset.aiForm = "texto";
     textForm.append(field("Título (opcional)", "titulo", "text", false), field("Artista (opcional)", "artista", "text", false), field("Cifra, letra com acordes, anotações ou estrutura musical", "conteudo", "textarea", true));
     const fileForm = element("div", "ai-summary-form ai-summary-file-form"); fileForm.dataset.aiForm = "arquivo";
@@ -180,19 +125,19 @@
     fileForm.addEventListener("drop", (event) => { if (event.dataTransfer?.files?.length) fileInput.files = event.dataTransfer.files; });
     const status = element("div", "ai-summary-status"); status.dataset.aiStatus = ""; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); status.hidden = true;
     const help = element("p", "ai-summary-help"); help.dataset.aiHelp = ""; help.hidden = true;
-    const results = element("div", "ai-source-results"); results.dataset.aiResults = ""; results.hidden = true;
     const submitButton = element("button", "ai-summary-submit", "Gerar resumo"); submitButton.type = "button"; submitButton.dataset.aiSubmit = ""; submitButton.addEventListener("click", submit);
-    dialog.append(header, intro, tabs, research, textForm, fileForm, status, help, results, submitButton);
+    dialog.append(header, intro, tabs, textForm, fileForm, status, help, submitButton);
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
-    updateMode("pesquisa");
+    updateMode("texto");
     if (sourceSong) {
-      research.querySelector('[name="titulo"]').value = sourceSong.title || "";
-      research.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      textForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
+      textForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      fileForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
+      fileForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
     }
-    research.querySelectorAll("input").forEach((input) => input.addEventListener("input", clearSourceResults));
-    research.querySelector("input").focus();
+    textForm.querySelector("textarea").focus();
   }
 
   global.aiHarmonicSummary = Object.freeze({ open, close, get busy() { return busy; } });

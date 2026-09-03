@@ -73,6 +73,47 @@
     }
   }
 
+  const REMOTE_IDENTIFIER = /^[A-Za-z0-9_.:-]{3,120}$/;
+  const ENCODED_SONG_ID_PREFIX = "scid64_";
+
+  function base64UrlEncode(value) {
+    const bytes = new TextEncoder().encode(value);
+    let binary = "";
+    bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+    return global.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function base64UrlDecode(value) {
+    const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
+    const binary = global.atob(padded);
+    return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)));
+  }
+
+  function toRemoteSongId(value) {
+    if (value != null && typeof value !== "string" && !(typeof value === "number" && Number.isSafeInteger(value))) {
+      throw new CollaborationError("Uma música do repertório possui identificador local incompatível.", 400, "song_id_local_incompativel");
+    }
+    const localId = String(value == null ? "" : value);
+    if (REMOTE_IDENTIFIER.test(localId) && !localId.startsWith(ENCODED_SONG_ID_PREFIX)) return localId;
+    if (!localId.trim()) throw new CollaborationError("Uma música do repertório não possui identificador.", 400, "song_id_ausente");
+    const encoded = ENCODED_SONG_ID_PREFIX + base64UrlEncode(localId);
+    if (!REMOTE_IDENTIFIER.test(encoded)) {
+      throw new CollaborationError("Uma música do repertório possui identificador local incompatível.", 400, "song_id_local_incompativel");
+    }
+    return encoded;
+  }
+
+  function fromRemoteSongId(value) {
+    const remoteId = String(value == null ? "" : value);
+    if (!remoteId.startsWith(ENCODED_SONG_ID_PREFIX)) return value;
+    try {
+      const decoded = base64UrlDecode(remoteId.slice(ENCODED_SONG_ID_PREFIX.length));
+      return decoded && toRemoteSongId(decoded) === remoteId ? decoded : value;
+    } catch (_error) {
+      return value;
+    }
+  }
+
   async function request(path, options) {
     const identity = readIdentity();
     const url = endpoint(path);
@@ -133,7 +174,7 @@
       leaderId: String(normalized.leaderId),
       remoteVersion: normalized.remoteVersion,
       members: normalized.members.map((member) => ({ id: String(member.id), name: member.name, role: member.role, avatarUrl: member.avatarUrl })),
-      repertoire: normalized.repertoire.map((item) => ({ id: String(item.id), songId: String(item.songId), order: item.order, shared: item.shared }))
+      repertoire: normalized.repertoire.map((item) => ({ id: String(item.id), songId: toRemoteSongId(item.songId), order: item.order, shared: item.shared }))
     };
   }
 
@@ -146,6 +187,7 @@
       pendingShared: false,
       repertoire: (value.repertoire || []).map((item) => ({
         ...item,
+        songId: fromRemoteSongId(item.songId),
         personalEdits: item.personal && userId ? { [userId]: item.personal } : {}
       }))
     });
@@ -215,5 +257,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, toRemotePayload, fromRemote, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

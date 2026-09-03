@@ -6,8 +6,6 @@ const { chromium } = require("playwright");
 
 const root = path.resolve(__dirname, "..");
 const apiEndpoint = "https://simplificandocifras-production.up.railway.app/api/resumo-harmonico";
-const sourceEndpoint = "https://simplificandocifras-production.up.railway.app/api/music-sources/search";
-const sourceCandidates = { candidates: [{ providerId: "licensed", sourceId: "studio", sourceName: "Fonte licenciada", sourceUrl: "https://licensed.example/song", title: "Rugido do Leão", artist: "Artista teste", format: "lyrics_chords", score: .99 }] };
 const executablePath = [process.env.BROWSER_EXECUTABLE, "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"].find((candidate) => candidate && fs.existsSync(candidate));
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
@@ -41,20 +39,22 @@ const success = {
   try {
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
     assert.equal(await page.locator("#ai-summary-overlay").isVisible(), true);
-    await page.getByRole("button", { name: "Buscar fontes", exact: true }).click();
-    assert.match(await page.locator("[data-ai-status]").innerText(), /Informe o título/);
+    assert.equal(await page.getByRole("tab", { name: "Pesquisa", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Buscar fontes", exact: true }).count(), 0);
+    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Texto", "Arquivo"]);
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /Cole uma cifra/);
 
     let pendingRoute;
     let requestBody;
-    await page.route(sourceEndpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(sourceCandidates) }));
     await page.route(apiEndpoint, async (route) => { pendingRoute = route; requestBody = route.request().postDataJSON(); }, { times: 1 });
-    const researchForm = page.locator("[data-ai-form=pesquisa]");
-    await researchForm.getByLabel("Título da música").fill("Rugido do Leão");
-    await researchForm.getByLabel("Artista (opcional)").fill("Artista teste");
-    await page.getByRole("button", { name: "Buscar fontes", exact: true }).click();
-    await page.getByRole("button", { name: "Usar esta versão", exact: true }).click();
-    assert.match(await page.locator("[data-ai-status]").innerText(), /Analisando a versão escolhida/);
-    assert.deepEqual(requestBody, { tipo: "pesquisa", titulo: "Rugido do Leão", artista: "Artista teste", sourceProvider: "licensed", sourceId: "studio" });
+    const textForm = page.locator("[data-ai-form=texto]");
+    await textForm.getByLabel("Título (opcional)").fill("Rugido do Leão");
+    await textForm.getByLabel("Artista (opcional)").fill("Artista teste");
+    await textForm.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /Analisando a estrutura harmônica/);
+    assert.deepEqual(requestBody, { tipo: "texto", titulo: "Rugido do Leão", artista: "Artista teste", conteudo: "Dm Bb C G" });
     await pendingRoute.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) });
     await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
     assert.equal(await page.locator("#song-editor").count(), 0);
@@ -77,11 +77,10 @@ const success = {
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("cifras_musicas_v1") || "[]").some((song) => song.title === "Alteração cancelada")), false);
 
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
-    const secondResearch = page.locator("[data-ai-form=pesquisa]");
-    await secondResearch.getByLabel("Título da música").fill("Rugido do Leão");
+    const secondText = page.locator("[data-ai-form=texto]");
+    await secondText.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
     await page.route(apiEndpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) }), { times: 1 });
-    await page.getByRole("button", { name: "Buscar fontes", exact: true }).click();
-    await page.getByRole("button", { name: "Usar esta versão", exact: true }).click();
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
     await page.getByLabel("Título", { exact: true }).fill("Resumo revisado");
     await page.getByLabel("Artista", { exact: true }).fill("Artista revisado");
@@ -111,10 +110,9 @@ const success = {
 
     async function verifyError(status, code, expected) {
       await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
-      await page.locator("[data-ai-form=pesquisa]").getByLabel("Título da música").fill("Teste");
+      await page.locator("[data-ai-form=texto]").getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("C G Am F");
       await page.route(apiEndpoint, (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ erro: { codigo: code } }) }), { times: 1 });
-      await page.getByRole("button", { name: "Buscar fontes", exact: true }).click();
-      await page.getByRole("button", { name: "Usar esta versão", exact: true }).click();
+      await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
       await page.waitForTimeout(80);
       assert.match(await page.locator("[data-ai-status]").innerText(), expected);
       await page.getByRole("button", { name: "Fechar", exact: true }).click();

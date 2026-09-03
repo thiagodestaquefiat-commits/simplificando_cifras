@@ -35,7 +35,7 @@
     const value = typeof source === "object" && source !== null ? source : { songId: source };
     return {
       id: id(value.id, "repertoire"),
-      songId: value.songId == null ? value.id : value.songId,
+      songId: value.songId == null ? null : value.songId,
       order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
       shared: repertoireEdit(value.shared),
       personalEdits: Object.fromEntries(Object.entries(value.personalEdits && typeof value.personalEdits === "object" ? value.personalEdits : {}).map(([userId, edit]) => [text(userId), repertoireEdit(edit)]).filter(([userId]) => userId))

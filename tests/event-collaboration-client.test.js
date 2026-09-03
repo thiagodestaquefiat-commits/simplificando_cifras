@@ -40,6 +40,23 @@ require("../js/event-collaboration-client.js");
   });
   const payload = window.eventCollaboration.toRemotePayload(local);
   assert.equal("personalEdits" in payload.repertoire[0], false, "overrides pessoais não podem integrar payload compartilhado");
+  const legacySongId = "Na Sua Estante / Pitty (versão local)";
+  for (const id of [1, 86, "1", "86", " música local ", "scid64_MQ", "song-personal", "team:abc", "550e8400-e29b-41d4-a716-446655440000"]) {
+    const remoteId = window.eventCollaboration.toRemoteSongId(id);
+    assert.match(remoteId, /^[A-Za-z0-9_.:-]{3,120}$/);
+    assert.equal(String(window.eventCollaboration.fromRemoteSongId(remoteId)), String(id));
+  }
+  assert.throws(() => window.eventCollaboration.toRemotePayload({ repertoire: [{ id: "item-missing" }] }), error => error.code === "song_id_ausente");
+  assert.throws(() => window.eventCollaboration.toRemoteSongId("x".repeat(121)), error => error.code === "song_id_local_incompativel");
+  const encodedSongId = window.eventCollaboration.toRemoteSongId(legacySongId);
+  assert.match(encodedSongId, /^scid64_[A-Za-z0-9_-]+$/);
+  assert.equal(window.eventCollaboration.fromRemoteSongId(encodedSongId), legacySongId);
+  const legacyPayload = window.eventCollaboration.toRemotePayload(window.eventModel.create({
+    ...local,
+    repertoire: [{ id: "item-legacy", songId: legacySongId, shared: { title: "Na Sua Estante", artist: "Pitty" } }]
+  }));
+  assert.equal(legacyPayload.repertoire[0].songId, encodedSongId, "ID local incompatível deve ser codificado antes do envio");
+  assert.equal(window.eventCollaboration.fromRemote({ ...remoteEvent(), repertoire: legacyPayload.repertoire }).repertoire[0].songId, legacySongId, "retorno remoto deve recuperar o ID local original");
   const saved = await window.eventCollaboration.saveSharedEvent(local, identity.user);
   assert.equal(saved.syncState, "synced");
   assert.deepEqual(Object.keys(saved.repertoire[0].personalEdits), [identity.user.id]);

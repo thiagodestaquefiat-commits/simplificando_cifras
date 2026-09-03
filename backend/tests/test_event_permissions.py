@@ -140,6 +140,22 @@ def test_version_conflict_does_not_overwrite_shared_repertoire(client):
     assert current["repertoire"][0]["shared"]["key"] == "D"
 
 
+def test_event_keeps_backend_identifier_validation_and_accepts_encoded_local_song_id(client):
+    leader = register(client, "leader-user", "Líder")
+    invalid = event_payload()
+    invalid["members"] = [invalid["members"][0]]
+    invalid["repertoire"] = [{"id": "item-local", "songId": "Na Sua Estante / Pitty", "order": 0, "shared": {}}]
+    rejected = client.post("/api/collaboration/events", headers=auth(leader), json=invalid)
+    assert rejected.status_code == 400
+    assert rejected.get_json()["erro"]["codigo"] == "entrada_invalida"
+
+    encoded = {**invalid, "id": "event-encoded"}
+    encoded["repertoire"] = [{"id": "item-local", "songId": "scid64_TmEgU3VhIEVzdGFudGUgLyBQaXR0eQ", "order": 0, "shared": {}}]
+    created = client.post("/api/collaboration/events", headers=auth(leader), json=encoded)
+    assert created.status_code == 201, created.get_json()
+    assert created.get_json()["repertoire"][0]["songId"] == "scid64_TmEgU3VhIEVzdGFudGUgLyBQaXR0eQ"
+
+
 def test_unregistered_members_and_invalid_versions_are_rejected(client):
     leader = register(client, "leader-user", "Líder")
     payload = event_payload()

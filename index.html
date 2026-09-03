@@ -12,7 +12,7 @@
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
-<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=2">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=3">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -391,8 +391,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       <div class="content" id="lista-musicas"></div>
     </div>
     <div id="pane-setlists" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
-      <div class="band-toolbar"><select id="active-band-select" onchange="selectActiveBand(this.value)" aria-label="Equipe ativa"><option value="">Todos os eventos</option></select><button type="button" onclick="openBandManager()">👥 Equipes</button></div>
-      <div class="event-sync-toolbar"><div><strong id="event-sync-status">Eventos disponíveis offline</strong><small id="event-current-user-id"></small></div><button type="button" class="event-sync-action" id="event-sync-action" onclick="syncEventsNow()">Postar</button></div>
+      <div class="band-toolbar"><select id="active-band-select" onchange="selectActiveBand(this.value)" aria-label="Equipe ativa"><option value="">Todos os eventos</option></select><button type="button" onclick="openBandManager()">👥 Equipes</button><button type="button" id="event-sync-action" onclick="syncEventsNow()">Postar</button></div>
       <div class="content" id="lista-setlists"></div>
     </div>
     <div id="pane-medley" style="display:none;flex:1;overflow:hidden;">
@@ -533,7 +532,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
-<script src="js/event-model.js?v=3"></script>
+<script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
 <script src="js/youtube-api.js?v=1"></script>
@@ -561,10 +560,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=2"></script>
+<script src="js/event-collaboration-client.js?v=3"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=5"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=2"></script>
+<script src="js/ai/harmonic-summary-client.js?v=6"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=3"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1802,7 +1801,6 @@ function openAddSetlist(prefill){
   if(prefill&&!eventModel.canEditShared(prefill,appCurrentUser.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
   editingId=prefill?prefill.id:null;
   const source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
-  let selectedEventLocation=source.eventLocation;
   let selectedBandId=source.bandId||activeBandId||null;
   let selectedIds=[...source.musicas];
   let eventMembers=[...source.members];
@@ -1839,16 +1837,13 @@ function openAddSetlist(prefill){
     <div class="form-group"><label class="form-label">Nome do evento</label><input class="form-input" id="fs-title" value="${eventEsc(source.title==='Novo evento'?'':source.title)}" placeholder="Ex: Culto de domingo"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="form-group"><label class="form-label" for="fs-date">Data</label><input class="form-input" id="fs-date" type="date" value="${eventEsc(eventDateISO(source.date))}"><div style="font-size:9px;color:var(--text2);margin-top:4px;">Toque para escolher no calendário</div></div><div class="form-group"><label class="form-label" for="fs-time">Horário</label><input class="form-input" id="fs-time" type="time" value="${eventEsc(source.time)}"></div></div>
     ${appBands.length?`<div class="form-group"><label class="form-label" for="fs-band">Equipe responsável</label><select class="form-input" id="fs-band"><option value="">Evento pessoal</option>${appBands.map(band=>`<option value="${eventEsc(band.id)}" ${String(band.id)===String(selectedBandId)?'selected':''}>${eventEsc(band.name)}</option>`).join('')}</select></div>`:''}
-    <div class="form-group location-combobox"><label class="form-label" for="fs-location">Local</label><input class="form-input" id="fs-location" value="${eventEsc(source.location)}" placeholder="Digite igreja, rua ou estabelecimento" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fs-location-results" autocomplete="off"><div id="fs-location-status" class="location-status" role="status" aria-live="polite"></div><div id="fs-location-results" class="location-results" role="listbox" hidden></div><div id="fs-location-preview" class="event-map-preview" hidden></div></div>
-    <div class="form-group"><label class="form-label">Informações</label><textarea class="form-textarea" id="fs-description" placeholder="Orientações, passagem de som, observações...">${eventEsc(source.description)}</textarea></div>
     <div class="form-group"><label class="form-label">Repertório compartilhado — arraste para ordenar</label><div id="pl-selected"></div></div>
     <div class="form-group"><label class="form-label">Adicionar músicas</label><input class="form-input" id="pl-search" placeholder="Buscar música..."><div id="pl-all" style="max-height:190px;overflow-y:auto;margin-top:7px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);"></div></div>
     <div id="pl-count" style="font-size:10px;color:var(--text2);margin-bottom:12px;"></div>
-    <div class="form-group"><label class="form-label">Membros, funções e líder</label><div class="event-permission-note">Somente o líder marcado poderá alterar músicas, ordem e informações oficiais. Seu ID para convites é <strong>${eventEsc(appCurrentUser.id)}</strong>. Para sincronizar um integrante, use o ID exibido no aplicativo dele; sem o ID, a escala ficará disponível apenas localmente.</div><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome"><select class="form-input" id="event-member-role">${roleOptions}</select><input class="form-input" id="event-member-id" placeholder="ID do integrante (opcional)"><button type="button" class="btn btn-outline" onclick="eventAddMember()">Adicionar</button></div></div>
+    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome"><select class="form-input" id="event-member-role">${roleOptions}</select><input class="form-input" id="event-member-id" placeholder="ID do integrante (opcional)"><button type="button" class="btn btn-outline" onclick="eventAddMember()">Adicionar</button></div></div>
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
   const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));selectedLeaderId=eventMembers.some(member=>String(member.id)===String(appCurrentUser.id))?appCurrentUser.id:eventMembers[0]&&eventMembers[0].id||'';renderMembers();}});
-  currentLocationAutocomplete=new LocationAutocomplete({input:document.getElementById('fs-location'),list:document.getElementById('fs-location-results'),status:document.getElementById('fs-location-status'),preview:document.getElementById('fs-location-preview'),initialLocation:selectedEventLocation,onSelect:value=>{selectedEventLocation=value;}});
   window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){selectedIds.push(id);renderSelected();renderAvailable();}};
   window.plRemove=id=>{selectedIds=selectedIds.filter(value=>String(value)!==String(id));renderSelected();renderAvailable();};
   let dragId=null;
@@ -1861,7 +1856,7 @@ function openAddSetlist(prefill){
     const previous=findEvent(editingId);
     const previousItems=previous?previous.repertoire:[];
     const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
-    let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,eventLocation:selectedEventLocation,location:document.getElementById('fs-location').value.trim(),description:document.getElementById('fs-description').value.trim(),repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
+    let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
     candidate=eventModel.withSharedChange(candidate,appCurrentUser,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
     let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,appCurrentUser);}catch(error){showToast('🔒 '+error.message);return;}
     try{candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
@@ -2052,7 +2047,7 @@ eventChat.subscribe(eventId=>{
   if(document.getElementById('view-sd').style.display==='flex'&&eventId&&String(eventId)===String(currentSdId)) openSD(currentSdId);
 });
 renderMusicas();
-document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
 renderAccountButton();renderBandToolbar();
 if(appIdentity.accessToken)setTimeout(()=>syncEventsNow(true),0);
 appAuth.subscribe(async state=>{
@@ -2064,7 +2059,7 @@ appAuth.subscribe(async state=>{
     appIdentity=await eventCollaboration.ensureRegistered(previousUser);
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
     setlists=setlists.map(event=>eventModel.migrateCurrentUser(event,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]));eventRepository.save(setlists);
-    document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+    if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
     renderAccountButton();renderSetlists();await syncEventsNow(true);showToast('✅ Conta conectada e dados locais vinculados');
   }catch(error){showToast('⚠️ Não foi possível concluir a vinculação: '+error.message);}finally{authLinking=false;}
 });
