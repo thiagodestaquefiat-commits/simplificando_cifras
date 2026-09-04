@@ -56,7 +56,10 @@ def ensure_additive_collaboration_columns() -> None:
             existing = {column["name"] for column in inspector.get_columns(table_name)}
             for column_name, definition in definitions.items():
                 if column_name not in existing:
-                    connection.execute(text(f'ALTER TABLE "{table_name}" ADD COLUMN "{column_name}" {definition}'))
+                    quote = connection.dialect.identifier_preparer.quote_identifier
+                    if connection.dialect.name == "mysql" and definition.startswith("TEXT "):
+                        definition = definition.replace("DEFAULT ''", "DEFAULT ('')")
+                    connection.execute(text(f'ALTER TABLE {quote(table_name)} ADD COLUMN {quote(column_name)} {definition}'))
 
 
 @event.listens_for(Engine, "connect")

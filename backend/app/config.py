@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
 
 
 load_dotenv()
@@ -13,6 +14,11 @@ def _csv(name: str, default: str) -> list[str]:
 
 
 def _database_uri(value: str) -> str:
+    if value.startswith(("mysql://", "mysql+pymysql://")):
+        url = make_url(value).set(drivername="mysql+pymysql")
+        if "charset" not in url.query:
+            url = url.update_query_dict({"charset": "utf8mb4"})
+        return url.render_as_string(hide_password=False)
     if value.startswith("postgres://"):
         return value.replace("postgres://", "postgresql+psycopg://", 1)
     if value.startswith("postgresql://"):
