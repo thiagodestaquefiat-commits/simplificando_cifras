@@ -36,3 +36,13 @@ assert.equal(bounded.autoScrollSpeed, 24);
 assert.equal(bounded.theme, 'dark');
 
 console.log('stage-preferences.test.js: OK');
+assert.equal(preferences.formatScrollSpeed(preferences.load('new-user').autoScrollSpeed),'1,00x');
+assert.equal(preferences.normalizeScrollSpeed(140),120);
+assert.equal(preferences.normalizeScrollSpeed(38),39);
+for(let speed=24;speed<=120;speed+=3){
+  assert.match(preferences.formatScrollSpeed(speed),/^\d,\d{2}x$/);
+  assert.equal(preferences.normalizeScrollSpeed(speed),speed);
+}
+preferences.save('speed-user',{autoScrollSpeed:39});
+assert.equal(preferences.formatScrollSpeed(preferences.load('speed-user').autoScrollSpeed),'0,65x');
+assert.equal(preferences.load('another-user').autoScrollSpeed,60);

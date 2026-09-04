@@ -352,6 +352,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .stage-heading{cursor:pointer}
 .stage-capo-controls{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--stage-muted)}
 .stage-capo-controls output{color:var(--stage-text);font-weight:800}.stage-capo-controls .stage-control{height:44px;min-width:44px;font-size:14px}.stage-capo-controls button:disabled{opacity:.35;cursor:default}
+.wa-block .letra-linha{color:#fff}.wa-block .chord-line{color:var(--chord-color)}
+.scroll-speed-controls{display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--text2)}.scroll-speed-controls button{min-width:44px;min-height:44px;border:1px solid var(--border);border-radius:9px;background:var(--bg2);color:var(--text);font-family:inherit;font-size:17px;font-weight:700;cursor:pointer}.scroll-speed-controls button:disabled{opacity:.35;cursor:default}.scroll-speed-value{min-width:48px;text-align:center;font-variant-numeric:tabular-nums;color:var(--text);font-weight:700}.stage-scroll-speed{grid-column:1/-1}.stage-scroll-speed button{background:transparent}.stage-toolbar:has(.scroll-speed-controls){flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -422,6 +424,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <button type="button" class="stage-control" id="stage-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button>
         <button type="button" class="stage-control" onclick="selectCapo(0)" aria-label="Sem capotraste">Sem</button>
       </div>
+      <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade do auto-scroll no palco">
+        <span>Auto Scroll</span>
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
+        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      </div>
     </header>
     <div class="stage-next-preview" id="stage-next-preview"><span>Próxima</span><strong id="stage-next-title">Fim do repertório</strong><span id="stage-next-key"></span></div>
     <section class="youtube-player-shell" id="youtube-song-player" aria-label="Player do YouTube da música"></section>
@@ -477,10 +485,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     <div class="stage-toolbar">
       <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()">Modo Palco</button>
       <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
+      <div class="scroll-speed-controls" role="group" aria-label="Velocidade do auto-scroll">
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
+        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      </div>
     </div>
     <div class="stage-toolbar" aria-label="Controles de apresentação">
       <button class="stage-btn" id="btn-previous-song" onclick="navigateSong(-1)" title="Música anterior" hidden>← Anterior</button>
-      <button class="stage-btn stage-only-control" id="btn-speed" onclick="cycleScrollSpeed()" title="Velocidade do auto-scroll">Vel. 1x</button>
       <button class="stage-btn stage-only-control" id="btn-font" onclick="cycleStageFont()" title="Tamanho das cifras">Fonte M</button>
       <button class="stage-btn" id="btn-next-song" onclick="navigateSong(1)" title="Próxima música" hidden>Próxima →</button>
     </div>
@@ -496,7 +508,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
       <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar auto-scroll">▶</button>
       <button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">♯</button>
       <button type="button" class="stage-control" onclick="adjustStageFont(2)" aria-label="Aumentar fonte">A+</button>
-      <button type="button" class="stage-control stage-speed-control" data-stage-wide onclick="cycleScrollSpeed()" aria-label="Alterar velocidade do auto-scroll">1×</button>
       <button type="button" class="stage-control" data-stage-wide onclick="openStageQuickPanel()" aria-label="Abrir repertório">☷</button>
       <button type="button" class="stage-control" onclick="exitStageMode()" aria-label="Sair do Modo Palco">×</button>
     </nav>
@@ -558,7 +569,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
-<script src="js/stage-preferences.js?v=1"></script>
+<script src="js/stage-preferences.js?v=2"></script>
 <script src="js/stage-offline.js?v=1"></script>
 <script src="js/editor/song-format.js?v=6"></script>
 <script src="js/editor/song-editor-history.js"></script>
@@ -1155,6 +1166,7 @@ function renderStageStructure(summary,totalShift){
 
 function renderDetail(){
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId); if(!m) return;
+  updateScrollSpeedControls();
   document.getElementById('stage-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('stage-capo-minus').disabled=selectedCapo===0;
@@ -1240,6 +1252,7 @@ function openDetail(id,options={}){
   const capoNum=summary.capo;
   storedCapo=capoNum;
   selectedCapo=capoNum;
+  scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -1373,11 +1386,18 @@ function stopAutoScroll(){
   if(scrollTimer!==null){cancelAnimationFrame(scrollTimer);scrollTimer=null;}stageScrollRemainder=0;
   const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar auto-scroll');}
 }
-function adjustStageScrollSpeed(delta){scrollSpeed=Math.max(24,Math.min(140,scrollSpeed+delta));if(activeStagePreferences){activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});}showToast(`Auto-scroll: ${scrollSpeed}`);revealStageControls();}
+function updateScrollSpeedControls(){
+  document.querySelectorAll('.scroll-speed-value').forEach(output=>output.textContent=stagePreferences.formatScrollSpeed(scrollSpeed));
+  document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=24:scrollSpeed>=120);
+}
+function adjustStageScrollSpeed(delta){
+  scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
+  const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
+  updateScrollSpeedControls();revealStageControls();
+}
 function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});document.getElementById('view-detail').scrollTop=0;if(stageMode&&activeStagePreferences?.autoScroll)startAutoScroll();}
 
-const stageSpeeds=[36,60,96];let stageSpeedIndex=1;
-function cycleScrollSpeed(){stageSpeedIndex=(stageSpeedIndex+1)%stageSpeeds.length;scrollSpeed=stageSpeeds[stageSpeedIndex];document.getElementById('btn-speed').textContent='Vel. '+['0.7x','1x','1.5x'][stageSpeedIndex];const stageSpeedButton=document.querySelector('.stage-speed-control');if(stageSpeedButton)stageSpeedButton.textContent=['0.7×','1×','1.5×'][stageSpeedIndex];if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,autoScrollSpeed:scrollSpeed});if(scrollTimer!==null){stopAutoScroll();startAutoScroll();}}
 const stageFontSizes=[22,28,34];let stageFontIndex=1;
 function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});return normalized;}
 function adjustStageFont(delta){const size=applyStageFont((activeStagePreferences?.fontSize||28)+delta);activeStagePreferences={...activeStagePreferences,fontSize:size};showToast(`Fonte: ${size}px`);revealStageControls();}

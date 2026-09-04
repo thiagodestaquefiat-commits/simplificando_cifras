@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v77-youtube/);
+assert.match(serviceWorker, /simplificando-cifras-v78-autoscroll/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=3/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
@@ -47,7 +47,7 @@ for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "y
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=1`));
 }
 assert.doesNotMatch(indexHtml, /js\/spotify-(?:config|auth|api|song-linker|player|player-ui|ui)\.js/);
-assert.match(serviceWorker, /js\/stage-preferences\.js\?v=1/);
+assert.match(serviceWorker, /js\/stage-preferences\.js\?v=2/);
 assert.match(serviceWorker, /js\/stage-offline\.js\?v=1/);
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
 assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js/);
