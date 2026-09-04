@@ -139,15 +139,10 @@
   async function ensureRegistered(fallback) {
     let identity = readIdentity() || ensureLocalIdentity(fallback);
     if (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken()) {
-      const legacyToken = identity.accessToken;
-      if (legacyToken && identity.status !== "supabase") {
-        await request("/identity/claim", { method: "POST", body: JSON.stringify({ legacyToken }) });
-      }
       const user = await request("/me", { method: "GET" });
-      identity = { ...identity, user: { ...identity.user, ...user }, accessToken: null, status: "supabase", legacyUserIds: [...new Set([...(identity.legacyUserIds || []), identity.user.id].filter(Boolean))] };
-      global.storage.set(IDENTITY_KEY, identity);
-      global.storage.set("sc_current_user_v1", identity.user);
-      return identity;
+      // Authentication is not consent to transfer legacy ownership. Keep the
+      // device identity untouched; use the authenticated identity only in memory.
+      return { user, accessToken: null, status: "supabase", legacyUserIds: [] };
     }
     if (identity.accessToken) return identity;
     const response = await request("/users", {

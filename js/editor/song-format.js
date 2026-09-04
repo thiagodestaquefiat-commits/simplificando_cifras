@@ -67,7 +67,7 @@
   }
 
   function chordLine(value) {
-    const tokens = String(value || "").trim().split(/\s+/).filter(Boolean);
+    const tokens = repeatFromText(value).text.trim().split(/\s+/).filter(Boolean);
     return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token));
   }
 
@@ -172,9 +172,9 @@
   }
 
   function repeatFromText(value) {
-    const match = String(value || "").match(/\s*\((\d{1,2})x\)\s*$/i);
+    const match = String(value || "").match(/(?:\s*\((\d{1,2})x\)|(?:\s+|^)(\d{1,2})x)\s*$/i);
     if (!match) return { text: String(value || "").trim(), repeticoes: null };
-    const repeticoes = Number(match[1]);
+    const repeticoes = Number(match[1] || match[2]);
     return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
   }
 
@@ -283,5 +283,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);

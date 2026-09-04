@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v79-stage-header";
+const CACHE_NAME = "simplificando-cifras-v80-classification";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./js/song-repository.js",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
-  "./js/event-collaboration-client.js?v=3",
+  "./js/event-collaboration-client.js?v=4",
   "./js/app-auth.js?v=7",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
@@ -27,7 +27,7 @@ const ASSETS = [
   "./js/navigation-context.js",
   "./js/stage-preferences.js?v=2",
   "./js/stage-offline.js?v=1",
-  "./js/editor/song-format.js?v=6",
+  "./js/editor/song-format.js?v=7",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",
