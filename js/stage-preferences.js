@@ -95,7 +95,7 @@
       contentMode: CONTENT_MODES.includes(source.contentMode) ? source.contentMode : BASE.contentMode,
       theme: THEMES.includes(source.theme) ? source.theme : BASE.theme,
       controlsMode: CONTROLS_MODES.includes(source.controlsMode) ? source.controlsMode : BASE.controlsMode,
-      autoScrollSpeed: clampNumber(source.autoScrollSpeed, 24, 140, BASE.autoScrollSpeed),
+      autoScrollSpeed: normalizeScrollSpeed(source.autoScrollSpeed),
       fontSize: clampNumber(source.fontSize, 18, 48, BASE.fontSize),
       showPrevious: source.showPrevious !== false,
       showNext: source.showNext !== false,
@@ -108,6 +108,16 @@
       wakeLock: source.wakeLock !== false,
       editLock: source.editLock !== false
     };
+  }
+
+  // Reuse pixels/second: 60 px/s = 1.00x; each 0.05x step = 3 px/s.
+  function normalizeScrollSpeed(value) {
+    return Math.round(clampNumber(value, 24, 120, BASE.autoScrollSpeed) / 3) * 3;
+  }
+
+  function formatScrollSpeed(value) {
+    const percent = normalizeScrollSpeed(value) / 3 * 5;
+    return `${Math.floor(percent / 100)},${String(percent % 100).padStart(2, '0')}x`;
   }
 
   function defaultsFor(role) {
@@ -188,6 +198,8 @@
     detectPreset,
     defaultsFor,
     normalize,
+    normalizeScrollSpeed,
+    formatScrollSpeed,
     load,
     save,
     listProfiles,

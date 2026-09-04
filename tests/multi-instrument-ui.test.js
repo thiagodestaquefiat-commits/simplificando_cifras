@@ -44,7 +44,7 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.getByText("Liberta-me de mim", { exact: true }).click();
-    assert.equal(await page.locator("#btn-speed").isVisible(), false);
+    assert.equal(await page.getByRole('group',{name:'Velocidade do auto-scroll',exact:true}).isVisible(), true);
     assert.equal(await page.locator("#btn-font").isVisible(), false);
     assert.equal(await page.locator("#btn-palco").textContent(), "Modo Palco");
     assert.doesNotMatch(await page.locator("#btn-palco").textContent(), /🎭/);
@@ -76,16 +76,16 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.equal(await page.locator(".chord-card").first().getAttribute("data-instrument"), "viola-caipira-cebolao-e");
 
-    const savedSpeed=await page.locator("#btn-speed").textContent();
+    const savedSpeed=await page.locator('.scroll-speed-value').last().textContent();
     const savedFont=await page.locator("#btn-font").textContent();
     await page.locator("#btn-palco").click();
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
-    assert.equal(await page.locator(".stage-floating-controls").isVisible(), true);
+    assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
     assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
-    assert.equal(await page.locator("#btn-speed").isVisible(), false);
+    assert.equal(await page.getByRole('group',{name:'Velocidade do auto-scroll',exact:true}).isVisible(), true);
     assert.equal(await page.locator("#btn-font").isVisible(), false);
-    assert.equal(await page.locator("#btn-speed").textContent(), savedSpeed);
+    assert.equal(await page.locator('.scroll-speed-value').last().textContent(), savedSpeed);
     assert.equal(await page.locator("#btn-font").textContent(), savedFont);
 
     await page.evaluate(() => {
@@ -94,7 +94,7 @@ const server = http.createServer((request, response) => {
     });
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.equal(await page.locator(".chord-card").first().getAttribute("data-instrument"), "guitar");
-    assert.equal(await page.locator(".letra-linha").first().evaluate((element) => getComputedStyle(element).color), "rgb(248, 250, 252)");
+    assert.equal(await page.locator(".letra-linha").first().evaluate((element) => getComputedStyle(element).color), "rgb(255, 255, 255)");
     assert.equal(errors.length, 0, errors.join(" | "));
     console.log("multi-instrument-ui.test.js: OK (5 instrumentos, mobile, transposição e música futura)");
   } finally {
