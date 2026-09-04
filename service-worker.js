@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v78-autoscroll";
+const CACHE_NAME = "simplificando-cifras-v79-stage-header";
 const ASSETS = [
   "./",
   "./index.html",

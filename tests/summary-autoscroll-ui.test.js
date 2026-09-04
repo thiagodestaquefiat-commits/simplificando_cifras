@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
   const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
   let reference;
   try{
-    for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1366,height:768}]){
+    for(const viewport of [{width:360,height:800},{width:390,height:844},{width:412,height:915},{width:844,height:390},{width:768,height:1024},{width:1366,height:768}]){
       const context=await browser.newContext({viewport});
       await context.addInitScript(()=>{
         let time=1000,next=0;const frames=new Map();
@@ -64,6 +64,23 @@ const server=http.createServer((req,res)=>{
       for(let i=0;i<5;i++)await minus(stage).click();
       assert.equal(await value(stage),'0,40x');assert.equal(await minus(stage).isEnabled(),false);
       await page.evaluate(()=>adjustStageScrollSpeed(-1));assert.equal(await value(stage),'0,40x');
+      await page.evaluate(()=>document.getElementById('view-detail').scrollTop=0);
+      const header=page.locator('#stage-performance-header'),headerBefore=await header.boundingBox();
+      const score=await page.locator('#detail-content').boundingBox();
+      assert.ok(score.y>=headerBefore.y+headerBefore.height,'score starts below the header');
+      assert.equal(await page.locator('.stage-floating-controls').count(),0);
+      assert.ok(await page.locator('#view-detail').evaluate(el=>el.scrollWidth<=el.clientWidth),'no horizontal overflow');
+      for(const button of await header.locator('button').all()){
+        const box=await button.boundingBox();if(!box)continue;
+        assert.ok(box.x>=0&&box.x+box.width<=viewport.width,'header buttons fit viewport');
+        assert.ok(box.height>=44&&box.width>=44,'touch target');
+      }
+      const originalKey=await page.locator('#stage-key').innerText();
+      await header.getByRole('button',{name:'Subir o tom',exact:true}).click();
+      assert.notEqual(await page.locator('#stage-key').innerText(),originalKey);
+      await header.getByRole('button',{name:'Descer o tom',exact:true}).click();
+      assert.equal(await page.locator('#stage-key').innerText(),originalKey);
+      if(process.env.SCREENSHOT_DIR){fs.mkdirSync(process.env.SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.SCREENSHOT_DIR,`stage-${viewport.width}x${viewport.height}.png`)});}
       await page.evaluate(()=>{document.getElementById('view-detail').scrollTop=400;});
       await page.locator('#stage-scroll-toggle').click();
       const before=await page.evaluate(()=>document.getElementById('view-detail').scrollTop);
@@ -77,6 +94,8 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.evaluate(()=>document.getElementById('view-detail').scrollTop),before+2);
       await page.evaluate(()=>advanceScroll(100));
       assert.equal(await page.evaluate(()=>document.getElementById('view-detail').scrollTop),before+14);
+      assert.deepEqual(await header.boundingBox(),headerBefore,'header stays still during scroll');
+      assert.ok((await page.locator('#view-detail').boundingBox()).y>=headerBefore.height,'scroll viewport is below header');
       await page.locator('#stage-scroll-toggle').click();assert.equal(await page.evaluate(()=>scrollTimer),null);
       const bounds=await stage.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=viewport.width);
       assert.ok((await plus(stage).boundingBox()).height>=44);
@@ -86,6 +105,6 @@ const server=http.createServer((req,res)=>{
       assert.equal(await value(normal),'2,00x');
       assert.deepEqual(errors,[]);await context.close();
     }
-    console.log('summary-autoscroll-ui.test.js: OK (cores, passos, limites, persistência, scroll real e capo em 3 viewports)');
+    console.log('summary-autoscroll-ui.test.js: OK (header fixo, sem sobreposição, cores, velocidade, transposição e capo em 6 viewports)');
   }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -80,7 +80,7 @@ const server = http.createServer((request, response) => {
     const savedFont=await page.locator("#btn-font").textContent();
     await page.locator("#btn-palco").click();
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
-    assert.equal(await page.locator(".stage-floating-controls").isVisible(), true);
+    assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
     assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     assert.equal(await page.getByRole('group',{name:'Velocidade do auto-scroll',exact:true}).isVisible(), true);
