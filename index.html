@@ -2043,7 +2043,9 @@ eventChat.subscribe(eventId=>{
 renderMusicas();
 if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
 renderAccountButton();renderBandToolbar();
-// Legacy ownership is never claimed or synchronized automatically on startup.
+// Legacy ownership is never claimed automatically. After Supabase restores the
+// session, refresh the events owned by that account so permissions use the
+// backend identity instead of a stale local copy.
 appAuth.subscribe(async state=>{
   currentAuthState=state;renderAccountButton();
   if(!state.authenticated){
@@ -2059,6 +2061,8 @@ appAuth.subscribe(async state=>{
     if(!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+    const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
+    setlists=eventRepository.mergeRemote(setlists,remoteEvents);eventRepository.save(setlists);
     renderAccountButton();renderSetlists();renderBandToolbar();
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });

@@ -14,6 +14,8 @@ global.fetch = async (url, options) => {
   if (url.endsWith("/users")) { registeredUserId = JSON.parse(options.body).id; return response(201, { user: { id: registeredUserId, name: "Você" }, accessToken: "secret-token" }); }
   if (url.endsWith("/events") && options.method === "POST") return response(201, remoteEvent());
   if (url.endsWith("/events") && options.method === "GET") return response(200, { events: [remoteEvent()] });
+  if (url.endsWith("/events/event-1") && options.method === "PUT") return response(200, { ...remoteEvent(), ...JSON.parse(options.body), remoteVersion: 2 });
+  if (url.endsWith("/events/event-1") && options.method === "DELETE") return response(204, null);
   if (url.includes("/repertoire/item-1/personal") && ["PUT", "DELETE"].includes(options.method)) return response(200, remoteEvent());
   throw new Error("Rota inesperada: " + url);
 };
@@ -64,6 +66,11 @@ require("../js/event-collaboration-client.js");
   assert.equal(Object.keys(saved.repertoire[0].personalEdits).length, 1, "cliente recebe apenas o override do usuário autenticado");
   assert.equal(requests.at(-1).options.headers.Authorization, "Bearer secret-token");
   assert.equal((await window.eventCollaboration.listEvents(identity.user)).length, 1);
+  const updated = await window.eventCollaboration.saveSharedEvent({ ...saved, title: "Culto atualizado" }, identity.user);
+  assert.equal(updated.title, "Culto atualizado");
+  assert.equal(requests.at(-1).options.method, "PUT");
+  assert.equal(await window.eventCollaboration.deleteEvent(updated, identity.user), true);
+  assert.equal(requests.at(-1).options.method, "DELETE");
   window.eventCollaboration.queuePersonalOperation("event-1", "item-1", "upsert", { key: "B", notes: "Offline" });
   window.eventCollaboration.queuePersonalOperation("event-1", "item-1", "delete");
   assert.equal(window.eventCollaboration.readPersonalQueue().length, 1, "a operação mais recente substitui a anterior");

@@ -20,6 +20,7 @@ const html=fs.readFileSync('index.html','utf8');
 const memory=new Map();
 global.storage={get:(k,f)=>memory.has(k)?structuredClone(memory.get(k)):f,set:(k,v)=>{memory.set(k,structuredClone(v));return true;}};
 require('../js/event-model.js');
+require('../js/event-repository.js');
 require('../js/event-collaboration-client.js');
 const library=Array.from({length:136},(_,i)=>({id:`local-${i}`,title:`Local ${i}`,blocos:[{l:'Verso',c:'F C 3x'}]}));
 storage.set('sc_songs_v1',library);storage.set('cifras_musicas_v1',library);
@@ -33,18 +34,23 @@ global.apiConfig={collaborationEndpoint:p=>'https://test.invalid'+p};
 global.fetch=async(url,options)=>{
  calls.push({url,method:options.method});
  assert.ok(!url.includes('claim'),'no automatic ownership transfer');
+ if(url.endsWith('/events'))return {ok:true,status:200,json:async()=>({events:[{id:'event-owned',title:'Evento remoto',leaderId:userId,remoteVersion:2,syncState:'synced',members:[{id:userId,name:'Google',isLeader:true}]}]})};
  return {ok:true,status:200,json:async()=>({id:userId,name:'Google'})};
 };
 (async()=>{
  let subscriber;
- const scope={eventCollaboration,appIdentity:identity,appCurrentUser:identity.user,legacyCurrentUser:identity.user,appBands:[],authLinking:false,currentAuthState:{},
+ const localCopy=eventModel.create({id:'event-owned',title:'Cópia antiga',leaderId:'old-local',remoteVersion:1,syncState:'synced',members:[{id:'old-local',isLeader:true}]});
+ const scope={eventCollaboration,eventRepository,setlists:[localCopy],appIdentity:identity,appCurrentUser:identity.user,legacyCurrentUser:identity.user,appBands:[],authLinking:false,currentAuthState:{},
   renderAccountButton(){},renderSetlists(){},renderBandToolbar(){},document:{getElementById:()=>null},showToast(){throw Error('Unexpected toast');},
   appAuth:{subscribe:fn=>subscriber=fn},Object};
  vm.runInNewContext(html.slice(html.indexOf('appAuth.subscribe(async state=>{'),html.indexOf('appAuth.initialize();')),scope);
  for(let n=0;n<3;n++){
   await subscriber({authenticated:true,user:{id:userId}});
   assert.equal(scope.appCurrentUser.id,userId);
-  assert.equal(JSON.stringify([...memory]),original,'login never writes local library or identity');
+  assert.deepEqual(storage.get('sc_songs_v1'),library,'login never writes local library');
+  assert.deepEqual(storage.get('cifras_musicas_v1'),library,'login never writes legacy library');
+  assert.deepEqual(storage.get(eventCollaboration.identityKey),identity,'login never rewrites local identity');
+  assert.equal(eventModel.canEditShared(scope.setlists[0],userId),true,'remote owner regains edit and delete controls');
   token=null;await subscriber({authenticated:false,user:null});
   assert.equal(scope.appCurrentUser.id,'old-local');
   token='test-only-session';userId=n%2?'google-a':'google-b';
@@ -53,7 +59,8 @@ global.fetch=async(url,options)=>{
  assert.equal(new Set(storage.get('sc_songs_v1').map(s=>s.id)).size,136);
  const localEvent=eventModel.create({id:'event-local',leaderId:'old-local',members:[{id:'old-local',isLeader:true}]});
  assert.equal(eventModel.isLeader(localEvent,'google-a'),false);
- assert.ok(calls.every(call=>call.method==='GET'&&call.url.endsWith('/me')));
+ assert.ok(calls.every(call=>call.method==='GET'&&(call.url.endsWith('/me')||call.url.endsWith('/events'))));
+ assert.equal(calls.filter(call=>call.url.endsWith('/events')).length,3,'authenticated events are refreshed after each login');
  assert.ok(!html.includes('await syncEventsNow(true);showToast'));
  console.log('global-classification-identity.test.js: OK (classification, repeats, 136 songs unchanged, login/logout, no claim or ownership transfer)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
