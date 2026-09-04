@@ -13,6 +13,10 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
  const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
  try{for(const viewport of [{width:390,height:844},{width:1366,height:768}]){
   const context=await browser.newContext({viewport,serviceWorkers:'block'}),page=await context.newPage(),requests=[];
+  // Netlify's review drawer is an external overlay, not part of the application.
+  if(process.env.TEST_BASE_URL)await context.addInitScript(()=>{
+    new MutationObserver(()=>document.querySelectorAll('[data-netlify-deploy-id]').forEach(node=>node.remove())).observe(document,{childList:true,subtree:true});
+  });
   await page.addInitScript(()=>{const auth={initialize:async()=>({authenticated:true}),subscribe:()=>()=>{},getState:()=>({authenticated:true}),getAccessToken:()=> 'test-token'};Object.defineProperty(window,'appAuth',{get:()=>auth,set:()=>{}});});
   await page.route('**/api/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{"enabled":false}'}));
   await page.route('**/api/resumo-harmonico',r=>{requests.push(r.request().postData());return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result)});});
