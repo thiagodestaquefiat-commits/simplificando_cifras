@@ -14,14 +14,14 @@ from app.services.harmonic_normalizer import (
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("B4", "Bsus4"),
-        ("A4", "Asus4"),
+        ("B4", "B4"),
+        ("A4", "A4"),
         ("B2", "B2"),
         ("Db", "Db"),
         ("Gb/Bb", "Gb/Bb"),
         ("F#m7(11)", "F#m7(11)"),
         ("D/F#", "D/F#"),
-        ("C7M", "Cmaj7"),
+        ("C7M", "C7M"),
     ],
 )
 def test_normalize_chord(source, expected):

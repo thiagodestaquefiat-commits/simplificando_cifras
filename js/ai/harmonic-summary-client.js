@@ -83,7 +83,7 @@
       return {
         type: "custom",
         label: clean(trecho.secao || "", 120),
-        hideLabel: !trecho.secao,
+        hideLabel: Boolean(trecho.fraseGuia) || !trecho.secao,
         lines: [{ lyrics: clean(trecho.fraseGuia, 80), repeticoes: trecho.repeticoes, chords }]
       };
     });

@@ -581,7 +581,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=2"></script>
 <script src="js/stage-offline.js?v=1"></script>
-<script src="js/editor/song-format.js?v=7"></script>
+<script src="js/editor/song-format.js?v=8"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -595,7 +595,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=4"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=6"></script>
+<script src="js/ai/harmonic-summary-client.js?v=7"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=3"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -1186,7 +1186,6 @@ function renderDetail(){
   const totalShift=currentSemitones+storedCapo-selectedCapo;
   const hasFull=Boolean(m.fullChordSheet?.content);
   if(!hasFull) currentSongView='summary';
-  if(stageMode&&hasFull&&activeStagePreferences?.contentMode!=='structure')currentSongView='full';
   const switchHtml=hasFull?`<div class="song-view-switch" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button></div>`:'';
   const blocosHtml = summary.sections.map(section=>{
     const corpo=section.lines.map(line=>{
@@ -1195,7 +1194,7 @@ function renderDetail(){
       const chordHtml=chords?`<div class="chord-line">${eventEsc(shiftText(chords,totalShift))}${repeat}</div>`:'';
       const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
       const lyricHtml=lyricText?renderMusicalText(lyricText,totalShift):'';
-      return chordHtml+lyricHtml;
+      return lyricHtml+chordHtml;
     }).join('');
     const labelHtml=section.showLabel&&section.label?renderMusicalText(section.label,totalShift):'';
     return `<div class="wa-block">${corpo}${labelHtml}</div>`;
@@ -1239,7 +1238,7 @@ function openDetail(id,options={}){
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
-  currentSongView='summary';
+  if(!stageMode)currentSongView='summary';
   const summary=songFormat.harmonicSummary(m);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
   document.getElementById('detail-title').textContent=summary.title;

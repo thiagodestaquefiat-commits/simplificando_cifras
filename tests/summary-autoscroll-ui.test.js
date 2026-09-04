@@ -23,7 +23,7 @@ const server=http.createServer((req,res)=>{
         window.requestAnimationFrame=fn=>{frames.set(++next,fn);return next;};
         window.cancelAnimationFrame=id=>frames.delete(id);
         window.advanceScroll=ms=>{time+=ms;const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn(time));};
-        localStorage.setItem('cifras_musicas_v1',JSON.stringify([{id:'speed-test',title:'Resumo de teste',key:'E',capo:'',blocos:Array.from({length:50},(_,i)=>({l:i?'Tudo o que tenho':'Precioso Jesus',c:'E  A  E  (2x)'}))}]));
+        localStorage.setItem('cifras_musicas_v1',JSON.stringify([{id:'speed-test',title:'Resumo de teste',key:'E',capo:'',blocos:Array.from({length:50},(_,i)=>({l:i?'Tudo o que tenho '+i:'Precioso Jesus',c:'E  A  E  (2x)'}))}]));
       });
       const page=await context.newPage(),errors=[];
       // The review-only Netlify toolbar is not part of the app and overlays stage controls.

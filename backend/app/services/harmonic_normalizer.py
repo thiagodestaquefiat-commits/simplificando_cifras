@@ -5,6 +5,7 @@ import unicodedata
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
+from .content_extractor import clean_musical_text, is_technical_line, TECHNICAL_BLOCK_RE, TECHNICAL_LABEL_RE
 
 
 FLAT_ROOTS = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
@@ -53,7 +54,7 @@ def _parse_chord(value: str) -> tuple[str, str]:
         "m7M": "mMaj7",
     }
     canonical_aliases = {**display_aliases, "2": "sus2"}
-    display_quality = display_aliases.get(quality, quality)
+    display_quality = quality
     canonical_quality = canonical_aliases.get(quality, quality)
     shown_bass = f"/{_shown_root(match.group('bass'))}" if match.group("bass") else ""
     canonical_bass = f"/{_canonical_root(match.group('bass'))}" if match.group("bass") else ""
@@ -133,6 +134,8 @@ def _guide_belongs_to_source(guide: str | None, section_name: str | None, sheet,
     folded_guide = _fold(guide)
     if not folded_guide:
         return True
+    if source_text is not None:
+        return guide in source_text
     candidates = _source_lyrics_by_section(sheet)
     if section_name:
         same_section = [lyrics for name, lyrics in candidates if name == section_name]
@@ -196,7 +199,9 @@ def _sheet_chords(sheet) -> list[str]:
 def _text_chords(source_text: str | None) -> list[str]:
     chords = []
     for token in re.findall(r"\S+", source_text or ""):
-        candidate = token.strip("[](){},;:|")
+        candidate = token.strip("[]{},;:|")
+        if candidate.startswith('(') and candidate.endswith(')'):
+            candidate = candidate[1:-1]
         try:
             chords.extend(split_chord_token(candidate))
         except ValueError:
@@ -271,7 +276,7 @@ def _local_explicit_repeat(source_text: str | None, trecho, repetitions: int) ->
     wanted = _canonical_sequence(trecho.acordes)
     guide = _fold(trecho.fraseGuia)
     section_name = _fold(normalize_section_name(trecho.secao))
-    marker = re.compile(rf"\(\s*{repetitions}\s*x\s*\)", re.IGNORECASE)
+    marker = re.compile(rf"(?<!\w)\(?\s*{repetitions}\s*x\s*\)?(?!\w)", re.IGNORECASE)
     for paragraph in re.split(r"\n\s*\n", source_text):
         if not marker.search(paragraph):
             continue
@@ -328,6 +333,8 @@ def _clean_trailing_diagram_sections(sheet) -> None:
 
 def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source_text: str | None = None) -> ResumoHarmonicoResponse:
     normalized = result.model_copy(deep=True)
+    if source_text is not None:
+        source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
     invalid = []
     derived_repetitions = set()
 
@@ -361,17 +368,38 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         )
 
     if normalized.fullChordSheet:
+        _clean_trailing_diagram_sections(normalized.fullChordSheet)
+        normalized.fullChordSheet.sections = [section for section in normalized.fullChordSheet.sections
+            if not TECHNICAL_LABEL_RE.fullmatch(section.nome or "")]
         for section in normalized.fullChordSheet.sections:
+            kept, technical = [], False
+            for line in section.linhas:
+                if TECHNICAL_BLOCK_RE.fullmatch(line.letra):
+                    technical = True
+                    continue
+                if is_technical_line(line.letra):
+                    continue
+                if technical and (not line.letra.strip() or _text_chords(line.letra) and
+                                  len(_text_chords(line.letra)) == len(line.letra.split())):
+                    continue
+                if line.letra.strip():
+                    technical = False
+                kept.append(line)
+            section.linhas = kept
             for line in section.linhas:
                 line.acordes, line_invalid = _normalize_chord_items(line.acordes)
                 invalid.extend(line_invalid)
         _clean_trailing_diagram_sections(normalized.fullChordSheet)
 
-    source_chords = _sheet_chords(normalized.fullChordSheet) + _text_chords(source_text)
-    if source_chords:
-        source_vocabulary = {canonicalize_chord(chord) for chord in source_chords}
+    source_chords = _text_chords(source_text) if source_text is not None else _sheet_chords(normalized.fullChordSheet)
+    if source_text is not None or source_chords:
+        source_vocabulary = set(source_chords)
+        if normalized.fullChordSheet and source_text is not None:
+            for section in normalized.fullChordSheet.sections:
+                for line in section.linhas:
+                    line.acordes = [item for item in line.acordes if item.acorde in source_vocabulary]
         for trecho in normalized.harmonicSummary.blocos:
-            trecho.acordes = [chord for chord in trecho.acordes if canonicalize_chord(chord) in source_vocabulary]
+            trecho.acordes = [chord for chord in trecho.acordes if chord in source_vocabulary]
         normalized.harmonicSummary.blocos = [item for item in normalized.harmonicSummary.blocos if item.acordes]
         if not normalized.harmonicSummary.blocos:
             raise ApiError("resultado_nao_confiavel", "Os acordes do resumo não pertencem à fonte.", 422)
@@ -381,15 +409,27 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         local_repetitions, next_cursor = _local_repeat_evidence(records, trecho, local_cursor)
         if trecho.repeticoes == 1:
             trecho.repeticoes = None
-        elif trecho.repeticoes and id(trecho) not in derived_repetitions:
-            locally_proven = local_repetitions == trecho.repeticoes
+        elif trecho.repeticoes and (source_text is not None or id(trecho) not in derived_repetitions):
+            locally_proven = source_text is None and local_repetitions == trecho.repeticoes
             explicitly_proven = _local_explicit_repeat(source_text, trecho, trecho.repeticoes)
+            if source_text is not None:
+                wanted = trecho.acordes * trecho.repeticoes
+                for paragraph in re.split(r"\n\s*\n", source_text):
+                    available = _text_chords(paragraph)
+                    if (not trecho.fraseGuia or trecho.fraseGuia in paragraph) and any(
+                        available[i:i + len(wanted)] == wanted for i in range(len(available) - len(wanted) + 1)
+                    ):
+                        locally_proven = True
             if not (locally_proven or explicitly_proven):
                 trecho.repeticoes = None
         if next_cursor is not None:
             local_cursor = next_cursor
 
     for trecho in normalized.harmonicSummary.blocos:
+        if trecho.fraseGuia:
+            trecho.fraseGuia = re.split(r"\s+/\s+(?:Verso|Refrão|Seção|Trecho)\b", trecho.fraseGuia, flags=re.I)[0]
+            if is_technical_line(trecho.fraseGuia):
+                trecho.fraseGuia = None
         if not _guide_belongs_to_source(trecho.fraseGuia, trecho.secao, normalized.fullChordSheet, source_text):
             trecho.fraseGuia = None
 
@@ -397,11 +437,11 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
     unique_blocks = []
     seen = set()
     for trecho in normalized.harmonicSummary.blocos:
-        identity = (tuple(trecho.acordes), trecho.repeticoes, _fold(trecho.fraseGuia), trecho.secao)
+        identity = (tuple(trecho.acordes), trecho.repeticoes, _fold(trecho.fraseGuia), None if trecho.fraseGuia else trecho.secao)
         if identity not in seen:
             unique_blocks.append(trecho)
             seen.add(identity)
-    normalized.harmonicSummary.blocos = unique_blocks[:12]
+    normalized.harmonicSummary.blocos = unique_blocks
 
     if invalid:
         normalized.observacoes.append(
