@@ -4,6 +4,14 @@ global.window = {};
 require("../js/song-model.js");
 
 const model = window.songModel;
+const privateSheet = model.create({ title: "Privada", fullChordSheet: { visibility: "public", source: "user_text", content: "C G\r\nLetra fornecida" } });
+assert.deepEqual(JSON.parse(JSON.stringify(privateSheet.fullChordSheet)), { visibility: "private", source: "user_text", content: "C G\nLetra fornecida", sections: [] });
+assert.deepEqual(JSON.parse(JSON.stringify(privateSheet.accessContext)), { scope: "personal", ownerId: null, teamId: null });
+
+const teamSong = model.create({ title: "Equipe", accessContext: { scope: "team", ownerId: "user-1", teamId: "team-7" } });
+assert.deepEqual(JSON.parse(JSON.stringify(teamSong.accessContext)), { scope: "team", ownerId: "user-1", teamId: "team-7" });
+const personalSong = model.create({ title: "Pessoal", accessContext: { scope: "personal", ownerId: "user-1", teamId: "ignored" } });
+assert.deepEqual(JSON.parse(JSON.stringify(personalSong.accessContext)), { scope: "personal", ownerId: "user-1", teamId: null });
 const now = "2026-08-14T12:00:00.000Z";
 
 const legacy = model.create({

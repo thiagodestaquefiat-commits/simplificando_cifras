@@ -45,6 +45,43 @@
     }));
   }
 
+  function normalizeFullChordSheet(value) {
+    if (!value || typeof value !== "object") return null;
+    const content = preserveText(value.content).replace(/\r\n?/g, "\n").trim();
+    if (!content) return null;
+    return {
+      visibility: "private",
+      source: value.source === "user_text" ? "user_text" : "user_upload",
+      content,
+      sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
+        nome: optionalText(section && section.nome),
+        linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
+          letra: preserveText(line && line.letra),
+          acordes: Array.isArray(line && line.acordes) ? line.acordes.map((item) => ({
+            acorde: cleanText(item && item.acorde).replace(/\s+/g, ""),
+            posicao: Math.max(0, Math.min(500, Number(item && item.posicao) || 0))
+          })).filter((item) => item.acorde) : []
+        })) : []
+      })) : []
+    };
+  }
+
+  function normalizeAccessContext(value) {
+    const context = value && typeof value === "object" ? value : {};
+    const scope = context.scope === "team" ? "team" : "personal";
+    return {
+      scope,
+      ownerId: optionalText(context.ownerId),
+      teamId: scope === "team" ? optionalText(context.teamId) : null
+    };
+  }
+
+  function normalizeSourceInfo(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const type = ["upload", "text", "online", "manual"].includes(source.type) ? source.type : "manual";
+    return { type, name: optionalText(source.name), url: optionalText(source.url) };
+  }
+
   function create(input, options) {
     const source = input || {};
     const settings = options || {};
@@ -70,6 +107,9 @@
       key: cleanText(source.key),
       capo: cleanText(source.capo),
       blocos: normalizeBlocks(source.blocos),
+      accessContext: normalizeAccessContext(source.accessContext),
+      sourceInfo: normalizeSourceInfo(source.sourceInfo),
+      fullChordSheet: normalizeFullChordSheet(source.fullChordSheet),
       createdAt: source.createdAt || now,
       updatedAt: source.updatedAt || source.createdAt || now
     };
@@ -129,6 +169,8 @@
   global.songModel = Object.freeze({
     create,
     normalizeCollection,
+    normalizeAccessContext,
+    normalizeSourceInfo,
     normalizeForIdentity,
     findDuplicate,
     enrich

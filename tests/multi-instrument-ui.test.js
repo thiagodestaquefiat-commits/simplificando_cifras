@@ -35,6 +35,7 @@ const server = http.createServer((request, response) => {
   const browser = await chromium.launch({ headless: true, executablePath });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
+  await page.route("**/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local", supabaseUrl: "", supabaseAnonKey: "" }) }));
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
@@ -78,9 +79,10 @@ const server = http.createServer((request, response) => {
     const savedSpeed=await page.locator("#btn-speed").textContent();
     const savedFont=await page.locator("#btn-font").textContent();
     await page.locator("#btn-palco").click();
-    assert.equal(await page.locator("#btn-speed").isVisible(), true);
-    assert.equal(await page.locator("#btn-font").isVisible(), true);
-    await page.locator("#btn-palco").click();
+    assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
+    assert.equal(await page.locator(".stage-floating-controls").isVisible(), true);
+    assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
+    await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     assert.equal(await page.locator("#btn-speed").isVisible(), false);
     assert.equal(await page.locator("#btn-font").isVisible(), false);
     assert.equal(await page.locator("#btn-speed").textContent(), savedSpeed);

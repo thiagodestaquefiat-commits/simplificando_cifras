@@ -27,6 +27,10 @@ const success = {
   const browser = await chromium.launch({ headless: true, executablePath });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    const fakeAuth = { initialize: async () => ({ authenticated: true }), subscribe: () => () => {}, getState: () => ({ authenticated: true }), getAccessToken: () => "test-access-token" };
+    Object.defineProperty(window, "appAuth", { configurable: false, get: () => fakeAuth, set: () => {} });
+  });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) errors.push(message.text()); });
@@ -35,19 +39,22 @@ const success = {
   try {
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
     assert.equal(await page.locator("#ai-summary-overlay").isVisible(), true);
-    await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
-    assert.match(await page.locator("[data-ai-status]").innerText(), /Informe o título/);
+    assert.equal(await page.getByRole("tab", { name: "Pesquisa", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Buscar fontes", exact: true }).count(), 0);
+    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Texto", "Arquivo"]);
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /Cole uma cifra/);
 
     let pendingRoute;
     let requestBody;
     await page.route(apiEndpoint, async (route) => { pendingRoute = route; requestBody = route.request().postDataJSON(); }, { times: 1 });
-    const researchForm = page.locator("[data-ai-form=pesquisa]");
-    await researchForm.getByLabel("Título da música").fill("Rugido do Leão");
-    await researchForm.getByLabel("Artista (opcional)").fill("Artista teste");
-    await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
-    assert.equal(await page.getByRole("button", { name: "Analisando…", exact: true }).isDisabled(), true);
+    const textForm = page.locator("[data-ai-form=texto]");
+    await textForm.getByLabel("Título (opcional)").fill("Rugido do Leão");
+    await textForm.getByLabel("Artista (opcional)").fill("Artista teste");
+    await textForm.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     assert.match(await page.locator("[data-ai-status]").innerText(), /Analisando a estrutura harmônica/);
-    assert.deepEqual(requestBody, { tipo: "pesquisa", titulo: "Rugido do Leão", artista: "Artista teste" });
+    assert.deepEqual(requestBody, { tipo: "texto", titulo: "Rugido do Leão", artista: "Artista teste", conteudo: "Dm Bb C G" });
     await pendingRoute.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) });
     await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
     assert.equal(await page.locator("#song-editor").count(), 0);
@@ -70,10 +77,10 @@ const success = {
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("cifras_musicas_v1") || "[]").some((song) => song.title === "Alteração cancelada")), false);
 
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
-    const secondResearch = page.locator("[data-ai-form=pesquisa]");
-    await secondResearch.getByLabel("Título da música").fill("Rugido do Leão");
+    const secondText = page.locator("[data-ai-form=texto]");
+    await secondText.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
     await page.route(apiEndpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) }), { times: 1 });
-    await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
+    await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
     await page.getByLabel("Título", { exact: true }).fill("Resumo revisado");
     await page.getByLabel("Artista", { exact: true }).fill("Artista revisado");
@@ -103,9 +110,9 @@ const success = {
 
     async function verifyError(status, code, expected) {
       await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
-      await page.locator("[data-ai-form=pesquisa]").getByLabel("Título da música").fill("Teste");
+      await page.locator("[data-ai-form=texto]").getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("C G Am F");
       await page.route(apiEndpoint, (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ erro: { codigo: code } }) }), { times: 1 });
-      await page.getByRole("button", { name: "Gerar resumo", exact: true }).click();
+      await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
       await page.waitForTimeout(80);
       assert.match(await page.locator("[data-ai-status]").innerText(), expected);
       await page.getByRole("button", { name: "Fechar", exact: true }).click();
@@ -113,6 +120,12 @@ const success = {
     await page.unroute(apiEndpoint);
     await verifyError(422, "resultado_nao_confiavel", /Não foi possível gerar um resumo harmônico confiável/);
     await verifyError(429, "limite_excedido", /limite de solicitações/);
+    await verifyError(504, "provedor_timeout", /demorou mais que o esperado/);
+    await verifyError(429, "provedor_rate_limit", /temporariamente ocupado/);
+    await verifyError(422, "provedor_rejeitou_requisicao", /processar este arquivo/);
+    await verifyError(502, "resposta_estruturada_invalida", /organizar esta cifra corretamente/);
+    await verifyError(502, "resposta_provedor_invalida", /resposta inválida/);
+    await verifyError(503, "provedor_indisponivel", /temporariamente indisponível/);
     await verifyError(500, "erro_interno", /servidor não conseguiu/);
 
     await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();

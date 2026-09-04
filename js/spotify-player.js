@@ -199,22 +199,28 @@
     return operationPromise;
   }
 
-  async function seek(position) {
-    await ensurePlayer();
+  async function performSeek(position) {
+    const readyPlayer = await ensurePlayer();
     if (!deviceId || !selectedSong || !selectedSong.spotifyUri) throw new Error("O dispositivo Spotify ainda não está pronto.");
     const target = Math.max(0, Math.min(Number(position) || 0, state.duration || Number.MAX_SAFE_INTEGER));
     const wasPlaying = state.paused === false;
     publish({ status: "loading", message: "Ajustando posição…" });
-    if (wasPlaying) {
-      // Reiniciar a mesma URI na nova posição força o navegador a reconstruir
-      // o fluxo de áudio protegido. O seek local do SDK pode manter o relógio
-      // avançando sem áudio em alguns ambientes.
-      await global.spotifyApi.startPlayback(deviceId, selectedSong.spotifyUri, target);
-      activeUri = selectedSong.spotifyUri;
-    } else {
-      await global.spotifyApi.seekPlayback(deviceId, target);
+    try {
+      // Ajusta o fluxo já aberto pelo SDK. Reiniciar a faixa pela Web API pode
+      // disputar com o player local e deixar o relógio avançando sem áudio.
+      if (typeof readyPlayer.seek === "function") await readyPlayer.seek(target);
+      else await global.spotifyApi.seekPlayback(deviceId, target);
+      publish({ status: "ready", position: target, paused: !wasPlaying, hasStarted: true, message: wasPlaying ? "Tocando agora" : "Pausado" });
+    } catch (error) {
+      publish({ status: "ready", paused: !wasPlaying, message: wasPlaying ? "Tocando agora" : "Pausado" });
+      throw error;
     }
-    publish({ status: "ready", position: target, paused: !wasPlaying, hasStarted: true, message: wasPlaying ? "Tocando agora" : "Pausado" });
+  }
+
+  function seek(position) {
+    if (operationPromise) return operationPromise;
+    operationPromise = performSeek(position).finally(() => { operationPromise = null; });
+    return operationPromise;
   }
 
   function skip(seconds) {

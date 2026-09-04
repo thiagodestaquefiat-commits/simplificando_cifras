@@ -30,18 +30,25 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v48/);
+assert.match(serviceWorker, /simplificando-cifras-v77-youtube/);
+assert.match(serviceWorker, /event-collaboration-client\.js\?v=3/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
+assert.match(indexHtml, /js\/editor\/song-format\.js\?v=6/);
+assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=6/);
+assert.match(indexHtml, /js\/song-model\.js\?v=4/);
+assert.match(serviceWorker, /js\/song-model\.js\?v=4/);
+assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=6/);
+assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=6/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/spotify-config\.js/);
-assert.match(serviceWorker, /js\/spotify-auth\.js/);
-assert.match(serviceWorker, /js\/spotify-api\.js/);
-assert.match(serviceWorker, /js\/spotify-song-linker\.js/);
-assert.match(serviceWorker, /js\/spotify-player\.js/);
-assert.match(serviceWorker, /js\/spotify-player-ui\.js/);
-assert.match(serviceWorker, /js\/spotify-ui\.js/);
+for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
+  assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=1`));
+  assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=1`));
+}
+assert.doesNotMatch(indexHtml, /js\/spotify-(?:config|auth|api|song-linker|player|player-ui|ui)\.js/);
+assert.match(serviceWorker, /js\/stage-preferences\.js\?v=1/);
+assert.match(serviceWorker, /js\/stage-offline\.js\?v=1/);
 assert.match(serviceWorker, /js\/instruments\/instrument-definitions\.js/);
 assert.match(serviceWorker, /js\/instruments\/multi-instrument-chord-library\.js/);
 assert.match(serviceWorker, /self\.skipWaiting\(\)/);
@@ -79,8 +86,11 @@ const server = http.createServer((request, response) => {
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+  page.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("[app-auth] authentication failed") && !message.text().includes("ERR_INTERNET_DISCONNECTED")) errors.push(message.text());
+  });
   await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
+  await page.route("http://127.0.0.1:5000/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local" }) }));
 
   try {
     const url = `http://127.0.0.1:${server.address().port}/`;

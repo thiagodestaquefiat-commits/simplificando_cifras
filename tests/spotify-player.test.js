@@ -7,6 +7,7 @@ class FakePlayer {
   constructor(options) {
     this.options = options;
     this.listeners = {};
+    this.paused = false;
     fakePlayer = this;
     actions.push("create:" + options.name);
   }
@@ -19,6 +20,7 @@ class FakePlayer {
   activateElement() { actions.push("activate"); return Promise.resolve(); }
   pause() {
     actions.push("pause");
+    this.paused = true;
     this.listeners.player_state_changed({
       paused: true,
       position: 1000,
@@ -30,9 +32,21 @@ class FakePlayer {
   }
   resume() {
     actions.push("resume");
+    this.paused = false;
     this.listeners.player_state_changed({
       paused: false,
       position: 1000,
+      duration: 180000,
+      repeat_mode: 0,
+      track_window: { current_track: { uri: "spotify:track:one" } }
+    });
+    return Promise.resolve();
+  }
+  seek(position) {
+    actions.push("sdk-seek:" + position);
+    this.listeners.player_state_changed({
+      paused: this.paused,
+      position,
       duration: 180000,
       repeat_mode: 0,
       track_window: { current_track: { uri: "spotify:track:one" } }
@@ -84,13 +98,15 @@ require("../js/spotify-player.js");
   assert.ok(actions.includes("start:browser-device:spotify:track:one:initial"));
 
   await window.spotifyPlayer.seek(15000);
-  assert.ok(actions.includes("start:browser-device:spotify:track:one:15000"));
+  assert.ok(actions.includes("sdk-seek:15000"));
+  assert.equal(actions.filter((action) => action.startsWith("start:")).length, 1, "seek não deve reiniciar a faixa pela Web API");
   await window.spotifyPlayer.toggle(song);
   assert.equal(actions.filter((action) => action === "pause").length, 1);
   await window.spotifyPlayer.seek(30000);
   await window.spotifyPlayer.toggle(song);
   await window.spotifyPlayer.setRepeat(true);
-  assert.ok(actions.includes("seek:browser-device:30000"));
+  assert.ok(actions.includes("sdk-seek:30000"));
+  assert.equal(actions.filter((action) => action.startsWith("seek:")).length, 0, "o SDK local deve controlar a posição");
   assert.equal(actions.filter((action) => action === "resume").length, 1);
   assert.ok(actions.includes("repeat:browser-device:true"));
   assert.equal(fakePlayer.options.enableMediaSession, true);

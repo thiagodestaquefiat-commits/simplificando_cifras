@@ -54,6 +54,14 @@ require("../js/spotify-auth.js");
   assert.equal(window.spotifyConfig.redirectUri, "http://127.0.0.1:4173/");
   assert.ok(window.spotifyConfig.scopes.includes("streaming"));
 
+  window.location.search = "?code=supabase-google-code";
+  window.location.href = `http://127.0.0.1:4173/${window.location.search}`;
+  const googleCallback = await window.spotifyAuth.handleCallback();
+  assert.deepEqual(googleCallback, { handled: false }, "o Spotify deve ignorar o callback Google/Supabase");
+  assert.equal(replacedUrl, null, "o Spotify não pode limpar parâmetros de outro provedor");
+  window.location.search = "";
+  window.location.href = "http://127.0.0.1:4173/";
+
   const authorization = await window.spotifyAuth.createAuthorizationRequest();
   const authorizationUrl = new URL(authorization.url);
   assert.equal(authorizationUrl.origin + authorizationUrl.pathname, "https://accounts.spotify.com/authorize");

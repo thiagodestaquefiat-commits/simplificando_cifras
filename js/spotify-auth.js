@@ -147,13 +147,14 @@
     const error = parameters.get("error");
     if (!code && !error) return { handled: false };
 
+    // Google/Supabase também retorna usando ?code. O Spotify só pode consumir
+    // a URL quando o state pertence à tentativa PKCE iniciada por este módulo.
+    const state = parameters.get("state");
+    const pending = readPending();
+    if (!pending || !state || state !== pending.state) return { handled: false };
+
     try {
       if (error) throw new Error(error === "access_denied" ? "A conexão com o Spotify foi cancelada." : error);
-      const state = parameters.get("state");
-      const pending = readPending();
-      if (!pending || !state || state !== pending.state) {
-        throw new Error("A validação de segurança do Spotify falhou. Tente conectar novamente.");
-      }
       if (!pending.createdAt || Date.now() - pending.createdAt > PENDING_MAX_AGE_MS) {
         throw new Error("A tentativa de conexão com o Spotify expirou. Tente novamente.");
       }
