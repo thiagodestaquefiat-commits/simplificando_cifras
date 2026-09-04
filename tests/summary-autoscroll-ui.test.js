@@ -26,6 +26,11 @@ const server=http.createServer((req,res)=>{
         localStorage.setItem('cifras_musicas_v1',JSON.stringify([{id:'speed-test',title:'Resumo de teste',key:'E',capo:'',blocos:Array.from({length:50},(_,i)=>({l:i?'Tudo o que tenho':'Precioso Jesus',c:'E  A  E  (2x)'}))}]));
       });
       const page=await context.newPage(),errors=[];
+      // The review-only Netlify toolbar is not part of the app and overlays stage controls.
+      if(process.env.TEST_BASE_URL)await context.addInitScript(()=>{
+        const observer=new MutationObserver(()=>document.querySelectorAll('[data-netlify-deploy-id]').forEach(node=>node.remove()));
+        observer.observe(document,{childList:true,subtree:true});
+      });
       page.on('pageerror',error=>errors.push(error.message));
       await page.route('**/api/**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({enabled:false,provider:'local'})}));
       await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,body:''}));
