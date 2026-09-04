@@ -1,0 +1,55 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..');
+const server=http.createServer((req,res)=>{
+ const file=path.resolve(root,new URL(req.url,'http://localhost').pathname.slice(1)||'index.html');
+ if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return res.writeHead(404).end();
+ res.setHeader('Content-Type',path.extname(file)==='.js'?'application/javascript':path.extname(file)==='.css'?'text/css':'text/html');fs.createReadStream(file).pipe(res);
+});
+const result={schemaVersion:2,titulo:'Uma música',confianca:'alta',harmonicSummary:{blocos:[{acordes:['C','G/B'],fraseGuia:'Uma frase real',secao:null,repeticoes:null}]},fullChordSheet:{visibility:'private',source:'user_upload',content:'C G/B\nUma frase real',sections:[]}};
+const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixture')});
+(async()=>{
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+ try{for(const viewport of [{width:390,height:844},{width:1366,height:768}]){
+  const context=await browser.newContext({viewport,serviceWorkers:'block'}),page=await context.newPage(),requests=[];
+  // Netlify's review drawer is an external overlay, not part of the application.
+  if(process.env.TEST_BASE_URL)await context.addInitScript(()=>{
+    new MutationObserver(()=>document.querySelectorAll('[data-netlify-deploy-id]').forEach(node=>node.remove())).observe(document,{childList:true,subtree:true});
+  });
+  await page.addInitScript(()=>{const auth={initialize:async()=>({authenticated:true}),subscribe:()=>()=>{},getState:()=>({authenticated:true}),getAccessToken:()=> 'test-token'};Object.defineProperty(window,'appAuth',{get:()=>auth,set:()=>{}});});
+  await page.route('**/api/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{"enabled":false}'}));
+  await page.route('**/api/resumo-harmonico',r=>{requests.push(r.request().postData());return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result)});});
+  await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
+  await page.evaluate(()=>{window.testDrafts=[];window.openAiDraft=model=>window.testDrafts.push(model);});
+  await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();
+  assert.deepEqual(await page.locator('.ai-summary-tab').allTextContents(),['Arquivo','Texto']);
+  await page.getByRole('tab',{name:'Arquivo',exact:true}).click();
+  const input=page.locator('input[type=file]');assert.equal(await input.getAttribute('multiple'),'');
+  await input.setInputFiles([file('z_pagina.png'),file('a_pagina.png')]);
+  assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
+  assert.deepEqual(await page.locator('[data-ai-files] span').allTextContents(),['Arquivo 1 — z_pagina.png','Arquivo 2 — a_pagina.png']);
+  await input.setInputFiles([file('m_pagina.png')]);
+  assert.match(await page.locator('[data-ai-file-count]').innerText(),/^3 /);
+  await page.getByRole('button',{name:'Remover arquivo 2: a_pagina.png',exact:true}).click();
+  assert.deepEqual(await page.locator('[data-ai-files] span').allTextContents(),['Arquivo 1 — z_pagina.png','Arquivo 2 — m_pagina.png']);
+  await page.getByRole('tab',{name:'Texto',exact:true}).click();await page.getByRole('tab',{name:'Arquivo',exact:true}).click();
+  assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
+  assert.ok(await page.locator('.ai-summary-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth));
+  await input.setInputFiles(Array.from({length:7},(_,i)=>file(i+'.png')));
+  assert.match(await page.locator('[data-ai-status]').innerText(),/8 arquivos/);
+  assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
+  await page.getByRole('button',{name:'Gerar resumo',exact:true}).click();
+  await page.waitForFunction(()=>window.testDrafts.length===1);
+  assert.equal(requests.length,1);assert.ok(requests[0].indexOf('z_pagina.png')<requests[0].indexOf('m_pagina.png'));assert.ok(!requests[0].includes('a_pagina.png'));
+  const draft=await page.evaluate(()=>window.testDrafts[0]);assert.equal(draft.sections.length,1);assert.equal(draft.fullChordSheet.content,result.fullChordSheet.content);
+  await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();await page.getByRole('tab',{name:'Arquivo',exact:true}).click();
+  assert.match(await page.locator('[data-ai-file-count]').innerText(),/^0 /);
+  await page.getByRole('tab',{name:'Texto',exact:true}).click();
+  await page.locator('[name=conteudo]').fill('C G/B\nUma frase real');
+  await page.getByRole('button',{name:'Analisar texto',exact:true}).click();await page.waitForFunction(()=>window.testDrafts.length===2);
+  assert.equal(JSON.parse(requests[1]).conteudo,'C G/B\nUma frase real');
+  await context.close();
+ }console.log('multiple-upload-ui: OK (order, add/remove, count, limits, single draft, text, mobile/desktop)');
+ }finally{await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

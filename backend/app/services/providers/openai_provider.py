@@ -51,12 +51,18 @@ class OpenAIProvider(AiProvider):
         started_at = perf_counter()
         safe_context = self._safe_context(context)
         user_content = [{"type": "input_text", "text": user_prompt}]
-        if media:
-            input_type = "input_file" if media.kind == "pdf" else "input_image"
+        media_items = (media.items or (media,)) if media else ()
+        for index, part in enumerate(media_items):
+            if media.items:
+                user_content.append({"type": "input_text", "text": f"Continuação da mesma música: arquivo {index + 1} de {len(media_items)}. Preserve esta ordem."})
+            if part.text is not None:
+                user_content.append({"type": "input_text", "text": part.text})
+                continue
+            input_type = "input_file" if part.kind == "pdf" else "input_image"
             key = "file_data" if input_type == "input_file" else "image_url"
-            item = {"type": input_type, key: media.data_url}
+            item = {"type": input_type, key: part.data_url}
             if input_type == "input_file":
-                item["filename"] = media.filename or "cifra.pdf"
+                item["filename"] = part.filename or "cifra.pdf"
             user_content.append(item)
         try:
             response = self._client.responses.parse(

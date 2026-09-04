@@ -1,8 +1,10 @@
 from __future__ import annotations
+from dataclasses import replace
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
 from .harmonic_normalizer import normalize_response, render_full_chord_sheet
+from .content_extractor import clean_musical_text
 from .providers import OpenAIProvider, ProviderError, ProviderRefusal
 
 
@@ -19,7 +21,12 @@ Regras obrigatórias:
 - Preserve também a qualidade escrita na fonte: B2 continua B2; não converta para Bsus2.
 - Cada acorde deve ser um item separado. Nunca retorne C#m7B2F#mA9 como um único acorde.
 - Não invente acordes, tom, frases ou repetições.
-- harmonicSummary.blocos contém somente progressão, repetição, seção e fraseGuia curta, com no máximo 12 blocos.
+- harmonicSummary.blocos contém somente progressão, repetição e fraseGuia curta. Use seção real apenas como fallback sem fraseGuia.
+- Busque uma página de referência, sem truncar partes distintas para caber. Não repita refrões idênticos.
+- Exclua afinação, metadados, título/artista duplicados, legendas de acordes, diagramas, números técnicos,
+  cabeçalhos, rodapés e comentários de fullChordSheet e harmonicSummary, inclusive em imagens e PDFs escaneados.
+- Uma linha de acordes isolada pode ser uma intro, solo ou interlúdio real: preserve-a sem evidência técnica.
+- Preserve Csus4, C/E, B2, A9 e C#m7 literalmente quando presentes. Não embeleze nem substitua símbolos válidos.
 - fullChordSheet.sections preserva semanticamente cada linha de letra e a posição de cada acorde.
 - As posições dos acordes são índices aproximados na linha de letra, nunca coordenadas visuais frágeis.
 - Se não houver segurança suficiente, retorne blocos vazios, confianca baixa e explique em observacoes.
@@ -57,6 +64,9 @@ class IaService:
         return cls(provider)
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
+        if extracted and extracted.items:
+            extracted = replace(extracted, items=tuple(replace(item, text=clean_musical_text(item.text, (payload.titulo, payload.artista)))
+                if item.text is not None else item for item in extracted.items))
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
         if payload.tipo == "pesquisa" and not has_online_source:
@@ -73,6 +83,10 @@ class IaService:
             )
         else:
             source_text = extracted.text if extracted is not None else payload.conteudo
+            if source_text is not None:
+                source_text = clean_musical_text(source_text, (payload.titulo, payload.artista))
+                if not source_text:
+                    raise ApiError("resultado_nao_confiavel", "A fonte contém apenas informações técnicas.", 422)
             full_sheet_instruction = (
                 "Estruture fullChordSheet.sections a partir do texto; o servidor substituirá content pela fonte exata."
                 if source_text else
@@ -80,6 +94,7 @@ class IaService:
             )
             user_prompt = (
                 "Analise uma única vez o conteúdo e retorne a cifra completa privada e o resumo harmônico curto.\n"
+                "Todos os arquivos anexados são continuação de UMA música, na ordem fornecida. Não produza uma música por arquivo nem repita páginas.\n"
                 f"{full_sheet_instruction}\n"
                 f"Título informado: {payload.titulo or 'não informado'}\n"
                 f"Artista informado: {payload.artista or 'não informado'}\n"
@@ -95,12 +110,12 @@ class IaService:
             result = self._provider.generate(
                 SYSTEM_PROMPT,
                 user_prompt,
-                extracted if extracted is not None and extracted.data_url else None,
+                extracted if extracted is not None and (extracted.data_url or (extracted.items and extracted.text is None)) else None,
                 context={
                     "request_id": request_id or "",
                     "input_type": payload.tipo,
                     "classification": (
-                        "visual" if extracted is not None and extracted.data_url else
+                        "visual" if extracted is not None and (extracted.data_url or (extracted.items and extracted.text is None)) else
                         "textual" if extracted is not None else payload.tipo
                     ),
                     "media_type": extracted.media_type if extracted is not None else None,
@@ -115,6 +130,7 @@ class IaService:
         if payload.tipo == "pesquisa" and not has_online_source:
             normalized.fullChordSheet = None
         elif source_text:
+            source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             normalized.fullChordSheet = CifraCompleta(
                 source="user_upload" if payload.tipo == "arquivo" else "user_text",
                 content=source_text,

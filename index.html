@@ -12,7 +12,7 @@
 <link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
-<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=3">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=4">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -354,6 +354,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .stage-capo-controls output{color:var(--stage-text);font-weight:800}.stage-capo-controls .stage-control{height:44px;min-width:44px;font-size:14px}.stage-capo-controls button:disabled{opacity:.35;cursor:default}
 .wa-block .letra-linha{color:#fff}.wa-block .chord-line{color:var(--chord-color)}
 .scroll-speed-controls{display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--text2)}.scroll-speed-controls button{min-width:44px;min-height:44px;border:1px solid var(--border);border-radius:9px;background:var(--bg2);color:var(--text);font-family:inherit;font-size:17px;font-weight:700;cursor:pointer}.scroll-speed-controls button:disabled{opacity:.35;cursor:default}.scroll-speed-value{min-width:48px;text-align:center;font-variant-numeric:tabular-nums;color:var(--text);font-weight:700}.stage-scroll-speed{grid-column:1/-1}.stage-scroll-speed button{background:transparent}.stage-toolbar:has(.scroll-speed-controls){flex-wrap:wrap}
+#detail-content .full-chord-line:not(.is-chord){color:#fff}
 /* Stage header owns its viewport space; only the score below it scrolls. */
 #view-detail.stage-mode{top:var(--stage-header-height,156px);height:calc(100dvh - var(--stage-header-height,156px));padding-bottom:env(safe-area-inset-bottom)}
 .stage-mode .stage-performance-header{position:fixed;top:0;left:0;right:0;width:100%;max-width:1180px;margin:auto;box-sizing:border-box;grid-template-columns:44px minmax(0,1fr) auto 44px 44px;gap:2px;padding:calc(4px + env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) 4px max(6px,env(safe-area-inset-left));background:var(--stage-surface);backdrop-filter:none;transform:none!important;opacity:1!important;pointer-events:auto!important;transition:none}
@@ -440,11 +441,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <button type="button" class="stage-control" onclick="transpose(-1)" aria-label="Descer o tom">−</button>
         <button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">+</button>
       </div>
-      <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade do auto-scroll no palco">
-        <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar auto-scroll">▶</button><span>Scroll</span>
-        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
-        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
-        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade da rolagem no palco">
+        <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem">▶</button><span>Rolagem</span>
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
+        <output class="scroll-speed-value" aria-live="polite">0,50x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(-2)" aria-label="Diminuir fonte">A−</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(2)" aria-label="Aumentar fonte">A+</button>
       </div>
@@ -502,11 +503,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     </div>
     <div class="stage-toolbar">
       <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()">Modo Palco</button>
-      <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
-      <div class="scroll-speed-controls" role="group" aria-label="Velocidade do auto-scroll">
-        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
-        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
-        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Rolagem</button>
+      <div class="scroll-speed-controls" role="group" aria-label="Velocidade da rolagem">
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
+        <output class="scroll-speed-value" aria-live="polite">0,50x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
       </div>
     </div>
     <div class="stage-toolbar" aria-label="Controles de apresentação">
@@ -578,9 +579,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
-<script src="js/stage-preferences.js?v=2"></script>
+<script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=1"></script>
-<script src="js/editor/song-format.js?v=6"></script>
+<script src="js/editor/song-format.js?v=8"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -592,10 +593,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=3"></script>
+<script src="js/event-collaboration-client.js?v=4"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=6"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=3"></script>
+<script src="js/ai/harmonic-summary-client.js?v=8"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1092,18 +1093,15 @@ function resetTranspose(){
 
 // detecta se uma linha é de acordes ou letra
 function isChordLine(linha){
-  const t = linha.trim();
-  if(!t) return false;
-  // remove pontos, vírgulas, x, parênteses, colchetes, números soltos — deixa só acordes e espaços
-  const limpa = t.replace(/[.,\(\)\[\]x0-9]/gi,'').trim();
-  // divide em tokens e verifica se todos são acordes reconhecíveis
-  const tokens = limpa.split(/\s+/).filter(Boolean);
-  if(!tokens.length) return false;
-  const chordPattern = /^[A-G][#b]?(m|M|maj|min|dim|aug|sus)?[0-9]?(\/[A-G][#b]?)?$/;
-  const todosAcordes = tokens.every(tok => chordPattern.test(tok));
-  // se pelo menos 60% dos tokens parecem acordes = linha de acorde
-  const acordes = tokens.filter(tok => chordPattern.test(tok));
-  return acordes.length > 0 && (acordes.length / tokens.length) >= 0.6;
+  return songFormat.chordLine(linha);
+}
+
+function renderMusicalText(text,totalShift,full=false){
+  return String(text||'').split('\n').map(line=>{
+    const chord=isChordLine(line);
+    const css=full?`full-chord-line${chord?' is-chord':''}`:chord?'chord-line':'letra-linha';
+    return `<div class="${css}">${eventEsc(chord?shiftText(line,totalShift):line)}</div>`;
+  }).join('');
 }
 
 function bold(txt){
@@ -1113,25 +1111,14 @@ function bold(txt){
 function renderLinha(linha, totalShift){
   const t = linha.trim();
   if(!t) return '';
-  // se tem asterisco, é letra explícita
-  if(t.startsWith('*') && t.endsWith('*')){
-    return `<div class="letra-linha">${t.replace(/\*/g,'')}</div>`;
-  }
-  // detecta automaticamente
-  if(isChordLine(t)){
-    // remove pontos dos acordes antes de exibir e transpor
-    const semPontos = t.replace(/\./g,' ').replace(/\s+/g,' ').trim();
-    return `<div class="chord-line">${shiftText(semPontos, totalShift)}</div>`;
-  }
-  // tudo que não é acorde = letra em negrito automático
-  return `<div class="letra-linha">${t}</div>`;
+  return renderMusicalText(t.startsWith('*')&&t.endsWith('*')?t.slice(1,-1):t,totalShift);
 }
 
 function renderFullChordSheet(sheet,totalShift){
   if(!sheet?.content) return '';
   if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
     const structured=sheet.sections.map(section=>{
-      const heading=section.nome?`<div class="full-chord-line is-section">${eventEsc(section.nome)}</div>`:'';
+      const heading=section.nome?(isChordLine(section.nome)?renderMusicalText(section.nome,totalShift,true):`<div class="full-chord-line is-section">${eventEsc(section.nome)}</div>`):'';
       const lines=(section.linhas||[]).map(line=>{
         const ordered=[...(line.acordes||[])].sort((a,b)=>a.posicao-b.posicao);
         let chordLine='';
@@ -1141,7 +1128,7 @@ function renderFullChordSheet(sheet,totalShift){
           chordLine+=' '.repeat(position-chordLine.length)+chord;
         });
         const chords=chordLine?`<div class="full-chord-line is-chord">${eventEsc(chordLine)}</div>`:'';
-        const lyric=line.letra?`<div class="full-chord-line">${eventEsc(line.letra)}</div>`:'';
+        const lyric=line.letra?renderMusicalText(line.letra,totalShift,true):'';
         return chords+lyric;
       }).join('');
       return heading+lines;
@@ -1199,7 +1186,6 @@ function renderDetail(){
   const totalShift=currentSemitones+storedCapo-selectedCapo;
   const hasFull=Boolean(m.fullChordSheet?.content);
   if(!hasFull) currentSongView='summary';
-  if(stageMode&&hasFull&&activeStagePreferences?.contentMode!=='structure')currentSongView='full';
   const switchHtml=hasFull?`<div class="song-view-switch" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button></div>`:'';
   const blocosHtml = summary.sections.map(section=>{
     const corpo=section.lines.map(line=>{
@@ -1207,10 +1193,10 @@ function renderDetail(){
       const repeat=line.repeticoes?` (${line.repeticoes}x)`:'';
       const chordHtml=chords?`<div class="chord-line">${eventEsc(shiftText(chords,totalShift))}${repeat}</div>`:'';
       const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
-      const lyricHtml=lyricText?`<div class="letra-linha">${eventEsc(lyricText)}</div>`:'';
-      return chordHtml+lyricHtml;
+      const lyricHtml=lyricText?renderMusicalText(lyricText,totalShift):'';
+      return lyricHtml+chordHtml;
     }).join('');
-    const labelHtml=section.showLabel&&section.label?`<div class="letra-linha">${eventEsc(section.label)}</div>`:'';
+    const labelHtml=section.showLabel&&section.label?renderMusicalText(section.label,totalShift):'';
     return `<div class="wa-block">${corpo}${labelHtml}</div>`;
   }).join('');
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
@@ -1252,7 +1238,7 @@ function openDetail(id,options={}){
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
-  currentSongView='summary';
+  if(!stageMode)currentSongView='summary';
   const summary=songFormat.harmonicSummary(m);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
   document.getElementById('detail-title').textContent=summary.title;
@@ -1294,7 +1280,7 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
+let stageMode=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
 function stageContextData(){
@@ -1391,18 +1377,18 @@ function navigateStageTo(index){const target=navigationContext.select(index);if(
 function toggleAutoScroll(){if(scrollTimer!==null)stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
-  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Scroll';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar auto-scroll');}
+  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Rolagem';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar rolagem');}
   stageLastFrame=performance.now();stageScrollRemainder=0;
   const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);
 }
 function stopAutoScroll(){
   if(scrollTimer!==null){cancelAnimationFrame(scrollTimer);scrollTimer=null;}stageScrollRemainder=0;
-  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar auto-scroll');}
+  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Rolagem';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar rolagem');}
 }
 function updateScrollSpeedControls(){
   document.querySelectorAll('.scroll-speed-value').forEach(output=>output.textContent=stagePreferences.formatScrollSpeed(scrollSpeed));
-  document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=24:scrollSpeed>=120);
+  document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=6:scrollSpeed>=120);
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
@@ -1779,7 +1765,7 @@ function renderAccountButton(){const button=document.getElementById('app-account
 async function openAccountModal(){
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const mode=currentAuthState.authenticated?'Conta conectada e protegida':'Identidade local deste dispositivo';
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Ao entrar, seus Eventos e Equipes locais serão vinculados à conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Entrar não transfere seus dados locais para a conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
@@ -2057,19 +2043,24 @@ eventChat.subscribe(eventId=>{
 renderMusicas();
 if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
 renderAccountButton();renderBandToolbar();
-if(appIdentity.accessToken)setTimeout(()=>syncEventsNow(true),0);
+// Legacy ownership is never claimed or synchronized automatically on startup.
 appAuth.subscribe(async state=>{
   currentAuthState=state;renderAccountButton();
+  if(!state.authenticated){
+    appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
+    appCurrentUser=Object.freeze({...appIdentity.user});
+    appBands=[];renderAccountButton();renderSetlists();renderBandToolbar();return;
+  }
   if(authLinking||!state.authenticated||!state.user||String(state.user.id)===String(appCurrentUser.id))return;
   authLinking=true;
   const previousUser=appCurrentUser;
   try{
     appIdentity=await eventCollaboration.ensureRegistered(previousUser);
+    if(!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
-    setlists=setlists.map(event=>eventModel.migrateCurrentUser(event,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]));eventRepository.save(setlists);
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
-    renderAccountButton();renderSetlists();await syncEventsNow(true);showToast('✅ Conta conectada e dados locais vinculados');
-  }catch(error){showToast('⚠️ Não foi possível concluir a vinculação: '+error.message);}finally{authLinking=false;}
+    renderAccountButton();renderSetlists();renderBandToolbar();
+  }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
 appAuth.initialize();
 checkShareParam();

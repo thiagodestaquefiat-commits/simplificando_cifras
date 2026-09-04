@@ -36,6 +36,37 @@ class ExtractedContent:
     page_count: int | None = None
     filename: str | None = None
     size_bytes: int | None = None
+    items: tuple[ExtractedContent, ...] = ()
+
+
+def extract_uploads(files, *, max_bytes: int, max_pages: int, max_text_length: int, max_files: int = 8) -> ExtractedContent:
+    """One ordered document, bounded by the existing aggregate upload budget."""
+    if not files:
+        raise ApiError("arquivo_obrigatorio", "Selecione ao menos um arquivo.", 400)
+    if len(files) > max_files:
+        raise ApiError("arquivos_demais", f"Selecione no máximo {max_files} arquivos por música.", 400)
+    items, total_bytes, total_pages, total_text = [], 0, 0, 0
+    for file in files:
+        try:
+            item = extract_upload(file, max_bytes=max_bytes - total_bytes, max_pages=max_pages,
+                                  max_text_length=max_text_length)
+        except ApiError as error:
+            if error.code == "arquivo_muito_grande":
+                raise ApiError("arquivo_muito_grande", f"Os arquivos devem somar no máximo {max_bytes // (1024 * 1024)} MB e {max_text_length} caracteres de texto.", 413) from error
+            raise
+        total_bytes += item.size_bytes or 0
+        total_pages += item.page_count or (1 if item.kind == "image" else 0)
+        total_text += len(item.text or "")
+        if total_pages > max_pages:
+            raise ApiError("pdf_paginas_invalidas", f"Use no máximo {max_pages} páginas de PDF/imagens no total.", 400)
+        if total_text + max(0, len(items) * 2) > max_text_length:
+            raise ApiError("arquivo_muito_grande", "O texto combinado excede o limite de 50.000 caracteres.", 413)
+        items.append(item)
+    if len(items) == 1:
+        return items[0]
+    text = "\n\n".join(item.text for item in items) if all(item.text is not None for item in items) else None
+    return ExtractedContent("bundle", text, "multipart/mixed", page_count=total_pages,
+                            size_bytes=total_bytes, items=tuple(items))
 
 
 def _detected_mime(data: bytes) -> str | None:
@@ -111,7 +142,7 @@ def _strip_trailing_diagram_footer(text: str) -> str:
     tail_start = max(0, last_nonempty - 24)
     for index in range(tail_start, last_nonempty + 1):
         line = lines[index]
-        if not _is_chord_legend(line) or not re.search(r"\s{5,}", line):
+        if not _is_chord_legend(line):
             continue
         following = [value for value in lines[index + 1:last_nonempty + 1] if value.strip()]
         has_technical_row = any(_DIAGRAM_TECHNICAL_RE.fullmatch(value) for value in following)
@@ -127,7 +158,51 @@ def _strip_trailing_diagram_footer(text: str) -> str:
 
 def clean_pdf_text(page_texts: list[str]) -> str:
     cleaned_pages = [_strip_page_edge_noise(value) for value in page_texts]
-    return _strip_trailing_diagram_footer("\n\n".join(value for value in cleaned_pages if value).strip())
+    return clean_musical_text("\n\n".join(value for value in cleaned_pages if value))
+
+
+TECHNICAL_LABEL_RE = re.compile(
+    r"^\s*(?:afina[çc][ãa]o|tuning|capotraste|capo|tom|tonalidade|t[íi]tulo|artista|"
+    r"compositor|composi[çc][ãa]o|transcri[çc][ãa]o|legenda(?: de acordes)?|"
+    r"diagramas?(?: de acordes)?|acordes (?:utilizados|usados)|metadados)\s*(?::.*)?$", re.I)
+TECHNICAL_BLOCK_RE = re.compile(r"^\s*(?:metadados|legenda(?: de acordes)?|diagramas?(?: de acordes)?|acordes (?:utilizados|usados))\s*:?\s*$", re.I)
+MUSICAL_SECTION_RE = re.compile(r"^\s*[\[(]?(?:intro(?:du[çc][ãa]o)?|verso|pr[ée][- ]refr[ãa]o|refr[ãa]o|ponte|interl[úu]dio|solo|final|outro)(?:\s+\d+)?[\])]?:?\s*$", re.I)
+
+
+def is_technical_line(line: str) -> bool:
+    return bool(TECHNICAL_LABEL_RE.fullmatch(line) or _PAGE_MARKER_RE.fullmatch(line)
+                or re.fullmatch(r"\s*\d+\s*", line)
+                or _DIAGRAM_TECHNICAL_RE.fullmatch(line))
+
+
+def clean_musical_text(text: str, metadata=()) -> str:
+    """Keep musical spacing; remove only explicit technical context, never lone chords."""
+    lines = _strip_trailing_diagram_footer(_strip_page_edge_noise(text)).splitlines()
+    output, technical, musical = [], False, False
+    names = {str(value).strip().casefold() for value in metadata if value}
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if TECHNICAL_BLOCK_RE.fullmatch(stripped):
+            technical = True
+            continue
+        if MUSICAL_SECTION_RE.fullmatch(stripped):
+            technical = False
+            musical = True
+        if is_technical_line(line):
+            continue
+        # Exact title/artist only at document edges or in a labelled metadata block.
+        if stripped.casefold() in names and (technical or (not musical and index < 3)):
+            continue
+        if technical and stripped:
+            tokens = stripped.split()
+            if all(_DIAGRAM_CHORD_RE.fullmatch(token) for token in tokens):
+                continue
+            # Prose outside the technical vocabulary resumes musical content.
+            technical = False
+        if stripped and all(_DIAGRAM_CHORD_RE.fullmatch(token) for token in stripped.split()):
+            musical = True
+        output.append(line)
+    return "\n".join(output).strip()
 
 
 def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_length: int) -> ExtractedContent:
@@ -173,6 +248,8 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
     except Exception as error:
         raise ApiError("arquivo_invalido", "NÃ£o foi possÃ­vel ler este PDF.", 400) from error
 
-    if text and len(text) <= max_text_length and len(text) >= 40:
+    if len(text) > max_text_length:
+        raise ApiError("arquivo_muito_grande", "O texto extraído excede o limite permitido.", 413)
+    if text and len(text) >= 40:
         return ExtractedContent("text", text, detected, page_count=pages, filename=file_storage.filename, size_bytes=len(data))
     return ExtractedContent("pdf", None, detected, _data_url(data, detected), pages, file_storage.filename, len(data))

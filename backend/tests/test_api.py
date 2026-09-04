@@ -79,7 +79,7 @@ def test_text_request_returns_versioned_json(generate, client):
     data = response.get_json()
     assert data["schemaVersion"] == 2
     assert data["tom"] == "Db"
-    assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["Db", "Bsus4", "Gb/Bb"]
+    assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["Db", "B4", "Gb/Bb"]
     assert data["harmonicSummary"]["blocos"][0]["repeticoes"] is None
     assert data["fullChordSheet"] == {
         "visibility": "private",
@@ -194,7 +194,7 @@ def test_txt_upload_returns_same_structured_contract(generate, client):
     assert response.get_json()["fullChordSheet"] == {
         "visibility": "private",
         "source": "user_upload",
-        "content": "Tom: Db\nDb B4 Gb/Bb",
+        "content": "Db B4 Gb/Bb",
         "sections": [],
     }
     assert generate.call_args.args[2] is None

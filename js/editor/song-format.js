@@ -67,7 +67,7 @@
   }
 
   function chordLine(value) {
-    const tokens = String(value || "").trim().split(/\s+/).filter(Boolean);
+    const tokens = repeatFromText(value).text.trim().split(/\s+/).filter(Boolean);
     return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token));
   }
 
@@ -172,9 +172,9 @@
   }
 
   function repeatFromText(value) {
-    const match = String(value || "").match(/\s*\((\d{1,2})x\)\s*$/i);
+    const match = String(value || "").match(/(?:\s*\((\d{1,2})x\)|(?:\s+|^)(\d{1,2})x)\s*$/i);
     if (!match) return { text: String(value || "").trim(), repeticoes: null };
-    const repeticoes = Number(match[1]);
+    const repeticoes = Number(match[1] || match[2]);
     return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
   }
 
@@ -234,6 +234,27 @@
   function harmonicSummary(song) {
     const normalized = fromLegacy(song || {});
     const hasStructuredSource = Boolean(song && song.editorData && Array.isArray(song.editorData.sections));
+    const technical = /^(?:afina[çc][ãa]o|tuning|metadados|diagramas?(?: de acordes)?|legenda(?: de acordes)?|acordes (?:utilizados|usados)|tom|artista|t[íi]tulo)\s*(?::.*)?$|^\d+$/i;
+    const generic = /^(?:Se[çc][ãa]o|Trecho)(?:\s+\d+)?$/i;
+    const realSection = /^(?:Intro(?:dução)?|Verso|Pré[- ]refrão|Refrão|Ponte|Interlúdio|Solo|Final)(?:\s+\d+)?$/i;
+    const seen = new Set();
+    const sections = normalized.sections.filter(section => !technical.test(section.label.trim())).map((section, sectionIndex) => {
+      const lines = section.lines.filter(line => !technical.test(line.lyrics.trim())).map(line => ({
+        lyrics: line.lyrics.replace(/\s+\/\s+(?:Verso|Refrão|Seção|Trecho)\b.*$/i, '').trim(),
+        repeticoes: line.repeticoes,
+        chords: line.chords.map(item => ({ chord: item.chord, position: item.position }))
+      }));
+      const hasHook = lines.some(line => line.lyrics && !chordLine(line.lyrics));
+      return { type: section.type, label: section.label,
+        showLabel: !section.hideLabel && !generic.test(section.label) &&
+          !(hasHook && realSection.test(section.label)) &&
+          (hasStructuredSource || Boolean(song?.blocos?.[sectionIndex]?.l)), lines };
+    }).filter(section => {
+      if (!section.lines.length) return false;
+      const identity = JSON.stringify([section.showLabel ? section.label : '', section.lines.map(line => [line.lyrics,line.repeticoes,line.chords.map(item=>item.chord)])]);
+      if (seen.has(identity)) return false;
+      seen.add(identity);return true;
+    });
     return {
       id: normalized.id,
       title: normalized.title,
@@ -243,16 +264,7 @@
       capo: normalized.capo,
       instrument: normalized.instrument,
       accessContext: normalized.accessContext,
-      sections: normalized.sections.map((section, sectionIndex) => ({
-        type: section.type,
-        label: section.label,
-        showLabel: !section.hideLabel && (hasStructuredSource || Boolean(song && song.blocos && song.blocos[sectionIndex] && song.blocos[sectionIndex].l)),
-        lines: section.lines.map((line) => ({
-          lyrics: line.lyrics,
-          repeticoes: line.repeticoes,
-          chords: line.chords.map((item) => ({ chord: item.chord, position: item.position }))
-        }))
-      }))
+      sections
     };
   }
 
@@ -283,5 +295,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);
