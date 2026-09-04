@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
@@ -63,6 +64,9 @@ class IaService:
         return cls(provider)
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
+        if extracted and extracted.items:
+            extracted = replace(extracted, items=tuple(replace(item, text=clean_musical_text(item.text, (payload.titulo, payload.artista)))
+                if item.text is not None else item for item in extracted.items))
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
         if payload.tipo == "pesquisa" and not has_online_source:
@@ -90,6 +94,7 @@ class IaService:
             )
             user_prompt = (
                 "Analise uma única vez o conteúdo e retorne a cifra completa privada e o resumo harmônico curto.\n"
+                "Todos os arquivos anexados são continuação de UMA música, na ordem fornecida. Não produza uma música por arquivo nem repita páginas.\n"
                 f"{full_sheet_instruction}\n"
                 f"Título informado: {payload.titulo or 'não informado'}\n"
                 f"Artista informado: {payload.artista or 'não informado'}\n"
@@ -105,12 +110,12 @@ class IaService:
             result = self._provider.generate(
                 SYSTEM_PROMPT,
                 user_prompt,
-                extracted if extracted is not None and extracted.data_url else None,
+                extracted if extracted is not None and (extracted.data_url or (extracted.items and extracted.text is None)) else None,
                 context={
                     "request_id": request_id or "",
                     "input_type": payload.tipo,
                     "classification": (
-                        "visual" if extracted is not None and extracted.data_url else
+                        "visual" if extracted is not None and (extracted.data_url or (extracted.items and extracted.text is None)) else
                         "textual" if extracted is not None else payload.tipo
                     ),
                     "media_type": extracted.media_type if extracted is not None else None,

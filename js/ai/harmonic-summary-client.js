@@ -27,10 +27,13 @@
       return payload;
     }
     if (mode === "arquivo") {
-      const arquivo = data.arquivo;
+      const arquivos = Array.isArray(data.arquivos) ? data.arquivos : (data.arquivo ? [data.arquivo] : []);
+      const arquivo = arquivos[0];
+      if (arquivos.length > 8) throw new HarmonicSummaryError("invalid_input", "Selecione no máximo 8 arquivos por música.");
       if (!arquivo || typeof arquivo.name !== "string") throw new HarmonicSummaryError("invalid_input", "Selecione um arquivo para analisar.");
-      if (arquivo.size > 10 * 1024 * 1024) throw new HarmonicSummaryError("invalid_input", "O arquivo deve ter no máximo 10 MB.");
-      return { tipo: "arquivo", arquivo, titulo: clean(data.titulo, 160).trim(), artista: clean(data.artista, 160).trim() };
+      if (arquivos.some(file => !file || typeof file.name !== 'string' || !Number.isFinite(file.size))) throw new HarmonicSummaryError("invalid_input", "Selecione arquivos válidos.");
+      if (arquivos.reduce((total,file)=>total+file.size,0) > 10 * 1024 * 1024) throw new HarmonicSummaryError("invalid_input", "Os arquivos devem somar no máximo 10 MB.");
+      return { tipo: "arquivo", arquivo, arquivos, titulo: clean(data.titulo, 160).trim(), artista: clean(data.artista, 160).trim() };
     }
     throw new HarmonicSummaryError("invalid_input", "Modo de análise inválido.");
   }
@@ -116,7 +119,7 @@
     const isFile = mode === "arquivo";
     const body = isFile ? new FormData() : JSON.stringify(payload);
     if (isFile) {
-      body.append("arquivo", payload.arquivo);
+      payload.arquivos.forEach(file => body.append("arquivo", file));
       if (payload.titulo) body.append("titulo", payload.titulo);
       if (payload.artista) body.append("artista", payload.artista);
     }
@@ -140,17 +143,19 @@
       data = await response.json();
     } catch (_) {
       if (response.status === 413) {
-        throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
+        throw new HarmonicSummaryError("file_too_large", "Use até 10 MB e 50.000 caracteres de texto no total.", response.status);
       }
       throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status);
     }
     if (!response.ok) {
       const code = data?.erro?.codigo;
+      if (code === "arquivos_demais") throw new HarmonicSummaryError("invalid_input", "Selecione no máximo 8 arquivos por música.", response.status);
+      if (code === "pdf_paginas_invalidas") throw new HarmonicSummaryError("invalid_file", "Use no máximo 20 páginas de PDF/imagens no total.", response.status);
       if (response.status === 401 || ["autenticacao_necessaria", "token_invalido", "usuario_invalido"].includes(code)) {
         throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente para usar a IA musical.", response.status);
       }
       if (response.status === 413 || code === "requisicao_muito_grande" || code === "arquivo_muito_grande") {
-        throw new HarmonicSummaryError("file_too_large", "Este arquivo é maior que o limite permitido de 10 MB.", response.status);
+        throw new HarmonicSummaryError("file_too_large", "Use até 10 MB e 50.000 caracteres de texto no total.", response.status);
       }
       if (["arquivo_invalido", "tipo_arquivo_invalido", "pdf_paginas_invalidas"].includes(code)) {
         throw new HarmonicSummaryError("invalid_file", "Não foi possível ler este arquivo. Tente outro PDF, imagem ou TXT.", response.status);

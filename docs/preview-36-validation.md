@@ -25,3 +25,13 @@ Recomenda-se uma chamada real controlada com PDF representativo após autorizaç
 ## Ajuste pontual de Rolagem
 
 Controles normal e de palco usam Rolagem, passos de 0,05x, mínimo 0,10x, máximo 2,00x e padrão 0,50x. Preferências válidas existentes são preservadas sem regravação ao carregar. Testes cobrem todos os passos, limites, persistência e efeito imediato durante a rolagem, inclusive deslocamentos fracionários no mínimo. Nenhuma alteração de layout ou backend.
+
+## Upload de múltiplos arquivos
+
+Antes, o navegador e a rota utilizavam apenas o primeiro arquivo. Agora Arquivo aparece antes de Texto, e a lista aceita adições, remoções e mostra a quantidade. A aba Texto mantém seu comportamento. A ordem recebida do seletor/arraste é exibida e enviada sem ordenação alfabética; adições posteriores entram no fim. Para controlar exatamente a sequência quando o seletor do celular reordena itens, adicione um por vez.
+
+O multipart repete o campo arquivo, mantendo compatibilidade com clientes de arquivo único. PDFs textuais/TXT são concatenados em ordem. Entradas mistas ou visuais são anexadas em ordem a uma única chamada estruturada, com marcadores de continuação. PDF multipágina mantém todas as páginas em um único item. Uma resposta v2 produz um rascunho/Song com cifra completa e resumo, sem salvar automaticamente.
+
+Limites: 8 arquivos, 10 MB somados (e portanto no máximo 10 MB por arquivo), 20 páginas de PDF/imagens somadas, 50.000 caracteres extraídos. O teto HTTP permanece 10 MB + 64 KiB para multipart; timeout OpenAI padrão 90 s, worker 120 s e saída 12.000 tokens permanecem inalterados. PNG, JPEG, WebP, PDF e TXT continuam aceitos. Nenhuma chamada real à OpenAI ou alteração de dados MySQL foi executada.
+
+Validação adicional: 131 testes backend; testes de upload único, várias imagens, PDF multipágina textual/escaneado, combinação de formatos, ordem, orçamento combinado e uma chamada com Structured Output v2. Testes de UI em mobile/desktop cobrem seleção, adição, remoção, contagem, troca de abas, limites, um único rascunho, Texto e responsividade; regressões de palco, Rolagem, identidade e PWA também verificadas.

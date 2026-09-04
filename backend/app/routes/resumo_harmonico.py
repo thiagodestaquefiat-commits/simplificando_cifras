@@ -6,7 +6,7 @@ from .. import limiter
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import ResumoHarmonicoRequest
 from ..services.ia_service import IaService
-from ..services.content_extractor import extract_upload
+from ..services.content_extractor import extract_uploads
 from ..services.collaboration_auth import authenticated
 from ..services.content_extractor import ExtractedContent
 from ..services.music_sources import MusicSourceInvalid, MusicSourceTimeout, MusicSourceUnavailable
@@ -30,8 +30,8 @@ def resumo_harmonico():
             "titulo": request.form.get("titulo"),
             "artista": request.form.get("artista"),
         }
-        extracted = extract_upload(
-            request.files.get("arquivo"),
+        extracted = extract_uploads(
+            request.files.getlist("arquivo"),
             max_bytes=current_app.config["MAX_UPLOAD_SIZE"],
             max_pages=current_app.config["MAX_PDF_PAGES"],
             max_text_length=current_app.config["MAX_TEXT_LENGTH"],

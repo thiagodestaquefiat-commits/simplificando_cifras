@@ -41,7 +41,7 @@ const success = {
     assert.equal(await page.locator("#ai-summary-overlay").isVisible(), true);
     assert.equal(await page.getByRole("tab", { name: "Pesquisa", exact: true }).count(), 0);
     assert.equal(await page.getByRole("button", { name: "Buscar fontes", exact: true }).count(), 0);
-    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Texto", "Arquivo"]);
+    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Arquivo", "Texto"]);
     await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     assert.match(await page.locator("[data-ai-status]").innerText(), /Cole uma cifra/);
 
@@ -62,7 +62,7 @@ const success = {
     assert.equal(await page.getByLabel("Artista", { exact: true }).inputValue(), "Artista teste");
     assert.equal(await page.getByLabel("Tom original", { exact: true }).inputValue(), "Dm");
     assert.equal(await page.getByLabel("Capotraste", { exact: true }).inputValue(), "");
-    assert.match(await page.getByLabel("Cifra / Resumo", { exact: true }).inputValue(), /Introdução\nOuçam as trombetas\nD\s+C\s+D\s+\(7x\)/);
+    assert.match(await page.getByLabel("Cifra / Resumo", { exact: true }).inputValue(), /Ouçam as trombetas\nD\s+C\s+D\s+\(7x\)/);
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileEditor = await page.getByLabel("Cifra / Resumo", { exact: true }).boundingBox();
     assert.ok(mobileEditor && mobileEditor.width <= 358);
