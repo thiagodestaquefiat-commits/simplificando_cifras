@@ -17,7 +17,7 @@
     showNextPreview: true,
     showKey: true,
     autoScroll: false,
-    autoScrollSpeed: 60,
+    autoScrollSpeed: 30,
     fontSize: 28,
     fullscreen: true,
     wakeLock: true,
@@ -112,7 +112,8 @@
 
   // Reuse pixels/second: 60 px/s = 1.00x; each 0.05x step = 3 px/s.
   function normalizeScrollSpeed(value) {
-    return Math.round(clampNumber(value, 24, 120, BASE.autoScrollSpeed) / 3) * 3;
+    if (value == null || value === '') return BASE.autoScrollSpeed;
+    return Math.round(clampNumber(value, 6, 120, BASE.autoScrollSpeed) / 3) * 3;
   }
 
   function formatScrollSpeed(value) {

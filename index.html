@@ -441,11 +441,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <button type="button" class="stage-control" onclick="transpose(-1)" aria-label="Descer o tom">−</button>
         <button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">+</button>
       </div>
-      <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade do auto-scroll no palco">
-        <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar auto-scroll">▶</button><span>Scroll</span>
-        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
-        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
-        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade da rolagem no palco">
+        <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem">▶</button><span>Rolagem</span>
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
+        <output class="scroll-speed-value" aria-live="polite">0,50x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(-2)" aria-label="Diminuir fonte">A−</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(2)" aria-label="Aumentar fonte">A+</button>
       </div>
@@ -503,11 +503,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     </div>
     <div class="stage-toolbar">
       <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()">Modo Palco</button>
-      <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Auto-Scroll</button>
-      <div class="scroll-speed-controls" role="group" aria-label="Velocidade do auto-scroll">
-        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade do auto-scroll">−</button>
-        <output class="scroll-speed-value" aria-live="polite">1,00x</output>
-        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade do auto-scroll">+</button>
+      <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Rolagem</button>
+      <div class="scroll-speed-controls" role="group" aria-label="Velocidade da rolagem">
+        <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
+        <output class="scroll-speed-value" aria-live="polite">0,50x</output>
+        <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
       </div>
     </div>
     <div class="stage-toolbar" aria-label="Controles de apresentação">
@@ -579,7 +579,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
-<script src="js/stage-preferences.js?v=2"></script>
+<script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=1"></script>
 <script src="js/editor/song-format.js?v=8"></script>
 <script src="js/editor/song-editor-history.js"></script>
@@ -1280,7 +1280,7 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-let stageMode=false,scrollTimer=null,scrollSpeed=60,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
+let stageMode=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
 function stageContextData(){
@@ -1377,18 +1377,18 @@ function navigateStageTo(index){const target=navigationContext.select(index);if(
 function toggleAutoScroll(){if(scrollTimer!==null)stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
-  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Scroll';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar auto-scroll');}
+  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Rolagem';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar rolagem');}
   stageLastFrame=performance.now();stageScrollRemainder=0;
   const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);
 }
 function stopAutoScroll(){
   if(scrollTimer!==null){cancelAnimationFrame(scrollTimer);scrollTimer=null;}stageScrollRemainder=0;
-  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Auto-Scroll';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar auto-scroll');}
+  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Rolagem';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar rolagem');}
 }
 function updateScrollSpeedControls(){
   document.querySelectorAll('.scroll-speed-value').forEach(output=>output.textContent=stagePreferences.formatScrollSpeed(scrollSpeed));
-  document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=24:scrollSpeed>=120);
+  document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=6:scrollSpeed>=120);
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));

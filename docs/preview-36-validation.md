@@ -16,8 +16,12 @@ Somente `codex/classificacao-identidade`. Não fazer merge nem publicar em produ
 - 120 testes backend, com provider simulado e SQLite em memória; zero chamadas reais à OpenAI.
 - 25 testes principais frontend; regressão de identidade com 136 músicas simuladas.
 - Testes de palco nas duas abas com Auto Scroll real, Capo, transposição, navegação e ausência de mutação do Song, em mobile/desktop.
-- Classificação global, Auto Scroll 0,40x–2,00x em seis viewports, PWA/offline, YouTube, Eventos, editor e consistência do resumo.
+- Classificação global, Rolagem 0,10x–2,00x em seis viewports, PWA/offline, YouTube, Eventos, editor e consistência do resumo.
 - Fixtures sintéticas cobrem afinação, metadados, diagramas explícitos/rodapé, números técnicos, intro/interlúdio/solo, extensões/inversões, grafia exata, hooks e acordes ausentes da fonte, duplicatas e repetições.
 - A regra antiga de largura desktop 1366×768 permanece uma exceção preexistente autorizada; não foi alterada.
 
 Recomenda-se uma chamada real controlada com PDF representativo após autorização explícita, para avaliar OCR e qualidade semântica. Os testes simulados não demonstram fidelidade de OCR real. A biblioteca do celular não foi acessada; preservação validada por regressões e ausência de rotinas de migração/limpeza.
+
+## Ajuste pontual de Rolagem
+
+Controles normal e de palco usam Rolagem, passos de 0,05x, mínimo 0,10x, máximo 2,00x e padrão 0,50x. Preferências válidas existentes são preservadas sem regravação ao carregar. Testes cobrem todos os passos, limites, persistência e efeito imediato durante a rolagem, inclusive deslocamentos fracionários no mínimo. Nenhuma alteração de layout ou backend.

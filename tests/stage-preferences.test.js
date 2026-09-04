@@ -32,17 +32,28 @@ assert.notEqual(preferences.load('user-2', 'Bateria').contentMode, preferences.l
 
 const bounded = preferences.normalize({ fontSize: 100, autoScrollSpeed: 2, theme: 'invalid' });
 assert.equal(bounded.fontSize, 48);
-assert.equal(bounded.autoScrollSpeed, 24);
+assert.equal(bounded.autoScrollSpeed, 6);
 assert.equal(bounded.theme, 'dark');
 
 console.log('stage-preferences.test.js: OK');
-assert.equal(preferences.formatScrollSpeed(preferences.load('new-user').autoScrollSpeed),'1,00x');
+assert.equal(preferences.formatScrollSpeed(preferences.load('new-user').autoScrollSpeed),'0,50x');
 assert.equal(preferences.normalizeScrollSpeed(140),120);
 assert.equal(preferences.normalizeScrollSpeed(38),39);
-for(let speed=24;speed<=120;speed+=3){
+for(let speed=6;speed<=120;speed+=3){
   assert.match(preferences.formatScrollSpeed(speed),/^\d,\d{2}x$/);
   assert.equal(preferences.normalizeScrollSpeed(speed),speed);
 }
 preferences.save('speed-user',{autoScrollSpeed:39});
 assert.equal(preferences.formatScrollSpeed(preferences.load('speed-user').autoScrollSpeed),'0,65x');
-assert.equal(preferences.load('another-user').autoScrollSpeed,60);
+assert.equal(preferences.load('another-user').autoScrollSpeed,30);
+for(const missing of [undefined,null,'',NaN,'invalid'])assert.equal(preferences.normalizeScrollSpeed(missing),30);
+assert.equal(preferences.formatScrollSpeed(-100),'0,10x');
+assert.equal(preferences.formatScrollSpeed(999),'2,00x');
+
+for(const speed of [6,9,24,30,39,60,117,120]){
+  memory.set(preferences.STORAGE_KEY,JSON.stringify({'legacy-user':{autoScrollSpeed:speed}}));
+  const before=memory.get(preferences.STORAGE_KEY);
+  assert.equal(preferences.load('legacy-user').autoScrollSpeed,speed);
+  assert.equal(memory.get(preferences.STORAGE_KEY),before,'loading must not rewrite saved preferences');
+}
+for(let step=2;step<=40;step++)assert.equal(preferences.formatScrollSpeed(step*3),(step*0.05).toFixed(2).replace('.',',')+'x');
