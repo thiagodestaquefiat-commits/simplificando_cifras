@@ -25,6 +25,9 @@ const server = http.createServer((request, response) => {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
+  if (process.env.EVENT_UI_URL) await context.addInitScript(() => {
+    new MutationObserver(() => document.querySelectorAll('[data-netlify-deploy-id]').forEach((node) => node.remove())).observe(document, { childList: true, subtree: true });
+  });
   const page = await context.newPage();
   const errors = [];
   let staticMapRequests = 0;
