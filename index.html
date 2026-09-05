@@ -1732,6 +1732,10 @@ let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAut
 let chatReplyTo=null,chatLimit=40;
 function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
 function findEvent(id){return setlists.find(item=>String(item.id)===String(id));}
+function eventPermissionActor(event){
+  const localIdentity=eventCollaboration.readIdentity(),localUser=localIdentity&&localIdentity.user;
+  return event&&event.remoteVersion==null&&localUser&&eventModel.canAccess(event,localUser.id)?localUser:appCurrentUser;
+}
 function eventInitials(name){return String(name||'?').split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toUpperCase();}
 function eventDateTime(value){try{return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value));}catch(error){return '';}}
 function eventDateISO(value){
@@ -1792,7 +1796,8 @@ function eventSongVariant(event,item,userId){
 }
 
 function openAddSetlist(prefill){
-  if(prefill&&!eventModel.canEditShared(prefill,appCurrentUser.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
+  const permissionActor=prefill?eventPermissionActor(prefill):appCurrentUser;
+  if(prefill&&!eventModel.canEditShared(prefill,permissionActor.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
   editingId=prefill?prefill.id:null;
   const source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
   let selectedBandId=source.bandId||activeBandId||null;
@@ -1851,9 +1856,9 @@ function openAddSetlist(prefill){
     const previousItems=previous?previous.repertoire:[];
     const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
     let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
-    candidate=eventModel.withSharedChange(candidate,appCurrentUser,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
-    let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,appCurrentUser);}catch(error){showToast('🔒 '+error.message);return;}
-    try{candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
+    candidate=eventModel.withSharedChange(candidate,permissionActor,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
+    let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,permissionActor);}catch(error){showToast('🔒 '+error.message);return;}
+    try{if(candidate.remoteVersion!=null||String(permissionActor.id)===String(appCurrentUser.id)){candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
     setlists=result.events;eventRepository.save(setlists);
     try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+(editingId?' atualizou o evento.':' criou o evento.'));}catch(error){}
     closeModal();renderSetlists();showToast(syncWarning||(result.created?'📅 Evento criado':'✅ Evento atualizado'));
@@ -1929,7 +1934,7 @@ function openSD(id){
   }).join('');
   const memberCards=event.members.length?event.members.map(member=>`<div class="event-member-card"><div class="event-member-avatar">${eventMemberAvatar(member)}</div><div><strong>${eventEsc(member.name)}${String(member.id)===String(event.leaderId)?'<span class="event-leader-badge">Líder</span>':''}</strong><span>${eventEsc(member.role)}</span><code class="event-member-id">${eventEsc(member.id)}</code></div></div>`).join(''):'<div style="color:var(--text2);font-size:11px;">Nenhum membro escalado.</div>';
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
-  const canShared=eventModel.canEditShared(event,appCurrentUser.id),permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
+  const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id),permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
   document.getElementById('sd-content').innerHTML=`<div class="event-permission-note">${eventEsc(permissionText)}</div><div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-heading"><div class="event-section-title">Repertório oficial compartilhado</div><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-section-title">Membros participantes</div><div class="event-member-list">${memberCards}</div><div class="btn-row" style="margin-top:16px;">${canShared?`<button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar oficial</button>`:''}<button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button>${canShared?`<button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button>`:''}</div>`;
   const chatButton=document.getElementById('event-chat-fab');chatButton.innerHTML=`💬${unread?`<span class="event-chat-fab-badge">${unread}</span>`:''}`;chatButton.hidden=false;
   renderEventNoticeButton(event);
@@ -1966,7 +1971,7 @@ async function saveEventSongEdit(eventId,itemId){
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}
 
 function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
-async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;try{eventModel.requireLeader(event,appCurrentUser.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,appCurrentUser);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}setlists=eventRepository.removeShared(setlists,id,appCurrentUser);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
+async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
 function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}

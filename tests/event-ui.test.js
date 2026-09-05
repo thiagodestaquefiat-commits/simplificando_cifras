@@ -88,12 +88,41 @@ const server = http.createServer((request, response) => {
     await page.locator("#fs-date").fill("2026-08-23");
     await page.locator("#fs-time").fill("19:30");
     await page.locator("#pl-all .pl-add-row").first().click();
+    await page.locator("#pl-all .pl-add-row").first().click();
+    await page.locator("#pl-all .pl-add-row").first().click();
     await page.locator("#event-member-name").fill("Ana Souza");
     await page.locator("#event-member-role").selectOption({ label: "Vocal" });
     await page.locator(".event-add-member button").click();
     await page.getByRole("button", { name: "Salvar evento" }).click();
     await page.waitForFunction(() => setlists.some(event => event.title === "Culto de teste"));
     assert.equal(await page.evaluate(() => setlists.find(event => event.title === "Culto de teste").bandId), "band-test");
+    assert.equal(await page.evaluate(() => setlists.find(event => event.title === "Culto de teste").musicas.length), 3);
+
+    await page.evaluate(() => {
+      appCurrentUser=Object.freeze({id:'supabase-session-user',name:'Conta Supabase',role:'Liderança'});
+      currentAuthState={authenticated:true,user:{id:'supabase-session-user'}};
+      openSD(setlists.find(event => event.title === "Culto de teste").id);
+    });
+    assert.equal(await page.getByRole("button", { name: "Editar oficial", exact: false }).count(),1,'evento local preserva edição durante sessão Supabase');
+    await page.getByRole("button", { name: "Editar oficial", exact: false }).click();
+    await page.locator("#pl-all .pl-add-row").first().click();
+    await page.locator("#pl-selected .event-member-remove").first().click();
+    const expectedOrder = await page.locator("#pl-selected .pl-sel-row").allTextContents();
+    await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('#pl-selected .pl-sel-row')];
+      const idFrom = JSON.parse(rows.at(-1).getAttribute('ondragstart').match(/plDragStart\((.*)\)/)[1]);
+      const idTo = JSON.parse(rows[0].getAttribute('ondrop').match(/plDrop\((.*)\)/)[1]);
+      plDragStart(idFrom);plDrop(idTo);plDragEnd();
+    });
+    expectedOrder.unshift(expectedOrder.pop());
+    assert.deepEqual(await page.locator("#pl-selected .pl-sel-row").allTextContents(), expectedOrder);
+    await page.getByRole("button", { name: "Salvar evento" }).click();
+    await page.waitForFunction(() => document.getElementById('modal-overlay').style.display === 'none');
+    const expectedIds=await page.evaluate(() => setlists.find(event=>event.title==='Culto de teste').musicas.map(id=>String(id)));
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#tab-setlists").click();
+    assert.deepEqual(await page.evaluate(() => setlists.find(event=>event.title==='Culto de teste').musicas.map(id=>String(id))),expectedIds);
+    assert.equal(await page.evaluate(() => setlists.find(event => event.title === "Culto de teste").musicas.length), 3);
 
     await page.evaluate(() => openSD(setlists.find(event => event.title === "Culto de teste").id));
     assert.equal(await page.locator(".event-meta-item").getByText("23/08/2026", { exact: true }).count(), 1);
@@ -124,10 +153,10 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     await page.locator("#view-detail .back-btn").click();
     assert.equal(await page.locator("#event-chat-fab").isVisible(), true);
-    assert.equal(await page.locator(".event-notification-badge").textContent(), "1");
+    assert.equal(await page.locator(".event-notification-badge").textContent(), "2");
     await page.locator("#event-notification-button").click();
     assert.equal(await page.getByText("Alterações recentes", { exact: true }).count(), 1);
-    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 1);
+    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 2);
     assert.equal(await page.locator(".event-notification-badge").count(), 0);
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
 
@@ -150,7 +179,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText(/Oficial — todos do evento/).count(), 0);
     assert.equal(await page.locator(".event-notification-badge").textContent(), "1");
     await page.locator("#event-notification-button").click();
-    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 2);
+    assert.equal(await page.locator(".event-notification-list .event-notification").count(), 3);
     assert.equal(await page.locator(".event-notification-badge").count(), 0);
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
     await page.evaluate(() => { closeSD(); openSD(setlists.find(event => event.title === "Culto de teste").id); });
