@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180" role="img" aria-label="ROUDY"><g fill="#fff"><text x="40" y="68" font-family="Arial Black,Arial,sans-serif" font-size="38" font-weight="900" letter-spacing="-5">RD</text><text x="36" y="145" font-family="Arial Black,Arial,sans-serif" font-size="112" font-weight="900" letter-spacing="-8">ROUDY</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-label="ROUDY com monograma de cabo P10">
+  <g transform="translate(318 0)">
+    <text x="42" y="72" text-anchor="middle" fill="#fff" font-family="Arial Black,Arial,sans-serif" font-size="64" font-weight="900" letter-spacing="-7">RD</text>
+    <g fill="none" stroke="#050505" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 25v31c0 10 4 17 13 22" stroke-width="6"/>
+      <path d="M16 25v-7" stroke-width="4"/>
+    </g>
+    <rect x="11" y="37" width="10" height="18" rx="2" fill="#050505"/>
+  </g>
+  <text x="360" y="190" text-anchor="middle" fill="#fff" font-family="Arial Black,Arial,sans-serif" font-size="148" font-weight="900" letter-spacing="-10">ROUDY</text>
+</svg>

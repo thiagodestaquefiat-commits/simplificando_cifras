@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v85-roudy-icon";
+const CACHE_NAME = "simplificando-cifras-v86-roudy-p10";
 const ASSETS = [
   "./",
   "./index.html",
@@ -39,14 +39,14 @@ const ASSETS = [
   "./js/ai/harmonic-summary-client.js?v=8",
   "./js/ai/ai-harmonic-summary.js?v=4",
   "./js/ai/ai-harmonic-summary.css?v=4",
-  "./manifest.webmanifest?v=12",
+  "./manifest.webmanifest?v=13",
   "./assets/roudy-monogram.svg",
   "./assets/roudy-wordmark.svg",
-  "./assets/icons/roudy-icon-v2-48.png",
-  "./assets/icons/roudy-icon-v2-192.png",
-  "./assets/icons/roudy-icon-v2-512.png",
-  "./assets/icons/roudy-icon-v2-maskable-192.png",
-  "./assets/icons/roudy-icon-v2-maskable-512.png"
+  "./assets/icons/roudy-icon-v3-48.png",
+  "./assets/icons/roudy-icon-v3-192.png",
+  "./assets/icons/roudy-icon-v3-512.png",
+  "./assets/icons/roudy-icon-v3-maskable-192.png",
+  "./assets/icons/roudy-icon-v3-maskable-512.png"
 ];
 
 self.addEventListener("install", (event) => {
