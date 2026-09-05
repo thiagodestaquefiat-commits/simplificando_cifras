@@ -9,10 +9,10 @@ const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.web
 const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
 const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
 const requiredIcons = [
-  ["assets/icons/roudy-icon-v3-192.png", "192x192", "any"],
-  ["assets/icons/roudy-icon-v3-512.png", "512x512", "any"],
-  ["assets/icons/roudy-icon-v3-maskable-192.png", "192x192", "maskable"],
-  ["assets/icons/roudy-icon-v3-maskable-512.png", "512x512", "maskable"]
+  ["assets/icons/roudy-icon-v4-192.png", "192x192", "any"],
+  ["assets/icons/roudy-icon-v4-512.png", "512x512", "any"],
+  ["assets/icons/roudy-icon-v4-maskable-192.png", "192x192", "maskable"],
+  ["assets/icons/roudy-icon-v4-maskable-512.png", "512x512", "maskable"]
 ];
 assert.equal(manifest.icons.length, requiredIcons.length);
 
@@ -28,9 +28,9 @@ assert.equal(manifest.scope, ".");
 assert.equal(manifest.display, "standalone");
 assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
-assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=13"/);
+assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v86-roudy-p10/);
+assert.match(serviceWorker, /simplificando-cifras-v87-roudy-original/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
@@ -112,7 +112,7 @@ const server = http.createServer((request, response) => {
     const devtools = await context.newCDPSession(page);
     const appManifest = await devtools.send("Page.getAppManifest");
     assert.deepEqual(appManifest.errors, [], `Manifesto inválido no Chrome DevTools: ${JSON.stringify(appManifest.errors)}`);
-    assert.match(appManifest.url, /manifest\.webmanifest\?v=13$/);
+    assert.match(appManifest.url, /manifest\.webmanifest\?v=14$/);
     for (const [src] of requiredIcons) {
       const response = await page.request.get(new URL(src, url).href);
       assert.equal(response.status(), 200, `${src} não retornou HTTP 200`);

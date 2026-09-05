@@ -11,12 +11,12 @@
 <meta property="og:title" content="ROUDY">
 <meta property="og:description" content="Menos papel, menos distração, mais música.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="assets/icons/roudy-icon-v3-512.png">
+<meta property="og:image" content="assets/icons/roudy-icon-v4-512.png">
 <meta name="sc-api-base-url" content="https://simplificandocifras-production.up.railway.app">
-<link rel="manifest" href="manifest.webmanifest?v=13">
-<link rel="icon" href="assets/icons/roudy-icon-v3-48.png" sizes="48x48" type="image/png">
-<link rel="icon" href="assets/icons/roudy-icon-v3-192.png" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="assets/icons/roudy-icon-v3-192.png" sizes="192x192">
+<link rel="manifest" href="manifest.webmanifest?v=14">
+<link rel="icon" href="assets/icons/roudy-icon-v4-48.png" sizes="48x48" type="image/png">
+<link rel="icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=4">
 <style>
@@ -247,7 +247,7 @@ button,.tab,.music-item,.setlist-item,.fab,.chip,.capo-opt{-webkit-tap-highlight
 button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.music-item:focus-visible{outline:3px solid rgba(59,130,246,.45);outline-offset:2px}
 .app{max-width:720px;background:linear-gradient(180deg,#0c0c0c,var(--bg) 22%);border-inline:1px solid rgba(255,255,255,.07);box-shadow:0 0 70px rgba(0,0,0,.62)}
 .topbar{min-height:78px;padding:14px 18px;gap:13px;background:rgba(5,5,5,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/roudy-monogram.svg') center/cover no-repeat;box-shadow:0 7px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.14)}
+.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/icons/roudy-icon-v4-192.png') center/cover no-repeat;box-shadow:0 7px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.14)}
 .topbar-title{font-size:19px;font-weight:900;letter-spacing:1.3px}.topbar-sub{font-size:11px;color:#d4d4d4;font-weight:600;margin-top:3px}
 .brand-login-lockup{display:grid;margin:0 auto 18px;justify-items:center;text-align:center}.brand-login-lockup img{width:58px;height:58px;margin-bottom:8px}.brand-login-lockup strong{font-size:30px;font-weight:900;letter-spacing:1.5px}.brand-login-lockup span{margin-top:10px;color:#d4d4d4;font-size:13px;line-height:1.45}
 .export-library-btn{min-height:36px;padding:8px 12px;color:#dbeafe;background:rgba(37,99,235,.1);border:1px solid rgba(96,165,250,.32);border-radius:11px;font-size:10.5px;transition:background .2s,border-color .2s,transform .2s}
@@ -1776,7 +1776,7 @@ function renderAccountButton(){const button=document.getElementById('app-account
 async function openAccountModal(){
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const mode=currentAuthState.authenticated?'Conta conectada e protegida':'Identidade local deste dispositivo';
-  document.getElementById('modal-body').innerHTML=`<div class="brand-login-lockup"><img src="assets/roudy-monogram.svg" alt=""><strong>ROUDY</strong><span>Menos papel,<br>Menos distração,<br>Mais música.</span></div><div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Entrar não transfere seus dados locais para a conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+  document.getElementById('modal-body').innerHTML=`<div class="brand-login-lockup"><img src="assets/icons/roudy-icon-v4-192.png" alt=""><strong>ROUDY</strong><span>Menos papel,<br>Menos distração,<br>Mais música.</span></div><div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Entrar não transfere seus dados locais para a conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
