@@ -3,14 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simplificando Cifras</title>
-<meta name="theme-color" content="#07111f">
-<meta name="description" content="App de cifras com playlist musical, eventos, repertórios, membros, chat, medley e modo palco.">
+<title>ROUDY</title>
+<meta name="theme-color" content="#050505">
+<meta name="description" content="ROUDY — Menos papel, menos distração, mais música.">
+<meta name="application-name" content="ROUDY">
+<meta name="apple-mobile-web-app-title" content="ROUDY">
+<meta property="og:title" content="ROUDY">
+<meta property="og:description" content="Menos papel, menos distração, mais música.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/icons/roudy-icon-v4-512.png">
 <meta name="sc-api-base-url" content="https://simplificandocifras-production.up.railway.app">
-<link rel="manifest" href="manifest.webmanifest?v=10">
-<link rel="icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192" type="image/png">
-<link rel="icon" href="assets/icons/pwa-icon-v10-512.png" sizes="512x512" type="image/png">
-<link rel="apple-touch-icon" href="assets/icons/pwa-icon-v10-192.png" sizes="192x192">
+<link rel="manifest" href="manifest.webmanifest?v=14">
+<link rel="icon" href="assets/icons/roudy-icon-v4-48.png" sizes="48x48" type="image/png">
+<link rel="icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=4">
 <style>
@@ -233,16 +239,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   .detail-body{padding-inline:12px;}
 }
 /* IDENTIDADE VISUAL 2026 — somente apresentação */
-:root{--bg:#07111f;--bg2:#0b1728;--bg3:#111f33;--surface:#0e1c2f;--surface-hover:#142640;--accent:#2563eb;--accent-hover:#3b82f6;--accent2:rgba(37,99,235,.16);--success:#22c55e;--success-soft:rgba(34,197,94,.13);--text:#f8fafc;--text2:#94a3b8;--border:rgba(148,163,184,.15);--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.28);--music-accent:#E8896B}
-html{background:#050b14}
-body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 12% 4%,rgba(37,99,235,.15),transparent 30rem),radial-gradient(circle at 88% 96%,rgba(34,197,94,.08),transparent 26rem),#050b14}
+:root{--bg:#050505;--bg2:#0b0b0b;--bg3:#151515;--surface:#111;--surface-hover:#1a1a1a;--accent:#fff;--accent-hover:#e5e5e5;--accent2:rgba(255,255,255,.1);--success:#d4d4d4;--success-soft:rgba(255,255,255,.08);--text:#fff;--text2:#a3a3a3;--border:rgba(255,255,255,.13);--danger:#f87171;--shadow:0 18px 50px rgba(0,0,0,.48);--music-accent:#E8896B}
+html{background:#000}
+body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 50% -12%,rgba(255,255,255,.075),transparent 34rem),#000}
 button,input,textarea,select{font:inherit}
 button,.tab,.music-item,.setlist-item,.fab,.chip,.capo-opt{-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.music-item:focus-visible{outline:3px solid rgba(59,130,246,.45);outline-offset:2px}
-.app{max-width:720px;background:linear-gradient(180deg,rgba(11,23,40,.98),var(--bg) 22%);border-inline:1px solid rgba(148,163,184,.08);box-shadow:0 0 70px rgba(0,0,0,.42)}
-.topbar{min-height:78px;padding:14px 18px;gap:13px;background:rgba(7,17,31,.88);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/logo-simplificando-cifras.png') center/cover no-repeat;box-shadow:0 7px 22px rgba(37,99,235,.26),inset 0 0 0 1px rgba(255,255,255,.1)}
-.topbar-title{font-size:18px;font-weight:800;letter-spacing:-.35px}.topbar-sub{font-size:11px;color:var(--success);font-weight:600;margin-top:3px}
+.app{max-width:720px;background:linear-gradient(180deg,#0c0c0c,var(--bg) 22%);border-inline:1px solid rgba(255,255,255,.07);box-shadow:0 0 70px rgba(0,0,0,.62)}
+.topbar{min-height:78px;padding:14px 18px;gap:13px;background:rgba(5,5,5,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/icons/roudy-icon-v4-192.png') center/cover no-repeat;box-shadow:0 7px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.14)}
+.topbar-title{font-size:19px;font-weight:900;letter-spacing:1.3px}.topbar-sub{font-size:11px;color:#d4d4d4;font-weight:600;margin-top:3px}
+.brand-login-lockup{display:grid;margin:0 auto 18px;justify-items:center;text-align:center}.brand-login-lockup img{width:58px;height:58px;margin-bottom:8px}.brand-login-lockup strong{font-size:30px;font-weight:900;letter-spacing:1.5px}.brand-login-lockup span{margin-top:10px;color:#d4d4d4;font-size:13px;line-height:1.45}
 .export-library-btn{min-height:36px;padding:8px 12px;color:#dbeafe;background:rgba(37,99,235,.1);border:1px solid rgba(96,165,250,.32);border-radius:11px;font-size:10.5px;transition:background .2s,border-color .2s,transform .2s}
 .export-library-btn:hover{background:rgba(37,99,235,.2);border-color:#3b82f6;transform:translateY(-1px)}
 .tab-bar{position:relative;gap:6px;padding:7px 12px 9px;background:rgba(7,17,31,.92);border-bottom:1px solid var(--border)}
@@ -376,7 +383,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
     <div class="topbar">
       <div class="topbar-icon">🎸</div>
       <div class="topbar-info">
-        <div class="topbar-title">Simplificando Cifras</div>
+        <div class="topbar-title">ROUDY</div>
         <div class="topbar-sub" id="count-label"></div>
       </div>
       <button class="export-library-btn" type="button" onclick="exportarBiblioteca()" title="Baixar uma cópia completa dos dados">Exportar Biblioteca</button>
@@ -1691,7 +1698,7 @@ function sharePlaylist(id){
   const ms=s.musicas.map(mid=>musicas.find(m=>m.id===mid)).filter(Boolean);
   const texto='🎸 '+s.title+' ('+s.date+')\n\n'+
     ms.map((m,i)=>(i+1)+'. '+m.title+(m.artist?' — '+m.artist:'')+(m.key?' | Tom: '+m.key:'')+(m.capo?' | '+m.capo:'')).join('\n')+
-    '\n\n📱 Simplificando Cifras';
+    '\n\n📱 ROUDY';
   if(navigator.share){
     navigator.share({title:s.title,text:texto}).catch(()=>prompt('Copie:',texto));
   } else {
@@ -1732,6 +1739,10 @@ let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAut
 let chatReplyTo=null,chatLimit=40;
 function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
 function findEvent(id){return setlists.find(item=>String(item.id)===String(id));}
+function eventPermissionActor(event){
+  const localIdentity=eventCollaboration.readIdentity(),localUser=localIdentity&&localIdentity.user;
+  return event&&event.remoteVersion==null&&localUser&&eventModel.canAccess(event,localUser.id)?localUser:appCurrentUser;
+}
 function eventInitials(name){return String(name||'?').split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toUpperCase();}
 function eventDateTime(value){try{return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value));}catch(error){return '';}}
 function eventDateISO(value){
@@ -1765,7 +1776,7 @@ function renderAccountButton(){const button=document.getElementById('app-account
 async function openAccountModal(){
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const mode=currentAuthState.authenticated?'Conta conectada e protegida':'Identidade local deste dispositivo';
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Entrar não transfere seus dados locais para a conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+  document.getElementById('modal-body').innerHTML=`<div class="brand-login-lockup"><img src="assets/icons/roudy-icon-v4-192.png" alt=""><strong>ROUDY</strong><span>Menos papel,<br>Menos distração,<br>Mais música.</span></div><div class="modal-title">Minha conta</div><div class="event-permission-note"><strong>${eventEsc(appCurrentUser.name)}</strong><br>${eventEsc(mode)}<br><code class="event-member-id">${eventEsc(appCurrentUser.id)}</code></div>${currentAuthState.authenticated?`<button class="btn btn-outline" onclick="logoutAppAccount()">Sair da conta</button>`:currentAuthState.enabled?`<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><p class="event-scope-note">Entrar não transfere seus dados locais para a conta.</p>`:`<div class="event-permission-note">O login com Google será liberado quando as variáveis do Supabase forem configuradas no Railway. O modo local continua funcionando.</div>`}<button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
@@ -1792,7 +1803,8 @@ function eventSongVariant(event,item,userId){
 }
 
 function openAddSetlist(prefill){
-  if(prefill&&!eventModel.canEditShared(prefill,appCurrentUser.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
+  const permissionActor=prefill?eventPermissionActor(prefill):appCurrentUser;
+  if(prefill&&!eventModel.canEditShared(prefill,permissionActor.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
   editingId=prefill?prefill.id:null;
   const source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
   let selectedBandId=source.bandId||activeBandId||null;
@@ -1851,9 +1863,9 @@ function openAddSetlist(prefill){
     const previousItems=previous?previous.repertoire:[];
     const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
     let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
-    candidate=eventModel.withSharedChange(candidate,appCurrentUser,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
-    let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,appCurrentUser);}catch(error){showToast('🔒 '+error.message);return;}
-    try{candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
+    candidate=eventModel.withSharedChange(candidate,permissionActor,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
+    let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,permissionActor);}catch(error){showToast('🔒 '+error.message);return;}
+    try{if(candidate.remoteVersion!=null||String(permissionActor.id)===String(appCurrentUser.id)){candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
     setlists=result.events;eventRepository.save(setlists);
     try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+(editingId?' atualizou o evento.':' criou o evento.'));}catch(error){}
     closeModal();renderSetlists();showToast(syncWarning||(result.created?'📅 Evento criado':'✅ Evento atualizado'));
@@ -1929,7 +1941,7 @@ function openSD(id){
   }).join('');
   const memberCards=event.members.length?event.members.map(member=>`<div class="event-member-card"><div class="event-member-avatar">${eventMemberAvatar(member)}</div><div><strong>${eventEsc(member.name)}${String(member.id)===String(event.leaderId)?'<span class="event-leader-badge">Líder</span>':''}</strong><span>${eventEsc(member.role)}</span><code class="event-member-id">${eventEsc(member.id)}</code></div></div>`).join(''):'<div style="color:var(--text2);font-size:11px;">Nenhum membro escalado.</div>';
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
-  const canShared=eventModel.canEditShared(event,appCurrentUser.id),permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
+  const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id),permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
   document.getElementById('sd-content').innerHTML=`<div class="event-permission-note">${eventEsc(permissionText)}</div><div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-heading"><div class="event-section-title">Repertório oficial compartilhado</div><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-section-title">Membros participantes</div><div class="event-member-list">${memberCards}</div><div class="btn-row" style="margin-top:16px;">${canShared?`<button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar oficial</button>`:''}<button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button>${canShared?`<button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button>`:''}</div>`;
   const chatButton=document.getElementById('event-chat-fab');chatButton.innerHTML=`💬${unread?`<span class="event-chat-fab-badge">${unread}</span>`:''}`;chatButton.hidden=false;
   renderEventNoticeButton(event);
@@ -1966,7 +1978,7 @@ async function saveEventSongEdit(eventId,itemId){
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}
 
 function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
-async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;try{eventModel.requireLeader(event,appCurrentUser.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,appCurrentUser);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}setlists=eventRepository.removeShared(setlists,id,appCurrentUser);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
+async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
 function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}

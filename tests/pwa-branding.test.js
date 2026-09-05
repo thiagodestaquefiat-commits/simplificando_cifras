@@ -9,10 +9,10 @@ const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.web
 const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
 const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
 const requiredIcons = [
-  ["assets/icons/pwa-icon-v10-192.png", "192x192", "any"],
-  ["assets/icons/pwa-icon-v10-512.png", "512x512", "any"],
-  ["assets/icons/pwa-icon-v10-maskable-192.png", "192x192", "maskable"],
-  ["assets/icons/pwa-icon-v10-maskable-512.png", "512x512", "maskable"]
+  ["assets/icons/roudy-icon-v4-192.png", "192x192", "any"],
+  ["assets/icons/roudy-icon-v4-512.png", "512x512", "any"],
+  ["assets/icons/roudy-icon-v4-maskable-192.png", "192x192", "maskable"],
+  ["assets/icons/roudy-icon-v4-maskable-512.png", "512x512", "maskable"]
 ];
 assert.equal(manifest.icons.length, requiredIcons.length);
 
@@ -21,16 +21,19 @@ for (const [src, sizes, purpose] of requiredIcons) {
   assert.ok(icon, `Ícone ${src} (${purpose}) ausente no manifesto`);
   assert.ok(fs.existsSync(path.join(projectRoot, icon.src)), `Arquivo ${icon.src} ausente`);
 }
-assert.equal(manifest.name, "Simplificando Cifras");
-assert.equal(manifest.short_name, "Cifras");
+assert.equal(manifest.name, "ROUDY");
+assert.equal(manifest.short_name, "ROUDY");
 assert.equal(manifest.start_url, ".");
 assert.equal(manifest.scope, ".");
 assert.equal(manifest.display, "standalone");
-assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
-assert.equal(manifest.background_color.toUpperCase(), "#07111F");
-assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
+assert.equal(manifest.theme_color.toUpperCase(), "#050505");
+assert.equal(manifest.background_color.toUpperCase(), "#050505");
+assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v83-multiple-upload/);
+assert.match(serviceWorker, /simplificando-cifras-v87-roudy-original/);
+assert.match(indexHtml, /<title>ROUDY<\/title>/);
+assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
+assert.match(indexHtml, /Menos papel, menos distração, mais música/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=4/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
@@ -82,23 +85,34 @@ const server = http.createServer((request, response) => {
   await context.addInitScript(({ playlists, favorites }) => {
     localStorage.setItem("cifras_setlists_v1", playlists);
     localStorage.setItem("cifras_favoritos_v1", favorites);
+    const removeNetlifyDrawer = () => document.querySelector("netlify-drawer")?.remove();
+    document.addEventListener("DOMContentLoaded", () => {
+      removeNetlifyDrawer();
+      new MutationObserver(removeNetlifyDrawer).observe(document.documentElement, { childList: true, subtree: true });
+    });
   }, { playlists: persistedPlaylists, favorites: persistedFavorites });
   const page = await context.newPage();
   const errors = [];
+  const failedRequests = [];
+  page.on("requestfailed", (request) => {
+    if (/cdn\.segment\.com|\/\.netlify\/scripts\/cdp/.test(request.url())) return;
+    failedRequests.push(`${request.url()}: ${request.failure()?.errorText || "falhou"}`);
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error" && !message.text().includes("[app-auth] authentication failed") && !message.text().includes("ERR_INTERNET_DISCONNECTED")) errors.push(message.text());
+    const injectedPreviewResource = process.env.PWA_TEST_URL && message.text().startsWith("Failed to load resource:");
+    if (message.type() === "error" && !injectedPreviewResource && !message.text().includes("[app-auth] authentication failed") && !message.text().includes("ERR_INTERNET_DISCONNECTED")) errors.push(message.text());
   });
   await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
-  await page.route("http://127.0.0.1:5000/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local" }) }));
+  await page.route("**/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local" }) }));
 
   try {
-    const url = `http://127.0.0.1:${server.address().port}/`;
+    const url = process.env.PWA_TEST_URL || `http://127.0.0.1:${server.address().port}/`;
     await page.goto(url, { waitUntil: "domcontentloaded" });
     const devtools = await context.newCDPSession(page);
     const appManifest = await devtools.send("Page.getAppManifest");
     assert.deepEqual(appManifest.errors, [], `Manifesto inválido no Chrome DevTools: ${JSON.stringify(appManifest.errors)}`);
-    assert.match(appManifest.url, /manifest\.webmanifest\?v=10$/);
+    assert.match(appManifest.url, /manifest\.webmanifest\?v=14$/);
     for (const [src] of requiredIcons) {
       const response = await page.request.get(new URL(src, url).href);
       assert.equal(response.status(), 200, `${src} não retornou HTTP 200`);
@@ -111,7 +125,7 @@ const server = http.createServer((request, response) => {
       page.waitForEvent("download"),
       page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).click()
     ]);
-    assert.match(download.suggestedFilename(), /^simplificando-cifras-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
+    assert.match(download.suggestedFilename(), /^roudy-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
     const serviceWorkerState = await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
       if (registration.active && registration.active.state !== "activated") {
@@ -125,11 +139,11 @@ const server = http.createServer((request, response) => {
     assert.match(serviceWorkerState.scriptURL, /service-worker\.js$/);
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
-    assert.equal(await page.title(), "Simplificando Cifras");
+    assert.equal(await page.title(), "ROUDY");
     assert.equal(await page.locator(".music-item").count(), 86);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
-    assert.equal(errors.length, 0, errors.join(" | "));
+    assert.equal(errors.length, 0, [...errors, ...failedRequests].join(" | "));
     console.log("pwa-branding.test.js: OK");
   } finally {
     await context.close();

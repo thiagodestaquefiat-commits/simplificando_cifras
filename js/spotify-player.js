@@ -108,7 +108,7 @@
     publish({ status: "loading", message: "Preparando reprodução completa…" });
     playerPromise = loadSdk().then((Spotify) => new Promise((resolve, reject) => {
       player = new Spotify.Player({
-        name: "Simplificando Cifras",
+        name: "ROUDY",
         getOAuthToken(callback) {
           global.spotifyAuth.getAccessToken()
             .then(callback)
