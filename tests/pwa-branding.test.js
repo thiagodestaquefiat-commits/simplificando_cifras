@@ -93,12 +93,18 @@ const server = http.createServer((request, response) => {
   }, { playlists: persistedPlaylists, favorites: persistedFavorites });
   const page = await context.newPage();
   const errors = [];
+  const failedRequests = [];
+  page.on("requestfailed", (request) => {
+    if (/cdn\.segment\.com|\/\.netlify\/scripts\/cdp/.test(request.url())) return;
+    failedRequests.push(`${request.url()}: ${request.failure()?.errorText || "falhou"}`);
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error" && !message.text().includes("[app-auth] authentication failed") && !message.text().includes("ERR_INTERNET_DISCONNECTED")) errors.push(message.text());
+    const injectedPreviewResource = process.env.PWA_TEST_URL && message.text().startsWith("Failed to load resource:");
+    if (message.type() === "error" && !injectedPreviewResource && !message.text().includes("[app-auth] authentication failed") && !message.text().includes("ERR_INTERNET_DISCONNECTED")) errors.push(message.text());
   });
   await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ status: 200, contentType: "text/css", body: "" }));
-  await page.route("http://127.0.0.1:5000/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local" }) }));
+  await page.route("**/api/auth/config", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false, provider: "local" }) }));
 
   try {
     const url = process.env.PWA_TEST_URL || `http://127.0.0.1:${server.address().port}/`;
@@ -137,7 +143,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".music-item").count(), 86);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
-    assert.equal(errors.length, 0, errors.join(" | "));
+    assert.equal(errors.length, 0, [...errors, ...failedRequests].join(" | "));
     console.log("pwa-branding.test.js: OK");
   } finally {
     await context.close();
