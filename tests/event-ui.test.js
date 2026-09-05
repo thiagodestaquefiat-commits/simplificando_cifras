@@ -59,7 +59,7 @@ const server = http.createServer((request, response) => {
   await page.route("**/api/locations/map**", (route) => { staticMapRequests += 1; return route.fulfill({ status: 200, contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="320"><rect width="100%" height="100%" fill="#17324d"/></svg>' }); });
 
   try {
-    await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+    await page.goto(process.env.EVENT_UI_URL || `http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.locator("#tab-setlists").click();
     assert.equal(await page.getByText("Eventos disponíveis offline", { exact: true }).count(), 0);
     await page.evaluate(() => {
