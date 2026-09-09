@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v80-library-sync/);
+assert.match(serviceWorker, /simplificando-cifras-v82-library-sync-header/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=3/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
@@ -42,7 +42,7 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=6/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=6/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/library-sync\.js\?v=1/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=2/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
 for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
@@ -109,10 +109,12 @@ const server = http.createServer((request, response) => {
     }
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
+    assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 1);
     page.once("dialog", (dialog) => dialog.dismiss());
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).click()
+      page.evaluate(() => exportarBiblioteca())
     ]);
     assert.match(download.suggestedFilename(), /^simplificando-cifras-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
     const serviceWorkerState = await page.evaluate(async () => {

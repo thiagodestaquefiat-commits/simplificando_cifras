@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v81-library-sync-status";
+const CACHE_NAME = "simplificando-cifras-v82-library-sync-header";
 const ASSETS = [
   "./",
   "./index.html",
