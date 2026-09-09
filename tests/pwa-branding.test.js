@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#07111F");
 assert.equal(manifest.background_color.toUpperCase(), "#07111F");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=10"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v79-stage-header/);
+assert.match(serviceWorker, /simplificando-cifras-v80-library-sync/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=3/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
@@ -42,6 +42,9 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=6/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=6/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=1/);
+assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
+assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
 for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=1`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=1`));
