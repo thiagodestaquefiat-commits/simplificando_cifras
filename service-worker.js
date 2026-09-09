@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v90-compact-player";
+const CACHE_NAME = "simplificando-cifras-v91-min-player";
 const ASSETS = [
   "./",
   "./index.html",

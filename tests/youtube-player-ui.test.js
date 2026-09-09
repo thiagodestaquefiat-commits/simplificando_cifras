@@ -59,6 +59,8 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).borderStyle), "none", "os diagramas não devem usar cartões contornados");
     assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "os diagramas devem usar o fundo natural do aplicativo");
     assert.equal(await page.locator("#chord-diagrams-section").evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "a seção de diagramas deve ser transparente");
+    assert.equal(await page.locator(".chord-line").first().evaluate((node) => getComputedStyle(node).fontSize), "19.8px", "as cifras devem ficar 10% menores fora do modo palco");
+    assert.equal(await page.locator(".letra-linha").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as letras devem ficar 10% menores fora do modo palco");
     assert.equal(await player.evaluate((node) => getComputedStyle(node).position), "sticky");
     assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
 
@@ -111,7 +113,7 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Ativar miniplayer flutuante" }).click();
     assert.equal(await player.evaluate((node) => node.classList.contains("is-floating")), true, "o player deve entrar no modo flutuante");
     const floatingDimensions = await page.locator("#youtube-iframe-player").evaluate((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height }));
-    assert.ok(floatingDimensions.width >= 200 && floatingDimensions.width <= 240 && floatingDimensions.height >= 200, JSON.stringify(floatingDimensions));
+    assert.deepEqual(floatingDimensions, { width: 200, height: 200 }, JSON.stringify(floatingDimensions));
     const bar = page.locator(".youtube-player-floating-grip");
     const beforeDrag = await player.boundingBox();
     const barBox = await bar.boundingBox();
