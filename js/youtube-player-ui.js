@@ -16,6 +16,8 @@
   let floatingOffset = { x: 0, y: 0 };
   let playerHome = null;
   let playerNextSibling = null;
+  let activePlayerContainer = null;
+  let iframeFocusHandler = null;
   const CONTROLS_DURATION = 4500;
 
   function element(id) { return global.document.getElementById(id); }
@@ -59,13 +61,15 @@
   }
   function hideControls() {
     clearControlsTimer();
+    if (repeatPanel) return;
     if (controlsElement) controlsElement.classList.remove("is-visible");
+    activePlayerContainer?.focus?.({ preventScroll: true });
   }
   function showControls() {
     if (!controlsElement) return;
     controlsElement.classList.add("is-visible");
     clearControlsTimer();
-    controlsTimer = global.setTimeout(hideControls, CONTROLS_DURATION);
+    if (!repeatPanel) controlsTimer = global.setTimeout(hideControls, CONTROLS_DURATION);
   }
   function closeRepeatPanel() {
     if (repeatPanel) repeatPanel.remove();
@@ -88,7 +92,20 @@
     clearControlsTimer();
     controlsElement = null;
     closeRepeatPanel();
+    if (iframeFocusHandler) global.removeEventListener("blur", iframeFocusHandler);
+    iframeFocusHandler = null;
+    activePlayerContainer = null;
     resetFloating(container);
+  }
+
+  function watchIframeInteraction(container) {
+    activePlayerContainer = container;
+    container.tabIndex = -1;
+    iframeFocusHandler = () => global.setTimeout(() => {
+      const active = global.document.activeElement;
+      if (active?.tagName === "IFRAME" && container.contains(active)) showControls();
+    }, 0);
+    global.addEventListener("blur", iframeFocusHandler);
   }
 
   function attachFloatingDrag(container, handle) {
@@ -146,6 +163,24 @@
     return action;
   }
 
+  function handleRepeatAction(status, repeatAction) {
+    if (global.youtubePlayer.getSegmentLoop()) {
+      global.youtubePlayer.clearSegmentLoop();
+      repeatAction.classList.remove("is-active");
+      closeRepeatPanel();
+      status.textContent = "Player pronto";
+      showControls();
+      return;
+    }
+    if (repeatPanel) {
+      closeRepeatPanel();
+      showControls();
+      return;
+    }
+    openRepeatPanel(status, repeatAction);
+    showControls();
+  }
+
   function openRepeatPanel(status, repeatAction) {
     closeRepeatPanel();
     const duration = global.youtubePlayer.getDuration();
@@ -166,14 +201,27 @@
     panel.setAttribute("aria-label", "Selecionar trecho para repetir");
     const header = global.document.createElement("div");
     header.className = "youtube-repeat-header";
-    const reset = button("↶", "youtube-repeat-icon-btn", () => {
-      global.youtubePlayer.clearSegmentLoop();
-      repeatAction.classList.remove("is-active");
-      status.textContent = "Player pronto";
-      closeRepeatPanel();
+    const toggle = button("↶", "youtube-repeat-toggle", () => {
+      if (global.youtubePlayer.getSegmentLoop()) {
+        global.youtubePlayer.clearSegmentLoop();
+        repeatAction.classList.remove("is-active");
+        toggle.classList.remove("is-active");
+        toggle.setAttribute("aria-label", "Ativar repetição do trecho");
+        status.textContent = "Player pronto";
+      } else {
+        try {
+          global.youtubePlayer.setSegmentLoop(start, end);
+          repeatAction.classList.add("is-active");
+          toggle.classList.add("is-active");
+          toggle.setAttribute("aria-label", "Desativar repetição do trecho");
+          status.textContent = `Repetindo ${formatTime(start)}–${formatTime(end)}`;
+        } catch (error) { context.showToast(readableError(error)); }
+      }
       showControls();
-    }, "Desativar repetição");
-    header.append(reset, Object.assign(global.document.createElement("strong"), { textContent: "Selecione o trecho" }), button("×", "youtube-repeat-icon-btn", closeRepeatPanel, "Fechar seleção"));
+    }, saved ? "Desativar repetição do trecho" : "Ativar repetição do trecho");
+    if (saved) toggle.classList.add("is-active");
+    const closePanel = button("×", "youtube-repeat-icon-btn", () => { closeRepeatPanel(); showControls(); }, "Fechar seleção");
+    header.append(toggle, Object.assign(global.document.createElement("strong"), { textContent: "Selecione o trecho" }), closePanel);
     const timeline = global.document.createElement("div");
     timeline.className = "youtube-repeat-timeline";
     const startLabel = global.document.createElement("span");
@@ -194,21 +242,19 @@
       endLabel.textContent = formatTime(end);
       ranges.style.setProperty("--loop-start", `${start / duration * 100}%`);
       ranges.style.setProperty("--loop-end", `${end / duration * 100}%`);
+      if (source && global.youtubePlayer.getSegmentLoop()) {
+        global.youtubePlayer.clearSegmentLoop();
+        repeatAction.classList.remove("is-active");
+        toggle.classList.remove("is-active");
+        toggle.setAttribute("aria-label", "Ativar repetição do trecho");
+        status.textContent = "Player pronto";
+      }
     };
     startInput.addEventListener("input", () => update(startInput));
     endInput.addEventListener("input", () => update(endInput));
     ranges.append(startInput, endInput);
     timeline.append(startLabel, ranges, endLabel);
-    const apply = button("Repetir este trecho", "youtube-repeat-apply", () => {
-      try {
-        global.youtubePlayer.setSegmentLoop(start, end);
-        repeatAction.classList.add("is-active");
-        status.textContent = `Repetindo ${formatTime(start)}–${formatTime(end)}`;
-        closeRepeatPanel();
-        showControls();
-      } catch (error) { context.showToast(readableError(error)); }
-    });
-    panel.append(header, timeline, apply);
+    panel.append(header, timeline);
     global.document.body.appendChild(panel);
     repeatPanel = panel;
     update();
@@ -261,38 +307,30 @@
   function renderExpanded(container, song) {
     container.className = "youtube-player-shell is-linked is-expanded";
     playerTop(container);
-    const bar = global.document.createElement("div");
-    bar.className = "youtube-player-bar";
-    const details = global.document.createElement("div");
-    details.className = "youtube-player-bar-info";
     const status = global.document.createElement("small");
-    status.className = "youtube-player-status";
+    status.className = "youtube-player-status is-visually-hidden";
+    status.setAttribute("aria-live", "polite");
     status.textContent = "Carregando player…";
-    details.append(
-      Object.assign(global.document.createElement("strong"), { textContent: song.title }),
-      Object.assign(global.document.createElement("span"), { textContent: song.youtubeChannelTitle || song.artist || "YouTube" }),
-      status
-    );
-    const trigger = button("⋮", "youtube-player-menu-trigger", () => {
-      if (controlsElement?.classList.contains("is-visible")) hideControls();
-      else showControls();
-    }, "Mostrar opções do player");
-    bar.append(details, trigger);
     const frame = global.document.createElement("div");
     frame.id = "youtube-iframe-player";
     frame.className = "youtube-player-frame";
     const actions = global.document.createElement("nav");
     actions.className = "youtube-player-actions is-visible";
     actions.setAttribute("aria-label", "Opções do vídeo");
-    const repeat = createAction("↻", "Repetir trecho", "repeat", () => openRepeatPanel(status, repeat));
+    const repeat = createAction("↻", "Repetir trecho", "repeat", () => handleRepeatAction(status, repeat));
     const mini = createAction("▱", "Miniplayer", "floating", toggleFloating, "Ativar miniplayer flutuante");
     const change = createAction("▶", "Trocar vídeo", "change", showManualSearch, "Escolher outro vídeo");
     change.querySelector(".youtube-player-action-icon").classList.add("is-youtube");
     const close = createAction("×", "Fechar", "close", closeExpanded, "Fechar player");
     actions.append(repeat, mini, change, close);
+    const grip = global.document.createElement("div");
+    grip.className = "youtube-player-floating-grip";
+    grip.setAttribute("aria-label", "Arrastar miniplayer");
+    grip.textContent = "⠿";
     controlsElement = actions;
-    container.append(bar, frame, actions);
-    attachFloatingDrag(container, bar);
+    container.append(frame, actions, grip, status);
+    attachFloatingDrag(container, grip);
+    watchIframeInteraction(container);
     showControls();
     global.requestAnimationFrame(() => {
       global.youtubePlayer.mount("youtube-iframe-player", song.youtubeVideoId, {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v88-youtube-preview";
+const CACHE_NAME = "simplificando-cifras-v89-youtube-loop";
 const ASSETS = [
   "./",
   "./index.html",
@@ -16,8 +16,8 @@ const ASSETS = [
   "./js/event-chat.js?v=1",
   "./js/youtube-api.js?v=2",
   "./js/youtube-song-linker.js?v=1",
-  "./js/youtube-player.js?v=2",
-  "./js/youtube-player-ui.js?v=2",
+  "./js/youtube-player.js?v=3",
+  "./js/youtube-player-ui.js?v=3",
   "./js/youtube-ui.js?v=1",
   "./js/export-library.js",
   "./js/chord-library.js",

@@ -24,10 +24,12 @@
       if (!player || !segmentLoop || typeof player.getCurrentTime !== "function") return;
       const current = Number(player.getCurrentTime());
       if (!Number.isFinite(current)) return;
-      if (current >= segmentLoop.end || current < segmentLoop.start - 1) {
+      if (current >= segmentLoop.end - .08) {
+        const ended = typeof player.getPlayerState === "function" && player.getPlayerState() === 0;
         player.seekTo(segmentLoop.start, true);
+        if (ended && typeof player.playVideo === "function") player.playVideo();
       }
-    }, 250);
+    }, 100);
   }
 
   function loadSdk() {
