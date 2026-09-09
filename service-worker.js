@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v89-youtube-loop";
+const CACHE_NAME = "simplificando-cifras-v90-compact-player";
 const ASSETS = [
   "./",
   "./index.html",
