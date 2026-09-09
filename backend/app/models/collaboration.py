@@ -41,6 +41,20 @@ class ExternalIdentity(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
 
 
+class PersonalSong(db.Model):
+    __tablename__ = "personal_songs"
+    __table_args__ = (db.UniqueConstraint("owner_user_id", "client_id", name="uq_personal_song_owner_client"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    owner_user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    client_id = db.Column(db.String(160), nullable=False)
+    song_data = db.Column(db.JSON, nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+    deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
 class Band(db.Model):
     __tablename__ = "bands"
 
