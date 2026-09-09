@@ -33,6 +33,10 @@ require("../js/youtube-api.js");
     capo: "",
     blocos: []
   });
+  window.location.hostname = "deploy-preview-40--simplificandocifras.netlify.app";
+  window.document.querySelector = () => ({ content: "https://simplificandocifras-production.up.railway.app" });
+  await window.youtubeApi.searchVideos("Outra canção", 5);
+  assert.match(requestedUrl, /^https:\/\/simplificandocifras-production\.up\.railway\.app\/api\/youtube\/search\?/);
   console.log("youtube-api.test.js: OK");
 })().catch((error) => {
   console.error(error);

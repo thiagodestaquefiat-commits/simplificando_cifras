@@ -80,6 +80,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.auth import blueprint as auth_blueprint
     from .routes.bands import blueprint as bands_blueprint
     from .routes.music_sources import blueprint as music_sources_blueprint
+    from .routes.library import blueprint as library_blueprint
     from .routes.youtube import blueprint as youtube_blueprint
     from .routes.resumo_harmonico import blueprint
 
@@ -89,6 +90,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(bands_blueprint)
     app.register_blueprint(music_sources_blueprint)
+    app.register_blueprint(library_blueprint)
     app.register_blueprint(youtube_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.

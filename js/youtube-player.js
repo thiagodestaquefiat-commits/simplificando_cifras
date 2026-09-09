@@ -5,6 +5,32 @@
   let sdkPromise = null;
   let player = null;
   let mountedVideoId = null;
+  let segmentLoop = null;
+  let segmentTimer = null;
+
+  function stopSegmentTimer() {
+    if (segmentTimer) global.clearInterval(segmentTimer);
+    segmentTimer = null;
+  }
+
+  function clearSegmentLoop() {
+    segmentLoop = null;
+    stopSegmentTimer();
+  }
+
+  function monitorSegment() {
+    stopSegmentTimer();
+    segmentTimer = global.setInterval(() => {
+      if (!player || !segmentLoop || typeof player.getCurrentTime !== "function") return;
+      const current = Number(player.getCurrentTime());
+      if (!Number.isFinite(current)) return;
+      if (current >= segmentLoop.end - .08) {
+        const ended = typeof player.getPlayerState === "function" && player.getPlayerState() === 0;
+        player.seekTo(segmentLoop.start, true);
+        if (ended && typeof player.playVideo === "function") player.playVideo();
+      }
+    }, 100);
+  }
 
   function loadSdk() {
     if (global.YT && global.YT.Player) return Promise.resolve(global.YT);
@@ -29,6 +55,7 @@
   }
 
   function destroy() {
+    clearSegmentLoop();
     if (player && typeof player.destroy === "function") player.destroy();
     player = null;
     mountedVideoId = null;
@@ -77,7 +104,38 @@
     if (player && typeof player.pauseVideo === "function") player.pauseVideo();
   }
 
+  function play() {
+    if (player && typeof player.playVideo === "function") player.playVideo();
+  }
+
+  function getDuration() {
+    if (!player || typeof player.getDuration !== "function") return 0;
+    return Number(player.getDuration()) || 0;
+  }
+
+  function getCurrentTime() {
+    if (!player || typeof player.getCurrentTime !== "function") return 0;
+    return Number(player.getCurrentTime()) || 0;
+  }
+
+  function setSegmentLoop(start, end) {
+    const duration = getDuration();
+    const safeStart = Math.max(0, Number(start) || 0);
+    const safeEnd = Math.min(duration || Number(end), Number(end) || 0);
+    if (!Number.isFinite(safeEnd) || safeEnd <= safeStart + .5) throw new Error("Selecione um trecho válido.");
+    segmentLoop = { start: safeStart, end: safeEnd };
+    if (getCurrentTime() < safeStart || getCurrentTime() >= safeEnd) player.seekTo(safeStart, true);
+    play();
+    monitorSegment();
+    return { ...segmentLoop };
+  }
+
+  function getSegmentLoop() { return segmentLoop ? { ...segmentLoop } : null; }
+
   function currentVideoId() { return mountedVideoId; }
 
-  global.youtubePlayer = Object.freeze({ loadSdk, mount, pause, destroy, currentVideoId });
+  global.youtubePlayer = Object.freeze({
+    loadSdk, mount, play, pause, destroy, currentVideoId,
+    getDuration, getCurrentTime, setSegmentLoop, clearSegmentLoop, getSegmentLoop
+  });
 })(window);
