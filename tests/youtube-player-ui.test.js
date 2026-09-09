@@ -40,7 +40,7 @@ const server = http.createServer((request, response) => {
   await page.route("https://www.youtube.com/iframe_api", (route) => route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: `window.YT={Player:function(id,options){var old=document.getElementById(id);var frame=document.createElement('iframe');frame.id=id;frame.className=old.className;frame.title='YouTube video player';old.replaceWith(frame);this.destroy=function(){frame.remove()};this.pauseVideo=function(){};setTimeout(()=>options.events.onReady({target:this}),0);}};window.onYouTubeIframeAPIReady();`
+    body: `window.YT={Player:function(id,options){var old=document.getElementById(id);var frame=document.createElement('iframe');var current=32,state=1,seekCount=0;frame.id=id;frame.className=old.className;frame.title='YouTube video player';old.replaceWith(frame);window.__ytTest={setTime:function(value){current=value},getSeekCount:function(){return seekCount}};this.destroy=function(){frame.remove()};this.pauseVideo=function(){state=2;options.events.onStateChange({data:2,target:this})};this.playVideo=function(){state=1;options.events.onStateChange({data:1,target:this})};this.getPlayerState=function(){return state};this.getDuration=function(){return 240};this.getCurrentTime=function(){return current};this.seekTo=function(value){current=value;seekCount++};setTimeout(()=>options.events.onReady({target:this}),0);}};window.onYouTubeIframeAPIReady();`
   }));
 
   try {
@@ -54,11 +54,35 @@ const server = http.createServer((request, response) => {
     await page.getByText("Bondade de Deus", { exact: true }).click();
     const player = page.locator("#youtube-song-player");
     await player.waitFor({ state: "visible" });
+    const diagramScale = await page.locator(".chord-card svg").first().evaluate((svg) => Number(svg.getAttribute("width")) / svg.viewBox.baseVal.width);
+    assert.ok(Math.abs(diagramScale - .65) < .01, `escala esperada 65%, recebida ${diagramScale}`);
+    assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).borderStyle), "none", "os diagramas não devem usar cartões contornados");
+    assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "os diagramas devem usar o fundo natural do aplicativo");
+    assert.equal(await page.locator("#chord-diagrams-section").evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "a seção de diagramas deve ser transparente");
+    assert.equal(await page.locator(".chord-line").first().evaluate((node) => getComputedStyle(node).fontSize), "19.8px", "as cifras devem ficar 10% menores fora do modo palco");
+    assert.equal(await page.locator(".letra-linha").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as letras devem ficar 10% menores fora do modo palco");
     assert.equal(await player.evaluate((node) => getComputedStyle(node).position), "sticky");
     assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
 
     await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).click();
     await page.locator("#youtube-iframe-player").waitFor({ state: "visible" });
+    const changeButton = page.getByRole("button", { name: "Escolher outro vídeo" });
+    assert.match(await changeButton.innerText(), /Trocar vídeo/);
+    assert.equal(await changeButton.evaluate((node) => node.parentElement?.classList.contains("youtube-player-actions")), true, "o botão de troca deve ficar no menu retrátil");
+    assert.equal(await page.locator(".youtube-player-bar").count(), 0, "o cabeçalho acima do vídeo deve ser removido");
+    assert.equal(await page.locator(".youtube-player-status").evaluate((node) => node.classList.contains("is-visually-hidden")), true, "o status deve permanecer apenas para leitores de tela");
+    const actions = page.locator(".youtube-player-actions");
+    assert.equal(await actions.evaluate((node) => node.classList.contains("is-visible")), true, "as opções devem aparecer ao abrir o vídeo");
+    assert.equal(await page.getByRole("button", { name: "Selecionar trecho para repetir" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Repetir trecho" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Ativar miniplayer flutuante" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Fechar player" }).count(), 1);
+    await page.waitForTimeout(4650);
+    assert.equal(await actions.evaluate((node) => node.classList.contains("is-visible")), false, "as opções devem recolher automaticamente após 4,5 segundos");
+    const frameBox = await page.locator("#youtube-iframe-player").boundingBox();
+    await page.mouse.click(frameBox.x + frameBox.width / 2, frameBox.y + frameBox.height / 2);
+    await page.waitForTimeout(50);
+    assert.equal(await actions.evaluate((node) => node.classList.contains("is-visible")), true, "clicar no vídeo deve reabrir imediatamente as opções");
     const dimensions = await page.locator("#youtube-iframe-player").evaluate((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height }));
     assert.ok(dimensions.width >= 200 && dimensions.height >= 200, JSON.stringify(dimensions));
     const topBefore = await player.evaluate((node) => node.getBoundingClientRect().top);
@@ -67,10 +91,43 @@ const server = http.createServer((request, response) => {
     const topAfter = await player.evaluate((node) => node.getBoundingClientRect().top);
     assert.ok(Math.abs(topBefore - topAfter) <= 2, `${topBefore} != ${topAfter}`);
 
-    await page.getByRole("button", { name: "Recolher vídeo" }).click();
+    await page.getByRole("button", { name: "Repetir trecho" }).click();
+    const repeatPanel = page.getByRole("dialog", { name: "Selecionar trecho para repetir" });
+    await repeatPanel.waitFor({ state: "visible" });
+    const sliders = repeatPanel.locator("input[type=range]");
+    await sliders.nth(0).evaluate((node) => { node.value = "45"; node.dispatchEvent(new Event("input", { bubbles: true })); });
+    await sliders.nth(1).evaluate((node) => { node.value = "60"; node.dispatchEvent(new Event("input", { bubbles: true })); });
+    await page.waitForTimeout(4650);
+    assert.equal(await actions.evaluate((node) => node.classList.contains("is-visible")), true, "o menu deve permanecer visível enquanto o seletor de trecho estiver aberto");
+    await page.getByRole("button", { name: "Ativar repetição do trecho" }).click();
+    assert.equal(await repeatPanel.isVisible(), true, "o seletor deve continuar visível após ativar a repetição");
+    await page.evaluate(() => window.__ytTest.setTime(61));
+    await page.waitForTimeout(180);
+    const firstReturn = await page.evaluate(() => window.__ytTest.getSeekCount());
+    await page.evaluate(() => window.__ytTest.setTime(61));
+    await page.waitForTimeout(180);
+    const secondReturn = await page.evaluate(() => window.__ytTest.getSeekCount());
+    assert.ok(secondReturn > firstReturn, "o trecho deve voltar ao início em todas as repetições");
+    await page.getByRole("button", { name: "Repetir trecho" }).click();
+    assert.equal(await page.evaluate(() => window.youtubePlayer.getSegmentLoop()), null, "o segundo clique deve desativar a repetição");
+    await page.getByRole("button", { name: "Ativar miniplayer flutuante" }).click();
+    assert.equal(await player.evaluate((node) => node.classList.contains("is-floating")), true, "o player deve entrar no modo flutuante");
+    const floatingDimensions = await page.locator("#youtube-iframe-player").evaluate((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height }));
+    assert.deepEqual(floatingDimensions, { width: 200, height: 200 }, JSON.stringify(floatingDimensions));
+    const bar = page.locator(".youtube-player-floating-grip");
+    const beforeDrag = await player.boundingBox();
+    const barBox = await bar.boundingBox();
+    await page.mouse.move(barBox.x + 20, barBox.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(barBox.x + 5, barBox.y + 70, { steps: 3 });
+    await page.mouse.up();
+    const afterDrag = await player.boundingBox();
+    assert.notEqual(Math.round(afterDrag.y), Math.round(beforeDrag.y), "o miniplayer deve poder ser arrastado");
+
+    await page.getByRole("button", { name: "Fechar player" }).click();
     assert.equal(await page.locator("#youtube-iframe-player").count(), 0, "o iframe deve ser removido ao recolher");
     assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
-    console.log("youtube-player-ui.test.js: OK (miniatura, player oficial visível, sticky e recolhimento seguro)");
+    console.log("youtube-player-ui.test.js: OK (menu retrátil, repetição A-B, miniplayer arrastável e fechamento seguro)");
   } finally {
     await context.close();
     await browser.close();

@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v88-integration-39-40";
+const CACHE_NAME = "simplificando-cifras-v92-integration-39-40";
 const ASSETS = [
   "./",
   "./index.html",
@@ -15,10 +15,10 @@ const ASSETS = [
   "./js/map-preview.js?v=2",
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=1",
-  "./js/youtube-api.js?v=1",
+  "./js/youtube-api.js?v=2",
   "./js/youtube-song-linker.js?v=1",
-  "./js/youtube-player.js?v=1",
-  "./js/youtube-player-ui.js?v=1",
+  "./js/youtube-player.js?v=3",
+  "./js/youtube-player-ui.js?v=3",
   "./js/youtube-ui.js?v=1",
   "./js/export-library.js",
   "./js/import-library.js?v=1",
