@@ -7,8 +7,8 @@
     const hostname = String(global.location?.hostname || "");
     const preview = hostname.match(/^deploy-preview-(\d+)--simplificandocifras\.netlify\.app$/);
     if (runtime) return String(runtime).trim().replace(/\/$/, "");
-    if (preview) return `https://simplificandocifras-simplificandocifras-pr-${preview[1]}.up.railway.app`;
     if (meta) return String(meta).trim().replace(/\/$/, "");
+    if (preview) return `https://simplificandocifras-simplificandocifras-pr-${preview[1]}.up.railway.app`;
     return /^(localhost|127\.0\.0\.1)$/.test(hostname) ? "http://127.0.0.1:5000" : "";
   }
 
