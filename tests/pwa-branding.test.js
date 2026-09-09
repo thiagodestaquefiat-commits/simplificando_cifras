@@ -49,9 +49,9 @@ assert.match(serviceWorker, /js\/library-sync\.js\?v=2/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
-for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
-  assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=1`));
-  assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=1`));
+for (const [script, version] of [["youtube-api", 2], ["youtube-song-linker", 1], ["youtube-player", 3], ["youtube-player-ui", 3], ["youtube-ui", 1]]) {
+  assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
+  assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }
 assert.doesNotMatch(indexHtml, /js\/spotify-(?:config|auth|api|song-linker|player|player-ui|ui)\.js/);
 assert.match(serviceWorker, /js\/stage-preferences\.js\?v=3/);
