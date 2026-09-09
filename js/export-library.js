@@ -30,12 +30,6 @@
     return selected;
   }
 
-  function countSongs(collections) {
-    return Object.values(collections).reduce((total, value) => {
-      return total + (Array.isArray(value) ? value.length : 0);
-    }, 0);
-  }
-
   function buildExport(context) {
     const rawSnapshot = global.storage.snapshotRaw();
     const persisted = {};
@@ -89,7 +83,7 @@
       const payload = buildExport(context);
       downloadExport(payload);
       const standardCount = Array.isArray(context.catalogoPadrao) ? context.catalogoPadrao.length : 0;
-      const storedCount = countSongs(payload.origens.armazenamentoUsuario.dadosConhecidos.musicas);
+      const storedCount = Array.isArray(context.musicas) ? context.musicas.length : 0;
       return { standardCount, storedCount, payload };
     },
     buildExport

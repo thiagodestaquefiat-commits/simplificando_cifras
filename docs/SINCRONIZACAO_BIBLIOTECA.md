@@ -40,6 +40,14 @@ O download remoto é combinado com a coleção local pelo `client_id`; somente n
 
 Em lotes parcialmente aceitos, somente respostas confirmadas recebem nova versão e hash. Os itens que falharam continuam pendentes e uma nova tentativa envia apenas esses itens. Os lotes usam no máximo 100 músicas, portanto a fixture de 136 músicas é enviada em 100 + 36.
 
+## Backup manual e restauração
+
+A exportação versão 1 guarda três origens: catálogo empacotado, snapshot bruto por chave do navegador e estado atual da sessão. A cópia da sessão preserva o objeto `Song` inteiro, inclusive ID, `librarySync`, blocos, `editorData`, `fullChordSheet`, resumo, conteúdo completo, integrações e campos futuros. O snapshot bruto permanece disponível como fallback para backups anteriores.
+
+O restaurador escolhe uma única coleção pela ordem segura `sessaoAtual.musicas` → `sc_songs_v1` → chaves legadas; ele não soma as cópias espelhadas. Antes de gravar, apresenta total, novas, existentes, conflitos e inválidas. O merge usa `librarySync.clientId` e ID local. Título e artista nunca são tratados como identidade definitiva.
+
+Músicas idênticas são ignoradas, músicas novas são acrescentadas e diferenças sob o mesmo identificador são classificadas como conflito sem sobrescrever o dispositivo. Itens inválidos bloqueiam a restauração. A operação altera somente a coleção local de músicas e não restaura nem apaga eventos, repertórios ou outras chaves.
+
 ## Conflitos e exclusão
 
 Versões usam concorrência otimista. Se local e remoto mudaram desde a última versão conhecida, a cópia local é preservada e o envio é bloqueado para resolução futura. Uma versão remota mais nova só substitui cache local sem edição. Exclusão remota silenciosa não é usada pelo frontend nesta fase; o endpoint implementa apenas soft delete para um fluxo explícito futuro.

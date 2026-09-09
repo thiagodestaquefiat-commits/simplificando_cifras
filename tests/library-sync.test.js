@@ -74,6 +74,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Pendentes/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
- assert.match(sw,/simplificando-cifras-v82-library-sync-header/);assert.match(sw,/library-sync\.js\?v=2/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ assert.match(sw,/simplificando-cifras-v83-library-backup-restore/);assert.match(sw,/library-sync\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (29 cenários: painel, consentimento, A/B, conflito, parcial, 136 músicas, localStorage, Eventos e PWA)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

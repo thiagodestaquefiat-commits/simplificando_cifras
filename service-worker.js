@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v82-library-sync-header";
+const CACHE_NAME = "simplificando-cifras-v83-library-backup-restore";
 const ASSETS = [
   "./",
   "./index.html",
@@ -21,6 +21,7 @@ const ASSETS = [
   "./js/youtube-player-ui.js?v=1",
   "./js/youtube-ui.js?v=1",
   "./js/export-library.js",
+  "./js/import-library.js?v=1",
   "./js/chord-library.js",
   "./js/instruments/instrument-definitions.js",
   "./js/instruments/multi-instrument-chord-library.js",
