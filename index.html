@@ -42,6 +42,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .topbar-sub{font-size:11px;color:var(--accent);margin-top:1px;}
 .export-library-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:7px 9px;font:600 11px/1.2 inherit;cursor:pointer;white-space:nowrap;}
 .export-library-btn:hover{background:var(--accent2);}
+.library-sync-panel{display:grid;gap:14px;margin:12px 0 16px;padding:16px;border:1px solid var(--border);border-radius:14px;background:rgba(7,17,31,.45)}
+.library-sync-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.library-sync-count{padding:10px;border-radius:10px;background:rgba(255,255,255,.035)}
+.library-sync-count span{display:block;color:var(--text2);font-size:11px}.library-sync-count strong{display:block;margin-top:3px;color:var(--text);font-size:20px}
+.library-sync-state{display:flex;align-items:flex-start;gap:9px;color:var(--text2);font-size:13px;line-height:1.45}.library-sync-state strong{display:block;color:var(--text);font-size:14px}
+.library-sync-state[data-state="synced"]{color:#86efac}.library-sync-state[data-state="conflict"],.library-sync-state[data-state="error"]{color:#fbbf24}
 /* TABS */
 .tab-bar{background:var(--bg2);display:flex;border-bottom:1px solid var(--border);}
 .tab{flex:1;padding:11px 4px;text-align:center;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;font-weight:500;}
@@ -386,7 +392,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <div class="topbar-title">ROUDY</div>
         <div class="topbar-sub" id="count-label"></div>
       </div>
-      <button class="export-library-btn" type="button" onclick="exportarBiblioteca()" title="Baixar uma cópia completa dos dados">Exportar Biblioteca</button>
+      <button class="export-library-btn" id="library-sync-btn" type="button" onclick="openLibrarySync()">Sincronização</button>
       <button class="app-account-btn" id="app-account-btn" type="button" onclick="openAccountModal()" aria-label="Abrir conta">EU</button>
     </div>
     <div class="tab-bar">
@@ -572,6 +578,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
+<script src="js/library-sync.js?v=2"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -581,6 +588,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/youtube-player-ui.js?v=1"></script>
 <script src="js/youtube-ui.js?v=1"></script>
 <script src="js/export-library.js"></script>
+<script src="js/import-library.js?v=1"></script>
 <script src="js/chord-library.js"></script>
 <script src="js/instruments/instrument-definitions.js"></script>
 <script src="js/instruments/multi-instrument-chord-library.js"></script>
@@ -595,7 +603,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=4"></script>
+<script src="js/ai/api-config.js?v=5"></script>
 <script src="js/app-auth.js?v=7"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
@@ -645,6 +653,7 @@ function shiftText(text,s){
 function salvar(){
   const musicasSalvas=songRepository.save(musicas);
   const setlistsSalvas=eventRepository.save(setlists);
+  if(musicasSalvas)librarySync.schedule();
   showToast(musicasSalvas&&setlistsSalvas?'💾 Salvo!':'⚠️ Erro ao salvar');
 }
 function showToast(msg){
@@ -1773,6 +1782,48 @@ async function refreshBands(silent){
   catch(error){if(!silent)showToast('⚠️ '+error.message);renderBandToolbar();return appBands;}
 }
 function renderAccountButton(){const button=document.getElementById('app-account-btn');if(!button)return;button.textContent=eventInitials(appCurrentUser.name);button.classList.toggle('authenticated',Boolean(currentAuthState.authenticated));button.title=currentAuthState.authenticated?'Conta conectada':'Identidade local';}
+async function openLibrarySync(){
+  document.getElementById('modal-overlay').style.display='flex';
+  renderLibrarySyncPanel(librarySync.getStatus());
+  try{renderLibrarySyncPanel(await librarySync.review());}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
+}
+function librarySyncCopy(state){
+  if(state.phase==='unauthenticated')return {icon:'☁️',title:'Sincronização desativada',message:'Entre na sua conta para sincronizar sua biblioteca.'};
+  if(state.phase==='syncing')return {icon:'↻',title:'Sincronizando biblioteca',message:'Estamos validando suas músicas com segurança.'};
+  if(state.phase==='offline')return {icon:'◌',title:'Você está offline',message:'Suas músicas continuam disponíveis neste dispositivo.'};
+  if(state.phase==='conflict')return {icon:'⚠',title:`${state.conflicts} conflito${state.conflicts===1?'':'s'} precisa${state.conflicts===1?'':'m'} de atenção`,message:'As versões local e remota foram preservadas. Nada foi sobrescrito.'};
+  if(state.phase==='error')return {icon:'⚠',title:'Não foi possível concluir a sincronização',message:state.error||'Suas músicas locais estão preservadas. Tente novamente.'};
+  if(state.phase==='needs-consent')return {icon:'☁️',title:`Encontramos ${state.local} música${state.local===1?'':'s'} neste dispositivo`,message:'Você pode salvá-las na sua conta ROUDY para acessá-las em outros dispositivos.'};
+  if(state.phase==='pending')return {icon:'↥',title:`${state.pending} música${state.pending===1?'':'s'} aguardando sincronização`,message:state.remotePending?'Existem alterações locais ou remotas prontas para serem conciliadas.':'Suas alterações locais ainda precisam chegar à nuvem.'};
+  return {icon:'✓',title:'Biblioteca sincronizada',message:'As músicas deste dispositivo estão atualizadas.'};
+}
+function renderLibrarySyncPanel(state){
+  const body=document.getElementById('modal-body');if(!body)return;
+  const copy=librarySyncCopy(state),canSync=state.authenticated&&state.online&&state.phase!=='syncing'&&state.conflicts===0;
+  const action=!state.authenticated
+    ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
+    :`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Sincronizar agora':'Sincronizar com minha conta'}</button>`;
+  body.innerHTML=`<div class="modal-title">Biblioteca</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Pendentes</span><strong>${Number(state.pending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+}
+let libraryRestoreDraft=null;
+function selectLibraryBackup(){
+  const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.hidden=true;
+  input.addEventListener('change',async()=>{const file=input.files&&input.files[0];input.remove();if(!file)return;try{const plan=libraryImporter.parse(await file.text(),musicas);libraryRestoreDraft={plan,fileName:file.name};renderLibraryRestoreReview(plan);}catch(error){showToast('⚠️ '+error.message);}});
+  document.body.appendChild(input);input.click();
+}
+function renderLibraryRestoreReview(plan){
+  const blocked=plan.invalid>0;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Backup encontrado</div><section class="library-sync-panel"><div class="library-sync-state"><span>🛟</span><div><strong>${plan.total} música${plan.total===1?'':'s'}</strong>Revise o resultado antes de restaurar.</div></div><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${plan.current}</strong></div><div class="library-sync-count"><span>Novas</span><strong>${plan.newSongs}</strong></div><div class="library-sync-count"><span>Já existentes</span><strong>${plan.existing}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${plan.conflicts}</strong></div></div>${plan.invalid?`<div class="library-sync-state" data-state="error"><span>⚠</span><div><strong>${plan.invalid} item${plan.invalid===1?' inválido':'s inválidos'}</strong>Nenhum dado será alterado enquanto o arquivo contiver itens inválidos.</div></div>`:''}${plan.conflicts?`<div class="library-sync-state" data-state="conflict"><span>⚠</span><div><strong>Conflitos não serão sobrescritos</strong>Somente músicas novas serão adicionadas.</div></div>`:''}</section><button class="btn btn-primary" onclick="confirmLibraryRestore()" ${blocked?'disabled':''}>Restaurar</button><button class="btn btn-outline" onclick="openLibrarySync()">Cancelar</button>`;
+}
+function confirmLibraryRestore(){
+  if(!libraryRestoreDraft)return;
+  try{const result=libraryImporter.apply(libraryRestoreDraft.plan,musicas);if(!songRepository.save(result.songs))throw new Error('Não foi possível gravar a biblioteca neste dispositivo.');musicas=result.songs;renderMusicas();librarySync.schedule();libraryRestoreDraft=null;showToast(`✅ ${result.restored} música(s) restauradas; ${result.conflicts} conflito(s) preservados.`);openLibrarySync();}catch(error){showToast('⚠️ '+error.message);}
+}
+async function confirmLibrarySync(){
+  const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
+  try{const result=await librarySync.syncNow();renderLibrarySyncPanel(result.status);showToast(`✅ ${result.total-result.failed} música(s) validadas; ${result.failed} falha(s).`);}
+  catch(error){renderLibrarySyncPanel(librarySync.getStatus());showToast('⚠️ '+error.message);}
+}
 async function openAccountModal(){
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const mode=currentAuthState.authenticated?'Conta conectada e protegida':'Identidade local deste dispositivo';
@@ -2018,7 +2069,7 @@ function openPollModal(){document.getElementById('modal-body').innerHTML='<div c
 function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:document.getElementById('poll-question').value,options:document.getElementById('poll-options').value.split(/\n/),multiple:document.getElementById('poll-multiple').checked,showVoters:document.getElementById('poll-voters').checked});closeModal();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
 
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
-function closeModal(){if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
+function closeModal(){if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;libraryRestoreDraft=null;}
 
 function exportarBiblioteca(){
   const result=libraryExporter.export({
@@ -2078,6 +2129,8 @@ appAuth.subscribe(async state=>{
     renderAccountButton();renderSetlists();renderBandToolbar();
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas});
+librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
 checkShareParam();
 youtubeUI.initialize({

@@ -23,6 +23,7 @@
     musicSourceEndpoint(path) { return endpoint("/api/music-sources" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     authEndpoint(path) { return endpoint("/api/auth" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     locationEndpoint(path) { return endpoint("/api/locations" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
-    collaborationEndpoint(path) { return endpoint("/api/collaboration" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); }
+    collaborationEndpoint(path) { return endpoint("/api/collaboration" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
+    libraryEndpoint(path) { return endpoint("/api/library/songs" + (String(path || "").startsWith("/") ? path : path ? "/" + String(path) : "")); }
   });
 })(window);

@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v87-roudy-original/);
+assert.match(serviceWorker, /simplificando-cifras-v88-integration-39-40/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
@@ -45,6 +45,10 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=2/);
+assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
+assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
+assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
 for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=1`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=1`));
@@ -120,12 +124,35 @@ const server = http.createServer((request, response) => {
     }
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
+    assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 1);
     page.once("dialog", (dialog) => dialog.dismiss());
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).click()
+      page.evaluate(() => exportarBiblioteca())
     ]);
     assert.match(download.suggestedFilename(), /^roudy-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
+    const backupJson = await page.evaluate(() => JSON.stringify(libraryExporter.buildExport({
+      catalogoPadrao: [],
+      musicas: [musicas[0]],
+      events: [],
+      playlists: [],
+      medleys: [],
+      favoritos: [],
+      configuracoes: {}
+    })));
+    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({ name: "backup-seguro.json", mimeType: "application/json", buffer: Buffer.from(backupJson) });
+    await page.getByText("Backup encontrado", { exact: true }).waitFor();
+    assert.match(await page.locator("#modal-body").innerText(), /1 música[\s\S]*Novas\s*0[\s\S]*Já existentes\s*1[\s\S]*Conflitos\s*0/);
+    await page.getByRole("button", { name: "Restaurar", exact: true }).click();
+    assert.equal(await page.locator(".music-item").count(), 86, "restauração idempotente não duplica a biblioteca");
+    assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
+    assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
+    await page.getByRole("button", { name: "Fechar", exact: true }).click();
     const serviceWorkerState = await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
       if (registration.active && registration.active.state !== "activated") {

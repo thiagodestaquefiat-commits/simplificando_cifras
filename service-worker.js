@@ -1,10 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v87-roudy-original";
+const CACHE_NAME = "simplificando-cifras-v88-integration-39-40";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
   "./js/song-repository.js",
+  "./js/library-sync.js?v=2",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
   "./js/event-collaboration-client.js?v=4",
@@ -20,6 +21,7 @@ const ASSETS = [
   "./js/youtube-player-ui.js?v=1",
   "./js/youtube-ui.js?v=1",
   "./js/export-library.js",
+  "./js/import-library.js?v=1",
   "./js/chord-library.js",
   "./js/instruments/instrument-definitions.js",
   "./js/instruments/multi-instrument-chord-library.js",
@@ -35,7 +37,7 @@ const ASSETS = [
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
-  "./js/ai/api-config.js?v=4",
+  "./js/ai/api-config.js?v=5",
   "./js/ai/harmonic-summary-client.js?v=8",
   "./js/ai/ai-harmonic-summary.js?v=4",
   "./js/ai/ai-harmonic-summary.css?v=4",

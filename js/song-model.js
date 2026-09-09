@@ -40,6 +40,7 @@
   function normalizeBlocks(value) {
     if (!Array.isArray(value)) return [];
     return value.map((block) => ({
+      ...(block && typeof block === "object" ? block : {}),
       l: preserveText(block && block.l),
       c: preserveText(block && block.c)
     }));
@@ -50,14 +51,18 @@
     const content = preserveText(value.content).replace(/\r\n?/g, "\n").trim();
     if (!content) return null;
     return {
+      ...value,
       visibility: "private",
       source: value.source === "user_text" ? "user_text" : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
+        ...(section && typeof section === "object" ? section : {}),
         nome: optionalText(section && section.nome),
         linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
+          ...(line && typeof line === "object" ? line : {}),
           letra: preserveText(line && line.letra),
           acordes: Array.isArray(line && line.acordes) ? line.acordes.map((item) => ({
+            ...(item && typeof item === "object" ? item : {}),
             acorde: cleanText(item && item.acorde).replace(/\s+/g, ""),
             posicao: Math.max(0, Math.min(500, Number(item && item.posicao) || 0))
           })).filter((item) => item.acorde) : []
