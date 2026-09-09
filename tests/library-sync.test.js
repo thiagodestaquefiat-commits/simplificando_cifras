@@ -60,7 +60,8 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 
  const offline=device('offline-user',[song(200)],{online:false,consent:true});await settle();assert.equal(offline.sync.getStatus().phase,'offline');
  const offlineSongs=offline.songs;offlineSongs.push(song(201));offline.replace(offlineSongs);offline.sync.schedule();assert.equal(offline.songs.length,2);assert.equal(offline.storage.get('sc_songs_v1').length,2);
- offline.setOnline(true);await new Promise(resolve=>setTimeout(resolve,1300));assert.equal(remote.get('offline-user').size,2,'criação offline sincroniza ao voltar');
+ const reopened=device('offline-user',offline.storage.get('sc_songs_v1'),{online:false,consent:true});await settle();assert.equal(reopened.songs.length,2,'fechar e reabrir offline preserva músicas');
+ reopened.setOnline(true);await new Promise(resolve=>setTimeout(resolve,1300));assert.equal(remote.get('offline-user').size,2,'criação offline sincroniza ao voltar');
  const offlineB=device('offline-user',[]);await settle();assert.equal(offlineB.songs.length,2);
 
  const partialSongs=Array.from({length:10},(_,i)=>song(300+i)),partial=device('partial-user',partialSongs);await settle();
@@ -73,6 +74,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Pendentes/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);
- assert.match(sw,/simplificando-cifras-v81-library-sync-status/);assert.match(sw,/library-sync\.js\?v=2/);
+ assert.match(sw,/simplificando-cifras-v81-library-sync-status/);assert.match(sw,/library-sync\.js\?v=2/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (29 cenários: painel, consentimento, A/B, conflito, parcial, 136 músicas, localStorage, Eventos e PWA)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
