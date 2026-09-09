@@ -23,6 +23,23 @@ O `client_id` é criado no dispositivo somente após a confirmação de sincroni
 5. Cada item retorna `created`, `existing`, `updated` ou `failed`; uma retomada reutiliza os mesmos IDs.
 6. A cópia local nunca é apagada.
 
+## Painel e contadores
+
+O painel usa o mesmo estado do mecanismo de sincronização, sem números fixos:
+
+- **Neste dispositivo:** quantidade atual de músicas retornada por `songRepository`, incluindo músicas que existem somente localmente.
+- **Na nuvem:** quantidade de registros pessoais ativos retornados pela conta autenticada; itens com `deleted_at` não entram na resposta.
+- **Pendentes:** soma de alterações locais ainda não confirmadas pelo servidor e versões remotas ainda não aplicadas localmente. Um item é contado uma única vez em cada direção.
+- **Conflitos:** músicas para as quais local e remoto mudaram desde a última versão conhecida. A cópia local e um snapshot da cópia remota ficam preservados no metadado local para uma resolução futura.
+
+Os estados visíveis são: sem autenticação, aguardando consentimento, sincronizando, sincronizado, pendente, offline, conflito e erro. O painel nunca inicia o primeiro upload sozinho. Depois do consentimento, edições locais podem ser retomadas automaticamente quando a conexão volta.
+
+## Dois dispositivos e falhas parciais
+
+O download remoto é combinado com a coleção local pelo `client_id`; somente na adoção inicial também é aceito o ID original exato. Uma música local exclusiva nunca é removida pelo download. Se um dispositivo não alterou uma música, uma versão remota mais nova pode atualizar seu cache; se ambos alteraram, nenhuma delas é sobrescrita.
+
+Em lotes parcialmente aceitos, somente respostas confirmadas recebem nova versão e hash. Os itens que falharam continuam pendentes e uma nova tentativa envia apenas esses itens. Os lotes usam no máximo 100 músicas, portanto a fixture de 136 músicas é enviada em 100 + 36.
+
 ## Conflitos e exclusão
 
 Versões usam concorrência otimista. Se local e remoto mudaram desde a última versão conhecida, a cópia local é preservada e o envio é bloqueado para resolução futura. Uma versão remota mais nova só substitui cache local sem edição. Exclusão remota silenciosa não é usada pelo frontend nesta fase; o endpoint implementa apenas soft delete para um fluxo explícito futuro.
