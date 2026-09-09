@@ -379,6 +379,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
         <div class="topbar-sub" id="count-label"></div>
       </div>
       <button class="export-library-btn" type="button" onclick="exportarBiblioteca()" title="Baixar uma cópia completa dos dados">Exportar Biblioteca</button>
+      <button class="export-library-btn" id="library-sync-btn" type="button" onclick="openLibrarySync()" hidden>Sincronizar Biblioteca</button>
       <button class="app-account-btn" id="app-account-btn" type="button" onclick="openAccountModal()" aria-label="Abrir conta">EU</button>
     </div>
     <div class="tab-bar">
@@ -564,6 +565,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
+<script src="js/library-sync.js?v=1"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -587,7 +589,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=4"></script>
+<script src="js/ai/api-config.js?v=5"></script>
 <script src="js/app-auth.js?v=7"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
@@ -637,6 +639,7 @@ function shiftText(text,s){
 function salvar(){
   const musicasSalvas=songRepository.save(musicas);
   const setlistsSalvas=eventRepository.save(setlists);
+  if(musicasSalvas)librarySync.schedule();
   showToast(musicasSalvas&&setlistsSalvas?'💾 Salvo!':'⚠️ Erro ao salvar');
 }
 function showToast(msg){
@@ -1776,6 +1779,19 @@ async function refreshBands(silent){
   catch(error){if(!silent)showToast('⚠️ '+error.message);renderBandToolbar();return appBands;}
 }
 function renderAccountButton(){const button=document.getElementById('app-account-btn');if(!button)return;button.textContent=eventInitials(appCurrentUser.name);button.classList.toggle('authenticated',Boolean(currentAuthState.authenticated));button.title=currentAuthState.authenticated?'Conta conectada':'Identidade local';}
+async function openLibrarySync(){
+  if(!currentAuthState.authenticated){showToast('Entre com Google antes de sincronizar.');return;}
+  try{
+    const state=await librarySync.review();
+    document.getElementById('modal-body').innerHTML=`<div class="modal-title">Sincronizar Biblioteca</div><div class="event-permission-note">Encontramos <strong>${state.local}</strong> música(s) neste dispositivo.<br><strong>${state.remote}</strong> já estão na conta.<br><strong>${state.toUpload}</strong> serão copiadas para sua conta.</div><p class="event-scope-note">A cópia local será preservada. Nenhuma música será apagada.</p><button class="btn btn-primary" onclick="confirmLibrarySync()">Sincronizar com minha conta</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
+    document.getElementById('modal-overlay').style.display='flex';
+  }catch(error){showToast('⚠️ '+error.message);}
+}
+async function confirmLibrarySync(){
+  const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
+  try{const result=await librarySync.syncNow();closeModal();showToast(`✅ ${result.total-result.failed} música(s) validadas; ${result.failed} falha(s).`);}
+  catch(error){if(button)button.disabled=false;showToast('⚠️ '+error.message);}
+}
 async function openAccountModal(){
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const mode=currentAuthState.authenticated?'Conta conectada e protegida':'Identidade local deste dispositivo';
@@ -2059,7 +2075,7 @@ if(document.getElementById('event-current-user-id'))document.getElementById('eve
 renderAccountButton();renderBandToolbar();
 if(appIdentity.accessToken)setTimeout(()=>syncEventsNow(true),0);
 appAuth.subscribe(async state=>{
-  currentAuthState=state;renderAccountButton();
+  currentAuthState=state;renderAccountButton();document.getElementById('library-sync-btn').hidden=!state.authenticated;
   if(authLinking||!state.authenticated||!state.user||String(state.user.id)===String(appCurrentUser.id))return;
   authLinking=true;
   const previousUser=appCurrentUser;
@@ -2071,6 +2087,7 @@ appAuth.subscribe(async state=>{
     renderAccountButton();renderSetlists();await syncEventsNow(true);showToast('✅ Conta conectada e dados locais vinculados');
   }catch(error){showToast('⚠️ Não foi possível concluir a vinculação: '+error.message);}finally{authLinking=false;}
 });
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas});
 appAuth.initialize();
 checkShareParam();
 youtubeUI.initialize({
