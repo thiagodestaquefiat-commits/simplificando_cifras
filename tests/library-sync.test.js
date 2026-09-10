@@ -3,7 +3,7 @@ const source=fs.readFileSync('js/library-sync.js','utf8'),songModelSource=fs.rea
 const remote=new Map(),failOnce=new Set();
 function response(body,status=200){return {ok:status>=200&&status<300,status,json:async()=>structuredClone(body)};}
 function song(i,extra={}){return {id:`local-${i}`,title:`Música ${i}`,artist:'Artista',key:'C',blocos:[{l:'Refrão',c:'C G',t:'Frase curta',repeticoes:2}],editorData:{sections:[{lines:[]}]},fullChordSheet:{content:'C G\nLetra + Cifras'},harmonicSummary:{blocks:[{chords:['C','G'],hook:'Frase curta'}]},...extra};}
-function device(userId,initial,{online=true,consent=false}={}){
+function device(userId,initial,{online=true,consent=false,remoteFormat='camel'}={}){
  const memory=new Map([['sc_songs_v1',structuredClone(initial)],['cifras_musicas_v1',structuredClone(initial)],['sc_musicas_v2',[{legacy:true}]],['sc_song_editor_drafts_v1',[{draft:true}]],['sc_events_v1',[{id:'event',repertoire:initial.slice(0,3).map(x=>x.id)}]]]);
  if(consent)memory.set('sc_library_sync_consent_v1',true);
  let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[];const networkListeners={};
@@ -12,7 +12,7 @@ function device(userId,initial,{online=true,consent=false}={}){
  async function fetch(_url,options={}){
   if(!online)throw Error('offline');const owner=String(options.headers.Authorization).slice(7),method=options.method||'GET';requests.push(method);
   const values=remote.get(owner)||new Map();remote.set(owner,values);
-  if(method==='GET')return response({songs:[...values.values()].filter(item=>!item.deletedAt)});
+  if(method==='GET'){const active=[...values.values()].filter(item=>!item.deletedAt);if(remoteFormat==='snake')return response({songs:active.map(item=>({id:item.id,client_id:item.clientId,song_data:structuredClone(item.songData),version:item.version,updated_at:item.updatedAt,deleted_at:item.deletedAt}))});if(remoteFormat==='records')return response({records:active.map(item=>({id:item.id,client_id:item.clientId,song_data:structuredClone(item.songData),version:item.version,updated_at:item.updatedAt,deleted_at:item.deletedAt}))});if(remoteFormat==='invalid')return response({records:active.map(item=>({id:item.id,clientId:item.clientId,version:item.version}))});return response({songs:active});}
   const body=JSON.parse(options.body),results=[];batches.push(body.items.length);
   body.items.forEach(item=>{
    const existing=values.get(item.clientId);
@@ -21,7 +21,7 @@ function device(userId,initial,{online=true,consent=false}={}){
    const outcome=existing?JSON.stringify(existing.songData)===JSON.stringify(item.songData)?'existing':'updated':'created';
    const value={id:existing?.id||`server-${owner}-${values.size}`,clientId:item.clientId,songData:structuredClone(item.songData),version:existing?(outcome==='updated'?existing.version+1:existing.version):1,updatedAt:new Date().toISOString(),deletedAt:null};
    values.set(item.clientId,value);results.push({clientId:item.clientId,outcome,song:value});
-  });return response({results});
+  });return response({results:remoteFormat==='snake'?results.map(item=>({...item,client_id:item.clientId,clientId:undefined,song:item.song?{id:item.song.id,client_id:item.song.clientId,song_data:item.song.songData,version:item.song.version,updated_at:item.song.updatedAt,deleted_at:item.song.deletedAt}:null})):results});
  }
  const context={window:null,console,structuredClone,setTimeout,clearTimeout,crypto:global.crypto,fetch,navigator,
   storage,apiConfig:{libraryEndpoint:p=>'https://api.test/songs'+p},addEventListener:(name,fn)=>{networkListeners[name]=fn;},
@@ -96,8 +96,15 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.equal(recovered.sync.sameContent({id:'defaults',title:'Defaults',duration:'120',blocos:[],editorData:{updatedAt:'device-a'}},{id:'defaults',title:'Defaults',duration:120,album:null,accessContext:{scope:'personal',ownerId:null,teamId:null},sourceInfo:{type:'manual',name:null,url:null},fullChordSheet:null,editorData:{updatedAt:'device-b'}}),true,'defaults, null/ausência, número/string e timestamps do editor convergem');
  assert.doesNotMatch(JSON.stringify(diagnostic),/Bearer|accessToken|refreshToken/i,'diagnóstico não contém tokens');
 
+ const contractSongs=Array.from({length:86},(_,index)=>{const data=song(4000+index,{createdAt:'2026-09-10T12:00:00.000Z',updatedAt:'2026-09-10T12:00:00.000Z'}),clientId=`contract-client-${index}`;return {data,clientId};});
+ remote.set('snake-contract-user',new Map(contractSongs.map(({data,clientId},index)=>[clientId,{id:`server-contract-${index}`,clientId,songData:structuredClone(data),version:1,updatedAt:'2026-09-10T12:00:00.000Z',deletedAt:null}])));
+ const contractLocal=contractSongs.map(({data,clientId})=>({...structuredClone(data),librarySync:{clientId,serverVersion:1,syncedAt:'2026-09-10T12:00:00.000Z',contentHash:null,conflict:null}}));
+ const snakeDevice=device('snake-contract-user',contractLocal,{remoteFormat:'snake'});await settle();const contractDiagnostic=snakeDevice.sync.diagnostics();assert.deepEqual([contractDiagnostic.summary.device,contractDiagnostic.summary.cloud,contractDiagnostic.summary.both,contractDiagnostic.summary.deviceOnly,contractDiagnostic.summary.cloudOnly,contractDiagnostic.summary.conflicts,contractDiagnostic.summary.pendingUpload,contractDiagnostic.summary.pendingDownload],[86,86,86,0,0,0,0,0],'86 clientIds snake_case correspondentes reconciliam como both');assert.deepEqual([contractDiagnostic.remoteContract.source,contractDiagnostic.remoteContract.recordShape.clientId,contractDiagnostic.remoteContract.recordShape.songData],['songs','client_id','song_data']);assert.ok(contractDiagnostic.rows.every(row=>row.localClientId===row.remoteClientId&&row.status==='synced'&&!row.conflict));assert.equal((await snakeDevice.sync.syncNow()).attempted,0,'snake_case equivalente não envia nem gera clientId');
+ const recordsDevice=device('snake-contract-user',contractLocal,{remoteFormat:'records'});await settle();assert.deepEqual([recordsDevice.sync.diagnostics().summary.cloud,recordsDevice.sync.diagnostics().summary.both],[86,86],'coleção records com conteúdo também é normalizada');
+ const invalidDevice=device('snake-contract-user',contractLocal,{remoteFormat:'invalid'});await settle();assert.equal(invalidDevice.sync.getStatus().phase,'error','contrato incompleto falha fechado');assert.equal(invalidDevice.sync.getStatus().localPending,0,'contrato inválido não transforma 86 remotos em uploads');
+
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
- assert.match(sw,/simplificando-cifras-v94-sync-semantic-content/);assert.match(sw,/library-sync\.js\?v=4/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
- console.log('library-sync.test.js: OK (86 legacy cross-device, reload, PWA restart, logout/login, convergência 138→141, identidade, fingerprint semântico, painel, A/B, conflito, offline e retry)');
+ assert.match(sw,/simplificando-cifras-v95-sync-remote-contract/);assert.match(sw,/library-sync\.js\?v=5/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ console.log('library-sync.test.js: OK (86 clientIds camel/snake, contrato fail-closed, legacy cross-device, reload, PWA restart, logout/login, convergência 138→141, fingerprint semântico, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
