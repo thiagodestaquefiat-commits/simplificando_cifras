@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v93-sync-diagnostics";
+const CACHE_NAME = "simplificando-cifras-v94-sync-semantic-content";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
   "./js/song-repository.js",
-  "./js/library-sync.js?v=3",
+  "./js/library-sync.js?v=4",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
   "./js/event-collaboration-client.js?v=4",

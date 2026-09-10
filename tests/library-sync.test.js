@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('js/library-sync.js','utf8'),html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('service-worker.js','utf8');
+const source=fs.readFileSync('js/library-sync.js','utf8'),songModelSource=fs.readFileSync('js/song-model.js','utf8'),html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('service-worker.js','utf8');
 const remote=new Map(),failOnce=new Set();
 function response(body,status=200){return {ok:status>=200&&status<300,status,json:async()=>structuredClone(body)};}
 function song(i,extra={}){return {id:`local-${i}`,title:`Música ${i}`,artist:'Artista',key:'C',blocos:[{l:'Refrão',c:'C G',t:'Frase curta',repeticoes:2}],editorData:{sections:[{lines:[]}]},fullChordSheet:{content:'C G\nLetra + Cifras'},harmonicSummary:{blocks:[{chords:['C','G'],hook:'Frase curta'}]},...extra};}
@@ -26,7 +26,7 @@ function device(userId,initial,{online=true,consent=false}={}){
  const context={window:null,console,structuredClone,setTimeout,clearTimeout,crypto:global.crypto,fetch,navigator,
   storage,apiConfig:{libraryEndpoint:p=>'https://api.test/songs'+p},addEventListener:(name,fn)=>{networkListeners[name]=fn;},
   appAuth:{getAccessToken:()=>authUser,subscribe:fn=>{authListener=fn;fn({authenticated:Boolean(authUser),user:authUser?{id:authUser}:null});}}};
- context.window=context;vm.runInNewContext(source,context);
+ context.window=context;vm.runInNewContext(songModelSource,context);vm.runInNewContext(source,context);
  context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){}});
  context.librarySync.subscribe(value=>statusEvents.push(structuredClone(value)));
  return {sync:context.librarySync,get songs(){return songs;},replace:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',songs);storage.set('cifras_musicas_v1',songs);},storage,requests,batches,statusEvents,
@@ -83,8 +83,21 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const semanticReordered={future:{beta:2,alpha:1},blocos:[{c:'C G',l:'Verso'}],artist:'Artista',title:'Mesma música',id:'semantic-x'};
  const semanticB=device('semantic-user',[semanticReordered]);await settle();assert.equal(semanticB.songs.length,1);assert.equal(semanticB.sync.getStatus().conflicts,0,'ordem das chaves JSON não cria conflito');assert.ok(semanticB.songs[0].librarySync.clientId,'client_id da nuvem é preservado');
 
+ const legacyCloudSongs=Array.from({length:86},(_,i)=>song(3000+i,{createdAt:'2026-09-10T10:00:00.000Z',updatedAt:'2026-09-10T10:00:00.000Z'}));
+ const legacyPc=device('legacy-cross-device',legacyCloudSongs);await settle();await legacyPc.sync.syncNow();assert.equal(legacyPc.sync.getStatus().conflicts,0);
+ const legacyMobileSongs=legacyCloudSongs.map(item=>({...structuredClone(item),createdAt:'2026-09-10T10:05:00.000Z',updatedAt:'2026-09-10T10:05:00.000Z'}));
+ const legacyMobile=device('legacy-cross-device',legacyMobileSongs);await settle();assert.deepEqual([legacyMobile.songs.length,legacyMobile.sync.getStatus().remote,legacyMobile.sync.getStatus().conflicts],[86,86,0],'dois dispositivos adotam as mesmas músicas legacy sem conflito');
+ assert.ok(legacyMobile.songs.every(item=>item.librarySync.clientId&&item.librarySync.contentHash),'adoção grava identidade e base semântica estáveis');
+ const diagnostic=legacyMobile.sync.diagnostics(),sample=diagnostic.rows[0];assert.equal(sample.status,'synced');assert.equal(sample.reason,'content_equal');assert.equal(sample.localFingerprint,sample.remoteFingerprint);assert.equal(sample.comparisonAtPull.reason,'legacy_adoptable');assert.ok(sample.comparisonAtPull.rawDiff.differences.some(item=>item.path==='createdAt'));assert.equal(sample.comparisonAtPull.semanticDiff.differences.length,0,'diff semântico ignora somente campos voláteis');
+ const restarted=device('legacy-cross-device',legacyMobile.storage.get('sc_songs_v1'),{consent:true});await settle();assert.equal(restarted.sync.getStatus().conflicts,0,'reload/PWA restart não recria conflitos');restarted.logout();restarted.login('legacy-cross-device');await settle();assert.equal(restarted.sync.getStatus().conflicts,0,'logout/login não recria conflitos');
+ const remoteSample=[...remote.get('legacy-cross-device').values()][0],staleConflict={...structuredClone(remoteSample.songData),createdAt:'2026-09-10T11:00:00.000Z',updatedAt:'2026-09-10T11:00:00.000Z',librarySync:{clientId:remoteSample.clientId,serverVersion:remoteSample.version,contentHash:'old-representation-hash',conflict:{remoteVersion:remoteSample.version}}};
+ const recovered=device('legacy-cross-device',[staleConflict]);await settle();assert.equal(recovered.sync.getStatus().conflicts,0,'conflito antigo é limpo quando o conteúdo musical é equivalente');assert.equal(recovered.songs[0].librarySync.conflict,null);
+ assert.equal(recovered.sync.sameContent({...remoteSample.songData,librarySync:{clientId:'device-a'}},{...remoteSample.songData,librarySync:{clientId:'device-b'}}),true,'librarySync não participa do fingerprint musical');
+ assert.equal(recovered.sync.sameContent({id:'defaults',title:'Defaults',duration:'120',blocos:[],editorData:{updatedAt:'device-a'}},{id:'defaults',title:'Defaults',duration:120,album:null,accessContext:{scope:'personal',ownerId:null,teamId:null},sourceInfo:{type:'manual',name:null,url:null},fullChordSheet:null,editorData:{updatedAt:'device-b'}}),true,'defaults, null/ausência, número/string e timestamps do editor convergem');
+ assert.doesNotMatch(JSON.stringify(diagnostic),/Bearer|accessToken|refreshToken/i,'diagnóstico não contém tokens');
+
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
- assert.match(sw,/simplificando-cifras-v93-sync-diagnostics/);assert.match(sw,/library-sync\.js\?v=3/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
- console.log('library-sync.test.js: OK (convergência 138→141, identidade, fingerprint estável, painel, A/B, conflito, offline, retry e PWA)');
+ assert.match(sw,/simplificando-cifras-v94-sync-semantic-content/);assert.match(sw,/library-sync\.js\?v=4/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ console.log('library-sync.test.js: OK (86 legacy cross-device, reload, PWA restart, logout/login, convergência 138→141, identidade, fingerprint semântico, painel, A/B, conflito, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

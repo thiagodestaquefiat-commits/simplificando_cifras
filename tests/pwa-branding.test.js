@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v93-sync-diagnostics/);
+assert.match(serviceWorker, /simplificando-cifras-v94-sync-semantic-content/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
