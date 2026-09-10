@@ -581,7 +581,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
-<script src="js/library-sync.js?v=5"></script>
+<script src="js/library-sync.js?v=6"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -1814,7 +1814,7 @@ function librarySyncCopy(state){
 }
 function renderLibrarySyncPanel(state){
   const body=document.getElementById('modal-body');if(!body)return;
-  const copy=librarySyncCopy(state),canSync=state.authenticated&&state.online&&state.phase!=='syncing'&&state.conflicts===0;
+  const copy=librarySyncCopy(state),canSync=state.authenticated&&state.online&&!state.identityBlocked&&state.phase!=='syncing'&&state.conflicts===0;
   const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
   const action=!state.authenticated
     ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
@@ -1823,9 +1823,11 @@ function renderLibrarySyncPanel(state){
 }
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review();await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const report={format:'roudy-sync-diagnostics',version:2,generatedAt:new Date().toISOString(),library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v96-sync-identity-guard',librarySyncVersion:6,frontendBuild:'pr42-sync-identity-diagnostics-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
+async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
+function syncDiagnosticMaskEmail(value){const email=String(value||''),parts=email.split('@');if(parts.length!==2)return null;return `${parts[0].slice(0,2)}***@${parts[1]}`;}
 let libraryRestoreDraft=null;
 function selectLibraryBackup(){
   const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.hidden=true;

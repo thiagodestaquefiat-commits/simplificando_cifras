@@ -1,19 +1,25 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import uuid
 from datetime import datetime, timezone
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 
 from ..database import db
 from ..errors import ApiError
-from ..models import PersonalSong
+from ..models import ExternalIdentity, PersonalSong
 from ..services.collaboration_auth import authenticated
 
 blueprint = Blueprint("library", __name__, url_prefix="/api/library/songs")
 MAX_ITEMS = 500
 MAX_SONG_BYTES = 750_000
+
+
+def _safe_id(value):
+    return hashlib.sha256(str(value or "").encode("utf-8")).hexdigest()[:16]
 
 
 def _payload(value):
@@ -75,6 +81,7 @@ def list_songs():
 @authenticated
 def library_diagnostics():
     values = PersonalSong.query.filter_by(owner_user_id=g.current_user.id).order_by(PersonalSong.created_at).all()
+    identities = ExternalIdentity.query.filter_by(user_id=g.current_user.id).order_by(ExternalIdentity.provider).all()
     records = [{
         "id": song.id,
         "clientId": song.client_id,
@@ -89,6 +96,18 @@ def library_diagnostics():
     return jsonify({
         "active": sum(1 for song in values if song.deleted_at is None),
         "deleted": sum(1 for song in values if song.deleted_at is not None),
+        "auth": {
+            "provider": getattr(g, "auth_provider", None),
+            "resolvedUserHash": _safe_id(g.current_user.id),
+            "subjectHash": _safe_id(getattr(g, "external_subject", None)) if getattr(g, "external_subject", None) else None,
+            "identities": [{"provider": identity.provider, "subjectHash": _safe_id(identity.subject)} for identity in identities],
+        },
+        "backend": {
+            "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME") or current_app.config.get("ENV") or "unknown",
+            "service": os.getenv("RAILWAY_SERVICE_NAME") or "unknown",
+            "buildCommit": (os.getenv("RAILWAY_GIT_COMMIT_SHA") or os.getenv("GIT_COMMIT") or "unknown")[:40],
+            "databaseDialect": db.engine.dialect.name,
+        },
         "records": records,
     }), 200
 
