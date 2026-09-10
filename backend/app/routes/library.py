@@ -71,6 +71,28 @@ def list_songs():
     return jsonify({"songs": [_serialize(song) for song in values]}), 200
 
 
+@blueprint.get("/diagnostics")
+@authenticated
+def library_diagnostics():
+    values = PersonalSong.query.filter_by(owner_user_id=g.current_user.id).order_by(PersonalSong.created_at).all()
+    records = [{
+        "id": song.id,
+        "clientId": song.client_id,
+        "localSongId": song.song_data.get("id") if isinstance(song.song_data, dict) else None,
+        "title": song.song_data.get("title") if isinstance(song.song_data, dict) else None,
+        "artist": song.song_data.get("artist") if isinstance(song.song_data, dict) else None,
+        "version": song.version,
+        "createdAt": song.created_at.isoformat(),
+        "updatedAt": song.updated_at.isoformat(),
+        "deletedAt": song.deleted_at.isoformat() if song.deleted_at else None,
+    } for song in values]
+    return jsonify({
+        "active": sum(1 for song in values if song.deleted_at is None),
+        "deleted": sum(1 for song in values if song.deleted_at is not None),
+        "records": records,
+    }), 200
+
+
 @blueprint.put("/<path:client_id>")
 @authenticated
 def put_song(client_id):

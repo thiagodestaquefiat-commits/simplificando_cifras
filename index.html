@@ -48,6 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .library-sync-count span{display:block;color:var(--text2);font-size:11px}.library-sync-count strong{display:block;margin-top:3px;color:var(--text);font-size:20px}
 .library-sync-state{display:flex;align-items:flex-start;gap:9px;color:var(--text2);font-size:13px;line-height:1.45}.library-sync-state strong{display:block;color:var(--text);font-size:14px}
 .library-sync-state[data-state="synced"]{color:#86efac}.library-sync-state[data-state="conflict"],.library-sync-state[data-state="error"]{color:#fbbf24}
+.sync-diagnostic-section{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.025)}.sync-diagnostic-section>strong{font-size:13px}.sync-diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;color:var(--text2);font-size:11px}.sync-diagnostic-grid span{display:flex;justify-content:space-between;gap:8px}.sync-diagnostic-grid b{color:var(--text)}
 /* TABS */
 .tab-bar{background:var(--bg2);display:flex;border-bottom:1px solid var(--border);}
 .tab{flex:1;padding:11px 4px;text-align:center;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;font-weight:500;}
@@ -580,7 +581,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
 <script src="js/song-repository.js"></script>
-<script src="js/library-sync.js?v=2"></script>
+<script src="js/library-sync.js?v=3"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -1790,7 +1791,16 @@ function renderAccountButton(){const button=document.getElementById('app-account
 async function openLibrarySync(){
   document.getElementById('modal-overlay').style.display='flex';
   renderLibrarySyncPanel(librarySync.getStatus());
-  try{renderLibrarySyncPanel(await librarySync.review());}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
+  try{const state=await librarySync.review();await refreshEventSyncDiagnostics();renderLibrarySyncPanel(state);}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
+}
+let eventSyncDiagnostics={device:0,cloud:null,deviceOnly:0,cloudOnly:0,rows:[],available:false};
+async function refreshEventSyncDiagnostics(){
+  const local=eventModel.normalizeCollection(setlists),authenticated=Boolean(currentAuthState.authenticated);
+  if(!authenticated){eventSyncDiagnostics={device:local.length,cloud:null,deviceOnly:local.length,cloudOnly:0,rows:local.map(event=>({classification:'device_only',id:event.id,title:event.title,syncState:event.syncState,remoteVersion:event.remoteVersion??null,repertoireCount:event.repertoire?.length||event.musicas?.length||0})),available:false};return eventSyncDiagnostics;}
+  try{const remote=await eventCollaboration.listEvents(appCurrentUser),remoteIds=new Set(remote.map(event=>String(event.id))),localIds=new Set(local.map(event=>String(event.id)));
+    eventSyncDiagnostics={device:local.length,cloud:remote.length,deviceOnly:local.filter(event=>!remoteIds.has(String(event.id))).length,cloudOnly:remote.filter(event=>!localIds.has(String(event.id))).length,available:true,rows:[...local.map(event=>({classification:remoteIds.has(String(event.id))?'device_and_cloud':'device_only',id:event.id,title:event.title,syncState:event.syncState,remoteVersion:event.remoteVersion??null,repertoireCount:event.repertoire?.length||event.musicas?.length||0})),...remote.filter(event=>!localIds.has(String(event.id))).map(event=>({classification:'cloud_only',id:event.id,title:event.title,syncState:event.syncState,remoteVersion:event.remoteVersion??null,repertoireCount:event.repertoire?.length||event.musicas?.length||0}))]};
+  }catch(error){eventSyncDiagnostics={device:local.length,cloud:null,deviceOnly:local.length,cloudOnly:0,rows:[],available:false,error:error.code||'event_audit_unavailable'};}
+  return eventSyncDiagnostics;
 }
 function librarySyncCopy(state){
   if(state.phase==='unauthenticated')return {icon:'☁️',title:'Sincronização desativada',message:'Entre na sua conta para sincronizar sua biblioteca.'};
@@ -1805,10 +1815,16 @@ function librarySyncCopy(state){
 function renderLibrarySyncPanel(state){
   const body=document.getElementById('modal-body');if(!body)return;
   const copy=librarySyncCopy(state),canSync=state.authenticated&&state.online&&state.phase!=='syncing'&&state.conflicts===0;
+  const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
   const action=!state.authenticated
     ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
     :`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Sincronizar agora':'Sincronizar com minha conta'}</button>`;
-  body.innerHTML=`<div class="modal-title">Biblioteca</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Pendentes</span><strong>${Number(state.pending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+  body.innerHTML=`<div class="modal-title">Sincronização</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><strong>Biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização, o diagnóstico e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+}
+async function downloadSyncDiagnostics(){
+  const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
+  try{await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const report={format:'roudy-sync-diagnostics',version:1,generatedAt:new Date().toISOString(),library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 let libraryRestoreDraft=null;
 function selectLibraryBackup(){

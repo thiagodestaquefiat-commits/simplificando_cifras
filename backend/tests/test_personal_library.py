@@ -64,4 +64,26 @@ def test_batch_of_136_can_resume_after_partial_failure(client, app):
 
 def test_authentication_is_required(client):
     assert client.get("/api/library/songs").status_code == 401
+    assert client.get("/api/library/songs/diagnostics").status_code == 401
     assert client.post("/api/library/songs/sync", json={"items": []}).status_code == 401
+
+
+def test_diagnostics_are_read_only_scoped_and_include_deleted(client, app):
+    token_a = register(client, "diagnostic-a", "A")
+    token_b = register(client, "diagnostic-b", "B")
+    client.put("/api/library/songs/active-a", headers=auth(token_a), json={"songData": song(1)})
+    client.put("/api/library/songs/deleted-a", headers=auth(token_a), json={"songData": song(2)})
+    client.put("/api/library/songs/other-b", headers=auth(token_b), json={"songData": song(3)})
+    client.delete("/api/library/songs/deleted-a", headers=auth(token_a))
+    before = None
+    with app.app_context():
+        before = [(item.id, item.version, item.deleted_at) for item in PersonalSong.query.order_by(PersonalSong.id)]
+    response = client.get("/api/library/songs/diagnostics", headers=auth(token_a))
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["active"] == 1 and payload["deleted"] == 1
+    assert {item["clientId"] for item in payload["records"]} == {"active-a", "deleted-a"}
+    assert all(item["createdAt"] and item["updatedAt"] for item in payload["records"])
+    with app.app_context():
+        after = [(item.id, item.version, item.deleted_at) for item in PersonalSong.query.order_by(PersonalSong.id)]
+    assert after == before

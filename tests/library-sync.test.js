@@ -72,8 +72,19 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const bulk=Array.from({length:136},(_,i)=>song(500+i)),bulkA=device('bulk-user',bulk);await settle();const bulkResult=await bulkA.sync.syncNow();assert.deepEqual(bulkA.batches.slice(-2),[100,36]);assert.equal(bulkResult.created,136);assert.equal(new Set(bulkA.songs.map(item=>item.librarySync.clientId)).size,136);
  const bulkB=device('bulk-user',[]);await settle();assert.equal(bulkB.songs.length,136);bulkA.logout();assert.equal(bulkA.songs.length,136);bulkA.login('bulk-user');await settle();assert.equal(bulkA.songs.length,136,'logout/login não duplica');
 
+ const convergenceA=device('convergence-user',Array.from({length:138},(_,i)=>song(1000+i)));await settle();await convergenceA.sync.syncNow();
+ const convergenceB=device('convergence-user',[]);await settle();assert.equal(convergenceB.songs.length,138,'B baixa as 138 de A');
+ const withThree=convergenceB.songs.concat([song(2001),song(2002),song(2003)]);convergenceB.replace(withThree);await convergenceB.sync.syncNow();
+ await convergenceA.sync.pull();assert.equal(convergenceA.songs.length,141,'A recebe as 3 criadas em B');assert.equal(convergenceB.songs.length,141);assert.equal(remote.get('convergence-user').size,141);
+ assert.equal((await convergenceB.sync.syncNow()).attempted,0,'B não recria client_id das músicas baixadas');
+
+ const semanticSource={id:'semantic-x',title:'Mesma música',artist:'Artista',blocos:[{l:'Verso',c:'C G'}],future:{alpha:1,beta:2}};
+ const semanticA=device('semantic-user',[semanticSource]);await settle();await semanticA.sync.syncNow();
+ const semanticReordered={future:{beta:2,alpha:1},blocos:[{c:'C G',l:'Verso'}],artist:'Artista',title:'Mesma música',id:'semantic-x'};
+ const semanticB=device('semantic-user',[semanticReordered]);await settle();assert.equal(semanticB.songs.length,1);assert.equal(semanticB.sync.getStatus().conflicts,0,'ordem das chaves JSON não cria conflito');assert.ok(semanticB.songs[0].librarySync.clientId,'client_id da nuvem é preservado');
+
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
- assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Pendentes/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
- assert.match(sw,/simplificando-cifras-v92-integration-39-40/);assert.match(sw,/library-sync\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
- console.log('library-sync.test.js: OK (29 cenários: painel, consentimento, A/B, conflito, parcial, 136 músicas, localStorage, Eventos e PWA)');
+ assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
+ assert.match(sw,/simplificando-cifras-v93-sync-diagnostics/);assert.match(sw,/library-sync\.js\?v=3/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ console.log('library-sync.test.js: OK (convergência 138→141, identidade, fingerprint estável, painel, A/B, conflito, offline, retry e PWA)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
