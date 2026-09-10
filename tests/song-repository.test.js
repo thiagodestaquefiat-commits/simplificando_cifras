@@ -61,4 +61,27 @@ assert.equal(repository.save(updated.songs), true);
 assert.deepEqual(values.get("sc_songs_v1"), values.get("cifras_musicas_v1"), "o salvamento deve manter rollback compatível");
 assert.equal(repository.remove(updated.songs, "8").length, 1);
 
-console.log("song-repository.test.js: OK");
+const defaults = [{ id: "default", title: "Catálogo padrão", blocos: [] }];
+const legacySnapshot = structuredClone(values.get("sc_songs_v1"));
+const ownerA = repository.activateOwner("owner-a", legacySnapshot, defaults);
+assert.equal(ownerA.migrationCandidate, true, "a primeira conta recebe apenas a oferta de migração da biblioteca legada");
+assert.deepEqual(ownerA.songs, legacySnapshot);
+assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a oferta não move nem apaga a biblioteca legada");
+
+const ownerB = repository.activateOwner("owner-b", legacySnapshot, defaults);
+assert.deepEqual({ songs: ownerB.songs, migrationCandidate: ownerB.migrationCandidate }, { songs: [], migrationCandidate: false }, "outra conta não herda nem recebe oferta da biblioteca reservada para A");
+repository.save([{ id: "b-1", title: "Somente B", blocos: [] }]);
+
+const ownerAAgain = repository.activateOwner("owner-a", [{ id: "b-1", title: "Somente B", blocos: [] }], defaults);
+assert.equal(ownerAAgain.migrationCandidate, true);
+assert.deepEqual(ownerAAgain.songs, legacySnapshot, "A continua com a cópia íntegra até o backend confirmar");
+repository.confirmActiveOwner(ownerAAgain.songs);
+
+const ownerBAgain = repository.activateOwner("owner-b", ownerAAgain.songs, defaults);
+assert.deepEqual(ownerBAgain.songs.map(song => song.title), ["Somente B"], "caches locais ficam separados por owner autenticado");
+const ownerAFinal = repository.activateOwner("owner-a", ownerBAgain.songs, defaults);
+assert.equal(ownerAFinal.migrationCandidate, false);
+assert.deepEqual(ownerAFinal.songs, legacySnapshot, "após confirmação, A reabre seu cache contextualizado");
+assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a confirmação não limpa as chaves legadas protegidas");
+
+console.log("song-repository.test.js: OK (migração legada e isolamento A/B)");

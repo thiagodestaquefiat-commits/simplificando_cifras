@@ -580,8 +580,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js"></script>
-<script src="js/library-sync.js?v=6"></script>
+<script src="js/song-repository.js?v=2"></script>
+<script src="js/library-sync.js?v=7"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=2"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -1814,16 +1814,20 @@ function librarySyncCopy(state){
 }
 function renderLibrarySyncPanel(state){
   const body=document.getElementById('modal-body');if(!body)return;
-  const copy=librarySyncCopy(state),canSync=state.authenticated&&state.online&&!state.identityBlocked&&state.phase!=='syncing'&&state.conflicts===0;
+  const copy=librarySyncCopy(state),ownerOverride=state.migrationCandidate&&state.backupReady,canSync=state.authenticated&&state.online&&(!state.identityBlocked||ownerOverride)&&state.phase!=='syncing'&&state.conflicts===0;
   const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
-  const action=!state.authenticated
+  const action=state.phase==='needs-consent'&&state.migrationCandidate
+    ?`<button class="btn btn-outline" onclick="downloadMigrationBackup()">${state.backupReady?'✓ Backup completo baixado':'Baixar backup completo'}</button><button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync&&state.backupReady?'':'disabled'}>Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`
+    :!state.authenticated
     ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
     :`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Sincronizar agora':'Sincronizar com minha conta'}</button>`;
   body.innerHTML=`<div class="modal-title">Sincronização</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><strong>Biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização, o diagnóstico e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
 }
+function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
+function deferLibraryMigration(){librarySync.deferMigration();closeModal();showToast('Nada foi enviado. Você pode salvar a biblioteca na sua conta depois.');}
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v96-sync-identity-guard',librarySyncVersion:6,frontendBuild:'pr42-sync-identity-diagnostics-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v97-personal-library-owner',librarySyncVersion:7,frontendBuild:'pr42-personal-library-owner-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -2152,8 +2156,9 @@ appAuth.subscribe(async state=>{
     renderAccountButton();renderSetlists();renderBandToolbar();
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas});
-librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value)});
+let promptedLibraryMigrationOwner=null;
+librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);const owner=currentAuthState&&currentAuthState.user&&currentAuthState.user.id;if(state.phase==='needs-consent'&&state.migrationCandidate&&owner&&promptedLibraryMigrationOwner!==owner){promptedLibraryMigrationOwner=owner;setTimeout(()=>openLibrarySync(),0);}});
 appAuth.initialize();
 checkShareParam();
 youtubeUI.initialize({

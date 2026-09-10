@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v96-sync-identity-guard";
+const CACHE_NAME = "simplificando-cifras-v97-personal-library-owner";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js",
-  "./js/library-sync.js?v=6",
+  "./js/song-repository.js?v=2",
+  "./js/library-sync.js?v=7",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
   "./js/event-collaboration-client.js?v=4",

@@ -3,10 +3,10 @@ const source=fs.readFileSync('js/library-sync.js','utf8'),songModelSource=fs.rea
 const remote=new Map(),failOnce=new Set();
 function response(body,status=200){return {ok:status>=200&&status<300,status,json:async()=>structuredClone(body)};}
 function song(i,extra={}){return {id:`local-${i}`,title:`Música ${i}`,artist:'Artista',key:'C',blocos:[{l:'Refrão',c:'C G',t:'Frase curta',repeticoes:2}],editorData:{sections:[{lines:[]}]},fullChordSheet:{content:'C G\nLetra + Cifras'},harmonicSummary:{blocks:[{chords:['C','G'],hook:'Frase curta'}]},...extra};}
-function device(userId,initial,{online=true,consent=false,remoteFormat='camel'}={}){
+function device(userId,initial,{online=true,consent=false,remoteFormat='camel',migrationCandidate=false}={}){
  const memory=new Map([['sc_songs_v1',structuredClone(initial)],['cifras_musicas_v1',structuredClone(initial)],['sc_musicas_v2',[{legacy:true}]],['sc_song_editor_drafts_v1',[{draft:true}]],['sc_events_v1',[{id:'event',repertoire:initial.slice(0,3).map(x=>x.id)}]]]);
- if(consent)memory.set('sc_library_sync_consent_v1',true);
- let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[];const networkListeners={};
+ if(consent){memory.set('sc_library_sync_consent_v1',true);memory.set('sc_library_sync_consent_by_owner_v1',{[userId]:true});}
+ let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[],ownerConfirmed=false;const networkListeners={};
  const storage={get:(k,f)=>memory.has(k)?structuredClone(memory.get(k)):f,set:(k,v)=>{memory.set(k,structuredClone(v));return true;}};
  const navigator={};Object.defineProperty(navigator,'onLine',{get:()=>online});
  async function fetch(_url,options={}){
@@ -27,9 +27,9 @@ function device(userId,initial,{online=true,consent=false,remoteFormat='camel'}=
   storage,apiConfig:{libraryEndpoint:p=>'https://api.test/songs'+p},addEventListener:(name,fn)=>{networkListeners[name]=fn;},
   appAuth:{getAccessToken:()=>authUser,subscribe:fn=>{authListener=fn;fn({authenticated:Boolean(authUser),user:authUser?{id:authUser}:null});}}};
  context.window=context;vm.runInNewContext(songModelSource,context);vm.runInNewContext(source,context);
- context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){}});
+ context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){},activateOwner:()=>({songs:structuredClone(songs),migrationCandidate}),confirmOwner:()=>{ownerConfirmed=true;return true;}});
  context.librarySync.subscribe(value=>statusEvents.push(structuredClone(value)));
- return {sync:context.librarySync,get songs(){return songs;},replace:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',songs);storage.set('cifras_musicas_v1',songs);},storage,requests,batches,statusEvents,
+ return {sync:context.librarySync,get songs(){return songs;},get ownerConfirmed(){return ownerConfirmed;},replace:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',songs);storage.set('cifras_musicas_v1',songs);},storage,requests,batches,statusEvents,
   setOnline:v=>{online=v;networkListeners[v?'online':'offline']?.();},logout:()=>{authUser='';authListener({authenticated:false,user:null});},login:id=>{authUser=id;authListener({authenticated:true,user:{id}});}};
 }
 const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
@@ -46,6 +46,12 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.equal(JSON.stringify(a.storage.get('sc_events_v1')),eventsBefore,'evento e ordem ficam intactos');
  assert.deepEqual(['sc_musicas_v2','sc_song_editor_drafts_v1'].map(key=>JSON.stringify(a.storage.get(key))),protectedBefore,'storages legados não são limpos');
  const repeated=await a.sync.syncNow();assert.equal(repeated.attempted,0,'sync idempotente não reenvia confirmadas');
+
+ const migration=device('migration-owner',five,{migrationCandidate:true});await settle();
+ assert.equal(migration.sync.getStatus().phase,'needs-consent');assert.equal(migration.requests.includes('POST'),false,'abrir a oferta nunca envia automaticamente');
+ migration.sync.deferMigration();assert.equal(migration.requests.includes('POST'),false,'Agora não mantém zero POST');
+ await assert.rejects(()=>migration.sync.syncNow(),/backup completo/);assert.equal(migration.requests.includes('POST'),false,'migração sem backup é bloqueada');
+ migration.sync.markBackupReady();const migrated=await migration.sync.syncNow();assert.deepEqual([migrated.created,migrated.failed,migrated.status.pending],[5,0,0]);assert.equal(migration.ownerConfirmed,true,'cache só é vinculado ao owner após confirmação final do backend');
 
  const b=device('user-a',[]);await settle();assert.equal(b.songs.length,5,'nuvem chega ao dispositivo B');assert.equal(b.sync.getStatus().phase,'synced');
  assert.deepEqual(b.songs[0].editorData,five[0].editorData);assert.deepEqual(b.songs[0].fullChordSheet,five[0].fullChordSheet);assert.deepEqual(b.songs[0].harmonicSummary,five[0].harmonicSummary);
@@ -106,6 +112,7 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);assert.match(html,/downloadSyncDiagnostics\(\)[\s\S]*?await librarySync\.review\(\)\.catch\(\(\)=>null\);await librarySync\.refreshServerAudit\(\)/,'diagnóstico aguarda a mesma coleção remota usada pelo reconciliador');assert.match(html,/!state\.identityBlocked/,'painel desabilita sincronização para owner não confirmado');
- assert.match(sw,/simplificando-cifras-v96-sync-identity-guard/);assert.match(sw,/library-sync\.js\?v=6/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ assert.match(html,/Encontramos .* neste dispositivo/);assert.match(html,/Baixar backup completo/);assert.match(html,/Salvar na minha conta/);assert.match(html,/Agora não/);
+ assert.match(sw,/simplificando-cifras-v97-personal-library-owner/);assert.match(sw,/song-repository\.js\?v=2/);assert.match(sw,/library-sync\.js\?v=7/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (86 clientIds camel/snake, contrato fail-closed, legacy cross-device, reload, PWA restart, logout/login, convergência 138→141, fingerprint semântico, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
