@@ -5,6 +5,7 @@
   const LEGACY_STORAGE_KEY = "cifras_musicas_v1";
   const OWNER_CACHES_KEY = "sc_personal_song_caches_v1";
   const LEGACY_OWNER_KEY = "sc_legacy_library_owner_v1";
+  const SEED_ONLY_KEY = "sc_seed_library_only_v1";
   let activeOwnerId = null;
   let legacyCandidateOwnerId = null;
   let storedLibraryExistedAtBoot = false;
@@ -75,7 +76,7 @@
     requireDependencies();
     const current = global.storage.get(CURRENT_STORAGE_KEY, null);
     if (Array.isArray(current)) {
-      storedLibraryExistedAtBoot = true;
+      storedLibraryExistedAtBoot = !global.storage.get(SEED_ONLY_KEY, false);
       return global.songModel.normalizeCollection(current);
     }
 
@@ -83,6 +84,7 @@
     storedLibraryExistedAtBoot = Array.isArray(legacy);
     const source = Array.isArray(legacy) ? legacy : defaultSongs;
     const songs = global.songModel.normalizeCollection(source);
+    if (!storedLibraryExistedAtBoot) global.storage.set(SEED_ONLY_KEY, true);
     persistCurrent(songs);
     return songs;
   }
@@ -91,6 +93,7 @@
     requireDependencies();
     const songs = global.songModel.normalizeCollection(collection);
     if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
+    global.storage.set(SEED_ONLY_KEY, false);
     const savedCurrent = global.storage.set(CURRENT_STORAGE_KEY, songs);
     const savedLegacy = global.storage.set(LEGACY_STORAGE_KEY, songs);
     return savedCurrent && savedLegacy;
@@ -137,6 +140,7 @@
     legacyStorageKey: LEGACY_STORAGE_KEY,
     ownerCachesKey: OWNER_CACHES_KEY,
     legacyOwnerKey: LEGACY_OWNER_KEY,
+    seedOnlyKey: SEED_ONLY_KEY,
     load,
     save,
     activateOwner,

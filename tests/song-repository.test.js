@@ -97,4 +97,19 @@ const freshOwner = freshContext.window.songRepository.activateOwner("new-owner",
 assert.equal(freshOwner.migrationCandidate, false, "catálogo criado no boot atual não é tratado como biblioteca legada");
 assert.deepEqual(Array.from(freshOwner.songs), [], "usuário realmente novo começa com biblioteca pessoal vazia");
 
-console.log("song-repository.test.js: OK (migração legada e isolamento A/B)");
+const reloadValues = new Map();
+function repositoryContext(store) {
+  const context = { console, structuredClone };
+  context.window = { storage: { get: (key, fallback) => store.has(key) ? structuredClone(store.get(key)) : fallback, set: (key, value) => { store.set(key, structuredClone(value)); return true; } } };
+  vm.runInNewContext(fs.readFileSync("js/song-model.js", "utf8"), context);
+  vm.runInNewContext(fs.readFileSync("js/song-repository.js", "utf8"), context);
+  return context.window.songRepository;
+}
+repositoryContext(reloadValues).load(freshDefaults);
+const afterReloadRepository = repositoryContext(reloadValues);
+const afterReloadSongs = afterReloadRepository.load(freshDefaults);
+const afterReloadOwner = afterReloadRepository.activateOwner("new-after-reload", afterReloadSongs, freshDefaults);
+assert.equal(afterReloadOwner.migrationCandidate, false, "reload antes do primeiro login não transforma catálogo inicial em biblioteca legada");
+assert.deepEqual(Array.from(afterReloadOwner.songs), []);
+
+console.log("song-repository.test.js: OK (migração legada, isolamento A/B e usuário novo após reload)");

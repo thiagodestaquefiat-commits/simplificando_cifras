@@ -1,10 +1,10 @@
-const CACHE_NAME = "simplificando-cifras-v101-personal-library-simple";
+const CACHE_NAME = "simplificando-cifras-v102-mvp-library-migration";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=3",
+  "./js/song-repository.js?v=4",
   "./js/library-sync.js?v=8",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
