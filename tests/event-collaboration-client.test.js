@@ -9,6 +9,7 @@ global.storage = {
   set(key, value) { values.set(key, structuredClone(value)); return true; }
 };
 global.apiConfig = { collaborationEndpoint: path => "https://api.example/api/collaboration" + path };
+global.appAuth = { getState: () => ({ user: { id: registeredUserId } }), getAccessToken: () => null };
 global.fetch = async (url, options) => {
   requests.push({ url, options });
   if (url.endsWith("/users")) { registeredUserId = JSON.parse(options.body).id; return response(201, { user: { id: registeredUserId, name: "Você" }, accessToken: "secret-token" }); }
@@ -71,6 +72,10 @@ require("../js/event-collaboration-client.js");
   assert.equal(requests.at(-1).options.method, "PUT");
   assert.equal(await window.eventCollaboration.deleteEvent(updated, identity.user), true);
   assert.equal(requests.at(-1).options.method, "DELETE");
+  window.eventCollaboration.queueEventDeletion("event-1");
+  assert.deepEqual(values.get(window.eventCollaboration.deleteQueueKey)[registeredUserId], ["event-1"]);
+  assert.deepEqual(await window.eventCollaboration.flushEventDeletionQueue(), ["event-1"]);
+  assert.deepEqual(values.get(window.eventCollaboration.deleteQueueKey)[registeredUserId], []);
   window.eventCollaboration.queuePersonalOperation("event-1", "item-1", "upsert", { key: "B", notes: "Offline" });
   window.eventCollaboration.queuePersonalOperation("event-1", "item-1", "delete");
   assert.equal(window.eventCollaboration.readPersonalQueue().length, 1, "a operação mais recente substitui a anterior");

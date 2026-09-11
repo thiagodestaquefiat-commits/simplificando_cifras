@@ -57,4 +57,15 @@ assert.equal(official.repertoire[0].personalEdits.member.key, "A", "alteração 
 assert.equal(official.repertoire[0].shared.title, "Versão oficial");
 assert.throws(() => window.eventRepository.upsertShared([collaborative], { ...collaborative, title: "Inválido" }, { id: "member" }), /Somente o líder/);
 
+const accountA = { id: "account-a", name: "Conta A" };
+const activatedA = window.eventRepository.activateOwner(accountA.id, events, accountA, ["local-user"]);
+assert.equal(activatedA.migrationCandidate, true, "eventos legados devem exigir migração explícita");
+assert.equal(activatedA.events[0].leaderId, accountA.id, "a cópia preparada deve vincular o líder à conta sem trocar o ID do evento");
+assert.equal(activatedA.events[0].id, events[0].id);
+assert.equal(window.eventRepository.confirmActiveOwner(activatedA.events), true);
+const accountB = window.eventRepository.activateOwner("account-b", activatedA.events, { id: "account-b", name: "Conta B" }, []);
+assert.deepEqual(accountB.events, [], "outra conta não pode receber o cache da conta A");
+const returnedA = window.eventRepository.activateOwner(accountA.id, accountB.events, accountA, []);
+assert.equal(returnedA.events.length, 1, "a conta A deve recuperar seu cache contextualizado");
+
 console.log("event-model-repository.test.js: OK");

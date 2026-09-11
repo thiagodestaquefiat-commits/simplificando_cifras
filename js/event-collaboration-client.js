@@ -3,6 +3,7 @@
 
   const IDENTITY_KEY = "sc_collaboration_identity_v1";
   const PERSONAL_QUEUE_KEY = "sc_collaboration_personal_queue_v1";
+  const DELETE_QUEUE_KEY = "sc_collaboration_event_delete_queue_v1";
 
   function generatedId() {
     const value = global.crypto && typeof global.crypto.randomUUID === "function" ? global.crypto.randomUUID().replace(/-/g, "") : Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -166,6 +167,9 @@
       eventLocation: normalized.eventLocation,
       bandId: normalized.bandId,
       description: normalized.description,
+      createdAt: normalized.createdAt,
+      updatedAt: normalized.updatedAt,
+      notifications: normalized.notifications,
       leaderId: String(normalized.leaderId),
       remoteVersion: normalized.remoteVersion,
       members: normalized.members.map((member) => ({ id: String(member.id), name: member.name, role: member.role, avatarUrl: member.avatarUrl })),
@@ -194,12 +198,12 @@
     return (body.events || []).map(fromRemote);
   }
 
-  async function saveSharedEvent(event, fallback) {
+  async function saveSharedEvent(event, fallback, options) {
     await ensureRegistered(fallback);
     const normalized = global.eventModel.create(event);
     const body = await request("/events" + (normalized.remoteVersion == null ? "" : "/" + encodeURIComponent(normalized.id)), {
       method: normalized.remoteVersion == null ? "POST" : "PUT",
-      body: JSON.stringify(toRemotePayload(normalized))
+      body: JSON.stringify({ ...toRemotePayload(normalized), legacyMigration: Boolean(options && options.legacyMigration) })
     });
     return fromRemote(body);
   }
@@ -248,9 +252,37 @@
     return true;
   }
 
+  function queueEventDeletion(eventId) {
+    const state = global.appAuth && global.appAuth.getState && global.appAuth.getState();
+    const ownerId = String(state && state.user && state.user.id || "").trim();
+    if (!ownerId) return false;
+    const queues = global.storage.get(DELETE_QUEUE_KEY, {});
+    const safe = queues && typeof queues === "object" && !Array.isArray(queues) ? queues : {};
+    safe[ownerId] = Array.from(new Set([...(Array.isArray(safe[ownerId]) ? safe[ownerId] : []), String(eventId)]));
+    return global.storage.set(DELETE_QUEUE_KEY, safe);
+  }
+
+  async function flushEventDeletionQueue() {
+    const state = global.appAuth && global.appAuth.getState && global.appAuth.getState();
+    const ownerId = String(state && state.user && state.user.id || "").trim();
+    if (!ownerId) return [];
+    const queues = global.storage.get(DELETE_QUEUE_KEY, {}), pending = Array.isArray(queues && queues[ownerId]) ? queues[ownerId] : [];
+    const completed = [];
+    for (const eventId of pending) {
+      try { await request("/events/" + encodeURIComponent(eventId), { method: "DELETE" }); }
+      catch (error) { if (error.status !== 404) throw error; }
+      completed.push(String(eventId));
+    }
+    if (completed.length) {
+      queues[ownerId] = pending.filter((eventId) => !completed.includes(String(eventId)));
+      global.storage.set(DELETE_QUEUE_KEY, queues);
+    }
+    return completed;
+  }
+
   function currentAccessToken() {
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);
