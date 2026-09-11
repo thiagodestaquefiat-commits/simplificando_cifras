@@ -1825,17 +1825,17 @@ function renderLibrarySyncPanel(state){
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 function deferLibraryMigration(){librarySync.deferMigration();closeModal();showToast('Nada foi enviado. Você pode salvar a biblioteca na sua conta depois.');}
 function openLibraryMigrationPrompt(state){
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Salvar músicas na sua conta</div><div class="event-permission-note"><strong>Encontramos ${Number(state.local)||0} música${Number(state.local)===1?'':'s'} salva${Number(state.local)===1?'':'s'} neste dispositivo.</strong><br>Deseja salvá-la${Number(state.local)===1?'':'s'} na sua conta?</div><button class="btn btn-primary" onclick="confirmLibraryMigration()">Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Salvar suas músicas</div><div class="event-permission-note">Encontramos <strong>${Number(state.local)||0} música${Number(state.local)===1?'':'s'}</strong> neste aparelho. Salve-a${Number(state.local)===1?'':'s'} na sua conta para acessá-la${Number(state.local)===1?'':'s'} em outros dispositivos.</div><button class="btn btn-primary" onclick="confirmLibraryMigration()">Salvar minhas músicas</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
 async function confirmLibraryMigration(){
   const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
-  try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível preservar o backup neste dispositivo.');const result=await librarySync.syncNow();if(result.failed)throw new Error(`${result.failed} música(s) ainda não foram salvas na conta.`);closeModal();showToast(`✅ ${result.total} música(s) salvas na sua conta.`);}
+  try{exportarBiblioteca({quiet:true});if(!librarySync.markBackupReady())throw new Error('Não foi possível preservar o backup neste dispositivo.');const result=await librarySync.syncNow();if(result.failed)throw new Error(`${result.failed} música(s) ainda não foram salvas na conta.`);closeModal();showToast(`✅ ${result.total} música(s) salvas na sua conta.`);}
   catch(error){if(button)button.disabled=false;showToast('⚠️ '+error.message);}
 }
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v100-personal-library-background',librarySyncVersion:8,frontendBuild:'pr42-personal-library-background-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v101-personal-library-simple',librarySyncVersion:8,frontendBuild:'pr42-personal-library-simple-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -2106,7 +2106,7 @@ function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:docume
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
 function closeModal(){if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;libraryRestoreDraft=null;}
 
-function exportarBiblioteca(){
+function exportarBiblioteca(options={}){
   const result=libraryExporter.export({
     catalogoPadrao,
     musicas,
@@ -2123,8 +2123,8 @@ function exportarBiblioteca(){
   const userMessage=result.storedCount
     ?`${result.storedCount} música(s) da biblioteca salva e ${result.standardCount} do catálogo padrão exportadas.`
     :`${result.standardCount} música(s) do catálogo padrão exportadas. Nenhuma biblioteca salva foi encontrada.`;
-  showToast('✅ '+userMessage);
-  alert('Exportação concluída!\n\n'+userMessage+'\nEventos, repertórios, medleys, favoritos, configurações e armazenamento bruto também foram incluídos.');
+  if(!options.quiet){showToast('✅ '+userMessage);alert('Exportação concluída!\n\n'+userMessage+'\nEventos, repertórios, medleys, favoritos, configurações e armazenamento bruto também foram incluídos.');}
+  return result;
 }
 
 // carrega dados salvos

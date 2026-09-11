@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v100-personal-library-background";
+const CACHE_NAME = "simplificando-cifras-v101-personal-library-simple";
 const ASSETS = [
   "./",
   "./index.html",
