@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v92-integration-39-40/);
+assert.match(serviceWorker, /simplificando-cifras-v96-sync-identity-guard/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
@@ -45,7 +45,7 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/library-sync\.js\?v=2/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=3/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
@@ -142,6 +142,16 @@ const server = http.createServer((request, response) => {
       configuracoes: {}
     })));
     await page.getByRole("button", { name: "Sincronização", exact: true }).click();
+    assert.match(await page.locator("#modal-body").innerText(), /Biblioteca[\s\S]*Para enviar[\s\S]*Para baixar[\s\S]*Eventos[\s\S]*Somente neste dispositivo/);
+    const [diagnosticDownload] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Baixar diagnóstico", exact: true }).click()
+    ]);
+    assert.match(diagnosticDownload.suggestedFilename(), /^roudy-diagnostico-\d{4}-\d{2}-\d{2}\.json$/);
+    const diagnostic = JSON.parse(fs.readFileSync(await diagnosticDownload.path(), "utf8"));
+    assert.equal(diagnostic.format, "roudy-sync-diagnostics");
+    assert.equal(Object.hasOwn(diagnostic, "accessToken"), false);
+    assert.equal(JSON.stringify(diagnostic).includes("Bearer "), false);
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const fileChooser = await fileChooserPromise;
