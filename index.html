@@ -582,7 +582,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/song-repository.js?v=4"></script>
 <script src="js/library-sync.js?v=8"></script>
 <script src="js/event-model.js?v=4"></script>
-<script src="js/event-repository.js?v=2"></script>
+<script src="js/event-repository.js?v=3"></script>
 <script src="js/event-chat.js?v=1"></script>
 <script src="js/youtube-api.js?v=2"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -610,7 +610,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=4"></script>
+<script src="js/event-collaboration-client.js?v=5"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=8"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=4"></script>
@@ -666,6 +666,7 @@ function showToast(msg){
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentLocationAutocomplete=null;
 let setlists=[];
+let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
 
 let musicas=[
   {id:1,title:'A alegria',key:'A',capo:'',blocos:[{l:'A alegria',c:'A  D  A  G D\nA  B7  E'},{l:'O sentimento',c:'A  A7  D  F\nA  E  A  E'},{l:'posso pisar numa tropa',c:'A  A7  D  F  (3x)\nA  E  A  E'},{l:'Aleluia',c:'A  D  A\nB7  E'}]},
@@ -1835,7 +1836,7 @@ async function confirmLibraryMigration(){
 }
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:3,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v102-mvp-library-migration',librarySyncVersion:8,frontendBuild:'pr42-mvp-library-migration-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:4,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v103-personal-events-repertoire',librarySyncVersion:8,frontendBuild:'personal-events-repertoire-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -1976,6 +1977,7 @@ async function syncEventsNow(silent){
   if(button)button.disabled=true;if(status)status.textContent='Postando alterações…';
   try{
     await eventCollaboration.ensureRegistered(appCurrentUser);
+    await eventCollaboration.flushEventDeletionQueue();
     for(const localEvent of [...setlists]){
       if(localEvent.syncState!=='pending'||!localEvent.pendingShared||!eventModel.isLeader(localEvent,appCurrentUser.id))continue;
       const synced=await eventCollaboration.saveSharedEvent(localEvent,appCurrentUser);setlists=eventRepository.upsert(setlists,synced).events;
@@ -2064,7 +2066,7 @@ async function saveEventSongEdit(eventId,itemId){
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}
 
 function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
-async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
+async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}if(event.remoteVersion!=null)eventCollaboration.queueEventDeletion(event.id);setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
 function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
@@ -2127,6 +2129,31 @@ function exportarBiblioteca(options={}){
   return result;
 }
 
+function openEventMigrationPrompt(){
+  if(!eventMigrationCandidate||!currentAuthState.authenticated||!setlists.length)return;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Salvar seus eventos</div><div class="event-permission-note">Encontramos <strong>${setlists.length} evento${setlists.length===1?'':'s'}</strong> neste aparelho, incluindo seus repertórios e a ordem das músicas. Salve-${setlists.length===1?'o':'os'} na sua conta para acessar em outros dispositivos.</div><button class="btn btn-primary" onclick="confirmEventMigration()">Salvar meus eventos</button><button class="btn btn-outline" onclick="deferEventMigration()">Agora não</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function deferEventMigration(){closeModal();showToast('Nada foi enviado. Seus eventos continuam neste aparelho.');}
+async function confirmEventMigration(){
+  const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
+  try{
+    exportarBiblioteca({quiet:true});
+    const original=eventModel.normalizeCollection(setlists),existingRemote=await eventCollaboration.listEvents(appCurrentUser),existingIds=new Set(existingRemote.map(event=>String(event.id))),confirmed=[...existingRemote];
+    for(const localEvent of original){
+      if(existingIds.has(String(localEvent.id)))continue;
+      const uploaded=await eventCollaboration.saveSharedEvent({...localEvent,remoteVersion:null,syncState:'pending',pendingShared:true},appCurrentUser,{legacyMigration:true});
+      confirmed.push(uploaded);
+    }
+    const remote=await eventCollaboration.listEvents(appCurrentUser),remoteIds=new Set(remote.map(event=>String(event.id)));
+    const missing=original.filter(event=>!remoteIds.has(String(event.id)));
+    if(missing.length)throw new Error(`${missing.length} evento(s) não foram confirmados pelo servidor.`);
+    setlists=eventRepository.mergeRemote(confirmed,remote);
+    if(!eventRepository.confirmActiveOwner(setlists))throw new Error('Não foi possível confirmar o cache desta conta.');
+    eventMigrationCandidate=false;eventBackgroundSyncReady=true;closeModal();renderSetlists();showToast(`✅ ${original.length} evento(s) e repertórios salvos na sua conta.`);
+  }catch(error){if(button)button.disabled=false;showToast('⚠️ '+error.message);}
+}
+
 // carrega dados salvos
 const catalogoPadrao=songModel.normalizeCollection(JSON.parse(JSON.stringify(musicas)));
 musicas=songRepository.load(catalogoPadrao);
@@ -2149,7 +2176,7 @@ appAuth.subscribe(async state=>{
   if(!state.authenticated){
     appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
     appCurrentUser=Object.freeze({...appIdentity.user});
-    appBands=[];renderAccountButton();renderSetlists();renderBandToolbar();return;
+    appBands=[];eventBackgroundSyncReady=false;renderAccountButton();renderSetlists();renderBandToolbar();return;
   }
   if(authLinking||!state.authenticated||!state.user||String(state.user.id)===String(appCurrentUser.id))return;
   authLinking=true;
@@ -2158,16 +2185,21 @@ appAuth.subscribe(async state=>{
     appIdentity=await eventCollaboration.ensureRegistered(previousUser);
     if(!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
+    const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
+    setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
     setlists=eventRepository.mergeRemote(setlists,remoteEvents);eventRepository.save(setlists);
+    eventBackgroundSyncReady=!eventMigrationCandidate;
     renderAccountButton();renderSetlists();renderBandToolbar();
+    if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>openEventMigrationPrompt(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value)});
 let promptedLibraryMigrationOwner=null;
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);const owner=currentAuthState&&currentAuthState.user&&currentAuthState.user.id;if(state.phase==='needs-consent'&&state.migrationCandidate&&owner&&promptedLibraryMigrationOwner!==owner){promptedLibraryMigrationOwner=owner;setTimeout(()=>openLibraryMigrationPrompt(state),0);}});
 appAuth.initialize();
+window.addEventListener('online',()=>{if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 checkShareParam();
 youtubeUI.initialize({
   getSongs:()=>musicas,

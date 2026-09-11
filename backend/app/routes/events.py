@@ -275,8 +275,9 @@ def _members_payload(payload: dict, actor) -> tuple[list[dict], str]:
     leader_id = _identifier(payload.get("leaderId"), "leaderId", actor.id)
     if leader_id not in {item["id"] for item in members}:
         raise ApiError("lider_invalido", "O líder precisa ser integrante do evento.", 400)
+    migration = payload.get("legacyMigration") is True and leader_id == actor.id
     missing = [item["id"] for item in members if db.session.get(CollaborationUser, item["id"]) is None]
-    if missing:
+    if missing and not migration:
         raise ApiError(
             "membro_nao_registrado",
             "Antes de sincronizar, informe o ID exibido no aplicativo de cada integrante.",
