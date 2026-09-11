@@ -7,6 +7,7 @@
   const LEGACY_OWNER_KEY = "sc_legacy_library_owner_v1";
   let activeOwnerId = null;
   let legacyCandidateOwnerId = null;
+  let storedLibraryExistedAtBoot = false;
 
   function requireDependencies() {
     if (!global.storage || !global.songModel) {
@@ -33,11 +34,6 @@
     return global.storage.set(OWNER_CACHES_KEY, caches);
   }
 
-  function sameCollection(left, right) {
-    try { return JSON.stringify(normalized(left)) === JSON.stringify(normalized(right)); }
-    catch (_error) { return false; }
-  }
-
   function activateOwner(ownerId, currentSongs, defaultSongs) {
     requireDependencies();
     const nextOwner = String(ownerId || "").trim();
@@ -55,7 +51,7 @@
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const candidate = Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : [];
-    const hasPersonalCandidate = candidate.length > 0 && !sameCollection(candidate, defaultSongs);
+    const hasPersonalCandidate = candidate.length > 0 && storedLibraryExistedAtBoot;
     if ((!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate) {
       if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
       legacyCandidateOwnerId = nextOwner;
@@ -78,9 +74,13 @@
   function load(defaultSongs) {
     requireDependencies();
     const current = global.storage.get(CURRENT_STORAGE_KEY, null);
-    if (Array.isArray(current)) return global.songModel.normalizeCollection(current);
+    if (Array.isArray(current)) {
+      storedLibraryExistedAtBoot = true;
+      return global.songModel.normalizeCollection(current);
+    }
 
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
+    storedLibraryExistedAtBoot = Array.isArray(legacy);
     const source = Array.isArray(legacy) ? legacy : defaultSongs;
     const songs = global.songModel.normalizeCollection(source);
     persistCurrent(songs);

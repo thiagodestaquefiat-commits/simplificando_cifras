@@ -61,10 +61,10 @@ assert.equal(repository.save(updated.songs), true);
 assert.deepEqual(values.get("sc_songs_v1"), values.get("cifras_musicas_v1"), "o salvamento deve manter rollback compatível");
 assert.equal(repository.remove(updated.songs, "8").length, 1);
 
-const defaults = [{ id: "default", title: "Catálogo padrão", blocos: [] }];
 const legacySnapshot = structuredClone(values.get("sc_songs_v1"));
+const defaults = structuredClone(legacySnapshot);
 const ownerA = repository.activateOwner("owner-a", legacySnapshot, defaults);
-assert.equal(ownerA.migrationCandidate, true, "a primeira conta recebe apenas a oferta de migração da biblioteca legada");
+assert.equal(ownerA.migrationCandidate, true, "biblioteca persistida recebe oferta mesmo quando coincide com o catálogo embutido");
 assert.deepEqual(ownerA.songs, legacySnapshot);
 assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a oferta não move nem apaga a biblioteca legada");
 
@@ -83,5 +83,18 @@ const ownerAFinal = repository.activateOwner("owner-a", ownerBAgain.songs, defau
 assert.equal(ownerAFinal.migrationCandidate, false);
 assert.deepEqual(ownerAFinal.songs, legacySnapshot, "após confirmação, A reabre seu cache contextualizado");
 assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a confirmação não limpa as chaves legadas protegidas");
+
+const fs = require("node:fs");
+const vm = require("node:vm");
+const freshValues = new Map();
+const freshContext = { console, structuredClone };
+freshContext.window = { storage: { get: (key, fallback) => freshValues.has(key) ? structuredClone(freshValues.get(key)) : fallback, set: (key, value) => { freshValues.set(key, structuredClone(value)); return true; } } };
+vm.runInNewContext(fs.readFileSync("js/song-model.js", "utf8"), freshContext);
+vm.runInNewContext(fs.readFileSync("js/song-repository.js", "utf8"), freshContext);
+const freshDefaults = [{ id: "seed-1", title: "Catálogo inicial", blocos: [] }];
+const freshBoot = freshContext.window.songRepository.load(freshDefaults);
+const freshOwner = freshContext.window.songRepository.activateOwner("new-owner", freshBoot, freshDefaults);
+assert.equal(freshOwner.migrationCandidate, false, "catálogo criado no boot atual não é tratado como biblioteca legada");
+assert.deepEqual(Array.from(freshOwner.songs), [], "usuário realmente novo começa com biblioteca pessoal vazia");
 
 console.log("song-repository.test.js: OK (migração legada e isolamento A/B)");

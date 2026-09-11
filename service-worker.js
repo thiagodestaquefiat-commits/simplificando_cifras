@@ -1,10 +1,10 @@
-const CACHE_NAME = "simplificando-cifras-v97-personal-library-owner";
+const CACHE_NAME = "simplificando-cifras-v98-personal-library-provenance";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=2",
+  "./js/song-repository.js?v=3",
   "./js/library-sync.js?v=7",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=2",
