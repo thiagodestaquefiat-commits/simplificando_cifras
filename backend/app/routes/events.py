@@ -172,6 +172,39 @@ def _iso(value) -> str:
     return value.isoformat()
 
 
+def _datetime(value, fallback: datetime) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _restore_legacy_changes(event: Event, payload: dict) -> bool:
+    if payload.get("legacyMigration") is not True or not isinstance(payload.get("notifications"), list):
+        return False
+    restored = False
+    seen: set[str] = set()
+    for raw in payload["notifications"][-50:]:
+        if not isinstance(raw, dict):
+            continue
+        change_id = _text(raw.get("id"), 36, "notifications.id") or str(uuid.uuid4())
+        if change_id in seen or db.session.get(EventChange, change_id) is not None:
+            continue
+        seen.add(change_id)
+        db.session.add(EventChange(
+            id=change_id,
+            event_id=event.id,
+            actor_id=_text(raw.get("actorId"), 80, "notifications.actorId") or g.current_user.id,
+            actor_name=_text(raw.get("actorName"), 120, "notifications.actorName") or g.current_user.name,
+            kind=_text(raw.get("kind"), 80, "notifications.kind") or "event.updated",
+            summary=_text(raw.get("summary"), 300, "notifications.summary") or "Atualizou o evento",
+            created_at=_datetime(raw.get("createdAt"), datetime.now(timezone.utc)),
+        ))
+        restored = True
+    return restored
+
+
 def _serialize_event(event: Event, user_id: str) -> dict:
     overrides = {
         item.repertoire_item_id: item
@@ -463,13 +496,16 @@ def create_event():
         description=_text(payload.get("description"), 10000, "description"),
         band_id=band_id,
         leader_id=g.current_user.id,
+        created_at=_datetime(payload.get("createdAt"), datetime.now(timezone.utc)),
+        updated_at=_datetime(payload.get("updatedAt"), datetime.now(timezone.utc)),
     )
     _assign_location(event, location_data)
     db.session.add(event)
     db.session.flush()
     _replace_members(event, members)
     _replace_repertoire(event, _repertoire_payload(payload))
-    _change(event, "event.created", "criou o evento e o repertório")
+    if not _restore_legacy_changes(event, payload):
+        _change(event, "event.created", "criou o evento e o repertório")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 201
 

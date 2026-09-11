@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v103-personal-events-repertoire";
+const CACHE_NAME = "simplificando-cifras-v104-legacy-events-fixture";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const ASSETS = [
   "./js/library-sync.js?v=8",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=3",
-  "./js/event-collaboration-client.js?v=5",
+  "./js/event-collaboration-client.js?v=6",
   "./js/app-auth.js?v=7",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",

@@ -184,6 +184,15 @@ def test_explicit_legacy_migration_preserves_event_repertoire_and_unregistered_m
     owner = register(client, "owner-user", "Proprietário")
     payload = event_payload()
     payload.update({"id": "legacy-event", "leaderId": "owner-user", "legacyMigration": True})
+    payload.update({
+        "createdAt": "2026-07-24T10:00:00+00:00",
+        "updatedAt": "2026-08-01T12:30:00+00:00",
+        "notifications": [{
+            "id": "legacy-change-1", "actorId": "owner-user", "actorName": "Proprietário",
+            "kind": "event.updated", "summary": "Reordenou o repertório",
+            "createdAt": "2026-08-01T12:30:00+00:00",
+        }],
+    })
     payload["members"] = [
         {"id": "owner-user", "name": "Proprietário", "role": "Liderança"},
         {"id": "legacy-member", "name": "Integrante legado", "role": "Vocal"},
@@ -196,3 +205,6 @@ def test_explicit_legacy_migration_preserves_event_repertoire_and_unregistered_m
     assert [item["songId"] for item in body["repertoire"]] == ["song-1", "song-2"]
     assert [item["order"] for item in body["repertoire"]] == [0, 1]
     assert any(member["id"] == "legacy-member" for member in body["members"])
+    assert body["createdAt"].startswith("2026-07-24T10:00:00")
+    assert body["updatedAt"].startswith("2026-08-01T12:30:00")
+    assert body["notifications"][0]["id"] == "legacy-change-1"

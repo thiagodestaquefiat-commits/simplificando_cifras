@@ -1,0 +1,25 @@
+{
+  "id": "event_1721844000000",
+  "title": "Culto legado de domingo",
+  "date": "2026-07-26",
+  "time": "18:30",
+  "location": "Igreja Central",
+  "eventLocation": { "name": "Igreja Central", "formattedAddress": "Rua das Flores, 100", "street": "Rua das Flores", "streetNumber": "100", "district": "Centro", "city": "Blumenau", "state": "Santa Catarina", "postalCode": "89000-000", "country": "Brasil", "latitude": -26.9187, "longitude": -49.066, "placeId": "legacy-place-1", "provider": "geoapify" },
+  "description": "Passagem às 17h30",
+  "bandId": null,
+  "leaderId": "local-user",
+  "members": [
+    { "id": "local-user", "name": "Thiago", "role": "Liderança", "isCurrentUser": true, "isLeader": true },
+    { "id": "member_1721844000001", "name": "Sabrina", "role": "Vocal" }
+  ],
+  "repertoire": [
+    { "id": "repertoire_3", "songId": 86, "order": 0, "shared": { "title": "Terceira", "artist": "Teste", "key": "G", "capo": "2", "chordSheet": "G C D", "notes": "Abrir" } },
+    { "id": "repertoire_1", "songId": 12, "order": 1, "shared": { "title": "Primeira", "artist": "Teste", "key": "A", "capo": "", "chordSheet": "A D E", "notes": "Meio" } },
+    { "id": "repertoire_2", "songId": 41, "order": 2, "shared": { "title": "Segunda", "artist": "Teste", "key": "C", "capo": "", "chordSheet": "C F G", "notes": "Final" } }
+  ],
+  "notifications": [
+    { "id": "legacy-notice-1", "actorId": "local-user", "actorName": "Thiago", "kind": "event.updated", "summary": "Reordenou o repertório", "createdAt": "2026-07-24T10:00:00.000Z" }
+  ],
+  "createdAt": "2026-07-20T09:00:00.000Z",
+  "updatedAt": "2026-07-24T10:00:00.000Z"
+}
