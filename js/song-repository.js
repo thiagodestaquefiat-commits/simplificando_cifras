@@ -125,15 +125,15 @@
     requireDependencies();
     const current = global.storage.get(CURRENT_STORAGE_KEY, null);
     if (Array.isArray(current)) {
-      storedLibraryExistedAtBoot = !global.storage.get(SEED_ONLY_KEY, false);
+      storedLibraryExistedAtBoot = current.length > 0;
       return global.songModel.normalizeCollection(current);
     }
 
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
-    storedLibraryExistedAtBoot = Array.isArray(legacy);
     const source = Array.isArray(legacy) ? legacy : defaultSongs;
     const songs = global.songModel.normalizeCollection(source);
-    if (!storedLibraryExistedAtBoot) global.storage.set(SEED_ONLY_KEY, true);
+    storedLibraryExistedAtBoot = songs.length > 0;
+    if (!Array.isArray(legacy)) global.storage.set(SEED_ONLY_KEY, true);
     persistCurrent(songs);
     return songs;
   }

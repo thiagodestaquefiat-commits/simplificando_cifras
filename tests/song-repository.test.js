@@ -94,8 +94,9 @@ vm.runInNewContext(fs.readFileSync("js/song-repository.js", "utf8"), freshContex
 const freshDefaults = [{ id: "seed-1", title: "Catálogo inicial", blocos: [] }];
 const freshBoot = freshContext.window.songRepository.load(freshDefaults);
 const freshOwner = freshContext.window.songRepository.activateOwner("new-owner", freshBoot, freshDefaults);
-assert.equal(freshOwner.migrationCandidate, false, "catálogo criado no boot atual não é tratado como biblioteca legada");
-assert.deepEqual(Array.from(freshOwner.songs), [], "usuário realmente novo começa com biblioteca pessoal vazia");
+assert.equal(freshOwner.migrationCandidate, true, "durante a transição, o catálogo inicial também integra a biblioteca atual do usuário");
+assert.deepEqual(Array.from(freshOwner.songs).map(song => song.id), ["seed-1"]);
+assert.equal(freshValues.get("sc_seed_library_only_v1"), true, "o marcador de origem do seed continua preservado");
 
 const reloadValues = new Map();
 function repositoryContext(store) {
@@ -109,8 +110,44 @@ repositoryContext(reloadValues).load(freshDefaults);
 const afterReloadRepository = repositoryContext(reloadValues);
 const afterReloadSongs = afterReloadRepository.load(freshDefaults);
 const afterReloadOwner = afterReloadRepository.activateOwner("new-after-reload", afterReloadSongs, freshDefaults);
-assert.equal(afterReloadOwner.migrationCandidate, false, "reload antes do primeiro login não transforma catálogo inicial em biblioteca legada");
-assert.deepEqual(Array.from(afterReloadOwner.songs), []);
+assert.equal(afterReloadOwner.migrationCandidate, true, "o marcador seed não bloqueia a migração depois do reload");
+assert.deepEqual(Array.from(afterReloadOwner.songs).map(song => song.id), ["seed-1"]);
+
+function seedTransitionScenario(total, cachedCount = 0) {
+  const store = new Map();
+  const songs = Array.from({ length: total }, (_, index) => ({
+    id: `transition-${total}-${index}`,
+    title: `Música ${index + 1}`,
+    blocos: [],
+    librarySync: { clientId: `transition-client-${total}-${index}`, version: 1 }
+  }));
+  store.set("sc_songs_v1", songs);
+  store.set("cifras_musicas_v1", songs);
+  store.set("sc_seed_library_only_v1", true);
+  store.set("sc_personal_song_caches_v1", { "seed-owner": songs.slice(0, cachedCount) });
+  store.set("sc_legacy_library_owner_v1", "seed-owner");
+  const scopedRepository = repositoryContext(store);
+  const bootSongs = scopedRepository.load([]);
+  const activation = scopedRepository.activateOwner("seed-owner", bootSongs, []);
+  return { store, songs, activation };
+}
+
+for (const total of [86, 91, 106]) {
+  const scenario = seedTransitionScenario(total);
+  assert.equal(scenario.activation.migrationCandidate, true, `${total} músicas marcadas como seed continuam elegíveis`);
+  assert.equal(scenario.activation.songs.length, total);
+  assert.deepEqual(
+    scenario.activation.songs.map(song => song.librarySync.clientId),
+    scenario.songs.map(song => song.librarySync.clientId),
+    `${total} clientIds existentes permanecem inalterados`
+  );
+  assert.equal(scenario.store.get("sc_seed_library_only_v1"), true, "a ativação apenas lê o marcador seed");
+}
+
+const partiallySynced = seedTransitionScenario(106, 40);
+assert.equal(partiallySynced.activation.migrationCandidate, true, "cache parcial não oculta as músicas restantes");
+assert.equal(partiallySynced.activation.songs.length, 106);
+assert.deepEqual(partiallySynced.activation.songs.map(song => song.id), partiallySynced.songs.map(song => song.id));
 
 const transitionValues = new Map();
 const transitionClientIds = ["legacy-client-1", "legacy-client-2", "legacy-client-3"];
@@ -155,4 +192,4 @@ assert.deepEqual(incompleteOwner.songs.map((song) => song.id), ["legacy-1", "leg
 const foreignOwner = incompleteRepository.activateOwner("other-owner", incompleteOwner.songs, []);
 assert.deepEqual(Array.from(foreignOwner.songs), [], "outra conta não absorve a biblioteca legada reservada");
 
-console.log("song-repository.test.js: OK (migração legada, cache vazia/incompleta, isolamento A/B e usuário novo)");
+console.log("song-repository.test.js: OK (seed 86/91/106, cache parcial, migração legada e isolamento A/B)");

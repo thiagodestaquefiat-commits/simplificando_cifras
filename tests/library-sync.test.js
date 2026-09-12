@@ -57,6 +57,21 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.deepEqual(transition.songs.map(item=>item.librarySync.clientId),transitionClientIds,'a cópia silenciosa preserva todos os clientIds existentes');
  assert.equal(JSON.stringify(transition.storage.get('sc_events_v1')),transitionEventsBefore,'migração de músicas não altera Eventos');
 
+ for(const total of [86,91,106,141]){
+  const clientIds=Array.from({length:total},(_,index)=>`seed-${total}-${index}`),library=clientIds.map((clientId,index)=>song(11000+total*10+index,{librarySync:{clientId,version:1}}));
+  const current=device(`seed-transition-${total}`,library,{migrationCandidate:true}),eventsBefore=JSON.stringify(current.storage.get('sc_events_v1'));await settle();
+  assert.deepEqual([current.songs.length,remote.get(`seed-transition-${total}`).size,current.sync.getStatus().pending],[total,total,0],`${total} músicas locais são copiadas integralmente para a conta`);
+  assert.deepEqual(current.songs.map(item=>item.librarySync.clientId),clientIds,`${total} clientIds existentes são preservados`);
+  assert.equal(JSON.stringify(current.storage.get('sc_events_v1')),eventsBefore,`Eventos permanecem intactos no cenário ${total}`);
+  const second=device(`seed-transition-${total}`,[]);await settle();assert.equal(second.songs.length,total,`segundo dispositivo recupera exatamente ${total}`);
+ }
+
+ const partialSeedIds=Array.from({length:106},(_,index)=>`seed-partial-${index}`),partialSeedLibrary=partialSeedIds.map((clientId,index)=>song(14000+index,{librarySync:{clientId,version:1}}));
+ const partialCloudA=device('seed-partial-cloud',partialSeedLibrary.slice(0,40),{consent:true});await settle();await partialCloudA.sync.syncNow();
+ const partialCloudB=device('seed-partial-cloud',partialSeedLibrary,{migrationCandidate:true});await settle();
+ assert.deepEqual([partialCloudB.songs.length,remote.get('seed-partial-cloud').size,partialCloudB.sync.getStatus().pending],[106,106,0],'biblioteca parcialmente sincronizada preserva 40 existentes e copia somente as 66 restantes');
+ assert.deepEqual(partialCloudB.songs.map(item=>item.librarySync.clientId),partialSeedIds,'cache/cloud parcial preserva identidades e ordem');
+
  const b=device('user-a',[]);await settle();assert.equal(b.songs.length,5,'nuvem chega ao dispositivo B');assert.equal(b.sync.getStatus().phase,'synced');assert.equal(b.sync.getStatus().consented,true,'biblioteca existente na conta ativa a sincronização em background no dispositivo B');
  assert.deepEqual(b.songs[0].editorData,five[0].editorData);assert.deepEqual(b.songs[0].fullChordSheet,five[0].fullChordSheet);assert.deepEqual(b.songs[0].harmonicSummary,five[0].harmonicSummary);
  const bEdit=b.songs;bEdit[0]={...bEdit[0],artist:'Editado no B'};b.replace(bEdit);b.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));await a.sync.pull();assert.equal(a.songs[0].artist,'Editado no B','B → A sincroniza em background quando A não mudou');
@@ -118,6 +133,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const newcomer=device('brand-new-user',[]);await settle();assert.equal(newcomer.sync.getStatus().consented,true,'conta nova vazia habilita persistência automática sem prompt');const newcomerSongs=[song(9000)];newcomer.replace(newcomerSongs);newcomer.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));assert.equal(remote.get('brand-new-user').size,1,'primeira música de usuário novo é persistida automaticamente');
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.doesNotMatch(html,/<button[^>]+id="library-sync-btn"/,'painel técnico não aparece na navegação normal');assert.match(html,/downloadSyncDiagnostics\(\)[\s\S]*?await librarySync\.review\(\)\.catch\(\(\)=>null\);await librarySync\.refreshServerAudit\(\)/,'diagnóstico interno permanece disponível no código');assert.match(html,/!state\.identityBlocked/,'guard de owner não confirmado permanece intacto');
  assert.doesNotMatch(html,/openLibraryMigrationPrompt|confirmLibraryMigration|Salvar suas músicas|Salvar minhas músicas|Salvar seus eventos|Salvar meus eventos/,'migração não expõe prompts técnicos');assert.doesNotMatch(html,/exportarBiblioteca\(\{quiet:true\}\)/,'login e migração não disparam download JSON');assert.match(html,/migrateLegacyEventsInBackground\(\)/);assert.doesNotMatch(html,/setTimeout\(\(\)=>openLibrarySync\(\),0\)/,'bootstrap e login nunca abrem o painel técnico');
- assert.match(sw,/simplificando-cifras-v106-preserve-legacy-library/);assert.match(sw,/song-repository\.js\?v=5/);assert.match(sw,/library-sync\.js\?v=9/);assert.match(sw,/event-repository\.js\?v=3/);assert.match(sw,/event-collaboration-client\.js\?v=6/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
- console.log('library-sync.test.js: OK (138 legadas + cloud vazia, 86 clientIds camel/snake, isolamento, convergência, offline e retry)');
+ assert.match(sw,/simplificando-cifras-v107-seed-transition-library/);assert.match(sw,/song-repository\.js\?v=6/);assert.match(sw,/library-sync\.js\?v=9/);assert.match(sw,/event-repository\.js\?v=3/);assert.match(sw,/event-collaboration-client\.js\?v=6/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ console.log('library-sync.test.js: OK (seed 86/91/106/141, legacy, isolamento, convergência, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
