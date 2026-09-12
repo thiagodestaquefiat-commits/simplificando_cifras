@@ -44,4 +44,46 @@ const library = [{ id: 12 }, { id: 41 }, { id: 86 }];
 assert.equal(b.eventRepository.remove(cloudUpdated, fixture.id).length, 0);
 assert.deepEqual(library.map(song => song.id), [12, 41, 86], "excluir evento não pode apagar músicas");
 
-console.log("event-legacy-account-sync.test.js: OK (cópia, IDs, ordem, A→cloud→B, atualização e exclusão segura)");
+const oneHundredSongs = Array.from({ length: 100 }, (_, index) => ({ id: index + 1, librarySync: { clientId: `song-${index + 1}` } }));
+const tenLegacyEvents = Array.from({ length: 10 }, (_, index) => ({
+  ...fixture,
+  id: `legacy-event-${index + 1}`,
+  title: `Evento legado ${index + 1}`,
+  repertoire: fixture.repertoire.map((item, order) => ({ ...item, id: `event-${index + 1}-item-${order + 1}`, order }))
+}));
+const cachedSunday = a.eventModel.create({ ...tenLegacyEvents[0], leaderId: owner.id, members: [{ id: owner.id, name: owner.name, role: "Liderança", isLeader: true }], remoteVersion: 1, syncState: "synced", pendingShared: false });
+const partial = device({
+  sc_songs_v1: oneHundredSongs,
+  sc_events_v1: tenLegacyEvents,
+  cifras_setlists_v1: tenLegacyEvents,
+  sc_personal_event_caches_v1: { [owner.id]: [cachedSunday] },
+  sc_legacy_events_owner_v1: owner.id
+});
+const partialLocal = partial.eventRepository.load([], { user: { id: "local-user", name: owner.name }, legacyUserIds: [] });
+const partialActivation = partial.eventRepository.activateOwner(owner.id, partialLocal, owner, ["local-user"]);
+assert.equal(partialActivation.events.length, 10, "cache parcial não pode ocultar os outros Eventos legados");
+assert.equal(partialActivation.migrationCandidate, true);
+assert.deepEqual(partialActivation.events.map(event => event.id).sort(), tenLegacyEvents.map(event => event.id).sort());
+assert.equal(partial.values.get("sc_songs_v1").length, 100, "a migração de Eventos não altera músicas");
+
+const allConfirmed = partialActivation.events.map(event => partial.eventModel.create({ ...event, remoteVersion: 1, syncState: "synced", pendingShared: false }));
+assert.equal(partial.eventRepository.confirmActiveOwner(allConfirmed), true);
+assert.equal(partial.values.get("sc_events_v1").length, 10, "a fonte legada permanece fisicamente preservada");
+assert.equal(partial.values.get("sc_legacy_event_migrations_v1")[owner.id].length, 10);
+
+const remoteAfterDelete = allConfirmed.slice(1);
+const convergedAfterDelete = partial.eventRepository.reconcileRemote(allConfirmed, remoteAfterDelete);
+assert.equal(convergedAfterDelete.length, 9, "exclusão confirmada na conta converge no outro dispositivo");
+partial.eventRepository.save(convergedAfterDelete);
+const afterReload = device(Object.fromEntries(partial.values));
+const afterReloadLocal = afterReload.eventRepository.load([], { user: owner, legacyUserIds: [] });
+const afterReloadActivation = afterReload.eventRepository.activateOwner(owner.id, afterReloadLocal, owner, []);
+assert.equal(afterReloadActivation.events.length, 9, "Evento já migrado e excluído não pode renascer da cópia legada preservada");
+assert.equal(afterReloadActivation.migrationCandidate, false);
+assert.equal(afterReload.values.get("sc_events_v1").length, 10, "preservar a fonte não significa reimportar um Evento excluído");
+
+const offlinePending = partial.eventModel.create({ ...fixture, id: "offline-new-event", remoteVersion: null, syncState: "pending", pendingShared: true });
+const withOfflinePending = partial.eventRepository.reconcileRemote([...remoteAfterDelete, offlinePending], remoteAfterDelete);
+assert.ok(withOfflinePending.some(event => event.id === offlinePending.id), "Evento criado offline deve sobreviver até a reconexão");
+
+console.log("event-legacy-account-sync.test.js: OK (cache parcial, 100 músicas intactas, 10 Eventos, A↔B, exclusão e offline)");

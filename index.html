@@ -1534,7 +1534,7 @@ function switchTab(tab){
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
     document.getElementById('pane-'+t).style.display=t===tab?'flex':'none';
   });
-  if(tab==='setlists') renderSetlists();
+  if(tab==='setlists'){renderSetlists();if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);}
   if(tab==='medley') renderMedley();
 }
 
@@ -1750,7 +1750,7 @@ function openSharedView(data){
 const legacyCurrentUser=storage.get('sc_current_user_v1',{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null})||{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null};
 let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
 let appCurrentUser=Object.freeze({...appIdentity.user,role:appIdentity.user.role||'Liderança'});
-let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false;
+let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false;
 let chatReplyTo=null,chatLimit=40;
 function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
 function findEvent(id){return setlists.find(item=>String(item.id)===String(id));}
@@ -1826,7 +1826,7 @@ function renderLibrarySyncPanel(state){
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:4,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v107-seed-transition-library',librarySyncVersion:9,frontendBuild:'silent-personal-data-sync-v3'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:4,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v108-account-events-convergence',librarySyncVersion:9,frontendBuild:'account-events-convergence-v1'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -1963,6 +1963,8 @@ function renderSetlists(){
 }
 
 async function syncEventsNow(silent){
+  if(eventSyncRunning)return;
+  eventSyncRunning=true;
   const button=document.getElementById('event-sync-action'),status=document.getElementById('event-sync-status');
   if(button)button.disabled=true;if(status)status.textContent='Postando alterações…';
   try{
@@ -1974,11 +1976,11 @@ async function syncEventsNow(silent){
     }
     for(const synced of await eventCollaboration.flushPersonalQueue(appCurrentUser))setlists=eventRepository.upsert(setlists,synced).events;
     const remote=await eventCollaboration.listEvents(appCurrentUser);
-    setlists=eventRepository.mergeRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
+    setlists=eventRepository.reconcileRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
     await refreshBands(true);
     if(status)status.textContent='Compartilhamento concluído';if(!silent)showToast('✅ Alterações compartilhadas');
   }catch(error){if(status)status.textContent='Modo offline — dados preservados neste dispositivo';if(!silent)showToast('⚠️ '+(error.message||'Sincronização indisponível'));}
-  finally{if(button)button.disabled=false;}
+  finally{eventSyncRunning=false;if(button)button.disabled=false;}
 }
 
 const EVENT_NOTICE_READ_KEY='sc_event_notice_read_v1';
@@ -2131,7 +2133,7 @@ async function migrateLegacyEventsInBackground(){
     const remote=await eventCollaboration.listEvents(appCurrentUser),remoteIds=new Set(remote.map(event=>String(event.id)));
     const missing=original.filter(event=>!remoteIds.has(String(event.id)));
     if(missing.length)throw new Error(`${missing.length} evento(s) não foram confirmados pelo servidor.`);
-    setlists=eventRepository.mergeRemote(confirmed,remote);
+    setlists=eventRepository.reconcileRemote(confirmed,remote);
     if(!eventRepository.confirmActiveOwner(setlists))throw new Error('Não foi possível confirmar o cache desta conta.');
     eventMigrationCandidate=false;eventBackgroundSyncReady=true;renderSetlists();
   }catch(error){eventBackgroundSyncReady=false;console.warn('Migração de Eventos preservada para nova tentativa.',error);}
@@ -2172,7 +2174,7 @@ appAuth.subscribe(async state=>{
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
-    setlists=eventRepository.mergeRemote(setlists,remoteEvents);eventRepository.save(setlists);
+    setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);
     eventBackgroundSyncReady=!eventMigrationCandidate;
     renderAccountButton();renderSetlists();renderBandToolbar();
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
@@ -2181,7 +2183,8 @@ appAuth.subscribe(async state=>{
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value)});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
-window.addEventListener('online',()=>{if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
+window.addEventListener('online',()=>{if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);});
 checkShareParam();
 youtubeUI.initialize({
   getSongs:()=>musicas,
