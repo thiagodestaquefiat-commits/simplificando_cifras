@@ -66,10 +66,10 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
   const second=device(`seed-transition-${total}`,[]);await settle();assert.equal(second.songs.length,total,`segundo dispositivo recupera exatamente ${total}`);
  }
 
- const partialSeedIds=Array.from({length:106},(_,index)=>`seed-partial-${index}`),partialSeedLibrary=partialSeedIds.map((clientId,index)=>song(14000+index,{librarySync:{clientId,version:1}}));
- const partialCloudA=device('seed-partial-cloud',partialSeedLibrary.slice(0,40),{consent:true});await settle();await partialCloudA.sync.syncNow();
+ const partialSeedIds=Array.from({length:96},(_,index)=>`seed-partial-${index}`),partialSeedLibrary=partialSeedIds.map((clientId,index)=>song(14000+index,{librarySync:{clientId,version:1}}));
+ const partialCloudA=device('seed-partial-cloud',partialSeedLibrary.slice(0,86),{consent:true});await settle();await partialCloudA.sync.syncNow();
  const partialCloudB=device('seed-partial-cloud',partialSeedLibrary,{migrationCandidate:true});await settle();
- assert.deepEqual([partialCloudB.songs.length,remote.get('seed-partial-cloud').size,partialCloudB.sync.getStatus().pending],[106,106,0],'biblioteca parcialmente sincronizada preserva 40 existentes e copia somente as 66 restantes');
+ assert.deepEqual([partialCloudB.songs.length,remote.get('seed-partial-cloud').size,partialCloudB.sync.getStatus().pending],[96,96,0],'biblioteca parcialmente sincronizada preserva 86 existentes e copia somente as 10 restantes');
  assert.deepEqual(partialCloudB.songs.map(item=>item.librarySync.clientId),partialSeedIds,'cache/cloud parcial preserva identidades e ordem');
 
  const b=device('user-a',[]);await settle();assert.equal(b.songs.length,5,'nuvem chega ao dispositivo B');assert.equal(b.sync.getStatus().phase,'synced');assert.equal(b.sync.getStatus().consented,true,'biblioteca existente na conta ativa a sincronização em background no dispositivo B');
