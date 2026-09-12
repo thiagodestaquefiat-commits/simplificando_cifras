@@ -35,6 +35,44 @@
     return global.storage.set(OWNER_CACHES_KEY, caches);
   }
 
+  function stableSongIdentity(song) {
+    const clientId = String(song && song.librarySync && song.librarySync.clientId || "").trim();
+    if (clientId) return `client:${clientId}`;
+    const id = song && song.id;
+    return id === undefined || id === null || String(id).trim() === "" ? null : `id:${String(id)}`;
+  }
+
+  function mergeLegacyWithOwnerCache(legacyCollection, cachedCollection) {
+    const legacySongs = normalized(legacyCollection);
+    const cachedSongs = normalized(cachedCollection);
+    const cachedByIdentity = new Map();
+    cachedSongs.forEach((song) => {
+      const identity = stableSongIdentity(song);
+      if (identity) cachedByIdentity.set(identity, song);
+    });
+
+    const merged = legacySongs.map((song) => {
+      const identity = stableSongIdentity(song);
+      return identity && cachedByIdentity.has(identity) ? cachedByIdentity.get(identity) : song;
+    });
+    const mergedIdentities = new Set(merged.map(stableSongIdentity).filter(Boolean));
+    cachedSongs.forEach((song) => {
+      const identity = stableSongIdentity(song);
+      if (identity && mergedIdentities.has(identity)) return;
+      merged.push(song);
+      if (identity) mergedIdentities.add(identity);
+    });
+    return merged;
+  }
+
+  function hasSongsMissingFromCache(legacyCollection, cachedCollection) {
+    const cachedIdentities = new Set(normalized(cachedCollection).map(stableSongIdentity).filter(Boolean));
+    return normalized(legacyCollection).some((song) => {
+      const identity = stableSongIdentity(song);
+      return !identity || !cachedIdentities.has(identity);
+    });
+  }
+
   function activateOwner(ownerId, currentSongs, defaultSongs) {
     requireDependencies();
     const nextOwner = String(ownerId || "").trim();
@@ -44,16 +82,27 @@
     }
     activeOwnerId = nextOwner;
     const caches = ownerCaches();
-    if (Array.isArray(caches[nextOwner])) {
-      legacyCandidateOwnerId = null;
-      return { songs: normalized(caches[nextOwner]), migrationCandidate: false, ownerId: nextOwner };
-    }
     const reservedOwner = String(global.storage.get(LEGACY_OWNER_KEY, "") || "").trim();
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const candidate = Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : [];
     const hasPersonalCandidate = candidate.length > 0 && storedLibraryExistedAtBoot;
-    if ((!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate) {
+    const canUseLegacyCandidate = (!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate;
+    if (Array.isArray(caches[nextOwner])) {
+      if (canUseLegacyCandidate) {
+        if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
+        const migrationCandidate = hasSongsMissingFromCache(candidate, caches[nextOwner]);
+        legacyCandidateOwnerId = migrationCandidate ? nextOwner : null;
+        return {
+          songs: mergeLegacyWithOwnerCache(candidate, caches[nextOwner]),
+          migrationCandidate,
+          ownerId: nextOwner
+        };
+      }
+      legacyCandidateOwnerId = null;
+      return { songs: normalized(caches[nextOwner]), migrationCandidate: false, ownerId: nextOwner };
+    }
+    if (canUseLegacyCandidate) {
       if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
       legacyCandidateOwnerId = nextOwner;
       return { songs: normalized(candidate), migrationCandidate: true, ownerId: nextOwner };

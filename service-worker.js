@@ -1,10 +1,10 @@
-const CACHE_NAME = "simplificando-cifras-v105-silent-account-sync";
+const CACHE_NAME = "simplificando-cifras-v106-preserve-legacy-library";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=4",
+  "./js/song-repository.js?v=5",
   "./js/library-sync.js?v=9",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=3",

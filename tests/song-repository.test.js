@@ -112,4 +112,47 @@ const afterReloadOwner = afterReloadRepository.activateOwner("new-after-reload",
 assert.equal(afterReloadOwner.migrationCandidate, false, "reload antes do primeiro login não transforma catálogo inicial em biblioteca legada");
 assert.deepEqual(Array.from(afterReloadOwner.songs), []);
 
-console.log("song-repository.test.js: OK (migração legada, isolamento A/B e usuário novo após reload)");
+const transitionValues = new Map();
+const transitionClientIds = ["legacy-client-1", "legacy-client-2", "legacy-client-3"];
+const transitionSongs = transitionClientIds.map((clientId, index) => ({
+  id: `legacy-${index + 1}`,
+  title: `Legada ${index + 1}`,
+  blocos: [{ l: "", c: "C  G" }],
+  librarySync: { clientId, version: 1 }
+}));
+transitionValues.set("sc_songs_v1", transitionSongs);
+transitionValues.set("cifras_musicas_v1", transitionSongs);
+transitionValues.set("sc_personal_song_caches_v1", { "transition-owner": [] });
+transitionValues.set("sc_legacy_library_owner_v1", "transition-owner");
+const transitionRepository = repositoryContext(transitionValues);
+const transitionBoot = transitionRepository.load([]);
+const emptyCacheOwner = transitionRepository.activateOwner("transition-owner", transitionBoot, []);
+assert.equal(emptyCacheOwner.migrationCandidate, true, "cache contextual vazia não pode ocultar biblioteca legada da mesma conta");
+assert.equal(emptyCacheOwner.songs.length, 3);
+assert.deepEqual(
+  emptyCacheOwner.songs.map((song) => song.librarySync.clientId),
+  transitionClientIds,
+  "clientIds existentes são preservados durante a recuperação da biblioteca legada"
+);
+assert.deepEqual(transitionValues.get("sc_songs_v1"), transitionSongs, "ativar a conta não altera sc_songs_v1");
+assert.deepEqual(transitionValues.get("cifras_musicas_v1"), transitionSongs, "ativar a conta não altera cifras_musicas_v1");
+
+const incompleteValues = new Map();
+incompleteValues.set("sc_songs_v1", transitionSongs);
+incompleteValues.set("cifras_musicas_v1", transitionSongs);
+incompleteValues.set("sc_personal_song_caches_v1", {
+  "transition-owner": [{ ...transitionSongs[0], title: "Legada 1 editada na conta" }]
+});
+incompleteValues.set("sc_legacy_library_owner_v1", "transition-owner");
+const incompleteRepository = repositoryContext(incompleteValues);
+const incompleteBoot = incompleteRepository.load([]);
+const incompleteOwner = incompleteRepository.activateOwner("transition-owner", incompleteBoot, []);
+assert.equal(incompleteOwner.migrationCandidate, true, "cache incompleta mantém músicas locais faltantes como candidatas à cópia");
+assert.equal(incompleteOwner.songs.length, 3);
+assert.equal(incompleteOwner.songs[0].title, "Legada 1 editada na conta", "registro contextual conhecido prevalece pela mesma identidade");
+assert.deepEqual(incompleteOwner.songs.map((song) => song.id), ["legacy-1", "legacy-2", "legacy-3"], "a ordem legada permanece estável");
+
+const foreignOwner = incompleteRepository.activateOwner("other-owner", incompleteOwner.songs, []);
+assert.deepEqual(Array.from(foreignOwner.songs), [], "outra conta não absorve a biblioteca legada reservada");
+
+console.log("song-repository.test.js: OK (migração legada, cache vazia/incompleta, isolamento A/B e usuário novo)");
