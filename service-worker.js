@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v107-seed-transition-library";
+const CACHE_NAME = "simplificando-cifras-v108-account-events-convergence";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./js/song-repository.js?v=6",
   "./js/library-sync.js?v=9",
   "./js/event-model.js?v=4",
-  "./js/event-repository.js?v=3",
+  "./js/event-repository.js?v=4",
   "./js/event-collaboration-client.js?v=6",
   "./js/app-auth.js?v=7",
   "./js/band-client.js?v=1",
