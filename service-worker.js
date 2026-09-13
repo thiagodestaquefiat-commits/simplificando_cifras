@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v108-account-events-convergence";
+const CACHE_NAME = "simplificando-cifras-v109-account-events-actions";
 const ASSETS = [
   "./",
   "./index.html",

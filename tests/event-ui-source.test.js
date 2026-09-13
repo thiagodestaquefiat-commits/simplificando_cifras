@@ -38,6 +38,8 @@ assert.match(html, /simpleSongEditorFields/);
 assert.match(html, /eventSongVariant/);
 assert.match(html, /Somente o líder pode editar o repertório oficial/);
 assert.match(html, /eventModel\.canEditShared/);
+assert.match(html, /onclick="editSetlistById\('\$\{eventEsc\(event\.id\)\}'\)"[^>]*>✏️ Editar<\/button>/);
+assert.match(html, /onclick="deleteSetlist\('\$\{eventEsc\(event\.id\)\}'\)"[^>]*>🗑️ Excluir<\/button>/);
 assert.match(html, /createPoll/);
 assert.match(html, /eventRepository\.load/);
 console.log("event-ui-source.test.js: OK");
