@@ -16,6 +16,96 @@
     return `${baseUrl()}/api/youtube${path}`;
   }
 
+  function extractVideoId(value) {
+    const cleaned = String(value || "").trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(cleaned)) return cleaned;
+
+    let url;
+    try {
+      url = new URL(/^https?:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`);
+    } catch (_) {
+      return null;
+    }
+
+    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+    let candidate = "";
+    if (hostname === "youtu.be") {
+      candidate = url.pathname.split("/").filter(Boolean)[0] || "";
+    } else if (hostname === "youtube.com" || hostname === "m.youtube.com" || hostname === "music.youtube.com") {
+      if (url.pathname === "/watch") candidate = url.searchParams.get("v") || "";
+      else {
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (["shorts", "embed", "live"].includes(parts[0])) candidate = parts[1] || "";
+      }
+    }
+
+    return /^[A-Za-z0-9_-]{11}$/.test(candidate) ? candidate : null;
+  }
+
+  function mapVideo(video) {
+    return {
+      title: String(video.title || "").trim(),
+      artist: String(video.channelTitle || "").trim(),
+      youtubeChannelTitle: String(video.channelTitle || "").trim(),
+      youtubeVideoId: String(video.videoId || "").trim(),
+      youtubeUrl: String(video.youtubeUrl || "").trim(),
+      coverUrl: String(video.thumbnailUrl || "").trim() || null,
+      publishedAt: video.publishedAt || null,
+      key: "",
+      capo: "",
+      blocos: []
+    };
+  }
+
+  function fallbackVideo(videoId) {
+    return {
+      title: "Vídeo do YouTube",
+      artist: "YouTube",
+      youtubeChannelTitle: "YouTube",
+      youtubeVideoId: videoId,
+      youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      coverUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      publishedAt: null,
+      key: "",
+      capo: "",
+      blocos: []
+    };
+  }
+
+  async function videoFromLink(videoId, options) {
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
+    try {
+      const response = await global.fetch(oembedUrl, {
+        headers: { Accept: "application/json" },
+        signal: options && options.signal
+      });
+      if (!response.ok) {
+        const error = new Error(response.status === 404
+          ? "Esse vídeo do YouTube não foi encontrado ou não está disponível."
+          : "Não foi possível consultar esse vídeo do YouTube.");
+        error.status = response.status;
+        throw error;
+      }
+      const payload = await response.json();
+      return {
+        title: String(payload.title || "Vídeo do YouTube").trim(),
+        artist: String(payload.author_name || "YouTube").trim(),
+        youtubeChannelTitle: String(payload.author_name || "YouTube").trim(),
+        youtubeVideoId: videoId,
+        youtubeUrl,
+        coverUrl: String(payload.thumbnail_url || "").trim() || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        publishedAt: null,
+        key: "",
+        capo: "",
+        blocos: []
+      };
+    } catch (error) {
+      if (error?.name === "AbortError" || error?.status) throw error;
+      return fallbackVideo(videoId);
+    }
+  }
+
   async function parseResponse(response) {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -36,6 +126,8 @@
   async function searchVideos(query, limit, options) {
     const cleaned = String(query || "").trim();
     if (cleaned.length < 3) return [];
+    const linkedVideoId = extractVideoId(cleaned);
+    if (linkedVideoId) return [await videoFromLink(linkedVideoId, options)];
     const parameters = new URLSearchParams({
       q: cleaned,
       limit: String(Math.min(Math.max(Number(limit) || 8, 1), 10))
@@ -45,19 +137,11 @@
       signal: options && options.signal
     });
     const payload = await parseResponse(response);
-    return Array.isArray(payload.videos) ? payload.videos.map((video) => ({
-      title: String(video.title || "").trim(),
-      artist: String(video.channelTitle || "").trim(),
-      youtubeChannelTitle: String(video.channelTitle || "").trim(),
-      youtubeVideoId: String(video.videoId || "").trim(),
-      youtubeUrl: String(video.youtubeUrl || "").trim(),
-      coverUrl: String(video.thumbnailUrl || "").trim() || null,
-      publishedAt: video.publishedAt || null,
-      key: "",
-      capo: "",
-      blocos: []
-    })).filter((video) => video.title && video.youtubeVideoId) : [];
+    const videos = Array.isArray(payload.videos)
+      ? payload.videos.map(mapVideo).filter((video) => video.title && video.youtubeVideoId)
+      : [];
+    return videos;
   }
 
-  global.youtubeApi = Object.freeze({ getConfig, searchVideos });
+  global.youtubeApi = Object.freeze({ getConfig, searchVideos, extractVideoId });
 })(window);

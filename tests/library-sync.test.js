@@ -39,7 +39,7 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const anonymous=device('',five);assert.equal(anonymous.sync.getStatus().phase,'unauthenticated');assert.equal(remote.size,0,'sem login não envia');
 
  const a=device('user-a',five);await settle();
- let review=await a.sync.review();assert.equal(review.phase,'needs-consent');assert.deepEqual([review.local,review.remote,review.pending,review.conflicts],[5,0,5,0]);assert.equal(remote.get('user-a').size,0,'review não envia');
+ let review=await a.sync.review();assert.equal(review.phase,'pending');assert.deepEqual([review.local,review.remote,review.pending,review.conflicts],[5,0,5,0]);assert.equal(remote.get('user-a').size,0,'a revisão inicial não envia antes do agendamento automático');assert.equal(a.storage.get('sc_library_sync_consent_v1'),true,'login ativa a sincronização automática');
  const protectedBefore=['sc_musicas_v2','sc_song_editor_drafts_v1'].map(key=>JSON.stringify(a.storage.get(key)));
  const eventsBefore=JSON.stringify(a.storage.get('sc_events_v1'));
  let first=await a.sync.syncNow();assert.deepEqual([first.created,first.failed,first.status.pending],[5,0,0]);assert.equal(first.status.phase,'synced');
@@ -51,7 +51,7 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.deepEqual(b.songs[0].editorData,five[0].editorData);assert.deepEqual(b.songs[0].fullChordSheet,five[0].fullChordSheet);assert.deepEqual(b.songs[0].harmonicSummary,five[0].harmonicSummary);
  const bEdit=b.songs;bEdit[0]={...bEdit[0],artist:'Editado no B'};b.replace(bEdit);await b.sync.syncNow();await a.sync.pull();assert.equal(a.songs[0].artist,'Editado no B','B → A aplica versão quando A não mudou');
 
- const preexisting=device('user-a',[song(100),song(101),song(102)]);await settle();assert.equal(preexisting.songs.length,8,'biblioteca existente em B é preservada e combinada');assert.equal(preexisting.sync.getStatus().pending,3);assert.equal(preexisting.sync.getStatus().phase,'needs-consent');
+ const preexisting=device('user-a',[song(100),song(101),song(102)]);await settle();assert.equal(preexisting.songs.length,8,'biblioteca existente em B é preservada e combinada');assert.equal(preexisting.sync.getStatus().pending,3);assert.equal(preexisting.sync.getStatus().phase,'pending');
 
  const editA=a.songs;editA[1]={...editA[1],artist:'Edição concorrente A'};a.replace(editA);
  const editB=b.songs;editB[1]={...editB[1],artist:'Edição concorrente B'};b.replace(editB);await b.sync.syncNow();
@@ -73,7 +73,7 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const bulkB=device('bulk-user',[]);await settle();assert.equal(bulkB.songs.length,136);bulkA.logout();assert.equal(bulkA.songs.length,136);bulkA.login('bulk-user');await settle();assert.equal(bulkA.songs.length,136,'logout/login não duplica');
 
  const outsider=device('user-b',[]);await settle();assert.equal(outsider.songs.length,0,'usuário B não lê músicas A');
- assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Pendentes/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.match(html,/<button[^>]+id="library-sync-btn"/);
- assert.match(sw,/simplificando-cifras-v92-integration-39-40/);assert.match(sw,/library-sync\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
- console.log('library-sync.test.js: OK (29 cenários: painel, consentimento, A/B, conflito, parcial, 136 músicas, localStorage, Eventos e PWA)');
+ assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Pendentes/);assert.match(html,/Conflitos/);assert.match(html,/Você está offline/);assert.match(html,/sincronização automática/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.doesNotMatch(html,/<button[^>]+id="library-sync-btn"/);
+ assert.match(sw,/simplificando-cifras-v99-profile-photo-editor/);assert.match(sw,/library-sync\.js\?v=3/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ console.log('library-sync.test.js: OK (29 cenários: sincronização automática, A/B, conflito, parcial, 136 músicas, localStorage, Eventos e PWA)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

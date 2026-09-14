@@ -101,7 +101,7 @@ const success = {
     assert.match(await page.locator("#detail-content").innerText(), /Aqui na terra como no céu/);
     await page.locator(".transpose-bar .t-btn").last().click();
     assert.equal(await page.locator("#transposed-key").innerText(), "F");
-    await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
+    await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
     await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
     assert.equal(await page.locator("#song-editor").count(), 0);
     assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), "Resumo revisado");

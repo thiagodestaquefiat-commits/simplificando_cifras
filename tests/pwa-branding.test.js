@@ -45,7 +45,7 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/library-sync\.js\?v=2/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=3/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
@@ -125,7 +125,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 0);
     page.once("dialog", (dialog) => dialog.dismiss());
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -141,7 +141,8 @@ const server = http.createServer((request, response) => {
       favoritos: [],
       configuracoes: {}
     })));
-    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
+    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Backup e dados/ }).click();
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const fileChooser = await fileChooserPromise;

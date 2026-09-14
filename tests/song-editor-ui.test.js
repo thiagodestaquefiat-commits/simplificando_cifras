@@ -18,7 +18,7 @@ const server = http.createServer((request, response) => {
 
 async function assertSimpleEditor(page, id, expectedTitle) {
   await page.evaluate((songId) => openDetail(songId), id);
-  await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
+  await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
   await page.getByText(/Editar música|Revisar resumo harmônico/, { exact: true }).waitFor({ state: "visible" });
   assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), expectedTitle);
   for (const label of ["Artista", "Tom original", "Capotraste", "Cifra / Resumo"]) assert.equal(await page.getByLabel(label, { exact: true }).count(), 1, label);
@@ -79,7 +79,7 @@ async function assertSimpleEditor(page, id, expectedTitle) {
       await page.locator(".transpose-bar .t-btn").last().click();
       assert.equal(await page.locator("#transposed-key").innerText(), "B");
 
-      await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
+      await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
       await page.getByLabel("Título", { exact: true }).fill("Não salvar");
       await page.getByRole("button", { name: "Cancelar", exact: true }).click();
       assert.equal(await page.evaluate(() => musicas.find((item) => item.id === "spotify-song").title), "Música Spotify revisada");

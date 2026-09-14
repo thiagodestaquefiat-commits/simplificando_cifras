@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, "..", "js/app-auth.js"), 
 function createAuthHarness(options = {}) {
   const storage = options.storage || new Map();
   const listeners = [];
-  const calls = { exchange: [], oauth: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
+  const calls = { exchange: [], oauth: [], updateUser: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
   const user = { id: "user-1", email: "musico@example.com", user_metadata: { full_name: "Músico" } };
   const exchangedSession = { access_token: "access-token", user };
   let currentSession = options.initialSession || null;
@@ -24,6 +24,7 @@ function createAuthHarness(options = {}) {
     },
     onAuthStateChange(listener) { listeners.push(listener); return { data: { subscription: { unsubscribe() {} } } }; },
     async signInWithOAuth(payload) { calls.oauth.push(payload); return { error: null }; },
+    async updateUser(attributes) { calls.updateUser.push(attributes);currentSession={...currentSession,user:{...currentSession.user,email:attributes.email||currentSession.user.email,user_metadata:{...currentSession.user.user_metadata,...attributes.data}}};return {data:{user:currentSession.user},error:null}; },
     async signOut() { calls.signOut += 1; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
   };
   const window = {
@@ -75,6 +76,13 @@ function createAuthHarness(options = {}) {
   });
   assert.ok(states.some((state) => state.authenticated), "a interface deve receber o estado autenticado");
   assert.doesNotMatch(JSON.stringify(callback.calls.logs), /access-token|pkce-code|anon-public/, "o diagnóstico não pode registrar tokens, code ou anon key");
+  const updatedProfile=await callback.window.appAuth.updateProfile({name:"Novo Nome",phone:"47999990000",email:"novo@example.com"});
+  assert.equal(callback.calls.updateUser.length,1);
+  assert.equal(callback.calls.updateUser[0].data.full_name,"Novo Nome");
+  assert.equal(callback.calls.updateUser[0].data.phone,"47999990000");
+  assert.equal(callback.calls.updateUser[0].email,"novo@example.com");
+  assert.equal(updatedProfile.user.name,"Novo Nome");
+  assert.equal(updatedProfile.user.email,"novo@example.com");
 
   const detected = createAuthHarness({ href: "https://simplificandocifras.netlify.app/?code=already-detected", initialSession: { access_token: "existing", user: callback.user } });
   const detectedState = await detected.window.appAuth.initialize();
