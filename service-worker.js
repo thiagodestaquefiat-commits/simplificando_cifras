@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v110-event-convergence-hotfix";
+const CACHE_NAME = "simplificando-cifras-v111-events-song-delete-hotfix";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=6",
-  "./js/library-sync.js?v=9",
+  "./js/song-repository.js?v=7",
+  "./js/library-sync.js?v=10",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
   "./js/event-collaboration-client.js?v=7",

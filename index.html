@@ -579,8 +579,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js?v=6"></script>
-<script src="js/library-sync.js?v=9"></script>
+<script src="js/song-repository.js?v=7"></script>
+<script src="js/library-sync.js?v=10"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -1640,8 +1640,9 @@ function saveMusica(){
 function deleteMusica(id){
   const nid=isNaN(+id)?id:+id;
   if(!confirm('Excluir esta música?')) return;
+  const song=musicas.find(item=>String(item.id)===String(nid));
+  if(song)librarySync.deleteSong(song);
   musicas=songRepository.remove(musicas,nid);
-  setlists=setlists.map(event=>eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.songId)!==String(nid))}));
   salvar(); closeDetail(); renderMusicas();
 }
 function parseBlocks(raw){
@@ -1970,15 +1971,17 @@ async function syncEventsNow(silent){
   try{
     await eventCollaboration.ensureRegistered(appCurrentUser);
     await eventCollaboration.flushEventDeletionQueue();
+    const failures=[];
     for(const localEvent of [...setlists]){
       if(localEvent.syncState!=='pending'||!localEvent.pendingShared||!eventModel.isLeader(localEvent,appCurrentUser.id))continue;
-      const synced=await eventCollaboration.saveSharedEvent(localEvent,appCurrentUser);setlists=eventRepository.upsert(setlists,synced).events;
+      try{const synced=await eventCollaboration.saveSharedEvent(localEvent,appCurrentUser);setlists=eventRepository.upsert(setlists,synced).events;}
+      catch(error){failures.push({eventId:String(localEvent.id),status:error.status||null,codigo:error.code||null,mensagem:error.message||null,requestId:error.requestId||null});console.warn('Evento preservado para nova tentativa.',failures[failures.length-1]);}
     }
     for(const synced of await eventCollaboration.flushPersonalQueue(appCurrentUser))setlists=eventRepository.upsert(setlists,synced).events;
     const remote=await eventCollaboration.listEvents(appCurrentUser);
     setlists=eventRepository.reconcileRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
     await refreshBands(true);
-    if(status)status.textContent='Compartilhamento concluído';if(!silent)showToast('✅ Alterações compartilhadas');
+    if(status)status.textContent=failures.length?'Alguns Eventos aguardam nova tentativa':'Compartilhamento concluído';if(!silent)showToast(failures.length?'⚠️ Alguns Eventos continuam salvos neste dispositivo':'✅ Alterações compartilhadas');
   }catch(error){if(status)status.textContent='Modo offline — dados preservados neste dispositivo';if(!silent)showToast('⚠️ '+(error.message||'Sincronização indisponível'));}
   finally{eventSyncRunning=false;if(button)button.disabled=false;}
 }
@@ -2129,10 +2132,10 @@ async function migrateLegacyEventsInBackground(){
     const remote=await eventCollaboration.listEvents(appCurrentUser),remoteIds=new Set(remote.map(event=>String(event.id)));
     const missing=original.filter(event=>!remoteIds.has(String(event.id)));
     setlists=eventRepository.reconcileRemote(original,remote);eventRepository.save(setlists);renderSetlists();
-    if(missing.length){console.warn('Migração de Eventos incompleta; itens locais foram preservados.',{missingEventIds:missing.map(event=>String(event.id)),failures:batch.failures});throw new Error(`${missing.length} evento(s) não foram confirmados pelo servidor.`);}
+    if(missing.length){console.warn('Migração de Eventos incompleta; itens locais foram preservados.',{missingEventIds:missing.map(event=>String(event.id)),failures:batch.failures});eventBackgroundSyncReady=true;return;}
     if(!eventRepository.confirmActiveOwner(setlists))throw new Error('Não foi possível confirmar o cache desta conta.');
     eventMigrationCandidate=false;eventBackgroundSyncReady=true;renderSetlists();
-  }catch(error){eventBackgroundSyncReady=false;console.warn('Migração de Eventos preservada para nova tentativa.',error);}
+  }catch(error){eventBackgroundSyncReady=true;console.warn('Migração de Eventos preservada para nova tentativa.',error);}
 }
 
 // carrega dados salvos
@@ -2171,12 +2174,12 @@ appAuth.subscribe(async state=>{
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
     setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);
-    eventBackgroundSyncReady=!eventMigrationCandidate;
+    eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value)});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
 window.addEventListener('online',()=>{if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});

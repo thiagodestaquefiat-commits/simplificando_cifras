@@ -189,7 +189,16 @@ assert.equal(incompleteOwner.songs.length, 3);
 assert.equal(incompleteOwner.songs[0].title, "Legada 1 editada na conta", "registro contextual conhecido prevalece pela mesma identidade");
 assert.deepEqual(incompleteOwner.songs.map((song) => song.id), ["legacy-1", "legacy-2", "legacy-3"], "a ordem legada permanece estável");
 
-const foreignOwner = incompleteRepository.activateOwner("other-owner", incompleteOwner.songs, []);
+incompleteRepository.confirmActiveOwner(incompleteOwner.songs);
+assert.equal(incompleteRepository.markDeleted(incompleteOwner.songs[1]), true, "exclusão autenticada registra tombstone por clientId");
+assert.deepEqual(incompleteValues.get("sc_songs_v1"), transitionSongs, "tombstone não limpa nem reescreve a fonte legada");
+const deletionReloadRepository = repositoryContext(incompleteValues);
+const deletionReloadSongs = deletionReloadRepository.load([]);
+const deletionReloadOwner = deletionReloadRepository.activateOwner("transition-owner", deletionReloadSongs, []);
+assert.deepEqual(deletionReloadOwner.songs.map((song) => song.id), ["legacy-1", "legacy-3"], "música excluída não ressurge do seed/legado após reload");
+assert.deepEqual(Array.from(deletionReloadRepository.getDeletedClientIds()), ["legacy-client-2"], "tombstone permanece contextualizado no owner");
+
+const foreignOwner = deletionReloadRepository.activateOwner("other-owner", deletionReloadOwner.songs, []);
 assert.deepEqual(Array.from(foreignOwner.songs), [], "outra conta não absorve a biblioteca legada reservada");
 
 console.log("song-repository.test.js: OK (seed 86/91/106, cache parcial, migração legada e isolamento A/B)");

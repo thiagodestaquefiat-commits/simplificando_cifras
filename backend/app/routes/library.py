@@ -72,7 +72,7 @@ def _upsert(client_id, song_data, expected_version=None):
 @blueprint.get("")
 @authenticated
 def list_songs():
-    values = PersonalSong.query.filter_by(owner_user_id=g.current_user.id, deleted_at=None).order_by(PersonalSong.updated_at).all()
+    values = PersonalSong.query.filter_by(owner_user_id=g.current_user.id).order_by(PersonalSong.updated_at).all()
     db.session.commit()
     return jsonify({"songs": [_serialize(song) for song in values]}), 200
 

@@ -42,7 +42,11 @@ def test_update_conflict_soft_delete_and_owner_from_token(client, app):
     assert client.delete("/api/library/songs/stable-id", headers=auth(token_b)).status_code == 204
     assert len(client.get("/api/library/songs", headers=auth(token_a)).get_json()["songs"]) == 1
     assert client.delete("/api/library/songs/stable-id", headers=auth(token_a)).status_code == 204
-    assert client.get("/api/library/songs", headers=auth(token_a)).get_json()["songs"] == []
+    deleted = client.get("/api/library/songs", headers=auth(token_a)).get_json()["songs"]
+    assert len(deleted) == 1
+    assert deleted[0]["clientId"] == "stable-id"
+    assert deleted[0]["deletedAt"] is not None
+    assert deleted[0]["version"] == version + 2
     with app.app_context():
         stored = PersonalSong.query.one()
         assert stored.owner_user_id == "owner-a" and stored.deleted_at is not None
