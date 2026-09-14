@@ -10,7 +10,7 @@ const musicPane = html.slice(html.indexOf('id="pane-musicas"'), html.indexOf('id
 assert.ok(musicPane.indexOf('class="youtube-panel"') < musicPane.indexOf('class="search-bar"'), "a busca do YouTube deve aparecer antes da busca da playlist");
 assert.match(musicPane, /placeholder="Buscar música na playlist"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);
-assert.doesNotMatch(musicPane, /ai-generate-action/, "o atalho de IA não deve aparecer na tela inicial");
+assert.match(musicPane, /ai-generate-action/, "a integração não deve remover o atalho de IA já aprovado no PR #48");
 assert.match(musicPane, /aria-label="Limpar busca do YouTube"/);
 assert.match(musicPane, /aria-label="Limpar busca da playlist"/);
 console.log(`index-syntax.test.js: OK (${scripts.length} scripts)`);

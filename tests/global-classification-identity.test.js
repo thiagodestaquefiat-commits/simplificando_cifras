@@ -41,7 +41,7 @@ global.fetch=async(url,options)=>{
  let subscriber;
  const localCopy=eventModel.create({id:'event-owned',title:'Cópia antiga',leaderId:'old-local',remoteVersion:1,syncState:'synced',members:[{id:'old-local',isLeader:true}]});
  const scope={eventCollaboration,eventRepository,setlists:[localCopy],appIdentity:identity,appCurrentUser:identity.user,legacyCurrentUser:identity.user,appBands:[],authLinking:false,currentAuthState:{},
-  renderAccountButton(){},renderSetlists(){},renderBandToolbar(){},renderMusicas(){},songRepository:{save(){}},document:{getElementById:()=>null},showToast(){throw Error('Unexpected toast');},
+  renderAccountButton(){},renderSetlists(){},renderBandToolbar(){},renderMusicas(){},accountProfile:()=>({}),songRepository:{save(){}},document:{getElementById:()=>null},showToast(){throw Error('Unexpected toast');},
   appAuth:{subscribe:fn=>subscriber=fn},librarySync:{initialize(){},subscribe(){}},Object};
  vm.runInNewContext(html.slice(html.indexOf('appAuth.subscribe(async state=>{'),html.indexOf('appAuth.initialize();')),scope);
  for(let n=0;n<3;n++){

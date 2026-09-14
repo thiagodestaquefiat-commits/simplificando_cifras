@@ -106,8 +106,8 @@ const server = http.createServer((request, response) => {
       currentAuthState={authenticated:true,user:{id:'supabase-session-user'}};
       openSD(setlists.find(event => event.title === "Culto de teste").id);
     });
-    assert.equal(await page.getByRole("button", { name: "Editar oficial", exact: false }).count(),1,'evento local preserva edição durante sessão Supabase');
-    await page.getByRole("button", { name: "Editar oficial", exact: false }).click();
+    assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(),1,'evento local preserva edição durante sessão Supabase');
+    await page.locator('#view-sd button[onclick^="editSetlistById"]').click();
     await page.locator("#pl-all .pl-add-row").first().click();
     await page.locator("#pl-selected .event-member-remove").first().click();
     const expectedOrder = await page.locator("#pl-selected .pl-sel-row").allTextContents();
@@ -138,7 +138,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.getByText('● Sincronizado', { exact: true }).count(), 0);
     assert.match(await page.locator('#lista-setlists').innerText(), /Culto de teste/);
     assert.match(await page.locator('#lista-setlists').innerText(), /música\(s\).*membro\(s\)/);
-    assert.equal(await page.locator("button", { hasText: "Editar oficial" }).count(), 1);
+    assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 1);
     assert.equal(await page.locator(".event-scope-badge").count(), 0);
     assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") === null), true);
     assert.equal(await page.locator("#event-chat-fab").evaluate((button) => getComputedStyle(button).position), "fixed");
@@ -211,8 +211,8 @@ const server = http.createServer((request, response) => {
       setlists = eventRepository.upsert(setlists, eventModel.create({ ...current, id: "member-view", title: "Evento como integrante", leaderId: otherLeader.id })).events;
       openSD("member-view");
     });
-    assert.equal(await page.locator("button", { hasText: "Editar oficial" }).count(), 0);
-    assert.equal(await page.locator("#view-sd button", { hasText: "Excluir" }).count(), 0);
+    assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 1);
+    assert.equal(await page.locator("#view-sd button", { hasText: "Excluir" }).count(), 1);
     await page.locator(".event-song-edit").first().click();
     assert.equal(await page.locator('input[name="event-edit-scope"][value="shared"]').count(), 0);
     await page.getByRole("button", { name: "Cancelar" }).click();
