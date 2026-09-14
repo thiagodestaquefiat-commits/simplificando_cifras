@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v111-events-song-delete-hotfix";
+const CACHE_NAME = "simplificando-cifras-v112-pr47-pr48-integration";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,17 +9,17 @@ const ASSETS = [
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
   "./js/event-collaboration-client.js?v=7",
-  "./js/app-auth.js?v=7",
+  "./js/app-auth.js?v=8",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
   "./js/map-preview.js?v=2",
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=1",
-  "./js/youtube-api.js?v=2",
+  "./js/youtube-api.js?v=4",
   "./js/youtube-song-linker.js?v=1",
   "./js/youtube-player.js?v=3",
   "./js/youtube-player-ui.js?v=3",
-  "./js/youtube-ui.js?v=1",
+  "./js/youtube-ui.js?v=2",
   "./js/export-library.js",
   "./js/import-library.js?v=1",
   "./js/chord-library.js",

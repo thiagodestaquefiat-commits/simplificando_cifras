@@ -47,7 +47,8 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     assert.equal(await page.locator(".music-item").count(), 0);
-    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
+    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Backup e dados/ }).click();
     const chooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const chooser = await chooserPromise;
@@ -70,7 +71,8 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
     await page.locator(".back-btn").first().click();
 
-    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
+    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Backup e dados/ }).click();
     const repeatChooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const repeatChooser = await repeatChooserPromise;

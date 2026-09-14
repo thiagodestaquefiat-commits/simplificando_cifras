@@ -125,7 +125,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 0);
     page.once("dialog", (dialog) => dialog.dismiss());
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -141,17 +141,8 @@ const server = http.createServer((request, response) => {
       favoritos: [],
       configuracoes: {}
     })));
-    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
-    assert.match(await page.locator("#modal-body").innerText(), /Biblioteca[\s\S]*Para enviar[\s\S]*Para baixar[\s\S]*Eventos[\s\S]*Somente neste dispositivo/);
-    const [diagnosticDownload] = await Promise.all([
-      page.waitForEvent("download"),
-      page.getByRole("button", { name: "Baixar diagnóstico", exact: true }).click()
-    ]);
-    assert.match(diagnosticDownload.suggestedFilename(), /^roudy-diagnostico-\d{4}-\d{2}-\d{2}\.json$/);
-    const diagnostic = JSON.parse(fs.readFileSync(await diagnosticDownload.path(), "utf8"));
-    assert.equal(diagnostic.format, "roudy-sync-diagnostics");
-    assert.equal(Object.hasOwn(diagnostic, "accessToken"), false);
-    assert.equal(JSON.stringify(diagnostic).includes("Bearer "), false);
+    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Backup e dados/ }).click();
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const fileChooser = await fileChooserPromise;

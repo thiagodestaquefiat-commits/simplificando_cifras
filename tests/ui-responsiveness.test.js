@@ -94,12 +94,26 @@ async function openApp(browser, baseUrl, width, height) {
 
     const { context, page, errors } = await openApp(browser, baseUrl, 320, 640);
 
+    const mainScroll = await page.evaluate(() => {
+      const header = document.querySelector(".topbar");
+      const list = document.getElementById("lista-musicas");
+      const before = { headerTop: header.getBoundingClientRect().top, listTop: list.getBoundingClientRect().top };
+      window.scrollTo(0, Math.min(320, document.documentElement.scrollHeight - innerHeight));
+      const after = { headerTop: header.getBoundingClientRect().top, listTop: list.getBoundingClientRect().top };
+      return { before, after, pageScroll: window.scrollY, listOverflow: getComputedStyle(list).overflowY };
+    });
+    assert.ok(mainScroll.pageScroll > 0, "a página inicial deve usar a rolagem principal do documento");
+    assert.ok(mainScroll.after.headerTop < mainScroll.before.headerTop, "o cabeçalho deve acompanhar a rolagem");
+    assert.ok(mainScroll.after.listTop < mainScroll.before.listTop, "a lista deve acompanhar a mesma rolagem do cabeçalho");
+    assert.equal(mainScroll.listOverflow, "visible", "a lista não deve criar uma segunda área de rolagem");
+    await page.evaluate(() => window.scrollTo(0, 0));
+
     const missingCatalogChords = await page.evaluate(() => [...new Set(
       musicas.flatMap((musica) => extractChords(musica)).filter((name) => !getChordData(name))
     )]);
     assert.deepEqual(missingCatalogChords, [], `Acordes do catálogo sem diagrama: ${missingCatalogChords.join(", ")}`);
 
-    await page.getByPlaceholder("Buscar música ou tom...").fill("A alegria");
+    await page.getByPlaceholder("Buscar música na playlist").fill("A alegria");
     await page.getByText("A alegria", { exact: true }).click();
     assert.equal(await page.locator("#btn-previous-song").isVisible(), false);
     assert.equal(await page.locator("#btn-next-song").isVisible(), false);
@@ -150,7 +164,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), true);
 
     await page.locator(".back-btn").first().click();
-    await page.getByPlaceholder("Buscar música ou tom...").fill("");
+    await page.getByPlaceholder("Buscar música na playlist").fill("");
     await page.getByText("Quem é esse", { exact: true }).click();
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.ok(await page.getByText("A9", { exact: true }).count() > 0);
