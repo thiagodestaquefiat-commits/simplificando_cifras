@@ -389,6 +389,44 @@ html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009
 .stage-mode .stage-nav-icon,.stage-mode .stage-control{height:44px;min-width:44px;width:44px;padding:0}
 .stage-mode .stage-position{display:none}.stage-mode .stage-meta{gap:4px}.stage-mode .stage-key{padding:4px;font-size:10px}
 .stage-mode .detail-body{padding-bottom:24px}
+/* ACESSIBILIDADE — amplia legibilidade e alvos de toque sem aplicar zoom global */
+html{--a11y-text-add:0px;--a11y-title-add:0px;--a11y-touch-add:0px}
+html[data-ui-scale="110"]{--a11y-text-add:.5px;--a11y-title-add:1px;--a11y-touch-add:2px}
+html[data-ui-scale="120"]{--a11y-text-add:1px;--a11y-title-add:1.5px;--a11y-touch-add:3px}
+html[data-ui-scale="130"]{--a11y-text-add:1.5px;--a11y-title-add:2px;--a11y-touch-add:4px}
+html[data-ui-scale="140"]{--a11y-text-add:2px;--a11y-title-add:3px;--a11y-touch-add:5px}
+html[data-ui-scale] .topbar-title{font-size:calc(clamp(16px,2.6vw,19px) + var(--a11y-title-add));line-height:1.2}
+html[data-ui-scale] .topbar-sub,
+html[data-ui-scale] .music-sub,
+html[data-ui-scale] .sl-sub{font-size:calc(11.5px + var(--a11y-text-add));line-height:1.3}
+html[data-ui-scale] .music-title,
+html[data-ui-scale] .sl-title{font-size:calc(14px + var(--a11y-title-add));line-height:1.25}
+html[data-ui-scale] .tab{min-height:calc(42px + var(--a11y-touch-add));font-size:calc(clamp(11px,3.1vw,12.5px) + var(--a11y-text-add));line-height:1.2}
+html[data-ui-scale] .search-input,
+html[data-ui-scale] .youtube-search-input{font-size:calc(12px + var(--a11y-text-add));line-height:1.3}
+html[data-ui-scale] .search-input,
+html[data-ui-scale] .youtube-search-bar{min-height:calc(38px + var(--a11y-touch-add))}
+html[data-ui-scale] .youtube-panel-label{font-size:calc(10px + var(--a11y-text-add) * .65);line-height:1.35}
+html[data-ui-scale] .youtube-search-btn{min-height:calc(30px + var(--a11y-touch-add));padding-inline:8px;font-size:calc(10.5px + var(--a11y-text-add));line-height:1.15}
+html[data-ui-scale] .ai-generate-action{min-height:calc(43px + var(--a11y-touch-add));font-size:calc(13px + var(--a11y-text-add));line-height:1.2}
+html[data-ui-scale] .music-item,
+html[data-ui-scale] .setlist-item{min-height:calc(63px + var(--a11y-touch-add));padding-block:11px}
+html[data-ui-scale] .key-badge,
+html[data-ui-scale] .sl-count{font-size:calc(11px + var(--a11y-text-add) * .75);line-height:1.2}
+html[data-ui-scale] .modal-title{font-size:calc(17px + var(--a11y-title-add));line-height:1.25}
+html[data-ui-scale] .account-menu-copy strong,
+html[data-ui-scale] .settings-row-copy strong{font-size:calc(12px + var(--a11y-text-add));line-height:1.25}
+html[data-ui-scale] .account-menu-copy small,
+html[data-ui-scale] .settings-row-copy small{font-size:calc(9px + var(--a11y-text-add) * .75);line-height:1.35}
+html[data-ui-scale] .account-menu-button,
+html[data-ui-scale] .settings-row{min-height:calc(52px + var(--a11y-touch-add))}
+html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add));font-size:calc(10px + var(--a11y-text-add))}
+@media(max-width:430px){
+  html[data-ui-scale] .youtube-search-input{min-width:0}
+  html[data-ui-scale] .youtube-search-btn{max-width:34%;flex:0 0 auto}
+  html[data-ui-scale] .tab-bar{gap:4px;padding-inline:8px}
+  html[data-ui-scale] .tab{padding-inline:3px}
+}
 </style>
 </head>
 <body>
@@ -1784,9 +1822,9 @@ function accountAvatar(profile,className='account-avatar'){return `<span class="
 function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
 function appText(key){const language=loadAppSettings().language;return (APP_TRANSLATIONS[language]||APP_TRANSLATIONS['pt-BR'])[key]||APP_TRANSLATIONS['pt-BR'][key]||key;}
 function applyAppSettings(settings=loadAppSettings()){
-  const root=document.documentElement,scale=Math.max(100,Math.min(140,Number(settings.scale)||100))/100;
+  const root=document.documentElement,scale=Math.max(100,Math.min(140,Number(settings.scale)||100));
   root.lang=settings.language||'pt-BR';root.classList.toggle('a11y-high-contrast',Boolean(settings.highContrast));root.classList.toggle('a11y-colorblind',Boolean(settings.colorBlind));
-  document.body.style.zoom=String(scale);document.body.style.width=(100/scale)+'%';document.body.style.minHeight=(100/scale)+'vh';
+  root.dataset.uiScale=String(scale);document.body.style.removeProperty('zoom');document.body.style.removeProperty('width');document.body.style.removeProperty('min-height');
   const dictionary=APP_TRANSLATIONS[settings.language]||APP_TRANSLATIONS['pt-BR'];
   document.querySelectorAll('[data-i18n]').forEach(node=>{const value=dictionary[node.dataset.i18n];if(value)node.textContent=value;});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{const value=dictionary[node.dataset.i18nPlaceholder];if(value)node.placeholder=value;});
@@ -1912,7 +1950,7 @@ function removeProfilePhoto(){pendingProfileAvatar=null;const target=document.ge
 async function saveProfileSettings(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const previous=accountProfile(),profile={name,phone,email,avatarUrl:pendingProfileAvatar};saveAccountProfile(profile);applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{currentAuthState=await appAuth.updateProfile(profile);remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
 function settingsFromForm(){return {language:document.getElementById('setting-language')?.value||'pt-BR',highContrast:Boolean(document.getElementById('setting-high-contrast')?.checked),colorBlind:Boolean(document.getElementById('setting-color-blind')?.checked),scale:Number(document.getElementById('setting-scale')?.value)||100};}
 function previewAppSettings(){applyAppSettings(settingsFromForm());}
-function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('settings'))}</div><section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Amplia toda a interface</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="cancelAppSettings()">Voltar</button>`;}
+function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('settings'))}</div><section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Aumenta textos e áreas de toque sem ampliar o layout</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="cancelAppSettings()">Voltar</button>`;}
 function saveAppSettings(){const value=settingsFromForm();storage.set(APP_SETTINGS_KEY,value);applyAppSettings(value);showToast('✅ Configurações salvas.');openAccountModal();}
 function cancelAppSettings(){applyAppSettings(loadAppSettings());openAccountModal();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}

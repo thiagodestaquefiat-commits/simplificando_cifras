@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v112-pr47-pr48-integration";
+const CACHE_NAME = "simplificando-cifras-v113-accessible-responsive-scale";
 const ASSETS = [
   "./",
   "./index.html",
