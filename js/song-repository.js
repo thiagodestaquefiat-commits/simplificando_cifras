@@ -4,6 +4,7 @@
   const CURRENT_STORAGE_KEY = "sc_songs_v1";
   const LEGACY_STORAGE_KEY = "cifras_musicas_v1";
   const OWNER_CACHES_KEY = "sc_personal_song_caches_v1";
+  const OWNER_DELETIONS_KEY = "sc_personal_song_deletions_v1";
   const LEGACY_OWNER_KEY = "sc_legacy_library_owner_v1";
   const SEED_ONLY_KEY = "sc_seed_library_only_v1";
   let activeOwnerId = null;
@@ -29,10 +30,51 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
 
+  function ownerDeletions() {
+    const value = global.storage.get(OWNER_DELETIONS_KEY, {});
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function deletedClientIds(ownerId) {
+    const values = ownerDeletions()[String(ownerId)] || {};
+    return new Set(Object.keys(values));
+  }
+
+  function filterDeleted(ownerId, collection) {
+    const deleted = deletedClientIds(ownerId);
+    return normalized(collection).filter((song) => {
+      const clientId = String(song && song.librarySync && song.librarySync.clientId || "").trim();
+      return !clientId || !deleted.has(clientId);
+    });
+  }
+
   function saveOwnerCache(ownerId, collection) {
     const caches = ownerCaches();
-    caches[String(ownerId)] = normalized(collection);
+    caches[String(ownerId)] = filterDeleted(ownerId, collection);
     return global.storage.set(OWNER_CACHES_KEY, caches);
+  }
+
+  function markDeleted(songOrClientId, confirmed) {
+    if (!activeOwnerId) return false;
+    const clientId = String(typeof songOrClientId === "string" ? songOrClientId : songOrClientId && songOrClientId.librarySync && songOrClientId.librarySync.clientId || "").trim();
+    if (!clientId) return false;
+    const deletions = ownerDeletions();
+    const ownerValues = deletions[activeOwnerId] && typeof deletions[activeOwnerId] === "object" ? deletions[activeOwnerId] : {};
+    const existing = ownerValues[clientId];
+    const entry = existing && typeof existing === "object" ? existing : { deletedAt: typeof existing === "string" ? existing : new Date().toISOString(), confirmedAt: null };
+    if (confirmed && !entry.confirmedAt) entry.confirmedAt = new Date().toISOString();
+    ownerValues[clientId] = entry;
+    deletions[activeOwnerId] = ownerValues;
+    const saved = global.storage.set(OWNER_DELETIONS_KEY, deletions);
+    if (saved) {
+      const caches = ownerCaches();
+      if (Array.isArray(caches[activeOwnerId])) saveOwnerCache(activeOwnerId, caches[activeOwnerId]);
+    }
+    return saved;
+  }
+
+  function confirmDeleted(clientId) {
+    return markDeleted(String(clientId || ""), true);
   }
 
   function stableSongIdentity(song) {
@@ -85,10 +127,11 @@
     const reservedOwner = String(global.storage.get(LEGACY_OWNER_KEY, "") || "").trim();
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
-    const candidate = Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : [];
+    const candidate = filterDeleted(nextOwner, Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : []);
     const hasPersonalCandidate = candidate.length > 0 && storedLibraryExistedAtBoot;
     const canUseLegacyCandidate = (!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate;
     if (Array.isArray(caches[nextOwner])) {
+      caches[nextOwner] = filterDeleted(nextOwner, caches[nextOwner]);
       if (canUseLegacyCandidate) {
         if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
         const migrationCandidate = hasSongsMissingFromCache(candidate, caches[nextOwner]);
@@ -140,7 +183,7 @@
 
   function save(collection) {
     requireDependencies();
-    const songs = global.songModel.normalizeCollection(collection);
+    const songs = activeOwnerId ? filterDeleted(activeOwnerId, collection) : global.songModel.normalizeCollection(collection);
     if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
     global.storage.set(SEED_ONLY_KEY, false);
     const savedCurrent = global.storage.set(CURRENT_STORAGE_KEY, songs);
@@ -188,6 +231,7 @@
     storageKey: CURRENT_STORAGE_KEY,
     legacyStorageKey: LEGACY_STORAGE_KEY,
     ownerCachesKey: OWNER_CACHES_KEY,
+    ownerDeletionsKey: OWNER_DELETIONS_KEY,
     legacyOwnerKey: LEGACY_OWNER_KEY,
     seedOnlyKey: SEED_ONLY_KEY,
     load,
@@ -196,6 +240,14 @@
     confirmActiveOwner,
     addOrReuse,
     update,
-    remove
+    remove,
+    markDeleted,
+    confirmDeleted,
+    getDeletedClientIds: () => activeOwnerId ? [...deletedClientIds(activeOwnerId)] : [],
+    getPendingDeletedClientIds: () => {
+      if (!activeOwnerId) return [];
+      const values = ownerDeletions()[activeOwnerId] || {};
+      return Object.keys(values).filter((clientId) => !values[clientId] || typeof values[clientId] !== "object" || !values[clientId].confirmedAt);
+    }
   });
 })(window);

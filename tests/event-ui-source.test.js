@@ -46,4 +46,8 @@ const authBootstrap = html.slice(html.indexOf("appAuth.subscribe(async state=>{"
 assert.doesNotMatch(authBootstrap, /state\.user\.id\)===String\(appCurrentUser\.id\)/, "identidade histórica igual à conta não pode pular a convergência");
 assert.match(authBootstrap, /activateOwner[\s\S]*listEvents[\s\S]*reconcileRemote/, "bootstrap autenticado precisa ativar owner, consultar e reconciliar Eventos");
 assert.match(silentMigration, /uploadMigrationCandidates/, "migração precisa tratar falhas por Evento sem abortar o lote");
+assert.match(silentMigration, /missing\.length[\s\S]*?eventBackgroundSyncReady=true;return/, "Evento legado inválido não pode bloquear a convergência normal");
+assert.match(authBootstrap, /eventBackgroundSyncReady=true/, "bootstrap autenticado sempre habilita leitura remota após ativar o owner");
+const automaticSync = html.slice(html.indexOf("async function syncEventsNow"), html.indexOf("const EVENT_NOTICE_READ_KEY"));
+assert.match(automaticSync, /for\(const localEvent[\s\S]*?catch\(error\)[\s\S]*?listEvents/, "falha de um Evento não pode impedir GET e reconciliação dos demais");
 console.log("event-ui-source.test.js: OK");

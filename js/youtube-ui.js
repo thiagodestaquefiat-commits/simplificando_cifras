@@ -120,6 +120,15 @@
     return performSearch(cleaned, searchVersion);
   }
 
+  function clearSearch() {
+    const input = document.getElementById("youtube-input");
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+    closeResults();
+  }
+
   function addVideo(index) {
     if (!appContext || !currentResults[index]) return;
     const result = global.songRepository.addOrReuse(appContext.getSongs(), currentResults[index]);
@@ -135,5 +144,5 @@
 
   function initialize(context) { appContext = context; }
 
-  global.youtubeUI = Object.freeze({ initialize, search, scheduleSearch, searchFromInternal: search, addVideo, friendlyRequestError });
+  global.youtubeUI = Object.freeze({ initialize, search, scheduleSearch, searchFromInternal: search, clearSearch, addVideo, friendlyRequestError });
 })(window);

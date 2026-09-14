@@ -81,7 +81,7 @@ const response = {
       assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
       await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
 
-      await page.getByRole("button", { name: "Editar cifra", exact: true }).click();
+      await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
       assert.equal(await page.getByLabel("Cifra / Resumo", { exact: true }).count(), 1);
       const editorModal = page.locator("#modal-body");
       await editorModal.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();

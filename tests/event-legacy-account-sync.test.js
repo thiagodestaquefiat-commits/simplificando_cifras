@@ -148,6 +148,10 @@ console.log("event-legacy-account-sync.test.js: OK (cache parcial, 100 músicas 
   const receivedOnB = cleanDeviceB.eventRepository.reconcileRemote(cleanActivationB.events, [...server.values()]);
   assert.equal(receivedOnB.length, 10, "segundo dispositivo deve receber todos os Eventos confirmados da conta");
   assert.deepEqual(receivedOnB.map(event => event.id).sort(), tenLegacyEvents.map(event => event.id).sort());
+  const localSunday = cleanDeviceB.eventModel.create({ ...fixture, id: "pc-local-domingo", title: "domingo", remoteVersion: null, syncState: "pending", pendingShared: true });
+  const combinedOnB = cleanDeviceB.eventRepository.reconcileRemote([localSunday], [...server.values()]);
+  assert.equal(combinedOnB.length, 11, "Evento histórico local e Eventos remotos precisam aparecer juntos no PC");
+  assert.ok(combinedOnB.some(event => event.id === "pc-local-domingo"));
   assert.equal(batchDevice.values.get("sc_songs_v1"), undefined, "hotfix de Eventos não pode criar ou alterar biblioteca musical");
 
   console.log("event-legacy-hotfix: OK (A–E: lote tolerante, bootstrap coberto por fonte, ledger remoto, A↔B e nova tentativa)");

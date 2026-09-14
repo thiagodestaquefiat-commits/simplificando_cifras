@@ -30,11 +30,11 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v96-sync-identity-guard/);
+assert.match(serviceWorker, /simplificando-cifras-v113-accessible-responsive-scale/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
-assert.match(serviceWorker, /event-collaboration-client\.js\?v=4/);
+assert.match(serviceWorker, /event-collaboration-client\.js\?v=7/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
 assert.match(indexHtml, /js\/editor\/song-format\.js\?v=8/);
@@ -45,11 +45,11 @@ assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=8/);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/library-sync\.js\?v=3/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=10/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
-for (const [script, version] of [["youtube-api", 2], ["youtube-song-linker", 1], ["youtube-player", 3], ["youtube-player-ui", 3], ["youtube-ui", 1]]) {
+for (const [script, version] of [["youtube-api", 4], ["youtube-song-linker", 1], ["youtube-player", 3], ["youtube-player-ui", 3], ["youtube-ui", 2]]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }
@@ -125,7 +125,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     assert.equal(await page.getByRole("button", { name: "Exportar Biblioteca", exact: true }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Sincronização", exact: true }).count(), 0);
     page.once("dialog", (dialog) => dialog.dismiss());
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -141,17 +141,8 @@ const server = http.createServer((request, response) => {
       favoritos: [],
       configuracoes: {}
     })));
-    await page.getByRole("button", { name: "Sincronização", exact: true }).click();
-    assert.match(await page.locator("#modal-body").innerText(), /Biblioteca[\s\S]*Para enviar[\s\S]*Para baixar[\s\S]*Eventos[\s\S]*Somente neste dispositivo/);
-    const [diagnosticDownload] = await Promise.all([
-      page.waitForEvent("download"),
-      page.getByRole("button", { name: "Baixar diagnóstico", exact: true }).click()
-    ]);
-    assert.match(diagnosticDownload.suggestedFilename(), /^roudy-diagnostico-\d{4}-\d{2}-\d{2}\.json$/);
-    const diagnostic = JSON.parse(fs.readFileSync(await diagnosticDownload.path(), "utf8"));
-    assert.equal(diagnostic.format, "roudy-sync-diagnostics");
-    assert.equal(Object.hasOwn(diagnostic, "accessToken"), false);
-    assert.equal(JSON.stringify(diagnostic).includes("Bearer "), false);
+    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Backup e dados/ }).click();
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
     const fileChooser = await fileChooserPromise;

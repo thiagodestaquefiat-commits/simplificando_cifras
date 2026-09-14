@@ -134,9 +134,28 @@
     emit();
   }
 
+  async function updateProfile(values) {
+    if (!client || !session || !session.user) throw new Error("Entre na sua conta para atualizar os dados na nuvem.");
+    const profile = values && typeof values === "object" ? values : {};
+    const attributes = {
+      data: {
+        ...session.user.user_metadata,
+        full_name: String(profile.name || "").trim(),
+        phone: String(profile.phone || "").trim()
+      }
+    };
+    const nextEmail = String(profile.email || "").trim();
+    if (nextEmail && nextEmail !== session.user.email) attributes.email = nextEmail;
+    const result = await client.auth.updateUser(attributes);
+    if (result.error) throw result.error;
+    if (result.data && result.data.user) session = { ...session, user: result.data.user };
+    emit();
+    return getState();
+  }
+
   function subscribe(listener) { listeners.add(listener); listener(getState()); return () => listeners.delete(listener); }
   function getAccessToken() { return session && session.access_token || null; }
   function refreshConfiguration() { return initialize(true); }
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, subscribe, getAccessToken, getState });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState });
 })(window);
