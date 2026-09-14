@@ -42,4 +42,8 @@ assert.match(html, /onclick="editSetlistById\('\$\{eventEsc\(event\.id\)\}'\)"[^
 assert.match(html, /onclick="deleteSetlist\('\$\{eventEsc\(event\.id\)\}'\)"[^>]*>🗑️ Excluir<\/button>/);
 assert.match(html, /createPoll/);
 assert.match(html, /eventRepository\.load/);
+const authBootstrap = html.slice(html.indexOf("appAuth.subscribe(async state=>{"), html.indexOf("librarySync.initialize"));
+assert.doesNotMatch(authBootstrap, /state\.user\.id\)===String\(appCurrentUser\.id\)/, "identidade histórica igual à conta não pode pular a convergência");
+assert.match(authBootstrap, /activateOwner[\s\S]*listEvents[\s\S]*reconcileRemote/, "bootstrap autenticado precisa ativar owner, consultar e reconciliar Eventos");
+assert.match(silentMigration, /uploadMigrationCandidates/, "migração precisa tratar falhas por Evento sem abortar o lote");
 console.log("event-ui-source.test.js: OK");

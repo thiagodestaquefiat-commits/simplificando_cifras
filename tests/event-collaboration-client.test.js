@@ -13,7 +13,10 @@ global.appAuth = { getState: () => ({ user: { id: registeredUserId } }), getAcce
 global.fetch = async (url, options) => {
   requests.push({ url, options });
   if (url.endsWith("/users")) { registeredUserId = JSON.parse(options.body).id; return response(201, { user: { id: registeredUserId, name: "Você" }, accessToken: "secret-token" }); }
-  if (url.endsWith("/events") && options.method === "POST") return response(201, remoteEvent());
+  if (url.endsWith("/events") && options.method === "POST") {
+    if (JSON.parse(options.body).id === "event-invalid") return response(400, { erro: { codigo: "entrada_invalida", mensagem: "Campo legado inválido.", requestId: "request-event-invalid" } });
+    return response(201, remoteEvent());
+  }
   if (url.endsWith("/events") && options.method === "GET") return response(200, { events: [remoteEvent()] });
   if (url.endsWith("/events/event-1") && options.method === "PUT") return response(200, { ...remoteEvent(), ...JSON.parse(options.body), remoteVersion: 2 });
   if (url.endsWith("/events/event-1") && options.method === "DELETE") return response(204, null);
@@ -72,6 +75,10 @@ require("../js/event-collaboration-client.js");
   assert.equal(requests.at(-1).options.method, "PUT");
   assert.equal(await window.eventCollaboration.deleteEvent(updated, identity.user), true);
   assert.equal(requests.at(-1).options.method, "DELETE");
+  await assert.rejects(
+    window.eventCollaboration.saveSharedEvent({ ...local, id: "event-invalid", remoteVersion: null }, identity.user),
+    error => error.status === 400 && error.code === "entrada_invalida" && error.requestId === "request-event-invalid"
+  );
   window.eventCollaboration.queueEventDeletion("event-1");
   assert.deepEqual(values.get(window.eventCollaboration.deleteQueueKey)[registeredUserId], ["event-1"]);
   assert.deepEqual(await window.eventCollaboration.flushEventDeletionQueue(), ["event-1"]);

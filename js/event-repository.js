@@ -73,15 +73,12 @@
       : [];
     if (Array.isArray(caches[nextOwner])) {
       const cached = global.eventModel.normalizeCollection(caches[nextOwner]);
-      const cachedIds = new Set(cached.map((event) => String(event.id)));
-      const missing = migrated.filter((event) => !cachedIds.has(String(event.id)));
-      if (missing.length) {
+      if (migrated.length) {
         if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
         legacyCandidateOwnerId = nextOwner;
         legacyCandidateIds = migrated.map((event) => String(event.id));
         return { events: mergeRemote(migrated, cached), migrationCandidate: true, ownerId: nextOwner };
       }
-      if (migrated.length) confirmLegacyIds(nextOwner, migrated.map((event) => String(event.id)));
       legacyCandidateOwnerId = null;
       legacyCandidateIds = [];
       return { events: cached, migrationCandidate: false, ownerId: nextOwner };
@@ -161,5 +158,32 @@
     return mergeRemote(localPending, remoteEvents);
   }
 
-  global.eventRepository = Object.freeze({ storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote });
+  async function uploadMigrationCandidates(events, remoteEvents, upload, onFailure) {
+    const local = global.eventModel.normalizeCollection(events);
+    const remoteIds = new Set(global.eventModel.normalizeCollection(remoteEvents).map((event) => String(event.id)));
+    const uploaded = [];
+    const failures = [];
+    for (const event of local) {
+      const eventId = String(event.id);
+      if (remoteIds.has(eventId)) continue;
+      try {
+        const result = await upload(event);
+        uploaded.push(result);
+        remoteIds.add(eventId);
+      } catch (error) {
+        const failure = {
+          eventId,
+          status: Number(error && error.status) || 0,
+          code: String(error && error.code || "erro_colaboracao"),
+          message: String(error && error.message || "Não foi possível sincronizar o evento."),
+          requestId: String(error && error.requestId || "")
+        };
+        failures.push(failure);
+        if (typeof onFailure === "function") onFailure(failure);
+      }
+    }
+    return { uploaded, failures };
+  }
+
+  global.eventRepository = Object.freeze({ storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
 })(window);

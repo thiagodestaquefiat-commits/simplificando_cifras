@@ -55,12 +55,17 @@ global.fetch=async(url,options)=>{
   assert.equal(scope.appCurrentUser.id,'old-local');
   token='test-only-session';userId=n%2?'google-a':'google-b';
  }
+ const beforeHistoricalBootstrap=calls.filter(call=>call.url.endsWith('/events')).length;
+ scope.appCurrentUser=Object.freeze({id:userId,name:'Google histórico'});
+ await subscriber({authenticated:true,user:{id:userId}});
+ assert.equal(calls.filter(call=>call.url.endsWith('/events')).length,beforeHistoricalBootstrap+1,'identidade histórica igual ao Supabase ainda consulta Eventos remotos');
+ assert.equal(scope.appCurrentUser.id,userId);
  assert.equal(storage.get('sc_songs_v1').length,136);
  assert.equal(new Set(storage.get('sc_songs_v1').map(s=>s.id)).size,136);
  const localEvent=eventModel.create({id:'event-local',leaderId:'old-local',members:[{id:'old-local',isLeader:true}]});
  assert.equal(eventModel.isLeader(localEvent,'google-a'),false);
  assert.ok(calls.every(call=>call.method==='GET'&&(call.url.endsWith('/me')||call.url.endsWith('/events'))));
- assert.equal(calls.filter(call=>call.url.endsWith('/events')).length,3,'authenticated events are refreshed after each login');
+ assert.equal(calls.filter(call=>call.url.endsWith('/events')).length,4,'authenticated events are refreshed after each login, including historical equal identity');
  assert.ok(!html.includes('await syncEventsNow(true);showToast'));
  console.log('global-classification-identity.test.js: OK (classification, repeats, 136 songs unchanged, login/logout, no claim or ownership transfer)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
