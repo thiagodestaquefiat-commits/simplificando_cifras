@@ -582,7 +582,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/song-repository.js?v=6"></script>
 <script src="js/library-sync.js?v=9"></script>
 <script src="js/event-model.js?v=4"></script>
-<script src="js/event-repository.js?v=3"></script>
+<script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=1"></script>
 <script src="js/youtube-api.js?v=2"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -610,7 +610,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=6"></script>
+<script src="js/event-collaboration-client.js?v=7"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=8"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=4"></script>
@@ -2124,16 +2124,12 @@ function exportarBiblioteca(options={}){
 async function migrateLegacyEventsInBackground(){
   if(!eventMigrationCandidate||!currentAuthState.authenticated||!setlists.length)return;
   try{
-    const original=eventModel.normalizeCollection(setlists),existingRemote=await eventCollaboration.listEvents(appCurrentUser),existingIds=new Set(existingRemote.map(event=>String(event.id))),confirmed=[...existingRemote];
-    for(const localEvent of original){
-      if(existingIds.has(String(localEvent.id)))continue;
-      const uploaded=await eventCollaboration.saveSharedEvent({...localEvent,remoteVersion:null,syncState:'pending',pendingShared:true},appCurrentUser,{legacyMigration:true});
-      confirmed.push(uploaded);
-    }
+    const original=eventModel.normalizeCollection(setlists),existingRemote=await eventCollaboration.listEvents(appCurrentUser);
+    const batch=await eventRepository.uploadMigrationCandidates(original,existingRemote,localEvent=>eventCollaboration.saveSharedEvent({...localEvent,remoteVersion:null,syncState:'pending',pendingShared:true},appCurrentUser,{legacyMigration:true}),failure=>console.warn('Evento legado preservado para nova tentativa.',failure));
     const remote=await eventCollaboration.listEvents(appCurrentUser),remoteIds=new Set(remote.map(event=>String(event.id)));
     const missing=original.filter(event=>!remoteIds.has(String(event.id)));
-    if(missing.length)throw new Error(`${missing.length} evento(s) não foram confirmados pelo servidor.`);
-    setlists=eventRepository.reconcileRemote(confirmed,remote);
+    setlists=eventRepository.reconcileRemote(original,remote);eventRepository.save(setlists);renderSetlists();
+    if(missing.length){console.warn('Migração de Eventos incompleta; itens locais foram preservados.',{missingEventIds:missing.map(event=>String(event.id)),failures:batch.failures});throw new Error(`${missing.length} evento(s) não foram confirmados pelo servidor.`);}
     if(!eventRepository.confirmActiveOwner(setlists))throw new Error('Não foi possível confirmar o cache desta conta.');
     eventMigrationCandidate=false;eventBackgroundSyncReady=true;renderSetlists();
   }catch(error){eventBackgroundSyncReady=false;console.warn('Migração de Eventos preservada para nova tentativa.',error);}
@@ -2163,7 +2159,7 @@ appAuth.subscribe(async state=>{
     appCurrentUser=Object.freeze({...appIdentity.user});
     appBands=[];eventBackgroundSyncReady=false;renderAccountButton();renderSetlists();renderBandToolbar();return;
   }
-  if(authLinking||!state.authenticated||!state.user||String(state.user.id)===String(appCurrentUser.id))return;
+  if(authLinking||!state.authenticated||!state.user)return;
   authLinking=true;
   const previousUser=appCurrentUser;
   try{

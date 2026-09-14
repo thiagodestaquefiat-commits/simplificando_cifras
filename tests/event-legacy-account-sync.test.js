@@ -87,3 +87,68 @@ const withOfflinePending = partial.eventRepository.reconcileRemote([...remoteAft
 assert.ok(withOfflinePending.some(event => event.id === offlinePending.id), "Evento criado offline deve sobreviver até a reconexão");
 
 console.log("event-legacy-account-sync.test.js: OK (cache parcial, 100 músicas intactas, 10 Eventos, A↔B, exclusão e offline)");
+
+(async () => {
+  const batchDevice = device({ sc_events_v1: tenLegacyEvents, cifras_setlists_v1: tenLegacyEvents });
+  const batchLocal = batchDevice.eventRepository.load([], { user: { id: "historical-account", name: owner.name }, legacyUserIds: [] });
+  const batchActivation = batchDevice.eventRepository.activateOwner(owner.id, batchLocal, owner, ["historical-account"]);
+  const server = new Map();
+  const attempts = [];
+  const failures = [];
+  const result = await batchDevice.eventRepository.uploadMigrationCandidates(batchActivation.events, [], async event => {
+    attempts.push(event.id);
+    if (event.id === "legacy-event-2") {
+      const error = new Error("Campo legado inválido.");
+      Object.assign(error, { status: 400, code: "entrada_invalida", requestId: "request-legacy-2" });
+      throw error;
+    }
+    const remote = batchDevice.eventModel.create({ ...event, remoteVersion: 1, syncState: "synced", pendingShared: false });
+    server.set(event.id, remote);
+    return remote;
+  }, failure => failures.push(failure));
+  assert.equal(attempts.length, 10, "um 400 não pode impedir as tentativas dos Eventos seguintes");
+  assert.deepEqual([...server.keys()], ["legacy-event-1", "legacy-event-3", "legacy-event-4", "legacy-event-5", "legacy-event-6", "legacy-event-7", "legacy-event-8", "legacy-event-9", "legacy-event-10"]);
+  assert.equal(result.failures.length, 1);
+  assert.deepEqual(failures[0], { eventId: "legacy-event-2", status: 400, code: "entrada_invalida", message: "Campo legado inválido.", requestId: "request-legacy-2" });
+
+  const partialRemote = [...server.values()];
+  const afterPartialUpload = batchDevice.eventRepository.reconcileRemote(batchActivation.events, partialRemote);
+  const failedLocal = afterPartialUpload.find(event => event.id === "legacy-event-2");
+  assert.ok(failedLocal, "Evento recusado precisa permanecer local");
+  assert.equal(failedLocal.syncState, "pending");
+  assert.equal(batchDevice.eventRepository.save(afterPartialUpload), true);
+
+  const afterPartialReload = device(Object.fromEntries(batchDevice.values));
+  const reloadedLocal = afterPartialReload.eventRepository.load([], { user: owner, legacyUserIds: [] });
+  const reloadedActivation = afterPartialReload.eventRepository.activateOwner(owner.id, reloadedLocal, owner, ["historical-account"]);
+  assert.equal(reloadedActivation.migrationCandidate, true, "falha precisa continuar elegível depois do reload");
+  assert.ok(reloadedActivation.events.some(event => event.id === "legacy-event-2"));
+  const retry = await afterPartialReload.eventRepository.uploadMigrationCandidates(reloadedActivation.events, partialRemote, async event => {
+    const remote = afterPartialReload.eventModel.create({ ...event, remoteVersion: 1, syncState: "synced", pendingShared: false });
+    server.set(event.id, remote);
+    return remote;
+  });
+  assert.deepEqual(retry.uploaded.map(event => event.id), ["legacy-event-2"], "reconexão deve tentar novamente somente o ID ainda ausente");
+
+  const cacheOnlyEvent = batchDevice.eventModel.create({ ...tenLegacyEvents[0], leaderId: owner.id, members: [{ id: owner.id, name: owner.name, role: "Liderança", isLeader: true }], remoteVersion: 1, syncState: "synced", pendingShared: false });
+  const cacheOnly = device({
+    sc_events_v1: [tenLegacyEvents[0]],
+    cifras_setlists_v1: [tenLegacyEvents[0]],
+    sc_personal_event_caches_v1: { [owner.id]: [cacheOnlyEvent] },
+    sc_legacy_events_owner_v1: owner.id
+  });
+  const cacheOnlyLocal = cacheOnly.eventRepository.load([], { user: { id: "historical-account", name: owner.name }, legacyUserIds: [] });
+  const cacheOnlyActivation = cacheOnly.eventRepository.activateOwner(owner.id, cacheOnlyLocal, owner, ["historical-account"]);
+  assert.equal(cacheOnlyActivation.migrationCandidate, true, "cache local sem confirmação remota não pode concluir o ledger");
+  assert.equal(cacheOnly.values.has("sc_legacy_event_migrations_v1"), false);
+
+  const cleanDeviceB = device({});
+  const cleanLocalB = cleanDeviceB.eventRepository.load([], { user: owner, legacyUserIds: [] });
+  const cleanActivationB = cleanDeviceB.eventRepository.activateOwner(owner.id, cleanLocalB, owner, []);
+  const receivedOnB = cleanDeviceB.eventRepository.reconcileRemote(cleanActivationB.events, [...server.values()]);
+  assert.equal(receivedOnB.length, 10, "segundo dispositivo deve receber todos os Eventos confirmados da conta");
+  assert.deepEqual(receivedOnB.map(event => event.id).sort(), tenLegacyEvents.map(event => event.id).sort());
+  assert.equal(batchDevice.values.get("sc_songs_v1"), undefined, "hotfix de Eventos não pode criar ou alterar biblioteca musical");
+
+  console.log("event-legacy-hotfix: OK (A–E: lote tolerante, bootstrap coberto por fonte, ledger remoto, A↔B e nova tentativa)");
+})().catch(error => { console.error(error); process.exitCode = 1; });

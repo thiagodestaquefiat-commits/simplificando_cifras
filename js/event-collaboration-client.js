@@ -65,11 +65,12 @@
   }
 
   class CollaborationError extends Error {
-    constructor(message, status, code) {
+    constructor(message, status, code, requestId) {
       super(message);
       this.name = "CollaborationError";
       this.status = Number(status) || 0;
       this.code = code || "erro_colaboracao";
+      this.requestId = requestId == null ? "" : String(requestId);
       this.offline = this.status === 0;
     }
   }
@@ -132,7 +133,7 @@
     const body = response.status === 204 ? null : await response.json().catch(() => null);
     if (!response.ok) {
       const error = body && body.erro || {};
-      throw new CollaborationError(error.mensagem || "Não foi possível sincronizar o evento.", response.status, error.codigo);
+      throw new CollaborationError(error.mensagem || "Não foi possível sincronizar o evento.", response.status, error.codigo, error.requestId);
     }
     return body;
   }
