@@ -193,6 +193,7 @@ def test_anthropic_rate_limit_is_classified():
 
 @pytest.mark.parametrize(("message", "code"), [
     ("Web search is not enabled for this organization", "anthropic_web_search_desabilitada"),
+    ("web_search_20250305 is not supported by this model", "anthropic_web_search_indisponivel"),
     ("Your credit balance is too low", "anthropic_creditos_indisponiveis"),
     ("The requested model is not available", "anthropic_modelo_indisponivel"),
     ("tools.0 has an invalid field", "anthropic_requisicao_invalida"),
@@ -209,6 +210,24 @@ def test_bad_request_has_safe_specific_classification(message, code):
     with pytest.raises(AnthropicExperimentError) as raised:
         instance.analyze("Canção", "Artista")
     assert raised.value.code == code
+
+
+@pytest.mark.parametrize(("message", "field"), [
+    ("web_search_20250305 is invalid", "web_search"),
+    ("max_tokens must be larger", "max_tokens"),
+    ("thinking configuration is invalid", "thinking"),
+    ("output_config.format is invalid", "output_config"),
+])
+def test_provider_metadata_logs_only_safe_rejected_field(message, field):
+    metadata = AnthropicSongAnalysisService._provider_error_metadata(
+        SimpleNamespace(
+            status_code=400,
+            request_id="req-safe",
+            body={"error": {"type": "invalid_request_error", "message": message}},
+        )
+    )
+    assert metadata["providerRejectedField"] == field
+    assert message not in metadata.values()
 
 
 def test_partial_structured_response_is_rejected_without_regex_repair():

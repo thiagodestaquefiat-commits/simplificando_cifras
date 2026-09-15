@@ -288,10 +288,19 @@ class AnthropicSongAnalysisService:
     def _classify_bad_request(error) -> AnthropicExperimentError:
         body = getattr(error, "body", None)
         safe_text = json.dumps(body, ensure_ascii=True, sort_keys=True).lower() if isinstance(body, dict) else ""
-        if "web search" in safe_text and any(word in safe_text for word in ("disabled", "not enabled", "unavailable")):
+        mentions_web_search = "web search" in safe_text or "web_search" in safe_text
+        if mentions_web_search and any(word in safe_text for word in ("disabled", "not enabled")):
             return AnthropicExperimentError(
                 "anthropic_web_search_desabilitada",
                 "A Web Search não está habilitada para a conta Anthropic deste ambiente.",
+                503,
+            )
+        if mentions_web_search and any(
+            word in safe_text for word in ("unavailable", "not available", "unsupported", "not supported", "invalid")
+        ):
+            return AnthropicExperimentError(
+                "anthropic_web_search_indisponivel",
+                "A Web Search não está disponível com a configuração atual do provedor.",
                 503,
             )
         if any(word in safe_text for word in ("credit balance", "billing", "insufficient credit")):
@@ -323,7 +332,27 @@ class AnthropicSongAnalysisService:
             "providerStatus": getattr(error, "status_code", None),
             "providerRequestId": str(getattr(error, "request_id", "") or "") or None,
             "providerErrorType": str(provider_type)[:80] if provider_type else None,
+            "providerRejectedField": AnthropicSongAnalysisService._provider_rejected_field(body),
         }
+
+    @staticmethod
+    def _provider_rejected_field(body) -> str | None:
+        if not isinstance(body, dict):
+            return None
+        safe_text = json.dumps(body, ensure_ascii=True, sort_keys=True).lower()
+        fields = (
+            ("web_search", ("web search", "web_search")),
+            ("output_config", ("output_config", "json_schema")),
+            ("max_tokens", ("max_tokens",)),
+            ("thinking", ("thinking",)),
+            ("model", ("model",)),
+            ("tools", ("tool",)),
+            ("messages", ("message",)),
+        )
+        for label, markers in fields:
+            if any(marker in safe_text for marker in markers):
+                return label
+        return None
 
     def _log(self, outcome: str, code: str, request_id: str, usage: dict[str, Any]) -> None:
         event = {
@@ -339,6 +368,7 @@ class AnthropicSongAnalysisService:
             "provider_status": usage.get("providerStatus"),
             "provider_request_id": usage.get("providerRequestId"),
             "provider_error_type": usage.get("providerErrorType"),
+            "provider_rejected_field": usage.get("providerRejectedField"),
         }
         log = logger.info if outcome == "success" else logger.warning
         log("anthropic_experiment_event=%s", json.dumps(event, ensure_ascii=True, sort_keys=True))
