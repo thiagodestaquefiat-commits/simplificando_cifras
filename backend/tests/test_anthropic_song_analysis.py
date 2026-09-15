@@ -115,6 +115,11 @@ def test_known_song_uses_web_search_then_structured_output():
     assert messages.calls[1]["output_config"]["format"]["type"] == "json_schema"
     assert "tools" not in messages.calls[1]
 
+    sent_schema = messages.calls[1]["output_config"]["format"]["schema"]
+    serialized_schema = json.dumps(sent_schema)
+    for unsupported in ("minimum", "maximum", "minLength", "maxLength", "maxItems"):
+        assert f'"{unsupported}"' not in serialized_schema
+
 
 def test_nonexistent_song_stays_uncertain_without_inventing_sources():
     result = service([

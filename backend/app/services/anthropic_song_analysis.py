@@ -150,6 +150,7 @@ class AnthropicSongAnalysisService:
 
     def _normalize(self, song: str, artist: str, evidence: str, sources: list[AnthropicAnalysisSource]):
         source_lines = "\n".join(f"- {item.title}: {item.url}" for item in sources) or "- nenhuma fonte verificável"
+        output_schema = anthropic.transform_schema(AnthropicNormalizedSongAnalysis.model_json_schema())
         return self._client.messages.create(
             model=self._model,
             max_tokens=self._normalize_max_tokens,
@@ -167,7 +168,7 @@ class AnthropicSongAnalysisService:
             output_config={
                 "format": {
                     "type": "json_schema",
-                    "schema": AnthropicNormalizedSongAnalysis.model_json_schema(),
+                    "schema": output_schema,
                 }
             },
         )
