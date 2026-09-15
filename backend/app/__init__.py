@@ -83,6 +83,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.library import blueprint as library_blueprint
     from .routes.youtube import blueprint as youtube_blueprint
     from .routes.resumo_harmonico import blueprint
+    from .routes.anthropic_ai import blueprint as anthropic_ai_blueprint
 
     app.register_blueprint(blueprint)
     app.register_blueprint(events_blueprint)
@@ -92,6 +93,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(music_sources_blueprint)
     app.register_blueprint(library_blueprint)
     app.register_blueprint(youtube_blueprint)
+    app.register_blueprint(anthropic_ai_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

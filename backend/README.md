@@ -186,6 +186,32 @@ Antes de publicar, confirme o acesso ao modelo com a chave e a conta que serão
 usadas no Railway. Registre nesta documentação o modelo efetivamente usado no
 primeiro teste real.
 
+## Experimento Anthropic + Web Search
+
+`POST /api/ai/anthropic/song-analysis` é um endpoint autenticado e separado do
+Resumo Harmônico atual. Ele permanece desabilitado por padrão e só responde
+quando `ANTHROPIC_EXPERIMENT_ENABLED=true`. O navegador nunca recebe a
+`ANTHROPIC_API_KEY`.
+
+O experimento usa `claude-sonnet-5` por padrão e permite substituição por
+`ANTHROPIC_MODEL`. A primeira chamada usa a ferramenta server-side
+`web_search_20250305`, limitada a três pesquisas. Como citações da Web Search
+não são compatíveis com JSON Schema estrito na mesma resposta, uma segunda
+chamada, sem ferramenta web, normaliza somente a síntese e as fontes verificadas
+por meio de `output_config.format`. URLs devolvidas ao cliente são reconstruídas
+exclusivamente dos blocos de citação reais da primeira chamada.
+
+Exemplo de entrada:
+
+```json
+{"song": "Na Sua Estante", "artist": "Pitty"}
+```
+
+A resposta inclui tonalidade, capo, afinação, acordes, seções, resumo harmônico,
+confiança por campo, fontes, alertas e uso agregado. Logs guardam somente modelo,
+contagens, duração, código do resultado e o `requestId`; não guardam o conteúdo
+pesquisado, o cabeçalho de autorização ou segredos.
+
 ## Testes
 
 ```powershell
@@ -193,7 +219,7 @@ cd backend
 python -m pytest
 ```
 
-Os testes usam um provider falso; não consomem a API da OpenAI.
+Os testes usam providers falsos; não consomem as APIs da OpenAI ou Anthropic.
 
 ## Railway
 
