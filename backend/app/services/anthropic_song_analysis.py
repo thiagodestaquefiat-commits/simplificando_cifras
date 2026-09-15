@@ -154,6 +154,7 @@ class AnthropicSongAnalysisService:
         return self._client.messages.create(
             model=self._model,
             max_tokens=self._normalize_max_tokens,
+            thinking={"type": "disabled"},
             system=(
                 "Normalize evidências de pesquisa musical no schema solicitado. Use null/listas vazias e baixa "
                 "confiança quando faltar evidência. Não invente URLs, acordes, tonalidade ou estrutura; não inclua letras."

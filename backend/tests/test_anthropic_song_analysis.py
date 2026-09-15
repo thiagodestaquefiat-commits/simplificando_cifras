@@ -113,6 +113,7 @@ def test_known_song_uses_web_search_then_structured_output():
     }]
     assert "output_config" not in messages.calls[0]
     assert messages.calls[1]["output_config"]["format"]["type"] == "json_schema"
+    assert messages.calls[1]["thinking"] == {"type": "disabled"}
     assert "tools" not in messages.calls[1]
 
     sent_schema = messages.calls[1]["output_config"]["format"]["schema"]
