@@ -91,7 +91,12 @@ class AnthropicSongAnalysisService:
             raise
         except Exception as error:
             classified = self._classify(error)
-            self._log("failure", classified.code, request_id, {"model": self._model})
+            self._log(
+                "failure",
+                classified.code,
+                request_id,
+                {"model": self._model, **self._provider_error_metadata(error)},
+            )
             raise classified from error
 
     def _search(self, song: str, artist: str):
@@ -269,7 +274,7 @@ class AnthropicSongAnalysisService:
         if isinstance(error, anthropic.APIConnectionError):
             return AnthropicExperimentError("anthropic_indisponivel", "O provedor experimental está indisponível.", 503)
         if isinstance(error, anthropic.BadRequestError):
-            return AnthropicExperimentError("anthropic_web_search_indisponivel", "A pesquisa web experimental não pôde ser executada.", 503)
+            return AnthropicSongAnalysisService._classify_bad_request(error)
         if isinstance(error, anthropic.APIStatusError):
             if error.status_code == 429:
                 return AnthropicExperimentError("anthropic_limite", "O provedor experimental está temporariamente ocupado.", 429)
@@ -278,6 +283,47 @@ class AnthropicSongAnalysisService:
             if error.status_code >= 500:
                 return AnthropicExperimentError("anthropic_indisponivel", "O provedor experimental está indisponível.", 503)
         return AnthropicExperimentError("anthropic_erro", "A análise experimental não pôde ser concluída.", 502)
+
+    @staticmethod
+    def _classify_bad_request(error) -> AnthropicExperimentError:
+        body = getattr(error, "body", None)
+        safe_text = json.dumps(body, ensure_ascii=True, sort_keys=True).lower() if isinstance(body, dict) else ""
+        if "web search" in safe_text and any(word in safe_text for word in ("disabled", "not enabled", "unavailable")):
+            return AnthropicExperimentError(
+                "anthropic_web_search_desabilitada",
+                "A Web Search não está habilitada para a conta Anthropic deste ambiente.",
+                503,
+            )
+        if any(word in safe_text for word in ("credit balance", "billing", "insufficient credit")):
+            return AnthropicExperimentError(
+                "anthropic_creditos_indisponiveis",
+                "A conta Anthropic não possui créditos disponíveis para esta análise.",
+                503,
+            )
+        if "model" in safe_text and any(word in safe_text for word in ("not found", "not available", "unsupported")):
+            return AnthropicExperimentError(
+                "anthropic_modelo_indisponivel",
+                "O modelo Anthropic configurado não está disponível para esta conta.",
+                503,
+            )
+        return AnthropicExperimentError(
+            "anthropic_requisicao_invalida",
+            "O provedor experimental rejeitou a configuração da análise.",
+            502,
+        )
+
+    @staticmethod
+    def _provider_error_metadata(error) -> dict[str, Any]:
+        body = getattr(error, "body", None)
+        provider_type = None
+        if isinstance(body, dict):
+            nested = body.get("error") if isinstance(body.get("error"), dict) else body
+            provider_type = nested.get("type") or nested.get("code")
+        return {
+            "providerStatus": getattr(error, "status_code", None),
+            "providerRequestId": str(getattr(error, "request_id", "") or "") or None,
+            "providerErrorType": str(provider_type)[:80] if provider_type else None,
+        }
 
     def _log(self, outcome: str, code: str, request_id: str, usage: dict[str, Any]) -> None:
         event = {
@@ -290,6 +336,9 @@ class AnthropicSongAnalysisService:
             "output_tokens": usage.get("outputTokens"),
             "web_searches": usage.get("webSearches"),
             "duration_ms": usage.get("durationMs"),
+            "provider_status": usage.get("providerStatus"),
+            "provider_request_id": usage.get("providerRequestId"),
+            "provider_error_type": usage.get("providerErrorType"),
         }
         log = logger.info if outcome == "success" else logger.warning
         log("anthropic_experiment_event=%s", json.dumps(event, ensure_ascii=True, sort_keys=True))

@@ -191,6 +191,26 @@ def test_anthropic_rate_limit_is_classified():
     assert raised.value.status_code == 429
 
 
+@pytest.mark.parametrize(("message", "code"), [
+    ("Web search is not enabled for this organization", "anthropic_web_search_desabilitada"),
+    ("Your credit balance is too low", "anthropic_creditos_indisponiveis"),
+    ("The requested model is not available", "anthropic_modelo_indisponivel"),
+    ("tools.0 has an invalid field", "anthropic_requisicao_invalida"),
+])
+def test_bad_request_has_safe_specific_classification(message, code):
+    request = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+    response = httpx2.Response(400, request=request)
+    error = anthropic.BadRequestError(
+        message,
+        response=response,
+        body={"type": "error", "error": {"type": "invalid_request_error", "message": message}},
+    )
+    instance, _ = service([error])
+    with pytest.raises(AnthropicExperimentError) as raised:
+        instance.analyze("Canção", "Artista")
+    assert raised.value.code == code
+
+
 def test_partial_structured_response_is_rejected_without_regex_repair():
     partial = SimpleNamespace(
         content=[{"type": "text", "text": '{"song":"Na Sua Estante"'}],
