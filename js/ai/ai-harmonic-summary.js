@@ -5,6 +5,7 @@
   let busy = false;
   let sourceSong = null;
   let selectedFiles = [];
+  let loadingTimer = null;
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -43,7 +44,8 @@
     });
     panel.querySelector("[data-ai-form=texto]").hidden = mode !== "texto";
     panel.querySelector("[data-ai-form=arquivo]").hidden = mode !== "arquivo";
-    panel.querySelector("[data-ai-submit]").textContent = mode === "texto" ? "Analisar texto" : "Gerar resumo";
+    panel.querySelector("[data-ai-form=busca]").hidden = mode !== "busca";
+    panel.querySelector("[data-ai-submit]").textContent = mode === "texto" ? "Analisar texto" : mode === "busca" ? "🔎 Buscar e gerar com IA" : "Gerar resumo";
     setStatus("initial", "");
   }
 
@@ -79,7 +81,20 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Analisando…") : (mode === "texto" ? "Analisar texto" : "Gerar resumo");
+    submit.textContent = value ? (mode === "busca" ? "Buscando e preparando…" : mode === "arquivo" ? "Analisando cifra..." : "Analisando…") : (mode === "texto" ? "Analisar texto" : mode === "busca" ? "🔎 Buscar e gerar com IA" : "Gerar resumo");
+  }
+
+  function startFriendlyLoading() {
+    if (loadingTimer) clearInterval(loadingTimer);
+    const messages = ["🔎 Buscando referências musicais...", "🎸 Analisando acordes e estrutura...", "✨ Preparando seu resumo..."];
+    let index = 0;
+    setStatus("loading", messages[index]);
+    loadingTimer = setInterval(() => { index = (index + 1) % messages.length; setStatus("loading", messages[index]); }, 3500);
+  }
+
+  function stopFriendlyLoading() {
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingTimer = null;
   }
 
   async function submit() {
@@ -88,27 +103,32 @@
     help.hidden = true;
     help.textContent = "";
     setBusy(true);
-    setStatus("loading", mode === "arquivo" ? "Analisando cifra..." : "Analisando a estrutura harmônica…");
+    if (mode === "busca") startFriendlyLoading();
+    else setStatus("loading", mode === "arquivo" ? "Analisando cifra..." : "Analisando a estrutura harmônica…");
     try {
-      const result = await global.harmonicSummaryClient.generate(mode, values());
+      const result = mode === "busca"
+        ? await global.harmonicSummaryClient.generateFromSearch(values())
+        : await global.harmonicSummaryClient.generate(mode, values());
       const sourceInfo = mode === "arquivo"
         ? { type: "upload", name: result.payload.arquivos.map(file=>file.name).join(' + ').slice(0,255), url: null }
         : mode === "texto"
           ? { type: "text", name: null, url: null }
           : { type: "manual", name: null, url: null };
-      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
+      const model = mode === "busca"
+        ? global.harmonicSummaryClient.anthropicResponseToEditorModel(result.data, global.currentInstrument || "guitar")
+        : global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
       close();
       global.openAiDraft(model, sourceSong);
     } catch (error) {
       const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
-      setStatus(kind, error.message || "Não foi possível concluir a análise.");
+      setStatus(kind, mode === "busca" ? (error.message || "Não conseguimos concluir a análise desta música. Tente novamente.") : (error.message || "Não foi possível concluir a análise."));
       if (kind === "untrusted") {
         help.hidden = false;
         help.textContent = "Corrija o título ou artista, cole uma cifra ou texto e tente novamente.";
       }
-    } finally { setBusy(false); }
+    } finally { stopFriendlyLoading(); setBusy(false); }
   }
 
   function close() {
@@ -116,6 +136,7 @@
     panel.remove();
     panel = null;
     selectedFiles = [];
+    stopFriendlyLoading();
   }
 
   function open(options) {
@@ -133,12 +154,14 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["arquivo", "Arquivo"], ["texto", "Texto"]].forEach(([key, label]) => {
+    [["arquivo", "Arquivo"], ["texto", "Texto"], ["busca", "Buscar cifra"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
     const textForm = element("div", "ai-summary-form"); textForm.dataset.aiForm = "texto";
     textForm.append(field("Título (opcional)", "titulo", "text", false), field("Artista (opcional)", "artista", "text", false), field("Cifra, letra com acordes, anotações ou estrutura musical", "conteudo", "textarea", true));
     const fileForm = element("div", "ai-summary-form ai-summary-file-form"); fileForm.dataset.aiForm = "arquivo";
+    const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "busca";
+    searchForm.append(field("Título da música", "titulo", "text", true), field("Artista", "artista", "text", true));
     const fileField = field("Adicionar arquivos — PDF, PNG, JPG, WebP ou TXT", "arquivo", "file", true);
     const fileInput = fileField.querySelector("input");
     fileInput.accept = ".pdf,.png,.jpg,.jpeg,.webp,.txt,application/pdf,image/png,image/jpeg,image/webp,text/plain";
@@ -154,7 +177,7 @@
     const status = element("div", "ai-summary-status"); status.dataset.aiStatus = ""; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); status.hidden = true;
     const help = element("p", "ai-summary-help"); help.dataset.aiHelp = ""; help.hidden = true;
     const submitButton = element("button", "ai-summary-submit", "Gerar resumo"); submitButton.type = "button"; submitButton.dataset.aiSubmit = ""; submitButton.addEventListener("click", submit);
-    dialog.append(header, intro, tabs, textForm, fileForm, status, help, submitButton);
+    dialog.append(header, intro, tabs, textForm, fileForm, searchForm, status, help, submitButton);
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
@@ -164,6 +187,8 @@
       textForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
       fileForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
       fileForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      searchForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
+      searchForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
     }
     textForm.querySelector("textarea").focus();
   }

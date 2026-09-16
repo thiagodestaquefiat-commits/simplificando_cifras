@@ -8,6 +8,7 @@ assert.ok(scripts.length > 0, "index.html deve possuir scripts inline");
 scripts.forEach((source, index) => new vm.Script(source, { filename: `index-inline-${index + 1}.js` }));
 const musicPane = html.slice(html.indexOf('id="pane-musicas"'), html.indexOf('id="pane-setlists"'));
 assert.ok(musicPane.indexOf('class="youtube-panel"') < musicPane.indexOf('class="search-bar"'), "a busca do YouTube deve aparecer antes da busca da playlist");
+assert.ok(/<section class="youtube-discovery-block"[\s\S]*?class="youtube-panel"[\s\S]*?id="youtube-results"[\s\S]*?<\/section>[\s\S]*?class="search-bar"/.test(musicPane), "pesquisa e resultados do YouTube devem compartilhar um bloco antes da busca da playlist");
 assert.match(musicPane, /placeholder="Buscar música na playlist"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);
 assert.match(musicPane, /ai-generate-action/, "a integração não deve remover o atalho de IA já aprovado no PR #48");

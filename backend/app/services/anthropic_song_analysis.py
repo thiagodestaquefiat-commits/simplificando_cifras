@@ -26,7 +26,9 @@ class AnthropicExperimentError(Exception):
 
 
 class AnthropicSongAnalysisService:
-    WEB_SEARCH_TOOL = "web_search_20250305"
+    WEB_SEARCH_TOOL = "web_search_20260318"
+    MAX_EVIDENCE_CHARACTERS = 6000
+    MAX_FINAL_SOURCES = 5
 
     def __init__(
         self,
@@ -51,8 +53,8 @@ class AnthropicSongAnalysisService:
             max_retries=1,
         )
         self._model = model
-        self._search_max_tokens = search_max_tokens
-        self._normalize_max_tokens = normalize_max_tokens
+        self._search_max_tokens = min(1800, max(800, search_max_tokens))
+        self._normalize_max_tokens = min(1800, max(1000, normalize_max_tokens))
         self._web_search_max_uses = min(3, max(1, web_search_max_uses))
 
     @classmethod
@@ -114,24 +116,27 @@ class AnthropicSongAnalysisService:
 
     def _search(self, song: str, artist: str):
         prompt = (
-            "Pesquise na web antes de concluir. Identifique com precisão a música e o artista e reúna "
-            "evidências verificáveis sobre tonalidade, afinação, capo, acordes/progressões e estrutura. "
-            "Não invente dados ausentes, sinalize divergências e não reproduza letras nem trechos longos. "
+            "Faça uma pesquisa musical compacta. Use uma busca; use a segunda apenas se faltar confirmação. "
+            "Pare quando 2 a 5 fontes úteis forem suficientes. Confirme identidade, tonalidade, afinação, "
+            "capo, acordes/progressões e estrutura. Produza no máximo 900 palavras, em tópicos curtos, "
+            "com citações junto às afirmações. Sinalize divergências. Não inclua letras nem transcrições. "
             f"Música: {song}\nArtista: {artist}"
         )
         response = self._client.messages.create(
             model=self._model,
             max_tokens=self._search_max_tokens,
+            thinking={"type": "disabled"},
             system=(
                 "Você é um pesquisador musical cuidadoso. Use Web Search para localizar fontes, compare-as "
-                "e produza uma síntese factual curta com citações. Não faça scraping próprio, não contorne "
-                "bloqueios e não copie letras protegidas."
+                "e produza somente evidência musical compacta com citações. Prefira 2 a 5 fontes independentes; "
+                "não faça pesquisa exaustiva, scraping, nem copie letras protegidas."
             ),
             messages=[{"role": "user", "content": prompt}],
             tools=[{
                 "type": self.WEB_SEARCH_TOOL,
                 "name": "web_search",
                 "max_uses": self._web_search_max_uses,
+                "response_inclusion": "excluded",
             }],
         )
         responses = [response]
@@ -147,6 +152,7 @@ class AnthropicSongAnalysisService:
             response = self._client.messages.create(
                 model=self._model,
                 max_tokens=self._search_max_tokens,
+                thinking={"type": "disabled"},
                 system="Continue a pesquisa musical anterior e conclua apenas com evidências verificáveis.",
                 messages=[
                     {"role": "user", "content": prompt},
@@ -156,6 +162,7 @@ class AnthropicSongAnalysisService:
                     "type": self.WEB_SEARCH_TOOL,
                     "name": "web_search",
                     "max_uses": remaining,
+                    "response_inclusion": "excluded",
                 }],
             )
             responses.append(response)
@@ -176,7 +183,9 @@ class AnthropicSongAnalysisService:
                 "role": "user",
                 "content": (
                     f"Música solicitada: {song}\nArtista solicitado: {artist}\n\n"
-                    f"Síntese pesquisada:\n{evidence[:16000]}\n\nFontes verificadas:\n{source_lines}"
+                    f"Evidência compacta:\n{evidence[:self.MAX_EVIDENCE_CHARACTERS]}\n\nFontes citadas:\n{source_lines}\n\n"
+                    "Retorne só o JSON. Limites: até 16 acordes, 12 seções, 12 itens de resumo e 8 avisos. "
+                    "Notas e ganchos devem ser curtos."
                 ),
             }],
             output_config={
@@ -218,23 +227,19 @@ class AnthropicSongAnalysisService:
     @classmethod
     def _sources(cls, response) -> list[AnthropicAnalysisSource]:
         found: dict[str, AnthropicAnalysisSource] = {}
-
-        def visit(value):
-            plain = cls._plain(value)
-            if isinstance(plain, dict):
-                url = plain.get("url")
-                title = plain.get("title")
+        for block in getattr(response, "content", []) or []:
+            plain = cls._plain(block)
+            if not isinstance(plain, dict) or plain.get("type") != "text":
+                continue
+            for citation in plain.get("citations") or []:
+                item = cls._plain(citation)
+                if not isinstance(item, dict):
+                    continue
+                url = item.get("url")
                 if isinstance(url, str) and url.startswith(("https://", "http://")):
-                    safe_title = str(title or url)[:300].strip()
-                    found.setdefault(url, AnthropicAnalysisSource(url=url[:2000], title=safe_title))
-                for item in plain.values():
-                    visit(item)
-            elif isinstance(plain, list):
-                for item in plain:
-                    visit(item)
-
-        visit(getattr(response, "content", []) or [])
-        return list(found.values())[:20]
+                    title = str(item.get("title") or url)[:300].strip()
+                    found.setdefault(url, AnthropicAnalysisSource(url=url[:2000], title=title))
+        return list(found.values())[: cls.MAX_FINAL_SOURCES]
 
     @classmethod
     def _merge_sources(cls, responses) -> list[AnthropicAnalysisSource]:
@@ -242,7 +247,7 @@ class AnthropicSongAnalysisService:
         for response in responses:
             for source in cls._sources(response):
                 found.setdefault(source.url, source)
-        return list(found.values())[:20]
+        return list(found.values())[: cls.MAX_FINAL_SOURCES]
 
     @staticmethod
     def _plain(value):

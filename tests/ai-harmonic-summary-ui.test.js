@@ -5,7 +5,8 @@ const path = require("node:path");
 const { chromium } = require("playwright");
 
 const root = path.resolve(__dirname, "..");
-const apiEndpoint = "https://simplificandocifras-production.up.railway.app/api/resumo-harmonico";
+const apiEndpoint = "**/api/resumo-harmonico";
+const searchEndpoint = "**/api/ai/anthropic/song-analysis";
 const executablePath = [process.env.BROWSER_EXECUTABLE, "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"].find((candidate) => candidate && fs.existsSync(candidate));
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
@@ -41,7 +42,7 @@ const success = {
     assert.equal(await page.locator("#ai-summary-overlay").isVisible(), true);
     assert.equal(await page.getByRole("tab", { name: "Pesquisa", exact: true }).count(), 0);
     assert.equal(await page.getByRole("button", { name: "Buscar fontes", exact: true }).count(), 0);
-    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Arquivo", "Texto"]);
+    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Arquivo", "Texto", "Buscar cifra"]);
     await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     assert.match(await page.locator("[data-ai-status]").innerText(), /Cole uma cifra/);
 
@@ -152,6 +153,40 @@ const success = {
     assert.match(multipartRequest.postData(), /cifra\.txt/);
     assert.match(await page.locator("[data-ai-status]").innerText(), /conectar ao servidor/);
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
+
+    await page.getByRole("button", { name: "Gerar com IA", exact: true }).click();
+    await page.getByRole("tab", { name: "Buscar cifra", exact: true }).click();
+    assert.equal(await page.locator('[data-ai-form="texto"]').isHidden(), true);
+    await page.getByRole("button", { name: "🔎 Buscar e gerar com IA", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /título/i);
+    const searchForm = page.locator('[data-ai-form="busca"]');
+    await searchForm.getByLabel("Título da música").fill("Na Sua Estante");
+    await page.getByRole("button", { name: "🔎 Buscar e gerar com IA", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /artista/i);
+    await searchForm.getByLabel("Artista").fill("Pitty");
+    let searchCalls = 0;
+    await page.route(searchEndpoint, async (route) => {
+      searchCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+        song: "Na Sua Estante", artist: "Pitty", key: "D", capo: 0, tuning: "Drop D",
+        chords: ["D", "G", "Bm", "A"],
+        sections: [{ type: "verse", name: "Verso", progression: ["D", "G"], order: 1, note: "Progressão principal", hook: "" }],
+        harmonic_summary: ["Verso: D – G"], confidence: { overall: .8, key: .8, chords: .8, structure: .7 },
+        sources: [{ title: "Fonte musical", url: "https://example.com/song" }], warnings: []
+      }) });
+    }, { times: 1 });
+    await page.getByRole("button", { name: "🔎 Buscar e gerar com IA", exact: true }).click();
+    assert.match(await page.locator("[data-ai-status]").innerText(), /Buscando referências/);
+    assert.equal(await page.getByRole("button", { name: /Buscando e preparando/ }).isDisabled(), true);
+    await page.getByRole("button", { name: /Buscando e preparando/ }).click({ force: true });
+    await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
+    assert.equal(searchCalls, 1);
+    assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), "Na Sua Estante");
+    assert.equal(await page.getByLabel("Tom original", { exact: true }).inputValue(), "D");
+    assert.match(await page.getByLabel("Cifra / Resumo", { exact: true }).inputValue(), /Progressão principal/);
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("cifras_musicas_v1") || "[]").some((song) => song.title === "Na Sua Estante")), false);
+    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
     assert.equal(errors.length, 0, errors.join(" | "));
     console.log("ai-harmonic-summary-ui.test.js: OK (modal, modos, loading, sucesso, erros, rascunho, transposição e XSS)");

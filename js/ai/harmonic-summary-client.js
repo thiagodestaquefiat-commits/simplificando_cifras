@@ -38,6 +38,15 @@
     throw new HarmonicSummaryError("invalid_input", "Modo de análise inválido.");
   }
 
+  function validateSearchPayload(values) {
+    const data = values || {};
+    const song = clean(data.titulo, 160).trim();
+    const artist = clean(data.artista, 160).trim();
+    if (!song) throw new HarmonicSummaryError("invalid_input", "Informe o título da música.");
+    if (!artist) throw new HarmonicSummaryError("invalid_input", "Informe o artista.");
+    return { song, artist };
+  }
+
   function assertResponse(data) {
     const normalized = data && data.schemaVersion === 1
       ? { ...data, schemaVersion: 2, capotraste: null, harmonicSummary: { blocos: data.trechos } }
@@ -112,6 +121,67 @@
     }, { source: "ai" });
   }
 
+  function anthropicResponseToEditorModel(raw, instrument) {
+    if (!raw || typeof raw.song !== "string" || typeof raw.artist !== "string" || !Array.isArray(raw.sections)) {
+      throw new HarmonicSummaryError("invalid_data", "O servidor retornou dados inválidos.");
+    }
+    const safeChords = (items) => (Array.isArray(items) ? items : [])
+      .map((item) => clean(item, 32).trim())
+      .filter((item) => item && global.multiInstrumentChordLibrary.parseChord(item));
+    const blocks = raw.sections.slice(0, 12).map((section) => ({
+      secao: clean(section?.name || section?.type || "", 120),
+      fraseGuia: clean(section?.hook || section?.note || "", 80),
+      acordes: safeChords(section?.progression).slice(0, 16),
+      repeticoes: null
+    })).filter((block) => block.secao || block.fraseGuia || block.acordes.length);
+    const confidence = Number(raw.confidence?.overall || 0);
+    const observations = [];
+    if (raw.tuning) observations.push(`Afinação: ${clean(raw.tuning, 80)}.`);
+    (raw.harmonic_summary || []).slice(0, 12).forEach((item) => observations.push(clean(item, 300)));
+    (raw.warnings || []).slice(0, 8).forEach((item) => observations.push(clean(item, 300)));
+    const source = Array.isArray(raw.sources) && raw.sources[0]
+      ? { type: "online", name: clean(raw.sources[0].title || "Referência musical", 255), url: String(raw.sources[0].url || "") }
+      : { type: "online", name: "Busca de cifra", url: null };
+    return responseToEditorModel({
+      schemaVersion: 2,
+      titulo: raw.song,
+      artista: raw.artist,
+      tom: raw.key || "C",
+      capotraste: Number.isInteger(raw.capo) ? raw.capo : null,
+      confianca: confidence >= .75 ? "alta" : confidence >= .45 ? "media" : "baixa",
+      observacoes: observations.filter(Boolean),
+      harmonicSummary: { blocos: blocks.length ? blocks : [{ secao: "Resumo", fraseGuia: "Revise as informações encontradas.", acordes: safeChords(raw.chords).slice(0, 16), repeticoes: null }] },
+      fullChordSheet: null
+    }, instrument, source);
+  }
+
+  async function generateFromSearch(values, options) {
+    const settings = options || {};
+    const payload = validateSearchPayload(values);
+    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
+    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para usar a IA musical.", 401);
+    let response;
+    try {
+      response = await (settings.fetch || global.fetch)(global.apiConfig.anthropicSongAnalysisEndpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${accessToken}` },
+        body: JSON.stringify(payload),
+        signal: settings.signal
+      });
+    } catch (_) {
+      throw new HarmonicSummaryError("network", "Não conseguimos concluir a análise desta música. Tente novamente.");
+    }
+    let data;
+    try { data = await response.json(); }
+    catch (_) { throw new HarmonicSummaryError("invalid_data", "Não conseguimos concluir a análise desta música. Tente novamente.", response.status); }
+    if (!response.ok) {
+      if (response.status === 401) throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente e tente outra vez.", response.status);
+      if (response.status === 429) throw new HarmonicSummaryError("rate_limit", "O serviço está ocupado agora. Aguarde um pouco e tente novamente.", response.status);
+      throw new HarmonicSummaryError("server", "Não conseguimos concluir a análise desta música. Tente novamente.", response.status);
+    }
+    return { payload, data };
+  }
+
   async function generate(mode, values, options) {
     const settings = options || {};
     const payload = validatePayload(mode, values);
@@ -178,5 +248,5 @@
     return { payload, data: assertResponse(data) };
   }
 
-  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, assertResponse, responseToEditorModel, generate });
+  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, validateSearchPayload, assertResponse, responseToEditorModel, anthropicResponseToEditorModel, generate, generateFromSearch });
 })(window);

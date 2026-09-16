@@ -29,6 +29,8 @@ const sizes = [
   [320, 640],
   [360, 800],
   [390, 844],
+  [412, 915],
+  [430, 932],
   [768, 1024],
   [1366, 768],
   [1920, 1080]
@@ -75,19 +77,32 @@ async function openApp(browser, baseUrl, width, height) {
       const layout = await page.evaluate(() => {
         const app = document.getElementById("app").getBoundingClientRect();
         const accountButton = document.getElementById("app-account-btn").getBoundingClientRect();
+        const youtubeBlock = document.querySelector(".youtube-discovery-block");
+        const playlistSearch = document.querySelector("#pane-musicas > .search-bar");
+        const youtubeInput = document.getElementById("youtube-input").getBoundingClientRect();
+        const youtubeButton = document.getElementById("youtube-search-btn").getBoundingClientRect();
         return {
           bodyScrollWidth: document.body.scrollWidth,
           appLeft: app.left,
           appRight: app.right,
           appWidth: app.width,
           accountLeft: accountButton.left,
-          accountRight: accountButton.right
+          accountRight: accountButton.right,
+          youtubeContainsResults: youtubeBlock.contains(document.getElementById("youtube-results")),
+          youtubeBottom: youtubeBlock.getBoundingClientRect().bottom,
+          playlistTop: playlistSearch.getBoundingClientRect().top,
+          youtubeInputWidth: youtubeInput.width,
+          youtubeButtonRight: youtubeButton.right
         };
       });
       assert.ok(layout.bodyScrollWidth <= width, `${width}x${height}: rolagem horizontal na página`);
       assert.ok(layout.appLeft >= 0 && layout.appRight <= width + 0.5, `${width}x${height}: app fora da viewport`);
       assert.ok(layout.appWidth <= (width >= 900 ? 1180.5 : 720.5), `${width}x${height}: app largo demais`);
       assert.ok(layout.accountLeft >= 0 && layout.accountRight <= width, `${width}x${height}: acesso à conta fora da viewport`);
+      assert.equal(layout.youtubeContainsResults, true, `${width}x${height}: resultados devem permanecer no bloco do YouTube`);
+      assert.ok(layout.playlistTop >= layout.youtubeBottom - 1, `${width}x${height}: busca da playlist deve ficar após o bloco do YouTube`);
+      assert.ok(layout.youtubeInputWidth >= 100, `${width}x${height}: campo do YouTube foi esmagado`);
+      assert.ok(layout.youtubeButtonRight <= width + .5, `${width}x${height}: botão Pesquisar fora da viewport`);
       assert.equal(errors.length, 0, `${width}x${height}: erros no console: ${errors.join(" | ")}`);
       await context.close();
     }

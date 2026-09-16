@@ -28,6 +28,12 @@ def song_analysis():
     if not isinstance(raw_payload, dict):
         raise ApiError("entrada_invalida", "Envie um objeto JSON válido.", 400)
     payload = AnthropicSongAnalysisRequest.model_validate(raw_payload)
+    cache = current_app.extensions["anthropic_analysis_cache"]
+    cached = cache.get(payload.song, payload.artist)
+    if cached is not None:
+        usage = dict(cached.get("usage") or {})
+        usage.update({"cacheHit": True, "durationMs": 0})
+        return jsonify({**cached, "usage": usage}), 200
     try:
         result = AnthropicSongAnalysisService.from_config(current_app.config).analyze(
             payload.song,
@@ -36,4 +42,6 @@ def song_analysis():
         )
     except AnthropicExperimentError as error:
         raise ApiError(error.code, error.public_message, error.status_code) from error
+    result["usage"]["cacheHit"] = False
+    cache.set(payload.song, payload.artist, result)
     return jsonify(result), 200

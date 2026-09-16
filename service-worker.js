@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v113-accessible-responsive-scale";
+const CACHE_NAME = "simplificando-cifras-v114-anthropic-search-preview";
 const ASSETS = [
   "./",
   "./index.html",
@@ -37,10 +37,10 @@ const ASSETS = [
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
-  "./js/ai/api-config.js?v=5",
-  "./js/ai/harmonic-summary-client.js?v=8",
-  "./js/ai/ai-harmonic-summary.js?v=4",
-  "./js/ai/ai-harmonic-summary.css?v=4",
+  "./js/ai/api-config.js?v=6",
+  "./js/ai/harmonic-summary-client.js?v=9",
+  "./js/ai/ai-harmonic-summary.js?v=5",
+  "./js/ai/ai-harmonic-summary.css?v=5",
   "./manifest.webmanifest?v=14",
   "./assets/roudy-icon-original.png",
   "./assets/icons/roudy-icon-v4-48.png",

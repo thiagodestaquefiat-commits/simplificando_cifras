@@ -114,8 +114,10 @@ def test_known_song_uses_web_search_then_structured_output():
     assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
     assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
     assert messages.calls[0]["tools"] == [{
-        "type": "web_search_20250305", "name": "web_search", "max_uses": 3,
+        "type": "web_search_20260318", "name": "web_search", "max_uses": 3,
+        "response_inclusion": "excluded",
     }]
+    assert messages.calls[0]["thinking"] == {"type": "disabled"}
     assert "output_config" not in messages.calls[0]
     assert messages.calls[1]["output_config"]["format"]["type"] == "json_schema"
     assert messages.calls[1]["thinking"] == {"type": "disabled"}
@@ -280,3 +282,23 @@ def test_endpoint_returns_experimental_result_without_exposing_key(from_config, 
     assert response.status_code == 200
     assert response.get_json() == expected
     assert "test-anthropic-key" not in response.get_data(as_text=True)
+
+
+@patch("app.routes.anthropic_ai.AnthropicSongAnalysisService.from_config")
+def test_endpoint_cache_normalizes_identity_and_avoids_second_provider_call(from_config, client):
+    expected = {
+        "song": "Na Sua Estante", "artist": "Pitty", "key": "D", "capo": 0,
+        "tuning": "Drop D", "chords": ["D"], "sections": [], "harmonic_summary": [],
+        "confidence": {"overall": 0.8, "key": 0.8, "chords": 0.8, "structure": 0.6},
+        "sources": [{"url": "https://example.com", "title": "Fonte"}], "warnings": [],
+        "usage": {"model": "test", "inputTokens": 10, "outputTokens": 5, "webSearches": 1, "durationMs": 100},
+    }
+    from_config.return_value.analyze.return_value = expected
+    headers = auth_headers(client)
+    first = client.post("/api/ai/anthropic/song-analysis", json={"song": "Na Sua Estante", "artist": "Pitty"}, headers=headers)
+    second = client.post("/api/ai/anthropic/song-analysis", json={"song": "  NA SUA   ESTANTE ", "artist": "pítty"}, headers=headers)
+    assert first.status_code == 200
+    assert first.get_json()["usage"]["cacheHit"] is False
+    assert second.status_code == 200
+    assert second.get_json()["usage"]["cacheHit"] is True
+    assert from_config.return_value.analyze.call_count == 1
