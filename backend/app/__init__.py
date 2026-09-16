@@ -46,7 +46,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.extensions["anthropic_analysis_cache"] = AnthropicAnalysisCache(
         ttl_seconds=app.config.get("ANTHROPIC_CACHE_TTL_SECONDS", 604800),
         max_entries=app.config.get("ANTHROPIC_CACHE_MAX_ENTRIES", 256),
-        analyzer_version=app.config.get("ANTHROPIC_ANALYZER_VERSION", "v2-compact-search"),
+        analyzer_version=app.config.get("ANTHROPIC_ANALYZER_VERSION", "v3-single-search"),
     )
     # Providers externos só entram aqui após contrato/API e allowlist aprovados.
     app.extensions["music_source_registry"] = AuthorizedMusicSourceRegistry(

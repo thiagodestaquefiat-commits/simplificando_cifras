@@ -53,9 +53,11 @@ class AnthropicSongAnalysisService:
             max_retries=1,
         )
         self._model = model
-        self._search_max_tokens = min(1800, max(800, search_max_tokens))
-        self._normalize_max_tokens = min(1800, max(1000, normalize_max_tokens))
-        self._web_search_max_uses = min(3, max(1, web_search_max_uses))
+        self._search_max_tokens = min(1200, max(800, search_max_tokens))
+        self._normalize_max_tokens = min(1400, max(1000, normalize_max_tokens))
+        # A medição real mostrou que cada busca adicional domina custo e latência.
+        # Uma consulta composta ainda pode retornar várias fontes independentes.
+        self._web_search_max_uses = 1
 
     @classmethod
     def from_config(cls, config, *, client=None):
@@ -116,10 +118,11 @@ class AnthropicSongAnalysisService:
 
     def _search(self, song: str, artist: str):
         prompt = (
-            "Faça uma pesquisa musical compacta. Use uma busca; use a segunda apenas se faltar confirmação. "
-            "Pare quando 2 a 5 fontes úteis forem suficientes. Confirme identidade, tonalidade, afinação, "
+            "Faça uma única consulta web composta e compacta. Compare 2 a 5 resultados úteis dessa consulta. "
+            "Confirme identidade, tonalidade, afinação, "
             "capo, acordes/progressões e estrutura. Produza no máximo 900 palavras, em tópicos curtos, "
-            "com citações junto às afirmações. Sinalize divergências. Não inclua letras nem transcrições. "
+            "com pelo menos 2 citações web junto às afirmações quando houver resultados. Sinalize divergências. "
+            "Não inclua letras nem transcrições. "
             f"Música: {song}\nArtista: {artist}"
         )
         response = self._client.messages.create(
@@ -128,7 +131,7 @@ class AnthropicSongAnalysisService:
             thinking={"type": "disabled"},
             system=(
                 "Você é um pesquisador musical cuidadoso. Use Web Search para localizar fontes, compare-as "
-                "e produza somente evidência musical compacta com citações. Prefira 2 a 5 fontes independentes; "
+                "e produza somente evidência musical compacta. A síntese final deve citar 2 a 5 fontes independentes; "
                 "não faça pesquisa exaustiva, scraping, nem copie letras protegidas."
             ),
             messages=[{"role": "user", "content": prompt}],
