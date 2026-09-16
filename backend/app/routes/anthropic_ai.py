@@ -6,6 +6,7 @@ from .. import limiter
 from ..errors import ApiError
 from ..schemas.anthropic_song_analysis import AnthropicSongAnalysisRequest
 from ..services.anthropic_song_analysis import AnthropicExperimentError, AnthropicSongAnalysisService
+from ..services.anthropic_haiku_poc import AnthropicHaikuPocService
 from ..services.collaboration_auth import authenticated
 
 
@@ -45,3 +46,12 @@ def song_analysis():
     result["usage"]["cacheHit"] = False
     cache.set(payload.song, payload.artist, result)
     return jsonify(result), 200
+
+
+@blueprint.post("/haiku-poc")
+@limiter.limit("1 per minute")
+@authenticated
+def haiku_poc():
+    if not current_app.config.get("ANTHROPIC_EXPERIMENT_ENABLED", False):
+        raise ApiError("experimento_indisponivel", "Este experimento não está habilitado neste ambiente.", 404)
+    return jsonify(AnthropicHaikuPocService(current_app.config.get("ANTHROPIC_API_KEY", "")).run()), 200
