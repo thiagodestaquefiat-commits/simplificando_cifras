@@ -114,8 +114,7 @@ def test_known_song_uses_web_search_then_structured_output():
     assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
     assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
     assert messages.calls[0]["tools"] == [{
-        "type": "web_search_20260318", "name": "web_search", "max_uses": 1,
-        "response_inclusion": "excluded",
+        "type": "web_search_20250305", "name": "web_search", "max_uses": 1,
     }]
     assert messages.calls[0]["thinking"] == {"type": "disabled"}
     assert "output_config" not in messages.calls[0]
@@ -158,6 +157,21 @@ def test_divergent_sources_preserve_both_urls_and_warning():
         "https://one.example/song", "https://two.example/song",
     }
     assert "divergem" in result["warnings"][0]
+
+
+def test_sources_fall_back_to_web_results_when_final_text_has_no_citations():
+    response = evidence(sources=[])
+    response.content.insert(0, {
+        "type": "web_search_tool_result",
+        "content": [
+            {"type": "web_search_result", "url": "https://one.example/song", "title": "Fonte 1"},
+            {"type": "web_search_result", "url": "https://two.example/song", "title": "Fonte 2"},
+        ],
+    })
+    result = service([response, normalized()])[0].analyze("Canção", "Artista")
+    assert [item["url"] for item in result["sources"]] == [
+        "https://one.example/song", "https://two.example/song",
+    ]
 
 
 def test_missing_key_remains_null_with_low_confidence():

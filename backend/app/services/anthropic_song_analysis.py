@@ -26,7 +26,7 @@ class AnthropicExperimentError(Exception):
 
 
 class AnthropicSongAnalysisService:
-    WEB_SEARCH_TOOL = "web_search_20260318"
+    WEB_SEARCH_TOOL = "web_search_20250305"
     MAX_EVIDENCE_CHARACTERS = 6000
     MAX_FINAL_SOURCES = 5
 
@@ -139,7 +139,6 @@ class AnthropicSongAnalysisService:
                 "type": self.WEB_SEARCH_TOOL,
                 "name": "web_search",
                 "max_uses": self._web_search_max_uses,
-                "response_inclusion": "excluded",
             }],
         )
         responses = [response]
@@ -165,7 +164,6 @@ class AnthropicSongAnalysisService:
                     "type": self.WEB_SEARCH_TOOL,
                     "name": "web_search",
                     "max_uses": remaining,
-                    "response_inclusion": "excluded",
                 }],
             )
             responses.append(response)
@@ -230,7 +228,8 @@ class AnthropicSongAnalysisService:
     @classmethod
     def _sources(cls, response) -> list[AnthropicAnalysisSource]:
         found: dict[str, AnthropicAnalysisSource] = {}
-        for block in getattr(response, "content", []) or []:
+        content = getattr(response, "content", []) or []
+        for block in content:
             plain = cls._plain(block)
             if not isinstance(plain, dict) or plain.get("type") != "text":
                 continue
@@ -242,6 +241,21 @@ class AnthropicSongAnalysisService:
                 if isinstance(url, str) and url.startswith(("https://", "http://")):
                     title = str(item.get("title") or url)[:300].strip()
                     found.setdefault(url, AnthropicAnalysisSource(url=url[:2000], title=title))
+        if not found:
+            def visit(value):
+                plain = cls._plain(value)
+                if isinstance(plain, dict):
+                    if plain.get("type") == "web_search_result":
+                        url = plain.get("url")
+                        if isinstance(url, str) and url.startswith(("https://", "http://")):
+                            title = str(plain.get("title") or url)[:300].strip()
+                            found.setdefault(url, AnthropicAnalysisSource(url=url[:2000], title=title))
+                    for nested in plain.values():
+                        visit(nested)
+                elif isinstance(plain, list):
+                    for nested in plain:
+                        visit(nested)
+            visit(content)
         return list(found.values())[: cls.MAX_FINAL_SOURCES]
 
     @classmethod
