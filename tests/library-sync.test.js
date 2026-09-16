@@ -6,7 +6,7 @@ function song(i,extra={}){return {id:`local-${i}`,title:`Música ${i}`,artist:'A
 function device(userId,initial,{online=true,consent=false,remoteFormat='camel',migrationCandidate=false}={}){
  const memory=new Map([['sc_songs_v1',structuredClone(initial)],['cifras_musicas_v1',structuredClone(initial)],['sc_musicas_v2',[{legacy:true}]],['sc_song_editor_drafts_v1',[{draft:true}]],['sc_events_v1',[{id:'event',repertoire:initial.slice(0,3).map(x=>x.id)}]]]);
  if(consent){memory.set('sc_library_sync_consent_v1',true);memory.set('sc_library_sync_consent_by_owner_v1',{[userId]:true});}
- let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[],ownerConfirmed=false;const networkListeners={};
+ let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[],ownerConfirmed=false,visibilityState='visible';const networkListeners={},documentListeners={};
  const storage={get:(k,f)=>memory.has(k)?structuredClone(memory.get(k)):f,set:(k,v)=>{memory.set(k,structuredClone(v));return true;}};
  const navigator={};Object.defineProperty(navigator,'onLine',{get:()=>online});
  async function fetch(url,options={}){
@@ -24,7 +24,8 @@ function device(userId,initial,{online=true,consent=false,remoteFormat='camel',m
    values.set(item.clientId,value);results.push({clientId:item.clientId,outcome,song:value});
   });return response({results:remoteFormat==='snake'?results.map(item=>({...item,client_id:item.clientId,clientId:undefined,song:item.song?{id:item.song.id,client_id:item.song.clientId,song_data:item.song.songData,version:item.song.version,updated_at:item.song.updatedAt,deleted_at:item.song.deletedAt}:null})):results});
  }
- const context={window:null,console,structuredClone,setTimeout,clearTimeout,crypto:global.crypto,fetch,navigator,
+ const document={get visibilityState(){return visibilityState;},addEventListener:(name,fn)=>{documentListeners[name]=fn;}};
+ const context={window:null,console,structuredClone,setTimeout,clearTimeout,crypto:global.crypto,fetch,navigator,document,
   storage,apiConfig:{libraryEndpoint:p=>'https://api.test/songs'+p},addEventListener:(name,fn)=>{networkListeners[name]=fn;},
   appAuth:{getAccessToken:()=>authUser,subscribe:fn=>{authListener=fn;fn({authenticated:Boolean(authUser),user:authUser?{id:authUser}:null});}}};
  context.window=context;vm.runInNewContext(songModelSource,context);vm.runInNewContext(source,context);
@@ -32,7 +33,7 @@ function device(userId,initial,{online=true,consent=false,remoteFormat='camel',m
  context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){},activateOwner:()=>({songs:structuredClone(songs),migrationCandidate}),confirmOwner:()=>{ownerConfirmed=true;return true;},markDeleted,confirmDeleted:value=>markDeleted(value,true),getDeletedClientIds:()=>Object.keys(storage.get('sc_personal_song_deletions_v1',{})[userId]||{}),getPendingDeletedClientIds:()=>{const values=storage.get('sc_personal_song_deletions_v1',{})[userId]||{};return Object.keys(values).filter(clientId=>!values[clientId]?.confirmedAt);}});
  context.librarySync.subscribe(value=>statusEvents.push(structuredClone(value)));
  return {sync:context.librarySync,get songs(){return songs;},get ownerConfirmed(){return ownerConfirmed;},replace:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',songs);storage.set('cifras_musicas_v1',songs);},storage,requests,batches,statusEvents,
-  setOnline:v=>{online=v;networkListeners[v?'online':'offline']?.();},logout:()=>{authUser='';authListener({authenticated:false,user:null});},login:id=>{authUser=id;authListener({authenticated:true,user:{id}});}};
+  setOnline:v=>{online=v;networkListeners[v?'online':'offline']?.();},setVisible:v=>{visibilityState=v;documentListeners.visibilitychange?.();},logout:()=>{authUser='';authListener({authenticated:false,user:null});},login:id=>{authUser=id;authListener({authenticated:true,user:{id}});}};
 }
 const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 (async()=>{
@@ -105,6 +106,27 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  await convergenceA.sync.pull();assert.equal(convergenceA.songs.length,141,'A recebe as 3 criadas em B');assert.equal(convergenceB.songs.length,141);assert.equal(remote.get('convergence-user').size,141);
  assert.equal((await convergenceB.sync.syncNow()).attempted,0,'B não recria client_id das músicas baixadas');
 
+ const foregroundPc=device('foreground-sync-user',[]),foregroundMobile=device('foreground-sync-user',[]);await settle();
+ const foregroundPcEvents=JSON.stringify(foregroundPc.storage.get('sc_events_v1')),foregroundMobileEvents=JSON.stringify(foregroundMobile.storage.get('sc_events_v1'));
+ foregroundPc.replace([song(2050)]);foregroundPc.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));
+ assert.equal(remote.get('foreground-sync-user').size,1,'criação no PC chega ao backend antes do pull do celular');
+ assert.equal([...remote.get('foreground-sync-user').keys()][0],foregroundPc.songs[0].librarySync.clientId,'backend preserva o clientId criado no PC');
+ assert.equal(foregroundMobile.songs.length,0,'dispositivo já aberto ainda não recebeu a criação remota antes de voltar ao primeiro plano');
+ foregroundMobile.setVisible('hidden');foregroundMobile.setVisible('visible');await settle();
+ assert.equal(foregroundMobile.songs.length,1,'PC → celular baixa música ao reabrir o PWA');
+ const mobileSongs=foregroundMobile.songs;mobileSongs.push(song(2051));foregroundMobile.replace(mobileSongs);foregroundMobile.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));
+ foregroundPc.setVisible('hidden');foregroundPc.setVisible('visible');await settle();assert.equal(foregroundPc.songs.length,2,'celular → PC permanece convergente');
+ const pcEdited=foregroundPc.songs;pcEdited[0]={...pcEdited[0],artist:'Editada no PC'};foregroundPc.replace(pcEdited);foregroundPc.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));
+ foregroundMobile.setVisible('hidden');foregroundMobile.setVisible('visible');await settle();assert.equal(foregroundMobile.songs[0].artist,'Editada no PC','edição PC → celular converge');
+ const mobileEdited=foregroundMobile.songs;mobileEdited[1]={...mobileEdited[1],artist:'Editada no celular'};foregroundMobile.replace(mobileEdited);foregroundMobile.sync.schedule();await new Promise(resolve=>setTimeout(resolve,1300));
+ foregroundPc.setVisible('hidden');foregroundPc.setVisible('visible');await settle();assert.equal(foregroundPc.songs[1].artist,'Editada no celular','edição celular → PC converge');
+ const pcDeleted=foregroundPc.songs[0];assert.equal(foregroundPc.sync.deleteSong(pcDeleted),true);await new Promise(resolve=>setTimeout(resolve,1300));
+ foregroundMobile.setVisible('hidden');foregroundMobile.setVisible('visible');await settle();assert.equal(foregroundMobile.songs.length,1,'exclusão PC → celular aplica tombstone');
+ const mobileDeleted=foregroundMobile.songs[0];assert.equal(foregroundMobile.sync.deleteSong(mobileDeleted),true);await new Promise(resolve=>setTimeout(resolve,1300));
+ foregroundPc.setVisible('hidden');foregroundPc.setVisible('visible');await settle();assert.equal(foregroundPc.songs.length,0,'exclusão celular → PC aplica tombstone');
+ assert.equal(JSON.stringify(foregroundPc.storage.get('sc_events_v1')),foregroundPcEvents,'sincronização de músicas não altera Eventos no PC');
+ assert.equal(JSON.stringify(foregroundMobile.storage.get('sc_events_v1')),foregroundMobileEvents,'sincronização de músicas não altera Eventos no celular');
+
  const deletionA=device('deletion-user',[song(2100),song(2101)]);await settle();await deletionA.sync.syncNow();
  const deletionB=device('deletion-user',[]);await settle();assert.equal(deletionB.songs.length,2);
  const deletedSong=deletionA.songs[0],deletionEventsBefore=JSON.stringify(deletionA.storage.get('sc_events_v1'));
@@ -144,6 +166,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.doesNotMatch(html,/<button[^>]+id="library-sync-btn"/,'painel técnico não aparece na navegação normal');assert.match(html,/downloadSyncDiagnostics\(\)[\s\S]*?await librarySync\.review\(\)\.catch\(\(\)=>null\);await librarySync\.refreshServerAudit\(\)/,'diagnóstico interno permanece disponível no código');assert.match(html,/!state\.identityBlocked/,'guard de owner não confirmado permanece intacto');
  assert.doesNotMatch(html,/openLibraryMigrationPrompt|confirmLibraryMigration|Salvar suas músicas|Salvar minhas músicas|Salvar seus eventos|Salvar meus eventos/,'migração não expõe prompts técnicos');assert.doesNotMatch(html,/exportarBiblioteca\(\{quiet:true\}\)/,'login e migração não disparam download JSON');assert.match(html,/migrateLegacyEventsInBackground\(\)/);assert.doesNotMatch(html,/setTimeout\(\(\)=>openLibrarySync\(\),0\)/,'bootstrap e login nunca abrem o painel técnico');
  const deletionSource=html.slice(html.indexOf('function deleteMusica'),html.indexOf('function parseBlocks'));assert.match(deletionSource,/librarySync\.deleteSong\(song\)/,'exclusão usa o clientId sincronizado no backend');assert.doesNotMatch(deletionSource,/setlists|repertoire/,'excluir música não altera Eventos ou repertórios');
- assert.match(sw,/simplificando-cifras-v113-accessible-responsive-scale/);assert.match(sw,/song-repository\.js\?v=7/);assert.match(sw,/library-sync\.js\?v=10/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=7/);assert.match(sw,/app-auth\.js\?v=8/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ assert.match(sw,/simplificando-cifras-v114-library-foreground-convergence/);assert.match(sw,/song-repository\.js\?v=7/);assert.match(sw,/library-sync\.js\?v=11/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=7/);assert.match(sw,/app-auth\.js\?v=8/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (seed 86/91/106/141, legacy, isolamento, convergência, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
