@@ -57,7 +57,25 @@ def normalized(**changes):
             "order": 1,
             "note": "Progressão indicada pelas fontes.",
             "hook": "",
+            "repetitions": None,
         }],
+        "chord_sheet": {
+            "available": True,
+            "completeness": "partial",
+            "sections": [{
+                "type": "verse", "name": "Verso", "order": 1,
+                "lines": [{
+                    "text": "Trecho curto", "repetitions": None,
+                    "chords": [{"chord": "Em", "position": 0}, {"chord": "C", "position": 8}],
+                }],
+            }],
+            "rights": {
+                "can_locate": True, "can_structure": True,
+                "integral_display_authorized": False,
+                "integral_persistence_authorized": False,
+                "basis": "Fonte externa sem licença explícita para reprodução integral.",
+            },
+        },
         "harmonic_summary": ["Centro tonal menor com progressão diatônica."],
         "confidence": {"overall": 0.82, "key": 0.75, "chords": 0.84, "structure": 0.7},
         "sources": [],
@@ -99,14 +117,16 @@ def service(responses, *, api_key="test-key"):
     return instance, messages
 
 
-def test_known_song_uses_web_search_then_structured_output():
-    instance, messages = service([evidence(searches=2), normalized()])
+def test_known_song_uses_one_cifraclub_search_then_both_structured_outputs():
+    instance, messages = service([evidence(searches=1), normalized()])
     result = instance.analyze("Na Sua Estante", "Pitty", request_id="internal-test")
 
     assert result["song"] == "Na Sua Estante"
     assert result["key"] == "E minor"
     assert result["sources"] == [{"url": "https://example.com/song", "title": "Fonte musical"}]
-    assert result["usage"]["webSearches"] == 2
+    assert result["usage"]["webSearches"] == 1
+    assert result["chord_sheet"]["available"] is True
+    assert result["chord_sheet"]["rights"]["can_structure"] is True
     assert result["usage"]["inputTokens"] == 17
     assert result["usage"]["stages"]["search"]["inputTokens"] == 10
     assert result["usage"]["stages"]["search"]["outputTokens"] == 20
@@ -114,13 +134,15 @@ def test_known_song_uses_web_search_then_structured_output():
     assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
     assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
     assert messages.calls[0]["tools"] == [{
-        "type": "web_search_20250305", "name": "web_search", "max_uses": 2,
+        "type": "web_search_20250305", "name": "web_search", "max_uses": 1,
+        "allowed_domains": ["cifraclub.com.br"],
     }]
     assert messages.calls[0]["thinking"] == {"type": "disabled"}
     assert "output_config" not in messages.calls[0]
     assert messages.calls[1]["output_config"]["format"]["type"] == "json_schema"
     assert messages.calls[1]["thinking"] == {"type": "disabled"}
     assert "tools" not in messages.calls[1]
+    assert "Letra + Cifras" in messages.calls[1]["system"]
 
     sent_schema = messages.calls[1]["output_config"]["format"]["schema"]
     serialized_schema = json.dumps(sent_schema)
@@ -137,6 +159,31 @@ def test_nonexistent_song_stays_uncertain_without_inventing_sources():
     assert result["key"] is None
     assert result["chords"] == []
     assert result["warnings"] == ["Música não encontrada."]
+
+
+def test_unlicensed_external_sheet_is_never_returned_as_complete_or_integral():
+    long_text = "x" * 500
+    response = normalized(chord_sheet={
+        "available": True,
+        "completeness": "complete",
+        "sections": [{
+            "type": "chorus", "name": "Refrão", "order": 1,
+            "lines": [
+                {"text": long_text, "repetitions": 2, "chords": [{"chord": "D", "position": 0}]},
+                {"text": long_text, "repetitions": None, "chords": [{"chord": "G", "position": 4}]},
+            ],
+        }],
+        "rights": {
+            "can_locate": True, "can_structure": True,
+            "integral_display_authorized": False,
+            "integral_persistence_authorized": False,
+            "basis": "Sem licença explícita.",
+        },
+    })
+    result = service([evidence(), response])[0].analyze("Canção", "Artista")
+    sheet = result["chord_sheet"]
+    assert sheet["completeness"] == "partial"
+    assert sum(len(line["text"]) for section in sheet["sections"] for line in section["lines"]) <= 240
 
 
 def test_wrong_artist_is_reported_as_warning():

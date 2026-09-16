@@ -29,12 +29,13 @@
     if (!content) return null;
     return {
       visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
+      source: ["user_text", "licensed_web"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         nome: cleanText(section && section.nome || "", 80) || null,
         linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
           letra: cleanText(line && line.letra || "", 2000),
+          repeticoes: Number.isInteger(line && line.repeticoes) ? Math.max(1, Math.min(99, line.repeticoes)) : null,
           acordes: Array.isArray(line && line.acordes) ? line.acordes.map((item) => ({
             acorde: cleanText(item && item.acorde || "", 40).replace(/\s+/g, ""),
             posicao: Math.max(0, Math.min(500, Number(item && item.posicao) || 0))

@@ -1,9 +1,9 @@
-const CACHE_NAME = "simplificando-cifras-v114-anthropic-search-preview";
+const CACHE_NAME = "simplificando-cifras-v115-anthropic-dual-view";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
-  "./js/song-model.js?v=4",
+  "./js/song-model.js?v=5",
   "./js/song-repository.js?v=7",
   "./js/library-sync.js?v=10",
   "./js/event-model.js?v=4",
@@ -29,7 +29,7 @@ const ASSETS = [
   "./js/navigation-context.js",
   "./js/stage-preferences.js?v=3",
   "./js/stage-offline.js?v=1",
-  "./js/editor/song-format.js?v=8",
+  "./js/editor/song-format.js?v=9",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",
@@ -38,7 +38,7 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=6",
-  "./js/ai/harmonic-summary-client.js?v=9",
+  "./js/ai/harmonic-summary-client.js?v=10",
   "./js/ai/ai-harmonic-summary.js?v=5",
   "./js/ai/ai-harmonic-summary.css?v=5",
   "./manifest.webmanifest?v=14",

@@ -111,7 +111,12 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
 
   const searched = {
     song: "Na Sua Estante", artist: "Pitty", key: "D", capo: 0, tuning: "Drop D",
-    chords: ["D", "G"], sections: [{ name: "Verso", type: "verse", progression: ["D", "G"], note: "Base", hook: "" }],
+    chords: ["D", "G"], sections: [{ name: "Verso", type: "verse", progression: ["D", "G"], note: "Base", hook: "", repetitions: 2 }],
+    chord_sheet: {
+      available: true, completeness: "partial",
+      sections: [{ name: "Verso", type: "verse", order: 1, lines: [{ text: "Trecho curto", repetitions: 2, chords: [{ chord: "D", position: 0 }, { chord: "G", position: 8 }] }] }],
+      rights: { can_locate: true, can_structure: true, integral_display_authorized: false, integral_persistence_authorized: false, basis: "Sem licença explícita." }
+    },
     harmonic_summary: ["Verso: D – G"], warnings: ["Revise antes de salvar."],
     confidence: { overall: .8 }, sources: [{ title: "Fonte", url: "https://example.com" }]
   };
@@ -127,6 +132,22 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
   assert.equal(searchedModel.originalKey, "D");
   assert.equal(searchedModel.status, "draft");
   assert.match(searchedModel.notes, /Drop D/);
+  assert.match(searchedModel.notes, /não há autorização confirmada/);
+  assert.equal(searchedModel.fullChordSheet, null, "evidência externa sem licença não vira cifra integral persistível");
+  assert.equal(searchedModel.sections[0].lines[0].repeticoes, 2);
+
+  const licensedModel = context.harmonicSummaryClient.anthropicResponseToEditorModel({
+    ...searched,
+    chord_sheet: {
+      available: true, completeness: "complete",
+      sections: [{ name: "Refrão", type: "chorus", order: 1, lines: [{ text: "Linha autorizada", repetitions: 3, chords: [{ chord: "D", position: 0 }, { chord: "G", position: 10 }] }] }],
+      rights: { can_locate: true, can_structure: true, integral_display_authorized: true, integral_persistence_authorized: true, basis: "Conteúdo licenciado para este uso." }
+    }
+  }, "guitar");
+  assert.equal(licensedModel.fullChordSheet.source, "licensed_web");
+  assert.match(licensedModel.fullChordSheet.content, /\[Refrão\]/);
+  assert.match(licensedModel.fullChordSheet.content, /\(3x\)/);
+  assert.equal(licensedModel.fullChordSheet.sections[0].linhas[0].acordes[1].posicao, 10);
 
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);

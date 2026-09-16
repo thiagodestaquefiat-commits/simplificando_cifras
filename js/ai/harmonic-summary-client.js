@@ -64,7 +64,7 @@
     });
     if (normalized.fullChordSheet != null) {
       const sheet = normalized.fullChordSheet;
-      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
+      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text", "licensed_web"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
         throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
       }
       if (sheet.sections != null && !Array.isArray(sheet.sections)) throw new HarmonicSummaryError("invalid_data", "A cifra estruturada é inválida.");
@@ -132,16 +132,45 @@
       secao: clean(section?.name || section?.type || "", 120),
       fraseGuia: clean(section?.hook || section?.note || "", 80),
       acordes: safeChords(section?.progression).slice(0, 16),
-      repeticoes: null
+      repeticoes: Number.isInteger(section?.repetitions) ? section.repetitions : null
     })).filter((block) => block.secao || block.fraseGuia || block.acordes.length);
     const confidence = Number(raw.confidence?.overall || 0);
     const observations = [];
     if (raw.tuning) observations.push(`Afinação: ${clean(raw.tuning, 80)}.`);
     (raw.harmonic_summary || []).slice(0, 12).forEach((item) => observations.push(clean(item, 300)));
     (raw.warnings || []).slice(0, 8).forEach((item) => observations.push(clean(item, 300)));
+    const sheet = raw.chord_sheet && typeof raw.chord_sheet === "object" ? raw.chord_sheet : null;
+    const rights = sheet?.rights && typeof sheet.rights === "object" ? sheet.rights : {};
+    const integralAuthorized = rights.integral_display_authorized === true && rights.integral_persistence_authorized === true;
+    if (sheet?.available && rights.can_structure) observations.push("A estrutura de Letra + Cifras foi localizada para este rascunho.");
+    if (sheet?.available && !integralAuthorized) observations.push("A fonte permite análise técnica, mas não há autorização confirmada para exibir ou salvar a letra/cifra integral.");
     const source = Array.isArray(raw.sources) && raw.sources[0]
       ? { type: "online", name: clean(raw.sources[0].title || "Referência musical", 255), url: String(raw.sources[0].url || "") }
       : { type: "online", name: "Busca de cifra", url: null };
+    const structuredSections = integralAuthorized && Array.isArray(sheet?.sections) ? sheet.sections.slice(0, 24).map((section) => ({
+      nome: clean(section?.name || section?.type || "", 80) || null,
+      linhas: (Array.isArray(section?.lines) ? section.lines : []).slice(0, 80).map((line) => ({
+        letra: clean(line?.text || "", 2000),
+        repeticoes: Number.isInteger(line?.repetitions) ? line.repetitions : null,
+        acordes: (Array.isArray(line?.chords) ? line.chords : []).slice(0, 24).map((item) => ({
+          acorde: clean(item?.chord || "", 32).replace(/\s+/g, ""),
+          posicao: Math.max(0, Math.min(500, Number(item?.position) || 0))
+        })).filter((item) => item.acorde && global.multiInstrumentChordLibrary.parseChord(item.acorde))
+      }))
+    })).filter((section) => section.linhas.length) : [];
+    const sheetContent = structuredSections.map((section) => {
+      const lines = section.nome ? [`[${section.nome}]`] : [];
+      section.linhas.forEach((line) => {
+        let chordLine = "";
+        line.acordes.slice().sort((a, b) => a.posicao - b.posicao).forEach((item) => {
+          const position = Math.max(chordLine.length, item.posicao);
+          chordLine += " ".repeat(position - chordLine.length) + item.acorde;
+        });
+        if (chordLine) lines.push(chordLine + (line.repeticoes ? `  (${line.repeticoes}x)` : ""));
+        if (line.letra) lines.push(line.letra);
+      });
+      return lines.join("\n");
+    }).filter(Boolean).join("\n\n");
     return responseToEditorModel({
       schemaVersion: 2,
       titulo: raw.song,
@@ -151,7 +180,12 @@
       confianca: confidence >= .75 ? "alta" : confidence >= .45 ? "media" : "baixa",
       observacoes: observations.filter(Boolean),
       harmonicSummary: { blocos: blocks.length ? blocks : [{ secao: "Resumo", fraseGuia: "Revise as informações encontradas.", acordes: safeChords(raw.chords).slice(0, 16), repeticoes: null }] },
-      fullChordSheet: null
+      fullChordSheet: integralAuthorized && sheetContent ? {
+        visibility: "private",
+        source: "licensed_web",
+        content: sheetContent,
+        sections: structuredSections
+      } : null
     }, instrument, source);
   }
 

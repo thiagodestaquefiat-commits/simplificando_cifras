@@ -171,9 +171,14 @@ const success = {
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
         song: "Na Sua Estante", artist: "Pitty", key: "D", capo: 0, tuning: "Drop D",
         chords: ["D", "G", "Bm", "A"],
-        sections: [{ type: "verse", name: "Verso", progression: ["D", "G"], order: 1, note: "Progressão principal", hook: "" }],
+        sections: [{ type: "verse", name: "Verso", progression: ["D", "G"], order: 1, note: "Progressão principal", hook: "", repetitions: 2 }],
+        chord_sheet: {
+          available: true, completeness: "complete",
+          sections: [{ type: "verse", name: "Verso", order: 1, lines: [{ text: "Trecho licenciado de teste", repetitions: 2, chords: [{ chord: "D", position: 0 }, { chord: "G", position: 9 }] }] }],
+          rights: { can_locate: true, can_structure: true, integral_display_authorized: true, integral_persistence_authorized: true, basis: "Fixture licenciada de teste." }
+        },
         harmonic_summary: ["Verso: D – G"], confidence: { overall: .8, key: .8, chords: .8, structure: .7 },
-        sources: [{ title: "Fonte musical", url: "https://example.com/song" }], warnings: []
+        sources: [{ title: "Fonte musical", url: "https://www.cifraclub.com.br/artista/musica/" }], warnings: []
       }) });
     }, { times: 1 });
     await page.getByRole("button", { name: "🔎 Buscar e gerar com IA", exact: true }).click();
@@ -185,6 +190,8 @@ const success = {
     assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), "Na Sua Estante");
     assert.equal(await page.getByLabel("Tom original", { exact: true }).inputValue(), "D");
     assert.match(await page.getByLabel("Cifra / Resumo", { exact: true }).inputValue(), /Progressão principal/);
+    assert.match(await page.getByLabel("Letra + Cifras", { exact: true }).inputValue(), /Trecho licenciado de teste/);
+    assert.match(await page.getByLabel("Letra + Cifras", { exact: true }).inputValue(), /\(2x\)/);
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("cifras_musicas_v1") || "[]").some((song) => song.title === "Na Sua Estante")), false);
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 

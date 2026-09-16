@@ -53,7 +53,7 @@
     return {
       ...value,
       visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
+      source: ["user_text", "licensed_web"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         ...(section && typeof section === "object" ? section : {}),
@@ -61,6 +61,7 @@
         linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
           ...(line && typeof line === "object" ? line : {}),
           letra: preserveText(line && line.letra),
+          repeticoes: Number.isInteger(line && line.repeticoes) ? Math.max(1, Math.min(99, line.repeticoes)) : null,
           acordes: Array.isArray(line && line.acordes) ? line.acordes.map((item) => ({
             ...(item && typeof item === "object" ? item : {}),
             acorde: cleanText(item && item.acorde).replace(/\s+/g, ""),

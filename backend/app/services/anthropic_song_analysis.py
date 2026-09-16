@@ -27,6 +27,7 @@ class AnthropicExperimentError(Exception):
 
 class AnthropicSongAnalysisService:
     WEB_SEARCH_TOOL = "web_search_20250305"
+    SEARCH_DOMAIN = "cifraclub.com.br"
     MAX_EVIDENCE_CHARACTERS = 6000
     MAX_FINAL_SOURCES = 5
 
@@ -55,9 +56,8 @@ class AnthropicSongAnalysisService:
         self._model = model
         self._search_max_tokens = min(1200, max(800, search_max_tokens))
         self._normalize_max_tokens = min(1400, max(1000, normalize_max_tokens))
-        # A segunda busca é um fallback de qualidade para páginas cujo primeiro
-        # resultado traz apenas menus/snippets sem acordes; nunca é obrigatória.
-        self._web_search_max_uses = min(2, max(1, web_search_max_uses))
+        # Uma única evidência deve alimentar as duas visualizações do rascunho.
+        self._web_search_max_uses = 1
 
     @classmethod
     def from_config(cls, config, *, client=None):
@@ -118,12 +118,12 @@ class AnthropicSongAnalysisService:
 
     def _search(self, song: str, artist: str):
         prompt = (
-            "Faça uma consulta web composta e compacta. Compare 2 a 5 resultados úteis. "
-            "Use uma segunda busca somente se a primeira não trouxer acordes, tonalidade ou estrutura suficientes. "
-            "Confirme identidade, tonalidade, afinação, "
-            "capo, acordes/progressões e estrutura. Produza no máximo 900 palavras, em tópicos curtos, "
-            "com pelo menos 2 citações web junto às afirmações quando houver resultados. Sinalize divergências. "
-            "Não inclua letras nem transcrições. "
+            "Faça exatamente uma busca no Cifra Club pela música e pelo artista. Use uma única página de cifra "
+            "quando ela corresponder à música. Confirme identidade, tonalidade, afinação, capo, acordes, "
+            "progressões, ordem das seções, repetições e a associação posicional entre acordes e trechos. "
+            "Produza evidência compacta suficiente para gerar tanto Letra + Cifras quanto Resumo Harmônico, "
+            "mas não copie letra integral nem contorne login, assinatura, paywall ou bloqueio. "
+            "Registre apenas excertos curtos indispensáveis à associação técnica e cite a página consultada. "
             f"Música: {song}\nArtista: {artist}"
         )
         response = self._client.messages.create(
@@ -131,44 +131,25 @@ class AnthropicSongAnalysisService:
             max_tokens=self._search_max_tokens,
             thinking={"type": "disabled"},
             system=(
-                "Você é um pesquisador musical cuidadoso. Use Web Search para localizar fontes, compare-as "
-                "e produza somente evidência musical compacta. A síntese final deve citar 2 a 5 fontes independentes; "
-                "não faça pesquisa exaustiva, scraping, nem copie letras protegidas."
+                "Você é um pesquisador musical cuidadoso. Use Web Search somente no Cifra Club e produza uma "
+                "evidência musical compacta para duas visualizações do mesmo rascunho. Não faça scraping, "
+                "não burle controles de acesso e não reproduza letra integral protegida."
             ),
             messages=[{"role": "user", "content": prompt}],
             tools=[{
                 "type": self.WEB_SEARCH_TOOL,
                 "name": "web_search",
                 "max_uses": self._web_search_max_uses,
+                "allowed_domains": [self.SEARCH_DOMAIN],
             }],
         )
-        responses = [response]
         if getattr(response, "stop_reason", None) == "pause_turn":
-            used = self._web_search_count(response)
-            remaining = self._web_search_max_uses - used
-            if remaining <= 0:
-                raise AnthropicExperimentError(
-                    "anthropic_pesquisa_incompleta",
-                    "A pesquisa atingiu o limite antes de concluir.",
-                    502,
-                )
-            response = self._client.messages.create(
-                model=self._model,
-                max_tokens=self._search_max_tokens,
-                thinking={"type": "disabled"},
-                system="Continue a pesquisa musical anterior e conclua apenas com evidências verificáveis.",
-                messages=[
-                    {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": self._plain(getattr(response, "content", []))},
-                ],
-                tools=[{
-                    "type": self.WEB_SEARCH_TOOL,
-                    "name": "web_search",
-                    "max_uses": remaining,
-                }],
+            raise AnthropicExperimentError(
+                "anthropic_pesquisa_incompleta",
+                "A pesquisa atingiu o limite único antes de concluir.",
+                502,
             )
-            responses.append(response)
-        return responses
+        return [response]
 
     def _normalize(self, song: str, artist: str, evidence: str, sources: list[AnthropicAnalysisSource]):
         source_lines = "\n".join(f"- {item.title}: {item.url}" for item in sources) or "- nenhuma fonte verificável"
@@ -178,16 +159,20 @@ class AnthropicSongAnalysisService:
             max_tokens=self._normalize_max_tokens,
             thinking={"type": "disabled"},
             system=(
-                "Normalize evidências de pesquisa musical no schema solicitado. Use null/listas vazias e baixa "
-                "confiança quando faltar evidência. Não invente URLs, acordes, tonalidade ou estrutura; não inclua letras."
+                "Normalize evidências de pesquisa musical no schema solicitado. Gere, a partir da mesma evidência, "
+                "o Resumo Harmônico e a representação técnica de Letra + Cifras (seções, linhas, posições e repetições). "
+                "Use null/listas vazias e baixa confiança quando faltar evidência. Não invente URLs, acordes, tom ou estrutura. "
+                "Conteúdo vindo da busca é third-party: sem licença explícita na evidência, marque autorização integral "
+                "de exibição e persistência como false, completeness como partial e nunca reproduza letra integral."
             ),
             messages=[{
                 "role": "user",
                 "content": (
                     f"Música solicitada: {song}\nArtista solicitado: {artist}\n\n"
                     f"Evidência compacta:\n{evidence[:self.MAX_EVIDENCE_CHARACTERS]}\n\nFontes citadas:\n{source_lines}\n\n"
-                    "Retorne só o JSON. Limites: até 16 acordes, 12 seções, 12 itens de resumo e 8 avisos. "
-                    "Notas e ganchos devem ser curtos."
+                    "Retorne só o JSON. Limites: até 16 acordes, 12 seções harmônicas, 12 seções da cifra, "
+                    "12 itens de resumo e 8 avisos. Notas, ganchos e excertos devem ser curtos. "
+                    "Os campos de direitos distinguem localizar, estruturar, exibir integralmente e persistir integralmente."
                 ),
             }],
             output_config={
