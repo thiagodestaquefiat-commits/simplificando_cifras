@@ -38,6 +38,15 @@
     throw new HarmonicSummaryError("invalid_input", "Modo de análise inválido.");
   }
 
+  function validateSearchPayload(values) {
+    const data = values || {};
+    const song = clean(data.titulo, 160).trim();
+    const artist = clean(data.artista, 160).trim();
+    if (!song) throw new HarmonicSummaryError("invalid_input", "Informe o título da música.");
+    if (!artist) throw new HarmonicSummaryError("invalid_input", "Informe o artista.");
+    return { song, artist };
+  }
+
   function assertResponse(data) {
     const normalized = data && data.schemaVersion === 1
       ? { ...data, schemaVersion: 2, capotraste: null, harmonicSummary: { blocos: data.trechos } }
@@ -55,7 +64,7 @@
     });
     if (normalized.fullChordSheet != null) {
       const sheet = normalized.fullChordSheet;
-      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
+      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text", "licensed_web"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
         throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
       }
       if (sheet.sections != null && !Array.isArray(sheet.sections)) throw new HarmonicSummaryError("invalid_data", "A cifra estruturada é inválida.");
@@ -110,6 +119,101 @@
       fullChordSheet: data.fullChordSheet || null,
       sections: sections.length ? sections : [{ type: "custom", label: "", hideLabel: true, lines: [{ lyrics: "", chords: [] }] }]
     }, { source: "ai" });
+  }
+
+  function anthropicResponseToEditorModel(raw, instrument) {
+    if (!raw || typeof raw.song !== "string" || typeof raw.artist !== "string" || !Array.isArray(raw.sections)) {
+      throw new HarmonicSummaryError("invalid_data", "O servidor retornou dados inválidos.");
+    }
+    const safeChords = (items) => (Array.isArray(items) ? items : [])
+      .map((item) => clean(item, 32).trim())
+      .filter((item) => item && global.multiInstrumentChordLibrary.parseChord(item));
+    const blocks = raw.sections.slice(0, 12).map((section) => ({
+      secao: clean(section?.name || section?.type || "", 120),
+      fraseGuia: clean(section?.hook || section?.note || "", 80),
+      acordes: safeChords(section?.progression).slice(0, 16),
+      repeticoes: Number.isInteger(section?.repetitions) ? section.repetitions : null
+    })).filter((block) => block.secao || block.fraseGuia || block.acordes.length);
+    const confidence = Number(raw.confidence?.overall || 0);
+    const observations = [];
+    if (raw.tuning) observations.push(`Afinação: ${clean(raw.tuning, 80)}.`);
+    (raw.harmonic_summary || []).slice(0, 12).forEach((item) => observations.push(clean(item, 300)));
+    (raw.warnings || []).slice(0, 8).forEach((item) => observations.push(clean(item, 300)));
+    const sheet = raw.chord_sheet && typeof raw.chord_sheet === "object" ? raw.chord_sheet : null;
+    const rights = sheet?.rights && typeof sheet.rights === "object" ? sheet.rights : {};
+    const integralAuthorized = rights.integral_display_authorized === true && rights.integral_persistence_authorized === true;
+    if (sheet?.available && rights.can_structure) observations.push("A estrutura de Letra + Cifras foi localizada para este rascunho.");
+    if (sheet?.available && !integralAuthorized) observations.push("A fonte permite análise técnica, mas não há autorização confirmada para exibir ou salvar a letra/cifra integral.");
+    const source = Array.isArray(raw.sources) && raw.sources[0]
+      ? { type: "online", name: clean(raw.sources[0].title || "Referência musical", 255), url: String(raw.sources[0].url || "") }
+      : { type: "online", name: "Busca de cifra", url: null };
+    const structuredSections = integralAuthorized && Array.isArray(sheet?.sections) ? sheet.sections.slice(0, 24).map((section) => ({
+      nome: clean(section?.name || section?.type || "", 80) || null,
+      linhas: (Array.isArray(section?.lines) ? section.lines : []).slice(0, 80).map((line) => ({
+        letra: clean(line?.text || "", 2000),
+        repeticoes: Number.isInteger(line?.repetitions) ? line.repetitions : null,
+        acordes: (Array.isArray(line?.chords) ? line.chords : []).slice(0, 24).map((item) => ({
+          acorde: clean(item?.chord || "", 32).replace(/\s+/g, ""),
+          posicao: Math.max(0, Math.min(500, Number(item?.position) || 0))
+        })).filter((item) => item.acorde && global.multiInstrumentChordLibrary.parseChord(item.acorde))
+      }))
+    })).filter((section) => section.linhas.length) : [];
+    const sheetContent = structuredSections.map((section) => {
+      const lines = section.nome ? [`[${section.nome}]`] : [];
+      section.linhas.forEach((line) => {
+        let chordLine = "";
+        line.acordes.slice().sort((a, b) => a.posicao - b.posicao).forEach((item) => {
+          const position = Math.max(chordLine.length, item.posicao);
+          chordLine += " ".repeat(position - chordLine.length) + item.acorde;
+        });
+        if (chordLine) lines.push(chordLine + (line.repeticoes ? `  (${line.repeticoes}x)` : ""));
+        if (line.letra) lines.push(line.letra);
+      });
+      return lines.join("\n");
+    }).filter(Boolean).join("\n\n");
+    return responseToEditorModel({
+      schemaVersion: 2,
+      titulo: raw.song,
+      artista: raw.artist,
+      tom: raw.key || "C",
+      capotraste: Number.isInteger(raw.capo) ? raw.capo : null,
+      confianca: confidence >= .75 ? "alta" : confidence >= .45 ? "media" : "baixa",
+      observacoes: observations.filter(Boolean),
+      harmonicSummary: { blocos: blocks.length ? blocks : [{ secao: "Resumo", fraseGuia: "Revise as informações encontradas.", acordes: safeChords(raw.chords).slice(0, 16), repeticoes: null }] },
+      fullChordSheet: integralAuthorized && sheetContent ? {
+        visibility: "private",
+        source: "licensed_web",
+        content: sheetContent,
+        sections: structuredSections
+      } : null
+    }, instrument, source);
+  }
+
+  async function generateFromSearch(values, options) {
+    const settings = options || {};
+    const payload = validateSearchPayload(values);
+    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
+    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para usar a IA musical.", 401);
+    let response;
+    try {
+      response = await (settings.fetch || global.fetch)(global.apiConfig.anthropicSongAnalysisEndpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${accessToken}` },
+        body: JSON.stringify(payload),
+        signal: settings.signal
+      });
+    } catch (_) {
+      throw new HarmonicSummaryError("network", "Não conseguimos concluir a análise desta música. Tente novamente.");
+    }
+    let data;
+    try { data = await response.json(); }
+    catch (_) { throw new HarmonicSummaryError("invalid_data", "Não conseguimos concluir a análise desta música. Tente novamente.", response.status); }
+    if (!response.ok) {
+      if (response.status === 401) throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente e tente outra vez.", response.status);
+      if (response.status === 429) throw new HarmonicSummaryError("rate_limit", "O serviço está ocupado agora. Aguarde um pouco e tente novamente.", response.status);
+      throw new HarmonicSummaryError("server", "Não conseguimos concluir a análise desta música. Tente novamente.", response.status);
+    }
+    return { payload, data };
   }
 
   async function generate(mode, values, options) {
@@ -178,5 +282,5 @@
     return { payload, data: assertResponse(data) };
   }
 
-  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, assertResponse, responseToEditorModel, generate });
+  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, validateSearchPayload, assertResponse, responseToEditorModel, anthropicResponseToEditorModel, generate, generateFromSearch });
 })(window);

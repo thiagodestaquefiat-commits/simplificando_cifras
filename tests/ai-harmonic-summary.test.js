@@ -25,6 +25,7 @@ assert.equal(context.apiConfig.API_BASE_URL, "https://simplificandocifras-simpli
 assert.equal(context.apiConfig.authEndpoint("/config"), "https://simplificandocifras-simplificandocifras-pr-31.up.railway.app/api/auth/config");
 context.SIMPLIFICANDO_CIFRAS_CONFIG = { API_BASE_URL: "https://backend.example/" };
 assert.equal(context.apiConfig.harmonicSummaryEndpoint(), "https://backend.example/api/resumo-harmonico");
+assert.equal(context.apiConfig.anthropicSongAnalysisEndpoint(), "https://backend.example/api/ai/anthropic/song-analysis");
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("texto", { conteudo: "Dm Bb C" }))), { tipo: "texto", conteudo: "Dm Bb C" });
 const upload = { name: "cifra.png", size: 1024 };
 const uploadPayload = context.harmonicSummaryClient.validatePayload("arquivo", { arquivo: upload, titulo: " Música " });
@@ -34,6 +35,9 @@ assert.equal(uploadPayload.titulo, "Música");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /Modo/.test(error.message));
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validateSearchPayload({ titulo: " Na Sua Estante ", artista: " Pitty " }))), { song: "Na Sua Estante", artist: "Pitty" });
+assert.throws(() => context.harmonicSummaryClient.validateSearchPayload({ titulo: "", artista: "Pitty" }), /título/i);
+assert.throws(() => context.harmonicSummaryClient.validateSearchPayload({ titulo: "Canção", artista: "" }), /artista/i);
 
 const response = {
   schemaVersion: 2,
@@ -104,6 +108,46 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
     return { ok: true, status: 200, json: async () => response };
   } });
   assert.equal(sentAuthorization, "Bearer test-access-token");
+
+  const searched = {
+    song: "Na Sua Estante", artist: "Pitty", key: "D", capo: 0, tuning: "Drop D",
+    chords: ["D", "G"], sections: [{ name: "Verso", type: "verse", progression: ["D", "G"], note: "Base", hook: "", repetitions: 2 }],
+    chord_sheet: {
+      available: true, completeness: "partial",
+      sections: [{ name: "Verso", type: "verse", order: 1, lines: [{ text: "Trecho curto", repetitions: 2, chords: [{ chord: "D", position: 0 }, { chord: "G", position: 8 }] }] }],
+      rights: { can_locate: true, can_structure: true, integral_display_authorized: false, integral_persistence_authorized: false, basis: "Sem licença explícita." }
+    },
+    harmonic_summary: ["Verso: D – G"], warnings: ["Revise antes de salvar."],
+    confidence: { overall: .8 }, sources: [{ title: "Fonte", url: "https://example.com" }]
+  };
+  let searchRequest;
+  const searchResult = await context.harmonicSummaryClient.generateFromSearch({ titulo: "Na Sua Estante", artista: "Pitty" }, { fetch: async (url, options) => {
+    searchRequest = { url, options };
+    return { ok: true, status: 200, json: async () => searched };
+  } });
+  assert.equal(searchRequest.url, "https://backend.example/api/ai/anthropic/song-analysis");
+  assert.deepEqual(JSON.parse(searchRequest.options.body), { song: "Na Sua Estante", artist: "Pitty" });
+  const searchedModel = context.harmonicSummaryClient.anthropicResponseToEditorModel(searchResult.data, "guitar");
+  assert.equal(searchedModel.title, "Na Sua Estante");
+  assert.equal(searchedModel.originalKey, "D");
+  assert.equal(searchedModel.status, "draft");
+  assert.match(searchedModel.notes, /Drop D/);
+  assert.match(searchedModel.notes, /não há autorização confirmada/);
+  assert.equal(searchedModel.fullChordSheet, null, "evidência externa sem licença não vira cifra integral persistível");
+  assert.equal(searchedModel.sections[0].lines[0].repeticoes, 2);
+
+  const licensedModel = context.harmonicSummaryClient.anthropicResponseToEditorModel({
+    ...searched,
+    chord_sheet: {
+      available: true, completeness: "complete",
+      sections: [{ name: "Refrão", type: "chorus", order: 1, lines: [{ text: "Linha autorizada", repetitions: 3, chords: [{ chord: "D", position: 0 }, { chord: "G", position: 10 }] }] }],
+      rights: { can_locate: true, can_structure: true, integral_display_authorized: true, integral_persistence_authorized: true, basis: "Conteúdo licenciado para este uso." }
+    }
+  }, "guitar");
+  assert.equal(licensedModel.fullChordSheet.source, "licensed_web");
+  assert.match(licensedModel.fullChordSheet.content, /\[Refrão\]/);
+  assert.match(licensedModel.fullChordSheet.content, /\(3x\)/);
+  assert.equal(licensedModel.fullChordSheet.sections[0].linhas[0].acordes[1].posicao, 10);
 
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);

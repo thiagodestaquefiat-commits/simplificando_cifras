@@ -18,8 +18,10 @@ música para cada visualização.
 O backend solicita uma única resposta estruturada. `fullChordSheet.sections`
 associa cada acorde a um índice aproximado da linha de letra. O campo
 `harmonicSummary.blocos` contém somente o conteúdo necessário para leitura
-rápida. A cifra completa só pode ser produzida a partir de material enviado pelo
-usuário; em pesquisa sem fonte ela é nula.
+rápida. A cifra completa pode ser produzida a partir de material enviado pelo
+usuário ou de fonte externa cuja licença autorize explicitamente exibição e
+persistência. Sem essa autorização, a pesquisa mantém apenas a representação
+técnica parcial e não preenche `fullChordSheet`.
 
 ## Upload e privacidade
 
@@ -61,6 +63,28 @@ Fontes avaliadas:
 Sites de cifra sem API oficial/licença comprovada não entram na allowlist. Não
 são permitidos scraping indiscriminado, bypass de login, CAPTCHA, paywall ou
 proteções anti-bot.
+
+### Experimento Anthropic da PR #50
+
+O modo `Buscar cifra` faz uma única Web Search restrita ao domínio
+`cifraclub.com.br`. A mesma evidência alimenta dois resultados do mesmo
+rascunho: `chord_sheet` (seções, linhas, posições e repetições) e
+`harmonic_summary` (progressões e ganchos curtos). O cache usa a identidade
+normalizada de artista + título + versão do analisador e não guarda páginas
+brutas.
+
+A pesquisa e a normalização acontecem em uma única chamada ao modelo. Depois
+da busca, o modelo entrega os dois resultados por uma ferramenta local com
+schema estrito; o backend valida esse payload sem repetir a evidência em uma
+segunda chamada. Isso reduz latência, tokens de entrada e custo.
+
+O contrato separa quatro capacidades: localizar, estruturar, exibir conteúdo
+integral e persistir conteúdo integral. A página pública pode ser tecnicamente
+suficiente para reconhecer estrutura e posicionamento, mas isso não comprova
+licença para redistribuição. Por isso, resultados do Cifra Club permanecem
+parciais e não persistíveis, salvo evidência explícita de autorização. Os Termos
+de Uso consultados também vedam métodos de extração de dados, então o experimento
+não contorna controles nem realiza scraping direto.
 
 Cada futuro provider deve entregar `sourceName`, `sourceUrl`, `title`, `artist`,
 `content`, `format` e `retrievedAt`. O frontend nunca envia conteúdo ou URL

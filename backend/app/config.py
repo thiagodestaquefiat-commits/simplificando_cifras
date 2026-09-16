@@ -37,6 +37,18 @@ class Config:
     OPENAI_TIMEOUT_SECONDS = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "90"))
     OPENAI_MAX_OUTPUT_TOKENS = int(os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "12000"))
 
+    ANTHROPIC_EXPERIMENT_ENABLED = os.getenv("ANTHROPIC_EXPERIMENT_ENABLED", "false").lower() == "true"
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+    ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
+    ANTHROPIC_TIMEOUT_SECONDS = float(os.getenv("ANTHROPIC_TIMEOUT_SECONDS", "90"))
+    ANTHROPIC_SEARCH_MAX_TOKENS = int(os.getenv("ANTHROPIC_SEARCH_MAX_TOKENS", "1200"))
+    ANTHROPIC_NORMALIZE_MAX_TOKENS = int(os.getenv("ANTHROPIC_NORMALIZE_MAX_TOKENS", "1400"))
+    ANTHROPIC_WEB_SEARCH_MAX_USES = min(2, max(1, int(os.getenv("ANTHROPIC_WEB_SEARCH_MAX_USES", "2"))))
+    ANTHROPIC_AI_RATE_LIMIT = os.getenv("ANTHROPIC_AI_RATE_LIMIT", "3 per minute")
+    ANTHROPIC_ANALYZER_VERSION = os.getenv("ANTHROPIC_ANALYZER_VERSION", "v5-conditional-second-search")
+    ANTHROPIC_CACHE_TTL_SECONDS = int(os.getenv("ANTHROPIC_CACHE_TTL_SECONDS", "604800"))
+    ANTHROPIC_CACHE_MAX_ENTRIES = int(os.getenv("ANTHROPIC_CACHE_MAX_ENTRIES", "256"))
+
     CORS_ALLOWED_ORIGINS = _csv(
         "CORS_ALLOWED_ORIGINS",
         "http://127.0.0.1:4173,http://localhost:4173,http://127.0.0.1:5500,http://localhost:5500,https://deploy-preview-8--simplificandocifras.netlify.app,https://simplificandocifras.netlify.app",

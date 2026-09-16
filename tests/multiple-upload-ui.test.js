@@ -23,7 +23,7 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
   await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
   await page.evaluate(()=>{window.testDrafts=[];window.openAiDraft=model=>window.testDrafts.push(model);});
   await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();
-  assert.deepEqual(await page.locator('.ai-summary-tab').allTextContents(),['Arquivo','Texto']);
+  assert.deepEqual(await page.locator('.ai-summary-tab').allTextContents(),['Arquivo','Texto','Buscar cifra']);
   await page.getByRole('tab',{name:'Arquivo',exact:true}).click();
   const input=page.locator('input[type=file]');assert.equal(await input.getAttribute('multiple'),'');
   await input.setInputFiles([file('z_pagina.png'),file('a_pagina.png')]);

@@ -27,6 +27,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .services.supabase_auth import SupabaseAuthProvider
     from .services.music_sources import AuthorizedMusicSourceRegistry
     from .services.youtube_provider import YouTubeProvider
+    from .services.anthropic_analysis_cache import AnthropicAnalysisCache
     app.extensions["location_provider"] = GeoapifyLocationProvider(
         api_key=app.config.get("GEOAPIFY_API_KEY", ""),
         timeout_seconds=app.config.get("LOCATION_TIMEOUT_SECONDS", 6),
@@ -41,6 +42,11 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
         api_key=app.config.get("YOUTUBE_API_KEY", ""),
         timeout_seconds=app.config.get("YOUTUBE_TIMEOUT_SECONDS", 8),
         cache_ttl_seconds=app.config.get("YOUTUBE_CACHE_TTL_SECONDS", 86_400),
+    )
+    app.extensions["anthropic_analysis_cache"] = AnthropicAnalysisCache(
+        ttl_seconds=app.config.get("ANTHROPIC_CACHE_TTL_SECONDS", 604800),
+        max_entries=app.config.get("ANTHROPIC_CACHE_MAX_ENTRIES", 256),
+        analyzer_version=app.config.get("ANTHROPIC_ANALYZER_VERSION", "v7-cifraclub-single-pass"),
     )
     # Providers externos só entram aqui após contrato/API e allowlist aprovados.
     app.extensions["music_source_registry"] = AuthorizedMusicSourceRegistry(
@@ -83,6 +89,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.library import blueprint as library_blueprint
     from .routes.youtube import blueprint as youtube_blueprint
     from .routes.resumo_harmonico import blueprint
+    from .routes.anthropic_ai import blueprint as anthropic_ai_blueprint
 
     app.register_blueprint(blueprint)
     app.register_blueprint(events_blueprint)
@@ -92,6 +99,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(music_sources_blueprint)
     app.register_blueprint(library_blueprint)
     app.register_blueprint(youtube_blueprint)
+    app.register_blueprint(anthropic_ai_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()
