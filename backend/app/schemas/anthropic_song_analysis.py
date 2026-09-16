@@ -128,3 +128,23 @@ class AnthropicNormalizedSongAnalysis(BaseModel):
     confidence: AnthropicAnalysisConfidence
     sources: list[AnthropicAnalysisSource] = Field(max_length=20)
     warnings: list[str] = Field(max_length=20)
+
+
+class AnthropicHaikuCompactSection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["intro", "verse", "pre_chorus", "chorus", "bridge", "solo", "outro", "other"]
+    name: str = Field(max_length=80)
+    progression: list[str] = Field(max_length=16)
+    order: int = Field(ge=1, le=40)
+
+
+class AnthropicHaikuCompactAnalysis(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str | None
+    chords: list[str] = Field(max_length=24)
+    sections: list[AnthropicHaikuCompactSection] = Field(max_length=16)
+    harmonic_summary: list[str] = Field(max_length=12)
+    confidence: AnthropicAnalysisConfidence
+    warnings: list[str] = Field(max_length=10)
