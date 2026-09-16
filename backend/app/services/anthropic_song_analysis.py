@@ -55,9 +55,9 @@ class AnthropicSongAnalysisService:
         self._model = model
         self._search_max_tokens = min(1200, max(800, search_max_tokens))
         self._normalize_max_tokens = min(1400, max(1000, normalize_max_tokens))
-        # A medição real mostrou que cada busca adicional domina custo e latência.
-        # Uma consulta composta ainda pode retornar várias fontes independentes.
-        self._web_search_max_uses = 1
+        # A segunda busca é um fallback de qualidade para páginas cujo primeiro
+        # resultado traz apenas menus/snippets sem acordes; nunca é obrigatória.
+        self._web_search_max_uses = min(2, max(1, web_search_max_uses))
 
     @classmethod
     def from_config(cls, config, *, client=None):
@@ -118,7 +118,8 @@ class AnthropicSongAnalysisService:
 
     def _search(self, song: str, artist: str):
         prompt = (
-            "Faça uma única consulta web composta e compacta. Compare 2 a 5 resultados úteis dessa consulta. "
+            "Faça uma consulta web composta e compacta. Compare 2 a 5 resultados úteis. "
+            "Use uma segunda busca somente se a primeira não trouxer acordes, tonalidade ou estrutura suficientes. "
             "Confirme identidade, tonalidade, afinação, "
             "capo, acordes/progressões e estrutura. Produza no máximo 900 palavras, em tópicos curtos, "
             "com pelo menos 2 citações web junto às afirmações quando houver resultados. Sinalize divergências. "

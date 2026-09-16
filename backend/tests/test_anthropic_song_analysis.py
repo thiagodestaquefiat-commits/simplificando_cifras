@@ -114,7 +114,7 @@ def test_known_song_uses_web_search_then_structured_output():
     assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
     assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
     assert messages.calls[0]["tools"] == [{
-        "type": "web_search_20250305", "name": "web_search", "max_uses": 1,
+        "type": "web_search_20250305", "name": "web_search", "max_uses": 2,
     }]
     assert messages.calls[0]["thinking"] == {"type": "disabled"}
     assert "output_config" not in messages.calls[0]
