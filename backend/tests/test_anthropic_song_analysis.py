@@ -108,6 +108,11 @@ def test_known_song_uses_web_search_then_structured_output():
     assert result["sources"] == [{"url": "https://example.com/song", "title": "Fonte musical"}]
     assert result["usage"]["webSearches"] == 2
     assert result["usage"]["inputTokens"] == 17
+    assert result["usage"]["stages"]["search"]["inputTokens"] == 10
+    assert result["usage"]["stages"]["search"]["outputTokens"] == 20
+    assert result["usage"]["stages"]["search"]["sources"] == 1
+    assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
+    assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
     assert messages.calls[0]["tools"] == [{
         "type": "web_search_20250305", "name": "web_search", "max_uses": 3,
     }]

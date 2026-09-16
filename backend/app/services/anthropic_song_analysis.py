@@ -70,7 +70,9 @@ class AnthropicSongAnalysisService:
     def analyze(self, song: str, artist: str, *, request_id: str = "") -> dict[str, Any]:
         started_at = perf_counter()
         try:
+            search_started_at = perf_counter()
             evidence_responses = self._search(song, artist)
+            search_duration_ms = round((perf_counter() - search_started_at) * 1000)
             evidence_text = "\n".join(filter(None, (self._text(item) for item in evidence_responses)))
             sources = self._merge_sources(evidence_responses)
             web_searches = sum(self._web_search_count(item) for item in evidence_responses)
@@ -80,10 +82,21 @@ class AnthropicSongAnalysisService:
                     "A pesquisa não retornou evidências suficientes para análise.",
                     502,
                 )
+            normalize_started_at = perf_counter()
             normalized_response = self._normalize(song, artist, evidence_text, sources)
+            normalize_duration_ms = round((perf_counter() - normalize_started_at) * 1000)
             analysis = self._parse_normalized(normalized_response)
             analysis.sources = sources
-            usage = self._usage(evidence_responses, normalized_response, web_searches, started_at)
+            usage = self._usage(
+                evidence_responses,
+                normalized_response,
+                web_searches,
+                started_at,
+                search_duration_ms=search_duration_ms,
+                normalize_duration_ms=normalize_duration_ms,
+                evidence_characters=len(evidence_text),
+                source_count=len(sources),
+            )
             self._log("success", "ok", request_id, usage)
             return {**analysis.model_dump(mode="json"), "usage": usage}
         except AnthropicExperimentError as error:
@@ -251,13 +264,44 @@ class AnthropicSongAnalysisService:
             return int(server.get("web_search_requests") or 0)
         return int(getattr(server, "web_search_requests", 0) or 0)
 
-    def _usage(self, search_responses, second, web_searches: int, started_at: float) -> dict[str, Any]:
+    def _usage(
+        self,
+        search_responses,
+        second,
+        web_searches: int,
+        started_at: float,
+        *,
+        search_duration_ms: int,
+        normalize_duration_ms: int,
+        evidence_characters: int,
+        source_count: int,
+    ) -> dict[str, Any]:
+        search_input_tokens = sum(self._tokens(item, "input_tokens") for item in search_responses)
+        search_output_tokens = sum(self._tokens(item, "output_tokens") for item in search_responses)
+        normalize_input_tokens = self._tokens(second, "input_tokens")
+        normalize_output_tokens = self._tokens(second, "output_tokens")
         return {
             "model": self._model,
-            "inputTokens": sum(self._tokens(item, "input_tokens") for item in search_responses) + self._tokens(second, "input_tokens"),
-            "outputTokens": sum(self._tokens(item, "output_tokens") for item in search_responses) + self._tokens(second, "output_tokens"),
+            "inputTokens": search_input_tokens + normalize_input_tokens,
+            "outputTokens": search_output_tokens + normalize_output_tokens,
             "webSearches": web_searches,
             "durationMs": round((perf_counter() - started_at) * 1000),
+            "stages": {
+                "search": {
+                    "durationMs": search_duration_ms,
+                    "inputTokens": search_input_tokens,
+                    "outputTokens": search_output_tokens,
+                    "webSearches": web_searches,
+                    "sources": source_count,
+                    "evidenceCharacters": evidence_characters,
+                },
+                "normalization": {
+                    "durationMs": normalize_duration_ms,
+                    "inputTokens": normalize_input_tokens,
+                    "outputTokens": normalize_output_tokens,
+                    "evidenceCharacters": evidence_characters,
+                },
+            },
         }
 
     @staticmethod
