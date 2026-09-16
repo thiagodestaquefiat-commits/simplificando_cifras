@@ -27,6 +27,7 @@ class AnthropicExperimentError(Exception):
 
 class AnthropicSongAnalysisService:
     WEB_SEARCH_TOOL = "web_search_20250305"
+    OUTPUT_TOOL = "submit_song_analysis"
     SEARCH_DOMAIN = "cifraclub.com.br"
     MAX_EVIDENCE_CHARACTERS = 6000
     MAX_FINAL_SOURCES = 5
@@ -74,31 +75,18 @@ class AnthropicSongAnalysisService:
     def analyze(self, song: str, artist: str, *, request_id: str = "") -> dict[str, Any]:
         started_at = perf_counter()
         try:
-            search_started_at = perf_counter()
-            evidence_responses = self._search(song, artist)
-            search_duration_ms = round((perf_counter() - search_started_at) * 1000)
-            evidence_text = "\n".join(filter(None, (self._text(item) for item in evidence_responses)))
-            sources = self._merge_sources(evidence_responses)
-            web_searches = sum(self._web_search_count(item) for item in evidence_responses)
-            if not evidence_text:
-                raise AnthropicExperimentError(
-                    "anthropic_resposta_incompleta",
-                    "A pesquisa não retornou evidências suficientes para análise.",
-                    502,
-                )
-            normalize_started_at = perf_counter()
-            normalized_response = self._normalize(song, artist, evidence_text, sources)
-            normalize_duration_ms = round((perf_counter() - normalize_started_at) * 1000)
-            analysis = self._parse_normalized(normalized_response)
+            analysis_started_at = perf_counter()
+            response = self._search(song, artist)
+            analysis_duration_ms = round((perf_counter() - analysis_started_at) * 1000)
+            sources = self._sources(response)
+            web_searches = self._web_search_count(response)
+            analysis = self._parse_normalized(response)
             analysis.sources = sources
             usage = self._usage(
-                evidence_responses,
-                normalized_response,
+                response,
                 web_searches,
                 started_at,
-                search_duration_ms=search_duration_ms,
-                normalize_duration_ms=normalize_duration_ms,
-                evidence_characters=len(evidence_text),
+                analysis_duration_ms=analysis_duration_ms,
                 source_count=len(sources),
             )
             self._log("success", "ok", request_id, usage)
@@ -117,31 +105,43 @@ class AnthropicSongAnalysisService:
             raise classified from error
 
     def _search(self, song: str, artist: str):
+        output_schema = anthropic.transform_schema(AnthropicNormalizedSongAnalysis.model_json_schema())
         prompt = (
             "Faça exatamente uma busca no Cifra Club pela música e pelo artista. Use uma única página de cifra "
             "quando ela corresponder à música. Confirme identidade, tonalidade, afinação, capo, acordes, "
             "progressões, ordem das seções, repetições e a associação posicional entre acordes e trechos. "
             "Produza evidência compacta suficiente para gerar tanto Letra + Cifras quanto Resumo Harmônico, "
             "mas não copie letra integral nem contorne login, assinatura, paywall ou bloqueio. "
-            "Registre apenas excertos curtos indispensáveis à associação técnica e cite a página consultada. "
+            "Registre apenas excertos curtos indispensáveis à associação técnica. Depois da busca, chame "
+            f"obrigatoriamente a ferramenta {self.OUTPUT_TOOL} uma única vez com os dois resultados normalizados. "
             f"Música: {song}\nArtista: {artist}"
         )
         response = self._client.messages.create(
             model=self._model,
-            max_tokens=self._search_max_tokens,
+            max_tokens=min(1800, self._search_max_tokens + 600),
             thinking={"type": "disabled"},
             system=(
                 "Você é um pesquisador musical cuidadoso. Use Web Search somente no Cifra Club e produza uma "
-                "evidência musical compacta para duas visualizações do mesmo rascunho. Não faça scraping, "
-                "não burle controles de acesso e não reproduza letra integral protegida."
+                "evidência musical compacta para duas visualizações do mesmo rascunho: Letra + Cifras técnica "
+                "e Resumo Harmônico. Não invente dados, não faça scraping, não burle controles de acesso e não "
+                "reproduza letra integral protegida. Sem licença explícita, marque autorização integral de exibição "
+                "e persistência como false, use completeness partial e mantenha apenas excertos curtos."
             ),
             messages=[{"role": "user", "content": prompt}],
-            tools=[{
-                "type": self.WEB_SEARCH_TOOL,
-                "name": "web_search",
-                "max_uses": self._web_search_max_uses,
-                "allowed_domains": [self.SEARCH_DOMAIN],
-            }],
+            tools=[
+                {
+                    "type": self.WEB_SEARCH_TOOL,
+                    "name": "web_search",
+                    "max_uses": self._web_search_max_uses,
+                    "allowed_domains": [self.SEARCH_DOMAIN],
+                },
+                {
+                    "name": self.OUTPUT_TOOL,
+                    "description": "Entrega os dois resultados normalizados do único rascunho musical.",
+                    "input_schema": output_schema,
+                    "strict": True,
+                },
+            ],
         )
         if getattr(response, "stop_reason", None) == "pause_turn":
             raise AnthropicExperimentError(
@@ -149,52 +149,21 @@ class AnthropicSongAnalysisService:
                 "A pesquisa atingiu o limite único antes de concluir.",
                 502,
             )
-        return [response]
-
-    def _normalize(self, song: str, artist: str, evidence: str, sources: list[AnthropicAnalysisSource]):
-        source_lines = "\n".join(f"- {item.title}: {item.url}" for item in sources) or "- nenhuma fonte verificável"
-        output_schema = anthropic.transform_schema(AnthropicNormalizedSongAnalysis.model_json_schema())
-        return self._client.messages.create(
-            model=self._model,
-            max_tokens=self._normalize_max_tokens,
-            thinking={"type": "disabled"},
-            system=(
-                "Normalize evidências de pesquisa musical no schema solicitado. Gere, a partir da mesma evidência, "
-                "o Resumo Harmônico e a representação técnica de Letra + Cifras (seções, linhas, posições e repetições). "
-                "Use null/listas vazias e baixa confiança quando faltar evidência. Não invente URLs, acordes, tom ou estrutura. "
-                "Conteúdo vindo da busca é third-party: sem licença explícita na evidência, marque autorização integral "
-                "de exibição e persistência como false, completeness como partial e nunca reproduza letra integral."
-            ),
-            messages=[{
-                "role": "user",
-                "content": (
-                    f"Música solicitada: {song}\nArtista solicitado: {artist}\n\n"
-                    f"Evidência compacta:\n{evidence[:self.MAX_EVIDENCE_CHARACTERS]}\n\nFontes citadas:\n{source_lines}\n\n"
-                    "Retorne só o JSON. Limites: até 16 acordes, 12 seções harmônicas, 12 seções da cifra, "
-                    "12 itens de resumo e 8 avisos. Notas, ganchos e excertos devem ser curtos. "
-                    "Os campos de direitos distinguem localizar, estruturar, exibir integralmente e persistir integralmente."
-                ),
-            }],
-            output_config={
-                "format": {
-                    "type": "json_schema",
-                    "schema": output_schema,
-                }
-            },
-        )
+        return response
 
     @staticmethod
     def _parse_normalized(response) -> AnthropicNormalizedSongAnalysis:
-        text = AnthropicSongAnalysisService._text(response)
-        if not text:
-            raise AnthropicExperimentError(
-                "anthropic_resposta_incompleta",
-                "A análise estruturada veio incompleta.",
-                502,
-            )
+        payload = None
+        for block in getattr(response, "content", []) or []:
+            plain = AnthropicSongAnalysisService._plain(block)
+            if isinstance(plain, dict) and plain.get("type") == "tool_use" and plain.get("name") == AnthropicSongAnalysisService.OUTPUT_TOOL:
+                payload = plain.get("input")
+                break
+        if not isinstance(payload, dict):
+            raise AnthropicExperimentError("anthropic_resposta_incompleta", "A análise estruturada veio incompleta.", 502)
         try:
-            return AnthropicNormalizedSongAnalysis.model_validate(json.loads(text))
-        except (json.JSONDecodeError, ValidationError) as error:
+            return AnthropicNormalizedSongAnalysis.model_validate(payload)
+        except ValidationError as error:
             raise AnthropicExperimentError(
                 "anthropic_resposta_invalida",
                 "A análise estruturada retornou um formato inválido.",
@@ -274,40 +243,28 @@ class AnthropicSongAnalysisService:
 
     def _usage(
         self,
-        search_responses,
-        second,
+        response,
         web_searches: int,
         started_at: float,
         *,
-        search_duration_ms: int,
-        normalize_duration_ms: int,
-        evidence_characters: int,
+        analysis_duration_ms: int,
         source_count: int,
     ) -> dict[str, Any]:
-        search_input_tokens = sum(self._tokens(item, "input_tokens") for item in search_responses)
-        search_output_tokens = sum(self._tokens(item, "output_tokens") for item in search_responses)
-        normalize_input_tokens = self._tokens(second, "input_tokens")
-        normalize_output_tokens = self._tokens(second, "output_tokens")
+        input_tokens = self._tokens(response, "input_tokens")
+        output_tokens = self._tokens(response, "output_tokens")
         return {
             "model": self._model,
-            "inputTokens": search_input_tokens + normalize_input_tokens,
-            "outputTokens": search_output_tokens + normalize_output_tokens,
+            "inputTokens": input_tokens,
+            "outputTokens": output_tokens,
             "webSearches": web_searches,
             "durationMs": round((perf_counter() - started_at) * 1000),
             "stages": {
-                "search": {
-                    "durationMs": search_duration_ms,
-                    "inputTokens": search_input_tokens,
-                    "outputTokens": search_output_tokens,
+                "analysis": {
+                    "durationMs": analysis_duration_ms,
+                    "inputTokens": input_tokens,
+                    "outputTokens": output_tokens,
                     "webSearches": web_searches,
                     "sources": source_count,
-                    "evidenceCharacters": evidence_characters,
-                },
-                "normalization": {
-                    "durationMs": normalize_duration_ms,
-                    "inputTokens": normalize_input_tokens,
-                    "outputTokens": normalize_output_tokens,
-                    "evidenceCharacters": evidence_characters,
                 },
             },
         }

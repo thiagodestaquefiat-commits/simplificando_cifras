@@ -73,6 +73,11 @@ rascunho: `chord_sheet` (seções, linhas, posições e repetições) e
 normalizada de artista + título + versão do analisador e não guarda páginas
 brutas.
 
+A pesquisa e a normalização acontecem em uma única chamada ao modelo. Depois
+da busca, o modelo entrega os dois resultados por uma ferramenta local com
+schema estrito; o backend valida esse payload sem repetir a evidência em uma
+segunda chamada. Isso reduz latência, tokens de entrada e custo.
+
 O contrato separa quatro capacidades: localizar, estruturar, exibir conteúdo
 integral e persistir conteúdo integral. A página pública pode ser tecnicamente
 suficiente para reconhecer estrutura e posicionamento, mas isso não comprova

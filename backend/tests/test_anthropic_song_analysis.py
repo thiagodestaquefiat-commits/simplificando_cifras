@@ -102,7 +102,29 @@ class FakeMessages:
         return item
 
 
+def combined(search_response, normalized_response):
+    payload = json.loads(normalized_response.content[0]["text"])
+    return SimpleNamespace(
+        content=[*search_response.content, {
+            "type": "tool_use",
+            "name": "submit_song_analysis",
+            "input": payload,
+        }],
+        usage=usage(
+            search_response.usage.input_tokens + normalized_response.usage.input_tokens,
+            search_response.usage.output_tokens + normalized_response.usage.output_tokens,
+            search_response.usage.server_tool_use.web_search_requests,
+        ),
+        stop_reason="tool_use",
+    )
+
+
 def service(responses, *, api_key="test-key"):
+    if len(responses) == 2 and not any(isinstance(item, Exception) for item in responses):
+        try:
+            responses = [combined(responses[0], responses[1])]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass
     messages = FakeMessages(responses)
     client = SimpleNamespace(messages=messages)
     instance = AnthropicSongAnalysisService(
@@ -128,23 +150,22 @@ def test_known_song_uses_one_cifraclub_search_then_both_structured_outputs():
     assert result["chord_sheet"]["available"] is True
     assert result["chord_sheet"]["rights"]["can_structure"] is True
     assert result["usage"]["inputTokens"] == 17
-    assert result["usage"]["stages"]["search"]["inputTokens"] == 10
-    assert result["usage"]["stages"]["search"]["outputTokens"] == 20
-    assert result["usage"]["stages"]["search"]["sources"] == 1
-    assert result["usage"]["stages"]["normalization"]["inputTokens"] == 7
-    assert result["usage"]["stages"]["normalization"]["outputTokens"] == 11
-    assert messages.calls[0]["tools"] == [{
+    assert result["usage"]["outputTokens"] == 31
+    assert result["usage"]["stages"]["analysis"]["inputTokens"] == 17
+    assert result["usage"]["stages"]["analysis"]["outputTokens"] == 31
+    assert result["usage"]["stages"]["analysis"]["sources"] == 1
+    assert messages.calls[0]["tools"][0] == {
         "type": "web_search_20250305", "name": "web_search", "max_uses": 1,
         "allowed_domains": ["cifraclub.com.br"],
-    }]
+    }
+    assert messages.calls[0]["tools"][1]["name"] == "submit_song_analysis"
+    assert messages.calls[0]["tools"][1]["strict"] is True
     assert messages.calls[0]["thinking"] == {"type": "disabled"}
     assert "output_config" not in messages.calls[0]
-    assert messages.calls[1]["output_config"]["format"]["type"] == "json_schema"
-    assert messages.calls[1]["thinking"] == {"type": "disabled"}
-    assert "tools" not in messages.calls[1]
-    assert "Letra + Cifras" in messages.calls[1]["system"]
+    assert len(messages.calls) == 1
+    assert "Letra + Cifras" in messages.calls[0]["system"]
 
-    sent_schema = messages.calls[1]["output_config"]["format"]["schema"]
+    sent_schema = messages.calls[0]["tools"][1]["input_schema"]
     serialized_schema = json.dumps(sent_schema)
     for unsupported in ("minimum", "maximum", "minLength", "maxLength", "maxItems"):
         assert f'"{unsupported}"' not in serialized_schema
@@ -306,11 +327,11 @@ def test_provider_metadata_logs_only_safe_rejected_field(message, field):
 
 def test_partial_structured_response_is_rejected_without_regex_repair():
     partial = SimpleNamespace(
-        content=[{"type": "text", "text": '{"song":"Na Sua Estante"'}],
+        content=[{"type": "tool_use", "name": "submit_song_analysis", "input": {"song": "Na Sua Estante"}}],
         usage=usage(),
-        stop_reason="max_tokens",
+        stop_reason="tool_use",
     )
-    instance, _ = service([evidence(), partial])
+    instance, _ = service([partial])
     with pytest.raises(AnthropicExperimentError) as raised:
         instance.analyze("Na Sua Estante", "Pitty")
     assert raised.value.code == "anthropic_resposta_invalida"
