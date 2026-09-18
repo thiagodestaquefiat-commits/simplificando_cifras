@@ -27,6 +27,14 @@ from ..services.collaboration_auth import authenticated, issue_access_token, tok
 
 blueprint = Blueprint("events", __name__, url_prefix="/api/collaboration")
 IDENTIFIER = re.compile(r"^[A-Za-z0-9_.:-]{3,120}$")
+# Formato canônico de UUID (8-4-4-4-12 hex) — é o formato que o Supabase usa
+# para `subject`. Reservado: um id de CollaborationUser criado por aqui nunca
+# pode ter essa forma, senão um cliente poderia registrar antecipadamente um
+# id que mais tarde coincida com o `subject` de uma conta Supabase real que
+# ainda não logou (collaboration_auth.py reaproveita `subject` como user_id
+# na ausência de ExternalIdentity). Outros formatos de id (os usados hoje
+# pelo ROUDY, como "user_"+hex ou nomes livres) continuam sem restrição.
+CANONICAL_UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 
 def _json() -> dict:
@@ -398,6 +406,8 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
 def register_user():
     payload = _json()
     user_id = _identifier(payload.get("id"), "id", f"user_{uuid.uuid4().hex}")
+    if CANONICAL_UUID.fullmatch(user_id):
+        raise ApiError("identificador_reservado", "Este formato de identificador é reservado para contas autenticadas.", 400)
     if db.session.get(CollaborationUser, user_id) is not None:
         raise ApiError("usuario_existente", "Este perfil já foi registrado neste dispositivo ou em outro.", 409)
     user = CollaborationUser(
