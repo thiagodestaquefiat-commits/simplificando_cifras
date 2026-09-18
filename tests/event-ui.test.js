@@ -98,6 +98,12 @@ const server = http.createServer((request, response) => {
     await page.locator(".event-add-member button").click();
     await page.getByRole("button", { name: "Salvar evento" }).click();
     await page.waitForFunction(() => setlists.some(event => event.title === "Culto de teste"));
+    assert.equal(await page.evaluate(() => findEvent(setlists.find(event => event.title === 'Culto de teste').id).members.some(member => member.name === 'Ana Souza')), false, 'convite ainda não aceito não cria membro');
+    await page.evaluate(() => {
+      const event=setlists.find(value => value.title === 'Culto de teste');
+      setlists=eventRepository.upsert(setlists,eventModel.create({...event,members:[...event.members,{id:'ana-user',name:'Ana Souza',role:'Vocal'}]})).events;
+      eventRepository.save(setlists);
+    });
     assert.equal(await page.evaluate(() => setlists.find(event => event.title === "Culto de teste").bandId), "band-test");
     assert.equal(await page.evaluate(() => setlists.find(event => event.title === "Culto de teste").musicas.length), 3);
 
@@ -140,10 +146,11 @@ const server = http.createServer((request, response) => {
     assert.match(await page.locator('#lista-setlists').innerText(), /música\(s\).*membro\(s\)/);
     assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 1);
     assert.equal(await page.locator(".event-scope-badge").count(), 0);
-    assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") === null), true);
-    assert.equal(await page.locator("#event-chat-fab").evaluate((button) => getComputedStyle(button).position), "fixed");
+    assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") !== null), true);
     const chatPositionBeforeScroll = await page.locator("#event-chat-fab").boundingBox();
-    assert.ok(chatPositionBeforeScroll.x > 300, `o chat deve ficar à direita, posição atual: ${chatPositionBeforeScroll.x}`);
+    const bellPosition = await page.locator("#event-notification-button").boundingBox();
+    assert.ok(chatPositionBeforeScroll.x + chatPositionBeforeScroll.width <= bellPosition.x);
+    assert.equal(chatPositionBeforeScroll.width, bellPosition.width);
     await page.evaluate(() => { document.getElementById("sd-content").style.minHeight = "1600px"; document.getElementById("view-sd").scrollTop = 450; });
     const chatPositionAfterScroll = await page.locator("#event-chat-fab").boundingBox();
     assert.equal(Math.round(chatPositionAfterScroll.x), Math.round(chatPositionBeforeScroll.x));
@@ -219,7 +226,7 @@ const server = http.createServer((request, response) => {
 
     await page.evaluate(() => openSD(setlists.find(event => event.title === "Culto de teste").id));
 
-    await page.locator(".event-chat-fab").click();
+    await page.locator("#event-chat-fab").click();
     await page.locator("#event-chat-input").fill("Olá, equipe!");
     await page.locator(".event-chat-send").click();
     assert.equal(await page.getByText("Olá, equipe!", { exact: true }).count(), 1);

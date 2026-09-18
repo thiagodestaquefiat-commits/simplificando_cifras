@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v113-accessible-responsive-scale";
+const CACHE_NAME = "simplificando-cifras-v119-preview-eventos-palco";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const ASSETS = [
   "./js/library-sync.js?v=10",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
-  "./js/event-collaboration-client.js?v=7",
+  "./js/event-collaboration-client.js?v=8",
   "./js/app-auth.js?v=8",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
@@ -29,6 +29,8 @@ const ASSETS = [
   "./js/navigation-context.js",
   "./js/stage-preferences.js?v=3",
   "./js/stage-offline.js?v=1",
+  "./js/study-metronome.js?v=2",
+  "./js/study-metronome.css?v=3",
   "./js/editor/song-format.js?v=8",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",

@@ -15,6 +15,7 @@ db = SQLAlchemy(model_class=Base)
 
 ADDITIVE_COLLABORATION_COLUMNS = {
     "events": {
+        "creator_id": "VARCHAR(80) NOT NULL DEFAULT ''",
         "band_id": "VARCHAR(80)",
         "location_name": "VARCHAR(200) NOT NULL DEFAULT ''",
         "formatted_address": "VARCHAR(500) NOT NULL DEFAULT ''",
@@ -60,6 +61,8 @@ def ensure_additive_collaboration_columns() -> None:
                     if connection.dialect.name == "mysql" and definition.startswith("TEXT "):
                         definition = definition.replace("DEFAULT ''", "DEFAULT ('')")
                     connection.execute(text(f'ALTER TABLE {quote(table_name)} ADD COLUMN {quote(column_name)} {definition}'))
+        if "events" in tables:
+            connection.execute(text("UPDATE events SET creator_id = leader_id WHERE creator_id = '' OR creator_id IS NULL"))
 
 
 @event.listens_for(Engine, "connect")

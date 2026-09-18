@@ -65,7 +65,7 @@ const server = http.createServer((request, response) => {
     await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();
     assert.match(await page.locator("#view-detail").innerText(), /C#m\s+B2\s+A9/);
     assert.match(await page.locator("#view-detail").innerText(), /Frase-gancho/);
-    await page.getByRole("button", { name: "Modo Palco", exact: true }).click();
+    await page.evaluate(() => enterStageMode());
     assert.ok(await page.locator("#view-detail").evaluate((element) => element.classList.contains("stage-mode")));
     assert.match(await page.locator("#view-detail").innerText(), /C#m\s+B2\s+A9/);
     await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();

@@ -75,7 +75,7 @@ const response = {
       const fullBefore = await page.locator(".full-chord-sheet").innerText();
       await page.locator(".transpose-bar .t-btn").last().click();
       assert.match(await page.locator(".full-chord-sheet .is-chord").first().innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
-      await page.getByRole("button", { name: "Modo Palco", exact: true }).click();
+      await page.evaluate(() => enterStageMode());
       assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
       assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);

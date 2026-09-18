@@ -209,6 +209,23 @@
     return fromRemote(body);
   }
 
+  async function createInvitation(eventId, name, role) {
+    if (!global.appAuth || !global.appAuth.getAccessToken || !global.appAuth.getAccessToken()) {
+      throw new CollaborationError("Entre com sua conta para convidar integrantes.", 403, "login_necessario");
+    }
+    return request("/events/" + encodeURIComponent(eventId) + "/invitations", {
+      method: "POST", body: JSON.stringify({ name, role })
+    });
+  }
+
+  async function acceptInvitation(token) {
+    if (!global.appAuth || !global.appAuth.getAccessToken || !global.appAuth.getAccessToken()) {
+      throw new CollaborationError("Entre com sua conta para aceitar o convite.", 403, "login_necessario");
+    }
+    const event = await request("/invitations/" + encodeURIComponent(token) + "/accept", { method: "POST" });
+    return fromRemote(event);
+  }
+
   async function saveSharedItem(event, itemId, changes, fallback) {
     await ensureRegistered(fallback);
     const body = await request("/events/" + encodeURIComponent(event.id) + "/repertoire/" + encodeURIComponent(itemId) + "/shared", {
@@ -285,5 +302,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

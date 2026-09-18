@@ -1,0 +1,24 @@
+.metronome-bar{display:flex;align-items:center;gap:7px;min-width:0;min-height:49px;margin:9px 14px 4px;padding:5px 9px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(145deg,rgba(17,31,51,.9),rgba(11,23,40,.92));color:var(--text)}
+.metronome-bar[hidden]{display:none!important}
+.metronome-symbol{width:24px;flex:0 0 24px;color:var(--music-accent);font-size:20px;text-align:center}
+.metronome-bpm{min-width:63px;color:var(--text);font-size:15px;font-weight:800;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.metronome-bpm small{color:var(--text2);font-size:10px;font-weight:600}
+.metronome-button{display:grid;width:34px;height:34px;flex:0 0 34px;place-items:center;padding:0;border:1px solid var(--border);border-radius:9px;background:#16263c;color:var(--text);font-family:inherit;font-size:18px;font-weight:700;line-height:1;cursor:pointer}
+.metronome-button:hover{border-color:var(--music-accent)}
+.metronome-button:focus-visible{outline:2px solid var(--music-accent);outline-offset:2px}
+.metronome-play{width:39px;height:39px;flex-basis:39px;border:0;background:var(--music-accent);color:#111;font-size:17px}
+.metronome-meter{width:54px;min-width:54px;height:34px;padding:0 3px;border:1px solid var(--border);border-radius:8px;background:#16263c;color:var(--text);font-family:inherit;font-size:11px;font-weight:600;line-height:1;cursor:pointer}
+.metronome-meter:focus-visible{outline:2px solid var(--music-accent);outline-offset:2px}
+.metronome-beats{display:flex;min-width:39px;flex:1;justify-content:center;gap:5px}
+.metronome-beat{width:7px;height:7px;border-radius:50%;background:#506176}
+.metronome-beat[hidden]{display:none}
+.metronome-beat.is-active{background:var(--music-accent);box-shadow:0 0 0 3px rgba(232,137,107,.16)}
+.stage-mode .metronome-bar{display:none!important}
+.capo-metronome-row{min-height:43px;margin:0;padding:7px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}
+.capo-metronome-row .metronome-symbol{display:flex;width:auto;flex:0 0 auto;align-items:center;gap:5px;color:var(--text2);font-size:18px;font-weight:700}
+.metronome-title{font-size:11px}
+.capo-metronome-row .metronome-button,.capo-metronome-row .metronome-meter{background:var(--bg3)}
+.capo-metronome-row .metronome-play{background:var(--music-accent)}
+@media (max-width:600px){.metronome-title{display:none}}
+@media (max-width:430px){.metronome-beats{gap:3px}.metronome-beat{width:5px;height:5px;flex:0 0 5px}}
+@media (max-width:360px){.capo-metronome-row{gap:4px;padding-inline:0}.capo-metronome-row .metronome-symbol{font-size:17px}.metronome-bpm{min-width:52px;font-size:13px}.metronome-button{width:30px;height:30px;flex-basis:30px}.metronome-play{width:34px;height:34px;flex-basis:34px}.metronome-meter{width:44px;min-width:44px;font-size:10px}.metronome-beats{min-width:30px;gap:2px}}

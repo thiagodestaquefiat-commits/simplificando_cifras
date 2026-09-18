@@ -97,12 +97,14 @@ Principais operações:
 
 - `GET/POST /events`: listar os eventos do integrante ou criar um evento;
 - `GET/PUT/DELETE /events/<id>`: consultar, substituir ou excluir um evento;
+- `POST /events/<id>/invitations`: o criador autenticado com Google gera um convite de uso único com nome e função musical;
+- `POST /invitations/<token>/accept`: a pessoa autenticada aceita o convite e entra no evento (e na equipe vinculada, como integrante comum);
 - `PATCH /events/<id>/repertoire/<item>/shared`: editar título, artista, tom, capotraste, cifra e observações oficiais;
 - `PUT/DELETE /events/<id>/repertoire/<item>/personal`: salvar ou limpar a versão pessoal completa do usuário autenticado.
 - `GET/POST /bands`: listar ou criar Bandas/Equipes;
 - `POST/PATCH/DELETE /bands/<id>/members`: gerenciar integrantes e funções.
 
-Somente o Líder pode criar alterações compartilhadas, mudar membros, ordem,
+Somente o criador, que permanece Líder, pode criar alterações compartilhadas, mudar membros, ordem,
 repertório e informações do evento. Todo integrante do evento pode ler a versão
 oficial e salvar somente a própria personalização. A resposta nunca inclui a
 personalização de outro usuário. A API usa uma versão do evento para rejeitar
@@ -117,6 +119,7 @@ existem:
 
 - `collaboration_users` e `user_access_tokens`;
 - `events` e `event_members`;
+- `event_invitations` (token armazenado apenas como hash SHA-256, validade de sete dias);
 - `event_repertoire_items`;
 - `personal_repertoire_overrides`;
 - `event_changes`.
@@ -126,6 +129,11 @@ guarda apenas as diferenças de cada integrante. Os campos de arranjo completo
 são adicionados por uma migration interna exclusivamente aditiva. Tokens são
 persistidos somente como hash SHA-256. Não há migration que remova ou renomeie
 estruturas existentes.
+O campo `events.creator_id` é adicionado de forma não destrutiva. Para eventos
+antigos, o líder atual é preservado como criador, pois o criador original não
+era registrado separadamente. A primeira inicialização do backend atualizado
+cria a tabela e a coluna; depois, publique também o frontend atualizado. Não
+compartilhe convites antes de ambas as versões estarem implantadas.
 
 ### Login e migração da identidade local
 

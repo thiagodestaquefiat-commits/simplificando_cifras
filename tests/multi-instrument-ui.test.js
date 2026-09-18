@@ -48,6 +48,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator("#btn-font").isVisible(), false);
     assert.equal(await page.locator("#btn-palco").textContent(), "Modo Palco");
     assert.doesNotMatch(await page.locator("#btn-palco").textContent(), /🎭/);
+    assert.equal(await page.locator("#btn-palco").isVisible(), false);
     for (const instrument of instruments) {
       await page.locator("#inst-btn").click();
       await page.locator(`#inst-list [onclick="setInstrument('${instrument.id}')"]`).click();
@@ -78,7 +79,7 @@ const server = http.createServer((request, response) => {
 
     const savedSpeed=await page.locator('.scroll-speed-value').last().textContent();
     const savedFont=await page.locator("#btn-font").textContent();
-    await page.locator("#btn-palco").click();
+    await page.evaluate(() => enterStageMode());
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     assert.equal(await page.locator("#stage-performance-header").isVisible(), true);
     assert.equal(await page.locator("#stage-performance-header").isVisible(), true);

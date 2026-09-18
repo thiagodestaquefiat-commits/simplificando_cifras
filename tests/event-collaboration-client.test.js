@@ -3,13 +3,14 @@ const assert = require("node:assert/strict");
 const values = new Map();
 const requests = [];
 let registeredUserId = null;
+let signedInToken = null;
 global.window = global;
 global.storage = {
   get(key, fallback) { return values.has(key) ? structuredClone(values.get(key)) : fallback; },
   set(key, value) { values.set(key, structuredClone(value)); return true; }
 };
 global.apiConfig = { collaborationEndpoint: path => "https://api.example/api/collaboration" + path };
-global.appAuth = { getState: () => ({ user: { id: registeredUserId } }), getAccessToken: () => null };
+global.appAuth = { getState: () => ({ user: { id: registeredUserId } }), getAccessToken: () => signedInToken };
 global.fetch = async (url, options) => {
   requests.push({ url, options });
   if (url.endsWith("/users")) { registeredUserId = JSON.parse(options.body).id; return response(201, { user: { id: registeredUserId, name: "Você" }, accessToken: "secret-token" }); }
@@ -20,6 +21,8 @@ global.fetch = async (url, options) => {
   if (url.endsWith("/events") && options.method === "GET") return response(200, { events: [remoteEvent()] });
   if (url.endsWith("/events/event-1") && options.method === "PUT") return response(200, { ...remoteEvent(), ...JSON.parse(options.body), remoteVersion: 2 });
   if (url.endsWith("/events/event-1") && options.method === "DELETE") return response(204, null);
+  if (url.endsWith("/events/event-1/invitations") && options.method === "POST") return response(201, { token: "secret-invitation", name: "Ana", role: "Vocal" });
+  if (url.endsWith("/invitations/secret-invitation/accept") && options.method === "POST") return response(200, remoteEvent());
   if (url.includes("/repertoire/item-1/personal") && ["PUT", "DELETE"].includes(options.method)) return response(200, remoteEvent());
   throw new Error("Rota inesperada: " + url);
 };
@@ -70,6 +73,14 @@ require("../js/event-collaboration-client.js");
   assert.equal(Object.keys(saved.repertoire[0].personalEdits).length, 1, "cliente recebe apenas o override do usuário autenticado");
   assert.equal(requests.at(-1).options.headers.Authorization, "Bearer secret-token");
   assert.equal((await window.eventCollaboration.listEvents(identity.user)).length, 1);
+  await assert.rejects(window.eventCollaboration.createInvitation("event-1", "Ana", "Vocal"), error => error.code === "login_necessario");
+  signedInToken = "google-token";
+  const invitation = await window.eventCollaboration.createInvitation("event-1", "Ana", "Vocal");
+  assert.equal(invitation.token, "secret-invitation");
+  assert.deepEqual(JSON.parse(requests.at(-1).options.body), { name: "Ana", role: "Vocal" });
+  assert.equal(requests.at(-1).options.headers.Authorization, "Bearer google-token");
+  assert.equal((await window.eventCollaboration.acceptInvitation(invitation.token)).id, "event-1");
+  signedInToken = null;
   const updated = await window.eventCollaboration.saveSharedEvent({ ...saved, title: "Culto atualizado" }, identity.user);
   assert.equal(updated.title, "Culto atualizado");
   assert.equal(requests.at(-1).options.method, "PUT");
