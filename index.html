@@ -2503,7 +2503,7 @@ librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},pe
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
 checkShareParam();
 youtubeUI.initialize({
   getSongs:()=>musicas,
