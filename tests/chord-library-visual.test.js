@@ -77,7 +77,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-line").first().evaluate((element) => getComputedStyle(element).color), chordColor);
     assert.equal(await page.locator(".chord-card-name").first().evaluate((element) => getComputedStyle(element).color), chordColor);
 
-    await page.locator("#btn-palco").click();
+    await page.evaluate(() => enterStageMode());
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     assert.equal(await page.locator(".chord-line").first().evaluate((element) => getComputedStyle(element).color), chordColor);
     await page.screenshot({ path: path.join(chordColorOutputDir, "03-modo-palco-mobile-390x844.png"), fullPage: false });

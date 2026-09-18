@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import re
+import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, g, jsonify, request
 
@@ -13,6 +14,7 @@ from ..models import (
     Band,
     BandMember,
     Event,
+    EventInvitation,
     EventChange,
     ExternalIdentity,
     EventMember,
@@ -257,6 +259,7 @@ def _serialize_event(event: Event, user_id: str) -> dict:
         "description": event.description,
         "bandId": event.band_id,
         "leaderId": event.leader_id,
+        "creatorId": event.creator_id or event.leader_id,
         "remoteVersion": event.version,
         "members": [{
             "id": member.user_id,
@@ -432,6 +435,8 @@ def claim_legacy_identity():
 
     for event in Event.query.filter_by(leader_id=old_user.id).all():
         event.leader_id = new_user.id
+    for event in Event.query.filter_by(creator_id=old_user.id).all():
+        event.creator_id = new_user.id
     for member in EventMember.query.filter_by(user_id=old_user.id).all():
         duplicate = EventMember.query.filter_by(event_id=member.event_id, user_id=new_user.id).first()
         if duplicate:
@@ -449,6 +454,8 @@ def claim_legacy_identity():
     for change in EventChange.query.filter_by(actor_id=old_user.id).all():
         change.actor_id = new_user.id
         change.actor_name = new_user.name
+    for invitation in EventInvitation.query.filter_by(accepted_by=old_user.id).all():
+        invitation.accepted_by = new_user.id
     for band in Band.query.filter_by(owner_id=old_user.id).all():
         band.owner_id = new_user.id
     for member in BandMember.query.filter_by(user_id=old_user.id).all():
@@ -496,6 +503,7 @@ def create_event():
         description=_text(payload.get("description"), 10000, "description"),
         band_id=band_id,
         leader_id=g.current_user.id,
+        creator_id=g.current_user.id,
         created_at=_datetime(payload.get("createdAt"), datetime.now(timezone.utc)),
         updated_at=_datetime(payload.get("updatedAt"), datetime.now(timezone.utc)),
     )
@@ -528,6 +536,8 @@ def update_event(event_id: str):
     payload = _json()
     _expected_version(payload, event.version)
     members, leader_id = _members_payload(payload, g.current_user)
+    if leader_id != (event.creator_id or event.leader_id):
+        raise ApiError("lider_fixo", "Somente o criador do evento pode ser líder.", 403)
     band_id = _band_id_payload(payload, members)
     event.title = _text(payload.get("title"), 160, "title", True)
     event.event_date = _text(payload.get("date"), 10, "date")
@@ -536,12 +546,79 @@ def update_event(event_id: str):
     _assign_location(event, _location_payload(payload))
     event.description = _text(payload.get("description"), 10000, "description")
     event.band_id = band_id
-    event.leader_id = leader_id
+    event.leader_id = event.creator_id or event.leader_id
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
     _replace_members(event, members)
     _replace_repertoire(event, _repertoire_payload(payload))
     _change(event, "event.updated", "atualizou o evento e o repertório compartilhado")
+    db.session.commit()
+    return jsonify(_serialize_event(event, g.current_user.id)), 200
+
+
+@blueprint.post("/events/<event_id>/invitations")
+@authenticated
+def create_event_invitation(event_id: str):
+    event = _event_or_404(event_id)
+    _leader(event, g.current_user.id)
+    if g.auth_provider != "supabase":
+        raise ApiError("login_necessario", "Entre com sua conta para enviar convites.", 403)
+    if event.band_id:
+        band_role = BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first()
+        if band_role is None or band_role.access_role not in {"owner", "leader"}:
+            raise ApiError("permissao_insuficiente", "Somente líderes da equipe podem convidar novos integrantes.", 403)
+    payload = _json()
+    name = _text(payload.get("name"), 120, "name", True)
+    role = _text(payload.get("role"), 80, "role") or "Outra"
+    if role.casefold() in {"líder", "lider", "liderança", "lideranca"}:
+        raise ApiError("funcao_invalida", "A liderança é exclusiva do criador do evento.", 400)
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    db.session.add(EventInvitation(
+        id=str(uuid.uuid4()), event_id=event.id, token_hash=token_digest(token),
+        invited_name=name, musical_role=role, created_by=g.current_user.id, expires_at=expires_at,
+    ))
+    db.session.commit()
+    return jsonify({"token": token, "eventTitle": event.title, "name": name, "role": role, "expiresAt": _iso(expires_at)}), 201
+
+
+@blueprint.post("/invitations/<token>/accept")
+@authenticated
+def accept_event_invitation(token: str):
+    if g.auth_provider != "supabase":
+        raise ApiError("login_necessario", "Entre com sua conta para aceitar o convite.", 403)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", token):
+        raise ApiError("convite_invalido", "O convite é inválido.", 400)
+    invitation = EventInvitation.query.filter_by(token_hash=token_digest(token)).with_for_update().first()
+    if invitation is None:
+        raise ApiError("convite_invalido", "O convite não foi encontrado.", 404)
+    if invitation.accepted_by and invitation.accepted_by != g.current_user.id:
+        raise ApiError("convite_utilizado", "Este convite já foi usado.", 409)
+    event = _event_or_404(invitation.event_id)
+    if invitation.accepted_by == g.current_user.id:
+        result = _serialize_event(event, g.current_user.id)
+        db.session.commit()
+        return jsonify(result), 200
+    expiry = invitation.expires_at.replace(tzinfo=timezone.utc) if invitation.expires_at.tzinfo is None else invitation.expires_at
+    if expiry < datetime.now(timezone.utc):
+        raise ApiError("convite_expirado", "Este convite expirou. Peça um novo link ao líder.", 410)
+    member = EventMember.query.filter_by(event_id=event.id, user_id=g.current_user.id).first()
+    if member is None:
+        db.session.add(EventMember(event_id=event.id, user_id=g.current_user.id,
+                                   name=invitation.invited_name, role=invitation.musical_role,
+                                   avatar_url=g.current_user.avatar_url))
+    if event.band_id:
+        band_member = BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first()
+        if band_member is None:
+            db.session.add(BandMember(band_id=event.band_id, user_id=g.current_user.id,
+                                      access_role="member", musical_role=invitation.musical_role))
+            band = db.session.get(Band, event.band_id)
+            band.updated_at = datetime.now(timezone.utc)
+    invitation.accepted_by = g.current_user.id
+    invitation.accepted_at = datetime.now(timezone.utc)
+    event.version += 1
+    event.updated_at = datetime.now(timezone.utc)
+    _change(event, "event.member.joined", "entrou no evento pelo convite")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 

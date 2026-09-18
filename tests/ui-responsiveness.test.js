@@ -139,7 +139,8 @@ async function openApp(browser, baseUrl, width, height) {
     await page.locator("#capo-opt-1").click();
     assert.ok(await page.locator("#capo-opt-1").evaluate((element) => element.classList.contains("active")));
 
-    await page.locator("#btn-palco").click();
+    assert.equal(await page.locator("#btn-palco").isVisible(), false);
+    await page.evaluate(() => enterStageMode());
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), false);
     assert.equal(await page.locator(".transpose-bar").isVisible(), false);

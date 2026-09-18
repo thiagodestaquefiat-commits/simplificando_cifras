@@ -57,7 +57,7 @@ const server=http.createServer((req,res)=>{
       for(let i=0;i<6;i++)await plus(normal).click();
       assert.equal(await value(normal),'0,40x');
       await page.locator('#capo-opt-2').click();
-      await page.locator('#btn-palco').click();
+      await page.evaluate(() => enterStageMode());
       assert.equal(await value(stage),'0,40x');
       assert.equal(await page.locator('#stage-capo-value').innerText(),'2');
       assert.equal(await page.locator('#modal-overlay').isVisible(),false);

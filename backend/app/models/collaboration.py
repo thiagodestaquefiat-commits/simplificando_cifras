@@ -103,6 +103,7 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=False, default="")
     band_id = db.Column(db.String(80), db.ForeignKey("bands.id", ondelete="SET NULL"), nullable=True, index=True)
     leader_id = db.Column(db.String(80), nullable=False, index=True)
+    creator_id = db.Column(db.String(80), nullable=False, default="")
     version = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
@@ -110,6 +111,21 @@ class Event(db.Model):
     members = db.relationship("EventMember", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin")
     repertoire = db.relationship("EventRepertoireItem", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventRepertoireItem.position")
     changes = db.relationship("EventChange", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventChange.created_at")
+
+
+class EventInvitation(db.Model):
+    __tablename__ = "event_invitations"
+
+    id = db.Column(db.String(36), primary_key=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    invited_name = db.Column(db.String(120), nullable=False)
+    musical_role = db.Column(db.String(80), nullable=False, default="Outra")
+    created_by = db.Column(db.String(80), nullable=False)
+    accepted_by = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    accepted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 
 class EventMember(db.Model):

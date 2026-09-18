@@ -19,6 +19,7 @@
 <link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=4">
+<link rel="stylesheet" href="js/study-metronome.css?v=3">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -328,14 +329,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 /* LAYOUT RESPONSIVO DA CIFRA — conteúdo e vídeo lado a lado no notebook */
 @media (min-width:900px){
 .detail-view{max-width:1180px}
-.detail-view:not(.stage-mode)[style*="display: flex"]{display:grid!important;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto auto auto auto auto auto minmax(0,1fr);align-content:start}
+.detail-view:not(.stage-mode)[style*="display: flex"]{display:grid!important;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto auto auto auto minmax(0,1fr);align-content:start}
 .detail-view:not(.stage-mode)>.detail-header{grid-column:1/-1;grid-row:1}
-.detail-view:not(.stage-mode)>#youtube-song-player{grid-column:2;grid-row:2/span 6;width:min(420px,calc(100% - 24px));margin:16px auto;align-self:start}
-.detail-view:not(.stage-mode)>#chord-diagrams-section{grid-column:1;grid-row:2}
-.detail-view:not(.stage-mode)>#capo-row{grid-column:1;grid-row:3}
-.detail-view:not(.stage-mode)>.transpose-bar{grid-column:1;grid-row:4}
-.detail-view:not(.stage-mode)>.stage-toolbar{grid-column:1}
-.detail-view:not(.stage-mode)>#detail-content{grid-column:1;grid-row:7;min-width:0}
+.detail-view:not(.stage-mode)>#youtube-song-player{grid-column:2;grid-row:2/span 4;width:min(420px,calc(100% - 24px));margin:16px auto;align-self:start}
+.detail-view:not(.stage-mode)>#study-music-panel{grid-column:1;grid-row:2}
+.detail-view:not(.stage-mode)>#study-scroll-toolbar{grid-column:1;grid-row:3}
+.detail-view:not(.stage-mode)>#detail-nav-toolbar{grid-column:1;grid-row:4}
+.detail-view:not(.stage-mode)>#detail-content{grid-column:1;grid-row:5;min-width:0}
 }
 
 /* TELA INICIAL RESPONSIVA — ferramentas laterais e biblioteca em grade */
@@ -357,7 +357,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .event-chat-view{position:fixed;inset:0;z-index:90;display:flex;width:100%;max-width:720px;margin-inline:auto;flex-direction:column;background:linear-gradient(180deg,#0c1b2d,#07111f);color:#fff}.event-chat-view[hidden]{display:none}.event-chat-header{display:grid;min-height:66px;padding:9px 12px;grid-template-columns:44px 1fr 44px;align-items:center;border-bottom:1px solid var(--border);background:rgba(7,17,31,.95)}.event-chat-header>div{display:flex;min-width:0;flex-direction:column}.event-chat-header strong,.event-chat-header span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.event-chat-header strong{font-size:14px}.event-chat-header span{margin-top:2px;color:#94a3b8;font-size:9px}.event-chat-back,.event-chat-poll-open,.event-chat-emoji,.event-chat-send{display:grid;border:0;place-items:center;cursor:pointer}.event-chat-back,.event-chat-poll-open{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);color:#fff;font-size:19px}.event-chat-messages{display:flex;min-height:0;flex:1;padding:14px 12px 20px;overflow-y:auto;flex-direction:column;gap:7px;background:radial-gradient(circle at 20% 10%,rgba(37,99,235,.08),transparent 24rem)}.event-chat-load{align-self:center;padding:6px 10px;border:1px solid var(--border);border-radius:12px;background:#12233a;color:#93c5fd;font-size:9px;cursor:pointer}.event-message{display:flex;max-width:82%;gap:7px;align-self:flex-start}.event-message.mine{align-self:flex-end}.event-message-avatar{display:grid;width:26px;height:26px;flex:0 0 26px;place-items:center;overflow:hidden;border-radius:50%;background:#1d4ed8;font-size:8px;font-weight:900}.event-message-avatar img{width:100%;height:100%;object-fit:cover}.event-message.mine .event-message-avatar{display:none}.event-message-bubble{min-width:90px;padding:8px 10px;border-radius:4px 14px 14px;background:#172a43;box-shadow:0 4px 12px rgba(0,0,0,.15)}.event-message.mine .event-message-bubble{border-radius:14px 4px 14px 14px;background:#164e63}.event-message-author{display:block;margin-bottom:3px;color:#86efac;font-size:8px;font-weight:800}.event-message-content{font-size:12px;line-height:1.4;white-space:pre-wrap;word-break:break-word}.event-message-time{display:block;margin-top:4px;color:#94a3b8;font-size:7px;text-align:right}.event-message-reply-quote{margin-bottom:5px;padding:5px 7px;border-left:2px solid #22c55e;border-radius:5px;background:rgba(0,0,0,.18);color:#cbd5e1;font-size:8px}.event-message-actions{display:flex;margin-top:6px;gap:5px;flex-wrap:wrap}.event-message-actions button,.event-reaction{border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#cbd5e1;padding:3px 6px;font-size:8px;cursor:pointer}.event-reaction.active{background:rgba(34,197,94,.22);color:#86efac}.event-message.system{max-width:90%;align-self:center;text-align:center}.event-message.system .event-message-bubble{background:rgba(148,163,184,.1);color:#94a3b8;border-radius:12px;font-size:9px}.event-poll-question{font-size:12px;font-weight:800}.event-poll-option{position:relative;margin-top:7px;overflow:hidden;border:1px solid rgba(148,163,184,.22);border-radius:9px;cursor:pointer}.event-poll-option-fill{position:absolute;inset:0 auto 0 0;background:rgba(34,197,94,.17);pointer-events:none}.event-poll-option-content{position:relative;display:flex;padding:7px;justify-content:space-between;gap:8px;font-size:9px}.event-poll-option.selected{border-color:#22c55e}.event-poll-total{display:block;margin-top:7px;color:#94a3b8;font-size:8px}.event-chat-reply{padding:7px 54px 7px 12px;border-top:1px solid var(--border);background:#0d1d30;color:#cbd5e1;font-size:9px}.event-chat-reply button{float:right;border:0;background:transparent;color:#f87171;cursor:pointer}.event-chat-composer{display:grid;padding:8px 10px calc(8px + env(safe-area-inset-bottom));grid-template-columns:38px 1fr 42px;align-items:end;gap:7px;border-top:1px solid var(--border);background:#0b1728}.event-chat-composer textarea{max-height:100px;resize:none;border:1px solid var(--border);border-radius:19px;background:#132238;color:#fff;padding:10px 13px;font:inherit;font-size:12px;outline:none}.event-chat-emoji{width:36px;height:36px;border-radius:50%;background:transparent;color:#cbd5e1;font-size:19px}.event-chat-send{width:40px;height:40px;border-radius:50%;background:#22c55e;color:#052e16;font-size:16px}.modal-overlay{z-index:110}
 .event-leader-badge{display:inline-flex;margin-left:5px;padding:2px 6px;border-radius:8px;background:rgba(250,204,21,.14);color:#fde68a;font-size:7px;font-weight:900;text-transform:uppercase}.event-permission-note{margin:0 0 12px;padding:9px 11px;border:1px solid rgba(96,165,250,.2);border-radius:11px;background:rgba(37,99,235,.08);color:#bfdbfe;font-size:10px;line-height:1.45}.event-sync-badge{font-size:8px;font-weight:800}.event-sync-badge.pending{color:#fbbf24}.event-sync-badge.synced{color:#86efac}.event-member-id{display:block;margin-top:2px;color:#64748b;font:7px/1.25 monospace}.event-leader-choice{display:flex;align-items:center;gap:4px;color:#fde68a;font-size:8px;white-space:nowrap}.event-personal-reset{color:#93c5fd!important;border-color:rgba(96,165,250,.4)!important}.event-sync-toolbar{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid var(--border);background:rgba(11,23,40,.82)}.event-sync-toolbar div{min-width:0;flex:1}.event-sync-toolbar strong,.event-sync-toolbar small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.event-sync-toolbar strong{font-size:10px}.event-sync-toolbar small{margin-top:2px;color:#64748b;font:7px/1.25 monospace}.event-sync-action{min-height:32px;padding:0 10px;border:1px solid rgba(34,197,94,.3);border-radius:9px;background:rgba(34,197,94,.1);color:#86efac;font-size:9px;font-weight:800;cursor:pointer}.event-sync-action:disabled{cursor:wait;opacity:.55}
 @media(max-width:430px){.event-meta-card{grid-template-columns:1fr}.event-add-member{grid-template-columns:1fr 100px}.event-add-member #event-member-id{grid-column:1/-1}.event-add-member button{grid-column:1/-1}.event-message{max-width:90%}}
-.event-chat-fab{position:fixed;right:max(18px,calc((100vw - 720px)/2 + 18px));bottom:max(18px,env(safe-area-inset-bottom));left:auto;z-index:24;margin:0}.event-chat-fab[hidden]{display:none}#view-sd .detail-body{padding-bottom:100px}
+#view-sd .detail-body{padding-bottom:max(24px,env(safe-area-inset-bottom))}
 .location-combobox{position:relative}.location-status{display:block;min-height:15px;margin-top:5px;color:var(--text2);font-size:9px;line-height:1.4}.location-status.error{color:#fca5a5}.location-results{position:absolute;z-index:18;top:calc(100% - 18px);left:0;right:0;max-height:230px;margin:0;padding:5px;overflow-y:auto;border:1px solid rgba(96,165,250,.28);border-radius:12px;background:#0b192b;box-shadow:0 18px 36px rgba(0,0,0,.38)}.location-results[hidden]{display:none}.location-option{display:flex;width:100%;padding:10px;border:0;border-radius:9px;background:transparent;color:#fff;text-align:left;cursor:pointer;flex-direction:column;gap:3px}.location-option:hover,.location-option[aria-selected="true"]{background:rgba(59,130,246,.18)}.location-option strong{font-size:11px}.location-option span{color:#a7b4c7;font-size:9px;line-height:1.4}.event-map-preview[hidden]{display:none}.event-map-card{margin:10px 0 15px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#0b192b}.event-map-card img{display:block;width:100%;height:auto;min-height:180px;max-height:330px;object-fit:cover;background:#132238}.event-map-card.compact img{min-height:130px;max-height:210px}.event-map-card figcaption{display:grid;padding:9px 11px;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}.event-map-card figcaption span{overflow:hidden;color:#dbeafe;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.event-map-card figcaption>a{color:#86efac;font-size:10px;font-weight:800;text-decoration:none}.event-map-card figcaption small{grid-column:1/-1;color:#64748b;font-size:7px}.event-map-card figcaption small a{color:#7c8da5}.event-map-error{padding:24px 14px;color:#94a3b8;font-size:10px;text-align:center}
 .event-map-viewport{position:relative;height:260px;overflow:hidden;background:#132238}.event-map-card.compact .event-map-viewport{height:190px}.event-map-viewport>img{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;object-fit:cover}.event-map-canvas{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s ease}.event-map-card.interactive-ready .event-map-canvas{opacity:1;pointer-events:auto}.event-map-loading{position:absolute;z-index:1;inset:0;display:grid;color:#94a3b8;font-size:10px;place-items:center;background:linear-gradient(110deg,#0e2035,#152b45,#0e2035);background-size:220% 100%;animation:event-map-pulse 1.5s ease infinite}.event-map-loading[hidden],.event-map-recenter[hidden]{display:none}.event-map-recenter{position:absolute;z-index:3;right:10px;bottom:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(7,17,31,.86);color:#fff;font-size:9px;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.25);cursor:pointer}.event-map-recenter:hover{background:#10243d}.event-map-canvas .maplibregl-ctrl-attrib{font-size:8px}.event-map-canvas .maplibregl-ctrl-top-right{top:8px;right:8px}@keyframes event-map-pulse{0%,100%{background-position:0 0}50%{background-position:100% 0}}@media(max-width:520px){.event-map-viewport{height:230px}.event-map-card.compact .event-map-viewport{height:175px}}
 .app-account-btn{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.25);border-radius:50%;background:#10233a;color:#dbeafe;font-size:10px;font-weight:900;cursor:pointer}.app-account-btn.authenticated{border-color:rgba(34,197,94,.42);background:#0d352e;color:#86efac}.band-toolbar{display:grid;padding:7px 12px;grid-template-columns:minmax(0,1fr) auto;gap:7px;border-bottom:1px solid var(--border);background:rgba(8,20,35,.9)}.band-toolbar select{min-width:0;height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:#10233a;color:#dbeafe;font-size:10px}.band-toolbar button{min-height:34px;padding:0 10px;border:1px solid rgba(96,165,250,.3);border-radius:9px;background:rgba(37,99,235,.1);color:#bfdbfe;font-size:9px;font-weight:800;cursor:pointer}.band-card{margin-bottom:9px;padding:11px;border:1px solid var(--border);border-radius:12px;background:#0d1d30}.band-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}.band-card header strong{font-size:13px}.band-card header span{color:#86efac;font-size:8px;font-weight:900;text-transform:uppercase}.band-member-row{display:flex;margin-top:7px;padding-top:7px;align-items:center;gap:7px;border-top:1px solid rgba(148,163,184,.12);font-size:10px}.band-member-row span:first-child{flex:1}.band-member-row small{color:#94a3b8}.band-inline-actions{display:flex;margin-top:9px;gap:6px;flex-wrap:wrap}.band-inline-actions button{min-height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:#132238;color:#cbd5e1;font-size:9px;cursor:pointer}
@@ -365,6 +365,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .profile-image-editor{position:fixed;inset:0;z-index:160;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.86);backdrop-filter:blur(8px)}.profile-image-editor[hidden]{display:none}.profile-image-editor-card{display:flex;width:min(760px,100%);max-height:calc(100dvh - 24px);overflow:hidden;flex-direction:column;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:#101827;color:#fff;box-shadow:0 24px 70px rgba(0,0,0,.62)}.profile-image-editor-header{display:flex;min-height:54px;padding:8px 12px;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.12)}.profile-image-editor-header strong{flex:1;font-size:14px}.profile-image-editor-close{display:grid;width:36px;height:36px;place-items:center;border:0;border-radius:50%;background:transparent;color:#e5e7eb;font-size:24px;cursor:pointer}.profile-image-editor-body{display:grid;min-height:0;grid-template-columns:minmax(0,1fr) 210px}.profile-crop-stage{display:grid;min-height:0;padding:18px;place-items:center;background:#6b7280}.profile-crop-canvas-wrap{position:relative;width:min(100%,480px);aspect-ratio:1;overflow:hidden;background:#111;touch-action:none;cursor:grab}.profile-crop-canvas-wrap.is-dragging{cursor:grabbing}.profile-crop-canvas{display:block;width:100%;height:100%}.profile-crop-mask{position:absolute;inset:0;border-radius:0;background:radial-gradient(circle at center,transparent 0 48%,rgba(0,0,0,.58) 48.4% 100%);pointer-events:none}.profile-crop-ring{position:absolute;inset:2%;border:2px solid rgba(255,255,255,.9);border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.2)}.profile-image-tools{display:flex;padding:16px 14px;overflow-y:auto;flex-direction:column;gap:15px;background:#111827}.profile-image-tool-title{font-size:11px;font-weight:800}.profile-image-tool-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.profile-image-tool-actions button{display:grid;height:38px;padding:0;place-items:center;border:1px solid rgba(255,255,255,.13);border-radius:9px;background:#1f2937;color:#f8fafc;font-size:18px;cursor:pointer}.profile-image-slider label{display:flex;margin-bottom:7px;justify-content:space-between;color:#cbd5e1;font-size:9px}.profile-image-slider input{width:100%;accent-color:#60a5fa}.profile-image-editor-footer{display:grid;margin-top:auto;grid-template-columns:1fr 1fr;gap:8px}.profile-image-editor-footer button{min-height:40px;border-radius:10px;font:800 10px inherit;cursor:pointer}.profile-image-cancel{border:1px solid rgba(255,255,255,.2);background:transparent;color:#e2e8f0}.profile-image-apply{border:0;background:#2563eb;color:#fff}@media(max-width:620px){.profile-image-editor{padding:0}.profile-image-editor-card{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.profile-image-editor-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.profile-crop-stage{padding:10px}.profile-crop-canvas-wrap{width:min(100%,calc(100dvh - 330px));min-width:230px}.profile-image-tools{padding:11px 13px;gap:10px}.profile-image-tool-actions button{height:34px}.profile-image-editor-footer button{min-height:38px}}
 html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009e73;--danger:#d55e00}html.a11y-high-contrast{--bg:#000;--bg2:#050505;--bg3:#111;--surface:#050505;--surface-hover:#171717;--accent:#ffd400;--accent2:rgba(255,212,0,.18);--text:#fff;--text2:#eee;--border:rgba(255,255,255,.42);--music-accent:#ffd400;--chord-color:#ffd400;--success:#00ff85;--danger:#ff6b6b}html.a11y-high-contrast button:focus-visible,html.a11y-high-contrast input:focus-visible,html.a11y-high-contrast select:focus-visible{outline:3px solid #ffd400!important;outline-offset:2px}
 .song-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 15.3px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:11.7px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
+
+.event-section-title--center{text-align:center}
+.event-stage-action{display:flex;justify-content:center;margin:14px 0 25px}
+.event-stage-action .event-stage-entry{min-width:176px;min-height:42px;padding:0 20px;border-radius:12px;font-size:11px;letter-spacing:.5px}
+.event-official-key-control{display:flex;flex:0 0 auto;align-items:center;gap:2px;margin-left:5px;border:1px solid rgba(96,165,250,.22);border-radius:9px;background:rgba(37,99,235,.07)}
+.event-official-key-control button{width:28px;height:30px;padding:0;border:0;background:transparent;color:#bfdbfe;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer}
+.event-official-key-control button:disabled{opacity:.45;cursor:wait}
+.event-official-key-control output{min-width:24px;color:#93c5fd;font:800 10px/1.2 monospace;text-align:center;white-space:nowrap}
+.event-chat-header-button{color:#86efac}.event-chat-header-button[hidden]{display:none}
 
 /* MODO PALCO PROFISSIONAL — FASE 1 */
 .stage-performance-header,.stage-next-preview,.stage-floating-controls,.stage-quick-panel{display:none}.stage-mode{--stage-text:#f8fafc;--stage-muted:#94a3b8;--stage-surface:#07111f;--stage-panel:rgba(9,24,41,.94);--stage-accent:#60a5fa;right:0;left:0;margin-inline:auto;background:var(--stage-surface);color:var(--stage-text);scrollbar-color:#334155 transparent;transform:none}.stage-mode.stage-theme-light{--stage-text:#102033;--stage-muted:#526274;--stage-surface:#f8fafc;--stage-panel:rgba(255,255,255,.95);--stage-accent:#1d4ed8;--chord-color:#9a3412}.stage-mode.stage-theme-contrast{--stage-text:#fff;--stage-muted:#e2e8f0;--stage-surface:#000;--stage-panel:rgba(0,0,0,.98);--stage-accent:#facc15;--chord-color:#facc15}.stage-mode .detail-header,.stage-mode #capo-row,.stage-mode .transpose-bar,.stage-mode>.stage-toolbar{display:none!important}.stage-mode .stage-performance-header{position:sticky;z-index:26;top:0;display:grid;min-height:64px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));grid-template-columns:44px minmax(0,1fr) auto 44px;align-items:center;gap:8px;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 12%,transparent);background:var(--stage-panel);backdrop-filter:blur(14px);transition:opacity .2s,transform .2s}.stage-nav-icon{display:grid;width:42px;height:42px;padding:0;place-items:center;border:1px solid color-mix(in srgb,var(--stage-text) 18%,transparent);border-radius:12px;background:transparent;color:var(--stage-text);font-size:20px;cursor:pointer}.stage-nav-icon:disabled{opacity:.24;cursor:not-allowed}.stage-heading{min-width:0}.stage-heading strong,.stage-heading span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-heading strong{font-size:clamp(13px,2.4vw,18px)}.stage-heading span{margin-top:2px;color:var(--stage-muted);font-size:9px}.stage-meta{display:flex;align-items:center;gap:7px}.stage-position,.stage-key{padding:5px 8px;border-radius:999px;background:color-mix(in srgb,var(--stage-text) 9%,transparent);color:var(--stage-text);font-size:9px;font-weight:900;white-space:nowrap}.stage-online-status{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.13)}.stage-online-status.offline{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.13)}.stage-mode .stage-next-preview{display:flex;margin:8px clamp(10px,3vw,28px) 0;padding:8px 11px;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);border-radius:11px;background:color-mix(in srgb,var(--stage-text) 5%,transparent);color:var(--stage-muted);font-size:9px}.stage-next-preview strong{min-width:0;overflow:hidden;color:var(--stage-text);font-size:10px;text-overflow:ellipsis;white-space:nowrap}.stage-next-preview span:last-child{margin-left:auto;white-space:nowrap}.stage-mode .detail-body{padding-top:14px;padding-bottom:112px;background:var(--stage-surface);color:var(--stage-text)}.stage-mode .wa-block,.stage-mode .full-chord-sheet{border:0;background:transparent;box-shadow:none}.stage-mode .wa-block{padding:4px 0;margin-bottom:16px}.stage-mode .full-chord-sheet{display:block;padding:4px 0}.stage-mode .full-chord-private{display:none}.stage-mode .letra-linha,.stage-mode .full-chord-line:not(.is-chord):not(.is-section){color:var(--stage-text);font-size:var(--stage-lyric-size,var(--stage-chord-size,28px));line-height:1.55}.stage-mode .full-chord-line.is-chord{font-size:var(--stage-chord-size,28px);line-height:1.7}.stage-mode .full-chord-line.is-section{color:var(--stage-accent);font-size:calc(var(--stage-chord-size,28px) * .55)}.stage-content-lyrics .chord-line,.stage-content-lyrics .full-chord-line.is-chord{display:none}.stage-content-chords .letra-linha,.stage-content-chords .full-chord-line:not(.is-chord):not(.is-section){display:none}.stage-structure-view{display:grid;gap:10px}.stage-structure-card{padding:14px;border-left:4px solid var(--stage-accent);border-radius:9px;background:color-mix(in srgb,var(--stage-text) 5%,transparent)}.stage-structure-card strong{display:block;color:var(--stage-accent);font-size:12px;text-transform:uppercase}.stage-structure-card span{display:block;margin-top:7px;color:var(--stage-text);font:700 var(--stage-chord-size,28px)/1.5 Arial,sans-serif}.stage-mode .stage-floating-controls{position:fixed;z-index:28;right:50%;bottom:max(12px,env(safe-area-inset-bottom));display:flex;max-width:calc(100% - 24px);padding:7px;align-items:center;gap:5px;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-panel);box-shadow:0 14px 34px rgba(0,0,0,.34);backdrop-filter:blur(15px);transform:translateX(50%);transition:opacity .2s,transform .2s}.stage-control{display:grid;min-width:42px;height:42px;padding:0 10px;place-items:center;border:0;border-radius:11px;background:transparent;color:var(--stage-text);font-size:15px;font-weight:900;cursor:pointer}.stage-control:hover,.stage-control.active{background:color-mix(in srgb,var(--stage-text) 12%,transparent)}.stage-control.primary{min-width:52px;background:var(--stage-accent);color:var(--stage-surface)}.stage-controls-hidden .stage-performance-header{opacity:0;pointer-events:none;transform:translateY(-105%)}.stage-controls-hidden .stage-floating-controls{opacity:0;pointer-events:none;transform:translate(50%,130%)}.stage-controls-always .stage-performance-header,.stage-controls-always .stage-floating-controls{opacity:1!important;pointer-events:auto!important}.stage-controls-hidden-permanent .stage-performance-header,.stage-controls-hidden-permanent .stage-floating-controls{display:none!important}.stage-mode .stage-quick-panel{position:fixed;z-index:32;inset:0;display:flex;padding:clamp(12px,4vw,28px);align-items:stretch;justify-content:flex-end;background:rgba(0,0,0,.58);backdrop-filter:blur(5px)}.stage-quick-panel[hidden]{display:none!important}.stage-quick-sheet{display:flex;width:min(430px,100%);padding:14px;overflow:hidden;flex-direction:column;border:1px solid color-mix(in srgb,var(--stage-text) 15%,transparent);border-radius:18px;background:var(--stage-surface);box-shadow:0 20px 55px rgba(0,0,0,.45)}.stage-quick-header{display:flex;align-items:center;gap:8px}.stage-quick-header strong{flex:1}.stage-quick-list{min-height:0;margin-top:10px;overflow-y:auto}.stage-quick-row{display:grid;width:100%;padding:10px;border:0;border-bottom:1px solid color-mix(in srgb,var(--stage-text) 10%,transparent);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:8px;background:transparent;color:var(--stage-text);text-align:left;cursor:pointer}.stage-quick-row.current{border-radius:10px;background:color-mix(in srgb,var(--stage-accent) 18%,transparent)}.stage-quick-row strong,.stage-quick-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stage-quick-row strong{font-size:11px}.stage-quick-row small{margin-top:2px;color:var(--stage-muted);font-size:8px}.stage-quick-row>span:last-child{color:var(--stage-accent);font-size:9px;font-weight:900}.stage-mode.stage-edit-locked .ai-generate-action,.stage-mode.stage-edit-locked .btn-row{display:none!important}
@@ -389,6 +398,27 @@ html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009
 .stage-mode .stage-nav-icon,.stage-mode .stage-control{height:44px;min-width:44px;width:44px;padding:0}
 .stage-mode .stage-position{display:none}.stage-mode .stage-meta{gap:4px}.stage-mode .stage-key{padding:4px;font-size:10px}
 .stage-mode .detail-body{padding-bottom:24px}
+/* Controles do palco: título central, tom junto da transposição e início embaixo. */
+.stage-mode .stage-performance-header{grid-template-columns:minmax(0,1fr) minmax(110px,1.2fr) minmax(0,1fr);column-gap:4px;row-gap:2px}
+.stage-nav-side{display:flex;min-width:0;align-items:center;gap:3px}.stage-nav-side--next{justify-content:flex-end}
+.stage-song-preview{display:flex;min-width:0;overflow:hidden;flex-direction:column;color:var(--stage-muted)}
+.stage-song-preview[hidden]{display:none}.stage-song-preview small{font-size:8px;font-weight:700;line-height:1.2}.stage-song-preview span{overflow:hidden;color:var(--stage-text);font-size:9px;font-weight:700;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.stage-nav-side--next .stage-song-preview{text-align:right}.stage-mode .stage-close{width:32px;min-width:32px;height:38px}
+.stage-mode .stage-heading{text-align:center}.stage-mode .stage-heading strong{font-size:clamp(14px,2.4vw,18px)}
+.stage-mode .stage-meta{justify-content:center;margin-top:3px}
+.stage-mode .stage-capo-controls{gap:clamp(6px,2vw,18px);flex-wrap:wrap}
+.stage-setting-group{display:flex;min-height:42px;align-items:center;justify-content:center;gap:2px;white-space:nowrap}
+.stage-setting-group .stage-key{min-width:42px;margin:0 3px;text-align:center;background:color-mix(in srgb,var(--stage-accent) 15%,transparent);color:var(--stage-accent)}
+.stage-mode .stage-capo-controls .stage-transpose-label{margin-left:0}
+.stage-mode .stage-scroll-speed{grid-column:1/-1;justify-content:center;flex-wrap:wrap;column-gap:4px;row-gap:0}
+.stage-start-row{grid-column:1/-1;display:flex;justify-content:center;padding:2px 0 4px}
+.stage-start-button{min-height:34px;min-width:min(180px,100%);padding:5px 14px;border:1px solid color-mix(in srgb,var(--stage-accent) 60%,transparent);border-radius:10px;background:var(--stage-accent);color:var(--stage-surface);font-family:inherit;font-size:11px;font-weight:800;line-height:1.2;cursor:pointer}
+.stage-start-button.active{background:color-mix(in srgb,var(--stage-accent) 18%,var(--stage-surface));color:var(--stage-text)}
+@media(max-width:560px){.stage-mode .stage-performance-header{grid-template-columns:minmax(0,1fr) minmax(110px,1.2fr) minmax(0,1fr)}.stage-mode .stage-nav-icon{width:38px;min-width:38px;height:38px}.stage-mode .stage-close{width:30px;min-width:30px;height:38px}.stage-mode .stage-capo-controls .stage-control{width:38px;min-width:38px;height:38px}.stage-mode .stage-capo-controls{gap:2px 8px}.stage-setting-group{min-height:38px}.stage-mode .stage-scroll-speed button{min-width:38px;width:38px;height:38px}.stage-start-button{min-height:34px}}
+.stage-mode.stage-scroll-compact .stage-performance-header{grid-template-columns:minmax(0,1fr) minmax(130px,1.2fr) minmax(0,1fr);min-height:0;padding-bottom:5px}
+.stage-mode.stage-scroll-compact .stage-heading,.stage-mode.stage-scroll-compact .stage-capo-controls,.stage-mode.stage-scroll-compact .stage-scroll-speed,.stage-mode.stage-scroll-compact .stage-close{display:none}
+.stage-mode.stage-scroll-compact .stage-nav-side--prev{grid-column:1;grid-row:1}.stage-mode.stage-scroll-compact .stage-nav-side--next{grid-column:3;grid-row:1}
+.stage-mode.stage-scroll-compact .stage-start-row{grid-column:2;grid-row:1;padding:0}
 /* ACESSIBILIDADE — amplia legibilidade e alvos de toque sem aplicar zoom global */
 html{--a11y-text-add:0px;--a11y-title-add:0px;--a11y-touch-add:0px}
 html[data-ui-scale="110"]{--a11y-text-add:.5px;--a11y-title-add:1px;--a11y-touch-add:2px}
@@ -427,6 +457,30 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
   html[data-ui-scale] .tab-bar{gap:4px;padding-inline:8px}
   html[data-ui-scale] .tab{padding-inline:3px}
 }
+.chord-section-header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 14px 4px}
+.study-music-panel{min-width:0;background:rgba(11,23,40,.75);border-bottom:1px solid var(--border)}
+.study-music-panel #capo-row{background:transparent!important;border-top:1px solid var(--border)}
+.study-panel-toggle{display:grid;width:29px;height:29px;padding:0;place-items:center;border:1px solid rgba(148,163,184,.25);border-radius:50%;background:rgba(148,163,184,.1);color:var(--text);font-family:inherit;font-size:19px;font-weight:700;line-height:1;cursor:pointer}
+.study-panel-toggle:hover,.study-panel-toggle:focus-visible{background:rgba(148,163,184,.2);outline:2px solid transparent}
+.study-panel-toggle span{display:block;transform:translateY(2px)}
+.study-music-panel.is-collapsed .study-panel-toggle span{transform:rotate(180deg) translateY(1px)}
+.study-music-panel.is-collapsed .chord-transpose-controls,.study-music-panel.is-collapsed .chord-instrument-button{display:none!important}
+.study-music-panel.is-collapsed .chord-section-header{grid-template-columns:auto 1fr;padding-block:7px}
+#study-panel-content[hidden]{display:none!important}
+.stage-mode #study-music-panel{display:none!important}
+.chord-section-header{grid-template-columns:auto auto minmax(0,1fr) auto}
+.chord-section-title{color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.chord-transpose-controls{min-width:0;margin:0;padding:0;justify-content:flex-start;gap:6px;border:0;background:transparent;box-shadow:none}
+.chord-transpose-controls .transpose-label{flex:0 0 auto;white-space:nowrap;font-size:11px}
+.chord-transpose-controls .transpose-semitone{min-width:20px}
+.chord-transpose-controls .transpose-key{min-width:24px;font-size:15px}
+.chord-transpose-controls .t-btn{width:30px;height:30px;font-size:17px}
+.chord-transpose-controls .t-reset{white-space:nowrap}
+.chord-instrument-button{display:flex;align-items:center;gap:5px;min-height:32px;padding:5px 11px;border:1px solid var(--border);border-radius:18px;background:var(--bg3);color:var(--text);font-family:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+@media(max-width:620px){.chord-section-header{grid-template-columns:auto minmax(0,1fr) auto}.chord-transpose-controls{grid-column:1/-1;grid-row:2;justify-content:flex-start;padding-top:7px;border-top:1px solid var(--border)}.chord-transpose-controls .t-reset{margin-left:auto}}
+@media(max-width:360px){.chord-section-header{gap:6px;padding-inline:8px}.chord-transpose-controls .transpose-label{display:none}.chord-transpose-controls .t-btn{width:28px;height:28px}.chord-transpose-controls .t-reset{font-size:11px}}
+.event-add-member{grid-template-columns:minmax(120px,1fr) 110px auto}
+@media(max-width:430px){.event-add-member{grid-template-columns:minmax(0,1fr) 110px}.event-add-member button{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -488,52 +542,44 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
       <span class="detail-key-badge" id="detail-key"></span>
     </div>
     <header class="stage-performance-header" id="stage-performance-header" aria-label="Informações da apresentação">
-      <button type="button" class="stage-nav-icon" id="stage-prev" onclick="navigateSong(-1)" aria-label="Música anterior">‹</button>
-      <div class="stage-heading" onclick="openStageQuickPanel()" title="Abrir repertório"><strong id="stage-song-title">Música</strong><span id="stage-song-artist"></span></div>
-      <div class="stage-meta"><span class="stage-position" id="stage-position">1 / 1</span><span class="stage-key" id="stage-key">Tom —</span><span class="stage-online-status" id="stage-online-status" title="Pacote pronto para uso offline"></span></div>
-      <button type="button" class="stage-nav-icon" id="stage-next" onclick="navigateSong(1)" aria-label="Próxima música">›</button>
-      <button type="button" class="stage-nav-icon" onclick="exitStageMode()" aria-label="Sair do Modo Palco">×</button>
+      <div class="stage-nav-side stage-nav-side--prev"><button type="button" class="stage-nav-icon" id="stage-prev" onclick="navigateSong(-1)" aria-label="Música anterior">‹</button><div class="stage-song-preview" id="stage-prev-preview" hidden><small>Anterior</small><span id="stage-prev-title"></span></div></div>
+      <div class="stage-heading" onclick="openStageQuickPanel()" title="Abrir repertório"><strong id="stage-song-title">Música</strong><span id="stage-song-artist"></span><span class="stage-position" id="stage-position" hidden>1 / 1</span></div>
+      <div class="stage-nav-side stage-nav-side--next"><div class="stage-song-preview" id="stage-upcoming-preview" hidden><small>Próxima</small><span id="stage-next-title"></span></div><button type="button" class="stage-nav-icon" id="stage-next" onclick="navigateSong(1)" aria-label="Próxima música">›</button><button type="button" class="stage-nav-icon stage-close" onclick="exitStageMode()" aria-label="Sair do Modo Palco">×</button></div>
       <div class="stage-capo-controls" role="group" aria-label="Capotraste no palco">
-        <span>Capo: <output id="stage-capo-value" aria-live="polite">Sem</output></span>
-        <button type="button" class="stage-control" id="stage-capo-minus" onclick="selectCapo(selectedCapo-1)" aria-label="Diminuir capotraste">−</button>
-        <button type="button" class="stage-control" id="stage-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button>
-        <button type="button" class="stage-control" onclick="selectCapo(0)" aria-label="Sem capotraste">Sem</button>
-        <span class="stage-transpose-label">Tom</span>
-        <button type="button" class="stage-control" onclick="transpose(-1)" aria-label="Descer o tom">−</button>
-        <button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">+</button>
+        <div class="stage-setting-group"><span>Capo: <output id="stage-capo-value" aria-live="polite">Sem</output></span><button type="button" class="stage-control" id="stage-capo-minus" onclick="selectCapo(selectedCapo-1)" aria-label="Diminuir capotraste">−</button><button type="button" class="stage-control" id="stage-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button></div>
+        <div class="stage-setting-group"><span class="stage-transpose-label">Tom</span><button type="button" class="stage-control" onclick="transpose(-1)" aria-label="Descer o tom">−</button><output class="stage-key" id="stage-key" aria-live="polite">—</output><button type="button" class="stage-control" onclick="transpose(1)" aria-label="Subir o tom">+</button></div>
       </div>
       <div class="scroll-speed-controls stage-scroll-speed" role="group" aria-label="Velocidade da rolagem no palco">
-        <button type="button" class="stage-control primary" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem">▶</button><span>Rolagem</span>
+        <span>Rolagem</span>
         <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
         <output class="scroll-speed-value" aria-live="polite">0,50x</output>
         <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(-2)" aria-label="Diminuir fonte">A−</button>
         <button type="button" class="stage-control" onclick="adjustStageFont(2)" aria-label="Aumentar fonte">A+</button>
       </div>
+      <div class="stage-start-row"><button type="button" class="stage-start-button" id="stage-scroll-toggle" onclick="toggleAutoScroll()" aria-label="Iniciar modo palco">Iniciar modo palco</button></div>
     </header>
-    <div class="stage-next-preview" id="stage-next-preview"><span>Próxima</span><strong id="stage-next-title">Fim do repertório</strong><span id="stage-next-key"></span></div>
     <section class="youtube-player-shell" id="youtube-song-player" aria-label="Player do YouTube da música"></section>
-    <!-- ACORDES + INSTRUMENTO -->
+    <!-- ACORDES, CAPOTRASTE E METRÔNOMO -->
+    <div id="study-music-panel" class="study-music-panel">
     <div id="chord-diagrams-section" style="background:var(--bg2);border-bottom:1px solid var(--border);">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px 4px;">
-        <span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase;">Acordes</span>
-        <button id="inst-btn" onclick="openInstModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:5px;">
+      <div class="chord-section-header">
+        <button type="button" id="study-panel-toggle" class="study-panel-toggle" onclick="toggleStudyPanel()" aria-label="Recolher painel de acordes" aria-expanded="true" aria-controls="study-panel-content"><span aria-hidden="true">^</span></button>
+        <span class="chord-section-title">Acordes</span>
+        <div class="transpose-bar chord-transpose-controls" role="group" aria-label="Transpor tom">
+          <span class="transpose-label">Transpor tom</span>
+          <span class="transpose-semitone" id="semitone-label">+0</span>
+          <button class="t-btn" onclick="transpose(-1)" aria-label="Descer o tom">−</button>
+          <span class="transpose-key" id="transposed-key"></span>
+          <button class="t-btn" onclick="transpose(+1)" aria-label="Subir o tom">+</button>
+          <button class="t-reset" onclick="resetTranspose()">Original</button>
+        </div>
+        <button id="inst-btn" class="chord-instrument-button" onclick="openInstModal()">
           <span id="inst-label">🎸 Violão</span> <span style="color:var(--text2);">▾</span>
         </button>
       </div>
+      <div id="study-panel-content">
       <div id="chord-strip"></div>
-    </div>
-
-    <!-- MODAL DE INSTRUMENTOS -->
-    <div id="inst-modal" onclick="closeInstModal(event)" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:40;align-items:flex-end;justify-content:center;">
-      <div onclick="event.stopPropagation()" style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:24px;border-top:1px solid var(--border);">
-        <div style="padding:16px 20px 8px;display:flex;align-items:center;gap:10px;">
-          <span onclick="closeInstModal()" style="color:var(--accent);font-size:20px;cursor:pointer;">←</span>
-          <span style="font-size:16px;font-weight:700;">Acordes</span>
-        </div>
-        <div id="inst-list"></div>
-      </div>
-    </div>
     <!-- CAPO SELECTOR (estilo Cifra Club) -->
     <div id="capo-row">
       <div class="capo-selector-line" id="capo-selector-group">
@@ -554,17 +600,32 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
         <button class="capo-opt" id="capo-opt-12" onclick="selectCapo(12)">12ª</button>
         </div>
       </div>
-      <div class="transpose-bar capo-transpose-row">
-        <span class="transpose-label">Transpor tom</span>
-        <span class="transpose-semitone" id="semitone-label">+0</span>
-        <button class="t-btn" onclick="transpose(-1)" aria-label="Descer o tom">−</button>
-        <span class="transpose-key" id="transposed-key"></span>
-        <button class="t-btn" onclick="transpose(+1)" aria-label="Subir o tom">+</button>
-        <button class="t-reset" onclick="resetTranspose()">Original</button>
+      <div class="metronome-bar capo-metronome-row" id="study-metronome" role="group" aria-label="Metrônomo de estudo">
+        <span class="metronome-symbol" aria-hidden="true">♩ <span class="metronome-title">Metrônomo</span></span>
+        <button type="button" class="metronome-button" id="metronome-minus" aria-label="Diminuir BPM">−</button>
+        <span class="metronome-bpm"><output id="metronome-bpm" aria-live="polite">72</output> <small>BPM</small></span>
+        <button type="button" class="metronome-button" id="metronome-plus" aria-label="Aumentar BPM">+</button>
+        <select id="metronome-meter" class="metronome-meter" aria-label="Compasso"><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4" selected>4/4</option><option value="6/8">6/8</option></select>
+        <span class="metronome-beats" aria-label="Quatro tempos do compasso"><span class="metronome-beat"></span><span class="metronome-beat"></span><span class="metronome-beat"></span><span class="metronome-beat"></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span></span>
+        <button type="button" class="metronome-button metronome-play" id="metronome-play" aria-label="Iniciar metrônomo" aria-pressed="false">▶</button>
       </div>
     </div>
-    <div class="stage-toolbar">
-      <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()">Modo Palco</button>
+      </div>
+    </div>
+    </div>
+
+    <!-- MODAL DE INSTRUMENTOS -->
+    <div id="inst-modal" onclick="closeInstModal(event)" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:40;align-items:flex-end;justify-content:center;">
+      <div onclick="event.stopPropagation()" style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:24px;border-top:1px solid var(--border);">
+        <div style="padding:16px 20px 8px;display:flex;align-items:center;gap:10px;">
+          <span onclick="closeInstModal()" style="color:var(--accent);font-size:20px;cursor:pointer;">←</span>
+          <span style="font-size:16px;font-weight:700;">Acordes</span>
+        </div>
+        <div id="inst-list"></div>
+      </div>
+    </div>
+    <div class="stage-toolbar" id="study-scroll-toolbar">
+      <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()" hidden>Modo Palco</button>
       <button class="stage-btn stage-btn-scroll" id="btn-scroll" onclick="toggleAutoScroll()">▶ Rolagem</button>
       <div class="scroll-speed-controls" role="group" aria-label="Velocidade da rolagem">
         <button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button>
@@ -572,7 +633,7 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
         <button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button>
       </div>
     </div>
-    <div class="stage-toolbar" aria-label="Controles de apresentação">
+    <div class="stage-toolbar" id="detail-nav-toolbar" aria-label="Controles de apresentação">
       <button class="stage-btn" id="btn-previous-song" onclick="navigateSong(-1)" title="Música anterior" hidden>← Anterior</button>
       <button class="stage-btn stage-only-control" id="btn-font" onclick="cycleStageFont()" title="Tamanho das cifras">Fonte M</button>
       <button class="stage-btn" id="btn-next-song" onclick="navigateSong(1)" title="Próxima música" hidden>Próxima →</button>
@@ -594,11 +655,11 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
         <div class="detail-title" id="sd-title"></div>
         <div class="detail-capo" id="sd-date"></div>
       </div>
+      <button type="button" class="event-notification-button event-chat-header-button" id="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento" hidden>💬</button>
       <button type="button" class="event-notification-button" id="event-notification-button" onclick="openEventNotifications()" aria-label="Abrir alterações recentes" aria-haspopup="dialog">🔔</button>
     </div>
     <div class="detail-body" id="sd-content"></div>
   </div>
-  <button type="button" class="event-chat-fab" id="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento" hidden>💬</button>
 
   <!-- MODAL -->
   <div id="modal-overlay" class="modal-overlay" onclick="closeModalOut(event)">
@@ -645,6 +706,7 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=1"></script>
+<script src="js/study-metronome.js?v=2"></script>
 <script src="js/editor/song-format.js?v=8"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
@@ -657,7 +719,7 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=7"></script>
+<script src="js/event-collaboration-client.js?v=8"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=8"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=4"></script>
@@ -712,6 +774,17 @@ function showToast(msg){
 }
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentLocationAutocomplete=null;
+const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast);
+function toggleStudyPanel(){
+  const panel=document.getElementById('study-music-panel');
+  const content=document.getElementById('study-panel-content');
+  const button=document.getElementById('study-panel-toggle');
+  const collapsed=!panel.classList.contains('is-collapsed');
+  panel.classList.toggle('is-collapsed',collapsed);
+  content.hidden=collapsed;
+  button.setAttribute('aria-expanded',String(!collapsed));
+  button.setAttribute('aria-label',collapsed?'Expandir painel de acordes':'Recolher painel de acordes');
+}
 let setlists=[];
 let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
 
@@ -1307,6 +1380,10 @@ function openDetail(id,options={}){
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
+  document.getElementById('study-metronome').hidden=false;
+  studyMetronome.setSong(m.id,appCurrentUser.id);
+  const context=navigationContext.get();
+  document.getElementById('btn-palco').hidden=!(context&&findEvent(context.playlistId));
   if(!stageMode)currentSongView='summary';
   const summary=songFormat.harmonicSummary(m);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
@@ -1370,6 +1447,7 @@ new ResizeObserver(measureStageHeader).observe(document.getElementById('stage-pe
 async function enterStageMode(){
   const vd=document.getElementById('view-detail');if(!vd)return;
   if(stageMode)return;
+  studyMetronome.stop();
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),contentMode:'lyrics-chords',theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
   const packData=stageContextData();
   try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
@@ -1404,6 +1482,7 @@ function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode()
 
 function closeDetail(){
   if(stageMode)exitStageMode(false);else stopAutoScroll();
+  studyMetronome.stop();
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');vd.style.display='none';vd.style.zIndex='10';
   document.getElementById('event-chat-fab').hidden=document.getElementById('view-sd').style.display!=='flex';
@@ -1426,9 +1505,12 @@ function updateStagePresentation(){
   const m=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId)),context=navigationContext.get(),prefs=activeStagePreferences||{};
   document.getElementById('stage-song-title').textContent=m?.title||'Música';document.getElementById('stage-song-artist').textContent=m?.artist||'';
   const position=document.getElementById('stage-position');position.hidden=prefs.showPosition===false;position.textContent=context?`${String(context.currentIndex+1).padStart(2,'0')} / ${String(context.songIds.length).padStart(2,'0')}`:'Música avulsa';
-  const key=document.getElementById('stage-key');key.hidden=prefs.showKey===false;key.textContent='Tom '+shiftText(m?.key||'—',currentSemitones);
-  const next=context?currentStageSongAt(context.currentIndex+1):null,preview=document.getElementById('stage-next-preview');preview.style.display=prefs.showNextPreview===false?'none':'';document.getElementById('stage-next-title').textContent=next?.title||'Fim do repertório';document.getElementById('stage-next-key').textContent=next?.key?`Tom ${next.key}`:'';
-  document.getElementById('stage-online-status').classList.toggle('offline',!navigator.onLine);
+  const key=document.getElementById('stage-key');key.textContent=shiftText(m?.key||'—',currentSemitones);
+  const previous=context?currentStageSongAt(context.currentIndex-1):null,next=context?currentStageSongAt(context.currentIndex+1):null;
+  document.getElementById('stage-prev-preview').hidden=!previous||prefs.showPrevious===false;
+  document.getElementById('stage-prev-title').textContent=previous?.title||'';
+  document.getElementById('stage-upcoming-preview').hidden=!next||prefs.showNextPreview===false;
+  document.getElementById('stage-next-title').textContent=next?.title||'';
   const listButton=document.querySelector('.stage-floating-controls [onclick="openStageQuickPanel()"]');if(listButton)listButton.style.display=prefs.showSetlist===false?'none':'';
   updateStageQuickList();
 }
@@ -1443,17 +1525,19 @@ function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarge
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
-function toggleAutoScroll(){if(scrollTimer!==null)stopAutoScroll();else startAutoScroll();revealStageControls();}
+function toggleAutoScroll(){if(scrollTimer!==null||document.getElementById('view-detail').classList.contains('stage-scroll-compact'))stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
-  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Rolagem';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Ⅱ';stageButton.setAttribute('aria-label','Pausar rolagem');}
+  if(btn){btn.classList.add('active');btn.textContent='⏹ Parar Rolagem';}if(stageButton){stageButton.classList.add('active');stageButton.textContent='Pausar Modo Palco';stageButton.setAttribute('aria-label','Pausar Modo Palco');}
+  if(stageMode){vd.classList.add('stage-scroll-compact');measureStageHeader();}
   stageLastFrame=performance.now();stageScrollRemainder=0;
-  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){stopAutoScroll();return;}scrollTimer=requestAnimationFrame(tick);};
+  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){scrollTimer=null;stageScrollRemainder=0;return;}scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);
 }
 function stopAutoScroll(){
   if(scrollTimer!==null){cancelAnimationFrame(scrollTimer);scrollTimer=null;}stageScrollRemainder=0;
-  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Rolagem';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='▶';stageButton.setAttribute('aria-label','Iniciar rolagem');}
+  document.getElementById('view-detail').classList.remove('stage-scroll-compact');measureStageHeader();
+  const btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');if(btn){btn.classList.remove('active');btn.textContent='▶ Rolagem';}if(stageButton){stageButton.classList.remove('active');stageButton.textContent='Iniciar modo palco';stageButton.setAttribute('aria-label','Iniciar modo palco');}
 }
 function updateScrollSpeedControls(){
   document.querySelectorAll('.scroll-speed-value').forEach(output=>output.textContent=stagePreferences.formatScrollSpeed(scrollSpeed));
@@ -1465,7 +1549,7 @@ function adjustStageScrollSpeed(delta){
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();revealStageControls();
 }
-function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});document.getElementById('view-detail').scrollTop=0;if(stageMode&&activeStagePreferences?.autoScroll)startAutoScroll();}
+function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}const view=document.getElementById('view-detail'),wasCompact=stageMode&&view.classList.contains('stage-scroll-compact');stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});view.scrollTop=0;if(stageMode&&(wasCompact||activeStagePreferences?.autoScroll))startAutoScroll();}
 
 const stageFontSizes=[22,28,34];let stageFontIndex=1;
 function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});return normalized;}
@@ -1555,6 +1639,9 @@ function limparMedley(){if(confirm('Limpar o medley?')){medleyBlocos=[];renderMe
 
 function tocarMedley(){
   // abre view de medley em modo palco
+  studyMetronome.stop();
+  document.getElementById('study-metronome').hidden=true;
+  document.getElementById('btn-palco').hidden=true;
   currentDetailId=null;
   const vd=document.getElementById('view-detail');
   document.getElementById('detail-title').textContent='🎛️ Medley';
@@ -1802,6 +1889,38 @@ function openSharedView(data){
   setTimeout(()=>openSD('shared'),300);
 }
 
+const EVENT_INVITE_SESSION_KEY='sc_event_invite_pending_v1';
+function captureEventInvitation(){
+  const hash=new URLSearchParams(location.hash.slice(1)),token=hash.get('convite');
+  if(token){
+    history.replaceState({},'',location.pathname+location.search);
+    if(/^[A-Za-z0-9_-]{32,128}$/.test(token))sessionStorage.setItem(EVENT_INVITE_SESSION_KEY,token);
+    else showToast('⚠️ Link de convite inválido.');
+  }
+  return sessionStorage.getItem(EVENT_INVITE_SESSION_KEY);
+}
+let pendingEventInvitation=captureEventInvitation();
+function showEventInvitationLogin(){
+  if(!pendingEventInvitation||!currentAuthState.enabled)return;
+  document.getElementById('modal-body').innerHTML='<div class="modal-title">Convite para evento</div><p class="event-scope-note">Entre com sua conta para aceitar o convite e participar automaticamente como integrante.</p><button type="button" class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><button type="button" class="btn btn-outline" onclick="closeModal()">Agora não</button>';
+  document.getElementById('modal-overlay').style.display='flex';
+}
+async function acceptPendingEventInvitation(){
+  if(!pendingEventInvitation||!currentAuthState.authenticated)return false;
+  try{
+    await eventCollaboration.acceptInvitation(pendingEventInvitation);
+    sessionStorage.removeItem(EVENT_INVITE_SESSION_KEY);pendingEventInvitation=null;
+    showToast('✅ Convite aceito. Você entrou no evento como integrante.');
+    return true;
+  }catch(error){
+    if([400,404,409,410].includes(error.status)){
+      sessionStorage.removeItem(EVENT_INVITE_SESSION_KEY);pendingEventInvitation=null;
+    }
+    showToast('⚠️ '+error.message);
+    return false;
+  }
+}
+
 // ── EVENTOS MVP ──────────────────────────────────────────────────────
 const legacyCurrentUser=storage.get('sc_current_user_v1',{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null})||{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null};
 let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
@@ -1855,6 +1974,7 @@ function eventSortValue(event){
   return new Date(year,month-1,day,time?Number(time[1]):0,time?Number(time[2]):0).getTime();
 }
 function eventMemberAvatar(member){return member.avatarUrl?`<img src="${eventEsc(member.avatarUrl)}" alt="">`:eventEsc(eventInitials(member.name));}
+function eventMemberRole(member,leaderId){return String(member.id)!==String(leaderId)&&/^(lider|líder|liderança|lideranca)$/i.test(member.role||'')?'Integrante':member.role;}
 function bandRoleLabel(role){return role==='owner'?'Proprietário':role==='leader'?'Líder':'Integrante';}
 function renderBandToolbar(){
   const select=document.getElementById('active-band-select');if(!select)return;
@@ -1963,12 +2083,23 @@ async function openBandManager(){
 }
 async function createBandFromModal(){const input=document.getElementById('new-band-name'),name=input&&input.value.trim();if(!name)return;try{const band=await bandClient.create({name,musicalRole:appCurrentUser.role});appBands.push(band);activeBandId=band.id;storage.set('sc_active_band_id_v1',activeBandId);renderBandToolbar();await openBandManager();showToast('👥 Equipe criada');}catch(error){showToast('⚠️ '+error.message);}}
 async function inviteBandMember(bandId){const userId=prompt('Informe o ID do integrante:');if(!userId)return;const musicalRole=prompt('Função musical:', 'Outra')||'Outra';try{const updated=await bandClient.addMember(bandId,{userId:userId.trim(),accessRole:'member',musicalRole});appBands=appBands.map(band=>String(band.id)===String(updated.id)?updated:band);await openBandManager();showToast('✅ Integrante adicionado');}catch(error){showToast('⚠️ '+error.message);}}
+function eventKeyShift(fromKey,toKey){
+  const root=value=>String(value||'').match(/^[A-G](?:#|b)?/)?.[0]||'';
+  const from=noteIdx(root(fromKey)),to=noteIdx(root(toKey));
+  return from<0||to<0?0:(to-from+12)%12;
+}
+function transposeEventChordText(value,semitones){
+  if(!semitones)return String(value||'');
+  return String(value||'').split(/(\r?\n)/).map(line=>songFormat.chordLine(line)?shiftText(line,semitones):line).join('');
+}
 function eventSongModel(song,edit,fallbackEdit){
   const base=songFormat.fromLegacy(song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
-  const chordSheet=primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),sections=songFormat.sectionsFromSimpleText(chordSheet,base);
-  return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections});
+  const sourceKey=primary.chordSheet?primary.key:fallback.chordSheet?fallback.key:base.originalKey;
+  const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
+  const sections=songFormat.sectionsFromSimpleText(chordSheet,base),fullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,eventKeyShift(base.originalKey,key))}:base.fullChordSheet;
+  return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
 function eventSongVariant(event,item,userId){
   const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return null;
@@ -1980,7 +2111,7 @@ function openAddSetlist(prefill){
   const permissionActor=prefill?eventPermissionActor(prefill):appCurrentUser;
   if(prefill&&!eventModel.canEditShared(prefill,permissionActor.id)){showToast('🔒 Somente o líder pode editar o repertório oficial');return;}
   editingId=prefill?prefill.id:null;
-  const source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
+  let source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
   let selectedBandId=source.bandId||activeBandId||null;
   let selectedIds=[...source.musicas];
   let eventMembers=[...source.members];
@@ -2008,10 +2139,9 @@ function openAddSetlist(prefill){
   }
   function renderMembers(){
     const target=document.getElementById('event-member-editor-list'); if(!target) return;
-    target.innerHTML=eventMembers.map((member,index)=>`<div class="event-member-editor"><span>${eventEsc(member.name)}${String(member.id)===String(appCurrentUser.id)?' (você)':''}<code class="event-member-id">${eventEsc(member.id)}</code></span><small>${eventEsc(member.role)}</small><label class="event-leader-choice"><input type="radio" name="event-leader-id" value="${eventEsc(member.id)}" ${String(member.id)===String(selectedLeaderId)?'checked':''}> Líder</label>${String(member.id)===String(selectedLeaderId)||String(member.id)===String(appCurrentUser.id)?'':`<button type="button" class="event-member-remove" onclick="eventRemoveMember(${index})" aria-label="Remover membro">×</button>`}</div>`).join('');
-    target.querySelectorAll('input[name="event-leader-id"]').forEach(input=>input.addEventListener('change',()=>{selectedLeaderId=input.value;renderMembers();}));
+    target.innerHTML=eventMembers.map((member,index)=>`<div class="event-member-editor"><span>${eventEsc(member.name)}${String(member.id)===String(appCurrentUser.id)?' (você)':''}<code class="event-member-id">${eventEsc(member.id)}</code></span><small>${eventEsc(eventMemberRole(member,selectedLeaderId))}</small>${String(member.id)===String(selectedLeaderId)?'<span class="event-leader-badge">Líder</span>':`<button type="button" class="event-member-remove" onclick="eventRemoveMember(${index})" aria-label="Remover membro">×</button>`}</div>`).join('');
   }
-  const roleOptions=eventModel.ROLES.map(role=>`<option value="${eventEsc(role)}">${eventEsc(role)}</option>`).join('');
+  const roleOptions=eventModel.ROLES.filter(role=>role!=='Liderança').map(role=>`<option value="${eventEsc(role)}">${eventEsc(role)}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${editingId?'Editar':'Novo'} evento</div>
     <div class="form-group"><label class="form-label">Nome do evento</label><input class="form-input" id="fs-title" value="${eventEsc(source.title==='Novo evento'?'':source.title)}" placeholder="Ex: Culto de domingo"></div>
@@ -2020,29 +2150,52 @@ function openAddSetlist(prefill){
     <div class="form-group"><label class="form-label">Repertório compartilhado — arraste para ordenar</label><div id="pl-selected"></div></div>
     <div class="form-group"><label class="form-label">Adicionar músicas</label><input class="form-input" id="pl-search" placeholder="Buscar música..."><div id="pl-all" style="max-height:190px;overflow-y:auto;margin-top:7px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);"></div></div>
     <div id="pl-count" style="font-size:10px;color:var(--text2);margin-bottom:12px;"></div>
-    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome"><select class="form-input" id="event-member-role">${roleOptions}</select><input class="form-input" id="event-member-id" placeholder="ID do integrante (opcional)"><button type="button" class="btn btn-outline" onclick="eventAddMember()">Adicionar</button></div></div>
+    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome do integrante"><select class="form-input" id="event-member-role">${roleOptions}</select><button type="button" class="btn btn-outline" onclick="eventInviteMember()">Convidar Integrante</button></div><p class="event-scope-note">O convite será enviado por link. O integrante aparece aqui após entrar com sua conta e aceitar.</p></div>
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
-  const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));selectedLeaderId=eventMembers.some(member=>String(member.id)===String(appCurrentUser.id))?appCurrentUser.id:eventMembers[0]&&eventMembers[0].id||'';renderMembers();}});
+  const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));if(!eventMembers.some(member=>String(member.id)===String(selectedLeaderId)))eventMembers.unshift({...appCurrentUser,isCurrentUser:true});renderMembers();}});
   window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){selectedIds.push(id);renderSelected();renderAvailable();}};
   window.plRemove=id=>{selectedIds=selectedIds.filter(value=>String(value)!==String(id));renderSelected();renderAvailable();};
   let dragId=null;
   window.plDragStart=id=>{dragId=id;}; window.plDragEnd=()=>{dragId=null;}; window.plDragOver=event=>event.preventDefault();
   window.plDrop=targetId=>{if(dragId==null||String(dragId)===String(targetId))return;const from=selectedIds.findIndex(id=>String(id)===String(dragId)),to=selectedIds.findIndex(id=>String(id)===String(targetId));if(from<0||to<0)return;const [moved]=selectedIds.splice(from,1);selectedIds.splice(to,0,moved);renderSelected();};
-  window.eventAddMember=()=>{const name=document.getElementById('event-member-name').value.trim();if(!name)return;const supplied=document.getElementById('event-member-id').value.trim(),memberId=supplied||'member_'+Date.now();if(!/^[A-Za-z0-9_.:-]{3,120}$/.test(memberId)){showToast('ID do integrante inválido');return;}if(eventMembers.some(member=>String(member.id)===memberId)){showToast('Este integrante já foi adicionado');return;}eventMembers.push({id:memberId,name,role:document.getElementById('event-member-role').value,avatarUrl:null});document.getElementById('event-member-name').value='';document.getElementById('event-member-id').value='';renderMembers();};
+  window.eventInviteMember=async()=>{
+    const name=document.getElementById('event-member-name').value.trim(),role=document.getElementById('event-member-role').value;
+    if(!name){showToast('⚠️ Informe o nome do integrante.');return;}
+    if(!currentAuthState.authenticated){showToast('⚠️ Entre com sua conta antes de convidar.');return;}
+    const button=document.querySelector('.event-add-member button');button.disabled=true;
+    try{
+      const saved=await window.saveSetlist({keepOpen:true});
+      if(!saved||saved.remoteVersion==null){showToast('⚠️ Salve o evento na nuvem antes de convidar.');return;}
+      const invitation=await eventCollaboration.createInvitation(saved.id,name,role);
+      const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+      const text=`Você foi convidado(a) para ${invitation.eventTitle} como ${role} (${name}). Abra o link e entre com sua conta para participar.`;
+      document.getElementById('event-member-name').value='';
+      if(navigator.share){try{await navigator.share({title:'Convite para '+invitation.eventTitle,text,url:link.href});return;}catch(error){if(error.name==='AbortError'){showToast('Convite criado. Toque em Convidar Integrante para gerar outro link.');return;}}}
+      if(navigator.clipboard?.writeText){
+        try{await navigator.clipboard.writeText(text+'\n'+link.href);showToast('🔗 Link do convite copiado para compartilhar.');}
+        catch(_error){prompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);}
+      }else prompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);
+    }catch(error){showToast('⚠️ '+error.message);}finally{button.disabled=false;}
+  };
   window.eventRemoveMember=index=>{const member=eventMembers[index];if(!member||String(member.id)===String(selectedLeaderId))return;eventMembers.splice(index,1);renderMembers();};
-  window.saveSetlist=async()=>{
+  function editorSignature(value){const event=eventModel.create(value);return JSON.stringify([event.title,event.date,event.time,event.bandId,event.leaderId,event.musicas,event.members.map(member=>[member.id,member.name,member.role]),event.repertoire.map(item=>[item.id,item.songId,item.order,item.shared])]);}
+  window.saveSetlist=async(options={})=>{
     const title=document.getElementById('fs-title').value.trim(); if(!title)return;
     const previous=findEvent(editingId);
     const previousItems=previous?previous.repertoire:[];
     const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
     let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
+    if(options.keepOpen&&source.remoteVersion!=null&&!source.pendingShared&&editorSignature(candidate)===editorSignature(source))return source;
     candidate=eventModel.withSharedChange(candidate,permissionActor,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
     let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,permissionActor);}catch(error){showToast('🔒 '+error.message);return;}
-    try{if(candidate.remoteVersion!=null||String(permissionActor.id)===String(appCurrentUser.id)){candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Evento salvo neste dispositivo. Use o ID do integrante para sincronizar.';}
+    try{if(candidate.remoteVersion!=null||String(permissionActor.id)===String(appCurrentUser.id)){candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Há um integrante legado sem conta registrada. Corrija-o antes de convidar.';}
     setlists=result.events;eventRepository.save(setlists);
     try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+(editingId?' atualizou o evento.':' criou o evento.'));}catch(error){}
-    closeModal();renderSetlists();showToast(syncWarning||(result.created?'📅 Evento criado':'✅ Evento atualizado'));
+    source=candidate;editingId=candidate.id;eventMembers=[...candidate.members];renderMembers();
+    if(!options.keepOpen)closeModal();
+    renderSetlists();if(!options.keepOpen)showToast(syncWarning||(result.created?'📅 Evento criado':'✅ Evento atualizado'));
+    return candidate;
   };
   renderSelected();renderAvailable();renderMembers();document.getElementById('modal-overlay').style.display='flex';
 }
@@ -2109,23 +2262,58 @@ function openEventNotifications(){
 
 function openSD(id){
   const event=findEvent(id);if(!event)return;currentSdId=event.id;
+  const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id);
   document.querySelector('#view-main .fab').style.display='none';
   document.getElementById('sd-title').textContent=event.title;
   document.getElementById('sd-date').textContent=[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ');
   const rows=event.repertoire.map((item,index)=>{
     const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return'';
     const effective=eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id),variant=eventSongVariant(event,item,appCurrentUser.id);
-    const displayKey=variant.key||song.key||'',notes=effective.effective.notes||'';
-    return `<div class="sd-row" style="cursor:pointer;" onclick="openDetailFromPlaylist('${eventEsc(event.id)}',${index})"><span class="sd-num">${index+1}</span><div style="flex:1;min-width:0;pointer-events:none;"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${eventEsc(variant.title)}</div><div style="font-size:10px;color:var(--text2);">${eventEsc(variant.artist||variant.capo||'—')}</div>${notes?`<div class="event-song-note">${eventEsc(notes)}</div>`:''}</div><span style="font-size:10px;color:var(--accent);font-family:monospace;font-weight:800;pointer-events:none;">${eventEsc(displayKey)}</span><button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')" aria-label="Editar música no evento">✎</button></div>`;
+    const officialKey=item.shared.key||song.key||'',displayKey=canShared?officialKey:(variant.key||song.key||''),notes=effective.effective.notes||'';
+    const keyControl=canShared?`<div class="event-official-key-control" data-item-id="${eventEsc(item.id)}" role="group" aria-label="Tom oficial de ${eventEsc(variant.title)}"><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',-1)" aria-label="Descer tom oficial de ${eventEsc(variant.title)}" ${officialKey?'':'disabled'}>−</button><output aria-live="polite" title="Tom oficial">${eventEsc(displayKey||'—')}</output><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',1)" aria-label="Subir tom oficial de ${eventEsc(variant.title)}" ${officialKey?'':'disabled'}>+</button></div>`:`<span style="font-size:10px;color:var(--accent);font-family:monospace;font-weight:800;pointer-events:none;" title="Tom desta versão">${eventEsc(displayKey)}</span>`;
+    return `<div class="sd-row" style="cursor:pointer;" onclick="openDetailFromPlaylist('${eventEsc(event.id)}',${index})"><span class="sd-num">${index+1}</span><div style="flex:1;min-width:0;pointer-events:none;"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${eventEsc(variant.title)}</div><div style="font-size:10px;color:var(--text2);">${eventEsc(variant.artist||variant.capo||'—')}</div>${notes?`<div class="event-song-note">${eventEsc(notes)}</div>`:''}</div>${keyControl}<button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')" aria-label="Editar música no evento">✎</button></div>`;
   }).join('');
-  const memberCards=event.members.length?event.members.map(member=>`<div class="event-member-card"><div class="event-member-avatar">${eventMemberAvatar(member)}</div><div><strong>${eventEsc(member.name)}${String(member.id)===String(event.leaderId)?'<span class="event-leader-badge">Líder</span>':''}</strong><span>${eventEsc(member.role)}</span><code class="event-member-id">${eventEsc(member.id)}</code></div></div>`).join(''):'<div style="color:var(--text2);font-size:11px;">Nenhum membro escalado.</div>';
-  let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
-  const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id),permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
-  document.getElementById('sd-content').innerHTML=`<div class="event-permission-note">${eventEsc(permissionText)}</div><div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-heading"><div class="event-section-title">Repertório oficial compartilhado</div><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-section-title">Membros participantes</div><div class="event-member-list">${memberCards}</div><div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div>`;
-  const chatButton=document.getElementById('event-chat-fab');chatButton.innerHTML=`💬${unread?`<span class="event-chat-fab-badge">${unread}</span>`:''}`;chatButton.hidden=false;
+  const memberCards=event.members.length?event.members.map(member=>`<div class="event-member-card"><div class="event-member-avatar">${eventMemberAvatar(member)}</div><div><strong>${eventEsc(member.name)}${String(member.id)===String(event.leaderId)?'<span class="event-leader-badge">Líder</span>':''}</strong><span>${eventEsc(eventMemberRole(member,event.leaderId))}</span><code class="event-member-id">${eventEsc(member.id)}</code></div></div>`).join(''):'<div style="color:var(--text2);font-size:11px;">Nenhum membro escalado.</div>';
+  const permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
+  document.getElementById('sd-content').innerHTML=`<div class="event-permission-note">${eventEsc(permissionText)}</div><div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-title event-section-title--center">REPERTÓRIO OFICIAL DO EVENTO</div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-stage-action"><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div><div class="event-section-title event-section-title--center">Membros participantes</div><div class="event-member-list">${memberCards}</div><div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div>`;
+  renderEventChatButton(event);
   renderEventNoticeButton(event);
   eventMapPreview.render(document.getElementById('event-detail-map'),event.eventLocation);
   document.getElementById('view-sd').style.display='flex';document.getElementById('view-sd').style.zIndex='15';
+}
+
+const eventOfficialKeyBusy=new Set();
+async function changeEventOfficialKey(eventId,itemId,direction){
+  const event=findEvent(eventId),item=event?.repertoire.find(value=>String(value.id)===String(itemId)),song=item&&musicas.find(value=>String(value.id)===String(item.songId));
+  if(!event||!item||!song)return;
+  const actor=eventPermissionActor(event);
+  if(!eventModel.canEditShared(event,actor.id)){showToast('🔒 Somente o líder pode alterar o tom oficial.');return;}
+  const baseKey=item.shared.key||song.key||'',nextKey=shiftText(baseKey,direction<0?-1:1),busyKey=String(eventId)+':'+String(itemId);
+  if(!baseKey||nextKey===baseKey){showToast('⚠️ Defina um tom original válido na edição da música.');return;}
+  if(eventOfficialKeyBusy.has(busyKey))return;
+  eventOfficialKeyBusy.add(busyKey);
+  const control=[...document.querySelectorAll('.event-official-key-control')].find(value=>value.dataset.itemId===String(itemId));
+  control?.querySelectorAll('button').forEach(button=>button.disabled=true);
+  try{
+    const changes={...item.shared,key:nextKey,updatedAt:new Date().toISOString()};
+    if(changes.chordSheet)changes.chordSheet=transposeEventChordText(changes.chordSheet,direction<0?-1:1);
+    let updated=eventModel.applySharedEdit(event,itemId,actor.id,changes);
+    updated=eventModel.withSharedChange(eventModel.create({...updated,syncState:'pending',pendingShared:true}),actor,'repertoire.key.updated',`alterou o tom oficial para ${nextKey}`);
+    try{updated=updated.remoteVersion==null?await eventCollaboration.saveSharedEvent(updated,appCurrentUser):await eventCollaboration.saveSharedItem(updated,itemId,changes,appCurrentUser);}
+    catch(error){if(!collaborationAllowsOffline(error))throw error;}
+    setlists=eventRepository.upsert(setlists,updated).events;eventRepository.save(setlists);
+    try{eventChat.sendSystem(updated.id,(actor.name||'O líder')+' alterou o tom oficial para '+nextKey+'.');}catch(error){}
+    const position=document.getElementById('view-sd').scrollTop;openSD(updated.id);document.getElementById('view-sd').scrollTop=position;
+    showToast(`🎵 Tom oficial: ${nextKey}`);
+  }catch(error){showToast('⚠️ '+error.message);}
+  finally{eventOfficialKeyBusy.delete(busyKey);control?.querySelectorAll('button').forEach(button=>button.disabled=false);}
+}
+function renderEventChatButton(event){
+  const button=document.getElementById('event-chat-fab');if(!button)return;
+  let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
+  button.innerHTML=`💬${unread?`<span class="event-chat-fab-badge" aria-label="${unread} mensagens não lidas">${unread>99?'99+':unread}</span>`:''}`;
+  button.setAttribute('aria-label',unread?`Abrir chat do evento: ${unread} mensagens não lidas`:'Abrir chat do evento');
+  button.hidden=false;
 }
 
 function openEventSongEdit(eventId,itemId){
@@ -2156,10 +2344,10 @@ async function saveEventSongEdit(eventId,itemId){
 }
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}
 
-function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.musicas.map(songId=>musicas.find(song=>String(song.id)===String(songId))).filter(Boolean);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map((song,index)=>(index+1)+'. '+song.title+(song.key?' | Tom: '+song.key:'')).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
+function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.repertoire.map(item=>({item,song:musicas.find(song=>String(song.id)===String(item.songId))})).filter(value=>value.song);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map(({item,song},index)=>{const key=item.shared.key||song.key;return(index+1)+'. '+(item.shared.title||song.title)+(key?' | Tom: '+key:'');}).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
 async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}if(event.remoteVersion!=null)eventCollaboration.queueEventDeletion(event.id);setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
-function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
+function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
 function eventChatButton(label,handler,className){const button=document.createElement('button');button.type='button';button.textContent=label;button.className=className||'';button.addEventListener('click',handler);return button;}
 function renderEventChatMessages(scrollEnd){
@@ -2242,8 +2430,9 @@ musicas=songRepository.load(catalogoPadrao);
 setlists=eventRepository.load(setlists,appIdentity);
 eventChat.initialize({getEvent:findEvent,getCurrentUser:()=>appCurrentUser});
 eventChat.subscribe(eventId=>{
-  renderSetlists();
   const chat=document.getElementById('event-chat-view');
+  if(!chat.hidden&&(!eventId||String(eventId)===String(currentSdId))){try{eventChat.markRead(currentSdId);}catch(error){}}
+  renderSetlists();
   if(!chat.hidden&&(!eventId||String(eventId)===String(currentSdId))) renderEventChatMessages(true);
   if(document.getElementById('view-sd').style.display==='flex'&&eventId&&String(eventId)===String(currentSdId)) openSD(currentSdId);
 });
@@ -2259,7 +2448,7 @@ appAuth.subscribe(async state=>{
     appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
     appCurrentUser=Object.freeze({...appIdentity.user});
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
-    appBands=[];eventBackgroundSyncReady=false;renderAccountButton();renderSetlists();renderBandToolbar();return;
+    appBands=[];eventBackgroundSyncReady=false;renderAccountButton();renderSetlists();renderBandToolbar();showEventInvitationLogin();return;
   }
   if(authLinking||!state.authenticated||!state.user)return;
   authLinking=true;
@@ -2272,8 +2461,10 @@ appAuth.subscribe(async state=>{
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+    const acceptedInvitation=await acceptPendingEventInvitation();
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
     setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);
+    if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
@@ -2282,7 +2473,7 @@ appAuth.subscribe(async state=>{
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
-window.addEventListener('online',()=>{if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
+window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);});
 checkShareParam();
 youtubeUI.initialize({
