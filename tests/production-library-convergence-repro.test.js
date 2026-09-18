@@ -12,10 +12,15 @@
 // testa um dispositivo que JÁ TEM um cache de dono estabelecido, porém menor
 // que o servidor — que é exatamente o caso real (celular com 145, já
 // sincronizado antes, servidor com 152). É por isso que a suíte automatizada
-// passou (12/12 no Bloco B) enquanto esse cenário real falha: a lacuna nunca
-// foi exercitada.
+// passou (12/12 no Bloco B) enquanto esse cenário real falhava: a lacuna
+// nunca foi exercitada.
 //
-// Não corrige nada. Roda isolado com:
+// Depois da correção (normalizeRemoteResponse quarentena registros
+// inválidos em vez de abortar a resposta inteira), os cenários abaixo
+// confirmam o comportamento CORRIGIDO: um registro corrompido não trava
+// mais as músicas válidas.
+//
+// Roda isolado com:
 //   node tests/production-library-convergence-repro.test.js
 
 const assert = require("node:assert/strict");
@@ -167,14 +172,13 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   });
 
   // ------------------------------------------------------------------
-  // Mesmo cenário, mas o pull() falha (ex.: um registro remoto malformado,
-  // erro de rede, etc.) — reproduz "logout/login não resolveu": o erro é
-  // engolido silenciosamente (`.catch(()=>{})` em library-sync.js), a tela
-  // fica presa no cache antigo, e repetir logout+login não ajuda porque
-  // cada novo login tenta de novo o MESMO pull, que falha de novo pelo
-  // MESMO motivo — não é uma falha aleatória/transiente.
+  // CORRIGIDO: um único registro remoto corrompido não trava mais o pull
+  // inteiro. As músicas válidas continuam sendo incorporadas; só o
+  // registro corrompido fica de fora (quarentenado), registrado em
+  // lastRemoteContract.rejectedRecords (sem conteúdo sensível). Nada é
+  // apagado localmente por causa disso.
   // ------------------------------------------------------------------
-  await record("Um único registro remoto corrompido trava o pull de forma determinística, mesmo após logout+login", async () => {
+  await record("Um registro remoto corrompido não bloqueia mais as músicas válidas (nem precisa de logout/login)", async () => {
     const remote = new Map();
     const pc = createDevice(remote);
     pc.login("user-stuck");
@@ -189,30 +193,53 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     phone.login("user-stuck");
     await settle();
     await wait(50);
-    assert.equal(phone.musicas.length, 3, "pré-condição: pull falhou por causa do registro corrompido, cache não avançou (continua nas 3 antigas)");
-    assert.match(String(phone.sync.getStatus().error || ""), /formato incompatível/, "o erro fica registrado em getStatus().error, mas nada na UI normal chama atenção pra ele (só o painel técnico escondido)");
+    assert.equal(phone.musicas.length, 5, `as 5 músicas válidas deveriam ter sido incorporadas mesmo com 1 registro corrompido no meio, ficou com ${phone.musicas.length}`);
+    assert.equal(phone.sync.getStatus().phase, "synced", "pull com registro inválido quarentenado não deveria ficar em fase de erro");
+    assert.equal(phone.sync.getStatus().error, null, "não é mais um erro bloqueante — as músicas válidas convergiram");
 
-    // logout + login de novo, no MESMO dispositivo. O registro corrompido
-    // continua no servidor (nada no cliente pode limpá-lo), então o
-    // pull falha de novo, pelo MESMO motivo — não é uma falha que um
-    // retry do usuário resolve.
-    phone.logout();
+    const diagnostics = phone.sync.diagnostics();
+    assert.equal(diagnostics.remoteContract.rejectedCount, 1, "o registro corrompido deveria aparecer contado em rejectedCount");
+    assert.deepEqual(diagnostics.remoteContract.rejectedRecords[0].clientId, "corrupted-record", "o diagnóstico registra qual clientId foi rejeitado");
+    assert.equal(diagnostics.summary.remoteRejected, 1, "o resumo do diagnóstico também expõe a contagem de rejeitados");
+    assert.deepEqual(Object.keys(diagnostics.remoteContract.rejectedRecords[0]).sort(), ["clientId", "index", "reason"], "o registro rejeitado só deveria expor metadados (index/clientId/reason), nunca songData/título/letra");
+  });
+
+  // ------------------------------------------------------------------
+  // Cenário pedido explicitamente: cache parcial (equivalente a 145) +
+  // resposta remota com músicas válidas E pelo menos 1 registro inválido
+  // → as músicas válidas ainda são incorporadas, nenhuma é perdida, e a
+  // correção não troca a biblioteca local cegamente pela remota (o que já
+  // estava lá e não veio na resposta rejeitada continua intacto).
+  // ------------------------------------------------------------------
+  await record("Cache parcial (145) + resposta com válidas e 1 inválida → válidas incorporadas, nada apagado cegamente", async () => {
+    const remote = new Map();
+    const pc = createDevice(remote);
+    pc.login("user-partial");
     await settle();
-    phone.login("user-stuck");
+    const total = 12; // proporção equivalente a 152/145 num teste rápido
+    pc.replace(pc.musicas.concat(Array.from({ length: total }, (_, i) => song(`partial-${i}`))));
+    await pc.sync.syncNow();
+    corruptOwnerRemote(remote, "user-partial");
+
+    const partialCache = pc.musicas.slice(0, 9); // equivalente às 145 já sincronizadas antes
+    const phone = createDevice(remote, { sc_personal_song_caches_v1: { "user-partial": partialCache } });
+
+    phone.login("user-partial");
     await settle();
     await wait(50);
-    assert.equal(phone.musicas.length, 3, "logout+login repete a mesma falha (comportamento determinístico, não uma falha aleatória de rede)");
 
-    // Só depois que o dado ruim é corrigido do lado do servidor (fora do
-    // alcance do cliente) é que um novo login converge — confirma que a
-    // causa é o dado, não o dispositivo nem a sessão.
-    remote.get("user-stuck").delete("corrupted-record");
-    phone.logout();
-    await settle();
-    phone.login("user-stuck");
-    await settle();
-    await wait(50);
-    assert.equal(phone.musicas.length, 5, "assim que o registro corrompido é removido do servidor, o próximo login converge normalmente");
+    const phoneClientIds = phone.musicas.map((s) => s.librarySync.clientId).sort();
+    const expectedClientIds = pc.musicas.map((s) => s.librarySync.clientId).sort();
+    assert.deepEqual(phoneClientIds, expectedClientIds, "todas as 12 músicas válidas (as 9 que já tinha + as 3 que faltavam) deveriam estar presentes");
+    assert.equal(phone.musicas.length, total, `esperava ${total} músicas válidas convergidas, ficou com ${phone.musicas.length}`);
+
+    // A biblioteca local não foi substituída cegamente: as 9 que já
+    // existiam continuam com o MESMO clientId/objeto de antes (não foram
+    // recriadas do zero a partir da resposta remota).
+    partialCache.forEach((song) => {
+      const stillThere = phone.musicas.find((item) => item.librarySync.clientId === song.librarySync.clientId);
+      assert.ok(stillThere, `música pré-existente ${song.librarySync.clientId} não deveria desaparecer`);
+    });
   });
 
   // ------------------------------------------------------------------
