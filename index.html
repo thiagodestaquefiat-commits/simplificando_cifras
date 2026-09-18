@@ -687,8 +687,8 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js?v=7"></script>
-<script src="js/library-sync.js?v=10"></script>
+<script src="js/song-repository.js?v=8"></script>
+<script src="js/library-sync.js?v=11"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -1052,7 +1052,7 @@ function drawChordSVG(data, name, strings=6){
       if(fingers[si]>0) g+=`<text x="${x}" y="${fy+3.5}" fill="#fff" font-size="8.5" text-anchor="middle" font-family="Arial" font-weight="bold">${fingers[si]}</text>`;
     }
   });
-  return `<div class="chord-card"><div class="chord-card-name">${name}</div><svg width="${scaledDiagramSize(W)}" height="${scaledDiagramSize(H)}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg></div>`;
+  return `<div class="chord-card"><div class="chord-card-name">${eventEsc(name)}</div><svg width="${scaledDiagramSize(W)}" height="${scaledDiagramSize(H)}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg></div>`;
 }
 
 
@@ -1080,7 +1080,7 @@ function drawPianoSVG(noteString, name){
     if(on) g+=`<text x="${x+BKW/2}" y="${BKH-4}" fill="#fff" font-size="7" text-anchor="middle" font-family="Arial" font-weight="bold">${n.replace('#','#')}</text>`;
   });
   return `<div class="chord-card" style="min-width:${scaledDiagramSize(totalW+22)}px;">
-    <div class="chord-card-name">${name}</div>
+    <div class="chord-card-name">${eventEsc(name)}</div>
     <svg width="${scaledDiagramSize(totalW)}" height="${scaledDiagramSize(WKH+2)}" viewBox="0 0 ${totalW} ${WKH+2}" xmlns="http://www.w3.org/2000/svg">${g}</svg>
     <div style="color:#8696a0;font-size:7.5px;margin-top:2px;font-family:Arial;">${raw.join(' · ')}</div>
   </div>`;
@@ -1116,7 +1116,7 @@ function drawValidatedFrettedSVG(data,name){
     }
   });
   const courseLabel=data.renderer==='double-course-fretted'?'5 ordens duplas':`${courses} cordas`;
-  return `<div class="chord-card" data-instrument="${data.instrumentId}" data-renderer="${data.renderer}" data-courses="${courses}"><div class="chord-card-name">${name}</div><svg width="${scaledDiagramSize(width)}" height="${scaledDiagramSize(height)}" viewBox="0 0 ${width} ${height}" aria-label="Diagrama ${name} para ${data.instrumentId}">${svg}</svg><div class="chord-tuning">${courseLabel} · ${data.tuning}</div></div>`;
+  return `<div class="chord-card" data-instrument="${data.instrumentId}" data-renderer="${data.renderer}" data-courses="${courses}"><div class="chord-card-name">${eventEsc(name)}</div><svg width="${scaledDiagramSize(width)}" height="${scaledDiagramSize(height)}" viewBox="0 0 ${width} ${height}" aria-label="Diagrama ${eventEsc(name)} para ${eventEsc(data.instrumentId)}">${svg}</svg><div class="chord-tuning">${courseLabel} · ${data.tuning}</div></div>`;
 }
 
 function drawValidatedKeyboardSVG(data,name){
@@ -1135,7 +1135,7 @@ function drawValidatedKeyboardSVG(data,name){
     svg+=`<rect x="${left}" y="5" width="22" height="61" rx="3" fill="${on?keyColor(note):'#111827'}" stroke="#020617" stroke-width="1.5"/>`;
     if(on) svg+=`<text x="${left+11}" y="57" fill="#fff" font-size="9" text-anchor="middle" font-family="Inter,Arial" font-weight="800">${note}</text>`;
   });
-  return `<div class="chord-card keyboard-card" data-instrument="${data.instrumentId}" data-renderer="keyboard"><div class="chord-card-name">${name}</div><svg width="${scaledDiagramSize(252)}" height="${scaledDiagramSize(116)}" viewBox="0 0 252 116" aria-label="Teclas do acorde ${name}">${svg}</svg><div class="chord-tuning">${data.notes.join(' · ')}${bass!==root?` · baixo ${bass}`:''}</div></div>`;
+  return `<div class="chord-card keyboard-card" data-instrument="${data.instrumentId}" data-renderer="keyboard"><div class="chord-card-name">${eventEsc(name)}</div><svg width="${scaledDiagramSize(252)}" height="${scaledDiagramSize(116)}" viewBox="0 0 252 116" aria-label="Teclas do acorde ${eventEsc(name)}">${svg}</svg><div class="chord-tuning">${data.notes.join(' · ')}${bass!==root?` · baixo ${bass}`:''}</div></div>`;
 }
 
 function extractChords(m){
@@ -1157,7 +1157,7 @@ function registerMissingDiagram(name){
 function getMissingDiagramReport(){return [...missingDiagramRegistry.values()];}
 function renderUnavailableChord(name){
   registerMissingDiagram(name);
-  return `<div class="chord-card chord-card-unavailable"><div class="chord-card-name">${name}</div><div class="chord-unavailable-message">Diagrama não disponível</div></div>`;
+  return `<div class="chord-card chord-card-unavailable"><div class="chord-card-name">${eventEsc(name)}</div><div class="chord-unavailable-message">Diagrama não disponível</div></div>`;
 }
 
 function renderChordStrip(m){
@@ -1343,12 +1343,12 @@ function renderDetail(){
   }).join('');
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
-    :currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica('${m.id}')">Adicionar cifra</button></div>`);
+    :currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml||`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica(${attrJs(m.id)})">Adicionar cifra</button></div>`);
   document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml +
-    `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong('${m.id}')"><span aria-hidden="true">🤖</span> Gerar Letra/Cifra com IA</button>`+
+    `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong(${attrJs(m.id)})"><span aria-hidden="true">🤖</span> Gerar Letra/Cifra com IA</button>`+
     `<div class="btn-row">
-      <button class="btn btn-outline" onclick="editMusica('${m.id}')"><span aria-hidden="true">✏️</span> Editar Cifra</button>
-      <button class="btn btn-danger" onclick="deleteMusica('${m.id}')">🗑️ Excluir</button>
+      <button class="btn btn-outline" onclick="editMusica(${attrJs(m.id)})"><span aria-hidden="true">✏️</span> Editar Cifra</button>
+      <button class="btn btn-danger" onclick="deleteMusica(${attrJs(m.id)})">🗑️ Excluir</button>
     </div>`;
   if(stageMode)updateStagePresentation();
 }
@@ -1576,14 +1576,14 @@ function renderMedley(){
     medleyBlocos.map((b,i)=>`
     <div class="medley-block">
       <div class="medley-block-header">
-        <span class="medley-source">🎵 ${b.musicTitle} — ${b.label||'Bloco'}</span>
+        <span class="medley-source">🎵 ${eventEsc(b.musicTitle)} — ${eventEsc(b.label||'Bloco')}</span>
         <div class="medley-order-btns">
           ${i>0?`<button class="medley-order-btn" onclick="moveMedley(${i},-1)">↑</button>`:''}
           ${i<medleyBlocos.length-1?`<button class="medley-order-btn" onclick="moveMedley(${i},1)">↓</button>`:''}
         </div>
         <button class="medley-remove" onclick="removeMedley(${i})">✕</button>
       </div>
-      <div class="chord-line" style="font-size:16px;">${b.chords.replace(/\n/g,'<br>')}</div>
+      <div class="chord-line" style="font-size:16px;">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
     </div>`).join('')+
     `<button class="btn btn-outline" style="margin-top:8px;" onclick="abrirAddMedley()">+ Adicionar bloco</button>
      <button class="btn btn-danger" style="margin-top:6px;" onclick="limparMedley()">🗑️ Limpar tudo</button>`;
@@ -1596,7 +1596,7 @@ function abrirAddMedley(){
     <div class="form-group">
       <label class="form-label">Música</label>
       <select class="form-input" id="med-music" onchange="renderMedleyBlocoSelect()">
-        ${sorted.map(m=>`<option value="${m.id}">${m.title} (${m.key||'?'})</option>`).join('')}
+        ${sorted.map(m=>`<option value="${eventEsc(m.id)}">${eventEsc(m.title)} (${eventEsc(m.key||'?')})</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
@@ -1652,9 +1652,9 @@ function tocarMedley(){
   document.getElementById('detail-content').innerHTML=
     medleyBlocos.map((b,i)=>`
     <details class="chord-block" ${i===0?'open':''}>
-      <summary>${b.musicTitle} — ${b.label}</summary>
+      <summary>${eventEsc(b.musicTitle)} — ${eventEsc(b.label)}</summary>
       <div class="chord-block-body">
-        <div class="chord-line">${b.chords.replace(/\n/g,'<br>')}</div>
+        <div class="chord-line">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
       </div>
     </details>`).join('');
   vd.style.display='flex';
@@ -1690,13 +1690,13 @@ function renderMusicas(){
   sorted.forEach(m=>{const l=m.title[0].toUpperCase();(grouped[l]||(grouped[l]=[])).push(m);});
   el.innerHTML=Object.keys(grouped).sort().map(l=>
     `<div class="section-label">${l}</div>`+
-    grouped[l].map(m=>`<div class="music-item" onclick="openDetail('${m.id}')">
+    grouped[l].map(m=>`<div class="music-item" onclick="openDetail(${attrJs(m.id)})">
       <div class="music-avatar">🎵</div>
       <div class="music-info">
-        <div class="music-title">${m.title}</div>
-        <div class="music-sub">${m.artist||m.capo||m.blocos.length+' blocos'}</div>
+        <div class="music-title">${eventEsc(m.title)}</div>
+        <div class="music-sub">${eventEsc(m.artist||m.capo||m.blocos.length+' blocos')}</div>
       </div>
-      ${m.key?`<span class="key-badge">${m.key}</span>`:''}
+      ${m.key?`<span class="key-badge">${eventEsc(m.key)}</span>`:''}
     </div>`).join('')
   ).join('');
 }
@@ -1712,7 +1712,7 @@ function simpleSongEditorFields(model,options={}){
   return `<div class="form-group"><label class="form-label" for="ai-review-title">Título</label><input class="form-input" id="ai-review-title" value="${safe(model.title)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-artist">Artista</label><input class="form-input" id="ai-review-artist" value="${safe(model.artist)}"></div>
     <div class="form-group"><label class="form-label" for="ai-review-key">Tom original</label><input class="form-input" id="ai-review-key" value="${safe(model.originalKey)}"></div>
-    <div class="form-group"><label class="form-label" for="ai-review-capo">Capotraste</label><input class="form-input" id="ai-review-capo" value="${model.capo||''}" placeholder="ex: 2"></div>
+    <div class="form-group"><label class="form-label" for="ai-review-capo">Capotraste</label><input class="form-input" id="ai-review-capo" value="${safe(model.capo||'')}" placeholder="ex: 2"></div>
     <div class="form-group" id="simple-editor-summary"><label class="form-label" for="ai-review-text">Cifra / Resumo</label><textarea class="form-textarea" id="ai-review-text" style="min-height:300px;">${safe(options.chordSheet==null?songFormat.simpleText(model):options.chordSheet)}</textarea></div>
     ${options.includeNotes?`<div class="form-group"><label class="form-label" for="event-song-notes">Observações do repertório</label><textarea class="form-textarea" id="event-song-notes">${safe(notes)}</textarea></div>`:''}`;
 }
@@ -1951,6 +1951,11 @@ function applyAppSettings(settings=loadAppSettings()){
 function applyProfileRuntime(profile){appCurrentUser=Object.freeze({...appCurrentUser,name:profile.name,email:profile.email,phone:profile.phone,avatarUrl:profile.avatarUrl});storage.set('sc_current_user_v1',appCurrentUser);if(appIdentity.status!=='supabase'){appIdentity={...appIdentity,user:{...appIdentity.user,...appCurrentUser}};storage.set('sc_collaboration_identity_v1',appIdentity);}renderAccountButton();renderSetlists();}
 let chatReplyTo=null,chatLimit=40;
 function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
+// Argumento seguro para manipuladores inline (onclick="f(...)"). O parser HTML
+// decodifica as entidades ANTES de o JavaScript ser avaliado, portanto eventEsc
+// sozinho não impede a quebra da string JS. JSON.stringify produz um literal
+// válido e eventEsc protege o atributo.
+function attrJs(value){return eventEsc(JSON.stringify(String(value==null?'':value)));}
 function findEvent(id){return setlists.find(item=>String(item.id)===String(id));}
 function eventPermissionActor(event){
   const localIdentity=eventCollaboration.readIdentity(),localUser=localIdentity&&localIdentity.user;
@@ -2470,7 +2475,7 @@ appAuth.subscribe(async state=>{
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
