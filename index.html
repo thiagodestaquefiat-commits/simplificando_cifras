@@ -2205,7 +2205,31 @@ function openAddSetlist(prefill){
   renderSelected();renderAvailable();renderMembers();document.getElementById('modal-overlay').style.display='flex';
 }
 
+// navigationContext congela songIds/currentIndex no momento em que a tela
+// do evento e aberta (openDetailFromPlaylist). Se um pull/reconcile em
+// segundo plano trouxer uma ordem nova para o evento que o usuario ja
+// esta navegando (Modo Palco ou anterior/proxima), sem isso a navegacao
+// ficaria presa na ordem antiga ate fechar e reabrir a tela. Mantem o
+// mesmo criterio de disponibilidade de openDetailFromPlaylist (so musicas
+// presentes localmente) e preserva a musica atualmente exibida, so
+// recalculando sua posicao na ordem nova.
+function refreshStageNavigationOrder(){
+  const context=navigationContext.get();
+  if(!context)return;
+  const event=findEvent(context.playlistId);
+  if(!event)return;
+  const availableItems=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const orderedIds=availableItems.map(item=>item.songId);
+  if(!orderedIds.length)return;
+  const currentSongId=context.songIds[context.currentIndex];
+  let nextIndex=orderedIds.findIndex(id=>String(id)===String(currentSongId));
+  if(nextIndex<0)nextIndex=Math.min(context.currentIndex,orderedIds.length-1);
+  const sameOrder=orderedIds.length===context.songIds.length&&orderedIds.every((id,index)=>String(id)===String(context.songIds[index]));
+  if(sameOrder&&nextIndex===context.currentIndex)return;
+  navigationContext.setPlaylist(event.id,orderedIds,nextIndex);
+}
 function renderSetlists(){
+  refreshStageNavigationOrder();
   const target=document.getElementById('lista-setlists');
   if(!setlists.length){target.innerHTML='<div class="empty-state"><div class="emoji">📅</div><p>Nenhum evento ainda</p><p style="font-size:12px;margin-top:6px;">Toque no + para criar um evento</p></div>';return;}
   const visible=activeBandId?setlists.filter(event=>String(event.bandId||'')===String(activeBandId)):setlists;
