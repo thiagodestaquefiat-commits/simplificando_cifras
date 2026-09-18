@@ -687,8 +687,8 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js?v=7"></script>
-<script src="js/library-sync.js?v=10"></script>
+<script src="js/song-repository.js?v=8"></script>
+<script src="js/library-sync.js?v=11"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=1"></script>
@@ -2475,7 +2475,7 @@ appAuth.subscribe(async state=>{
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 appAuth.initialize();
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});

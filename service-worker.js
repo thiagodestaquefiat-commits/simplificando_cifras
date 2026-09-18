@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v119-preview-eventos-palco";
+const CACHE_NAME = "simplificando-cifras-v120-identity-ownership-fix";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=7",
-  "./js/library-sync.js?v=10",
+  "./js/song-repository.js?v=8",
+  "./js/library-sync.js?v=11",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
   "./js/event-collaboration-client.js?v=8",

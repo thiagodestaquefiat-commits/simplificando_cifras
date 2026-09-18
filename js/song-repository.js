@@ -154,6 +154,25 @@
     return { songs: [], migrationCandidate: false, ownerId: nextOwner };
   }
 
+  // Encerra a sessão de dono ativo (logout). O cache privado da conta em
+  // sc_personal_song_caches_v1 NÃO é apagado — só deixa de ser o alvo de
+  // save(). A partir daqui save() volta a gravar no armazenamento local
+  // anônimo. Deliberadamente NÃO reusa load(): load() atualiza
+  // storedLibraryExistedAtBoot, e essa flag precisa continuar refletindo o
+  // que existia no boot real da página, não o que passou a existir no
+  // armazenamento anônimo no meio da sessão — senão uma edição feita
+  // "deslogado" passaria a se qualificar como candidata de migração
+  // silenciosa (activateOwner) para a conta que logar a seguir, mesmo que
+  // seja a mesma conta que acabou de sair.
+  function deactivateOwner(defaultSongs) {
+    activeOwnerId = null;
+    legacyCandidateOwnerId = null;
+    const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
+    if (Array.isArray(stored)) return normalized(stored);
+    const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
+    return normalized(Array.isArray(legacy) ? legacy : defaultSongs);
+  }
+
   function confirmActiveOwner(collection) {
     if (!activeOwnerId) return false;
     const saved = saveOwnerCache(activeOwnerId, collection);
@@ -237,6 +256,7 @@
     load,
     save,
     activateOwner,
+    deactivateOwner,
     confirmActiveOwner,
     addOrReuse,
     update,
