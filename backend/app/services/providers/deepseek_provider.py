@@ -94,10 +94,24 @@ class DeepSeekProvider(OpenAIProvider):
             raise error
 
         try:
-            parsed = ResumoHarmonicoResponse.model_validate(json.loads(output_text))
-        except (json.JSONDecodeError, ValidationError) as error:
+            decoded = json.loads(output_text)
+        except json.JSONDecodeError as error:
             classified = self._classify_exception(error)
             self._log_result("failure", started_at, safe_context, classified.code, exception=error, response=response)
+            raise classified from error
+        try:
+            parsed = ResumoHarmonicoResponse.model_validate(decoded)
+        except ValidationError as error:
+            classified = self._classify_exception(error)
+            self._log_result(
+                "failure",
+                started_at,
+                safe_context,
+                classified.code,
+                exception=error,
+                response=response,
+                response_diagnostics=self._safe_validation_diagnostics(error),
+            )
             raise classified from error
 
         self._log_result("success", started_at, safe_context, "ok", response=response)
@@ -126,6 +140,20 @@ class DeepSeekProvider(OpenAIProvider):
             "input_tokens": cls._safe_integer(getattr(usage, "input_tokens", None)),
             "output_tokens": cls._safe_integer(getattr(usage, "output_tokens", None)),
             "reasoning_tokens": cls._safe_integer(getattr(output_details, "reasoning_tokens", None)),
+        }
+
+    @staticmethod
+    def _safe_validation_diagnostics(error: ValidationError) -> dict:
+        validation_errors = []
+        for item in error.errors(include_url=False, include_context=False, include_input=False)[:32]:
+            path = ".".join(str(segment)[:80] for segment in item.get("loc", ()))
+            validation_errors.append({
+                "path": path,
+                "type": str(item.get("type", "unknown"))[:80],
+            })
+        return {
+            "validation_error_count": error.error_count(),
+            "validation_errors": validation_errors,
         }
 
     @staticmethod

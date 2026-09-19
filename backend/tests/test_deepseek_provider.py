@@ -155,11 +155,36 @@ def test_invalid_json_is_rejected():
         provider.generate("Retorne somente JSON válido.", "Tom: C\nC G")
 
 
-def test_valid_json_with_incompatible_contract_is_rejected():
-    provider, _responses = provider_with_output(json.dumps({"titulo": "Sem contrato completo"}))
+def test_valid_json_with_incompatible_contract_logs_only_safe_validation_metadata(caplog):
+    sensitive_value = "SEGREDO_NAO_PODE_APARECER"
+    provider, _responses = provider_with_output(json.dumps({
+        "schemaVersion": 1,
+        "titulo": sensitive_value,
+        "harmonicSummary": {"blocos": [{"acordes": [sensitive_value] * 65}]},
+        "confianca": "incerta",
+        "fullChordSheet": {
+            "visibility": "public",
+            "source": "fonte_desconhecida",
+            "content": sensitive_value,
+        },
+    }))
 
-    with pytest.raises(ProviderStructuredResponseError):
-        provider.generate("Retorne somente JSON válido.", "Tom: C\nC G")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ProviderStructuredResponseError):
+            provider.generate("PROMPT_SENSIVEL", "CIFRA_SENSIVEL")
+
+    event = json.loads(caplog.records[-1].message.split("=", 1)[1])
+    assert event["validation_error_count"] == 5
+    assert event["validation_errors"] == [
+        {"path": "schemaVersion", "type": "literal_error"},
+        {"path": "harmonicSummary.blocos.0.acordes", "type": "too_long"},
+        {"path": "confianca", "type": "literal_error"},
+        {"path": "fullChordSheet.visibility", "type": "literal_error"},
+        {"path": "fullChordSheet.source", "type": "literal_error"},
+    ]
+    assert sensitive_value not in caplog.text
+    assert "PROMPT_SENSIVEL" not in caplog.text
+    assert "CIFRA_SENSIVEL" not in caplog.text
 
 
 def test_http_error_is_classified_without_exposing_provider_body():
