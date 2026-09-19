@@ -338,17 +338,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .detail-view:not(.stage-mode)>#detail-content{grid-column:1;grid-row:5;min-width:0}
 }
 
-/* TELA INICIAL RESPONSIVA — ferramentas laterais e biblioteca em grade */
+/* TELA INICIAL NO COMPUTADOR — fluxo único centralizado */
 @media (min-width:900px){
-.app{max-width:1180px}
-#pane-musicas:not([style*="display: none"]){display:grid!important;grid-template-columns:360px minmax(0,1fr);grid-template-rows:auto auto auto auto;min-height:0;overflow:visible}
-#pane-musicas>.youtube-panel{grid-column:1;grid-row:1}
-#pane-musicas>.search-bar{grid-column:1;grid-row:2}
-#pane-musicas>#youtube-results{grid-column:1;grid-row:3;max-height:280px}
-#pane-musicas>.ai-generate-action{grid-column:1;grid-row:4;align-self:start}
-#pane-musicas>#lista-musicas{grid-column:2;grid-row:1/5;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:8px 10px;height:auto;min-height:0;padding:12px 14px 84px;border-left:1px solid var(--border);overflow:visible}
-#lista-musicas>.section-label{grid-column:1/-1}
-#lista-musicas>.music-item{min-width:0;margin-bottom:0}
+.app{max-width:820px;margin-inline:auto}
+#pane-musicas:not([style*="display: none"]){display:block!important;width:100%;min-height:0;overflow:visible}
+#pane-musicas>.youtube-panel,#pane-musicas>.search-bar,#pane-musicas>#youtube-results,#pane-musicas>.ai-generate-action{width:100%;max-width:none;margin-inline:auto}
+#pane-musicas>#youtube-results{max-height:320px}
+#pane-musicas>#lista-musicas{display:block;width:100%;height:auto;min-height:0;padding:4px 14px 84px;border-left:0;overflow:visible}
+#lista-musicas>.music-item{width:100%;min-width:0}
 #pane-setlists,#pane-medley{width:100%;max-width:820px;margin-inline:auto}
 }
 
@@ -691,7 +688,7 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 <script src="js/library-sync.js?v=11"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
-<script src="js/event-chat.js?v=1"></script>
+<script src="js/event-chat.js?v=2"></script>
 <script src="js/youtube-api.js?v=4"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
 <script src="js/youtube-player.js?v=3"></script>
@@ -715,11 +712,12 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
 <script src="js/ai/api-config.js?v=5"></script>
-<script src="js/app-auth.js?v=8"></script>
+<script src="js/app-auth.js?v=9"></script>
+<script src="js/sync-realtime.js?v=1"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=8"></script>
+<script src="js/event-collaboration-client.js?v=10"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=8"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=4"></script>
@@ -2230,6 +2228,7 @@ function refreshStageNavigationOrder(){
 }
 function renderSetlists(){
   refreshStageNavigationOrder();
+  if(window.syncRealtime)syncRealtime.setEventIds(setlists.map(event=>event.id));
   const target=document.getElementById('lista-setlists');
   if(!setlists.length){target.innerHTML='<div class="empty-state"><div class="emoji">📅</div><p>Nenhum evento ainda</p><p style="font-size:12px;margin-top:6px;">Toque no + para criar um evento</p></div>';return;}
   const visible=activeBandId?setlists.filter(event=>String(event.bandId||'')===String(activeBandId)):setlists;
@@ -2306,6 +2305,7 @@ function openSD(id){
   const permissionText=canShared?'Você é o líder: pode editar a versão oficial e também criar ajustes pessoais.':'Você é integrante: pode visualizar a versão oficial e criar somente ajustes pessoais.';
   document.getElementById('sd-content').innerHTML=`<div class="event-permission-note">${eventEsc(permissionText)}</div><div class="event-meta-card"><div class="event-meta-item"><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span></div><div class="event-meta-item"><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div><div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-title event-section-title--center">REPERTÓRIO OFICIAL DO EVENTO</div>${rows||'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-stage-action"><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div><div class="event-section-title event-section-title--center">Membros participantes</div><div class="event-member-list">${memberCards}</div><div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div>`;
   renderEventChatButton(event);
+  if(currentAuthState.authenticated)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
   renderEventNoticeButton(event);
   eventMapPreview.render(document.getElementById('event-detail-map'),event.eventLocation);
   document.getElementById('view-sd').style.display='flex';document.getElementById('view-sd').style.zIndex='15';
@@ -2328,8 +2328,17 @@ async function changeEventOfficialKey(eventId,itemId,direction){
     if(changes.chordSheet)changes.chordSheet=transposeEventChordText(changes.chordSheet,direction<0?-1:1);
     let updated=eventModel.applySharedEdit(event,itemId,actor.id,changes);
     updated=eventModel.withSharedChange(eventModel.create({...updated,syncState:'pending',pendingShared:true}),actor,'repertoire.key.updated',`alterou o tom oficial para ${nextKey}`);
-    try{updated=updated.remoteVersion==null?await eventCollaboration.saveSharedEvent(updated,appCurrentUser):await eventCollaboration.saveSharedItem(updated,itemId,changes,appCurrentUser);}
-    catch(error){if(!collaborationAllowsOffline(error))throw error;}
+    if(updated.remoteVersion==null)throw new Error('Salve o evento na nuvem antes de alterar o tom oficial.');
+    try{updated=await eventCollaboration.saveSharedItem(updated,itemId,changes,appCurrentUser);}
+    catch(error){
+      if(error.status!==409)throw error;
+      const latest=await eventCollaboration.getEvent(eventId,appCurrentUser);
+      const latestItem=latest.repertoire.find(value=>String(value.id)===String(itemId));
+      if(!latestItem)throw error;
+      const retryChanges={...latestItem.shared,key:nextKey,updatedAt:new Date().toISOString()};
+      if(retryChanges.chordSheet)retryChanges.chordSheet=transposeEventChordText(retryChanges.chordSheet,direction<0?-1:1);
+      updated=await eventCollaboration.saveSharedItem(latest,itemId,retryChanges,appCurrentUser);
+    }
     setlists=eventRepository.upsert(setlists,updated).events;eventRepository.save(setlists);
     try{eventChat.sendSystem(updated.id,(actor.name||'O líder')+' alterou o tom oficial para '+nextKey+'.');}catch(error){}
     const position=document.getElementById('view-sd').scrollTop;openSD(updated.id);document.getElementById('view-sd').scrollTop=position;
@@ -2337,6 +2346,22 @@ async function changeEventOfficialKey(eventId,itemId,direction){
   }catch(error){showToast('⚠️ '+error.message);}
   finally{eventOfficialKeyBusy.delete(busyKey);control?.querySelectorAll('button').forEach(button=>button.disabled=false);}
 }
+
+let eventLiveRefreshRunning=false;
+async function refreshOpenEventFromCloud(){
+  if(eventLiveRefreshRunning||!currentAuthState.authenticated||document.visibilityState!=='visible'||document.getElementById('view-sd').style.display!=='flex'||!currentSdId||eventOfficialKeyBusy.size)return;
+  const local=findEvent(currentSdId);if(!local||local.remoteVersion==null)return;
+  eventLiveRefreshRunning=true;
+  try{
+    const remote=await eventCollaboration.getEvent(currentSdId,appCurrentUser);
+    if(Number(remote.remoteVersion||0)<=Number(local.remoteVersion||0))return;
+    const position=document.getElementById('view-sd').scrollTop;
+    setlists=eventRepository.upsert(setlists,remote).events;eventRepository.save(setlists);
+    openSD(remote.id);document.getElementById('view-sd').scrollTop=position;
+  }catch(error){if(!collaborationAllowsOffline(error))console.warn('Não foi possível atualizar o evento aberto.',error);}
+  finally{eventLiveRefreshRunning=false;}
+}
+setInterval(refreshOpenEventFromCloud,3000);
 function renderEventChatButton(event){
   const button=document.getElementById('event-chat-fab');if(!button)return;
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
@@ -2376,7 +2401,7 @@ async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventI
 function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.repertoire.map(item=>({item,song:musicas.find(song=>String(song.id)===String(item.songId))})).filter(value=>value.song);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map(({item,song},index)=>{const key=item.shared.key||song.key;return(index+1)+'. '+(item.shared.title||song.title)+(key?' | Tom: '+key:'');}).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
 async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}if(event.remoteVersion!=null)eventCollaboration.queueEventDeletion(event.id);setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
-function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{eventChat.markRead(event.id);}catch(error){showToast(error.message);return;}renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
+async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);eventChat.markRead(event.id);}catch(error){showToast('⚠️ '+error.message);}renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
 function eventChatButton(label,handler,className){const button=document.createElement('button');button.type='button';button.textContent=label;button.className=className||'';button.addEventListener('click',handler);return button;}
 function renderEventChatMessages(scrollEnd){
@@ -2501,6 +2526,7 @@ appAuth.subscribe(async state=>{
 });
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
+syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize();
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});

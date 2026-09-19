@@ -16,6 +16,7 @@ from ..models import (
     Event,
     EventInvitation,
     EventChange,
+    EventMessage,
     ExternalIdentity,
     EventMember,
     EventRepertoireItem,
@@ -180,6 +181,22 @@ def _iso(value) -> str:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.isoformat()
+
+
+def _serialize_message(message: EventMessage) -> dict:
+    return {
+        "id": message.id,
+        "eventId": message.event_id,
+        "type": message.message_type,
+        "sender": {"id": message.sender_id, "name": message.sender_name, "avatarUrl": message.sender_avatar_url},
+        "content": "" if message.deleted else message.content,
+        "replyTo": message.reply_to,
+        "poll": message.poll,
+        "reactions": message.reactions or {},
+        "deleted": message.deleted,
+        "createdAt": _iso(message.created_at),
+        "editedAt": _iso(message.edited_at) if message.edited_at else None,
+    }
 
 
 def _datetime(value, fallback: datetime) -> datetime:
@@ -538,6 +555,124 @@ def get_event(event_id: str):
     return jsonify(result), 200
 
 
+@blueprint.get("/events/<event_id>/messages")
+@authenticated
+def list_event_messages(event_id: str):
+    event = _event_or_404(event_id)
+    _member(event, g.current_user.id)
+    try:
+        limit = max(1, min(int(request.args.get("limit", 100)), 200))
+    except (TypeError, ValueError):
+        limit = 100
+    query = EventMessage.query.filter_by(event_id=event.id)
+    before = request.args.get("before", "").strip()
+    if before:
+        query = query.filter(EventMessage.created_at < _datetime(before, datetime.now(timezone.utc)))
+    values = list(reversed(query.order_by(EventMessage.created_at.desc()).limit(limit).all()))
+    return jsonify({"messages": [_serialize_message(value) for value in values]}), 200
+
+
+@blueprint.post("/events/<event_id>/messages")
+@authenticated
+def create_event_message(event_id: str):
+    event = _event_or_404(event_id)
+    _member(event, g.current_user.id)
+    payload = _json()
+    message_id = _text(payload.get("clientId"), 80, "clientId") or str(uuid.uuid4())
+    existing = db.session.get(EventMessage, message_id)
+    if existing is not None:
+        if existing.event_id != event.id or existing.sender_id != g.current_user.id:
+            raise ApiError("mensagem_existente", "Este identificador de mensagem já está em uso.", 409)
+        return jsonify(_serialize_message(existing)), 200
+    message_type = _text(payload.get("type"), 16, "type") or "text"
+    if message_type not in {"text", "system", "poll"}:
+        raise ApiError("tipo_invalido", "Tipo de mensagem inválido.", 400)
+    content = _text(payload.get("content"), 5000 if message_type == "text" else 500, "content")
+    poll = None
+    if message_type == "poll":
+        raw_poll = payload.get("poll") if isinstance(payload.get("poll"), dict) else {}
+        question = _text(raw_poll.get("question"), 500, "poll.question", True)
+        raw_options = raw_poll.get("options") if isinstance(raw_poll.get("options"), list) else []
+        options = []
+        for raw in raw_options[:10]:
+            if not isinstance(raw, dict):
+                continue
+            label = _text(raw.get("label"), 240, "poll.options.label")
+            if label:
+                options.append({"id": _text(raw.get("id"), 80, "poll.options.id") or str(uuid.uuid4()), "label": label})
+        if len(options) < 2:
+            raise ApiError("enquete_invalida", "A enquete precisa de pelo menos duas opções.", 400)
+        poll = {"question": question, "options": options, "multiple": bool(raw_poll.get("multiple")), "showVoters": raw_poll.get("showVoters") is not False, "votes": {}}
+    elif not content:
+        raise ApiError("mensagem_vazia", "Digite uma mensagem.", 400)
+    message = EventMessage(
+        id=message_id, event_id=event.id, sender_id=g.current_user.id,
+        sender_name=g.current_user.name, sender_avatar_url=g.current_user.avatar_url,
+        message_type=message_type, content=content, reply_to=_text(payload.get("replyTo"), 80, "replyTo") or None,
+        poll=poll, reactions={},
+    )
+    db.session.add(message)
+    db.session.commit()
+    return jsonify(_serialize_message(message)), 201
+
+
+@blueprint.patch("/events/<event_id>/messages/<message_id>")
+@authenticated
+def update_event_message(event_id: str, message_id: str):
+    event = _event_or_404(event_id)
+    _member(event, g.current_user.id)
+    message = db.session.get(EventMessage, message_id)
+    if message is None or message.event_id != event.id:
+        raise ApiError("mensagem_nao_encontrada", "Mensagem não encontrada.", 404)
+    payload = _json()
+    action = _text(payload.get("action"), 20, "action", True)
+    now = datetime.now(timezone.utc)
+    if action in {"edit", "delete"}:
+        if message.sender_id != g.current_user.id:
+            raise ApiError("mensagem_de_outro_usuario", "Você só pode alterar suas mensagens.", 403)
+        if action == "edit":
+            if message.message_type != "text":
+                raise ApiError("edicao_invalida", "Somente mensagens de texto podem ser editadas.", 400)
+            message.content = _text(payload.get("content"), 5000, "content", True)
+        else:
+            message.deleted, message.content = True, ""
+        message.edited_at = now
+    elif action == "react":
+        emoji = _text(payload.get("emoji"), 16, "emoji", True)
+        if emoji not in {"👍", "❤️", "🙏"}:
+            raise ApiError("reacao_invalida", "Reação inválida.", 400)
+        reactions = dict(message.reactions or {})
+        users = set(str(value) for value in reactions.get(emoji, []))
+        if g.current_user.id in users:
+            users.remove(g.current_user.id)
+        else:
+            users.add(g.current_user.id)
+        reactions[emoji] = sorted(users)
+        message.reactions = reactions
+    elif action == "vote":
+        if message.message_type != "poll" or not isinstance(message.poll, dict):
+            raise ApiError("voto_invalido", "Esta mensagem não é uma enquete.", 400)
+        option_id = _text(payload.get("optionId"), 80, "optionId", True)
+        poll = dict(message.poll)
+        if option_id not in {str(item.get("id")) for item in poll.get("options", [])}:
+            raise ApiError("opcao_invalida", "Opção de enquete inválida.", 400)
+        votes = {str(key): list(value or []) for key, value in dict(poll.get("votes") or {}).items()}
+        if not poll.get("multiple"):
+            votes = {key: [user for user in users if user != g.current_user.id] for key, users in votes.items()}
+        selected = set(str(value) for value in votes.get(option_id, []))
+        if g.current_user.id in selected:
+            selected.remove(g.current_user.id)
+        else:
+            selected.add(g.current_user.id)
+        votes[option_id] = sorted(selected)
+        poll["votes"] = votes
+        message.poll = poll
+    else:
+        raise ApiError("acao_invalida", "Ação de mensagem inválida.", 400)
+    db.session.commit()
+    return jsonify(_serialize_message(message)), 200
+
+
 @blueprint.put("/events/<event_id>")
 @authenticated
 def update_event(event_id: str):
@@ -643,6 +778,7 @@ def update_shared_item(event_id: str, item_id: str):
     item = db.session.get(EventRepertoireItem, item_id)
     if item is None or item.event_id != event.id:
         raise ApiError("item_nao_encontrado", "A música não pertence a este repertório.", 404)
+    previous_key = item.shared_key
     item.shared_key = _text(payload.get("key"), 32, "key")
     item.shared_title = _text(payload.get("title"), 160, "title")
     item.shared_artist = _text(payload.get("artist"), 160, "artist")
@@ -651,7 +787,11 @@ def update_shared_item(event_id: str, item_id: str):
     item.shared_notes = _text(payload.get("notes"), 10000, "notes")
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
-    _change(event, "repertoire.song.updated", "alterou uma música do repertório compartilhado")
+    if item.shared_key != previous_key:
+        title = item.shared_title or "uma música"
+        _change(event, "repertoire.key.updated", f"alterou o tom oficial de {title} de {previous_key or '—'} para {item.shared_key or '—'}")
+    else:
+        _change(event, "repertoire.song.updated", "alterou uma música do repertório compartilhado")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 
