@@ -1,14 +1,17 @@
 import json
+import logging
 from types import SimpleNamespace
 
 import httpx
 import pytest
 from openai import BadRequestError
+from openai.types.responses.response import Response
 
 from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.content_extractor import ExtractedContent
 from app.services.providers import (
     ProviderError,
+    ProviderInvalidResponse,
     ProviderRequestRejected,
     ProviderStructuredResponseError,
 )
@@ -46,6 +49,73 @@ def provider_with_output(output_text):
     responses = FakeResponses(output_text)
     provider = DeepSeekProvider("", "deepseek-flash", 90, 12000, client=SimpleNamespace(responses=responses))
     return provider, responses
+
+
+def sdk_response(*, status, output=None, error=None, incomplete_details=None):
+    return Response.model_validate({
+        "id": "resp_deepseek_test",
+        "object": "response",
+        "created_at": 1,
+        "model": "deepseek-flash",
+        "status": status,
+        "error": error,
+        "incomplete_details": incomplete_details,
+        "output": output or [],
+        "parallel_tool_calls": True,
+        "tool_choice": "auto",
+        "tools": [],
+        "usage": {
+            "input_tokens": 321,
+            "input_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0},
+            "output_tokens": 45,
+            "output_tokens_details": {"reasoning_tokens": 44},
+            "total_tokens": 366,
+        },
+    })
+
+
+@pytest.mark.parametrize(
+    ("response", "expected"),
+    [
+        (sdk_response(status="completed"), {
+            "response_status": "completed", "response_error_code": None,
+            "incomplete_reason": None, "output_item_types": [], "output_block_types": [],
+        }),
+        (sdk_response(status="completed", output=[{
+            "id": "rs_test", "type": "reasoning", "status": "completed", "summary": [],
+            "content": [{"type": "reasoning_text", "text": "CONTEUDO_SENSIVEL"}],
+        }]), {
+            "response_status": "completed", "response_error_code": None,
+            "incomplete_reason": None, "output_item_types": ["reasoning"],
+            "output_block_types": ["reasoning_text"],
+        }),
+        (sdk_response(status="incomplete", incomplete_details={"reason": "max_output_tokens"}), {
+            "response_status": "incomplete", "response_error_code": None,
+            "incomplete_reason": "max_output_tokens", "output_item_types": [], "output_block_types": [],
+        }),
+        (sdk_response(status="failed", error={"code": "server_error", "message": "CONTEUDO_SENSIVEL"}), {
+            "response_status": "failed", "response_error_code": "server_error",
+            "incomplete_reason": None, "output_item_types": [], "output_block_types": [],
+        }),
+    ],
+)
+def test_empty_output_logs_only_safe_response_diagnostics(response, expected, caplog):
+    client = SimpleNamespace(responses=SimpleNamespace(create=lambda **_kwargs: response))
+    provider = DeepSeekProvider("", "deepseek-flash", 90, 12000, client=client)
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ProviderInvalidResponse):
+            provider.generate("PROMPT_SENSIVEL", "CIFRA_SENSIVEL")
+
+    event = json.loads(caplog.records[-1].message.split("=", 1)[1])
+    assert {key: event[key] for key in expected} == expected
+    assert event["output_text_length"] == 0
+    assert event["input_tokens"] == 321
+    assert event["output_tokens"] == 45
+    assert event["reasoning_tokens"] == 44
+    assert "CONTEUDO_SENSIVEL" not in caplog.text
+    assert "PROMPT_SENSIVEL" not in caplog.text
+    assert "CIFRA_SENSIVEL" not in caplog.text
 
 
 def test_requires_backend_api_key():

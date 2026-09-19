@@ -147,6 +147,7 @@ class OpenAIProvider(AiProvider):
         *,
         exception: Exception | None = None,
         response=None,
+        response_diagnostics: dict | None = None,
     ) -> None:
         provider_request_id = cls._provider_request_id(exception, response)
         status_code = getattr(exception, "status_code", None)
@@ -159,6 +160,7 @@ class OpenAIProvider(AiProvider):
             "provider_status": status_code,
             "provider_request_id": provider_request_id,
             **safe_context,
+            **(response_diagnostics or {}),
         }
         log = logger.info if outcome == "success" else logger.error
         log("ai_provider_event=%s", json.dumps(event, ensure_ascii=True, sort_keys=True))
