@@ -90,12 +90,55 @@ def test_personal_override_is_private_and_shared_edit_requires_leader(client, ap
     assert member_view["repertoire"][0]["shared"]["title"] == "Novo título oficial"
     assert member_view["repertoire"][0]["shared"]["chordSheet"] == "Refrão\nD G A"
     assert member_view["repertoire"][0]["personal"]["key"] == "A"
+    assert member_view["notifications"][-1]["kind"] == "repertoire.key.updated"
+    assert "tom oficial" in member_view["notifications"][-1]["summary"]
+    assert "G para D" in member_view["notifications"][-1]["summary"]
 
     with app.app_context():
         assert Event.query.count() == 1
         assert EventMember.query.count() == 2
         assert EventRepertoireItem.query.count() == 2
         assert PersonalRepertoireOverride.query.count() == 1
+
+
+def test_event_chat_persists_across_members_and_protects_authorship(client):
+    leader = register(client, "leader-user", "Líder")
+    member = register(client, "member-user", "Integrante")
+    outsider = register(client, "outsider-user", "Visitante")
+    assert client.post("/api/collaboration/events", headers=auth(leader), json=event_payload()).status_code == 201
+
+    sent = client.post(
+        "/api/collaboration/events/event-sunday/messages",
+        headers=auth(member),
+        json={"clientId": "message-device-b", "type": "text", "content": "Olá, equipe!"},
+    )
+    assert sent.status_code == 201, sent.get_json()
+    assert sent.get_json()["sender"]["id"] == "member-user"
+
+    leader_messages = client.get("/api/collaboration/events/event-sunday/messages", headers=auth(leader))
+    assert leader_messages.status_code == 200
+    assert [item["content"] for item in leader_messages.get_json()["messages"]] == ["Olá, equipe!"]
+    assert client.get("/api/collaboration/events/event-sunday/messages", headers=auth(outsider)).status_code == 403
+
+    denied = client.patch(
+        "/api/collaboration/events/event-sunday/messages/message-device-b",
+        headers=auth(leader), json={"action": "edit", "content": "Alteração indevida"},
+    )
+    assert denied.status_code == 403
+
+    reacted = client.patch(
+        "/api/collaboration/events/event-sunday/messages/message-device-b",
+        headers=auth(leader), json={"action": "react", "emoji": "👍"},
+    )
+    assert reacted.status_code == 200
+    assert reacted.get_json()["reactions"]["👍"] == ["leader-user"]
+
+    edited = client.patch(
+        "/api/collaboration/events/event-sunday/messages/message-device-b",
+        headers=auth(member), json={"action": "edit", "content": "Olá, equipe atualizada!"},
+    )
+    assert edited.status_code == 200
+    assert edited.get_json()["content"] == "Olá, equipe atualizada!"
 
 
 def test_only_creator_leads_and_can_reorder_and_remove_event(client):

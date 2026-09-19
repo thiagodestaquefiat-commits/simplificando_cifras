@@ -180,7 +180,10 @@
 
   function fromRemote(value) {
     const identity = readIdentity();
-    const userId = identity && identity.user && String(identity.user.id);
+    const authState = global.appAuth && global.appAuth.getState && global.appAuth.getState();
+    const userId = authState && authState.authenticated && authState.user
+      ? String(authState.user.id)
+      : identity && identity.user && String(identity.user.id);
     return global.eventModel.create({
       ...value,
       syncState: "synced",
@@ -199,6 +202,11 @@
     return (body.events || []).map(fromRemote);
   }
 
+  async function getEvent(eventId, fallback) {
+    await ensureRegistered(fallback);
+    return fromRemote(await request("/events/" + encodeURIComponent(eventId), { method: "GET" }));
+  }
+
   async function saveSharedEvent(event, fallback, options) {
     await ensureRegistered(fallback);
     const normalized = global.eventModel.create(event);
@@ -206,6 +214,7 @@
       method: normalized.remoteVersion == null ? "POST" : "PUT",
       body: JSON.stringify({ ...toRemotePayload(normalized), legacyMigration: Boolean(options && options.legacyMigration) })
     });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(body.id || normalized.id);
     return fromRemote(body);
   }
 
@@ -223,6 +232,7 @@
       throw new CollaborationError("Entre com sua conta para aceitar o convite.", 403, "login_necessario");
     }
     const event = await request("/invitations/" + encodeURIComponent(token) + "/accept", { method: "POST" });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(event.id);
     return fromRemote(event);
   }
 
@@ -232,6 +242,7 @@
       method: "PATCH",
       body: JSON.stringify({ ...changes, remoteVersion: event.remoteVersion })
     });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(event.id);
     return fromRemote(body);
   }
 
@@ -242,6 +253,7 @@
       body: JSON.stringify(changes)
     });
     clearPersonalOperation(event.id, itemId);
+    if (global.syncRealtime) global.syncRealtime.publishPersonalEvent(event.id);
     return fromRemote(body);
   }
 
@@ -249,6 +261,7 @@
     await ensureRegistered(fallback);
     const body = await request("/events/" + encodeURIComponent(event.id) + "/repertoire/" + encodeURIComponent(itemId) + "/personal", { method: "DELETE" });
     clearPersonalOperation(event.id, itemId);
+    if (global.syncRealtime) global.syncRealtime.publishPersonalEvent(event.id);
     return fromRemote(body);
   }
 
@@ -259,6 +272,7 @@
       const path = "/events/" + encodeURIComponent(operation.eventId) + "/repertoire/" + encodeURIComponent(operation.itemId) + "/personal";
       const body = await request(path, operation.action === "delete" ? { method: "DELETE" } : { method: "PUT", body: JSON.stringify(operation.changes) });
       clearPersonalOperation(operation.eventId, operation.itemId);
+      if (global.syncRealtime) global.syncRealtime.publishPersonalEvent(operation.eventId);
       synchronized.push(fromRemote(body));
     }
     return synchronized;
@@ -267,6 +281,7 @@
   async function deleteEvent(event, fallback) {
     await ensureRegistered(fallback);
     await request("/events/" + encodeURIComponent(event.id), { method: "DELETE" });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(event.id);
     return true;
   }
 
@@ -290,6 +305,7 @@
       try { await request("/events/" + encodeURIComponent(eventId), { method: "DELETE" }); }
       catch (error) { if (error.status !== 404) throw error; }
       completed.push(String(eventId));
+      if (global.syncRealtime) global.syncRealtime.publishEvent(eventId);
     }
     if (completed.length) {
       queues[ownerId] = pending.filter((eventId) => !completed.includes(String(eventId)));
@@ -302,5 +318,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

@@ -111,6 +111,7 @@ class Event(db.Model):
     members = db.relationship("EventMember", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin")
     repertoire = db.relationship("EventRepertoireItem", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventRepertoireItem.position")
     changes = db.relationship("EventChange", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventChange.created_at")
+    messages = db.relationship("EventMessage", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventMessage.created_at")
 
 
 class EventInvitation(db.Model):
@@ -187,3 +188,21 @@ class EventChange(db.Model):
     kind = db.Column(db.String(80), nullable=False)
     summary = db.Column(db.String(300), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class EventMessage(db.Model):
+    __tablename__ = "event_messages"
+
+    id = db.Column(db.String(80), primary_key=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_id = db.Column(db.String(80), nullable=False, index=True)
+    sender_name = db.Column(db.String(120), nullable=False)
+    sender_avatar_url = db.Column(db.String(500), nullable=True)
+    message_type = db.Column(db.String(16), nullable=False, default="text")
+    content = db.Column(db.Text, nullable=False, default="")
+    reply_to = db.Column(db.String(80), nullable=True)
+    poll = db.Column(db.JSON, nullable=True)
+    reactions = db.Column(db.JSON, nullable=False, default=dict)
+    deleted = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, index=True)
+    edited_at = db.Column(db.DateTime(timezone=True), nullable=True)

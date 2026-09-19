@@ -155,7 +155,15 @@
 
   function subscribe(listener) { listeners.add(listener); listener(getState()); return () => listeners.delete(listener); }
   function getAccessToken() { return session && session.access_token || null; }
+  function createRealtimeChannel(topic, options) {
+    if (!client || !session || !session.user) throw new Error("Entre na sua conta para ativar as atualizações em tempo real.");
+    return client.channel(String(topic || ""), options || {});
+  }
+  function removeRealtimeChannel(channel) {
+    if (!client || !channel) return Promise.resolve("ok");
+    return client.removeChannel(channel);
+  }
   function refreshConfiguration() { return initialize(true); }
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

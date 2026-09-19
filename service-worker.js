@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v120-identity-ownership-fix";
+const CACHE_NAME = "simplificando-cifras-v124-centered-desktop";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,13 +8,14 @@ const ASSETS = [
   "./js/library-sync.js?v=11",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
-  "./js/event-collaboration-client.js?v=8",
-  "./js/app-auth.js?v=8",
+  "./js/event-collaboration-client.js?v=10",
+  "./js/app-auth.js?v=9",
+  "./js/sync-realtime.js?v=1",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
   "./js/map-preview.js?v=2",
   "./js/location-autocomplete.js?v=1",
-  "./js/event-chat.js?v=1",
+  "./js/event-chat.js?v=2",
   "./js/youtube-api.js?v=4",
   "./js/youtube-song-linker.js?v=1",
   "./js/youtube-player.js?v=3",
