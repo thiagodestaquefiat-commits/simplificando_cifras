@@ -71,7 +71,7 @@ def test_provider_sends_mixed_continuation_in_one_structured_call():
     assert calls[0]['text_format'].__name__=='ResumoHarmonicoResponse'
 
 def test_route_accepts_repeated_legacy_field_and_one_result(client):
-    with patch('app.services.providers.openai_provider.OpenAIProvider.generate',return_value=sample_result()) as generate:
+    with patch('app.services.providers.deepseek_provider.DeepSeekProvider.generate', return_value=sample_result()) as generate:
         response=client.post('/api/resumo-harmonico',headers=auth_headers(client),data=MultiDict([
             ('arquivo',(BytesIO(b'Db B4'),'z.txt','text/plain')),
             ('arquivo',(BytesIO(b'Gb/Bb'),'a.txt','text/plain'))]),content_type='multipart/form-data')

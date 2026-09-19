@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from openai import OpenAI
+import json
+from time import perf_counter
 
-from .base import ProviderError, ProviderRequestRejected
+from openai import OpenAI
+from pydantic import ValidationError
+
+from ...schemas.resumo_harmonico import ResumoHarmonicoResponse
+from .base import ProviderError, ProviderInvalidResponse, ProviderRequestRejected
 from .openai_provider import OpenAIProvider
 
 
@@ -44,4 +49,48 @@ class DeepSeekProvider(OpenAIProvider):
             raise ProviderRequestRejected(
                 "A DeepSeek não aceita PDF escaneado diretamente; envie uma imagem ou PDF com texto."
             )
-        return super().generate(system_prompt, user_prompt, media, context)
+        started_at = perf_counter()
+        safe_context = self._safe_context(context)
+        user_content = [{"type": "input_text", "text": user_prompt}]
+        for index, part in enumerate(media_items):
+            if media.items:
+                user_content.append({
+                    "type": "input_text",
+                    "text": f"Continuação da mesma música: arquivo {index + 1} de {len(media_items)}. Preserve esta ordem.",
+                })
+            if part.text is not None:
+                user_content.append({"type": "input_text", "text": part.text})
+            else:
+                user_content.append({"type": "input_image", "image_url": part.data_url})
+
+        try:
+            response = self._client.responses.create(
+                model=self._model,
+                input=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ],
+                text={"format": {"type": "json_object"}},
+                max_output_tokens=self._max_output_tokens,
+                reasoning={"effort": "low"},
+            )
+        except Exception as error:
+            classified = self._classify_exception(error)
+            self._log_result("failure", started_at, safe_context, classified.code, exception=error)
+            raise classified from error
+
+        output_text = getattr(response, "output_text", None)
+        if not isinstance(output_text, str) or not output_text.strip():
+            error = ProviderInvalidResponse("A DeepSeek não retornou conteúdo JSON")
+            self._log_result("failure", started_at, safe_context, error.code, response=response)
+            raise error
+
+        try:
+            parsed = ResumoHarmonicoResponse.model_validate(json.loads(output_text))
+        except (json.JSONDecodeError, ValidationError) as error:
+            classified = self._classify_exception(error)
+            self._log_result("failure", started_at, safe_context, classified.code, exception=error, response=response)
+            raise classified from error
+
+        self._log_result("success", started_at, safe_context, "ok", response=response)
+        return parsed

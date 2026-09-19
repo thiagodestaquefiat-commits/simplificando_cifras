@@ -9,7 +9,7 @@ from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
 
 
 SYSTEM_PROMPT = """Você analisa uma fonte musical uma única vez e gera duas representações da mesma música, em português do Brasil.
-Retorne somente o objeto estruturado solicitado.
+Retorne somente JSON válido no formato esperado pelo ROUDY, sem Markdown ou texto adicional.
 
 Regras obrigatórias:
 - Nunca reproduza letra completa em pesquisa ou no resumo. A única exceção é fullChordSheet,
