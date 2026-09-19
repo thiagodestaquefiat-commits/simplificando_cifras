@@ -12,6 +12,7 @@ from .openai_provider import OpenAIProvider
 
 
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_JSON_MAX_OUTPUT_TOKENS = 8000
 
 
 class DeepSeekProvider(OpenAIProvider):
@@ -71,8 +72,8 @@ class DeepSeekProvider(OpenAIProvider):
                     {"role": "user", "content": user_content},
                 ],
                 text={"format": {"type": "json_object"}},
-                max_output_tokens=self._max_output_tokens,
-                reasoning={"effort": "low"},
+                max_output_tokens=min(self._max_output_tokens, DEEPSEEK_JSON_MAX_OUTPUT_TOKENS),
+                reasoning={"effort": "none"},
             )
         except Exception as error:
             classified = self._classify_exception(error)

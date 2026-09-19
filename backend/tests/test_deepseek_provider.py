@@ -132,7 +132,20 @@ def test_valid_json_is_parsed_and_validated_locally():
     assert result == expected
     assert responses.kwargs["model"] == "deepseek-flash"
     assert responses.kwargs["text"] == {"format": {"type": "json_object"}}
+    assert responses.kwargs["reasoning"] == {"effort": "none"}
+    assert responses.kwargs["max_output_tokens"] == 8000
     assert "text_format" not in responses.kwargs
+
+
+def test_json_output_limit_preserves_lower_configured_value():
+    responses = FakeResponses(valid_result().model_dump_json(by_alias=True))
+    provider = DeepSeekProvider(
+        "", "deepseek-flash", 90, 4096, client=SimpleNamespace(responses=responses)
+    )
+
+    provider.generate("Retorne somente JSON válido.", "Tom: C\nC G")
+
+    assert responses.kwargs["max_output_tokens"] == 4096
 
 
 def test_invalid_json_is_rejected():
