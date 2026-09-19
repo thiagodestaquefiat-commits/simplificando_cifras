@@ -8,6 +8,7 @@ const auth = fs.readFileSync("js/app-auth.js", "utf8");
 assert.doesNotMatch(html, /id="library-sync-btn"/, "o botão manual de sincronização deve sair do topo");
 assert.match(sync, /global\.storage\.set\(CONSENT_KEY,true\)/, "o login deve ativar a sincronização automática");
 assert.match(sync, /pull\(\)\.then\(result=>\{if\(hasConsent\(\)&&result\.status\?\.localPending\)schedule\(\);\}\)/, "a conciliação inicial deve agendar o envio automático somente para uma conta já confirmada");
+assert.doesNotMatch(html, /canSync=[^;\n]*conflicts===0/, "um conflito automático não pode desativar o botão de sincronização");
 assert.match(html, /openProfileSettings\(\)/);
 assert.match(html, /openAppSettings\(\)/);
 assert.match(html, /profilePhotoSelected\(this\)/);

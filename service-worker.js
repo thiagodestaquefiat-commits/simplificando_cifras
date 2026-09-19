@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v125-auto-sync";
+const CACHE_NAME = "simplificando-cifras-v126-sync-button";
 const ASSETS = [
   "./",
   "./index.html",
