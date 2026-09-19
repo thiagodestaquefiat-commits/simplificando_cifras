@@ -38,7 +38,7 @@ do upload e gera `fullChordSheet` + `harmonicSummary` em uma única análise.
 
 Nenhum provider de conteúdo está ativado enquanto não houver API ou parceria
 autorizada. Nesse estado, a interface informa que não encontrou uma fonte
-autorizada e orienta o envio de PDF, imagem ou TXT, sem chamar a OpenAI.
+autorizada e orienta o envio de PDF, imagem ou TXT, sem chamar a DeepSeek.
 
 Fontes avaliadas:
 
@@ -69,7 +69,7 @@ backend resolve em um provider previamente configurado.
 
 ## Segurança e observabilidade
 
-A chave da OpenAI permanece somente no Railway. O frontend envia o token de
+A chave da DeepSeek permanece somente no Railway, em `DEEPSEEK_API_KEY`. O frontend envia o token de
 sessão; o backend determina o usuário autenticado. CORS, rate limit, timeout,
 Structured Outputs e classificação segura de erros permanecem ativos. Logs
 podem conter request ID, duração, tipo da entrada, tamanho e páginas, mas nunca

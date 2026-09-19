@@ -66,7 +66,7 @@ def selected_source_result():
     )
 
 
-@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_text_request_returns_versioned_json(generate, client):
     generate.return_value = sample_result()
     response = client.post(
@@ -92,7 +92,7 @@ def test_text_request_returns_versioned_json(generate, client):
     assert generate.call_args.kwargs["context"]["request_id"] == response.headers["X-Request-ID"]
 
 
-@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_research_caps_confidence_and_adds_warning(generate, client):
     generate.return_value = sample_result()
     client.application.extensions["music_source_registry"] = FakeMusicSourceRegistry(result=selected_source_result())
@@ -177,7 +177,7 @@ def test_rejects_malformed_json_with_json_error(client):
     assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
 
 
-@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_txt_upload_returns_same_structured_contract(generate, client):
     generate.return_value = sample_result()
     response = client.post(
@@ -233,7 +233,7 @@ def test_cors_is_not_wildcard(client):
     assert "Access-Control-Allow-Origin" not in denied.headers
 
 
-@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_rate_limit_returns_standard_json(generate, app, client):
     generate.return_value = sample_result()
     app.config["RESUMO_RATE_LIMIT"] = "1 per minute"
@@ -260,7 +260,7 @@ def test_rate_limit_returns_standard_json(generate, app, client):
         (ProviderUnavailable("offline"), 503, "provedor_indisponivel"),
     ],
 )
-@patch("app.services.providers.openai_provider.OpenAIProvider.generate")
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_provider_errors_are_publicly_classified(generate, error, status, code, client):
     generate.side_effect = error
     response = client.post(

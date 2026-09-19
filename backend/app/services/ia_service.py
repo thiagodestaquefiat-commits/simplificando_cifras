@@ -5,7 +5,7 @@ from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
 from .harmonic_normalizer import normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
-from .providers import OpenAIProvider, ProviderError, ProviderRefusal
+from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
 
 
 SYSTEM_PROMPT = """Você analisa uma fonte musical uma única vez e gera duas representações da mesma música, em português do Brasil.
@@ -53,11 +53,11 @@ class IaService:
     @classmethod
     def from_config(cls, config):
         try:
-            provider = OpenAIProvider(
-                api_key=config["OPENAI_API_KEY"],
-                model=config["OPENAI_MODEL"],
-                timeout_seconds=config["OPENAI_TIMEOUT_SECONDS"],
-                max_output_tokens=config["OPENAI_MAX_OUTPUT_TOKENS"],
+            provider = DeepSeekProvider(
+                api_key=config["DEEPSEEK_API_KEY"],
+                model=config["DEEPSEEK_MODEL"],
+                timeout_seconds=config["DEEPSEEK_TIMEOUT_SECONDS"],
+                max_output_tokens=config["DEEPSEEK_MAX_OUTPUT_TOKENS"],
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error

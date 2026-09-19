@@ -18,7 +18,7 @@ python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Preencha `OPENAI_API_KEY`, `DATABASE_URL` e ajuste `CORS_ALLOWED_ORIGINS`. Para
+Preencha `DEEPSEEK_API_KEY`, `DATABASE_URL` e ajuste `CORS_ALLOWED_ORIGINS`. Para
 desenvolvimento, o padrão usa SQLite; no Railway, use a URL privada do
 PostgreSQL provisionado. Para habilitar endereços e mapas, preencha também
 `GEOAPIFY_API_KEY`. Para habilitar o login, preencha `SUPABASE_URL` e
@@ -183,12 +183,16 @@ legado e, quando uma sugestão é escolhida, os campos estruturados, coordenadas
 `placeId` e provedor. As novas colunas de `events` são criadas pela migration
 interna aditiva; eventos antigos continuam válidos e apenas não exibem o mapa.
 
-## Modelo OpenAI
+## Modelo DeepSeek
 
-O padrão inicial é `gpt-5.6-luna`, modelo oficial compatível com Responses API
-e Structured Outputs, escolhido para esta primeira validação por ser voltado a
-cargas sensíveis a custo. O valor não é fixo: altere `OPENAI_MODEL` no ambiente
-sem modificar rotas, schemas ou serviços.
+O padrão inicial é `deepseek-flash`, compatível com Responses API, imagens e
+Structured Outputs. O valor não é fixo: altere `DEEPSEEK_MODEL` no ambiente sem
+modificar rotas, schemas ou serviços. A URL do provedor é fixa no backend em
+`https://api.deepseek.com`; somente o Railway recebe `DEEPSEEK_API_KEY`.
+
+PDFs com camada de texto são extraídos localmente e seguem normalmente para a
+análise. Como a Responses API da DeepSeek não aceita PDF como item de entrada,
+um PDF puramente escaneado deve ser enviado como PNG, JPG ou WebP.
 
 Antes de publicar, confirme o acesso ao modelo com a chave e a conta que serão
 usadas no Railway. Registre nesta documentação o modelo efetivamente usado no
@@ -201,7 +205,7 @@ cd backend
 python -m pytest
 ```
 
-Os testes usam um provider falso; não consomem a API da OpenAI.
+Os testes usam um provider falso; não consomem a API da DeepSeek.
 
 ## Railway
 
