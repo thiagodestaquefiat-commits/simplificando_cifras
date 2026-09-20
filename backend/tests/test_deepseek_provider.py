@@ -329,6 +329,26 @@ def test_image_is_sent_as_multimodal_input_in_json_mode():
     ]
 
 
+def test_rendered_pdf_pages_use_the_existing_multiple_image_pipeline():
+    provider, responses = provider_with_output(valid_result().model_dump_json())
+    pages = (
+        ExtractedContent("image", None, "image/png", "data:image/png;base64,PAGE1"),
+        ExtractedContent("image", None, "image/png", "data:image/png;base64,PAGE2"),
+    )
+    media = ExtractedContent("bundle", None, "multipart/mixed", items=pages)
+
+    provider.generate("Retorne somente JSON válido.", "Analise o PDF renderizado", media)
+
+    content = responses.kwargs["input"][1]["content"]
+    assert [item["type"] for item in content] == [
+        "input_text", "input_text", "input_image", "input_text", "input_image",
+    ]
+    assert [item["image_url"] for item in content if item["type"] == "input_image"] == [
+        pages[0].data_url,
+        pages[1].data_url,
+    ]
+
+
 def test_rejects_scanned_pdf_before_external_request():
     responses = SimpleNamespace(create=lambda **_kwargs: pytest.fail("provider must not be called"))
     provider = DeepSeekProvider("", "deepseek-flash", 90, 12000, client=SimpleNamespace(responses=responses))

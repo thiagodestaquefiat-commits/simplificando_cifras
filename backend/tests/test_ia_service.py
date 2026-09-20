@@ -116,3 +116,37 @@ def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
     assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]
     assert "[reconstruir]" in provider.user_prompt
     assert "B2" in provider.system_prompt
+
+
+def test_multipage_visual_pdf_pipeline_returns_summary_and_private_full_sheet():
+    provider = FakeProvider()
+    provider_result = CifraCompleta(
+        source="user_upload",
+        content="[reconstruir]",
+        sections=[SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
+            letra="Digno é o Senhor",
+            acordes=[AcordePosicionado(acorde="C", posicao=0), AcordePosicionado(acorde="G", posicao=9)],
+        )])],
+    )
+    original_generate = provider.generate
+
+    def generate(system_prompt, user_prompt, media=None, context=None):
+        result = original_generate(system_prompt, user_prompt, media, context)
+        result.fullChordSheet = provider_result
+        return result
+
+    provider.generate = generate
+    service = IaService(provider)
+    pages = (
+        ExtractedContent("image", None, "image/png", "data:image/png;base64,PAGE1", page_count=1),
+        ExtractedContent("image", None, "image/png", "data:image/png;base64,PAGE2", page_count=1),
+    )
+    pdf = ExtractedContent("bundle", None, "multipart/mixed", page_count=2, items=pages)
+
+    result = service.generate(ResumoHarmonicoRequest(tipo="arquivo", titulo="Digno é Senhor"), pdf)
+
+    assert provider.media.items == pages
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]
+    assert result.fullChordSheet.visibility == "private"
+    assert result.fullChordSheet.source == "user_upload"
+    assert result.fullChordSheet.content == "[Refrão]\nC        G\nDigno é o Senhor"
