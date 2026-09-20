@@ -9,6 +9,12 @@ from app.errors import ApiError
 from app.services import content_extractor
 
 
+def test_pdf_renderer_dependency_is_available():
+    from PIL import Image
+
+    assert callable(Image.frombuffer)
+
+
 def upload(data, filename, mime):
     return FileStorage(stream=BytesIO(data), filename=filename, content_type=mime)
 
