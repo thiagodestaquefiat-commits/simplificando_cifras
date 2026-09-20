@@ -135,6 +135,115 @@ def test_valid_json_is_parsed_and_validated_locally():
     assert responses.kwargs["reasoning"] == {"effort": "none"}
     assert responses.kwargs["max_output_tokens"] == 8000
     assert "text_format" not in responses.kwargs
+    system_prompt = responses.kwargs["input"][0]["content"]
+    assert "CONTRATO JSON OBRIGATÓRIO" in system_prompt
+    assert '"schemaVersion"' in system_prompt
+    assert '"harmonicSummary"' in system_prompt
+    assert '"fullChordSheet"' in system_prompt
+    assert '"additionalProperties":false' in system_prompt
+
+
+def test_realistic_complete_json_covers_the_entire_contract():
+    payload = {
+        "schemaVersion": 2,
+        "titulo": "Teu Amor Não Falha",
+        "artista": "Artista informado",
+        "tom": "E",
+        "capotraste": 2,
+        "harmonicSummary": {
+            "blocos": [{
+                "acordes": ["E", "B", "C#m", "A9"],
+                "repeticoes": 2,
+                "fraseGuia": "Nada vai me separar",
+                "secao": "Refrão",
+            }],
+        },
+        "observacoes": ["Confirmar o tom antes de salvar."],
+        "confianca": "alta",
+        "fullChordSheet": {
+            "visibility": "private",
+            "source": "user_text",
+            "content": "[Refrão]\nE       B\nNada vai me separar",
+            "sections": [{
+                "nome": "Refrão",
+                "linhas": [{
+                    "letra": "Nada vai me separar",
+                    "acordes": [
+                        {"acorde": "E", "posicao": 0},
+                        {"acorde": "B", "posicao": 8},
+                    ],
+                }],
+            }],
+        },
+    }
+    provider, _responses = provider_with_output(json.dumps(payload, ensure_ascii=False))
+
+    result = provider.generate("sistema", "usuário")
+
+    assert result.model_dump(mode="json") == payload
+
+
+def test_safe_predictable_variations_are_normalized_before_validation():
+    payload = {
+        "schemaVersion": 2,
+        "titulo": "Teste",
+        "harmonicSummary": {"blocos": None},
+        "observacoes": None,
+        "confianca": " MÉDIA ",
+        "fullChordSheet": {
+            "visibility": "private",
+            "source": "user_text",
+            "content": "C G\nLetra",
+            "sections": [{"nome": "Verso", "linhas": [{"letra": "Letra", "acordes": None}]}],
+        },
+    }
+    provider, _responses = provider_with_output(json.dumps(payload, ensure_ascii=False))
+
+    result = provider.generate("sistema", "usuário")
+
+    assert result.confianca == "media"
+    assert result.observacoes == []
+    assert result.harmonicSummary.blocos == []
+    assert result.fullChordSheet.visibility == "private"
+    assert result.fullChordSheet.sections[0].linhas[0].acordes == []
+
+
+def test_public_full_chord_sheet_is_rejected_instead_of_normalized():
+    payload = {
+        "schemaVersion": 2,
+        "titulo": "Teste",
+        "harmonicSummary": {"blocos": []},
+        "confianca": "alta",
+        "fullChordSheet": {
+            "visibility": "public",
+            "source": "user_text",
+            "content": "C G\nLetra",
+            "sections": [],
+        },
+    }
+    provider, _responses = provider_with_output(json.dumps(payload))
+
+    with pytest.raises(ProviderStructuredResponseError):
+        provider.generate("sistema", "usuário")
+
+
+def test_normalization_does_not_weaken_version_required_fields_or_extra_forbid():
+    base = {
+        "schemaVersion": 2,
+        "titulo": "Teste",
+        "harmonicSummary": {"blocos": []},
+        "confianca": "alta",
+    }
+    invalid_payloads = [
+        {**base, "schemaVersion": 1},
+        {key: value for key, value in base.items() if key != "titulo"},
+        {**base, "campoInesperado": True},
+    ]
+
+    for payload in invalid_payloads:
+        provider, _responses = provider_with_output(json.dumps(payload))
+        with pytest.raises(ProviderStructuredResponseError):
+            provider.generate("sistema", "usuário")
 
 
 def test_json_output_limit_preserves_lower_configured_value():
