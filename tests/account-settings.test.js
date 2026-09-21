@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const vm = require("node:vm");
 
 const html = fs.readFileSync("index.html", "utf8");
 const sync = fs.readFileSync("js/library-sync.js", "utf8");
@@ -10,6 +11,21 @@ assert.match(sync, /global\.storage\.set\(CONSENT_KEY,true\)/, "o login deve ati
 assert.match(sync, /pull\(\)\.then\(result=>\{if\(hasConsent\(\)&&result\.status\?\.localPending\)schedule\(\);\}\)/, "a conciliação inicial deve agendar o envio automático somente para uma conta já confirmada");
 assert.doesNotMatch(html, /canSync=[^;\n]*conflicts===0/, "um conflito automático não pode desativar o botão de sincronização");
 assert.match(html, /openProfileSettings\(\)/);
+const profileMarkup = html.slice(html.indexOf('function openProfileSettings(){'),html.indexOf('function profilePhotoSelected('));
+const subpageSource=html.slice(html.indexOf('function accountSubpageHeader('),html.indexOf('async function openLibrarySync('));
+const subpageContext={eventEsc:value=>String(value)};
+vm.createContext(subpageContext);
+vm.runInContext(`${subpageSource}\nthis.header=accountSubpageHeader;`,subpageContext);
+assert.match(subpageContext.header('Meu Perfil'), /class="profile-back-button"[^>]*onclick="openAccountModal\(\)"[^>]*aria-label="Voltar para minha conta"/);
+assert.match(subpageContext.header('Configurações','cancelAppSettings'), /onclick="cancelAppSettings\(\)"/);
+assert.match(subpageContext.header('Backup encontrado','openLibrarySync'), /onclick="openLibrarySync\(\)"/);
+assert.match(profileMarkup,/accountSubpageHeader\(appText\('myProfile'\)\)/);
+assert.doesNotMatch(profileMarkup, /onclick="openAccountModal\(\)">Voltar<\/button>/);
+const settingsMarkup=html.slice(html.indexOf('function openAppSettings(){'),html.indexOf('function saveAppSettings(){'));
+assert.match(settingsMarkup,/accountSubpageHeader\(appText\('settings'\),'cancelAppSettings'\)/);
+assert.doesNotMatch(settingsMarkup,/cancelAppSettings\(\)">Voltar<\/button>/);
+assert.match(html,/accountSubpageHeader\('Sincronização'\)/);
+assert.match(html,/accountSubpageHeader\('Backup encontrado','openLibrarySync'\)/);
 assert.match(html, /openAppSettings\(\)/);
 assert.match(html, /profilePhotoSelected\(this\)/);
 assert.match(html, /openProfilePhotoEditor\(image\)/);
@@ -27,6 +43,7 @@ assert.match(html, /Português Brasileiro/);
 assert.match(html, />English</);
 assert.match(html, />Español</);
 assert.match(html, /id="setting-high-contrast"/);
+assert.match(html, /id="setting-theme"/);
 assert.match(html, /id="setting-color-blind"/);
 assert.match(html, /\[100,110,120,130,140\]/);
 assert.doesNotMatch(html, /document\.body\.style\.zoom\s*=/, "o tamanho acessível não pode usar zoom global");

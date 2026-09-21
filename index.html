@@ -214,6 +214,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:620px;padding:18px 16px 24px;max-height:92dvh;overflow-x:hidden;overflow-y:auto;}
 .modal-handle{width:34px;height:3px;background:var(--bg3);border-radius:2px;margin:0 auto 16px;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;}
+.profile-modal-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.profile-modal-header .modal-title{margin:0;}
+.profile-back-button{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.35);border-radius:11px;background:rgba(37,99,235,.16);color:#dbeafe;font-family:inherit;font-size:22px;font-weight:700;line-height:1;cursor:pointer;}
+.profile-back-button:hover,.profile-back-button:focus-visible{border-color:#60a5fa;background:rgba(37,99,235,.3);outline:none;}
 .form-group{margin-bottom:11px;}
 .form-label{font-size:11px;color:var(--text2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .form-input{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
@@ -228,6 +232,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .empty-state{text-align:center;padding:48px 20px;color:var(--text2);}
 .empty-state .emoji{font-size:44px;margin-bottom:12px;}
 .empty-state p{font-size:14px;}
+#pane-medley{flex-direction:column;align-items:stretch;}
+#medley-content{width:100%;min-width:0;box-sizing:border-box;}
+.medley-empty{display:flex;width:100%;flex-direction:column;align-items:center;}
+.medley-empty .empty-state{width:100%;box-sizing:border-box;}
+.medley-empty .btn{width:min(100%,320px);}
 /* SD numbered */
 .sd-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .sd-num{width:24px;height:24px;background:var(--accent2);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
@@ -478,6 +487,32 @@ html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add
 @media(max-width:360px){.chord-section-header{gap:6px;padding-inline:8px}.chord-transpose-controls .transpose-label{display:none}.chord-transpose-controls .t-btn{width:28px;height:28px}.chord-transpose-controls .t-reset{font-size:11px}}
 .event-add-member{grid-template-columns:minmax(120px,1fr) 110px auto}
 @media(max-width:430px){.event-add-member{grid-template-columns:minmax(0,1fr) 110px}.event-add-member button{grid-column:1/-1}}
+/* Tema claro: mantém o palco e o player de mídia com suas cores próprias. */
+html[data-theme="light"]:not(.a11y-high-contrast){--bg:#f5f7fb;--bg2:#eaf0f8;--bg3:#e2eaf4;--surface:#fff;--surface-hover:#edf4fd;--accent:#1d4ed8;--accent2:rgba(29,78,216,.12);--success:#047857;--success-soft:rgba(4,120,87,.1);--text:#17263b;--text2:#526477;--border:rgba(32,57,87,.18);--music-accent:#a34d2e;--chord-color:#a34d2e;--shadow:0 12px 32px rgba(28,50,78,.12);color-scheme:light}
+html[data-theme="light"]:not(.a11y-high-contrast),html[data-theme="light"]:not(.a11y-high-contrast) body{background:#f5f7fb;color:var(--text)}
+html[data-theme="light"]:not(.a11y-high-contrast) .app,html[data-theme="light"]:not(.a11y-high-contrast) .detail-view:not(.stage-mode){background:var(--bg);border-color:var(--border);box-shadow:var(--shadow)}
+html[data-theme="light"]:not(.a11y-high-contrast) .topbar,html[data-theme="light"]:not(.a11y-high-contrast) .detail-header,html[data-theme="light"]:not(.a11y-high-contrast) .tab-bar{background:rgba(244,248,253,.96)}
+html[data-theme="light"]:not(.a11y-high-contrast) .topbar-sub,html[data-theme="light"]:not(.a11y-high-contrast) .tab:hover{color:var(--text2)}
+html[data-theme="light"]:not(.a11y-high-contrast) .tab.active{color:#17499c;background:#dceaff;border-color:#94b9ee}
+html[data-theme="light"]:not(.a11y-high-contrast) .section-label{background:var(--bg);color:#1d4ed8}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.music-item,.setlist-item,.medley-block,.wa-block,.full-chord-sheet,.transpose-bar,.event-meta-card,.event-member-card,.band-card,.account-summary,.account-menu-button,.library-sync-panel,.sync-diagnostic-section,.song-view-switch){background:#fff;color:var(--text);border-color:var(--border)}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.search-input,.form-input,.form-textarea,.settings-select,.settings-row,.profile-photo-change,.profile-photo-remove,.capo-opt,.t-btn,.stage-btn,.chord-instrument-button,.band-toolbar select,.band-inline-actions button){background:#edf3fa;color:var(--text);border-color:var(--border)}
+html[data-theme="light"]:not(.a11y-high-contrast) .search-input:focus{background:#fff;border-color:#7fa9e8}
+html[data-theme="light"]:not(.a11y-high-contrast) .modal{background:#f8fbff;color:var(--text);border-color:var(--border)}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.account-menu-icon,.profile-back-button,.app-account-btn,.back-btn){background:#e1edfc;color:#17499c;border-color:#adc7e8}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.account-menu-copy small,.account-summary-info span,.settings-row-copy small,.settings-group-title,.full-chord-private){color:var(--text2)}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.letra-linha,.full-chord-line,.detail-title,.modal-title,.music-title,.sl-title){color:var(--text)}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.full-chord-line.is-chord,.chord-line,.chord-card-name){color:var(--chord-color)}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.btn-outline,.stage-btn-palco){background:#eef5ff;color:#17499c;border-color:#91b4e5}
+html[data-theme="light"]:not(.a11y-high-contrast) .settings-toggle span{background:#a9b8ca}
+html[data-theme="light"]:not(.a11y-high-contrast) .settings-toggle input:checked+span{background:#2563eb}
+html[data-theme="light"]:not(.a11y-high-contrast) .library-sync-count{background:#edf3fa}
+html[data-theme="light"]:not(.a11y-high-contrast) #capo-row{background:#f8fbff!important}
+html[data-theme="light"]:not(.a11y-high-contrast) .event-permission-note{color:#234b76;background:#eaf3ff}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.event-sync-toolbar,.band-toolbar){background:#edf3fa}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.event-chat-composer,.event-chat-reply){background:#eaf0f8;color:var(--text)}
+html[data-theme="light"]:not(.a11y-high-contrast) .event-chat-composer textarea{background:#fff;color:var(--text)}
+html[data-theme="light"]:not(.a11y-high-contrast) .song-player-expanded{color:#fff}
 </style>
 </head>
 <body>
@@ -1558,18 +1593,27 @@ window.addEventListener('online',()=>updateStagePresentation());window.addEventL
 
 // ── MEDLEY ────────────────────────────────────────────────────────────
 let medleyBlocos=[];
+function medleyReference(){return medleyBlocos[0]||null;}
+function medleyChordText(block){
+  const first=medleyReference();
+  if(!first)return String(block.chords||'');
+  const from=noteIdx(String(block.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'');
+  const to=noteIdx(String(first.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'');
+  if(from<0||to<0)return String(block.chords||'');
+  const shift=(to-from+12)%12+(songFormat.parseCapo(block.capo)-songFormat.parseCapo(first.capo));
+  return shiftText(String(block.chords||''),shift);
+}
 
 function renderMedley(){
   const el=document.getElementById('medley-content');
   if(!medleyBlocos.length){
-    el.innerHTML=`<div class="empty-state"><div class="emoji">🎛️</div><p>Nenhum bloco no medley</p><p style="font-size:12px;margin-top:6px;">Adicione partes de músicas abaixo</p></div>
-    <button class="btn btn-primary" style="margin-top:16px;" onclick="abrirAddMedley()">+ Adicionar bloco</button>`;
+    el.innerHTML=`<div class="medley-empty"><div class="empty-state"><div class="emoji">🎛️</div><p>Nenhum bloco no medley</p><p style="font-size:12px;margin-top:6px;">Adicione partes de músicas abaixo</p></div>
+    <button class="btn btn-primary" style="margin-top:16px;" onclick="abrirAddMedley()">+ Adicionar bloco</button></div>`;
     return;
   }
   el.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <span style="font-size:14px;font-weight:700;">${medleyBlocos.length} bloco(s)</span>
-      <button class="btn btn-primary" style="width:auto;padding:6px 14px;margin:0;font-size:13px;" onclick="tocarMedley()">▶ Tocar Medley</button>
+      <span style="font-size:14px;font-weight:700;">${medleyBlocos.length} bloco(s) · Tom: ${eventEsc(medleyReference().key)}${songFormat.parseCapo(medleyReference().capo)?` · Capotraste: ${songFormat.parseCapo(medleyReference().capo)}ª casa`:''}</span>
     </div>`+
     medleyBlocos.map((b,i)=>`
     <div class="medley-block">
@@ -1581,10 +1625,11 @@ function renderMedley(){
         </div>
         <button class="medley-remove" onclick="removeMedley(${i})">✕</button>
       </div>
-      <div class="chord-line" style="font-size:16px;">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
+      <div class="chord-line" style="font-size:16px;">${eventEsc(medleyChordText(b)).replace(/\n/g,'<br>')}</div>
     </div>`).join('')+
     `<button class="btn btn-outline" style="margin-top:8px;" onclick="abrirAddMedley()">+ Adicionar bloco</button>
-     <button class="btn btn-danger" style="margin-top:6px;" onclick="limparMedley()">🗑️ Limpar tudo</button>`;
+     <button class="btn btn-danger" style="margin-top:6px;" onclick="limparMedley()">🗑️ Limpar tudo</button>
+     <button class="btn btn-primary" style="margin-top:6px;" onclick="abrirSalvarMedley()">Salvar na Playlist</button>`;
 }
 
 function abrirAddMedley(){
@@ -1621,7 +1666,9 @@ function confirmarAddMedley(){
   const m=musicas.find(x=>x.id===mid);
   if(!m) return;
   const b=m.blocos[bi];
-  medleyBlocos.push({musicTitle:m.title,musicId:mid,blocoIdx:bi,label:b.l||'Bloco '+(bi+1),chords:b.c,key:m.key});
+  if(!b)return;
+  if(noteIdx(String(m.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'')<0){showToast('⚠️ Defina o tom da música antes de adicioná-la ao medley.');return;}
+  medleyBlocos.push({musicTitle:m.title,musicId:mid,blocoIdx:bi,label:b.l||'Bloco '+(bi+1),chords:b.c,key:m.key,capo:songFormat.parseCapo(m.capo)});
   closeModal(); renderMedley();
 }
 
@@ -1634,6 +1681,41 @@ function moveMedley(i,dir){
 
 function removeMedley(i){medleyBlocos.splice(i,1);renderMedley();}
 function limparMedley(){if(confirm('Limpar o medley?')){medleyBlocos=[];renderMedley();}}
+function abrirSalvarMedley(){
+  if(!medleyBlocos.length)return;
+  const titles=[...new Set(medleyBlocos.map(block=>block.musicTitle))];
+  const suggested=`Medley: ${titles.join(' + ')}`;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Salvar Medley na Playlist</div>
+    <div class="form-group"><label class="form-label" for="medley-save-title">Nome do Medley</label>
+    <input class="form-input" id="medley-save-title" maxlength="160" value="${eventEsc(suggested)}"></div>
+    <button class="btn btn-primary" onclick="confirmarSalvarMedley()">Salvar na Playlist</button>
+    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function confirmarSalvarMedley(){
+  const title=document.getElementById('medley-save-title')?.value.trim();
+  if(!title){showToast('⚠️ Informe um nome para o Medley.');return;}
+  const first=medleyReference();if(!first)return;
+  const capo=songFormat.parseCapo(first.capo);
+  const now=new Date().toISOString();
+  const song=songModel.create({
+    id:`medley-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    title,artist:'Medley',key:first.key,capo:capo?`Capotraste casa ${capo}`:'',
+    blocos:medleyBlocos.map(block=>({l:`${block.musicTitle} — ${block.label||'Bloco'}`,c:medleyChordText(block)})),
+    medleySources:medleyBlocos.map(block=>({musicId:block.musicId,blocoIdx:block.blocoIdx})),
+    createdAt:now,updatedAt:now
+  });
+  const nextSongs=[...musicas,song];
+  if(!songRepository.save(nextSongs)){showToast('⚠️ Não foi possível salvar o Medley. Seus blocos continuam aqui.');return;}
+  musicas=nextSongs;
+  librarySync.schedule();
+  medleyBlocos=[];
+  closeModal();
+  renderMusicas();
+  renderMedley();
+  switchTab('musicas');
+  showToast('✅ Medley salvo na Playlist.');
+}
 
 function tocarMedley(){
   // abre view de medley em modo palco
@@ -1643,8 +1725,8 @@ function tocarMedley(){
   currentDetailId=null;
   const vd=document.getElementById('view-detail');
   document.getElementById('detail-title').textContent='🎛️ Medley';
-  document.getElementById('detail-key').textContent='';
-  document.getElementById('transposed-key').textContent='';
+  document.getElementById('detail-key').textContent=medleyReference()?`Tom: ${medleyReference().key}`:'';
+  document.getElementById('transposed-key').textContent=medleyReference()?.key||'';
   document.getElementById('semitone-label').textContent='+0';
   document.querySelectorAll('.stage-hide').forEach(el=>el.style.display='');
   document.getElementById('detail-content').innerHTML=
@@ -1652,7 +1734,7 @@ function tocarMedley(){
     <details class="chord-block" ${i===0?'open':''}>
       <summary>${eventEsc(b.musicTitle)} — ${eventEsc(b.label)}</summary>
       <div class="chord-block-body">
-        <div class="chord-line">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
+        <div class="chord-line">${eventEsc(medleyChordText(b)).replace(/\n/g,'<br>')}</div>
       </div>
     </details>`).join('');
   vd.style.display='flex';
@@ -1666,6 +1748,7 @@ function switchTab(tab){
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
     document.getElementById('pane-'+t).style.display=t===tab?'flex':'none';
   });
+  document.querySelector('#view-main .fab').style.display=tab==='medley'?'none':'flex';
   if(tab==='setlists'){renderSetlists();if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);}
   if(tab==='medley') renderMedley();
 }
@@ -1925,7 +2008,7 @@ let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
 let appCurrentUser=Object.freeze({...appIdentity.user,role:appIdentity.user.role||'Liderança'});
 let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false;
 const ACCOUNT_PROFILES_KEY='sc_account_profiles_v1',APP_SETTINGS_KEY='sc_settings_v3';
-const APP_SETTINGS_DEFAULT={language:'pt-BR',highContrast:false,colorBlind:false,scale:100};
+const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',highContrast:false,colorBlind:false,scale:100};
 const APP_TRANSLATIONS={
   'pt-BR':{tabPlaylist:'🎵 Playlist',tabEvents:'📅 Eventos',tabMedley:'🎛️ Medley',youtubeHelp:'Encontre um vídeo para adicionar à sua playlist',youtubePlaceholder:'Pesquisar música, artista ou link no YouTube',playlistPlaceholder:'Buscar música na playlist',search:'Pesquisar',account:'Minha conta',myProfile:'Meu Perfil',profileHelp:'Edite sua foto e seus dados pessoais',settings:'Configurações',settingsHelp:'Idioma, acessibilidade e preferências',backup:'Backup e dados',backupHelp:'Restauração e estado da sincronização automática',logout:'Sair da conta',login:'Entrar com Google'},
   'en':{tabPlaylist:'🎵 Playlist',tabEvents:'📅 Events',tabMedley:'🎛️ Medley',youtubeHelp:'Find a video to add to your playlist',youtubePlaceholder:'Search music, artist or YouTube link',playlistPlaceholder:'Search music in playlist',search:'Search',account:'My account',myProfile:'My Profile',profileHelp:'Edit your photo and personal information',settings:'Settings',settingsHelp:'Language, accessibility and preferences',backup:'Backup and data',backupHelp:'Restore and automatic sync status',logout:'Log out',login:'Sign in with Google'},
@@ -1936,16 +2019,24 @@ function accountProfiles(){const value=storage.get(ACCOUNT_PROFILES_KEY,{});retu
 function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
 function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};storage.set(ACCOUNT_PROFILES_KEY,profiles);}
 function accountAvatar(profile,className='account-avatar'){return `<span class="${className}" id="account-profile-avatar">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
-function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
+function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),theme:['light','dark','system'].includes(saved?.theme)?saved.theme:'dark',scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
 function appText(key){const language=loadAppSettings().language;return (APP_TRANSLATIONS[language]||APP_TRANSLATIONS['pt-BR'])[key]||APP_TRANSLATIONS['pt-BR'][key]||key;}
 function applyAppSettings(settings=loadAppSettings()){
   const root=document.documentElement,scale=Math.max(100,Math.min(140,Number(settings.scale)||100));
+  const theme=['light','dark','system'].includes(settings.theme)?settings.theme:'dark';
+  const resolvedTheme=theme==='system'&&window.matchMedia?.('(prefers-color-scheme: light)').matches?'light':theme==='system'?'dark':theme;
+  root.dataset.themeChoice=theme;root.dataset.theme=resolvedTheme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',resolvedTheme==='light'?'#f5f7fb':'#050505');
   root.lang=settings.language||'pt-BR';root.classList.toggle('a11y-high-contrast',Boolean(settings.highContrast));root.classList.toggle('a11y-colorblind',Boolean(settings.colorBlind));
   root.dataset.uiScale=String(scale);document.body.style.removeProperty('zoom');document.body.style.removeProperty('width');document.body.style.removeProperty('min-height');
   const dictionary=APP_TRANSLATIONS[settings.language]||APP_TRANSLATIONS['pt-BR'];
   document.querySelectorAll('[data-i18n]').forEach(node=>{const value=dictionary[node.dataset.i18n];if(value)node.textContent=value;});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{const value=dictionary[node.dataset.i18nPlaceholder];if(value)node.placeholder=value;});
 }
+window.matchMedia?.('(prefers-color-scheme: light)').addEventListener?.('change',()=>{
+  if(document.documentElement.dataset.themeChoice!=='system')return;
+  applyAppSettings(document.getElementById('setting-theme')?settingsFromForm():loadAppSettings());
+});
 function applyProfileRuntime(profile){appCurrentUser=Object.freeze({...appCurrentUser,name:profile.name,email:profile.email,phone:profile.phone,avatarUrl:profile.avatarUrl});storage.set('sc_current_user_v1',appCurrentUser);if(appIdentity.status!=='supabase'){appIdentity={...appIdentity,user:{...appIdentity.user,...appCurrentUser}};storage.set('sc_collaboration_identity_v1',appIdentity);}renderAccountButton();renderSetlists();}
 let chatReplyTo=null,chatLimit=40;
 function eventEsc(value){return String(value==null?'':value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
@@ -1990,6 +2081,11 @@ async function refreshBands(silent){
   catch(error){if(!silent)showToast('⚠️ '+error.message);renderBandToolbar();return appBands;}
 }
 function renderAccountButton(){const button=document.getElementById('app-account-btn');if(!button)return;const profile=accountProfile();button.innerHTML=profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:eventEsc(eventInitials(profile.name));button.classList.toggle('authenticated',Boolean(currentAuthState.authenticated));button.title=currentAuthState.authenticated?'Conta conectada':'Identidade local';}
+function accountSubpageHeader(title,backAction='openAccountModal'){
+  const action=['openAccountModal','cancelAppSettings','openLibrarySync'].includes(backAction)?backAction:'openAccountModal';
+  const destination=action==='openLibrarySync'?'sincronização':'minha conta';
+  return `<div class="profile-modal-header"><button class="profile-back-button" type="button" onclick="${action}()" aria-label="Voltar para ${destination}">←</button><div class="modal-title">${eventEsc(title)}</div></div>`;
+}
 async function openLibrarySync(){
   document.getElementById('modal-overlay').style.display='flex';
   renderLibrarySyncPanel(librarySync.getStatus());
@@ -2023,7 +2119,7 @@ function renderLibrarySyncPanel(state){
     :!state.authenticated
     ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
     :`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Sincronizar agora':'Sincronizar com minha conta'}</button>`;
-  body.innerHTML=`<div class="modal-title">Sincronização</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><strong>Biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização, o diagnóstico e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+  body.innerHTML=`${accountSubpageHeader('Sincronização')}<section class="library-sync-panel" data-library-sync-status aria-live="polite"><strong>Biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização, o diagnóstico e a restauração não apagam músicas locais nem eventos.</p>`;
 }
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 async function downloadSyncDiagnostics(){
@@ -2041,7 +2137,7 @@ function selectLibraryBackup(){
 }
 function renderLibraryRestoreReview(plan){
   const blocked=plan.invalid>0;
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Backup encontrado</div><section class="library-sync-panel"><div class="library-sync-state"><span>🛟</span><div><strong>${plan.total} música${plan.total===1?'':'s'}</strong>Revise o resultado antes de restaurar.</div></div><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${plan.current}</strong></div><div class="library-sync-count"><span>Novas</span><strong>${plan.newSongs}</strong></div><div class="library-sync-count"><span>Já existentes</span><strong>${plan.existing}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${plan.conflicts}</strong></div></div>${plan.invalid?`<div class="library-sync-state" data-state="error"><span>⚠</span><div><strong>${plan.invalid} item${plan.invalid===1?' inválido':'s inválidos'}</strong>Nenhum dado será alterado enquanto o arquivo contiver itens inválidos.</div></div>`:''}${plan.conflicts?`<div class="library-sync-state" data-state="conflict"><span>⚠</span><div><strong>Conflitos não serão sobrescritos</strong>Somente músicas novas serão adicionadas.</div></div>`:''}</section><button class="btn btn-primary" onclick="confirmLibraryRestore()" ${blocked?'disabled':''}>Restaurar</button><button class="btn btn-outline" onclick="openLibrarySync()">Cancelar</button>`;
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Backup encontrado','openLibrarySync')}<section class="library-sync-panel"><div class="library-sync-state"><span>🛟</span><div><strong>${plan.total} música${plan.total===1?'':'s'}</strong>Revise o resultado antes de restaurar.</div></div><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${plan.current}</strong></div><div class="library-sync-count"><span>Novas</span><strong>${plan.newSongs}</strong></div><div class="library-sync-count"><span>Já existentes</span><strong>${plan.existing}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${plan.conflicts}</strong></div></div>${plan.invalid?`<div class="library-sync-state" data-state="error"><span>⚠</span><div><strong>${plan.invalid} item${plan.invalid===1?' inválido':'s inválidos'}</strong>Nenhum dado será alterado enquanto o arquivo contiver itens inválidos.</div></div>`:''}${plan.conflicts?`<div class="library-sync-state" data-state="conflict"><span>⚠</span><div><strong>Conflitos não serão sobrescritos</strong>Somente músicas novas serão adicionadas.</div></div>`:''}</section><button class="btn btn-primary" onclick="confirmLibraryRestore()" ${blocked?'disabled':''}>Restaurar</button>`;
 }
 function confirmLibraryRestore(){
   if(!libraryRestoreDraft)return;
@@ -2058,7 +2154,7 @@ async function openAccountModal(){
   document.getElementById('modal-body').innerHTML=`<div class="modal-title">${eventEsc(appText('account'))}</div><div class="account-summary">${accountAvatar(profile)}<div class="account-summary-info"><strong>${eventEsc(profile.name)}</strong><span>${eventEsc(profile.email||mode)}</span>${profile.email?`<span>${eventEsc(mode)}</span>`:''}</div></div><div class="account-menu"><button class="account-menu-button" type="button" onclick="openProfileSettings()"><span class="account-menu-icon">👤</span><span class="account-menu-copy"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openAppSettings()"><span class="account-menu-icon">⚙</span><span class="account-menu-copy"><strong>${eventEsc(appText('settings'))}</strong><small>${eventEsc(appText('settingsHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openLibrarySync()"><span class="account-menu-icon">↥</span><span class="account-menu-copy"><strong>${eventEsc(appText('backup'))}</strong><small>${eventEsc(appText('backupHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>${currentAuthState.authenticated?`<button class="btn account-logout" type="button" onclick="logoutAppAccount()"><span aria-hidden="true">↪</span> ${eventEsc(appText('logout'))}</button>`:currentAuthState.enabled?`<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="loginAppAccount()">${eventEsc(appText('login'))}</button><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p>`:`<div class="event-permission-note" style="margin-top:14px">O login com Google será liberado quando o Supabase estiver configurado. O perfil local continua funcionando.</div>`}<button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="closeModal()">Fechar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
 }
-function openProfileSettings(){const profile=accountProfile();pendingProfileAvatar=profile.avatarUrl;document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('myProfile'))}</div><div class="profile-photo-editor">${accountAvatar(profile)}<div class="profile-photo-actions"><label class="profile-photo-change" for="profile-photo-input">Alterar foto</label><input class="profile-photo-input" id="profile-photo-input" type="file" accept="image/*" onchange="profilePhotoSelected(this)"><button class="profile-photo-remove" type="button" onclick="removeProfilePhoto()">Remover</button></div></div><div class="form-group"><label class="form-label" for="profile-name">Nome</label><input class="form-input" id="profile-name" maxlength="80" value="${eventEsc(profile.name)}"></div><div class="form-group"><label class="form-label" for="profile-phone">Número de celular</label><input class="form-input" id="profile-phone" type="tel" maxlength="24" autocomplete="tel" placeholder="(00) 00000-0000" value="${eventEsc(profile.phone)}"></div><div class="form-group"><label class="form-label" for="profile-email">E-mail</label><input class="form-input" id="profile-email" type="email" maxlength="160" autocomplete="email" value="${eventEsc(profile.email)}"></div><button class="btn btn-primary" style="width:100%" type="button" onclick="saveProfileSettings()">Salvar perfil</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="openAccountModal()">Voltar</button>`;}
+function openProfileSettings(){const profile=accountProfile();pendingProfileAvatar=profile.avatarUrl;document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('myProfile'))}<div class="profile-photo-editor">${accountAvatar(profile)}<div class="profile-photo-actions"><label class="profile-photo-change" for="profile-photo-input">Alterar foto</label><input class="profile-photo-input" id="profile-photo-input" type="file" accept="image/*" onchange="profilePhotoSelected(this)"><button class="profile-photo-remove" type="button" onclick="removeProfilePhoto()">Remover</button></div></div><div class="form-group"><label class="form-label" for="profile-name">Nome</label><input class="form-input" id="profile-name" maxlength="80" value="${eventEsc(profile.name)}"></div><div class="form-group"><label class="form-label" for="profile-phone">Número de celular</label><input class="form-input" id="profile-phone" type="tel" maxlength="24" autocomplete="tel" placeholder="(00) 00000-0000" value="${eventEsc(profile.phone)}"></div><div class="form-group"><label class="form-label" for="profile-email">E-mail</label><input class="form-input" id="profile-email" type="email" maxlength="160" autocomplete="email" value="${eventEsc(profile.email)}"></div><button class="btn btn-primary" style="width:100%" type="button" onclick="saveProfileSettings()">Salvar perfil</button>`;}
 function profilePhotoSelected(input){const file=input&&input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')||file.size>5*1024*1024){showToast('⚠️ Escolha uma imagem de até 5 MB.');input.value='';return;}const reader=new FileReader();reader.onload=()=>loadProfilePhotoEditorSource(reader.result);reader.onerror=()=>{showToast('⚠️ Não foi possível abrir essa imagem.');input.value='';};reader.readAsDataURL(file);}
 function loadProfilePhotoEditorSource(source){const image=new Image();image.onload=()=>openProfilePhotoEditor(image);image.onerror=()=>{showToast('⚠️ Não foi possível abrir essa imagem.');const input=document.getElementById('profile-photo-input');if(input)input.value='';};image.src=source;}
 function openProfilePhotoEditor(image){closeProfilePhotoEditor();const editor=document.createElement('section');editor.id='profile-image-editor';editor.className='profile-image-editor';editor.setAttribute('role','dialog');editor.setAttribute('aria-modal','true');editor.setAttribute('aria-label','Editar imagem');editor.innerHTML=`<div class="profile-image-editor-card"><header class="profile-image-editor-header"><strong>Editar imagem</strong><button class="profile-image-editor-close" type="button" onclick="closeProfilePhotoEditor()" aria-label="Fechar editor">×</button></header><div class="profile-image-editor-body"><div class="profile-crop-stage"><div class="profile-crop-canvas-wrap" id="profile-crop-canvas-wrap"><canvas class="profile-crop-canvas" id="profile-crop-canvas" width="600" height="600"></canvas><span class="profile-crop-mask"></span><span class="profile-crop-ring"></span></div></div><aside class="profile-image-tools"><div class="profile-image-tool-title">Recortar e ajustar</div><div class="profile-image-tool-actions"><button type="button" onclick="profileEditorRotate(-90)" aria-label="Girar para a esquerda">↶</button><button type="button" onclick="profileEditorRotate(90)" aria-label="Girar para a direita">↷</button><button type="button" onclick="profileEditorFlip('x')" aria-label="Espelhar horizontalmente">↔</button><button type="button" onclick="profileEditorFlip('y')" aria-label="Espelhar verticalmente">↕</button></div><div class="profile-image-slider"><label for="profile-image-zoom"><span>Zoom</span><output id="profile-image-zoom-value">100%</output></label><input id="profile-image-zoom" type="range" min="1" max="3" value="1" step="0.01" oninput="profileEditorZoom(this.value)"></div><div class="profile-image-slider"><label for="profile-image-rotation"><span>Girar</span><output id="profile-image-rotation-value">0°</output></label><input id="profile-image-rotation" type="range" min="-180" max="180" value="0" step="1" oninput="profileEditorRotation(this.value)"></div><div class="profile-image-editor-footer"><button class="profile-image-cancel" type="button" onclick="closeProfilePhotoEditor()">Cancelar</button><button class="profile-image-apply" type="button" onclick="applyProfilePhotoEdit()">Usar foto</button></div></aside></div></div>`;document.body.appendChild(editor);profileImageEditorState={image,zoom:1,rotation:0,flipX:1,flipY:1,offsetX:0,offsetY:0,drag:null};const wrap=document.getElementById('profile-crop-canvas-wrap');wrap.addEventListener('pointerdown',event=>{const state=profileImageEditorState;if(!state)return;wrap.setPointerCapture(event.pointerId);state.drag={x:event.clientX,y:event.clientY,offsetX:state.offsetX,offsetY:state.offsetY};wrap.classList.add('is-dragging');});wrap.addEventListener('pointermove',event=>{const state=profileImageEditorState;if(!state||!state.drag)return;const rect=wrap.getBoundingClientRect(),ratio=600/rect.width;state.offsetX=state.drag.offsetX+(event.clientX-state.drag.x)*ratio;state.offsetY=state.drag.offsetY+(event.clientY-state.drag.y)*ratio;renderProfilePhotoEditor();});const stop=()=>{if(profileImageEditorState)profileImageEditorState.drag=null;wrap.classList.remove('is-dragging');};wrap.addEventListener('pointerup',stop);wrap.addEventListener('pointercancel',stop);renderProfilePhotoEditor();}
@@ -2071,9 +2167,9 @@ function applyProfilePhotoEdit(){const source=document.getElementById('profile-c
 function closeProfilePhotoEditor(){document.getElementById('profile-image-editor')?.remove();profileImageEditorState=null;const input=document.getElementById('profile-photo-input');if(input)input.value='';}
 function removeProfilePhoto(){pendingProfileAvatar=null;const target=document.getElementById('account-profile-avatar');if(target)target.textContent=eventInitials(document.getElementById('profile-name')?.value||appCurrentUser.name);}
 async function saveProfileSettings(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const previous=accountProfile(),profile={name,phone,email,avatarUrl:pendingProfileAvatar};saveAccountProfile(profile);applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{currentAuthState=await appAuth.updateProfile(profile);remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
-function settingsFromForm(){return {language:document.getElementById('setting-language')?.value||'pt-BR',highContrast:Boolean(document.getElementById('setting-high-contrast')?.checked),colorBlind:Boolean(document.getElementById('setting-color-blind')?.checked),scale:Number(document.getElementById('setting-scale')?.value)||100};}
+function settingsFromForm(){return {language:document.getElementById('setting-language')?.value||'pt-BR',theme:document.getElementById('setting-theme')?.value||'dark',highContrast:Boolean(document.getElementById('setting-high-contrast')?.checked),colorBlind:Boolean(document.getElementById('setting-color-blind')?.checked),scale:Number(document.getElementById('setting-scale')?.value)||100};}
 function previewAppSettings(){applyAppSettings(settingsFromForm());}
-function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('settings'))}</div><section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Aumenta textos e áreas de toque sem ampliar o layout</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="cancelAppSettings()">Voltar</button>`;}
+function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('settings'),'cancelAppSettings')}<section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Aparência e Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Tema da Interface</strong><small>Escolha como o aplicativo exibe as cores</small></div><select class="settings-select" id="setting-theme" onchange="previewAppSettings()" aria-label="Tema da Interface"><option value="light" ${value.theme==='light'?'selected':''}>Claro</option><option value="dark" ${value.theme==='dark'?'selected':''}>Escuro</option><option value="system" ${value.theme==='system'?'selected':''}>Sincronizar com o Sistema</option></select></div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Aumenta textos e áreas de toque sem ampliar o layout</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button>`;}
 function saveAppSettings(){const value=settingsFromForm();storage.set(APP_SETTINGS_KEY,value);applyAppSettings(value);showToast('✅ Configurações salvas.');openAccountModal();}
 function cancelAppSettings(){applyAppSettings(loadAppSettings());openAccountModal();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
