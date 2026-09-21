@@ -25,6 +25,17 @@
     return global.songModel.normalizeCollection(Array.isArray(collection) ? collection : []);
   }
 
+  function migrateCollection(collection) {
+    const migration = global.demoLibrary ? global.demoLibrary.migrate(collection) : { songs: collection, removed: 0, seeded: false };
+    const songs = normalized(migration.songs);
+    if (migration.removed && global.demoLibrary) global.demoLibrary.markMigrated(global.storage, { removed: migration.removed, seeded: migration.seeded });
+    return { ...migration, songs };
+  }
+
+  function hasStoredLibrary() {
+    return Array.isArray(global.storage.get(CURRENT_STORAGE_KEY, null)) || Array.isArray(global.storage.get(LEGACY_STORAGE_KEY, null));
+  }
+
   function ownerCaches() {
     const value = global.storage.get(OWNER_CACHES_KEY, {});
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -42,7 +53,7 @@
 
   function filterDeleted(ownerId, collection) {
     const deleted = deletedClientIds(ownerId);
-    return normalized(collection).filter((song) => {
+    return migrateCollection(collection).songs.filter((song) => {
       const clientId = String(song && song.librarySync && song.librarySync.clientId || "").trim();
       return !clientId || !deleted.has(clientId);
     });
@@ -168,9 +179,9 @@
     activeOwnerId = null;
     legacyCandidateOwnerId = null;
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
-    if (Array.isArray(stored)) return normalized(stored);
+    if (Array.isArray(stored)) return migrateCollection(stored).songs;
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
-    return normalized(Array.isArray(legacy) ? legacy : defaultSongs);
+    return migrateCollection(Array.isArray(legacy) ? legacy : defaultSongs).songs;
   }
 
   function confirmActiveOwner(collection) {
@@ -188,12 +199,14 @@
     const current = global.storage.get(CURRENT_STORAGE_KEY, null);
     if (Array.isArray(current)) {
       storedLibraryExistedAtBoot = current.length > 0;
-      return global.songModel.normalizeCollection(current);
+      const migration = migrateCollection(current);
+      if (migration.removed) persistCurrent(migration.songs);
+      return migration.songs;
     }
 
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const source = Array.isArray(legacy) ? legacy : defaultSongs;
-    const songs = global.songModel.normalizeCollection(source);
+    const songs = migrateCollection(source).songs;
     storedLibraryExistedAtBoot = songs.length > 0;
     if (!Array.isArray(legacy)) global.storage.set(SEED_ONLY_KEY, true);
     persistCurrent(songs);
@@ -253,6 +266,7 @@
     ownerDeletionsKey: OWNER_DELETIONS_KEY,
     legacyOwnerKey: LEGACY_OWNER_KEY,
     seedOnlyKey: SEED_ONLY_KEY,
+    hasStoredLibrary,
     load,
     save,
     activateOwner,

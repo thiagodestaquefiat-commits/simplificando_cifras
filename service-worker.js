@@ -1,11 +1,12 @@
-const CACHE_NAME = "simplificando-cifras-v127-medley-key";
+const CACHE_NAME = "simplificando-cifras-v128-demo-library";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
-  "./js/song-repository.js?v=8",
-  "./js/library-sync.js?v=12",
+  "./js/demo-library.js?v=1",
+  "./js/song-repository.js?v=9",
+  "./js/library-sync.js?v=13",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",
   "./js/event-collaboration-client.js?v=10",

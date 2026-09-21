@@ -1,4 +1,7 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+
+assert.doesNotMatch(fs.readFileSync("js/event-collaboration-client.js", "utf8"), /request\("\/identity\/claim"/, "login não pode acionar claim destrutivo");
 
 const values = new Map();
 const requests = [];
