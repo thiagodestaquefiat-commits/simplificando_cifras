@@ -15,6 +15,76 @@ DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_JSON_MAX_OUTPUT_TOKENS = 8000
 
 
+def _response_contract_prompt() -> str:
+    schema = json.dumps(
+        ResumoHarmonicoResponse.model_json_schema(),
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return (
+        "\n\nCONTRATO JSON OBRIGATÓRIO:\n"
+        "Produza exatamente um objeto compatível com o JSON Schema abaixo. "
+        "Use somente os nomes de campos declarados; não traduza, renomeie nem acrescente campos. "
+        "Inclua titulo, harmonicSummary e confianca. schemaVersion deve ser o número 2. "
+        "Use null apenas onde o schema permite e [] para listas vazias. "
+        "Se fullChordSheet existir, visibility deve ser \"private\" e source deve ser "
+        "\"user_text\" ou \"user_upload\".\n"
+        f"{schema}"
+    )
+
+
+def _normalize_json_payload(value):
+    """Normalize only predictable JSON-mode variations without relaxing the schema."""
+    if not isinstance(value, dict):
+        return value
+
+    normalized = dict(value)
+    confidence = normalized.get("confianca")
+    if isinstance(confidence, str):
+        normalized_confidence = confidence.strip().lower()
+        if normalized_confidence == "média":
+            normalized_confidence = "media"
+        if normalized_confidence in {"alta", "media", "baixa"}:
+            normalized["confianca"] = normalized_confidence
+
+    for key in ("observacoes",):
+        if normalized.get(key) is None:
+            normalized[key] = []
+
+    summary = normalized.get("harmonicSummary")
+    if isinstance(summary, dict) and summary.get("blocos") is None:
+        normalized["harmonicSummary"] = {**summary, "blocos": []}
+
+    sheet = normalized.get("fullChordSheet")
+    if isinstance(sheet, dict):
+        sheet = dict(sheet)
+        if sheet.get("sections") is None:
+            sheet["sections"] = []
+        sections = sheet.get("sections")
+        if isinstance(sections, list):
+            normalized_sections = []
+            for section in sections:
+                if not isinstance(section, dict):
+                    normalized_sections.append(section)
+                    continue
+                section = dict(section)
+                if section.get("linhas") is None:
+                    section["linhas"] = []
+                lines = section.get("linhas")
+                if isinstance(lines, list):
+                    section["linhas"] = [
+                        {**line, "acordes": []}
+                        if isinstance(line, dict) and line.get("acordes") is None
+                        else line
+                        for line in lines
+                    ]
+                normalized_sections.append(section)
+            sheet["sections"] = normalized_sections
+        normalized["fullChordSheet"] = sheet
+
+    return normalized
+
+
 class DeepSeekProvider(OpenAIProvider):
     """DeepSeek Responses API adapter using the existing safe provider contract."""
 
@@ -68,7 +138,7 @@ class DeepSeekProvider(OpenAIProvider):
             response = self._client.responses.create(
                 model=self._model,
                 input=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": system_prompt + _response_contract_prompt()},
                     {"role": "user", "content": user_content},
                 ],
                 text={"format": {"type": "json_object"}},
@@ -100,7 +170,7 @@ class DeepSeekProvider(OpenAIProvider):
             self._log_result("failure", started_at, safe_context, classified.code, exception=error, response=response)
             raise classified from error
         try:
-            parsed = ResumoHarmonicoResponse.model_validate(decoded)
+            parsed = ResumoHarmonicoResponse.model_validate(_normalize_json_payload(decoded))
         except ValidationError as error:
             classified = self._classify_exception(error)
             self._log_result(

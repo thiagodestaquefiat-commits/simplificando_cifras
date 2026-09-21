@@ -2,10 +2,17 @@ from io import BytesIO
 from types import SimpleNamespace
 
 import pytest
+from pypdf import PdfWriter
 from werkzeug.datastructures import FileStorage
 
 from app.errors import ApiError
 from app.services import content_extractor
+
+
+def test_pdf_renderer_dependency_is_available():
+    from PIL import Image
+
+    assert callable(Image.frombuffer)
 
 
 def upload(data, filename, mime):
@@ -42,6 +49,22 @@ def test_textual_pdf_uses_local_text(monkeypatch):
     assert result.page_count == 1
     assert result.filename == "cifra.pdf"
     assert calls == [{"extraction_mode": "layout"}]
+
+
+@pytest.mark.parametrize("declared_mime", ["", "application/octet-stream"])
+def test_pdf_with_generic_browser_mime_uses_detected_signature(monkeypatch, declared_mime):
+    pages = [SimpleNamespace(extract_text=lambda **_kwargs: "Tom: Dm\nDm Bb C G\nTexto musical fornecido pelo usuário")]
+    monkeypatch.setattr(content_extractor, "PdfReader", lambda *_args, **_kwargs: SimpleNamespace(pages=pages))
+
+    result = content_extractor.extract_upload(
+        upload(b"%PDF-1.7 text", "cifra.pdf", declared_mime),
+        max_bytes=1024,
+        max_pages=20,
+        max_text_length=50000,
+    )
+
+    assert result.kind == "text"
+    assert result.media_type == "application/pdf"
 
 
 def test_textual_pdf_removes_diagram_footer_and_keeps_instrumental_blocks(monkeypatch):
@@ -82,11 +105,52 @@ def test_pdf_edge_cleanup_preserves_real_music(monkeypatch):
 def test_image_pdf_uses_visual_input(monkeypatch):
     pages = [SimpleNamespace(extract_text=lambda: "")]
     monkeypatch.setattr(content_extractor, "PdfReader", lambda *_args, **_kwargs: SimpleNamespace(pages=pages))
+    monkeypatch.setattr(content_extractor, "_render_pdf_pages", lambda *_args: (
+        content_extractor.ExtractedContent("image", None, "image/png", "data:image/png;base64,AAAA", page_count=1),
+    ))
     result = content_extractor.extract_upload(upload(b"%PDF-1.7 image", "scan.pdf", "application/pdf"), max_bytes=1024, max_pages=20, max_text_length=50000)
-    assert result.kind == "pdf"
-    assert result.data_url.startswith("data:application/pdf;base64,")
+    assert result.kind == "image"
+    assert result.data_url.startswith("data:image/png;base64,")
     assert result.page_count == 1
     assert result.size_bytes == len(b"%PDF-1.7 image")
+
+
+def test_visual_pdf_is_really_rendered_to_png_pages():
+    source = BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    writer.add_blank_page(width=612, height=792)
+    writer.write(source)
+
+    result = content_extractor.extract_upload(
+        upload(source.getvalue(), "scan.pdf", "application/pdf"),
+        max_bytes=100_000,
+        max_pages=20,
+        max_text_length=50000,
+    )
+
+    assert result.kind == "bundle"
+    assert result.page_count == 2
+    assert result.size_bytes == len(source.getvalue())
+    assert [item.kind for item in result.items] == ["image", "image"]
+    assert all(item.data_url.startswith("data:image/png;base64,iVBOR") for item in result.items)
+    assert [item.filename for item in result.items] == ["scan-pagina-1.png", "scan-pagina-2.png"]
+
+
+def test_invalid_visual_pdf_render_is_rejected(monkeypatch):
+    pages = [SimpleNamespace(extract_text=lambda: "")]
+    monkeypatch.setattr(content_extractor, "PdfReader", lambda *_args, **_kwargs: SimpleNamespace(pages=pages))
+    monkeypatch.setattr(content_extractor.pdfium, "PdfDocument", lambda *_args: (_ for _ in ()).throw(ValueError("broken")))
+
+    with pytest.raises(ApiError) as error:
+        content_extractor.extract_upload(
+            upload(b"%PDF-1.7 broken", "broken.pdf", "application/pdf"),
+            max_bytes=1024,
+            max_pages=20,
+            max_text_length=50000,
+        )
+
+    assert error.value.code == "arquivo_invalido"
 
 
 def test_rejects_mime_spoof_and_large_file():

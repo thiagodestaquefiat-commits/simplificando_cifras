@@ -37,10 +37,25 @@ def test_texts_join_as_one_source_without_sorting():
 
 def test_scanned_multipage_pdf_stays_one_intact_file(monkeypatch):
     monkeypatch.setattr(extractor,'PdfReader',lambda *a,**kw:SimpleNamespace(pages=[SimpleNamespace(extract_text=lambda **kw:'') for _ in range(3)]))
+    monkeypatch.setattr(extractor,'_render_pdf_pages',lambda *a,**kw:tuple(
+        extractor.ExtractedContent('image',None,'image/png',f'data:image/png;base64,PAGE{i}',1,f'pages-pagina-{i}.png')
+        for i in range(1,4)))
     result=extract([file(b'%PDF-1.7 scanned','pages.pdf','application/pdf')])
-    assert result.kind=='pdf' and result.page_count==3
-    assert result.items==()
-    assert result.data_url.startswith('data:application/pdf;base64,')
+    assert result.kind=='bundle' and result.page_count==3
+    assert [item.kind for item in result.items]==['image','image','image']
+    assert [item.data_url for item in result.items]==[
+        'data:image/png;base64,PAGE1','data:image/png;base64,PAGE2','data:image/png;base64,PAGE3']
+
+
+def test_scanned_pdf_pages_are_flattened_with_other_uploads(monkeypatch):
+    monkeypatch.setattr(extractor,'PdfReader',lambda *a,**kw:SimpleNamespace(pages=[SimpleNamespace(extract_text=lambda **kw:'') for _ in range(2)]))
+    monkeypatch.setattr(extractor,'_render_pdf_pages',lambda *a,**kw:tuple(
+        extractor.ExtractedContent('image',None,'image/png',f'data:image/png;base64,PDF{i}',1,f'scan-pagina-{i}.png')
+        for i in range(1,3)))
+    result=extract([file(b'%PDF-1.7 scanned','scan.pdf','application/pdf'),file()])
+    assert result.page_count==3
+    assert [item.data_url for item in result.items]==[
+        'data:image/png;base64,PDF1','data:image/png;base64,PDF2','data:image/png;base64,iVBORw0KGgpwaG90bw==']
 
 @pytest.mark.parametrize('files,kwargs,code',[
     ([file() for _ in range(9)],{},'arquivos_demais'),

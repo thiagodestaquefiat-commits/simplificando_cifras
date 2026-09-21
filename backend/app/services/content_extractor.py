@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import base64
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from io import BytesIO
 from pathlib import Path
 
+import pypdfium2 as pdfium
 from pypdf import PdfReader
 
 from ..errors import ApiError
@@ -61,7 +62,7 @@ def extract_uploads(files, *, max_bytes: int, max_pages: int, max_text_length: i
             raise ApiError("pdf_paginas_invalidas", f"Use no máximo {max_pages} páginas de PDF/imagens no total.", 400)
         if total_text + max(0, len(items) * 2) > max_text_length:
             raise ApiError("arquivo_muito_grande", "O texto combinado excede o limite de 50.000 caracteres.", 413)
-        items.append(item)
+        items.extend(item.items or (item,))
     if len(items) == 1:
         return items[0]
     text = "\n\n".join(item.text for item in items) if all(item.text is not None for item in items) else None
@@ -92,12 +93,56 @@ def _data_url(data: bytes, mime: str) -> str:
     return f"data:{mime};base64,{encoded}"
 
 
+def _render_pdf_pages(data: bytes, filename: str) -> tuple[ExtractedContent, ...]:
+    """Render a visual PDF locally into bounded PNG pages for multimodal input."""
+    document = None
+    rendered = []
+    try:
+        document = pdfium.PdfDocument(data)
+        stem = Path(filename).stem[:120] or "cifra"
+        for index in range(len(document)):
+            page = document[index]
+            width, height = page.get_size()
+            largest_dimension = max(width, height)
+            if largest_dimension <= 0:
+                raise ValueError("invalid PDF page dimensions")
+            scale = min(2.0, 2000 / largest_dimension)
+            bitmap = page.render(scale=scale)
+            image = bitmap.to_pil()
+            output = BytesIO()
+            image.save(output, format="PNG", optimize=True)
+            rendered.append(ExtractedContent(
+                "image",
+                None,
+                "image/png",
+                _data_url(output.getvalue(), "image/png"),
+                page_count=1,
+                filename=f"{stem}-pagina-{index + 1}.png",
+            ))
+            image.close()
+            bitmap.close()
+            page.close()
+    except Exception as error:
+        raise ApiError("arquivo_invalido", "Não foi possível renderizar este PDF.", 400) from error
+    finally:
+        if document is not None:
+            document.close()
+    if not rendered:
+        raise ApiError("arquivo_invalido", "O PDF não possui páginas renderizáveis.", 400)
+    return tuple(rendered)
+
+
 def _extract_pdf_layout(page) -> str:
     """Preserva colunas/posições de cifras textuais em vez de agrupar acordes no fim."""
     try:
         return page.extract_text(extraction_mode="layout") or ""
     except TypeError:  # compatibilidade com leitores/mocks mais antigos
-        return page.extract_text() or ""
+        try:
+            return page.extract_text() or ""
+        except KeyError:  # página visual/vazia pode não possuir /Contents
+            return ""
+    except KeyError:  # página visual/vazia pode não possuir /Contents
+        return ""
 
 
 _PAGE_MARKER_RE = re.compile(
@@ -218,6 +263,8 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
     detected = _detected_mime(data)
     declared = (file_storage.mimetype or "").lower().split(";", 1)[0]
     extension = Path(file_storage.filename).suffix.lower()
+    if declared in {"", "application/octet-stream"}:
+        declared = detected
     if (
         detected not in ALLOWED_MIMES
         or declared not in ALLOWED_MIMES
@@ -252,4 +299,15 @@ def extract_upload(file_storage, *, max_bytes: int, max_pages: int, max_text_len
         raise ApiError("arquivo_muito_grande", "O texto extraído excede o limite permitido.", 413)
     if text and len(text) >= 40:
         return ExtractedContent("text", text, detected, page_count=pages, filename=file_storage.filename, size_bytes=len(data))
-    return ExtractedContent("pdf", None, detected, _data_url(data, detected), pages, file_storage.filename, len(data))
+    rendered_pages = _render_pdf_pages(data, file_storage.filename)
+    if len(rendered_pages) == 1:
+        return replace(rendered_pages[0], size_bytes=len(data))
+    return ExtractedContent(
+        "bundle",
+        None,
+        "multipart/mixed",
+        page_count=pages,
+        filename=file_storage.filename,
+        size_bytes=len(data),
+        items=rendered_pages,
+    )
