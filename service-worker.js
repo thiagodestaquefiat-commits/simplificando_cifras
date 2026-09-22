@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v127-medley-key";
+const CACHE_NAME = "simplificando-cifras-v131-tuner-instruments";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,8 @@ const ASSETS = [
   "./js/event-repository.js?v=5",
   "./js/event-collaboration-client.js?v=10",
   "./js/app-auth.js?v=9",
+  "./js/ui-i18n.js?v=1",
+  "./js/tuner.js?v=2",
   "./js/sync-realtime.js?v=1",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",
