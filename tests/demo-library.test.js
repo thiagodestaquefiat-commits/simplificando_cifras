@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const vm = require("node:vm");
 
@@ -16,16 +17,37 @@ const expected = [
   ["Digno É o Senhor", "Felipe Rodrigues", "E"],
   ["Santo Pra Sempre", "Ana Nóbrega", "E"]
 ];
+const fullChordSheetHashes = new Map([
+  ["demo-ah-jesus-coracao-igual-ao-teu", "cd3186f84e6502d477333c40f89b6e4ad01470adea14dd66a11d33a52566b26d"],
+  ["demo-cultura-do-ceu", "087c044b913689ea100475c6867d9c3b5180a477d7419fce94817d2fbbcfa608"],
+  ["demo-digno-e-o-senhor", "9a0c15e6bb9276b69ba4d62b6319cbf78c61cf55125f4a5a1480e4c98487d4f8"],
+  ["demo-santo-pra-sempre", "24b86b6f43621eb37ec952fc0b25714e84f55f3256513e093f0fc15bc39280b5"]
+]);
+const instrumentalSection = /^(?:Intro|Interlúdio|Solo|Final)(?:\s+\d+)?$/i;
+const normalizeText = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
 assert.equal(demos.length, 4, "a biblioteca inicial deve ter exatamente quatro demos");
 assert.equal(new Set(demos.map((song) => song.id)).size, 4, "IDs das demos devem ser estáveis e únicos");
 assert.deepEqual(demos.map((song) => [song.title, song.artist, song.key]), expected);
 demos.forEach((song) => {
   assert.ok(song.fullChordSheet?.content.includes("\n"), `${song.title} precisa de letra e cifra completas`);
+  assert.equal(crypto.createHash("sha256").update(song.fullChordSheet.content).digest("hex"), fullChordSheetHashes.get(song.id), `${song.title} não pode alterar a cifra completa validada`);
   assert.ok(song.blocos.length >= 2 && song.blocos.every((block) => block.l && block.c), `${song.title} precisa de resumo harmônico`);
   assert.match(song.summary, /Resumo harmônico:/);
   const parsed = window.songFormat.fromLegacy(song);
   assert.ok(parsed.sections.some((section) => section.lines.some((line) => line.chords.length)), song.title + " precisa ser aceita pelo parser");
-  const summaryChords = song.blocos.flatMap((block) => block.c.split(/\s+/).filter(Boolean));
+  song.blocos.forEach((block) => {
+    const lines = block.c.split("\n").map((line) => line.trim()).filter(Boolean);
+    const hook = lines[0].replace(/\.\.\.$/, "");
+    if (hook !== block.l) {
+      assert.ok(normalizeText(song.fullChordSheet.content).includes(normalizeText(hook)), `${song.title} / ${block.l} precisa usar uma frase da cifra completa`);
+      assert.ok(hook.split(/\s+/).length <= 8, `${song.title} / ${block.l} precisa manter a frase-gancho curta`);
+    } else {
+      assert.match(block.l, instrumentalSection, `${song.title} / ${block.l} só pode omitir frase em parte instrumental`);
+      assert.equal(hook, block.l, `${song.title} / ${block.l} deve manter apenas o nome da parte instrumental`);
+    }
+    assert.ok(lines.length >= 2, `${song.title} / ${block.l} deve mostrar identificação antes dos acordes`);
+  });
+  const summaryChords = song.blocos.flatMap((block) => block.c.split("\n").slice(1).flatMap((line) => line.split(/\s+/).filter(Boolean)));
   assert.ok(summaryChords.every((chord) => window.multiInstrumentChordLibrary.parseChord(chord)), song.title + " possui acorde inválido em blocos");
   assert.ok(summaryChords.every((chord) => window.songEditorState.transposeChord(chord, 1) !== chord), song.title + " precisa permitir transposição");
   const chordLines = song.fullChordSheet.content.split("\n").filter((line) => line.trim() && line.trim().split(/\s+/).every((token) => window.multiInstrumentChordLibrary.parseChord(token)));

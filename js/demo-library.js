@@ -99,7 +99,7 @@
       ["Intro", "C#m7  B4  A2"], ["Primeira Parte", "A2  E  B4  F#m  C#m7", "Graças eu Te dou"],
       ["Segunda Parte", "A2  E  B4  F#m7(11)  C#m7", "Pelos cravos em Suas mãos"],
       ["Refrão", "E  B4  F#m7(11)  A2  C#m7  E7M", "Digno é o Senhor"],
-      ["Final", "E  E7M  F#m  A2  B4  C#m7"]
+      ["Final", "E  E7M  F#m  A2  B4  C#m7", "Digno é o Senhor"]
     ], "Resumo harmônico: em E, alterna duas partes de gratidão com um refrão amplo; F#m7(11), C#m7, A2, B4 e E7M definem a condução até o refrão final.", DIGNO_SHEET),
     demoSong("demo-santo-pra-sempre", "Santo Pra Sempre", "Ana Nóbrega", "E", [
       ["Intro", "A  B  G#m  C#m"], ["Primeira Parte", "E  A  C#m  B", "As muitas gerações"],
@@ -110,7 +110,10 @@
   ]);
 
   function demoSong(id, title, artist, key, blocks, summary, fullContent) {
-    const blocos = blocks.map(([l, c, t]) => ({ l, c, ...(t ? { t } : {}) }));
+    const blocos = blocks.map(([l, c, hook]) => ({
+      l,
+      c: `${hook ? `${hook}...` : l}\n${c}`
+    }));
     return {
       id, title, artist, key, capo: "", blocos, demo: true, summary,
       fullChordSheet: { visibility: "private", source: "user_text", content: fullContent },
