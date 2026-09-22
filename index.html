@@ -719,9 +719,9 @@ html[data-theme="light"]:not(.a11y-high-contrast) .song-player-expanded{color:#f
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/demo-library.js?v=1"></script>
-<script src="js/song-repository.js?v=9"></script>
-<script src="js/library-sync.js?v=13"></script>
+<script src="js/demo-library.js?v=2"></script>
+<script src="js/song-repository.js?v=10"></script>
+<script src="js/library-sync.js?v=14"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=2"></script>
@@ -2580,10 +2580,9 @@ async function migrateLegacyEventsInBackground(){
 // carrega dados salvos
 applyAppSettings();
 appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
-const bibliotecaJaExistia=songRepository.hasStoredLibrary();
 const catalogoPadrao=songModel.normalizeCollection(demoLibrary.catalog());
 musicas=songRepository.load(catalogoPadrao);
-medleyBlocos=demoLibrary.loadMedley(storage,!bibliotecaJaExistia);
+medleyBlocos=demoLibrary.loadMedley(storage,false);
 setlists=eventRepository.load(setlists,appIdentity);
 eventChat.initialize({getEvent:findEvent,getCurrentUser:()=>appCurrentUser});
 eventChat.subscribe(eventId=>{
@@ -2627,7 +2626,7 @@ appAuth.subscribe(async state=>{
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),seedNewOwner:()=>{medleyBlocos=demoLibrary.loadMedley(storage,true);renderMedley();return demoLibrary.catalog();},confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize();

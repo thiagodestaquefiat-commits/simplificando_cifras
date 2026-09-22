@@ -3,7 +3,7 @@ const source=fs.readFileSync('js/library-sync.js','utf8'),songModelSource=fs.rea
 const remote=new Map(),failOnce=new Set();
 function response(body,status=200){return {ok:status>=200&&status<300,status,json:async()=>structuredClone(body)};}
 function song(i,extra={}){return {id:`local-${i}`,title:`Música ${i}`,artist:'Artista',key:'C',blocos:[{l:'Refrão',c:'C G',t:'Frase curta',repeticoes:2}],editorData:{sections:[{lines:[]}]},fullChordSheet:{content:'C G\nLetra + Cifras'},harmonicSummary:{blocks:[{chords:['C','G'],hook:'Frase curta'}]},...extra};}
-function device(userId,initial,{online=true,consent=false,remoteFormat='camel',migrationCandidate=false}={}){
+function device(userId,initial,{online=true,consent=false,remoteFormat='camel',migrationCandidate=false,awaitingRemoteOnboarding=false,demos=[]}={}){
  const memory=new Map([['sc_songs_v1',structuredClone(initial)],['cifras_musicas_v1',structuredClone(initial)],['sc_musicas_v2',[{legacy:true}]],['sc_song_editor_drafts_v1',[{draft:true}]],['sc_events_v1',[{id:'event',repertoire:initial.slice(0,3).map(x=>x.id)}]]]);
  if(consent){memory.set('sc_library_sync_consent_v1',true);memory.set('sc_library_sync_consent_by_owner_v1',{[userId]:true});}
  let songs=structuredClone(initial),authUser=userId,authListener,requests=[],batches=[],statusEvents=[],ownerConfirmed=false;const networkListeners={};
@@ -25,11 +25,12 @@ function device(userId,initial,{online=true,consent=false,remoteFormat='camel',m
   });return response({results:remoteFormat==='snake'?results.map(item=>({...item,client_id:item.clientId,clientId:undefined,song:item.song?{id:item.song.id,client_id:item.song.clientId,song_data:item.song.songData,version:item.song.version,updated_at:item.song.updatedAt,deleted_at:item.song.deletedAt}:null})):results});
  }
  const context={window:null,console,structuredClone,setTimeout,clearTimeout,crypto:global.crypto,fetch,navigator,
+  demoLibrary:{isDemoSong:value=>String(value?.id||'').startsWith('demo-'),catalog:()=>structuredClone(demos)},
   storage,apiConfig:{libraryEndpoint:p=>'https://api.test/songs'+p},addEventListener:(name,fn)=>{networkListeners[name]=fn;},
   appAuth:{getAccessToken:()=>authUser,subscribe:fn=>{authListener=fn;fn({authenticated:Boolean(authUser),user:authUser?{id:authUser}:null});}}};
  context.window=context;vm.runInNewContext(songModelSource,context);vm.runInNewContext(source,context);
  const markDeleted=(value,confirmed=false)=>{const clientId=String(typeof value==='string'?value:value?.librarySync?.clientId||'');if(!clientId)return false;const all=storage.get('sc_personal_song_deletions_v1',{}),ownerValues=all[userId]||{},existing=ownerValues[clientId];ownerValues[clientId]=existing&&typeof existing==='object'?existing:{deletedAt:new Date().toISOString(),confirmedAt:null};if(confirmed)ownerValues[clientId].confirmedAt=ownerValues[clientId].confirmedAt||new Date().toISOString();storage.set('sc_personal_song_deletions_v1',{...all,[userId]:ownerValues});songs=songs.filter(item=>item.librarySync?.clientId!==clientId);return true;};
- context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){},activateOwner:()=>({songs:structuredClone(songs),migrationCandidate}),confirmOwner:()=>{ownerConfirmed=true;return true;},markDeleted,confirmDeleted:value=>markDeleted(value,true),getDeletedClientIds:()=>Object.keys(storage.get('sc_personal_song_deletions_v1',{})[userId]||{}),getPendingDeletedClientIds:()=>{const values=storage.get('sc_personal_song_deletions_v1',{})[userId]||{};return Object.keys(values).filter(clientId=>!values[clientId]?.confirmedAt);}});
+ context.librarySync.initialize({getSongs:()=>songs,setSongs:v=>songs=structuredClone(v),persist:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',v);storage.set('cifras_musicas_v1',v);},render(){},activateOwner:()=>({songs:awaitingRemoteOnboarding?[]:structuredClone(songs),migrationCandidate,awaitingRemoteOnboarding}),seedNewOwner:()=>{storage.set('test_demo_medley',[{id:'demo-medley'}]);return structuredClone(demos);},confirmOwner:()=>{ownerConfirmed=true;return true;},markDeleted,confirmDeleted:value=>markDeleted(value,true),getDeletedClientIds:()=>Object.keys(storage.get('sc_personal_song_deletions_v1',{})[userId]||{}),getPendingDeletedClientIds:()=>{const values=storage.get('sc_personal_song_deletions_v1',{})[userId]||{};return Object.keys(values).filter(clientId=>!values[clientId]?.confirmedAt);}});
  context.librarySync.subscribe(value=>statusEvents.push(structuredClone(value)));
  return {sync:context.librarySync,get songs(){return songs;},get ownerConfirmed(){return ownerConfirmed;},replace:v=>{songs=structuredClone(v);storage.set('sc_songs_v1',songs);storage.set('cifras_musicas_v1',songs);},storage,requests,batches,statusEvents,
   setOnline:v=>{online=v;networkListeners[v?'online':'offline']?.();},logout:()=>{authUser='';authListener({authenticated:false,user:null});},login:id=>{authUser=id;authListener({authenticated:true,user:{id}});}};
@@ -39,6 +40,21 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  remote.clear();
  const five=Array.from({length:5},(_,i)=>song(i));
  const anonymous=device('',five);assert.equal(anonymous.sync.getStatus().phase,'unauthenticated');anonymous.sync.schedule();await settle();assert.equal(anonymous.requests.includes('POST'),false,'sem login não tenta enviar');assert.equal(remote.size,0,'sem login não envia');
+
+ const demos=Array.from({length:4},(_,i)=>song(`demo-${i}`,{id:`demo-${i}`,title:`Demo ${i+1}`}));
+ const existing142=Array.from({length:142},(_,i)=>song(`existing-${i}`,{id:`existing-${i}`}));
+ remote.set('existing-142',new Map(existing142.map((item,index)=>[`existing-client-${index}`,{id:`server-existing-${index}`,clientId:`existing-client-${index}`,songData:structuredClone(item),version:1,updatedAt:'2026-09-22T00:00:00.000Z',deletedAt:null}])));
+ const existingFresh=device('existing-142',demos,{awaitingRemoteOnboarding:true,demos});await settle();
+ assert.equal(existingFresh.songs.length,142,'novo dispositivo recupera 86 originais + 56 próprias do backend');
+ assert.equal(existingFresh.songs.some(item=>String(item.id).startsWith('demo-')),false,'usuário existente não recebe demos');
+ assert.equal(existingFresh.requests.includes('DELETE'),false,'recuperação não altera nenhum registro remoto');
+
+ const newOwner=device('brand-new',demos,{awaitingRemoteOnboarding:true,demos});await settle();
+ assert.equal(newOwner.songs.length,4,'usuário novo recebe exatamente quatro demos');
+ assert.equal(newOwner.storage.get('test_demo_medley').length,1,'usuário novo recebe exatamente um medley-demo');
+ await newOwner.sync.syncNow();
+ const refreshedNewOwner=device('brand-new',demos,{awaitingRemoteOnboarding:true,demos});await settle();
+ assert.equal(refreshedNewOwner.songs.length,4,'login/refresh não duplica demos');
 
  const a=device('user-a',five,{consent:true});await settle();
  let review=await a.sync.review();assert.deepEqual([review.local,review.remote,review.pending,review.conflicts],[5,0,5,0]);assert.equal(remote.get('user-a').size,0,'review não envia');
@@ -165,6 +181,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.doesNotMatch(html,/<button[^>]+id="library-sync-btn"/,'painel técnico não aparece na navegação normal');assert.match(html,/downloadSyncDiagnostics\(\)[\s\S]*?await librarySync\.review\(\)\.catch\(\(\)=>null\);await librarySync\.refreshServerAudit\(\)/,'diagnóstico interno permanece disponível no código');assert.match(html,/!state\.identityBlocked/,'guard de owner não confirmado permanece intacto');
  assert.doesNotMatch(html,/openLibraryMigrationPrompt|confirmLibraryMigration|Salvar suas músicas|Salvar minhas músicas|Salvar seus eventos|Salvar meus eventos/,'migração não expõe prompts técnicos');assert.doesNotMatch(html,/exportarBiblioteca\(\{quiet:true\}\)/,'login e migração não disparam download JSON');assert.match(html,/migrateLegacyEventsInBackground\(\)/);assert.doesNotMatch(html,/setTimeout\(\(\)=>openLibrarySync\(\),0\)/,'bootstrap e login nunca abrem o painel técnico');
  const deletionSource=html.slice(html.indexOf('function deleteMusica'),html.indexOf('function parseBlocks'));assert.match(deletionSource,/librarySync\.deleteSong\(song\)/,'exclusão usa o clientId sincronizado no backend');assert.doesNotMatch(deletionSource,/setlists|repertoire/,'excluir música não altera Eventos ou repertórios');
- assert.match(sw,/simplificando-cifras-v128-demo-library/);assert.match(sw,/demo-library\.js\?v=1/);assert.match(sw,/study-metronome\.js\?v=2/);assert.match(sw,/study-metronome\.css\?v=3/);assert.match(sw,/song-repository\.js\?v=9/);assert.match(sw,/library-sync\.js\?v=13/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=10/);assert.match(sw,/app-auth\.js\?v=9/);assert.match(sw,/sync-realtime\.js\?v=1/);assert.match(sw,/event-chat\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ assert.match(sw,/simplificando-cifras-v129-existing-library/);assert.match(sw,/demo-library\.js\?v=2/);assert.match(sw,/study-metronome\.js\?v=2/);assert.match(sw,/study-metronome\.css\?v=3/);assert.match(sw,/song-repository\.js\?v=10/);assert.match(sw,/library-sync\.js\?v=14/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=10/);assert.match(sw,/app-auth\.js\?v=9/);assert.match(sw,/sync-realtime\.js\?v=1/);assert.match(sw,/event-chat\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (seed 86/91/106/141, legacy, isolamento, convergência, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});
