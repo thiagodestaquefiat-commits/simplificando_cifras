@@ -62,13 +62,11 @@
     return (hash >>> 0).toString(16).padStart(8, "0");
   }
   function isLegacyCatalogSong(song) { return LEGACY_SIGNATURES.has(signature(song)); }
+  function isDemoSong(song) { return DEMO_SONGS.some((demo) => String(demo.id) === String(song && song.id)); }
   function catalog() { return clone(DEMO_SONGS); }
   function migrate(songs) {
     const source = Array.isArray(songs) ? songs : [];
-    const preserved = source.filter((song) => !isLegacyCatalogSong(song));
-    const removed = source.length - preserved.length;
-    const seeded = removed > 0 && preserved.length === 0;
-    return { songs: seeded ? catalog() : preserved, removed, seeded };
+    return { songs: clone(source), removed: 0, seeded: false };
   }
   function demoMedley() {
     return [
@@ -81,11 +79,11 @@
     if (Array.isArray(current)) return current;
     for (const key of LEGACY_MEDLEY_KEYS) { const legacy = storage.get(key, null); if (Array.isArray(legacy)) return legacy; }
     const initial = isNewLibrary ? demoMedley() : [];
-    storage.set(MEDLEY_KEY, initial);
+    if (isNewLibrary) storage.set(MEDLEY_KEY, initial);
     return initial;
   }
   function saveMedley(storage, medley) { return storage.set(MEDLEY_KEY, Array.isArray(medley) ? medley : []); }
   function markMigrated(storage, details) { storage.set(MIGRATION_KEY, { version: 1, ...details }); }
 
-  global.demoLibrary = Object.freeze({ catalog, migrate, signature, isLegacyCatalogSong, loadMedley, saveMedley, markMigrated, migrationKey: MIGRATION_KEY });
+  global.demoLibrary = Object.freeze({ catalog, migrate, signature, isLegacyCatalogSong, isDemoSong, loadMedley, saveMedley, markMigrated, migrationKey: MIGRATION_KEY });
 })(window);

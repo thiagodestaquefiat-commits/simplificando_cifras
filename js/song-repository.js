@@ -139,8 +139,14 @@
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const candidate = filterDeleted(nextOwner, Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : []);
+    const seedOnlyCandidate = Boolean(global.storage.get(SEED_ONLY_KEY, false)) && candidate.length > 0 &&
+      global.demoLibrary && candidate.every((song) => global.demoLibrary.isDemoSong(song));
     const hasPersonalCandidate = candidate.length > 0 && storedLibraryExistedAtBoot;
     const canUseLegacyCandidate = (!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate;
+    if (seedOnlyCandidate && (!Array.isArray(caches[nextOwner]) || caches[nextOwner].every((song) => global.demoLibrary.isDemoSong(song)))) {
+      legacyCandidateOwnerId = null;
+      return { songs: [], migrationCandidate: false, ownerId: nextOwner, awaitingRemoteOnboarding: true };
+    }
     if (Array.isArray(caches[nextOwner])) {
       caches[nextOwner] = filterDeleted(nextOwner, caches[nextOwner]);
       if (canUseLegacyCandidate) {

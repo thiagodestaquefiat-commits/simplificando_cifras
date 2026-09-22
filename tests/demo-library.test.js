@@ -19,17 +19,17 @@ const start = html.indexOf("const musicasLegadasParaMigracao=") + "const musicas
 const end = html.indexOf("\n];", start) + 2;
 const legacySongs = vm.runInNewContext(html.slice(start, end));
 assert.equal(legacySongs.length, 86);
-assert.equal(legacySongs.filter(demoLibrary.isLegacyCatalogSong).length, 86, "somente assinaturas exatas podem ser removidas");
+assert.equal(legacySongs.filter(demoLibrary.isLegacyCatalogSong).length, 86, "as assinaturas legadas continuam reconhecíveis sem autorizar remoção");
 
 const personalized = { ...legacySongs[0], artist: "Versão pessoal", fullChordSheet: { content: "C\nMinha letra" } };
 const migrated = demoLibrary.migrate([...legacySongs, personalized]);
-assert.equal(migrated.removed, 86);
-assert.deepEqual(migrated.songs, [personalized], "versões pessoais ou enriquecidas devem ser preservadas");
-assert.deepEqual(demoLibrary.migrate(migrated.songs).songs, [personalized], "a migração deve ser idempotente");
+assert.equal(migrated.removed, 0);
+assert.equal(migrated.songs.length, 87, "as 86 originais e versões pessoais devem ser preservadas");
+assert.deepEqual(demoLibrary.migrate(migrated.songs).songs, migrated.songs, "a preservação deve ser idempotente");
 
 const pristine = demoLibrary.migrate(legacySongs);
-assert.equal(pristine.seeded, true);
-assert.equal(pristine.songs.length, 4);
+assert.equal(pristine.seeded, false);
+assert.equal(pristine.songs.length, 86, "a biblioteca existente nunca é substituída por demos");
 
 const memory = new Map();
 const storage = { get: (key, fallback) => memory.has(key) ? structuredClone(memory.get(key)) : fallback, set: (key, value) => { memory.set(key, structuredClone(value)); return true; } };
