@@ -70,6 +70,7 @@ assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a oferta não move 
 
 const ownerB = repository.activateOwner("owner-b", legacySnapshot, defaults);
 assert.deepEqual({ songs: ownerB.songs, migrationCandidate: ownerB.migrationCandidate }, { songs: [], migrationCandidate: false }, "outra conta não herda nem recebe oferta da biblioteca reservada para A");
+assert.equal(ownerB.awaitingRemoteOnboarding, true, "conta sem migração consulta o onboarding persistente antes de decidir pelas demos");
 repository.save([{ id: "b-1", title: "Somente B", blocos: [] }]);
 
 const ownerAAgain = repository.activateOwner("owner-a", [{ id: "b-1", title: "Somente B", blocos: [] }], defaults);
@@ -82,6 +83,7 @@ assert.deepEqual(ownerBAgain.songs.map(song => song.title), ["Somente B"], "cach
 const ownerAFinal = repository.activateOwner("owner-a", ownerBAgain.songs, defaults);
 assert.equal(ownerAFinal.migrationCandidate, false);
 assert.deepEqual(ownerAFinal.songs, legacySnapshot, "após confirmação, A reabre seu cache contextualizado");
+assert.equal(ownerAFinal.awaitingRemoteOnboarding, true, "cache local não substitui a decisão persistente da conta");
 assert.deepEqual(values.get("sc_songs_v1"), legacySnapshot, "a confirmação não limpa as chaves legadas protegidas");
 
 const fs = require("node:fs");
@@ -200,5 +202,6 @@ assert.deepEqual(Array.from(deletionReloadRepository.getDeletedClientIds()), ["l
 
 const foreignOwner = deletionReloadRepository.activateOwner("other-owner", deletionReloadOwner.songs, []);
 assert.deepEqual(Array.from(foreignOwner.songs), [], "outra conta não absorve a biblioteca legada reservada");
+assert.equal(foreignOwner.awaitingRemoteOnboarding, true, "dispositivo já usado ainda consulta o estado remoto da nova conta");
 
 console.log("song-repository.test.js: OK (seed 86/91/106, cache parcial, migração legada e isolamento A/B)");

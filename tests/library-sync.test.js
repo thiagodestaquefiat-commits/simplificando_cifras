@@ -53,6 +53,9 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.equal(newOwner.songs.length,4,'usuário novo recebe exatamente quatro demos');
  assert.equal(newOwner.storage.get('test_demo_medley').length,1,'usuário novo recebe exatamente um medley-demo');
  await newOwner.sync.syncNow();
+ const previouslyUsedDevice=device('brand-new-used-device',[song('previous-account')],{awaitingRemoteOnboarding:true,demos});await settle();
+ assert.equal(previouslyUsedDevice.songs.length,4,'conta nova em dispositivo anteriormente usado recebe quatro demos');
+ assert.equal(previouslyUsedDevice.storage.get('test_demo_medley').length,1,'conta nova em dispositivo anteriormente usado recebe um medley-demo');
  const refreshedNewOwner=device('brand-new',demos,{awaitingRemoteOnboarding:true,demos});await settle();
  assert.equal(refreshedNewOwner.songs.length,4,'login/refresh não duplica demos');
 
@@ -60,6 +63,12 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  const existingEmpty=device('existing-empty',demos,{awaitingRemoteOnboarding:true,demos});await settle();
  assert.equal(existingEmpty.songs.length,0,'conta existente vazia permanece vazia e não recebe demos novamente');
  assert.equal(existingEmpty.storage.get('test_demo_medley',null),null,'conta existente vazia não recebe medley-demo novamente');
+
+ const existing86=Array.from({length:86},(_,i)=>song(`tester-${i}`,{id:`tester-${i}`}));
+ remote.set('existing-tester',new Map(existing86.map((item,index)=>[`tester-client-${index}`,{id:`server-tester-${index}`,clientId:`tester-client-${index}`,songData:structuredClone(item),version:1,updatedAt:'2026-09-22T00:00:00.000Z',deletedAt:null}])));
+ const testerFresh=device('existing-tester',[],{awaitingRemoteOnboarding:true,demos});await settle();
+ assert.equal(testerFresh.songs.length,86,'conta existente preserva integralmente suas músicas remotas');
+ assert.equal(testerFresh.songs.some(item=>String(item.id).startsWith('demo-')),false,'conta existente com músicas não recebe demos');
 
  const a=device('user-a',five,{consent:true});await settle();
  let review=await a.sync.review();assert.deepEqual([review.local,review.remote,review.pending,review.conflicts],[5,0,5,0]);assert.equal(remote.get('user-a').size,0,'review não envia');
@@ -186,6 +195,6 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  assert.match(html,/Neste dispositivo/);assert.match(html,/Na nuvem/);assert.match(html,/Para enviar/);assert.match(html,/Para baixar/);assert.match(html,/Somente neste dispositivo/);assert.match(html,/Baixar diagnóstico/);assert.match(html,/Conflitos/);assert.match(html,/Sincronizar com minha conta/);assert.match(html,/Você está offline/);assert.match(html,/<div class="topbar-title">ROUDY<\/div>/);assert.doesNotMatch(html,/<button[^>]+onclick="exportarBiblioteca\(\)"/);assert.doesNotMatch(html,/<button[^>]+id="library-sync-btn"/,'painel técnico não aparece na navegação normal');assert.match(html,/downloadSyncDiagnostics\(\)[\s\S]*?await librarySync\.review\(\)\.catch\(\(\)=>null\);await librarySync\.refreshServerAudit\(\)/,'diagnóstico interno permanece disponível no código');assert.match(html,/!state\.identityBlocked/,'guard de owner não confirmado permanece intacto');
  assert.doesNotMatch(html,/openLibraryMigrationPrompt|confirmLibraryMigration|Salvar suas músicas|Salvar minhas músicas|Salvar seus eventos|Salvar meus eventos/,'migração não expõe prompts técnicos');assert.doesNotMatch(html,/exportarBiblioteca\(\{quiet:true\}\)/,'login e migração não disparam download JSON');assert.match(html,/migrateLegacyEventsInBackground\(\)/);assert.doesNotMatch(html,/setTimeout\(\(\)=>openLibrarySync\(\),0\)/,'bootstrap e login nunca abrem o painel técnico');
  const deletionSource=html.slice(html.indexOf('function deleteMusica'),html.indexOf('function parseBlocks'));assert.match(deletionSource,/librarySync\.deleteSong\(song\)/,'exclusão usa o clientId sincronizado no backend');assert.doesNotMatch(deletionSource,/setlists|repertoire/,'excluir música não altera Eventos ou repertórios');
- assert.match(sw,/simplificando-cifras-v130-onboarding-marker/);assert.match(sw,/demo-library\.js\?v=2/);assert.match(sw,/study-metronome\.js\?v=2/);assert.match(sw,/study-metronome\.css\?v=3/);assert.match(sw,/song-repository\.js\?v=10/);assert.match(sw,/library-sync\.js\?v=15/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=10/);assert.match(sw,/app-auth\.js\?v=9/);assert.match(sw,/sync-realtime\.js\?v=1/);assert.match(sw,/event-chat\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
+ assert.match(sw,/simplificando-cifras-v131-account-onboarding/);assert.match(sw,/demo-library\.js\?v=2/);assert.match(sw,/study-metronome\.js\?v=2/);assert.match(sw,/study-metronome\.css\?v=3/);assert.match(sw,/song-repository\.js\?v=11/);assert.match(sw,/library-sync\.js\?v=15/);assert.match(sw,/event-repository\.js\?v=5/);assert.match(sw,/event-collaboration-client\.js\?v=10/);assert.match(sw,/app-auth\.js\?v=9/);assert.match(sw,/sync-realtime\.js\?v=1/);assert.match(sw,/event-chat\.js\?v=2/);assert.match(sw,/import-library\.js\?v=1/);assert.doesNotMatch(sw,/localStorage\.(?:clear|removeItem)/,'atualização do cache não apaga biblioteca');
  console.log('library-sync.test.js: OK (seed 86/91/106/141, legacy, isolamento, convergência, offline e retry)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

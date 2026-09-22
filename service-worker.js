@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v130-onboarding-marker";
+const CACHE_NAME = "simplificando-cifras-v131-account-onboarding";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/song-model.js?v=4",
   "./js/demo-library.js?v=2",
-  "./js/song-repository.js?v=10",
+  "./js/song-repository.js?v=11",
   "./js/library-sync.js?v=15",
   "./js/event-model.js?v=4",
   "./js/event-repository.js?v=5",

@@ -156,11 +156,17 @@
         return {
           songs: mergeLegacyWithOwnerCache(candidate, caches[nextOwner]),
           migrationCandidate,
-          ownerId: nextOwner
+          ownerId: nextOwner,
+          awaitingRemoteOnboarding: !migrationCandidate
         };
       }
       legacyCandidateOwnerId = null;
-      return { songs: normalized(caches[nextOwner]), migrationCandidate: false, ownerId: nextOwner };
+      return {
+        songs: normalized(caches[nextOwner]),
+        migrationCandidate: false,
+        ownerId: nextOwner,
+        awaitingRemoteOnboarding: true
+      };
     }
     if (canUseLegacyCandidate) {
       if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
@@ -168,7 +174,7 @@
       return { songs: normalized(candidate), migrationCandidate: true, ownerId: nextOwner };
     }
     legacyCandidateOwnerId = null;
-    return { songs: [], migrationCandidate: false, ownerId: nextOwner };
+    return { songs: [], migrationCandidate: false, ownerId: nextOwner, awaitingRemoteOnboarding: true };
   }
 
   // Encerra a sessão de dono ativo (logout). O cache privado da conta em
