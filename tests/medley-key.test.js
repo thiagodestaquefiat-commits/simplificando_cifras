@@ -37,6 +37,7 @@ const saveContext={
   songFormat:context.songFormat,
   songModel:{create(song){return song;}},
   songRepository:{save(songs){events.push(['save',songs]);return true;}},
+  demoLibrary:{saveMedley(){events.push(['medley-storage']);}},storage:{},
   librarySync:{schedule(){events.push(['sync']);}},
   closeModal(){events.push(['close']);},renderMusicas(){events.push(['playlist']);},
   renderMedley(){events.push(['medley']);},switchTab(tab){events.push(['tab',tab]);},

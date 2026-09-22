@@ -741,8 +741,9 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 
 <script src="js/storage.js"></script>
 <script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js?v=8"></script>
-<script src="js/library-sync.js?v=12"></script>
+<script src="js/demo-library.js?v=3"></script>
+<script src="js/song-repository.js?v=11"></script>
+<script src="js/library-sync.js?v=15"></script>
 <script src="js/event-model.js?v=4"></script>
 <script src="js/event-repository.js?v=5"></script>
 <script src="js/event-chat.js?v=2"></script>
@@ -847,7 +848,7 @@ function appPrompt(message,value){return window.prompt(uiI18n.translate(message)
 let setlists=[];
 let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
 
-let musicas=[
+const musicasLegadasParaMigracao=[
   {id:1,title:'A alegria',key:'A',capo:'',blocos:[{l:'A alegria',c:'A  D  A  G D\nA  B7  E'},{l:'O sentimento',c:'A  A7  D  F\nA  E  A  E'},{l:'posso pisar numa tropa',c:'A  A7  D  F  (3x)\nA  E  A  E'},{l:'Aleluia',c:'A  D  A\nB7  E'}]},
   {id:2,title:'A Ele a glória',key:'G',capo:'',blocos:[{l:'',c:'C  D  Em\nC  D  G  D  Em'}]},
   {id:3,title:'A casa é sua',key:'G',capo:'',blocos:[{l:'Você é bem vindo aqui',c:'G  Em7  C  G  C/G  G'},{l:'Essa casa é sua',c:'C  D4  Em  Bm7'},{l:'Apareça',c:'C  Am7  G  Bm7'}]},
@@ -935,6 +936,7 @@ let musicas=[
   {id:85,title:'Uma nova história',key:'A',capo:'',blocos:[{l:'Sai de tua tenda',c:'F#m  E  B  D'},{l:'Filho meu',c:'F#m  E  D  B  D'},{l:'Uma nova História',c:'A  D  E'}]},
   {id:86,title:'Você me leva ao deserto',key:'A',capo:'',blocos:[{l:'Introdução',c:'F#m7  E  A9  (2x)'},{l:'Eu calei minha tristeza',c:'F#m7  E  A9  (2x)'},{l:'Eu coloquei os meus desejos',c:'D9  E  F#m7  D9  E'},{l:'Estou seguindo meu caminho',c:'F#m7  E  A9  (2x)'},{l:'Na tua identidade',c:'D9  E  F#m7  D9  E\nF#m7  E  A9'},{l:'Você me leva ao deserto',c:'F#m7  E  D9\nF#m7  E  A9  (2x)'},{l:'Pra me dizer no fim',c:'D  E  F#m7  E  A9'}]}
 ];
+let musicas=demoLibrary.catalog();
 
 // ── DIAGRAMAS DE ACORDES ──────────────────────────────────────────────
 const SK_INSTRUMENT='sc_instrument_v1';
@@ -1687,22 +1689,23 @@ function abrirAddMedley(){
 }
 
 function renderMedleyBlocoSelect(){
-  const mid=parseInt(document.getElementById('med-music').value);
-  const m=musicas.find(x=>x.id===mid);
+  const mid=document.getElementById('med-music').value;
+  const m=musicas.find(x=>String(x.id)===String(mid));
   const sel=document.getElementById('med-bloco');
   if(!m||!sel) return;
   sel.innerHTML=m.blocos.map((b,i)=>`<option value="${i}">${b.l||'Bloco '+(i+1)} — ${b.c.split('\n')[0].substring(0,30)}</option>`).join('');
 }
 
 function confirmarAddMedley(){
-  const mid=parseInt(document.getElementById('med-music').value);
+  const mid=document.getElementById('med-music').value;
   const bi=parseInt(document.getElementById('med-bloco').value);
-  const m=musicas.find(x=>x.id===mid);
+  const m=musicas.find(x=>String(x.id)===String(mid));
   if(!m) return;
   const b=m.blocos[bi];
   if(!b)return;
   if(noteIdx(String(m.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'')<0){showToast('⚠️ Defina o tom da música antes de adicioná-la ao medley.');return;}
   medleyBlocos.push({musicTitle:m.title,musicId:mid,blocoIdx:bi,label:b.l||'Bloco '+(bi+1),chords:b.c,key:m.key,capo:songFormat.parseCapo(m.capo)});
+  demoLibrary.saveMedley(storage,medleyBlocos);
   closeModal(); renderMedley();
 }
 
@@ -1710,11 +1713,12 @@ function moveMedley(i,dir){
   const ni=i+dir;
   if(ni<0||ni>=medleyBlocos.length) return;
   [medleyBlocos[i],medleyBlocos[ni]]=[medleyBlocos[ni],medleyBlocos[i]];
+  demoLibrary.saveMedley(storage,medleyBlocos);
   renderMedley();
 }
 
-function removeMedley(i){medleyBlocos.splice(i,1);renderMedley();}
-function limparMedley(){if(appConfirm('Limpar o medley?')){medleyBlocos=[];renderMedley();}}
+function removeMedley(i){medleyBlocos.splice(i,1);demoLibrary.saveMedley(storage,medleyBlocos);renderMedley();}
+function limparMedley(){if(appConfirm('Limpar o medley?')){medleyBlocos=[];demoLibrary.saveMedley(storage,medleyBlocos);renderMedley();}}
 function abrirSalvarMedley(){
   if(!medleyBlocos.length)return;
   const titles=[...new Set(medleyBlocos.map(block=>block.musicTitle))];
@@ -1744,6 +1748,7 @@ function confirmarSalvarMedley(){
   musicas=nextSongs;
   librarySync.schedule();
   medleyBlocos=[];
+  demoLibrary.saveMedley(storage,medleyBlocos);
   closeModal();
   renderMusicas();
   renderMedley();
@@ -2693,8 +2698,9 @@ async function migrateLegacyEventsInBackground(){
 // carrega dados salvos
 applyAppSettings();
 appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
-const catalogoPadrao=songModel.normalizeCollection(JSON.parse(JSON.stringify(musicas)));
+const catalogoPadrao=songModel.normalizeCollection(demoLibrary.catalog());
 musicas=songRepository.load(catalogoPadrao);
+medleyBlocos=demoLibrary.loadMedley(storage,false);
 setlists=eventRepository.load(setlists,appIdentity);
 eventChat.initialize({getEvent:findEvent,getCurrentUser:()=>appCurrentUser});
 eventChat.subscribe(eventId=>{
@@ -2738,7 +2744,7 @@ appAuth.subscribe(async state=>{
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),seedNewOwner:()=>{medleyBlocos=demoLibrary.loadMedley(storage,true);renderMedley();return demoLibrary.catalog();},confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize();
