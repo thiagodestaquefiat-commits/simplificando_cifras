@@ -70,17 +70,7 @@ class IaService:
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
         if payload.tipo == "pesquisa" and not has_online_source:
-            user_prompt = (
-                "Gere somente um resumo harmônico por conhecimento do modelo, sem letra ou frases-guia.\n"
-                f"Título: {payload.titulo}\n"
-                f"Artista: {payload.artista or 'não informado'}\n"
-                "Quando título e artista identificarem inequivocamente uma música amplamente conhecida "
-                "e você conhecer sua harmonia, forneça um resumo da versão harmônica mais conhecida, "
-                "com confiança média e aviso de revisão. Não exija uma fonte externa. Retorne trechos "
-                "vazios somente quando não reconhecer a música, houver ambiguidade sobre sua identidade "
-                "ou você não conhecer acordes suficientes para formar ao menos um trecho confiável. "
-                "fullChordSheet deve ser nulo e toda fraseGuia deve ser nula."
-            )
+            raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada é obrigatória para a busca por IA.", 400)
         else:
             source_text = extracted.text if extracted is not None else payload.conteudo
             if source_text is not None:
@@ -127,9 +117,7 @@ class IaService:
             raise ApiError(error.code, error.public_message, error.status_code) from error
 
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
-        if payload.tipo == "pesquisa" and not has_online_source:
-            normalized.fullChordSheet = None
-        elif source_text:
+        if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             normalized.fullChordSheet = CifraCompleta(
                 source="user_upload" if payload.tipo == "arquivo" else "user_text",
@@ -143,7 +131,4 @@ class IaService:
             if not reconstructed:
                 raise ApiError("resposta_estruturada_invalida", "A cifra completa não pôde ser reconstruída.", 502)
             normalized.fullChordSheet.content = reconstructed
-        if payload.tipo == "pesquisa" and not has_online_source:
-            for trecho in normalized.harmonicSummary.blocos:
-                trecho.fraseGuia = None
         return normalized

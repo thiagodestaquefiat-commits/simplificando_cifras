@@ -67,7 +67,7 @@ def test_text_clears_guide_not_present_in_user_content():
     assert result.harmonicSummary.blocos[0].fraseGuia is None
 
 
-def test_research_prompt_allows_known_song_without_external_source():
+def test_research_without_authorized_source_never_calls_provider():
     provider = FakeProvider()
     service = IaService(provider)
     request = ResumoHarmonicoRequest(
@@ -76,16 +76,14 @@ def test_research_prompt_allows_known_song_without_external_source():
         artista="Cazuza",
     )
 
-    result = service.generate(request)
+    from app.errors import ApiError
+    import pytest
 
-    assert result.titulo == "Teste"
-    assert "música amplamente conhecida" in provider.user_prompt
-    assert "versão harmônica mais conhecida" in provider.user_prompt
-    assert "Não exija uma fonte externa" in provider.user_prompt
-    assert "Retorne trechos vazios somente quando" in provider.user_prompt
-    assert "não conhecer acordes suficientes" in provider.user_prompt
-    assert "não tente completar lacunas" not in provider.user_prompt
-    assert result.fullChordSheet is None
+    with pytest.raises(ApiError) as raised:
+        service.generate(request)
+
+    assert raised.value.code == "fonte_nao_selecionada"
+    assert provider.user_prompt == ""
 
 
 def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
