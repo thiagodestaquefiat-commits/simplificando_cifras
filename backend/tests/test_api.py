@@ -158,6 +158,7 @@ def test_model_knowledge_sends_web_search_results_as_context(generate, client, m
 
         def text(self, query, **kwargs):
             assert "Canção teste" in query and "Artista" in query and "cifra" in query
+            assert "site:cifraclub.com.br OR site:letras.mus.br" in query
             return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
 
     monkeypatch.setattr("duckduckgo_search.DDGS", FakeDDGS)
@@ -171,6 +172,7 @@ def test_model_knowledge_sends_web_search_results_as_context(generate, client, m
     assert response.status_code == 200
     prompt = generate.call_args.args[1]
     assert "Resultados de busca na web" in prompt
+    assert "Não altere o tom original da música." in prompt
     assert "Canção teste - Cifra: Db B4 Gb/Bb letra" in prompt
 
 
