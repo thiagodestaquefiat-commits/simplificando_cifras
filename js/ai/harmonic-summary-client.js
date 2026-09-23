@@ -26,6 +26,7 @@
         payload.sourceProvider = clean(data.sourceProvider, 80).trim();
         payload.sourceId = clean(data.sourceId, 300).trim();
       }
+      if (data.modoGeracao === "conhecimento_modelo") payload.modoGeracao = "conhecimento_modelo";
       return payload;
     }
     if (mode === "texto") {

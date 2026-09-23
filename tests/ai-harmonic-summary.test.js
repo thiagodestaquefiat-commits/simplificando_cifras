@@ -33,6 +33,7 @@ assert.equal(uploadPayload.arquivo, upload);
 assert.equal(uploadPayload.titulo, "Música");
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Música ", artista: " Artista " }))), { tipo: "pesquisa", titulo: "Música", artista: "Artista" });
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Música", sourceProvider: "licensed", sourceId: "version-1" }))), { tipo: "pesquisa", titulo: "Música", sourceProvider: "licensed", sourceId: "version-1" });
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Música", modoGeracao: "conhecimento_modelo" }))), { tipo: "pesquisa", titulo: "Música", modoGeracao: "conhecimento_modelo" });
 assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /título/.test(error.message));
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");

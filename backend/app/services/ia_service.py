@@ -47,8 +47,9 @@ Regras obrigatórias:
 
 
 class IaService:
-    def __init__(self, provider):
+    def __init__(self, provider, research_max_output_tokens=1200):
         self._provider = provider
+        self._research_max_output_tokens = research_max_output_tokens
 
     @classmethod
     def from_config(cls, config):
@@ -61,7 +62,7 @@ class IaService:
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
-        return cls(provider)
+        return cls(provider, config.get("DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS", 1200))
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
@@ -69,8 +70,18 @@ class IaService:
                 if item.text is not None else item for item in extracted.items))
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
-        if payload.tipo == "pesquisa" and not has_online_source:
-            raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada é obrigatória para a busca por IA.", 400)
+        knowledge_only = payload.tipo == "pesquisa" and payload.modoGeracao == "conhecimento_modelo"
+        if payload.tipo == "pesquisa" and not has_online_source and not knowledge_only:
+            raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada ou o modo explícito de conhecimento do modelo é obrigatório.", 400)
+        if knowledge_only:
+            source_text = None
+            user_prompt = (
+                "Gere somente um resumo harmônico aproximado usando seu conhecimento do modelo.\n"
+                f"Título: {payload.titulo}\n"
+                f"Artista: {payload.artista or 'não informado'}\n"
+                "Não retorne letra, fraseGuia, conteúdo de cifra completa nem URLs. "
+                "fullChordSheet deve ser null. Use confiança no máximo média e inclua aviso de revisão humana."
+            )
         else:
             source_text = extracted.text if extracted is not None else payload.conteudo
             if source_text is not None:
@@ -111,12 +122,21 @@ class IaService:
                     "media_type": extracted.media_type if extracted is not None else None,
                     "page_count": extracted.page_count if extracted is not None else None,
                     "size_bytes": extracted.size_bytes if extracted is not None else None,
+                    "max_output_tokens": self._research_max_output_tokens if knowledge_only else None,
                 },
             )
         except ProviderError as error:
             raise ApiError(error.code, error.public_message, error.status_code) from error
 
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
+        if knowledge_only:
+            normalized.fullChordSheet = None
+            normalized.confianca = "media" if normalized.confianca == "alta" else normalized.confianca
+            for bloco in normalized.harmonicSummary.blocos:
+                bloco.fraseGuia = None
+            warning = "Gerado somente por IA, sem fonte autorizada; exige revisão humana antes de salvar."
+            if warning not in normalized.observacoes:
+                normalized.observacoes.append(warning)
         if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             normalized.fullChordSheet = CifraCompleta(

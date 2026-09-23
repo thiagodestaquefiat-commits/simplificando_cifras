@@ -119,6 +119,39 @@ def test_research_requires_explicit_source_selection(client):
     assert response.get_json()["erro"]["codigo"] == "fonte_nao_selecionada"
 
 
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_research_model_knowledge_fallback_is_explicit_and_strips_lyrics(generate, client):
+    result = sample_result()
+    result.confianca = "alta"
+    result.harmonicSummary.blocos[0].fraseGuia = "Trecho inventado que deve sumir"
+    generate.return_value = result
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["fullChordSheet"] is None
+    assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] is None
+    assert data["confianca"] == "media"
+    assert any("exige revisão humana" in item for item in data["observacoes"])
+    assert generate.call_args.kwargs["context"]["max_output_tokens"] == 1200
+    assert "fullChordSheet deve ser null" in generate.call_args.args[1]
+
+
+@pytest.mark.parametrize("payload", [
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "sourceProvider": "licensed", "sourceId": "one"},
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "conteudo": "https://malicioso.example"},
+    {"tipo": "texto", "conteudo": "C G", "modoGeracao": "conhecimento_modelo"},
+])
+def test_model_knowledge_mode_rejects_sources_urls_and_other_flows(payload, client):
+    response = client.post("/api/resumo-harmonico", json=payload, headers=auth_headers(client))
+    assert response.status_code == 400
+    assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
+
+
 def test_source_search_returns_ranked_options_without_content(client):
     candidate = MusicSourceCandidate("licensed", "studio", "Fonte licenciada", "https://licensed.example/song", "Canção teste", "Artista teste", "lyrics_chords", .98)
     client.application.extensions["music_source_registry"] = FakeMusicSourceRegistry(candidates=[candidate])

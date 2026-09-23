@@ -108,6 +108,35 @@
     } finally { setBusy(false); }
   }
 
+  async function generateFromModelKnowledge(searchPayload) {
+    setBusy(true);
+    setStatus("loading", "Gerando um resumo aproximado somente com IA…");
+    try {
+      const result = await global.harmonicSummaryClient.generate("pesquisa", {
+        titulo: searchPayload.titulo,
+        artista: searchPayload.artista,
+        modoGeracao: "conhecimento_modelo"
+      });
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", { type: "ai_knowledge", name: "Somente IA — sem fonte autorizada", url: null });
+      setBusy(false);
+      close();
+      global.openAiDraft(model, sourceSong);
+    } catch (error) {
+      const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
+      setStatus(kind, error.message || "Não foi possível gerar o resumo aproximado.");
+    } finally { setBusy(false); }
+  }
+
+  function renderKnowledgeFallback(searchPayload) {
+    const list = panel.querySelector("[data-ai-candidates]");
+    list.replaceChildren();
+    const warning = element("p", "ai-summary-help", "Nenhuma fonte autorizada foi encontrada. A IA pode sugerir apenas acordes e seções, sem letra ou cifra completa. O resultado exige revisão humana e será aberto como rascunho.");
+    const button = element("button", "ai-summary-submit", "Gerar somente com IA");
+    button.type = "button";
+    button.addEventListener("click", () => generateFromModelKnowledge(searchPayload));
+    list.append(warning, button);
+  }
+
   function renderCandidates(searchPayload, candidates) {
     const list = panel.querySelector("[data-ai-candidates]");
     list.replaceChildren(element("p", "ai-summary-help", "Encontramos mais de uma versão. Escolha a fonte que deseja usar:"));
@@ -133,7 +162,8 @@
     try {
       const result = await global.harmonicSummaryClient.searchSources(values());
       if (!result.candidates.length) {
-        setStatus("untrusted", "Não encontramos uma fonte disponível para esta música. Você pode enviar uma cifra, PDF ou foto.");
+        setStatus("untrusted", "Não encontramos uma fonte autorizada para esta música.");
+        renderKnowledgeFallback(result.payload);
         return;
       }
       if (result.candidates.length === 1) {

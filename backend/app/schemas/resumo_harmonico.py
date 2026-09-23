@@ -28,6 +28,7 @@ class ResumoHarmonicoRequest(BaseModel):
     conteudo: str | None = None
     sourceProvider: str | None = Field(default=None, max_length=80)
     sourceId: str | None = Field(default=None, max_length=300)
+    modoGeracao: Literal["conhecimento_modelo"] | None = None
 
     @field_validator("titulo", "artista", "sourceProvider", "sourceId", mode="before")
     @classmethod
@@ -46,6 +47,10 @@ class ResumoHarmonicoRequest(BaseModel):
             raise ValueError("titulo é obrigatório para pesquisa")
         if bool(self.sourceProvider) != bool(self.sourceId):
             raise ValueError("sourceProvider e sourceId devem ser enviados juntos")
+        if self.modoGeracao and self.tipo != "pesquisa":
+            raise ValueError("modoGeracao só pode ser usado em pesquisa")
+        if self.modoGeracao and (self.sourceProvider or self.sourceId or self.conteudo):
+            raise ValueError("modoGeracao não aceita fonte, URL ou conteúdo")
         if self.tipo == "texto" and not self.conteudo:
             raise ValueError("conteudo é obrigatório para texto")
         if self.conteudo and len(self.conteudo) > max_text_length:

@@ -143,6 +143,15 @@ def test_valid_json_is_parsed_and_validated_locally():
     assert '"additionalProperties":false' in system_prompt
 
 
+def test_context_can_lower_output_limit_for_isolated_research():
+    expected = valid_result()
+    provider, responses = provider_with_output(expected.model_dump_json(by_alias=True))
+
+    provider.generate("Sistema", "Pesquisa", context={"max_output_tokens": 1200})
+
+    assert responses.kwargs["max_output_tokens"] == 1200
+
+
 def test_realistic_complete_json_covers_the_entire_contract():
     payload = {
         "schemaVersion": 2,

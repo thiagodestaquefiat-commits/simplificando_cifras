@@ -102,7 +102,7 @@ class DeepSeekProvider(OpenAIProvider):
             api_key=api_key,
             base_url=DEEPSEEK_BASE_URL,
             timeout=timeout_seconds,
-            max_retries=1,
+            max_retries=0,
         )
         super().__init__(
             api_key=api_key,
@@ -142,7 +142,11 @@ class DeepSeekProvider(OpenAIProvider):
                     {"role": "user", "content": user_content},
                 ],
                 text={"format": {"type": "json_object"}},
-                max_output_tokens=min(self._max_output_tokens, DEEPSEEK_JSON_MAX_OUTPUT_TOKENS),
+                max_output_tokens=min(
+                    self._max_output_tokens,
+                    int((context or {}).get("max_output_tokens") or self._max_output_tokens),
+                    DEEPSEEK_JSON_MAX_OUTPUT_TOKENS,
+                ),
                 reasoning={"effort": "none"},
             )
         except Exception as error:
