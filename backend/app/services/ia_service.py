@@ -131,6 +131,11 @@ class IaService:
             normalized.confianca = "media" if normalized.confianca == "alta" else normalized.confianca
             if normalized.fullChordSheet:
                 normalized.fullChordSheet.source = "model_knowledge"
+                reconstructed = render_full_chord_sheet(normalized.fullChordSheet) if normalized.fullChordSheet.sections else None
+                if reconstructed:
+                    normalized.fullChordSheet.content = reconstructed
+                elif normalized.fullChordSheet.content.strip() == "[reconstruir]":
+                    normalized.fullChordSheet = None
             warning = "Gerado somente por IA, sem fonte autorizada; exige revisão humana antes de salvar."
             if warning not in normalized.observacoes:
                 normalized.observacoes.append(warning)

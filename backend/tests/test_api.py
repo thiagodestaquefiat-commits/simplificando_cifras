@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.schemas.resumo_harmonico import CifraCompleta, ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import AcordePosicionado, CifraCompleta, LinhaCifraCompleta, ResumoEstruturado, SecaoCifraCompleta, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.providers import (
     ProviderInvalidResponse,
     ProviderRateLimit,
@@ -142,6 +142,32 @@ def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_shee
     assert generate.call_args.kwargs["context"]["max_output_tokens"] == client.application.config["DEEPSEEK_MAX_OUTPUT_TOKENS"]
     assert "Gere a cifra completa com letra e acordes" in generate.call_args.args[1]
     assert "fullChordSheet deve ser null" not in generate.call_args.args[1]
+
+
+@pytest.mark.parametrize("sections, expected", [
+    ([SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
+        letra="Linha gerada pelo modelo", acordes=[AcordePosicionado(acorde="Db", posicao=0)])])], "Linha gerada pelo modelo"),
+    ([], None),
+])
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_rebuilds_placeholder_content_from_sections(generate, sections, expected, client):
+    result = sample_result()
+    result.fullChordSheet = CifraCompleta(source="user_text", content="[reconstruir]", sections=sections)
+    generate.return_value = result
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    sheet = response.get_json()["fullChordSheet"]
+    if expected is None:
+        assert sheet is None
+    else:
+        assert sheet["source"] == "model_knowledge"
+        assert "[reconstruir]" not in sheet["content"]
+        assert expected in sheet["content"] and "Db" in sheet["content"]
 
 
 @pytest.mark.parametrize("payload", [
