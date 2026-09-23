@@ -45,7 +45,7 @@ Regras obrigatórias:
 
 
 class IaService:
-    def __init__(self, provider, research_max_output_tokens=1200):
+    def __init__(self, provider, research_max_output_tokens=12000):
         self._provider = provider
         self._research_max_output_tokens = research_max_output_tokens
 
@@ -60,7 +60,7 @@ class IaService:
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
-        return cls(provider, config.get("DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS", 1200))
+        return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"])
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
@@ -129,6 +129,8 @@ class IaService:
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
         if knowledge_only:
             normalized.confianca = "media" if normalized.confianca == "alta" else normalized.confianca
+            if normalized.fullChordSheet:
+                normalized.fullChordSheet.source = "model_knowledge"
             warning = "Gerado somente por IA, sem fonte autorizada; exige revisão humana antes de salvar."
             if warning not in normalized.observacoes:
                 normalized.observacoes.append(warning)

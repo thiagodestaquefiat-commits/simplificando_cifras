@@ -123,7 +123,7 @@ def test_research_requires_explicit_source_selection(client):
 def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_sheet(generate, client):
     result = sample_result()
     result.confianca = "alta"
-    result.fullChordSheet = CifraCompleta(source="user_text", content="C G\nLetra gerada pelo modelo")
+    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra gerada pelo modelo")
     result.harmonicSummary.blocos[0].fraseGuia = "Trecho inventado que deve sumir"
     generate.return_value = result
     response = client.post(
@@ -135,10 +135,11 @@ def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_shee
     assert response.status_code == 200
     data = response.get_json()
     assert data["fullChordSheet"]["content"] == "C G\nLetra gerada pelo modelo"
+    assert data["fullChordSheet"]["source"] == "model_knowledge"
     assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] is None
     assert data["confianca"] == "media"
     assert any("exige revisão humana" in item for item in data["observacoes"])
-    assert generate.call_args.kwargs["context"]["max_output_tokens"] == 1200
+    assert generate.call_args.kwargs["context"]["max_output_tokens"] == client.application.config["DEEPSEEK_MAX_OUTPUT_TOKENS"]
     assert "Gere a cifra completa com letra e acordes" in generate.call_args.args[1]
     assert "fullChordSheet deve ser null" not in generate.call_args.args[1]
 

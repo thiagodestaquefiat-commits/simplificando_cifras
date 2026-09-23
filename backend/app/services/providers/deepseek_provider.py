@@ -28,7 +28,7 @@ def _response_contract_prompt() -> str:
         "Inclua titulo, harmonicSummary e confianca. schemaVersion deve ser o número 2. "
         "Use null apenas onde o schema permite e [] para listas vazias. "
         "Se fullChordSheet existir, visibility deve ser \"private\" e source deve ser "
-        "\"user_text\" ou \"user_upload\".\n"
+        "\"user_text\", \"user_upload\" ou \"model_knowledge\".\n"
         f"{schema}"
     )
 

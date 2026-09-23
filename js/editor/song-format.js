@@ -29,7 +29,7 @@
     if (!content) return null;
     return {
       visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
+      source: ["user_text", "model_knowledge"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         nome: cleanText(section && section.nome || "", 80) || null,
