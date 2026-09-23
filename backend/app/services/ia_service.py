@@ -79,7 +79,7 @@ class IaService:
                 "Gere somente um resumo harmônico aproximado usando seu conhecimento do modelo.\n"
                 f"Título: {payload.titulo}\n"
                 f"Artista: {payload.artista or 'não informado'}\n"
-                "Não retorne letra, fraseGuia, conteúdo de cifra completa nem URLs. "
+                "Não retorne fraseGuia nem URLs. "
                 "Gere a cifra completa com letra e acordes. Use confiança média e aviso de revisão humana."
             )
         else:
@@ -131,8 +131,6 @@ class IaService:
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
         if knowledge_only:
             normalized.confianca = "media" if normalized.confianca == "alta" else normalized.confianca
-            for bloco in normalized.harmonicSummary.blocos:
-                bloco.fraseGuia = None
             warning = "Gerado somente por IA, sem fonte autorizada; exige revisão humana antes de salvar."
             if warning not in normalized.observacoes:
                 normalized.observacoes.append(warning)
