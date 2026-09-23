@@ -144,6 +144,49 @@ def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_shee
     assert "fullChordSheet deve ser null" not in generate.call_args.args[1]
 
 
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_sends_web_search_results_as_context(generate, client, monkeypatch):
+    class FakeDDGS:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def text(self, query, **kwargs):
+            assert "Canção teste" in query and "Artista" in query and "cifra" in query
+            return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", FakeDDGS)
+    generate.return_value = sample_result()
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    prompt = generate.call_args.args[1]
+    assert "Resultados de busca na web" in prompt
+    assert "Canção teste - Cifra: Db B4 Gb/Bb letra" in prompt
+
+
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_still_works_when_web_search_fails(generate, client):
+    generate.return_value = sample_result()
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    assert "Resultados de busca na web" not in generate.call_args.args[1]
+
+
 @pytest.mark.parametrize("sections, expected", [
     ([SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
         letra="Linha gerada pelo modelo", acordes=[AcordePosicionado(acorde="Db", posicao=0)])])], "Linha gerada pelo modelo"),

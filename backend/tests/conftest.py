@@ -42,6 +42,16 @@ class TestConfig:
     MUSIC_SOURCE_MAX_RESULTS = 8
 
 
+@pytest.fixture(autouse=True)
+def no_web_search(monkeypatch):
+    """Testes nunca acessam o DuckDuckGo de verdade."""
+    class OfflineDDGS:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("web search disabled in tests")
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", OfflineDDGS)
+
+
 @pytest.fixture()
 def app():
     return create_app(TestConfig)
