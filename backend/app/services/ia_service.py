@@ -80,7 +80,7 @@ class IaService:
                 f"Título: {payload.titulo}\n"
                 f"Artista: {payload.artista or 'não informado'}\n"
                 "Não retorne letra, fraseGuia, conteúdo de cifra completa nem URLs. "
-                "fullChordSheet deve ser null. Use confiança no máximo média e inclua aviso de revisão humana."
+                "Gere a cifra completa com letra e acordes. Use confiança média e aviso de revisão humana."
             )
         else:
             source_text = extracted.text if extracted is not None else payload.conteudo
@@ -130,7 +130,6 @@ class IaService:
 
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
         if knowledge_only:
-            normalized.fullChordSheet = None
             normalized.confianca = "media" if normalized.confianca == "alta" else normalized.confianca
             for bloco in normalized.harmonicSummary.blocos:
                 bloco.fraseGuia = None
