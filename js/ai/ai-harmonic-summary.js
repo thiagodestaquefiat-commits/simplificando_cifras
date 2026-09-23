@@ -203,9 +203,9 @@
     });
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
     const titleField = field("Título da música", "titulo", "text", true);
-    titleField.querySelector("input").placeholder = "Ex.: Na Sua Estante";
+    titleField.querySelector("input").placeholder = "Ex: Oceans";
     const artistField = field("Artista", "artista", "text", false);
-    artistField.querySelector("input").placeholder = "Recomendado para melhorar a busca";
+    artistField.querySelector("input").placeholder = "Ex: Hillsong UNITED";
     searchForm.append(titleField, artistField);
     const fileForm = element("div", "ai-summary-form ai-summary-file-form"); fileForm.dataset.aiForm = "arquivo";
     const fileField = field("Adicionar arquivos — PDF, PNG, JPG, WebP ou TXT", "arquivo", "file", true);
