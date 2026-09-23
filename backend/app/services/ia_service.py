@@ -39,7 +39,7 @@ Regras obrigatórias:
   transcrição completa e sections estruturadas, preservando letra, acordes, posições, seções, tom, capo e ordem da fonte.
 - Em fonte visual, concentre a transcrição em fullChordSheet.sections e use "[reconstruir]" em
   fullChordSheet.content; o servidor reconstruirá o texto sem duplicar toda a letra na resposta.
-- Nunca acrescente na cifra completa conteúdo que não esteja na fonte do usuário.
+- Para texto ou arquivo fornecido pelo usuário, nunca acrescente na cifra completa conteúdo que não esteja na fonte.
 - Para pesquisa sem fonte enviada, fullChordSheet deve conter a cifra completa com letra.
 """
 
