@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import CifraCompleta, ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.providers import (
     ProviderInvalidResponse,
     ProviderRateLimit,
@@ -120,9 +120,10 @@ def test_research_requires_explicit_source_selection(client):
 
 
 @patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_research_model_knowledge_fallback_is_explicit_and_strips_lyrics(generate, client):
+def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_sheet(generate, client):
     result = sample_result()
     result.confianca = "alta"
+    result.fullChordSheet = CifraCompleta(source="user_text", content="C G\nLetra gerada pelo modelo")
     result.harmonicSummary.blocos[0].fraseGuia = "Trecho inventado que deve sumir"
     generate.return_value = result
     response = client.post(
@@ -133,12 +134,13 @@ def test_research_model_knowledge_fallback_is_explicit_and_strips_lyrics(generat
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data["fullChordSheet"] is None
+    assert data["fullChordSheet"]["content"] == "C G\nLetra gerada pelo modelo"
     assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] is None
     assert data["confianca"] == "media"
     assert any("exige revisão humana" in item for item in data["observacoes"])
     assert generate.call_args.kwargs["context"]["max_output_tokens"] == 1200
-    assert "fullChordSheet deve ser null" in generate.call_args.args[1]
+    assert "Gere a cifra completa com letra e acordes" in generate.call_args.args[1]
+    assert "fullChordSheet deve ser null" not in generate.call_args.args[1]
 
 
 @pytest.mark.parametrize("payload", [
