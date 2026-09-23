@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v133-model-knowledge";
+const CACHE_NAME = "simplificando-cifras-v134-single-ai-button";
 const ASSETS = [
   "./",
   "./index.html",
@@ -43,7 +43,7 @@ const ASSETS = [
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
   "./js/ai/harmonic-summary-client.js?v=9",
-  "./js/ai/ai-harmonic-summary.js?v=4",
+  "./js/ai/ai-harmonic-summary.js?v=5",
   "./js/ai/ai-harmonic-summary.css?v=4",
   "./manifest.webmanifest?v=14",
   "./assets/roudy-icon-original.png",

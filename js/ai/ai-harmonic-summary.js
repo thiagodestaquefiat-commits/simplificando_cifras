@@ -43,7 +43,7 @@
     });
     panel.querySelector("[data-ai-form=pesquisa]").hidden = mode !== "pesquisa";
     panel.querySelector("[data-ai-form=arquivo]").hidden = mode !== "arquivo";
-    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Buscar com IA" : "Gerar resumo";
+    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo";
     panel.querySelector("[data-ai-candidates]").replaceChildren();
     setStatus("initial", "");
   }
@@ -80,7 +80,14 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando...") : (mode === "pesquisa" ? "Buscar com IA" : "Gerar resumo");
+    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando...") : (mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo");
+  }
+
+  // Falhas que o modo conhecimento do modelo também teria: não adianta tentar de novo.
+  const NO_FALLBACK_KINDS = ["authentication", "invalid_input", "rate_limit", "network"];
+
+  function errorKind(error) {
+    return error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
   }
 
   function sourceInfo(candidate) {
@@ -103,14 +110,19 @@
       close();
       global.openAiDraft(model, sourceSong);
     } catch (error) {
-      const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
+      const kind = errorKind(error);
+      if (!NO_FALLBACK_KINDS.includes(kind)) {
+        setBusy(false);
+        await generateFromModelKnowledge(searchPayload);
+        return;
+      }
       setStatus(kind, error.message || "Não foi possível concluir a análise.");
     } finally { setBusy(false); }
   }
 
   async function generateFromModelKnowledge(searchPayload) {
     setBusy(true);
-    setStatus("loading", "Gerando um resumo aproximado somente com IA…");
+    setStatus("loading", "Nenhuma fonte disponível. Gerando com o conhecimento da IA…");
     try {
       const result = await global.harmonicSummaryClient.generate("pesquisa", {
         titulo: searchPayload.titulo,
@@ -125,16 +137,6 @@
       const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
       setStatus(kind, error.message || "Não foi possível gerar o resumo aproximado.");
     } finally { setBusy(false); }
-  }
-
-  function renderKnowledgeFallback(searchPayload) {
-    const list = panel.querySelector("[data-ai-candidates]");
-    list.replaceChildren();
-    const warning = element("p", "ai-summary-help", "Nenhuma fonte autorizada foi encontrada. A IA pode sugerir apenas acordes e seções, sem letra ou cifra completa. O resultado exige revisão humana e será aberto como rascunho.");
-    const button = element("button", "ai-summary-submit", "Gerar somente com IA");
-    button.type = "button";
-    button.addEventListener("click", () => generateFromModelKnowledge(searchPayload));
-    list.append(warning, button);
   }
 
   function renderCandidates(searchPayload, candidates) {
@@ -162,8 +164,8 @@
     try {
       const result = await global.harmonicSummaryClient.searchSources(values());
       if (!result.candidates.length) {
-        setStatus("untrusted", "Não encontramos uma fonte autorizada para esta música.");
-        renderKnowledgeFallback(result.payload);
+        setBusy(false);
+        await generateFromModelKnowledge(result.payload);
         return;
       }
       if (result.candidates.length === 1) {
@@ -173,7 +175,12 @@
       }
       renderCandidates(result.payload, result.candidates);
     } catch (error) {
-      const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
+      const kind = errorKind(error);
+      if (!NO_FALLBACK_KINDS.includes(kind) && kind !== "source_required") {
+        setBusy(false);
+        await generateFromModelKnowledge(global.harmonicSummaryClient.validatePayload("pesquisa", values()));
+        return;
+      }
       setStatus(kind, error.message || "Não foi possível buscar esta música.");
     } finally { setBusy(false); }
   }
