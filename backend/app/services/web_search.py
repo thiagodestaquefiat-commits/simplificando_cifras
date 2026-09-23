@@ -15,7 +15,7 @@ def search_chord_context(titulo: str, artista: str | None = None) -> str | None:
     Falhas de rede, bloqueio ou ausência de resultados retornam None para não interromper a geração.
     """
     query = " ".join(part for part in (
-        titulo, artista, "cifra violão tom G", "site:cifraclub.com.br OR site:letras.mus.br",
+        titulo, artista, "cifra violão", "site:cifraclub.com.br OR site:letras.mus.br",
     ) if part)
     try:
         from duckduckgo_search import DDGS
