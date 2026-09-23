@@ -80,7 +80,7 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando fontes…") : (mode === "pesquisa" ? "Buscar com IA" : "Gerar resumo");
+    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando...") : (mode === "pesquisa" ? "Buscar com IA" : "Gerar resumo");
   }
 
   function sourceInfo(candidate) {
@@ -114,11 +114,13 @@
     candidates.forEach((candidate) => {
       const button = element("button", "ai-summary-candidate");
       button.type = "button";
-      button.append(
+      const copy = element("span", "ai-summary-candidate-copy");
+      copy.append(
         element("strong", "", candidate.title || searchPayload.titulo),
         element("span", "", candidate.artist || "Artista não informado"),
         element("small", "", candidate.sourceName || "Fonte autorizada")
       );
+      button.append(copy, element("span", "ai-summary-candidate-action", "Selecionar"));
       button.addEventListener("click", () => generateFromCandidate(searchPayload, candidate));
       list.appendChild(button);
     });
@@ -196,11 +198,15 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["pesquisa", "Busca por IA"], ["arquivo", "Arquivo ou foto"]].forEach(([key, label]) => {
+    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou foto"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
-    const searchForm = element("div", "ai-summary-form"); searchForm.dataset.aiForm = "pesquisa";
-    searchForm.append(field("Título da música", "titulo", "text", true), field("Artista (recomendado)", "artista", "text", false));
+    const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
+    const titleField = field("Título da música", "titulo", "text", true);
+    titleField.querySelector("input").placeholder = "Ex.: Na Sua Estante";
+    const artistField = field("Artista", "artista", "text", false);
+    artistField.querySelector("input").placeholder = "Recomendado para melhorar a busca";
+    searchForm.append(titleField, artistField);
     const fileForm = element("div", "ai-summary-form ai-summary-file-form"); fileForm.dataset.aiForm = "arquivo";
     const fileField = field("Adicionar arquivos — PDF, PNG, JPG, WebP ou TXT", "arquivo", "file", true);
     const fileInput = fileField.querySelector("input");

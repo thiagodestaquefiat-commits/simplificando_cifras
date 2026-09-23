@@ -23,8 +23,8 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
   await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
   await page.evaluate(()=>{window.testDrafts=[];window.openAiDraft=model=>window.testDrafts.push(model);});
   await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();
-  assert.deepEqual(await page.locator('.ai-summary-tab').allTextContents(),['Busca por IA','Arquivo ou foto']);
-  await page.getByRole('tab',{name:'Arquivo ou foto',exact:true}).click();
+  assert.deepEqual(await page.locator('.ai-summary-tab').allTextContents(),['🔎 Busca por IA','📁 Arquivo ou foto']);
+  await page.getByRole('tab',{name:/Arquivo ou foto/}).click();
   const input=page.locator('input[type=file]');assert.equal(await input.getAttribute('multiple'),'');
   await input.setInputFiles([file('z_pagina.png'),file('a_pagina.png')]);
   assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
@@ -33,7 +33,7 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
   assert.match(await page.locator('[data-ai-file-count]').innerText(),/^3 /);
   await page.getByRole('button',{name:'Remover arquivo 2: a_pagina.png',exact:true}).click();
   assert.deepEqual(await page.locator('[data-ai-files] span').allTextContents(),['Arquivo 1 — z_pagina.png','Arquivo 2 — m_pagina.png']);
-  await page.getByRole('tab',{name:'Busca por IA',exact:true}).click();await page.getByRole('tab',{name:'Arquivo ou foto',exact:true}).click();
+  await page.getByRole('tab',{name:/Busca por IA/}).click();await page.getByRole('tab',{name:/Arquivo ou foto/}).click();
   assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
   assert.ok(await page.locator('.ai-summary-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth));
   await input.setInputFiles(Array.from({length:7},(_,i)=>file(i+'.png')));
@@ -43,7 +43,7 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
   await page.waitForFunction(()=>window.testDrafts.length===1);
   assert.equal(requests.length,1);assert.ok(requests[0].indexOf('z_pagina.png')<requests[0].indexOf('m_pagina.png'));assert.ok(!requests[0].includes('a_pagina.png'));
   const draft=await page.evaluate(()=>window.testDrafts[0]);assert.equal(draft.sections.length,1);assert.equal(draft.fullChordSheet.content,result.fullChordSheet.content);
-  await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();await page.getByRole('tab',{name:'Arquivo ou foto',exact:true}).click();
+  await page.getByRole('button',{name:'Gerar com IA',exact:true}).click();await page.getByRole('tab',{name:/Arquivo ou foto/}).click();
   assert.match(await page.locator('[data-ai-file-count]').innerText(),/^0 /);
   await context.close();
  }console.log('multiple-upload-ui: OK (order, add/remove, count, limits, single draft, mobile/desktop)');
