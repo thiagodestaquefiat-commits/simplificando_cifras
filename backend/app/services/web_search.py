@@ -12,6 +12,7 @@ MAX_RESULTS = 5
 MAX_SNIPPET_CHARS = 600
 MAX_PAGE_CHARS = 3000
 TIMEOUT_SECONDS = 8
+SIMPLIFICACIFRAS_HOSTS = ("simplificacifras.com.br", "www.simplificacifras.com.br")
 CIFRACLUB_HOSTS = ("cifraclub.com.br", "www.cifraclub.com.br")
 CHORD_CLASSES = {"cifra", "chord"}
 SKIPPED_TAGS = {"script", "style", "noscript"}
@@ -19,12 +20,13 @@ VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link",
 
 
 class _ChordSheetParser(HTMLParser):
-    """Guarda o texto de cada <pre> e de cada elemento com class="cifra" ou class="chord"."""
+    """Guarda o texto de cada <pre>, de cada elemento com class="cifra" ou class="chord" e de cada <article>."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.pre_blocks: list[str] = []
         self.class_blocks: list[str] = []
+        self.article_blocks: list[str] = []
         self._stack: list[tuple[str, list[str] | None]] = []
         self._skip_depth = 0
 
@@ -43,6 +45,9 @@ class _ChordSheetParser(HTMLParser):
         elif classes & CHORD_CLASSES:
             buffer = []
             self.class_blocks.append(buffer)
+        elif tag == "article":
+            buffer = []
+            self.article_blocks.append(buffer)
         self._stack.append((tag, buffer))
 
     def handle_endtag(self, tag):
@@ -58,40 +63,53 @@ class _ChordSheetParser(HTMLParser):
             self._write(data)
 
     def _write(self, text):
-        for _tag, buffer in self._stack:
+        for _tag, buffer in reversed(self._stack):
             if buffer is not None:
                 buffer.append(text)
                 return
 
 
-def extract_chord_sheet(html: str) -> str | None:
+def extract_chord_sheet(html: str, *, include_article: bool = False) -> str | None:
     parser = _ChordSheetParser()
     parser.feed(html)
     parser.close()
-    for blocks in (parser.pre_blocks, parser.class_blocks):
+    candidates = (parser.pre_blocks, parser.class_blocks) + ((parser.article_blocks,) if include_article else ())
+    for blocks in candidates:
         text = "\n".join("".join(block).strip("\n") for block in blocks if "".join(block).strip())
         if text.strip():
             return text.strip()[:MAX_PAGE_CHARS]
     return None
 
 
-def _fetch_cifraclub(url: str, http_client) -> str | None:
+# Fontes de página em ordem de prioridade: (nome para log, hosts, aceita <article> como cifra).
+PAGE_SOURCES = (
+    ("simplificacifras", SIMPLIFICACIFRAS_HOSTS, True),
+    ("cifraclub", CIFRACLUB_HOSTS, False),
+)
+
+
+def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool) -> str | None:
     try:
-        html, _final_url = http_client.get_text(url, allowed_hosts=CIFRACLUB_HOSTS, allowed_content_types=("text/html",))
+        html, _final_url = http_client.get_text(url, allowed_hosts=hosts, allowed_content_types=("text/html",))
     except MusicSourceError as error:
-        logger.warning("cifraclub_fetch_failed=%s", error.__class__.__name__)
+        logger.warning("%s_fetch_failed=%s", name, error.__class__.__name__)
         return None
-    return extract_chord_sheet(html)
+    return extract_chord_sheet(html, include_article=include_article)
+
+
+def _first_url(results, hosts: tuple[str, ...]) -> str | None:
+    return next((str(item.get("href")) for item in results
+                 if (urlparse(str(item.get("href") or "")).hostname or "").casefold() in hosts), None)
 
 
 def search_chord_context(titulo: str, artista: str | None = None, http_client=None) -> str | None:
     """Busca no DuckDuckGo por cifra da música e devolve o conteúdo encontrado como texto.
 
-    Quando há resultado do Cifra Club, baixa a página e usa o texto da cifra (até 3000 caracteres);
-    se isso falhar, usa os trechos da busca. Falhas retornam None para não interromper a geração.
+    Baixa a página do primeiro resultado do simplificacifras.com.br (prioritário) ou do Cifra Club e usa
+    o texto da cifra (até 3000 caracteres); se isso falhar, usa os trechos da busca. Falhas retornam None para não interromper a geração.
     """
     query = " ".join(part for part in (
-        titulo, artista, "cifra violão simplificada", "site:cifraclub.com.br OR site:letras.mus.br",
+        titulo, artista, "cifra", "site:simplificacifras.com.br OR site:cifraclub.com.br",
     ) if part)
     try:
         from duckduckgo_search import DDGS
@@ -102,10 +120,10 @@ def search_chord_context(titulo: str, artista: str | None = None, http_client=No
         logger.warning("web_search_failed=%s", error.__class__.__name__)
         return None
 
-    cifraclub_url = next((str(item.get("href")) for item in results
-                          if (urlparse(str(item.get("href") or "")).hostname or "").casefold() in CIFRACLUB_HOSTS), None)
-    if cifraclub_url:
-        sheet = _fetch_cifraclub(cifraclub_url, http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS))
+    client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
+    for name, hosts, include_article in PAGE_SOURCES:
+        url = _first_url(results, hosts)
+        sheet = _fetch_page(url, client, name, hosts, include_article) if url else None
         if sheet:
             return sheet
 
