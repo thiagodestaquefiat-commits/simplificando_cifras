@@ -392,3 +392,4 @@ def test_reasoning_is_enabled_only_when_requested():
     provider.generate("Retorne somente JSON válido.", "Tom: C\nC G", context={"reasoning_effort": "low"})
 
     assert responses.kwargs["reasoning"] == {"effort": "low"}
+    assert responses.kwargs["max_output_tokens"] == 16000
