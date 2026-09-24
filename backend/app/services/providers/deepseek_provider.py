@@ -147,7 +147,7 @@ class DeepSeekProvider(OpenAIProvider):
                     int((context or {}).get("max_output_tokens") or self._max_output_tokens),
                     DEEPSEEK_JSON_MAX_OUTPUT_TOKENS,
                 ),
-                reasoning={"effort": "none"},
+                reasoning={"effort": "low" if (context or {}).get("reasoning_effort") == "low" else "none"},
             )
         except Exception as error:
             classified = self._classify_exception(error)

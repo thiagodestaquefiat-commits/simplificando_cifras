@@ -383,3 +383,12 @@ def test_rejects_scanned_pdf_inside_multi_file_upload():
 
     with pytest.raises(ProviderRequestRejected):
         provider.generate("system", "user", bundle)
+
+
+def test_reasoning_is_enabled_only_when_requested():
+    expected = valid_result()
+    provider, responses = provider_with_output(expected.model_dump_json(by_alias=True))
+
+    provider.generate("Retorne somente JSON válido.", "Tom: C\nC G", context={"reasoning_effort": "low"})
+
+    assert responses.kwargs["reasoning"] == {"effort": "low"}

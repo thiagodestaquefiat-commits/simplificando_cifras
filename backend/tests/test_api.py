@@ -119,8 +119,25 @@ def test_research_requires_explicit_source_selection(client):
     assert response.get_json()["erro"]["codigo"] == "fonte_nao_selecionada"
 
 
+class SnippetDDGS:
+    """Busca web simulada que devolve um resultado (sem página do Cifra Club)."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def text(self, query, **kwargs):
+        return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
+
+
 @patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_sheet(generate, client):
+def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_sheet(generate, client, monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
     result = sample_result()
     result.confianca = "alta"
     result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra gerada pelo modelo")
@@ -178,7 +195,9 @@ def test_model_knowledge_sends_web_search_results_as_context(generate, client, m
 
 @patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
 def test_model_knowledge_still_works_when_web_search_fails(generate, client):
-    generate.return_value = sample_result()
+    result = sample_result()
+    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra inventada")
+    generate.return_value = result
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
@@ -186,7 +205,14 @@ def test_model_knowledge_still_works_when_web_search_fails(generate, client):
     )
 
     assert response.status_code == 200
-    assert "Resultados de busca na web" not in generate.call_args.args[1]
+    prompt = generate.call_args.args[1]
+    assert "Resultados de busca na web" not in prompt
+    assert "fullChordSheet deve ser null" in prompt
+    data = response.get_json()
+    assert data["fullChordSheet"] is None
+    assert data["harmonicSummary"]["blocos"]
+    assert "Nenhuma fonte encontrada. Apenas resumo harmônico disponível. Use Arquivo ou foto para cifra completa." in data["observacoes"]
+    assert generate.call_args.kwargs["context"]["reasoning_effort"] == "low"
 
 
 @pytest.mark.parametrize("sections, expected", [
@@ -195,7 +221,8 @@ def test_model_knowledge_still_works_when_web_search_fails(generate, client):
     ([], None),
 ])
 @patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_model_knowledge_rebuilds_placeholder_content_from_sections(generate, sections, expected, client):
+def test_model_knowledge_rebuilds_placeholder_content_from_sections(generate, sections, expected, client, monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
     result = sample_result()
     result.fullChordSheet = CifraCompleta(source="user_text", content="[reconstruir]", sections=sections)
     generate.return_value = result
