@@ -102,7 +102,7 @@
     });
     if (normalized.fullChordSheet != null) {
       const sheet = normalized.fullChordSheet;
-      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text", "model_knowledge"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
+      if (!sheet || sheet.visibility !== "private" || !["user_upload", "user_text", "model_knowledge", "web_source"].includes(sheet.source) || typeof sheet.content !== "string" || !sheet.content.trim()) {
         throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma cifra completa inválida.");
       }
       if (sheet.sections != null && !Array.isArray(sheet.sections)) throw new HarmonicSummaryError("invalid_data", "A cifra estruturada é inválida.");

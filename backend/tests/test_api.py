@@ -175,7 +175,7 @@ def test_model_knowledge_sends_web_search_results_as_context(generate, client, m
 
         def text(self, query, **kwargs):
             assert "Canção teste" in query and "Artista" in query and "cifra" in query
-            assert "site:simplificacifras.com.br OR site:cifraclub.com.br" in query
+            assert "site:" in query and " OR " not in query
             return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
 
     monkeypatch.setattr("duckduckgo_search.DDGS", FakeDDGS)

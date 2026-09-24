@@ -100,7 +100,7 @@ class CifraCompleta(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     visibility: Literal["private"] = "private"
-    source: Literal["user_upload", "user_text", "model_knowledge"]
+    source: Literal["user_upload", "user_text", "model_knowledge", "web_source"]
     content: str = Field(min_length=1, max_length=50000)
     sections: list[SecaoCifraCompleta] = Field(default_factory=list, max_length=80)
 

@@ -5,7 +5,7 @@ from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
 from .harmonic_normalizer import normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
-from .web_search import search_chord_context
+from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
 
 
@@ -46,8 +46,9 @@ Regras obrigatórias:
 
 
 class IaService:
-    def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context):
+    def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context, sheet_finder=find_chord_sheet):
         self._provider = provider
+        self._sheet_finder = sheet_finder
         self._web_search = web_search
         self._research_max_output_tokens = research_max_output_tokens
 
@@ -73,6 +74,14 @@ class IaService:
         knowledge_only = payload.tipo == "pesquisa" and payload.modoGeracao == "conhecimento_modelo"
         if payload.tipo == "pesquisa" and not has_online_source and not knowledge_only:
             raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada ou o modo explícito de conhecimento do modelo é obrigatório.", 400)
+        web_hit = None
+        if knowledge_only:
+            web_hit = self._sheet_finder(payload.titulo, payload.artista)
+            if web_hit and clean_musical_text(web_hit.content, (payload.titulo, payload.artista)):
+                knowledge_only = False
+                has_online_source = True
+            else:
+                web_hit = None
         if knowledge_only:
             source_text = None
             web_context = self._web_search(payload.titulo, payload.artista)
@@ -99,7 +108,7 @@ class IaService:
                     "Não retorne fraseGuia nem URLs. Use confiança média e aviso de revisão humana."
                 )
         else:
-            source_text = extracted.text if extracted is not None else payload.conteudo
+            source_text = web_hit.content if web_hit else extracted.text if extracted is not None else payload.conteudo
             if source_text is not None:
                 source_text = clean_musical_text(source_text, (payload.titulo, payload.artista))
                 if not source_text:
@@ -166,10 +175,14 @@ class IaService:
         if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             normalized.fullChordSheet = CifraCompleta(
-                source="user_upload" if payload.tipo == "arquivo" else "user_text",
+                source="web_source" if web_hit else "user_upload" if payload.tipo == "arquivo" else "user_text",
                 content=source_text,
                 sections=normalized.fullChordSheet.sections if normalized.fullChordSheet else [],
             )
+            if web_hit:
+                note = f"Cifra obtida de {web_hit.url}; revise antes de salvar."
+                if note not in normalized.observacoes:
+                    normalized.observacoes.append(note)
         elif payload.tipo == "arquivo":
             if not normalized.fullChordSheet or not normalized.fullChordSheet.sections:
                 raise ApiError("resposta_estruturada_invalida", "A cifra completa não pôde ser estruturada.", 502)

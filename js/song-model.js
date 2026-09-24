@@ -53,7 +53,7 @@
     return {
       ...value,
       visibility: "private",
-      source: ["user_text", "model_knowledge"].includes(value.source) ? value.source : "user_upload",
+      source: ["user_text", "model_knowledge", "web_source"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         ...(section && typeof section === "object" ? section : {}),

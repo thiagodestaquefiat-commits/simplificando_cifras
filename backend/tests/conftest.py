@@ -7,6 +7,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import create_app
+from app.services.music_sources import MusicSourceUnavailable
 
 
 class TestConfig:
@@ -49,7 +50,15 @@ def no_web_search(monkeypatch):
         def __init__(self, *args, **kwargs):
             raise RuntimeError("web search disabled in tests")
 
+    class OfflineHttpClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def get_text(self, url, **kwargs):
+            raise MusicSourceUnavailable("network disabled in tests")
+
     monkeypatch.setattr("duckduckgo_search.DDGS", OfflineDDGS)
+    monkeypatch.setattr("app.services.web_search.SafeMusicSourceHttpClient", OfflineHttpClient)
 
 
 @pytest.fixture()

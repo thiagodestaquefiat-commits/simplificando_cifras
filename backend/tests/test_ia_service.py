@@ -148,3 +148,37 @@ def test_multipage_visual_pdf_pipeline_returns_summary_and_private_full_sheet():
     assert result.fullChordSheet.visibility == "private"
     assert result.fullChordSheet.source == "user_upload"
     assert result.fullChordSheet.content == "[Refrão]\nC        G\nDigno é o Senhor"
+
+
+def test_research_uses_web_chord_sheet_in_text_flow():
+    from app.services.web_search import ChordSheetHit
+
+    provider = FakeProvider()
+    web_search_calls = []
+    sheet = "C  G\nEstátuas e cofres e paredes pintadas"
+    service = IaService(
+        provider,
+        web_search=lambda *args: web_search_calls.append(args),
+        sheet_finder=lambda titulo, artista: ChordSheetHit(sheet, "https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/", "cifraclub"),
+    )
+    request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Pais e Filhos", artista="Legião Urbana", modoGeracao="conhecimento_modelo")
+
+    result = service.generate(request)
+
+    assert web_search_calls == []
+    assert "<conteudo_usuario>" in provider.user_prompt
+    assert sheet in provider.user_prompt
+    assert result.fullChordSheet.source == "web_source"
+    assert result.fullChordSheet.content == sheet
+    assert "Cifra obtida de https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/; revise antes de salvar." in result.observacoes
+
+
+def test_research_keeps_model_knowledge_flow_without_web_chord_sheet():
+    provider = FakeProvider()
+    service = IaService(provider, web_search=lambda *args: None, sheet_finder=lambda *args: None)
+    request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Música", modoGeracao="conhecimento_modelo")
+
+    result = service.generate(request)
+
+    assert "<conteudo_usuario>" not in provider.user_prompt
+    assert result.fullChordSheet is None
