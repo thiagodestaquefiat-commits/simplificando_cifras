@@ -55,6 +55,24 @@ class PersonalSong(db.Model):
     deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 
+class SharedSong(db.Model):
+    __tablename__ = "shared_songs"
+    __table_args__ = (db.Index("idx_search", "normalized_title", "normalized_artist", mysql_prefix="FULLTEXT"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    artist = db.Column(db.String(255), nullable=True)
+    normalized_title = db.Column(db.String(255), nullable=False)
+    normalized_artist = db.Column(db.String(255), nullable=True)
+    song_key = db.Column(db.String(20), nullable=True)
+    capo = db.Column(db.String(50), nullable=True)
+    song_data = db.Column(db.JSON, nullable=False)
+    contributed_by = db.Column(db.String(80), nullable=True)
+    times_searched = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+
+
 class Band(db.Model):
     __tablename__ = "bands"
 

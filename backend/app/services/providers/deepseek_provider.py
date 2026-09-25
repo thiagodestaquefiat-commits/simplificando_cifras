@@ -13,6 +13,8 @@ from .openai_provider import OpenAIProvider
 
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_JSON_MAX_OUTPUT_TOKENS = 8000
+# Com raciocínio ligado, parte da saída vai para o raciocínio; o JSON precisa de mais espaço.
+DEEPSEEK_REASONING_MAX_OUTPUT_TOKENS = 16000
 
 
 def _response_contract_prompt() -> str:
@@ -28,7 +30,7 @@ def _response_contract_prompt() -> str:
         "Inclua titulo, harmonicSummary e confianca. schemaVersion deve ser o número 2. "
         "Use null apenas onde o schema permite e [] para listas vazias. "
         "Se fullChordSheet existir, visibility deve ser \"private\" e source deve ser "
-        "\"user_text\" ou \"user_upload\".\n"
+        "\"user_text\", \"user_upload\" ou \"model_knowledge\".\n"
         f"{schema}"
     )
 
@@ -102,7 +104,7 @@ class DeepSeekProvider(OpenAIProvider):
             api_key=api_key,
             base_url=DEEPSEEK_BASE_URL,
             timeout=timeout_seconds,
-            max_retries=1,
+            max_retries=0,
         )
         super().__init__(
             api_key=api_key,
@@ -122,6 +124,7 @@ class DeepSeekProvider(OpenAIProvider):
             )
         started_at = perf_counter()
         safe_context = self._safe_context(context)
+        reasoning = (context or {}).get("reasoning_effort") == "low"
         user_content = [{"type": "input_text", "text": user_prompt}]
         for index, part in enumerate(media_items):
             if media.items:
@@ -142,8 +145,12 @@ class DeepSeekProvider(OpenAIProvider):
                     {"role": "user", "content": user_content},
                 ],
                 text={"format": {"type": "json_object"}},
-                max_output_tokens=min(self._max_output_tokens, DEEPSEEK_JSON_MAX_OUTPUT_TOKENS),
-                reasoning={"effort": "none"},
+                max_output_tokens=DEEPSEEK_REASONING_MAX_OUTPUT_TOKENS if reasoning else min(
+                    self._max_output_tokens,
+                    int((context or {}).get("max_output_tokens") or self._max_output_tokens),
+                    DEEPSEEK_JSON_MAX_OUTPUT_TOKENS,
+                ),
+                reasoning={"effort": "low" if reasoning else "none"},
             )
         except Exception as error:
             classified = self._classify_exception(error)

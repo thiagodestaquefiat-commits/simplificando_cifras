@@ -1,10 +1,10 @@
-const CACHE_NAME = "simplificando-cifras-v143-integrated-release";
+const CACHE_NAME = "simplificando-cifras-v144-ai-integrated-release";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/tablature.js?v=1",
-  "./js/song-model.js?v=4",
+  "./js/song-model.js?v=5",
   "./js/demo-library.js?v=3",
   "./js/song-repository.js?v=13",
   "./js/library-sync.js?v=16",
@@ -37,7 +37,7 @@ const ASSETS = [
   "./js/stage-offline.js?v=1",
   "./js/study-metronome.js?v=2",
   "./js/study-metronome.css?v=3",
-  "./js/editor/song-format.js?v=8",
+  "./js/editor/song-format.js?v=9",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",
@@ -46,8 +46,8 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
-  "./js/ai/harmonic-summary-client.js?v=8",
-  "./js/ai/ai-harmonic-summary.js?v=4",
+  "./js/ai/harmonic-summary-client.js?v=9",
+  "./js/ai/ai-harmonic-summary.js?v=5",
   "./js/ai/ai-harmonic-summary.css?v=4",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",

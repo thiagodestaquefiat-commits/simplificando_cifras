@@ -1,7 +1,7 @@
 (function (global) {
   "use strict";
   let panel = null;
-  let mode = "texto";
+  let mode = "pesquisa";
   let busy = false;
   let sourceSong = null;
   let selectedFiles = [];
@@ -41,9 +41,10 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-selected", String(active));
     });
-    panel.querySelector("[data-ai-form=texto]").hidden = mode !== "texto";
+    panel.querySelector("[data-ai-form=pesquisa]").hidden = mode !== "pesquisa";
     panel.querySelector("[data-ai-form=arquivo]").hidden = mode !== "arquivo";
-    panel.querySelector("[data-ai-submit]").textContent = mode === "texto" ? "Analisar texto" : "Gerar resumo";
+    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo";
+    panel.querySelector("[data-ai-candidates]").replaceChildren();
     setStatus("initial", "");
   }
 
@@ -79,11 +80,114 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Analisando…") : (mode === "texto" ? "Analisar texto" : "Gerar resumo");
+    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando...") : (mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo");
+  }
+
+  // Falhas que o modo conhecimento do modelo também teria: não adianta tentar de novo.
+  const NO_FALLBACK_KINDS = ["authentication", "invalid_input", "rate_limit", "network"];
+
+  function errorKind(error) {
+    return error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
+  }
+
+  function sourceInfo(candidate) {
+    return { type: "online", name: candidate.sourceName || null, url: candidate.sourceUrl || null };
+  }
+
+  async function generateFromCandidate(searchPayload, candidate) {
+    setBusy(true);
+    setStatus("loading", "Analisando a fonte selecionada…");
+    try {
+      const result = await global.harmonicSummaryClient.generate("pesquisa", {
+        titulo: searchPayload.titulo,
+        artista: searchPayload.artista,
+        sourceProvider: candidate.providerId,
+        sourceId: candidate.sourceId
+      });
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo(candidate));
+      setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
+      setBusy(false);
+      close();
+      global.openAiDraft(model, sourceSong);
+    } catch (error) {
+      const kind = errorKind(error);
+      if (!NO_FALLBACK_KINDS.includes(kind)) {
+        setBusy(false);
+        await generateFromModelKnowledge(searchPayload);
+        return;
+      }
+      setStatus(kind, error.message || "Não foi possível concluir a análise.");
+    } finally { setBusy(false); }
+  }
+
+  async function generateFromModelKnowledge(searchPayload) {
+    setBusy(true);
+    setStatus("loading", "Nenhuma fonte disponível. Gerando com o conhecimento da IA…");
+    try {
+      const result = await global.harmonicSummaryClient.generate("pesquisa", {
+        titulo: searchPayload.titulo,
+        artista: searchPayload.artista,
+        modoGeracao: "conhecimento_modelo"
+      });
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", { type: "ai_knowledge", name: "Somente IA — sem fonte autorizada", url: null });
+      setBusy(false);
+      close();
+      global.openAiDraft(model, sourceSong);
+    } catch (error) {
+      const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
+      setStatus(kind, error.message || "Não foi possível gerar o resumo aproximado.");
+    } finally { setBusy(false); }
+  }
+
+  function renderCandidates(searchPayload, candidates) {
+    const list = panel.querySelector("[data-ai-candidates]");
+    list.replaceChildren(element("p", "ai-summary-help", "Encontramos mais de uma versão. Escolha a fonte que deseja usar:"));
+    candidates.forEach((candidate) => {
+      const button = element("button", "ai-summary-candidate");
+      button.type = "button";
+      const copy = element("span", "ai-summary-candidate-copy");
+      copy.append(
+        element("strong", "", candidate.title || searchPayload.titulo),
+        element("span", "", candidate.artist || "Artista não informado"),
+        element("small", "", candidate.sourceName || "Fonte autorizada")
+      );
+      button.append(copy, element("span", "ai-summary-candidate-action", "Selecionar"));
+      button.addEventListener("click", () => generateFromCandidate(searchPayload, candidate));
+      list.appendChild(button);
+    });
+    setStatus("success", "Escolha uma das fontes encontradas para continuar.");
+  }
+
+  async function search() {
+    setBusy(true);
+    setStatus("loading", "Buscando fontes autorizadas…");
+    try {
+      const result = await global.harmonicSummaryClient.searchSources(values());
+      if (!result.candidates.length) {
+        setBusy(false);
+        await generateFromModelKnowledge(result.payload);
+        return;
+      }
+      if (result.candidates.length === 1) {
+        setBusy(false);
+        await generateFromCandidate(result.payload, result.candidates[0]);
+        return;
+      }
+      renderCandidates(result.payload, result.candidates);
+    } catch (error) {
+      const kind = errorKind(error);
+      if (!NO_FALLBACK_KINDS.includes(kind) && kind !== "source_required") {
+        setBusy(false);
+        await generateFromModelKnowledge(global.harmonicSummaryClient.validatePayload("pesquisa", values()));
+        return;
+      }
+      setStatus(kind, error.message || "Não foi possível buscar esta música.");
+    } finally { setBusy(false); }
   }
 
   async function submit() {
     if (busy) return;
+    if (mode === "pesquisa") return search();
     const help = panel.querySelector("[data-ai-help]");
     help.hidden = true;
     help.textContent = "";
@@ -93,9 +197,7 @@
       const result = await global.harmonicSummaryClient.generate(mode, values());
       const sourceInfo = mode === "arquivo"
         ? { type: "upload", name: result.payload.arquivos.map(file=>file.name).join(' + ').slice(0,255), url: null }
-        : mode === "texto"
-          ? { type: "text", name: null, url: null }
-          : { type: "manual", name: null, url: null };
+        : { type: "manual", name: null, url: null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
@@ -106,7 +208,7 @@
       setStatus(kind, error.message || "Não foi possível concluir a análise.");
       if (kind === "untrusted") {
         help.hidden = false;
-        help.textContent = "Corrija o título ou artista, cole uma cifra ou texto e tente novamente.";
+        help.textContent = "Corrija o título ou artista, ou envie uma cifra, PDF ou foto.";
       }
     } finally { setBusy(false); }
   }
@@ -133,11 +235,15 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["arquivo", "Arquivo"], ["texto", "Texto"]].forEach(([key, label]) => {
+    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou foto"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
-    const textForm = element("div", "ai-summary-form"); textForm.dataset.aiForm = "texto";
-    textForm.append(field("Título (opcional)", "titulo", "text", false), field("Artista (opcional)", "artista", "text", false), field("Cifra, letra com acordes, anotações ou estrutura musical", "conteudo", "textarea", true));
+    const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
+    const titleField = field("Título da música", "titulo", "text", true);
+    titleField.querySelector("input").placeholder = "Ex: Oceans";
+    const artistField = field("Artista", "artista", "text", false);
+    artistField.querySelector("input").placeholder = "Ex: Hillsong UNITED";
+    searchForm.append(titleField, artistField);
     const fileForm = element("div", "ai-summary-form ai-summary-file-form"); fileForm.dataset.aiForm = "arquivo";
     const fileField = field("Adicionar arquivos — PDF, PNG, JPG, WebP ou TXT", "arquivo", "file", true);
     const fileInput = fileField.querySelector("input");
@@ -153,19 +259,20 @@
     fileForm.addEventListener("drop", (event) => { if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files); });
     const status = element("div", "ai-summary-status"); status.dataset.aiStatus = ""; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); status.hidden = true;
     const help = element("p", "ai-summary-help"); help.dataset.aiHelp = ""; help.hidden = true;
+    const candidates = element("div", "ai-summary-candidates"); candidates.dataset.aiCandidates = "";
     const submitButton = element("button", "ai-summary-submit", "Gerar resumo"); submitButton.type = "button"; submitButton.dataset.aiSubmit = ""; submitButton.addEventListener("click", submit);
-    dialog.append(header, intro, tabs, textForm, fileForm, status, help, submitButton);
+    dialog.append(header, intro, tabs, searchForm, fileForm, status, help, candidates, submitButton);
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
-    updateMode("texto");
+    updateMode("pesquisa");
     if (sourceSong) {
-      textForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
-      textForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      searchForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
+      searchForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
       fileForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
       fileForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
     }
-    textForm.querySelector("textarea").focus();
+    searchForm.querySelector('[name="titulo"]').focus();
   }
 
   global.aiHarmonicSummary = Object.freeze({ open, close, get busy() { return busy; } });

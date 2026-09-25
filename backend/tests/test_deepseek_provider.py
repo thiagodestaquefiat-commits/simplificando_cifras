@@ -143,6 +143,15 @@ def test_valid_json_is_parsed_and_validated_locally():
     assert '"additionalProperties":false' in system_prompt
 
 
+def test_context_can_lower_output_limit_for_isolated_research():
+    expected = valid_result()
+    provider, responses = provider_with_output(expected.model_dump_json(by_alias=True))
+
+    provider.generate("Sistema", "Pesquisa", context={"max_output_tokens": 1200})
+
+    assert responses.kwargs["max_output_tokens"] == 1200
+
+
 def test_realistic_complete_json_covers_the_entire_contract():
     payload = {
         "schemaVersion": 2,
@@ -374,3 +383,13 @@ def test_rejects_scanned_pdf_inside_multi_file_upload():
 
     with pytest.raises(ProviderRequestRejected):
         provider.generate("system", "user", bundle)
+
+
+def test_reasoning_is_enabled_only_when_requested():
+    expected = valid_result()
+    provider, responses = provider_with_output(expected.model_dump_json(by_alias=True))
+
+    provider.generate("Retorne somente JSON válido.", "Tom: C\nC G", context={"reasoning_effort": "low"})
+
+    assert responses.kwargs["reasoning"] == {"effort": "low"}
+    assert responses.kwargs["max_output_tokens"] == 16000
