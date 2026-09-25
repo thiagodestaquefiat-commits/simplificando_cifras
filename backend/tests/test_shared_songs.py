@@ -91,3 +91,29 @@ def test_ia_service_prefers_personal_song_over_catalog():
     )
     result = IaService(ExplodingProvider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha", modoGeracao="conhecimento_modelo"), user_id="u1")
     assert result.titulo == "Minha"
+
+
+def test_personal_match_matches_ai_response_format(client):
+    token = register(client, "shared-f", "F")
+    song = {
+        "title": "Minha Canção", "artist": "Eu", "key": "D", "originalKey": "C", "capo": "2",
+        "fullChordSheet": {"visibility": "private", "source": "user_upload", "content": "[Intro]\nD A\n[Refrão 2]\nG D\nCantando alto hoje com a banda toda aqui",
+                           "sections": [
+                               {"nome": "Intro", "linhas": [{"letra": "", "acordes": [{"acorde": "D", "posicao": 0}, {"acorde": "A", "posicao": 3}]}]},
+                               {"nome": "Refrão 2", "linhas": [
+                                   {"letra": "", "acordes": []},
+                                   {"letra": "Cantando alto hoje com a banda toda aqui", "acordes": [{"acorde": "G", "posicao": 0}, {"acorde": "D", "posicao": 9}]},
+                               ]},
+                           ]},
+    }
+    client.put("/api/library/songs/minha", headers=auth(token), json={"songData": song})
+    data = client.get("/api/shared-songs/search?title=minha%20cancao&artist=eu", headers=auth(token)).get_json()["match"]["songData"]
+    assert data["tom"] == "D" and data["capotraste"] == 2 and data["confianca"] == "alta"
+    assert data["observacoes"] == ["Encontrada na sua biblioteca pessoal."]
+    assert data["harmonicSummary"]["blocos"] == [
+        {"acordes": ["D", "A"], "repeticoes": None, "fraseGuia": None, "secao": "Intro"},
+        {"acordes": ["G", "D"], "repeticoes": None, "fraseGuia": "Cantando alto hoje com a banda toda aqui", "secao": "Refrão"},
+    ]
+    assert data["fullChordSheet"]["source"] == "user_upload"
+    assert data["fullChordSheet"]["content"] == song["fullChordSheet"]["content"]
+    assert data["fullChordSheet"]["sections"][1]["linhas"][1]["letra"] == "Cantando alto hoje com a banda toda aqui"
