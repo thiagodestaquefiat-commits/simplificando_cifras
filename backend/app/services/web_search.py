@@ -114,7 +114,9 @@ class ScraperApiHttpClient:
         self._client = httpx.Client(timeout=timeout_seconds, follow_redirects=True)
 
     def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",)) -> tuple[str, str]:
-        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=false"
+        # render=true é necessário para SPAs (ex: Cifra Club em React) que carregam acordes via JS.
+        # Custa 5 créditos/req no ScraperAPI em vez de 1, mas garante HTML completo.
+        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true"
         try:
             response = self._client.get(proxy_url)
         except httpx.TimeoutException as error:
@@ -175,7 +177,9 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
         return None
     sheet = extract_chord_sheet(html, include_article=include_article)
     if not sheet:
-        logger.warning("%s_extract_empty url=%s html_len=%d", name, url, len(html or ""))
+        # Log primeiros 500 chars do HTML para diagnóstico de extração falha
+        preview = (html or "")[:500].replace("\n", " ")
+        logger.warning("%s_extract_empty url=%s html_len=%d html_preview=%r", name, url, len(html or ""), preview)
     return sheet
 
 
