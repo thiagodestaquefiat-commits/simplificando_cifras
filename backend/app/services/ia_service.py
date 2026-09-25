@@ -68,10 +68,13 @@ class IaService:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         return cls(provider, shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
 
-    def _shared_song_result(self, payload: ResumoHarmonicoRequest) -> ResumoHarmonicoResponse | None:
+    def _shared_song_result(self, payload: ResumoHarmonicoRequest, user_id: str | None = None) -> ResumoHarmonicoResponse | None:
         if self._shared_songs is None or not payload.titulo:
             return None
         try:
+            personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
+            if personal is not None:
+                return ResumoHarmonicoResponse.model_validate(personal.summary)
             match = self._shared_songs.search(payload.titulo, payload.artista)
             if match is None or match.score < self._shared_min_score:
                 return None
@@ -80,14 +83,14 @@ class IaService:
             logger.warning("shared_song_lookup_failed", exc_info=True)
             return None
 
-    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
+    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
             extracted = replace(extracted, items=tuple(replace(item, text=clean_musical_text(item.text, (payload.titulo, payload.artista)))
                 if item.text is not None else item for item in extracted.items))
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
         if payload.tipo == "pesquisa" and not has_online_source:
-            cached = self._shared_song_result(payload)
+            cached = self._shared_song_result(payload, user_id)
             if cached is not None:
                 return cached
             user_prompt = (

@@ -29,7 +29,8 @@ def test_ai_song_is_contributed_once_and_searchable(client, app):
         stored = SharedSong.query.one()
         assert stored.contributed_by == "shared-a" and stored.song_data["fullChordSheet"] is None
         assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
-    found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(token)).get_json()
+    searcher = register(client, "shared-a2", "A2")
+    found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(searcher)).get_json()
     assert found["match"]["title"] == "Asa Branca" and found["match"]["score"] == 1.0
     assert found["match"]["timesSearched"] == 1
     assert client.get("/api/shared-songs/search?title=", headers=auth(token)).status_code == 400
@@ -50,7 +51,7 @@ class ExplodingProvider:
 
 def test_ia_service_returns_catalog_match_without_calling_provider():
     data = {"titulo": "Asa Branca", "artista": "Luiz Gonzaga", "tom": "G", "harmonicSummary": {"blocos": [{"acordes": ["G", "C"]}]}, "confianca": "media"}
-    catalog = SimpleNamespace(search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
     result = IaService(ExplodingProvider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Asa Branca"))
     assert result.titulo == "Asa Branca"
 
@@ -61,6 +62,32 @@ def test_ia_service_ignores_low_score_match():
         def generate(self, *args, **kwargs):
             calls.append(1)
             return ResumoHarmonicoResponse.model_validate({"titulo": "X", "harmonicSummary": {"blocos": [{"acordes": ["C", "G"]}]}, "confianca": "media"})
-    catalog = SimpleNamespace(search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data={}), 0.5))
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data={}), 0.5))
     IaService(Provider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="X"))
     assert calls
+
+
+def test_own_library_has_priority_over_shared_catalog(client, app):
+    other = register(client, "shared-c", "C")
+    client.put("/api/library/songs/x", headers=auth(other), json={"songData": ai_song()})
+    token = register(client, "shared-d", "D")
+    mine = ai_song(aiGenerated=False, sourceInfo={"type": "upload"}, originalKey="A")
+    client.put("/api/library/songs/mine", headers=auth(token), json={"songData": mine})
+    found = client.get("/api/shared-songs/search?title=Asa%20Branca&artist=luiz%20gonzaga", headers=auth(token)).get_json()["match"]
+    assert found["source"] == "personal" and found["clientId"] == "mine" and found["songData"]["tom"] == "A"
+    shared = client.get("/api/shared-songs/search?title=Asa%20Branca&artist=luiz%20gonzaga", headers=auth(other)).get_json()["match"]
+    assert shared["source"] == "personal" and shared["clientId"] == "x"
+    third = register(client, "shared-e", "E")
+    assert client.get("/api/shared-songs/search?title=Asa%20Branca", headers=auth(third)).get_json()["match"]["source"] == "shared"
+    with app.app_context():
+        assert client.get("/api/shared-songs/search?title=Asa%20Branca&artist=Outro", headers=auth(token)).get_json()["match"]["source"] == "shared"
+
+
+def test_ia_service_prefers_personal_song_over_catalog():
+    personal_data = {"titulo": "Minha", "harmonicSummary": {"blocos": [{"acordes": ["A"]}]}, "confianca": "media"}
+    catalog = SimpleNamespace(
+        search_personal=lambda user_id, title, artist: SimpleNamespace(summary=personal_data) if user_id == "u1" else None,
+        search=lambda title, artist: (_ for _ in ()).throw(AssertionError("catálogo não deveria ser consultado")),
+    )
+    result = IaService(ExplodingProvider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha"), user_id="u1")
+    assert result.titulo == "Minha"

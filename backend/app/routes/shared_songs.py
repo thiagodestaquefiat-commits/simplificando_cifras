@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 
 from .. import limiter
 from ..errors import ApiError
@@ -22,11 +22,18 @@ def search_shared_songs():
     artist = str(request.args.get("artist") or "").strip()[:160] or None
     if not title:
         raise ApiError("entrada_invalida", "Informe o título da música.", 400)
+    personal = SharedSongService.search_personal(g.current_user.id, title, artist)
+    if personal is not None:
+        data = personal.song.song_data
+        return jsonify({"match": {
+            "source": "personal", "id": personal.song.id, "clientId": personal.song.client_id,
+            "title": data.get("title"), "artist": data.get("artist"), "score": 1.0, "songData": personal.summary,
+        }}), 200
     match = SharedSongService.search(title, artist)
     if match is None:
         return jsonify({"match": None}), 200
     song = match.song
     return jsonify({"match": {
-        "id": song.id, "title": song.title, "artist": song.artist, "key": song.song_key, "capo": song.capo,
+        "source": "shared", "id": song.id, "title": song.title, "artist": song.artist, "key": song.song_key, "capo": song.capo,
         "score": round(match.score, 4), "timesSearched": song.times_searched, "songData": song.song_data,
     }}), 200

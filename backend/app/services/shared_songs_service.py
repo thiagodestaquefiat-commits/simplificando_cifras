@@ -10,8 +10,8 @@ from pydantic import ValidationError
 from sqlalchemy import text
 
 from ..database import db
-from ..models import SharedSong
-from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
+from ..models import PersonalSong, SharedSong
+from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoResponse
 
 MAX_CANDIDATES = 10
 # Só entram no catálogo resumos gerados por pesquisa (sem fonte do usuário);
@@ -31,7 +31,32 @@ class SharedSongMatch:
     score: float
 
 
+@dataclass(frozen=True)
+class PersonalSongMatch:
+    song: PersonalSong
+    summary: dict
+
+
 class SharedSongService:
+    @classmethod
+    def search_personal(cls, user_id, title, artist=None) -> PersonalSongMatch | None:
+        """Procura na biblioteca do próprio usuário: título igual (normalizado) e, se informado, artista igual."""
+        normalized_title, normalized_artist = normalize_text(title), normalize_text(artist)
+        if not user_id or not normalized_title:
+            return None
+        songs = (PersonalSong.query.filter_by(owner_user_id=user_id, deleted_at=None)
+                 .order_by(PersonalSong.updated_at.desc()).all())
+        for song in songs:
+            data = song.song_data if isinstance(song.song_data, dict) else {}
+            if normalize_text(data.get("title")) != normalized_title:
+                continue
+            if normalized_artist and normalize_text(data.get("artist")) != normalized_artist:
+                continue
+            summary = cls._summary_from_song(data, "Encontrada na sua biblioteca.", include_full_sheet=True)
+            if summary is not None:
+                return PersonalSongMatch(song, summary)
+        return None
+
     @staticmethod
     def _score(song: SharedSong, title: str, artist: str) -> float:
         title_score = SequenceMatcher(None, title, song.normalized_title).ratio()
@@ -71,8 +96,9 @@ class SharedSongService:
         return best
 
     @staticmethod
-    def _summary_from_song(song_data: dict) -> dict | None:
-        """Converte a música salva do editor em resumo harmônico sem letra nem cifra completa."""
+    def _summary_from_song(song_data: dict, observacao: str = "Resumo do catálogo compartilhado; revise antes de usar.",
+                           include_full_sheet: bool = False) -> dict | None:
+        """Converte a música salva do editor em resumo harmônico; cifra completa só para o próprio dono."""
         sections = song_data.get("sections")
         if not isinstance(sections, list):
             sections = (song_data.get("editorData") or {}).get("sections")
@@ -88,6 +114,12 @@ class SharedSongService:
                     blocos.append({"acordes": chords, "repeticoes": line.get("repeticoes"), "fraseGuia": None, "secao": label})
         if not blocos:
             return None
+        full_sheet = None
+        if include_full_sheet and isinstance(song_data.get("fullChordSheet"), dict):
+            try:
+                full_sheet = CifraCompleta.model_validate(song_data["fullChordSheet"]).model_dump(mode="json")
+            except ValidationError:
+                full_sheet = None
         capo = song_data.get("capo")
         try:
             response = ResumoHarmonicoResponse.model_validate({
@@ -96,9 +128,9 @@ class SharedSongService:
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
                 "capotraste": capo if isinstance(capo, int) and 0 <= capo <= 12 else None,
                 "harmonicSummary": {"blocos": blocos[:40]},
-                "observacoes": ["Resumo do catálogo compartilhado; revise antes de usar."],
+                "observacoes": [observacao],
                 "confianca": "media",
-                "fullChordSheet": None,
+                "fullChordSheet": full_sheet,
             })
         except ValidationError:
             return None
