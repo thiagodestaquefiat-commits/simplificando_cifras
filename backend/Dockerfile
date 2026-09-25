@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD gunicorn --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - --capture-output run:app
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-8080} --timeout 120 --access-logfile - --error-logfile - --capture-output run:app"]
