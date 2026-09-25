@@ -11,6 +11,7 @@ from .collaboration import (
     EventRepertoireItem,
     PersonalRepertoireOverride,
     PersonalSong,
+    SharedSong,
     UserAccessToken,
 )
 
@@ -27,5 +28,6 @@ __all__ = [
     "EventRepertoireItem",
     "PersonalRepertoireOverride",
     "PersonalSong",
+    "SharedSong",
     "UserAccessToken",
 ]

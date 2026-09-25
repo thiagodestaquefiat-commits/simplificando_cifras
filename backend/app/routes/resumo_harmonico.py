@@ -69,5 +69,6 @@ def resumo_harmonico():
                 filename=None, size_bytes=len(online_source.content.encode("utf-8")),
             )
     service = IaService.from_config(current_app.config)
-    result = service.generate(payload, extracted, request_id=g.get("request_id", ""), online_source=online_source)
+    result = service.generate(payload, extracted, request_id=g.get("request_id", ""), online_source=online_source,
+                            user_id=g.current_user.id)
     return jsonify(result.model_dump(mode="json")), 200

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from dataclasses import replace
 
 from ..errors import ApiError
@@ -7,7 +8,9 @@ from .harmonic_normalizer import normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
 from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
+from .shared_songs_service import SharedSongService
 
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """Você analisa uma fonte musical uma única vez e gera duas representações da mesma música, em português do Brasil.
 Retorne somente JSON válido no formato esperado pelo ROUDY, sem Markdown ou texto adicional.
@@ -46,11 +49,14 @@ Regras obrigatórias:
 
 
 class IaService:
-    def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context, sheet_finder=find_chord_sheet):
+    def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context, sheet_finder=find_chord_sheet,
+                 shared_songs=None, shared_min_score: float = 0.9):
         self._provider = provider
         self._sheet_finder = sheet_finder
         self._web_search = web_search
         self._research_max_output_tokens = research_max_output_tokens
+        self._shared_songs = shared_songs
+        self._shared_min_score = shared_min_score
 
     @classmethod
     def from_config(cls, config):
@@ -63,9 +69,25 @@ class IaService:
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
-        return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"])
+        return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"], shared_songs=SharedSongService,
+                   shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
 
-    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
+    def _shared_song_result(self, payload: ResumoHarmonicoRequest, user_id: str | None = None) -> ResumoHarmonicoResponse | None:
+        if self._shared_songs is None or not payload.titulo:
+            return None
+        try:
+            personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
+            if personal is not None:
+                return ResumoHarmonicoResponse.model_validate(personal.summary)
+            match = self._shared_songs.search(payload.titulo, payload.artista)
+            if match is None or match.score < self._shared_min_score:
+                return None
+            return ResumoHarmonicoResponse.model_validate(match.song.song_data)
+        except Exception:  # catálogo é otimização: qualquer falha cai para a IA
+            logger.warning("shared_song_lookup_failed", exc_info=True)
+            return None
+
+    def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
             extracted = replace(extracted, items=tuple(replace(item, text=clean_musical_text(item.text, (payload.titulo, payload.artista)))
                 if item.text is not None else item for item in extracted.items))
@@ -74,6 +96,10 @@ class IaService:
         knowledge_only = payload.tipo == "pesquisa" and payload.modoGeracao == "conhecimento_modelo"
         if payload.tipo == "pesquisa" and not has_online_source and not knowledge_only:
             raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada ou o modo explícito de conhecimento do modelo é obrigatório.", 400)
+        if knowledge_only:
+            cached = self._shared_song_result(payload, user_id)
+            if cached is not None:
+                return cached
         web_hit = None
         if knowledge_only:
             web_hit = self._sheet_finder(payload.titulo, payload.artista)
