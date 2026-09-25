@@ -5,9 +5,11 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote_plus
 
-from .music_sources import MusicSourceError, SafeMusicSourceHttpClient
+import httpx
+
+from .music_sources import MusicSourceError, MusicSourceTimeout, MusicSourceUnavailable, MusicSourceInvalid, SafeMusicSourceHttpClient
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +103,56 @@ class ChordSheetHit:
     source_name: str
 
 
+class ScraperApiHttpClient:
+    """Cliente HTTP que roteia requisições pelo ScraperAPI para contornar bloqueios de IP de datacenter."""
+
+    BASE_URL = "https://api.scraperapi.com/"
+    SEARCH_URL = "https://api.scraperapi.com/structured/google/search"
+
+    def __init__(self, api_key: str, timeout_seconds: float = 20.0):
+        self._api_key = api_key
+        self._client = httpx.Client(timeout=timeout_seconds, follow_redirects=True)
+
+    def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",)) -> tuple[str, str]:
+        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=false"
+        try:
+            response = self._client.get(proxy_url)
+        except httpx.TimeoutException as error:
+            raise MusicSourceTimeout("ScraperAPI timeout") from error
+        except httpx.HTTPError as error:
+            raise MusicSourceUnavailable("ScraperAPI indisponível") from error
+        if response.status_code == 403:
+            raise MusicSourceUnavailable("ScraperAPI bloqueou a requisição")
+        if response.status_code != 200:
+            raise MusicSourceUnavailable(f"ScraperAPI retornou status {response.status_code}")
+        content = response.content
+        if len(content) > 1_500_000:
+            raise MusicSourceInvalid("Conteúdo da fonte excede o limite")
+        return content.decode(response.encoding or "utf-8", errors="replace"), url
+
+    def google_search(self, query: str, max_results: int = 5) -> list | None:
+        """Busca no Google via ScraperAPI, substituindo o DuckDuckGo bloqueado."""
+        try:
+            response = self._client.get(
+                self.SEARCH_URL,
+                params={"api_key": self._api_key, "query": query, "num": max_results, "country_code": "br"},
+            )
+            if response.status_code != 200:
+                logger.warning("scraper_api_search_status=%d query=%r", response.status_code, query)
+                return None
+            data = response.json()
+            results = [
+                {"href": item.get("link"), "title": item.get("title"), "body": item.get("snippet")}
+                for item in data.get("organic_results", [])
+                if item.get("link")
+            ]
+            logger.info("scraper_api_search_results query=%r count=%d", query, len(results))
+            return results
+        except Exception as error:  # noqa: BLE001
+            logger.warning("scraper_api_search_failed=%s", error.__class__.__name__)
+            return None
+
+
 def slugify(texto: str | None) -> str:
     sem_acento = unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^a-z0-9]+", "-", sem_acento.casefold()).strip("-")
@@ -146,8 +198,9 @@ def _ddg_search(query: str) -> list | None:
     return results
 
 
-def _find(titulo: str, artista: str | None, http_client) -> tuple[ChordSheetHit | None, list]:
+def _find(titulo: str, artista: str | None, http_client, search_fn=None) -> tuple[ChordSheetHit | None, list]:
     client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
+    _search = search_fn or _ddg_search
     for name, hosts, include_article in PAGE_SOURCES:
         url = direct_url(name, titulo, artista)
         sheet = _fetch_page(url, client, name, hosts, include_article) if url else None
@@ -157,7 +210,7 @@ def _find(titulo: str, artista: str | None, http_client) -> tuple[ChordSheetHit 
     all_results = []
     for name, hosts, include_article in PAGE_SOURCES:
         query = " ".join(part for part in (titulo, artista, "cifra", f"site:{SITE_DOMAINS[name]}") if part)
-        results = _ddg_search(query)
+        results = _search(query)
         if results is None:
             continue
         all_results.extend(results)
@@ -171,17 +224,17 @@ def _find(titulo: str, artista: str | None, http_client) -> tuple[ChordSheetHit 
     return None, all_results
 
 
-def find_chord_sheet(titulo: str, artista: str | None = None, http_client=None) -> ChordSheetHit | None:
-    """Procura a cifra: URL direta do simplificacifras, URL direta do Cifra Club e depois DuckDuckGo por site."""
-    return _find(titulo, artista, http_client)[0]
+def find_chord_sheet(titulo: str, artista: str | None = None, http_client=None, search_fn=None) -> ChordSheetHit | None:
+    """Procura a cifra: URL direta do simplificacifras, URL direta do Cifra Club e depois busca por site."""
+    return _find(titulo, artista, http_client, search_fn)[0]
 
 
-def search_chord_context(titulo: str, artista: str | None = None, http_client=None) -> str | None:
+def search_chord_context(titulo: str, artista: str | None = None, http_client=None, search_fn=None) -> str | None:
     """Devolve a cifra encontrada por find_chord_sheet ou, se não houver, os trechos da busca.
 
     Falhas retornam None para não interromper a geração.
     """
-    hit, results = _find(titulo, artista, http_client)
+    hit, results = _find(titulo, artista, http_client, search_fn)
     if hit:
         return hit.content
     snippets = []
@@ -191,3 +244,18 @@ def search_chord_context(titulo: str, artista: str | None = None, http_client=No
         if title or body:
             snippets.append(f"- {title}: {body}")
     return "\n".join(snippets) or None
+
+
+def make_web_searchers(scraper_api_key: str):
+    """Retorna (sheet_finder, chord_context_searcher) usando ScraperAPI como proxy.
+
+    Uso: quando SCRAPER_API_KEY está configurado no Railway para contornar
+    bloqueio de IPs de datacenter no DuckDuckGo e nas fontes de cifras.
+    """
+    import functools
+    client = ScraperApiHttpClient(scraper_api_key)
+    search_fn = client.google_search
+    return (
+        functools.partial(find_chord_sheet, http_client=client, search_fn=search_fn),
+        functools.partial(search_chord_context, http_client=client, search_fn=search_fn),
+    )

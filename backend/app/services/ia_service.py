@@ -69,8 +69,17 @@ class IaService:
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
-        return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"], shared_songs=SharedSongService,
-                   shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
+        scraper_api_key = config.get("SCRAPER_API_KEY", "")
+        if scraper_api_key:
+            from .web_search import make_web_searchers
+            sheet_finder, web_search = make_web_searchers(scraper_api_key)
+            logger.info("web_search_backend=scraper_api")
+        else:
+            sheet_finder = find_chord_sheet
+            web_search = search_chord_context
+            logger.info("web_search_backend=duckduckgo")
+        return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"], web_search=web_search, sheet_finder=sheet_finder,
+                   shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
 
     def _shared_song_result(self, payload: ResumoHarmonicoRequest, user_id: str | None = None) -> ResumoHarmonicoResponse | None:
         if self._shared_songs is None or not payload.titulo:

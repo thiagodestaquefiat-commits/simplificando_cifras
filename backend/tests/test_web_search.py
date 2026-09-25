@@ -233,3 +233,38 @@ def test_simplificacifras_extraction_tries_pre_then_cifra_then_article(html, exp
 
 def test_article_is_ignored_for_other_sources():
     assert web_search.extract_chord_sheet("<article>texto qualquer</article>") is None
+
+
+# --- ScraperAPI ---
+
+def test_scraper_api_client_uses_search_fn():
+    """make_web_searchers retorna funções que usam o search_fn do ScraperApiHttpClient."""
+    calls = []
+
+    class FakeScraperClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(("fetch", url))
+            raise MusicSourceUnavailable("bloqueado")
+
+        def google_search(self, query, max_results=5):
+            calls.append(("search", query))
+            return []
+
+    import functools
+    client = FakeScraperClient()
+    sheet_finder = functools.partial(web_search.find_chord_sheet, http_client=client, search_fn=client.google_search)
+
+    result = sheet_finder("Música Teste", "Artista Teste")
+    assert result is None
+    # Deve ter tentado fetch direto e depois buscado pelo Google
+    fetch_calls = [c for c in calls if c[0] == "fetch"]
+    search_calls = [c for c in calls if c[0] == "search"]
+    assert len(fetch_calls) >= 1, "Deve ter tentado URL direta"
+    assert len(search_calls) >= 1, "Deve ter feito busca via search_fn"
+
+
+def test_make_web_searchers_returns_bound_functions():
+    """make_web_searchers exporta um par (sheet_finder, context_searcher) callable."""
+    sheet_finder, context_searcher = web_search.make_web_searchers("fake_key_for_test")
+    assert callable(sheet_finder)
+    assert callable(context_searcher)

@@ -72,6 +72,8 @@ class Config:
     YOUTUBE_SEARCH_RATE_LIMIT = os.getenv("YOUTUBE_SEARCH_RATE_LIMIT", "20 per minute")
     YOUTUBE_CONFIG_RATE_LIMIT = os.getenv("YOUTUBE_CONFIG_RATE_LIMIT", "60 per minute")
 
+    SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
+
     MUSIC_SOURCE_SEARCH_RATE_LIMIT = os.getenv("MUSIC_SOURCE_SEARCH_RATE_LIMIT", "30 per minute")
     SHARED_SONG_MIN_SCORE = float(os.getenv("SHARED_SONG_MIN_SCORE", "0.9"))
     SHARED_SONG_SEARCH_RATE_LIMIT = os.getenv("SHARED_SONG_SEARCH_RATE_LIMIT", "30 per minute")
