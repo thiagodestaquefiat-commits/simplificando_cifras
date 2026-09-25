@@ -187,9 +187,20 @@
   // "deslogado" passaria a se qualificar como candidata de migração
   // silenciosa (activateOwner) para a conta que logar a seguir, mesmo que
   // seja a mesma conta que acabou de sair.
-  function deactivateOwner(defaultSongs) {
+  function deactivateOwner(currentSongs, anonymousSongs) {
+    if (activeOwnerId && Array.isArray(currentSongs) && activeOwnerId !== legacyCandidateOwnerId) {
+      saveOwnerCache(activeOwnerId, currentSongs);
+    }
     activeOwnerId = null;
     legacyCandidateOwnerId = null;
+    if (arguments.length > 1) {
+      const anonymous = migrateCollection(Array.isArray(anonymousSongs) ? anonymousSongs : []).songs;
+      global.storage.set(SEED_ONLY_KEY, false);
+      global.storage.set(CURRENT_STORAGE_KEY, anonymous);
+      global.storage.set(LEGACY_STORAGE_KEY, anonymous);
+      return anonymous;
+    }
+    const defaultSongs = currentSongs;
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     if (Array.isArray(stored)) return migrateCollection(stored).songs;
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
@@ -203,6 +214,17 @@
       global.storage.set(LEGACY_OWNER_KEY, activeOwnerId);
       legacyCandidateOwnerId = null;
     }
+    return saved;
+  }
+
+  function declineActiveOwnerMigration() {
+    if (!activeOwnerId) return false;
+    const reservedOwner = String(global.storage.get(LEGACY_OWNER_KEY, "") || "").trim();
+    if (reservedOwner === activeOwnerId) global.storage.set(LEGACY_OWNER_KEY, "");
+    const caches = ownerCaches();
+    caches[activeOwnerId] = [];
+    const saved = global.storage.set(OWNER_CACHES_KEY, caches);
+    legacyCandidateOwnerId = null;
     return saved;
   }
 
@@ -284,6 +306,7 @@
     activateOwner,
     deactivateOwner,
     confirmActiveOwner,
+    declineActiveOwnerMigration,
     addOrReuse,
     update,
     remove,

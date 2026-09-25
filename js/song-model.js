@@ -115,6 +115,7 @@
       accessContext: normalizeAccessContext(source.accessContext),
       sourceInfo: normalizeSourceInfo(source.sourceInfo),
       fullChordSheet: normalizeFullChordSheet(source.fullChordSheet),
+      tablature: global.tablature?.normalize(source.tablature) || null,
       createdAt: source.createdAt || now,
       updatedAt: source.updatedAt || source.createdAt || now
     };

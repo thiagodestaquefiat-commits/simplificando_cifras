@@ -106,6 +106,18 @@
     return saved && migrationSaved;
   }
 
+  function deactivateOwner(currentEvents) {
+    if (activeOwnerId && Array.isArray(currentEvents) && activeOwnerId !== legacyCandidateOwnerId) {
+      saveOwnerCache(activeOwnerId, currentEvents);
+    }
+    activeOwnerId = null;
+    legacyCandidateOwnerId = null;
+    legacyCandidateIds = [];
+    global.storage.set(STORAGE_KEY, []);
+    global.storage.set(LEGACY_KEY, []);
+    return [];
+  }
+
   function save(events) {
     requireDependencies();
     const normalized = global.eventModel.normalizeCollection(events);
@@ -185,5 +197,5 @@
     return { uploaded, failures };
   }
 
-  global.eventRepository = Object.freeze({ storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
+  global.eventRepository = Object.freeze({ storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
 })(window);

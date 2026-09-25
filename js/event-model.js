@@ -138,6 +138,15 @@
     if (!isLeader(event, userId)) throw new Error("Somente o líder pode alterar o repertório compartilhado.");
   }
 
+  function transferLeadership(event, actorId, nextLeaderId) {
+    const normalized = create(event);
+    requireLeader(normalized, actorId);
+    const target = normalized.members.find((item) => String(item.id) === String(nextLeaderId));
+    if (!target) throw new Error("Escolha um integrante válido para assumir a liderança.");
+    if (String(target.id) === String(normalized.leaderId)) throw new Error("Este integrante já é o líder do evento.");
+    return create({ ...normalized, leaderId: target.id, updatedAt: new Date().toISOString() });
+  }
+
   function findRepertoireItem(event, itemId) {
     return event.repertoire.find((item) => String(item.id) === String(itemId));
   }
@@ -232,5 +241,5 @@
     });
   }
 
-  global.eventModel = Object.freeze({ ROLES, create, normalizeCollection, withSharedChange, canAccess, isLeader, canEditShared, requireMember, requireLeader, effectiveRepertoireItem, applyPersonalEdit, clearPersonalEdit, applySharedEdit, migrateCurrentUser });
+  global.eventModel = Object.freeze({ ROLES, create, normalizeCollection, withSharedChange, canAccess, isLeader, canEditShared, requireMember, requireLeader, transferLeadership, effectiveRepertoireItem, applyPersonalEdit, clearPersonalEdit, applySharedEdit, migrateCurrentUser });
 })(window);

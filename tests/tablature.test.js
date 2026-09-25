@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+global.window={};
+require('../js/tablature.js');
+require('../js/song-model.js');
+const tab=window.tablature.normalize({instrument:'guitar',tuning:'E A D G B E',capo:2,sections:[{title:'Intro',content:'e|---0---|\r\nB|---1---|'}]});
+assert.deepEqual(tab,{instrument:'guitar',tuning:'E A D G B E',capo:2,sections:[{title:'Intro',content:'e|---0---|\nB|---1---|'}]});
+const parsed=window.tablature.parseEditor('[Intro]\ne|---0---|\n\n[Solo]\ne|--5/7--|');
+assert.deepEqual(parsed.map(section=>section.title),['Intro','Solo']);
+assert.equal(window.tablature.serializeEditor({...tab,sections:parsed}),'[Intro]\ne|---0---|\n\n[Solo]\ne|--5/7--|');
+const song=window.songModel.create({title:'Teste',tablature:tab},{now:'2026-09-23T00:00:00.000Z'});
+assert.equal(song.tablature.sections[0].content,'e|---0---|\nB|---1---|');
+assert.equal(window.tablature.normalize({sections:[]}),null,'tablatura vazia não cria aba');
+const html=require('node:fs').readFileSync('index.html','utf8');
+assert.match(html,/setSongView\('tablature'\)/);assert.match(html,/id="simple-editor-tablature"/);assert.match(html,/tablature-scroll/);
+console.log('tablature.test.js: OK (normalização, seções, persistência e interface)');

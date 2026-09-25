@@ -24,6 +24,7 @@ global.fetch = async (url, options) => {
   if (url.endsWith("/events") && options.method === "GET") return response(200, { events: [remoteEvent()] });
   if (url.endsWith("/events/event-1") && options.method === "GET") return response(200, remoteEvent());
   if (url.endsWith("/events/event-1") && options.method === "PUT") return response(200, { ...remoteEvent(), ...JSON.parse(options.body), remoteVersion: 2 });
+  if (url.endsWith("/events/event-1/leader") && options.method === "PATCH") return response(200, { ...remoteEvent(), leaderId: JSON.parse(options.body).leaderId, remoteVersion: 2, members: [...remoteEvent().members, { id: "member-2", name: "Ana", role: "Vocal" }] });
   if (url.endsWith("/events/event-1") && options.method === "DELETE") return response(204, null);
   if (url.endsWith("/events/event-1/invitations") && options.method === "POST") return response(201, { token: "secret-invitation", name: "Ana", role: "Vocal" });
   if (url.endsWith("/invitations/secret-invitation/accept") && options.method === "POST") return response(200, remoteEvent());
@@ -89,6 +90,9 @@ require("../js/event-collaboration-client.js");
   const updated = await window.eventCollaboration.saveSharedEvent({ ...saved, title: "Culto atualizado" }, identity.user);
   assert.equal(updated.title, "Culto atualizado");
   assert.equal(requests.at(-1).options.method, "PUT");
+  const transferred = await window.eventCollaboration.transferLeadership(saved, "member-2", identity.user);
+  assert.equal(transferred.leaderId, "member-2");
+  assert.deepEqual(JSON.parse(requests.at(-1).options.body), { leaderId: "member-2", remoteVersion: 1 });
   assert.equal(await window.eventCollaboration.deleteEvent(updated, identity.user), true);
   assert.equal(requests.at(-1).options.method, "DELETE");
   await assert.rejects(

@@ -227,6 +227,16 @@
     });
   }
 
+  async function transferLeadership(event, nextLeaderId, fallback) {
+    await ensureRegistered(fallback);
+    const body = await request("/events/" + encodeURIComponent(event.id) + "/leader", {
+      method: "PATCH",
+      body: JSON.stringify({ leaderId: String(nextLeaderId), remoteVersion: event.remoteVersion })
+    });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(event.id);
+    return fromRemote(body);
+  }
+
   async function acceptInvitation(token) {
     if (!global.appAuth || !global.appAuth.getAccessToken || !global.appAuth.getAccessToken()) {
       throw new CollaborationError("Entre com sua conta para aceitar o convite.", 403, "login_necessario");
@@ -318,5 +328,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

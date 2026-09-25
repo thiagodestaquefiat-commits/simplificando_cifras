@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const memory = new Map();
 global.window = {
@@ -57,3 +59,8 @@ for(const speed of [6,9,24,30,39,60,117,120]){
   assert.equal(memory.get(preferences.STORAGE_KEY),before,'loading must not rewrite saved preferences');
 }
 for(let step=2;step<=40;step++)assert.equal(preferences.formatScrollSpeed(step*3),(step*0.05).toFixed(2).replace('.',',')+'x');
+
+const indexHtml = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8');
+assert.match(indexHtml, /stage-harmonic-summary/, 'o resumo harmônico precisa de um agrupador próprio no palco');
+assert.match(indexHtml, /stage-summary-label/, 'cada trecho precisa de identificação própria no palco');
+assert.match(indexHtml, /section\.label\|\|`Trecho \$\{sectionIndex\+1\}`/, 'trechos sem nome precisam de identificação previsível');

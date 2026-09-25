@@ -44,8 +44,17 @@ assert.equal(attrs.get('placeholder'), 'Nombre del evento');
 i18n.setLanguage('pt-BR');
 assert.equal(label.nodeValue, 'Acordes');
 assert.equal(attrs.get('placeholder'), 'Nome do evento');
+i18n.setLanguage('it');
+assert.equal(label.nodeValue, 'Accordi');
+assert.equal(i18n.translate('0 músicas'), '0 brani');
+i18n.setLanguage('fr');
+assert.equal(label.nodeValue, 'Accords');
+assert.equal(i18n.translate('1 música'), '1 chanson');
+i18n.setLanguage('de');
+assert.equal(label.nodeValue, 'Akkorde');
+assert.equal(i18n.translate('2 músicas'), '2 Songs');
 
 const html = fs.readFileSync('index.html', 'utf8');
-assert.match(html, /ui-i18n\.js\?v=1/);
+assert.match(html, /ui-i18n\.js\?v=10/);
 assert.match(html, /window\.uiI18n\?\.setLanguage\(settings\.language\)/);
 console.log('ui-i18n.test.js: OK');

@@ -134,5 +134,5 @@ function createAuthHarness(options = {}) {
   assert.equal(reloadState.authenticated, true, "getSession deve restaurar a sessão persistida após reload/reabertura");
   assert.equal(reloaded.calls.exchange.length, 0);
 
-  console.log("app-auth.test.js: OK (configuração, instância única, PKCE único, persistência, renovação, logout e redirects)");
+  console.log("app-auth.test.js: OK (Google, PKCE, persistência, renovação, logout e redirects)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

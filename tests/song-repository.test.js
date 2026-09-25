@@ -204,4 +204,23 @@ const foreignOwner = deletionReloadRepository.activateOwner("other-owner", delet
 assert.deepEqual(Array.from(foreignOwner.songs), [], "outra conta não absorve a biblioteca legada reservada");
 assert.equal(foreignOwner.awaitingRemoteOnboarding, true, "dispositivo já usado ainda consulta o estado remoto da nova conta");
 
+const privateSongs = [{ id: "private-1", title: "Somente da conta", blocos: [] }];
+deletionReloadRepository.activateOwner("private-owner", [], []);
+const signedOutSongs = deletionReloadRepository.deactivateOwner(privateSongs, []);
+assert.deepEqual(Array.from(signedOutSongs), [], "logout deve retirar a biblioteca privada da interface");
+const privateAgain = deletionReloadRepository.activateOwner("private-owner", [], []);
+assert.deepEqual(privateAgain.songs.map(song => song.title), ["Somente da conta"], "novo login deve restaurar o cache privado da conta");
+
+const guestValues = new Map([
+  ["sc_songs_v1", [{ id: "guest-1", title: "Criada sem login", blocos: [] }]],
+  ["cifras_musicas_v1", [{ id: "guest-1", title: "Criada sem login", blocos: [] }]]
+]);
+const guestRepository = repositoryContext(guestValues);
+const guestSongs = guestRepository.load([]);
+const guestOffer = guestRepository.activateOwner("new-account", guestSongs, []);
+assert.equal(guestOffer.migrationCandidate, true, "login recebe uma oferta para incorporar a biblioteca visitante");
+assert.equal(guestRepository.declineActiveOwnerMigration(), true, "usuário pode manter a biblioteca visitante separada");
+const guestAfterDecline = guestRepository.deactivateOwner([]);
+assert.deepEqual(guestAfterDecline.map(song => song.title), ["Criada sem login"], "recusar a importação preserva e restaura a biblioteca visitante");
+
 console.log("song-repository.test.js: OK (seed 86/91/106, cache parcial, migração legada e isolamento A/B)");

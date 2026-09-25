@@ -141,7 +141,7 @@ def test_event_chat_persists_across_members_and_protects_authorship(client):
     assert edited.get_json()["content"] == "Olá, equipe atualizada!"
 
 
-def test_only_creator_leads_and_can_reorder_and_remove_event(client):
+def test_leader_can_transfer_leadership_and_new_leader_receives_permissions(client):
     leader = register(client, "leader-user", "Líder")
     member = register(client, "member-user", "Integrante")
     created = client.post("/api/collaboration/events", headers=auth(leader), json=event_payload()).get_json()
@@ -149,23 +149,36 @@ def test_only_creator_leads_and_can_reorder_and_remove_event(client):
     update = {**created, "leaderId": "member-user"}
     denied_transfer = client.put("/api/collaboration/events/event-sunday", headers=auth(leader), json=update)
     assert denied_transfer.status_code == 403
-    assert denied_transfer.get_json()["erro"]["codigo"] == "lider_fixo"
-    update["leaderId"] = "leader-user"
+    assert denied_transfer.get_json()["erro"]["codigo"] == "transferencia_exclusiva"
+    transferred = client.patch(
+        "/api/collaboration/events/event-sunday/leader",
+        headers=auth(leader), json={"leaderId": "member-user", "remoteVersion": created["remoteVersion"]},
+    )
+    assert transferred.status_code == 200, transferred.get_json()
+    transferred_body = transferred.get_json()
+    assert transferred_body["leaderId"] == "member-user"
+    assert transferred_body["creatorId"] == "leader-user"
+    assert any(item["kind"] == "event.leader.transferred" for item in transferred_body["notifications"])
+    assert client.patch(
+        "/api/collaboration/events/event-sunday/leader",
+        headers=auth(leader), json={"leaderId": "leader-user", "remoteVersion": transferred_body["remoteVersion"]},
+    ).status_code == 403
+    update = {**transferred_body, "leaderId": "member-user"}
     update["repertoire"] = list(reversed(update["repertoire"]))
-    reordered = client.put("/api/collaboration/events/event-sunday", headers=auth(leader), json=update)
+    reordered = client.put("/api/collaboration/events/event-sunday", headers=auth(member), json=update)
     assert reordered.status_code == 200, reordered.get_json()
     body = reordered.get_json()
-    assert body["leaderId"] == "leader-user"
+    assert body["leaderId"] == "member-user"
     assert [item["id"] for item in body["repertoire"]] == ["item-two", "item-one"]
 
-    member_denied = client.patch(
+    old_leader_denied = client.patch(
         "/api/collaboration/events/event-sunday/repertoire/item-one/shared",
-        headers=auth(member),
+        headers=auth(leader),
         json={"key": "F", "notes": ""},
     )
-    assert member_denied.status_code == 403
-    assert client.delete("/api/collaboration/events/event-sunday", headers=auth(member)).status_code == 403
-    assert client.delete("/api/collaboration/events/event-sunday", headers=auth(leader)).status_code == 204
+    assert old_leader_denied.status_code == 403
+    assert client.delete("/api/collaboration/events/event-sunday", headers=auth(leader)).status_code == 403
+    assert client.delete("/api/collaboration/events/event-sunday", headers=auth(member)).status_code == 204
 
 
 def test_version_conflict_does_not_overwrite_shared_repertoire(client):

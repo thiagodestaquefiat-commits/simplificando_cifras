@@ -103,7 +103,7 @@
       return getState();
     } catch (error) {
       if (global.console && typeof global.console.error === "function") global.console.error("[app-auth] authentication failed", JSON.stringify(safeError(error)));
-      config = { ...config, error: "Não foi possível concluir o login com Google. Tente novamente." };
+      config = { ...config, error: "Não foi possível concluir o login. Tente novamente." };
       emit();
       return getState();
     }
@@ -159,6 +159,7 @@
     if (!client || !session || !session.user) throw new Error("Entre na sua conta para ativar as atualizações em tempo real.");
     return client.channel(String(topic || ""), options || {});
   }
+
   function removeRealtimeChannel(channel) {
     if (!client || !channel) return Promise.resolve("ok");
     return client.removeChannel(channel);

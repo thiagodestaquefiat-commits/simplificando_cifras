@@ -144,19 +144,20 @@
       aiConfidence: ["alta", "media", "baixa"].includes(value.aiConfidence) ? value.aiConfidence : null,
       sections: Array.isArray(value.sections) && value.sections.length ? value.sections.map(normalizeSection) : [normalizeSection({}, 0)],
       fullChordSheet: normalizeFullChordSheet(value.fullChordSheet || fallback.fullChordSheet),
+      tablature: global.tablature?.normalize(value.tablature || fallback.tablature) || null,
       notes: cleanText(value.notes || ""), createdAt: value.createdAt || now, updatedAt: now
     };
   }
 
   function fromLegacy(song) {
-    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet });
+    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet, tablature: song.tablature || song.editorData.tablature });
     return normalize({
       id: song && song.id, title: song && song.title, artist: song && song.artist,
       originalKey: song && song.key, currentKey: song && song.key, capo: parseCapo(song && song.capo),
       instrument: song && song.instrumento, status: "draft", source: "existing",
       sections: Array.isArray(song && song.blocos) ? song.blocos.map(legacyBlockToSection) : undefined,
       accessContext: song && song.accessContext, sourceInfo: song && song.sourceInfo,
-      fullChordSheet: song && song.fullChordSheet,
+      fullChordSheet: song && song.fullChordSheet, tablature: song && song.tablature,
       notes: song && song.notes, bpm: song && song.bpm, createdAt: song && song.createdAt
     });
   }
@@ -291,6 +292,7 @@
       accessContext: normalized.accessContext, sourceInfo: normalized.sourceInfo,
       createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
       fullChordSheet: normalized.fullChordSheet,
+      tablature: normalized.tablature,
       editorData: normalized
     };
   }

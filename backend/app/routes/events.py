@@ -681,8 +681,8 @@ def update_event(event_id: str):
     payload = _json()
     _expected_version(payload, event.version)
     members, leader_id = _members_payload(payload, g.current_user)
-    if leader_id != (event.creator_id or event.leader_id):
-        raise ApiError("lider_fixo", "Somente o criador do evento pode ser líder.", 403)
+    if leader_id != event.leader_id:
+        raise ApiError("transferencia_exclusiva", "Use a opção de transferência de liderança para trocar o líder.", 403)
     band_id = _band_id_payload(payload, members)
     event.title = _text(payload.get("title"), 160, "title", True)
     event.event_date = _text(payload.get("date"), 10, "date")
@@ -691,12 +691,33 @@ def update_event(event_id: str):
     _assign_location(event, _location_payload(payload))
     event.description = _text(payload.get("description"), 10000, "description")
     event.band_id = band_id
-    event.leader_id = event.creator_id or event.leader_id
+    event.leader_id = leader_id
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
     _replace_members(event, members)
     _replace_repertoire(event, _repertoire_payload(payload))
     _change(event, "event.updated", "atualizou o evento e o repertório compartilhado")
+    db.session.commit()
+    return jsonify(_serialize_event(event, g.current_user.id)), 200
+
+
+@blueprint.patch("/events/<event_id>/leader")
+@authenticated
+def transfer_event_leadership(event_id: str):
+    event = _event_or_404(event_id)
+    _leader(event, g.current_user.id)
+    payload = _json()
+    _expected_version(payload, event.version)
+    next_leader_id = _identifier(payload.get("leaderId"), "leaderId")
+    if next_leader_id == event.leader_id:
+        raise ApiError("lider_inalterado", "Este integrante já é o líder do evento.", 400)
+    next_leader = EventMember.query.filter_by(event_id=event.id, user_id=next_leader_id).first()
+    if next_leader is None:
+        raise ApiError("lider_invalido", "O novo líder precisa ser integrante do evento.", 400)
+    event.leader_id = next_leader_id
+    event.version += 1
+    event.updated_at = datetime.now(timezone.utc)
+    _change(event, "event.leader.transferred", f"transferiu a liderança para {next_leader.name}")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 
@@ -708,10 +729,6 @@ def create_event_invitation(event_id: str):
     _leader(event, g.current_user.id)
     if g.auth_provider != "supabase":
         raise ApiError("login_necessario", "Entre com sua conta para enviar convites.", 403)
-    if event.band_id:
-        band_role = BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first()
-        if band_role is None or band_role.access_role not in {"owner", "leader"}:
-            raise ApiError("permissao_insuficiente", "Somente líderes da equipe podem convidar novos integrantes.", 403)
     payload = _json()
     name = _text(payload.get("name"), 120, "name", True)
     role = _text(payload.get("role"), 80, "role") or "Outra"
