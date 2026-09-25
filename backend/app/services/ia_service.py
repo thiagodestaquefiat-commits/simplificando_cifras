@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from dataclasses import replace
 
 from ..errors import ApiError
@@ -6,7 +7,9 @@ from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, Re
 from .harmonic_normalizer import normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
+from .shared_songs_service import SharedSongService
 
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """Você analisa uma fonte musical uma única vez e gera duas representações da mesma música, em português do Brasil.
 Retorne somente JSON válido no formato esperado pelo ROUDY, sem Markdown ou texto adicional.
@@ -47,8 +50,10 @@ Regras obrigatórias:
 
 
 class IaService:
-    def __init__(self, provider):
+    def __init__(self, provider, shared_songs=None, shared_min_score: float = 0.9):
         self._provider = provider
+        self._shared_songs = shared_songs
+        self._shared_min_score = shared_min_score
 
     @classmethod
     def from_config(cls, config):
@@ -61,7 +66,19 @@ class IaService:
             )
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
-        return cls(provider)
+        return cls(provider, shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
+
+    def _shared_song_result(self, payload: ResumoHarmonicoRequest) -> ResumoHarmonicoResponse | None:
+        if self._shared_songs is None or not payload.titulo:
+            return None
+        try:
+            match = self._shared_songs.search(payload.titulo, payload.artista)
+            if match is None or match.score < self._shared_min_score:
+                return None
+            return ResumoHarmonicoResponse.model_validate(match.song.song_data)
+        except Exception:  # catálogo é otimização: qualquer falha cai para a IA
+            logger.warning("shared_song_lookup_failed", exc_info=True)
+            return None
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
@@ -70,6 +87,9 @@ class IaService:
         has_online_source = payload.tipo == "pesquisa" and online_source is not None and extracted is not None and extracted.text
         source_text = None
         if payload.tipo == "pesquisa" and not has_online_source:
+            cached = self._shared_song_result(payload)
+            if cached is not None:
+                return cached
             user_prompt = (
                 "Gere somente um resumo harmônico por conhecimento do modelo, sem letra ou frases-guia.\n"
                 f"Título: {payload.titulo}\n"
