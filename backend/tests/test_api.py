@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import AcordePosicionado, CifraCompleta, LinhaCifraCompleta, ResumoEstruturado, SecaoCifraCompleta, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.providers import (
     ProviderInvalidResponse,
     ProviderRateLimit,
@@ -117,6 +117,140 @@ def test_research_requires_explicit_source_selection(client):
     )
     assert response.status_code == 400
     assert response.get_json()["erro"]["codigo"] == "fonte_nao_selecionada"
+
+
+class SnippetDDGS:
+    """Busca web simulada que devolve um resultado (sem página do Cifra Club)."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def text(self, query, **kwargs):
+        return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
+
+
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_research_model_knowledge_fallback_is_explicit_and_keeps_full_chord_sheet(generate, client, monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
+    result = sample_result()
+    result.confianca = "alta"
+    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra gerada pelo modelo")
+    result.harmonicSummary.blocos[0].fraseGuia = "Trecho inventado que deve sumir"
+    generate.return_value = result
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["fullChordSheet"]["content"] == "C G\nLetra gerada pelo modelo"
+    assert data["fullChordSheet"]["source"] == "model_knowledge"
+    assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] is None
+    assert data["confianca"] == "media"
+    assert any("exige revisão humana" in item for item in data["observacoes"])
+    assert generate.call_args.kwargs["context"]["max_output_tokens"] == client.application.config["DEEPSEEK_MAX_OUTPUT_TOKENS"]
+    assert "Gere a cifra completa com letra e acordes" in generate.call_args.args[1]
+    assert "fullChordSheet deve ser null" not in generate.call_args.args[1]
+
+
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_sends_web_search_results_as_context(generate, client, monkeypatch):
+    class FakeDDGS:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def text(self, query, **kwargs):
+            assert "Canção teste" in query and "Artista" in query and "cifra" in query
+            assert "site:" in query and " OR " not in query
+            return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", FakeDDGS)
+    generate.return_value = sample_result()
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    prompt = generate.call_args.args[1]
+    assert "Resultados de busca na web" in prompt
+    assert "Não altere o tom original da música." in prompt
+    assert "Canção teste - Cifra: Db B4 Gb/Bb letra" in prompt
+
+
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_still_works_when_web_search_fails(generate, client):
+    result = sample_result()
+    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra inventada")
+    generate.return_value = result
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    prompt = generate.call_args.args[1]
+    assert "Resultados de busca na web" not in prompt
+    assert "fullChordSheet deve ser null" in prompt
+    data = response.get_json()
+    assert data["fullChordSheet"] is None
+    assert data["harmonicSummary"]["blocos"]
+    assert "Nenhuma fonte encontrada. Apenas resumo harmônico disponível. Use Arquivo ou foto para cifra completa." in data["observacoes"]
+    assert generate.call_args.kwargs["context"]["reasoning_effort"] == "low"
+
+
+@pytest.mark.parametrize("sections, expected", [
+    ([SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
+        letra="Linha gerada pelo modelo", acordes=[AcordePosicionado(acorde="Db", posicao=0)])])], "Linha gerada pelo modelo"),
+    ([], None),
+])
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_model_knowledge_rebuilds_placeholder_content_from_sections(generate, sections, expected, client, monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
+    result = sample_result()
+    result.fullChordSheet = CifraCompleta(source="user_text", content="[reconstruir]", sections=sections)
+    generate.return_value = result
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    sheet = response.get_json()["fullChordSheet"]
+    if expected is None:
+        assert sheet is None
+    else:
+        assert sheet["source"] == "model_knowledge"
+        assert "[reconstruir]" not in sheet["content"]
+        assert expected in sheet["content"] and "Db" in sheet["content"]
+
+
+@pytest.mark.parametrize("payload", [
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "sourceProvider": "licensed", "sourceId": "one"},
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "conteudo": "https://malicioso.example"},
+    {"tipo": "texto", "conteudo": "C G", "modoGeracao": "conhecimento_modelo"},
+])
+def test_model_knowledge_mode_rejects_sources_urls_and_other_flows(payload, client):
+    response = client.post("/api/resumo-harmonico", json=payload, headers=auth_headers(client))
+    assert response.status_code == 400
+    assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
 
 
 def test_source_search_returns_ranked_options_without_content(client):
