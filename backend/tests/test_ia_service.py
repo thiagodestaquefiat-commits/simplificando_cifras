@@ -150,6 +150,50 @@ def test_multipage_visual_pdf_pipeline_returns_summary_and_private_full_sheet():
     assert result.fullChordSheet.content == "[Refrão]\nC        G\nDigno é o Senhor"
 
 
+def test_shared_catalog_skips_provider_even_with_online_source():
+    """Catálogo compartilhado tem prioridade sobre qualquer fonte online para evitar chamadas desnecessárias ao DeepSeek."""
+    from app.schemas.resumo_harmonico import ResumoEstruturado, TrechoHarmonico
+    from app.services.content_extractor import ExtractedContent
+    from unittest.mock import MagicMock
+
+    provider = FakeProvider()
+    cached_response = ResumoHarmonicoResponse(
+        titulo="Wonderwall",
+        artista="Oasis",
+        tom="Fa#m",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["F#m", "A", "E"], fraseGuia="Today is gonna be")]),
+        observacoes=["Resumo do catálogo compartilhado; revise antes de usar."],
+        confianca="media",
+    )
+
+    fake_shared = MagicMock()
+    fake_shared.search_personal.return_value = None
+    match = MagicMock()
+    match.score = 0.95
+    match.song.song_data = cached_response.model_dump(mode="json")
+    fake_shared.search.return_value = match
+
+    online_source = MagicMock()
+    online_source.content = "F#m A E\nToday is gonna be the day"
+    extracted = ExtractedContent("text", online_source.content, "text/plain")
+
+    service = IaService(provider, shared_songs=fake_shared)
+    request = ResumoHarmonicoRequest(
+        tipo="pesquisa",
+        titulo="Wonderwall",
+        artista="Oasis",
+        sourceProvider="simplificacifras",
+        sourceId="wonderwall-oasis",
+    )
+
+    result = service.generate(request, extracted=extracted, online_source=online_source)
+
+    # Provedor NÃO deve ser chamado quando catálogo compartilhado tem a música
+    assert provider.user_prompt == ""
+    assert result.titulo == "Wonderwall"
+    assert result.artista == "Oasis"
+
+
 def test_research_uses_web_chord_sheet_in_text_flow():
     from app.services.web_search import ChordSheetHit
 

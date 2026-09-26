@@ -105,7 +105,10 @@ class IaService:
         knowledge_only = payload.tipo == "pesquisa" and payload.modoGeracao == "conhecimento_modelo"
         if payload.tipo == "pesquisa" and not has_online_source and not knowledge_only:
             raise ApiError("fonte_nao_selecionada", "Uma fonte autorizada ou o modo explícito de conhecimento do modelo é obrigatório.", 400)
-        if knowledge_only:
+        # Consulta o catálogo compartilhado antes de qualquer chamada à IA, inclusive quando o usuário
+        # selecionou uma fonte online. Se outro usuário já salvou esta música com alta confiança, retorna
+        # direto sem consumir tokens do DeepSeek.
+        if payload.tipo == "pesquisa":
             cached = self._shared_song_result(payload, user_id)
             if cached is not None:
                 return cached

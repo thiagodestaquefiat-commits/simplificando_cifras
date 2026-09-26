@@ -88,7 +88,7 @@ class SharedSongService:
                 {"query": f"{title} {artist}".strip(), "limit": MAX_CANDIDATES},
             ).scalars().all()
             return SharedSong.query.filter(SharedSong.id.in_(ids)).all() if ids else []
-        # Fallback sem FULLTEXT (SQLite em testes/dev local).
+        # Fallback LIKE para PostgreSQL e SQLite (sem índice FULLTEXT).
         return SharedSong.query.filter(SharedSong.normalized_title.contains(title)).limit(MAX_CANDIDATES).all()
 
     @classmethod
