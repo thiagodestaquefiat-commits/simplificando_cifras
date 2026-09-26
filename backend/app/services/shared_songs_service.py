@@ -188,18 +188,27 @@ class SharedSongService:
                 chords = [chord for chord in chords if chord][:64]
                 if chords:
                     blocos.append({"acordes": chords, "repeticoes": line.get("repeticoes"), "fraseGuia": None, "secao": label})
-        # Fallback: formato legado com campo "blocos" direto na raiz (músicas antigas)
+        # Fallback: formato legado com campo "blocos" direto na raiz (músicas antigas).
+        # Cada bloco tem "c" (string de acordes separados por espaço) e "l" (letra/frase).
         if not blocos:
             for bloco in song_data.get("blocos") or []:
                 if not isinstance(bloco, dict):
                     continue
-                acordes = bloco.get("acordes") or []
-                if isinstance(acordes, list) and acordes:
+                # Formato legado: "c" é string com acordes separados por espaço
+                c = bloco.get("c") or bloco.get("acordes") or ""
+                if isinstance(c, str):
+                    acordes = [a.strip() for a in c.split() if a.strip()]
+                elif isinstance(c, list):
+                    acordes = [str(a).strip() for a in c if str(a).strip()]
+                else:
+                    acordes = []
+                if acordes:
+                    frase = bloco.get("l") or bloco.get("fraseGuia") or None
                     blocos.append({
-                        "acordes": [str(a).strip() for a in acordes if str(a).strip()][:64],
-                        "repeticoes": bloco.get("repeticoes"),
-                        "fraseGuia": bloco.get("fraseGuia"),
-                        "secao": bloco.get("secao"),
+                        "acordes": acordes[:64],
+                        "repeticoes": bloco.get("r") or bloco.get("repeticoes"),
+                        "fraseGuia": str(frase).strip()[:100] if frase else None,
+                        "secao": bloco.get("s") or bloco.get("secao"),
                     })
         if not blocos:
             return None
