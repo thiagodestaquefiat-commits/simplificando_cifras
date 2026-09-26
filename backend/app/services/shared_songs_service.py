@@ -174,7 +174,7 @@ class SharedSongService:
 
     @staticmethod
     def _summary_from_song(song_data: dict) -> dict | None:
-        """Converte a música salva do editor em resumo harmônico sem letra nem cifra completa."""
+        """Converte a música salva no editor em resumo harmônico com cifra completa para o catálogo compartilhado."""
         sections = song_data.get("sections")
         if not isinstance(sections, list):
             sections = (song_data.get("editorData") or {}).get("sections")
@@ -191,6 +191,20 @@ class SharedSongService:
         if not blocos:
             return None
         capo = song_data.get("capo")
+        # Inclui a cifra completa (letra + acordes) no catálogo compartilhado,
+        # igual ao modelo do Cifra Club: cada usuário contribui com a cifra completa.
+        full_sheet = song_data.get("fullChordSheet")
+        full_sheet_payload = None
+        if isinstance(full_sheet, dict):
+            content = str(full_sheet.get("content") or "").strip()
+            source = full_sheet.get("source")
+            valid_sources = {"user_upload", "user_text", "model_knowledge", "web_source"}
+            if content and source in valid_sources:
+                full_sheet_payload = {
+                    "source": source,
+                    "content": content[:50000],
+                    "sections": full_sheet.get("sections") or [],
+                }
         try:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
@@ -198,9 +212,9 @@ class SharedSongService:
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
                 "capotraste": capo if isinstance(capo, int) and 0 <= capo <= 12 else None,
                 "harmonicSummary": {"blocos": blocos[:40]},
-                "observacoes": ["Resumo do catálogo compartilhado; revise antes de usar."],
+                "observacoes": ["Cifra do catálogo compartilhado; revise antes de usar."],
                 "confianca": "media",
-                "fullChordSheet": None,
+                "fullChordSheet": full_sheet_payload,
             })
         except ValidationError:
             return None
