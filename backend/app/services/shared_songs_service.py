@@ -222,7 +222,7 @@ class SharedSongService:
 
     @classmethod
     def contribute(cls, song_data, user_id) -> SharedSong | None:
-        if not isinstance(song_data, dict) or not song_data.get("aiGenerated"):
+        if not isinstance(song_data, dict):
             return None
         source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
         if source_type not in SHAREABLE_SOURCE_TYPES:

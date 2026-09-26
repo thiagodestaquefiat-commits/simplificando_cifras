@@ -36,15 +36,15 @@ def test_ai_song_is_contributed_once_and_searchable(client, app):
     assert client.get("/api/shared-songs/search?title=", headers=auth(token)).status_code == 400
 
 
-def test_only_ai_generated_songs_are_shared(client, app):
-    """Músicas com aiGenerated=False nunca entram no catálogo; qualquer fonte AI-gerada (upload, texto, online, manual) entra."""
+def test_any_source_type_goes_to_catalog(client, app):
+    """Qualquer fonte válida (upload, manual, texto, online) entra no catálogo, independente de aiGenerated."""
     token = register(client, "shared-b", "B")
-    # aiGenerated=True + upload → DEVE entrar no catálogo
+    # upload → DEVE entrar no catálogo
     client.put("/api/library/songs/up", headers=auth(token), json={"songData": ai_song(sourceInfo={"type": "upload"})})
-    # aiGenerated=False → NÃO deve entrar no catálogo
+    # manual + aiGenerated=False → TAMBÉM deve entrar no catálogo (colaboração estilo Cifra Club)
     client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Outra")})
     with app.app_context():
-        assert SharedSong.query.count() == 1
+        assert SharedSong.query.count() == 2
 
 
 class ExplodingProvider:
