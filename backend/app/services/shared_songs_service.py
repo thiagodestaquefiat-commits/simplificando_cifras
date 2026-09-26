@@ -231,10 +231,20 @@ class SharedSongService:
         normalized_artist = normalize_text(song_data.get("artist")) or None
         if not normalized_title:
             return None
-        if SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first():
-            return None
         summary = cls._summary_from_song(song_data)
         if summary is None:
+            return None
+        new_has_full = summary.get("fullChordSheet") is not None
+        existing = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
+        if existing is not None:
+            # Atualiza o catálogo apenas se a nova versão é mais completa:
+            # tem cifra completa e a versão existente não tem.
+            existing_has_full = (existing.song_data or {}).get("fullChordSheet") is not None
+            if not existing_has_full and new_has_full:
+                existing.song_data = summary
+                existing.song_key = summary.get("tom")
+                existing.capo = str(summary["capotraste"]) if summary.get("capotraste") is not None else None
+                return existing
             return None
         song = SharedSong(
             id=str(uuid.uuid4()),
