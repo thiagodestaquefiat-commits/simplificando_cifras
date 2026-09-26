@@ -188,6 +188,19 @@ class SharedSongService:
                 chords = [chord for chord in chords if chord][:64]
                 if chords:
                     blocos.append({"acordes": chords, "repeticoes": line.get("repeticoes"), "fraseGuia": None, "secao": label})
+        # Fallback: formato legado com campo "blocos" direto na raiz (músicas antigas)
+        if not blocos:
+            for bloco in song_data.get("blocos") or []:
+                if not isinstance(bloco, dict):
+                    continue
+                acordes = bloco.get("acordes") or []
+                if isinstance(acordes, list) and acordes:
+                    blocos.append({
+                        "acordes": [str(a).strip() for a in acordes if str(a).strip()][:64],
+                        "repeticoes": bloco.get("repeticoes"),
+                        "fraseGuia": bloco.get("fraseGuia"),
+                        "secao": bloco.get("secao"),
+                    })
         if not blocos:
             return None
         capo = song_data.get("capo")
