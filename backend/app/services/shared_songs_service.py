@@ -16,9 +16,10 @@ from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraComple
 from .harmonic_normalizer import render_full_chord_sheet
 
 MAX_CANDIDATES = 10
-# Só entram no catálogo resumos gerados por pesquisa (sem fonte do usuário);
-# uploads e textos colados continuam privados.
-SHAREABLE_SOURCE_TYPES = {"manual", "online"}
+# Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
+# contém apenas acordes (sem letra nem cifra completa), então não há problema
+# de privacidade independentemente da fonte (upload, texto, online ou manual).
+SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text", "ai_knowledge"}
 
 
 def canonical_section(value) -> str | None:
