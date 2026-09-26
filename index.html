@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=4">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#1a1a2e;--bg2:#22223b;--bg3:#2d2d44;
@@ -550,6 +550,11 @@ html[data-theme="light"]:not(.a11y-high-contrast) .song-player-expanded{color:#f
 .login-gate{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 15%,#142b4a 0,#07111f 48%,#03070d 100%);color:#f8fafc}.login-gate[hidden]{display:none}.login-gate-card{width:min(100%,390px);text-align:center}.login-gate-logo{width:104px;height:104px;margin:0 auto 20px;border-radius:26px;box-shadow:0 18px 50px rgba(0,0,0,.38)}.login-gate h1{font-size:34px;letter-spacing:1.5px}.login-gate-tagline{margin:8px 0 34px;color:#a9b8cb;font-size:14px;line-height:1.5}.login-gate-actions{display:grid;gap:16px}.login-google-button{display:flex;min-height:54px;padding:0 20px;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(148,163,184,.34);border-radius:14px;background:#fff;color:#172033;font:800 14px/1 inherit;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.22)}.login-google-mark{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 0 50%,#fbbc05 0 75%,#ea4335 0);color:#fff;font-size:14px}.login-guest-button{justify-self:center;border:0;border-bottom:1px solid currentColor;background:transparent;color:#b7c6d9;font:600 12px/1.5 inherit;cursor:pointer}.login-gate-status{min-height:18px;margin-top:18px;color:#8393a8;font-size:11px}.login-gate-actions[hidden]{display:none}
 html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear-gradient(180deg,#172337,#1a293d);color:#fff}
 @media(max-width:360px){.tuner-panel{padding:11px}.tuner-strings{gap:3px}.tuner-string{padding-inline:1px}.tuner-string strong{font-size:10px}}
+/* Fonte musical padrão (monoespaçada) para Resumo Harmônico e Letra + Cifras, no estudo e no palco */
+:root{--music-font:'Roboto Mono',ui-monospace,'SF Mono',Menlo,Consolas,'Droid Sans Mono','Liberation Mono',monospace}
+.wa-block .chord-line,.wa-block .letra-linha,.medley-block .chord-line,.medley-block .letra-linha,.stage-structure-card span{font-family:var(--music-font)}
+.wa-block .chord-line,.medley-block .chord-line{letter-spacing:0;font-weight:700}
+.wa-block .letra-linha,.medley-block .letra-linha{font-weight:500}
 /* Modo Palco — Resumo Harmônico em blocos compactos, na mesma escala do modo estudo */
 .stage-mode .stage-harmonic-summary{gap:10px}
 .stage-mode .stage-harmonic-summary .wa-block{padding:10px 14px 12px;border-left-width:3px;border-radius:12px;box-shadow:none}
@@ -558,7 +563,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 .stage-mode .stage-harmonic-summary .letra-linha{font-size:calc(var(--stage-lyric-size,26px) * .68);line-height:1.3;margin:2px 0 0}
 /* Letra + Cifras — fonte monoespaçada para alinhar acorde e sílaba, linhas compactas e ajuste automático à largura */
 .full-chord-sheet{--full-sheet-size:15px;padding:14px 12px;overflow-x:auto}
-.full-chord-sheet .full-chord-line{font-family:ui-monospace,'SF Mono',Menlo,Consolas,'Roboto Mono','Droid Sans Mono','Liberation Mono',monospace;font-size:var(--full-sheet-size);font-weight:400;line-height:1.3;min-height:1.3em;white-space:pre;overflow-wrap:normal}
+.full-chord-sheet .full-chord-line{font-family:var(--music-font);font-size:var(--full-sheet-size);font-weight:400;line-height:1.3;min-height:1.3em;white-space:pre;overflow-wrap:normal}
 .full-chord-sheet .full-chord-line.is-chord{margin-top:.5em;font-weight:700}
 .full-chord-sheet .full-chord-line.is-empty{min-height:.6em;line-height:.6}
 .full-chord-sheet .full-chord-line.is-section{margin:1.1em 0 .1em;font-family:Inter,Arial,sans-serif;font-size:11.5px;line-height:1.3;white-space:normal}

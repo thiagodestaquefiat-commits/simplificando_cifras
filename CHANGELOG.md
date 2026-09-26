@@ -5,6 +5,7 @@
 - Modo Palco: blocos do Resumo Harmônico mais compactos, na mesma escala do modo estudo (menos espaço interno, sem o rótulo azul do trecho, acordes e letra proporcionais ao tamanho de fonte escolhido).
 - Letra + Cifras: fonte monoespaçada para o acorde ficar exatamente sobre a sílaba, linhas mais juntas (acorde colado à letra, respiro entre versos) e tamanho ajustado automaticamente para a linha mais longa caber na tela sem quebrar.
 - Modo Palco: seletor Resumo Harmônico / Letra + Cifras disponível no palco; a escolha é mantida ao entrar no palco e ao passar de uma música para a outra.
+- Fonte padrão monoespaçada (Roboto Mono, com fonte monoespaçada do sistema como reserva offline) no Resumo Harmônico e em Letra + Cifras, no estudo e no palco.
 - No palco, o ajuste de largura parte do tamanho de fonte escolhido pelo músico (A−/A+) e nunca fica abaixo de 14px.
 
 ## 0.7.1 — Mapa interativo nos eventos
