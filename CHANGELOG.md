@@ -1,5 +1,11 @@
 # Changelog
 
+## Não lançado — Leitura no palco e Letra + Cifras
+
+- Modo Palco: blocos do Resumo Harmônico mais compactos, na mesma escala do modo estudo (menos espaço interno, rótulo menor, acordes e letra proporcionais ao tamanho de fonte escolhido).
+- Letra + Cifras: fonte monoespaçada para o acorde ficar exatamente sobre a sílaba, linhas mais juntas (acorde colado à letra, respiro entre versos) e tamanho ajustado automaticamente para a linha mais longa caber na tela sem quebrar.
+- No palco, o ajuste de largura parte do tamanho de fonte escolhido pelo músico (A−/A+) e nunca fica abaixo de 14px.
+
 ## 0.7.1 — Mapa interativo nos eventos
 
 - Substitui a prévia estática por mapa interativo MapLibre com tiles Geoapify quando a chave pública restrita está configurada.
