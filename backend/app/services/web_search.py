@@ -19,7 +19,7 @@ MAX_PAGE_CHARS = 20000
 TIMEOUT_SECONDS = 8
 SIMPLIFICACIFRAS_HOSTS = ("simplificacifras.com.br", "www.simplificacifras.com.br")
 CIFRACLUB_HOSTS = ("cifraclub.com.br", "www.cifraclub.com.br")
-CHORD_CLASSES = {"cifra", "chord"}
+CHORD_CLASSES = {"cifra", "chord", "cifra_mono", "g-song", "song-chords"}
 SKIPPED_TAGS = {"script", "style", "noscript"}
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 
@@ -116,7 +116,9 @@ class ScraperApiHttpClient:
     def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",)) -> tuple[str, str]:
         # render=true é necessário para SPAs (ex: Cifra Club em React) que carregam acordes via JS.
         # Custa 5 créditos/req no ScraperAPI em vez de 1, mas garante HTML completo.
-        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true"
+        # render=true renderiza JavaScript (SPA). wait=3000 aguarda 3s após o JS executar
+        # para garantir que o React do Cifra Club termine de montar os acordes no DOM.
+        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true&wait=3000"
         try:
             response = self._client.get(proxy_url)
         except httpx.TimeoutException as error:
@@ -177,9 +179,11 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
         return None
     sheet = extract_chord_sheet(html, include_article=include_article)
     if not sheet:
-        # Log primeiros 500 chars do HTML para diagnóstico de extração falha
-        preview = (html or "")[:500].replace("\n", " ")
+        # Log primeiros 1000 chars do HTML para diagnóstico de extração falha
+        preview = (html or "")[:1000].replace("\n", " ")
         logger.warning("%s_extract_empty url=%s html_len=%d html_preview=%r", name, url, len(html or ""), preview)
+    else:
+        logger.info("%s_extract_ok url=%s sheet_len=%d sheet_preview=%r", name, url, len(sheet), sheet[:200])
     return sheet
 
 
