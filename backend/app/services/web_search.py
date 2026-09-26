@@ -116,9 +116,10 @@ class ScraperApiHttpClient:
     def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",)) -> tuple[str, str]:
         # render=true é necessário para SPAs (ex: Cifra Club em React) que carregam acordes via JS.
         # Custa 5 créditos/req no ScraperAPI em vez de 1, mas garante HTML completo.
-        # render=true renderiza JavaScript (SPA). wait=3000 aguarda 3s após o JS executar
-        # para garantir que o React do Cifra Club termine de montar os acordes no DOM.
-        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true&wait=3000"
+        # render=true renderiza JavaScript (SPA React do Cifra Club).
+        # country_code=br usa proxies residenciais brasileiros (melhor taxa de sucesso em sites .com.br).
+        # wait=3000 aguarda 3s após o JS executar para o React terminar de montar os acordes no DOM.
+        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true&country_code=br&wait=3000"
         try:
             response = self._client.get(proxy_url)
         except httpx.TimeoutException as error:
