@@ -19,6 +19,36 @@ QUALITY_RE = re.compile(
 )
 
 
+# Qualidades que o frontend aceita (espelho de ALIASES em js/instruments/multi-instrument-chord-library.js).
+# Qualquer acorde enviado ao cliente precisa caber aqui, senão assertResponse() rejeita a resposta
+# inteira com "O servidor retornou um acorde inválido".
+CLIENT_QUALITIES = frozenset({
+    "", "maj", "maior", "m", "min", "menor", "-", "5", "6", "m6", "7", "dom",
+    "maj7", "M7", "7M", "7m", "7+", "Δ7", "m7", "min7", "mMaj7", "m(maj7)",
+    "9", "maj9", "M9", "m9", "add9", "(add9)", "11", "m11", "m7(11)", "13",
+    "2", "sus2", "4", "sus", "sus4", "dim", "°", "o", "m7(b5)", "m7b5", "ø",
+    "aug", "+", "#5", "(#5)",
+})
+# Notação brasileira comum (Cifra Club etc.) que o backend reconhece, mas o frontend ainda não:
+# converte para o equivalente exato quando existe, senão para o acorde-base mais próximo.
+CLIENT_EQUIVALENTS = {
+    "7(9)": "9", "7(11)": "11", "7(13)": "13",
+    "maj7(9)": "maj9", "m7(9)": "m9",
+    "7(4)": "sus4",
+    "m(add9)": "m", "m13": "m7",
+}
+
+
+def _client_quality(quality: str) -> str:
+    if quality in CLIENT_QUALITIES:
+        return quality
+    if quality in CLIENT_EQUIVALENTS:
+        return CLIENT_EQUIVALENTS[quality]
+    for prefix in ("maj7", "m7", "7"):
+        if quality.startswith(prefix + "("):
+            return prefix
+    return quality
+
 def _shown_root(value: str) -> str:
     return value[0].upper() + value[1:]
 
@@ -54,6 +84,7 @@ def _parse_chord(value: str) -> tuple[str, str]:
         "m7M": "mMaj7",
     }
     canonical_aliases = {**display_aliases, "2": "sus2"}
+    quality = _client_quality(quality)
     display_quality = quality
     canonical_quality = canonical_aliases.get(quality, quality)
     shown_bass = f"/{_shown_root(match.group('bass'))}" if match.group("bass") else ""
@@ -77,6 +108,28 @@ def split_chord_token(value: str) -> list[str]:
 def normalize_chord(value: str) -> str:
     """Valida e normaliza aliases sem substituir a grafia válida do usuário."""
     return _parse_chord(value)[0]
+
+
+def client_simplification(value: str) -> str | None:
+    """Se o acorde precisou ser adaptado ao vocabulário do app, devolve a grafia adaptada."""
+    compact = str(value or "").strip().replace("♯", "#").replace("♭", "b").replace(" ", "").rstrip(".")
+    match = CHORD_RE.fullmatch(compact)
+    if not match or _client_quality(match.group("quality") or "") == (match.group("quality") or ""):
+        return None
+    try:
+        return normalize_chord(compact)
+    except ValueError:
+        return None
+
+
+def is_client_chord(value: str) -> bool:
+    """Replica a validação do frontend (parseChord) para barrar acordes antes de responder."""
+    compact = str(value or "").strip().replace("♯", "#").replace("♭", "b").replace(" ", "")
+    match = re.fullmatch(r"([A-Ga-g][#b]?)(.*?)(?:/([A-Ga-g][#b]?))?", compact)
+    if not match:
+        return False
+    quality = match.group(2)
+    return quality in CLIENT_QUALITIES or quality.casefold() in {item.casefold() for item in CLIENT_QUALITIES}
 
 
 def canonicalize_chord(value: str) -> str:
@@ -345,6 +398,19 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
             normalized.observacoes.append(f"Tom não validado: {normalized.tom}")
             normalized.tom = None
 
+    simplified = {}
+    for trecho in normalized.harmonicSummary.blocos:
+        for chord in trecho.acordes:
+            adapted = client_simplification(chord)
+            if adapted:
+                simplified[str(chord).strip()] = adapted
+    for section in (normalized.fullChordSheet.sections if normalized.fullChordSheet else []):
+        for line in section.linhas:
+            for item in line.acordes:
+                adapted = client_simplification(item.acorde)
+                if adapted:
+                    simplified[str(item.acorde).strip()] = adapted
+
     for trecho in normalized.harmonicSummary.blocos:
         chords = []
         for chord in trecho.acordes:
@@ -447,6 +513,11 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         normalized.observacoes.append(
             "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(invalid)))
         )
+    if simplified:
+        normalized.observacoes.append(
+            "Acordes adaptados ao formato do app: "
+            + ", ".join(f"{original} → {adapted}" for original, adapted in sorted(simplified.items()))
+        )
 
     if source_type == "pesquisa":
         if normalized.confianca == "alta":
@@ -460,3 +531,49 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
 
     normalized.observacoes = list(dict.fromkeys(normalized.observacoes))[:20]
     return normalized
+
+
+def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
+    """Última barreira antes de responder: todo acorde precisa passar no parseChord do frontend.
+
+    Um único acorde fora do vocabulário faz o frontend descartar a resposta inteira, então aqui
+    adaptamos o que for possível e omitimos o resto, registrando em observacoes.
+    Vale também para respostas vindas do catálogo compartilhado, que não passam por normalize_response.
+    """
+    fixed = response.model_copy(deep=True)
+    dropped = []
+
+    def adapt(chord: str) -> str | None:
+        if is_client_chord(chord):
+            return chord
+        try:
+            candidate = normalize_chord(chord)
+        except ValueError:
+            candidate = None
+        if candidate and is_client_chord(candidate):
+            return candidate
+        dropped.append(str(chord))
+        return None
+
+    if fixed.tom and not is_client_chord(fixed.tom):
+        fixed.tom = adapt(fixed.tom)
+    for trecho in fixed.harmonicSummary.blocos:
+        trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
+    fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
+    if fixed.fullChordSheet:
+        for section in fixed.fullChordSheet.sections:
+            for line in section.linhas:
+                kept = []
+                for item in line.acordes:
+                    chord = adapt(item.acorde)
+                    if chord:
+                        item.acorde = chord
+                        kept.append(item)
+                line.acordes = kept
+    if dropped:
+        note = "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(dropped)))
+        if note not in fixed.observacoes:
+            fixed.observacoes = (fixed.observacoes + [note])[:20]
+    if not fixed.harmonicSummary.blocos:
+        raise ApiError("resultado_nao_confiavel", "Não foi possível produzir um resumo harmônico confiável.", 422)
+    return fixed

@@ -4,7 +4,7 @@ from dataclasses import replace
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
-from .harmonic_normalizer import normalize_response, render_full_chord_sheet
+from .harmonic_normalizer import ensure_client_chords, normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
 from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
@@ -70,14 +70,10 @@ class IaService:
         except ProviderError as error:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         scraper_api_key = config.get("SCRAPER_API_KEY", "")
-        if scraper_api_key:
-            from .web_search import make_web_searchers
-            sheet_finder, web_search = make_web_searchers(scraper_api_key)
-            logger.info("web_search_backend=scraper_api")
-        else:
-            sheet_finder = find_chord_sheet
-            web_search = search_chord_context
-            logger.info("web_search_backend=duckduckgo")
+        from .web_search import make_web_searchers
+        # Um par de funções por requisição, compartilhando a mesma busca (sem scraping duplicado).
+        sheet_finder, web_search = make_web_searchers(scraper_api_key)
+        logger.info("web_search_backend=%s", "scraper_api" if scraper_api_key else "duckduckgo")
         return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"], web_search=web_search, sheet_finder=sheet_finder,
                    shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
 
@@ -87,16 +83,19 @@ class IaService:
         try:
             personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
             if personal is not None:
-                return ResumoHarmonicoResponse.model_validate(personal.summary)
+                return ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary))
             match = self._shared_songs.search(payload.titulo, payload.artista)
             if match is None or match.score < self._shared_min_score:
                 return None
-            return ResumoHarmonicoResponse.model_validate(match.song.song_data)
+            return ensure_client_chords(ResumoHarmonicoResponse.model_validate(match.song.song_data))
         except Exception:  # catálogo é otimização: qualquer falha cai para a IA
             logger.warning("shared_song_lookup_failed", exc_info=True)
             return None
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
+        return ensure_client_chords(self._generate(payload, extracted, request_id, online_source, user_id))
+
+    def _generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         if extracted and extracted.items:
             extracted = replace(extracted, items=tuple(replace(item, text=clean_musical_text(item.text, (payload.titulo, payload.artista)))
                 if item.text is not None else item for item in extracted.items))
@@ -118,7 +117,9 @@ class IaService:
             if web_hit and clean_musical_text(web_hit.content, (payload.titulo, payload.artista)):
                 knowledge_only = False
                 has_online_source = True
+                logger.info("ai_search_source=web url=%s", web_hit.url)
             else:
+                logger.info("ai_search_source=%s", "web_empty_after_cleanup" if web_hit else "model_only")
                 web_hit = None
         if knowledge_only:
             source_text = None

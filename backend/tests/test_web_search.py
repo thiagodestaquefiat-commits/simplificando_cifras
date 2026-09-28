@@ -268,3 +268,37 @@ def test_make_web_searchers_returns_bound_functions():
     sheet_finder, context_searcher = web_search.make_web_searchers("fake_key_for_test")
     assert callable(sheet_finder)
     assert callable(context_searcher)
+
+
+def test_make_web_searchers_shares_one_lookup_between_finder_and_context():
+    """Sem cifra encontrada, o contexto não pode refazer todo o scraping (dobrava créditos do ScraperAPI)."""
+    calls = []
+
+    class FakeClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(("fetch", url))
+            raise MusicSourceUnavailable("bloqueado")
+
+    def fake_search(query):
+        calls.append(("search", query))
+        return [{"href": "https://example.com/x", "title": "Título", "body": "trecho"}]
+
+    sheet_finder, context_searcher = web_search.make_web_searchers("k", http_client=FakeClient(), search_fn=fake_search)
+    assert sheet_finder("Música", "Artista") is None
+    first_round = len(calls)
+    assert context_searcher("Música", "Artista") == "- Título: trecho\n- Título: trecho"
+    assert len(calls) == first_round
+
+
+def test_web_search_respects_time_budget(monkeypatch):
+    clock = iter([0, 0, 100, 100, 100, 100, 100])
+    monkeypatch.setattr(web_search.time, "monotonic", lambda: next(clock))
+    calls = []
+
+    class SlowClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(url)
+            raise MusicSourceUnavailable("lento")
+
+    hit, results = web_search._find("Música", "Artista", SlowClient(), lambda q: calls.append(q) or [], budget_seconds=45)
+    assert hit is None and len(calls) == 1
