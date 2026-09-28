@@ -52,9 +52,9 @@ def test_local_parser_builds_sections_blocks_and_positions():
 def test_web_sheet_is_built_without_ai_and_uses_page_key_and_capo():
     hit = ChordSheetHit(ISAIAS, "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/", "cifraclub", key="D", shape_key="C", capo=2)
     result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
-    assert (result.tom, result.capotraste) == ("C", 2)
+    assert (result.tom, result.capotraste) == ("D", 2)
     assert result.harmonicSummary.blocos[0].acordes == ["C", "G4", "Am"] and result.harmonicSummary.blocos[0].repeticoes == 2
-    assert result.observacoes[0] == "Tom real: D (forma de C, capotraste na 2ª casa)."
+    assert result.observacoes[0] == "Tom: D (acordes na forma de C, capotraste na 2ª casa)."
 
 
 def test_kill_switch_disables_web_search(app):
@@ -105,4 +105,4 @@ def test_summary_follows_roudy_standard_for_real_sheet():
         ("Solo", None, ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
         ("Segunda Parte", "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
     ]
-    assert (result.tom, result.capotraste) == ("C", 2)
+    assert (result.tom, result.capotraste) == ("D", 2)

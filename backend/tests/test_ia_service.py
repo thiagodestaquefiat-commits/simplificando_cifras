@@ -251,5 +251,5 @@ def test_web_sheet_uses_page_key_shape_and_capo_not_ai_guess():
     service = IaService(Provider(), web_search=lambda *a: None, sheet_finder=lambda *a: hit)
     result = service.generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes",
                                                      modoGeracao="conhecimento_modelo"))
-    assert result.tom == "C" and result.capotraste == 2
-    assert result.observacoes[0] == "Tom real: D (forma de C, capotraste na 2ª casa)."
+    assert result.tom == "D" and result.capotraste == 2
+    assert result.observacoes[0] == "Tom: D (acordes na forma de C, capotraste na 2ª casa)."

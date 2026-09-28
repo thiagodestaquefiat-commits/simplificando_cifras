@@ -129,18 +129,19 @@ class IaService:
     def _apply_page_key_and_capo(normalized: ResumoHarmonicoResponse, web_hit) -> None:
         """Tom e capotraste vêm do cabeçalho da página, não da IA.
 
-        Convenção do ROUDY: `tom` é o tom dos acordes escritos (a forma) e o capotraste fica à parte.
-        Ex.: Cifra Club "Tom: D (com forma de C)" + "Capotraste: 2ª casa" -> tom C, capotraste 2.
+        Padrão do ROUDY (biblioteca base): `tom` é o tom REAL da música e o capotraste fica à parte;
+        os acordes ficam escritos na forma. Ex.: "Alfa e Ômega" = tom E, capo 2, acordes em forma de D.
+        Cifra Club "Tom: D (com forma de C)" + "Capotraste: 2ª casa" -> tom D, capotraste 2, acordes em C.
         """
-        written_key = getattr(web_hit, "shape_key", None) or getattr(web_hit, "key", None)
+        real_key = getattr(web_hit, "key", None)
+        shape_key = getattr(web_hit, "shape_key", None)
         capo = getattr(web_hit, "capo", None)
-        if written_key:
-            normalized.tom = written_key
+        if real_key:
+            normalized.tom = real_key
         if capo:
             normalized.capotraste = capo
-        real_key = getattr(web_hit, "key", None)
-        if real_key and capo and written_key and written_key != real_key:
-            note = f"Tom real: {real_key} (forma de {written_key}, capotraste na {capo}ª casa)."
+        if real_key and capo and shape_key and shape_key != real_key:
+            note = f"Tom: {real_key} (acordes na forma de {shape_key}, capotraste na {capo}ª casa)."
         elif real_key and capo:
             note = f"Tom: {real_key}, capotraste na {capo}ª casa."
         else:
@@ -218,7 +219,7 @@ class IaService:
         if web_hit and source_text:
             # Cifra da web já vem estruturada: monta localmente, sem custo de IA.
             local_result = parse_chord_sheet(source_text, payload.titulo, payload.artista,
-                                             key=getattr(web_hit, "shape_key", None) or getattr(web_hit, "key", None))
+                                             key=getattr(web_hit, "key", None))
             logger.info("web_sheet_parser=%s url=%s", "local" if local_result else "deepseek_fallback", web_hit.url)
         try:
             result = local_result or self._provider.generate(
