@@ -25,6 +25,37 @@
     return wrap;
   }
 
+  function capoSelector() {
+    const wrap = element("div", "ai-summary-field ai-summary-capo-field");
+    wrap.appendChild(element("span", "ai-summary-label", "Capotraste"));
+    const input = element("input");
+    input.type = "hidden";
+    input.name = "capotraste";
+    const choices = element("div", "ai-summary-capo-options");
+    choices.setAttribute("role", "group");
+    choices.setAttribute("aria-label", "Casa do capotraste");
+    const select = (value) => {
+      input.value = value;
+      choices.querySelectorAll("button").forEach((button) => {
+        const active = button.dataset.capo === value;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    };
+    for (let fret = 1; fret <= 12; fret += 1) {
+      const button = element("button", "ai-summary-capo-option", String(fret));
+      button.type = "button";
+      button.dataset.capo = String(fret);
+      button.setAttribute("aria-label", `Capotraste na casa ${fret}`);
+      button.setAttribute("aria-pressed", "false");
+      button.addEventListener("click", () => select(input.value === String(fret) ? "" : String(fret)));
+      choices.appendChild(button);
+    }
+    wrap.append(input, choices);
+    wrap.setValue = (value) => select(Number(value) >= 1 && Number(value) <= 12 ? String(Number(value)) : "");
+    return wrap;
+  }
+
   function setStatus(kind, message) {
     const status = panel?.querySelector("[data-ai-status]");
     if (!status) return;
@@ -43,14 +74,22 @@
     });
     panel.querySelector("[data-ai-form=pesquisa]").hidden = mode !== "pesquisa";
     panel.querySelector("[data-ai-form=arquivo]").hidden = mode !== "arquivo";
-    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo";
+    panel.querySelector("[data-ai-form=texto]").hidden = mode !== "texto";
+    panel.querySelector("[data-ai-submit]").textContent = mode === "pesquisa" ? "Gerar com IA" : "Gerar Resumo/Letra e Cifra";
     panel.querySelector("[data-ai-candidates]").replaceChildren();
     setStatus("initial", "");
   }
 
   function values() {
     const form = panel.querySelector(`[data-ai-form=${mode}]`);
-    return {...Object.fromEntries([...form.querySelectorAll("input, textarea")].filter(input=>input.type !== 'file').map((input) => [input.name, input.value])), arquivos: selectedFiles.slice()};
+    const data={...Object.fromEntries([...form.querySelectorAll("input, textarea")].filter(input=>input.type !== 'file').map((input) => [input.name, input.value])), arquivos: selectedFiles.slice()};
+    if(mode==='texto'){
+      const metadata=[];
+      if(data.tom?.trim())metadata.push(`Tom: ${data.tom.trim()}`);
+      if(data.capotraste?.trim())metadata.push(`Capotraste: ${data.capotraste.trim()}`);
+      data.conteudo=[...metadata,data.conteudo].filter(Boolean).join('\n');
+    }
+    return data;
   }
 
   function renderFiles() {
@@ -80,7 +119,7 @@
     if (!panel) return;
     panel.querySelectorAll("button, input, textarea").forEach((control) => { control.disabled = value; });
     const submit = panel.querySelector("[data-ai-submit]");
-    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : "Buscando...") : (mode === "pesquisa" ? "Gerar com IA" : "Gerar resumo");
+    submit.textContent = value ? (mode === "arquivo" ? "Analisando cifra..." : mode === "texto" ? "Analisando a estrutura harmônica…" : "Buscando...") : (mode === "pesquisa" ? "Gerar com IA" : "Gerar Resumo/Letra e Cifra");
   }
 
   // Falhas que o modo conhecimento do modelo também teria: não adianta tentar de novo.
@@ -105,7 +144,9 @@
         sourceId: candidate.sourceId
       });
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo(candidate));
-      setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
+      setStatus("success", mode === "texto"
+        ? "Letra, cifra e resumo harmônico organizados. Revise o rascunho antes de salvar."
+        : "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
       close();
       global.openAiDraft(model, sourceSong);
@@ -263,7 +304,7 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou foto"]].forEach(([key, label]) => {
+    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou foto"], ["texto", "📝 Texto"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
@@ -285,11 +326,21 @@
     ["dragenter", "dragover"].forEach((eventName) => fileForm.addEventListener(eventName, (event) => { event.preventDefault(); fileForm.classList.add("is-dragging"); }));
     ["dragleave", "drop"].forEach((eventName) => fileForm.addEventListener(eventName, (event) => { event.preventDefault(); fileForm.classList.remove("is-dragging"); }));
     fileForm.addEventListener("drop", (event) => { if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files); });
+    const textForm = element("div", "ai-summary-form ai-summary-text-form"); textForm.dataset.aiForm = "texto";
+    const textTitle=field("Título", "titulo", "text", false);textTitle.querySelector("input").placeholder="Nome da música";
+    const textArtist=field("Artista / Compositor", "artista", "text", false);textArtist.querySelector("input").placeholder="ex: Fernandinho, Aline Barros...";
+    const textKey=field("Tom", "tom", "text", false);textKey.querySelector("input").placeholder="ex: G, Am, C#m";
+    const textCapo=capoSelector();
+    const textContent=field("Cifras", "conteudo", "textarea", true);
+    textContent.querySelector("textarea").placeholder="G9  Em7  C9  Am7\nAo que está assentado\n\nC9  D9  Bm7  Em\nQuem já pisou";
+    const textHint=element("div","ai-summary-text-hint");
+    textHint.append(element("span","","Digite a cifra e a letra alternadas. Linha em branco separa estrofes."),element("strong","","Ex:\nG9  Em7  C9  Am7\nAo que está assentado\n\nC9  D9  Bm7  Em\nQuem já pisou"));
+    textForm.append(textTitle,textArtist,textKey,textCapo,textHint,textContent);
     const status = element("div", "ai-summary-status"); status.dataset.aiStatus = ""; status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); status.hidden = true;
     const help = element("p", "ai-summary-help"); help.dataset.aiHelp = ""; help.hidden = true;
     const candidates = element("div", "ai-summary-candidates"); candidates.dataset.aiCandidates = "";
-    const submitButton = element("button", "ai-summary-submit", "Gerar resumo"); submitButton.type = "button"; submitButton.dataset.aiSubmit = ""; submitButton.addEventListener("click", submit);
-    dialog.append(header, intro, tabs, searchForm, fileForm, status, help, candidates, submitButton);
+    const submitButton = element("button", "ai-summary-submit", "Gerar Resumo/Letra e Cifra"); submitButton.type = "button"; submitButton.dataset.aiSubmit = ""; submitButton.addEventListener("click", submit);
+    dialog.append(header, intro, tabs, searchForm, fileForm, textForm, status, help, candidates, submitButton);
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
@@ -299,6 +350,11 @@
       searchForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
       fileForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
       fileForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      textForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
+      textForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
+      textForm.querySelector('[name="tom"]').value = sourceSong.key || sourceSong.currentKey || "";
+      textCapo.setValue(sourceSong.capo || "");
+      textForm.querySelector('[name="conteudo"]').value = global.songFormat?.simpleText(sourceSong.editorData||sourceSong) || "";
     }
     searchForm.querySelector('[name="titulo"]').focus();
   }

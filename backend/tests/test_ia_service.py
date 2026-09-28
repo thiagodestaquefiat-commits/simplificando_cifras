@@ -60,6 +60,44 @@ def test_request_preserves_musical_line_breaks():
     assert request.conteudo == "C  G\nPrimeira frase\nAm  F"
 
 
+def test_text_uses_ai_sections_to_format_full_chord_sheet_without_reordering_music():
+    provider = FakeProvider()
+    original_generate = provider.generate
+
+    def generate(system_prompt, user_prompt, media=None, context=None):
+        result = original_generate(system_prompt, user_prompt, media, context)
+        result.fullChordSheet = CifraCompleta(
+            source="user_text",
+            content="[reconstruir]",
+            sections=[
+                SecaoCifraCompleta(nome="Verso", linhas=[LinhaCifraCompleta(
+                    letra="Primeira frase",
+                    acordes=[AcordePosicionado(acorde="C", posicao=0), AcordePosicionado(acorde="G", posicao=9)],
+                )]),
+                SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
+                    letra="Segunda frase",
+                    acordes=[AcordePosicionado(acorde="Am", posicao=0), AcordePosicionado(acorde="F", posicao=8)],
+                )]),
+            ],
+        )
+        result.harmonicSummary = ResumoEstruturado(blocos=[
+            TrechoHarmonico(acordes=["C", "G"], fraseGuia="Primeira frase", secao="Verso"),
+            TrechoHarmonico(acordes=["Am", "F"], fraseGuia="Segunda frase", secao="Refrão"),
+        ])
+        return result
+
+    provider.generate = generate
+    source = "VERSO\nC       G\nPrimeira frase\nREFRAO\nAm      F\nSegunda frase"
+    result = IaService(provider).generate(ResumoHarmonicoRequest(tipo="texto", titulo="Teste", conteudo=source))
+
+    assert "Reorganize o texto" in provider.user_prompt
+    assert "Preserve rigorosamente a ordem musical" in provider.user_prompt
+    assert result.fullChordSheet.content == "[Verso]\nC        G\nPrimeira frase\n\n[Refrão]\nAm      F\nSegunda frase"
+    assert [section.nome for section in result.fullChordSheet.sections] == ["Verso", "Refrão"]
+    assert [block.acordes for block in result.harmonicSummary.blocos] == [["C", "G"], ["Am", "F"]]
+    assert any("Texto organizado por IA" in note for note in result.observacoes)
+
+
 def test_text_clears_guide_not_present_in_user_content():
     provider = FakeProvider()
     service = IaService(provider)

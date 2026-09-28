@@ -72,5 +72,11 @@ assert.match(html, /Continuar com Google/);
 assert.match(html, /Continuar sem login/);
 assert.match(html, /function continueWithoutLogin\(\)/);
 assert.match(html, /state\.authenticated\|\|loginGatePassed/);
+assert.match(html, /class="account-contribution"/);
+assert.match(html, /assets\/qr-contribuicao\.png\?v=1/);
+assert.match(html, /class="btn btn-primary account-contribution-copy"/);
+assert.match(html, /const ROUDY_PIX_COPY_PASTE='000201[0-9A-Za-zÀ-ÿ .-]+293E'/);
+assert.match(html, /async function copyRoudyPixCode\(\)/);
+assert.match(html, /navigator\.clipboard\?\.writeText/);
 
 console.log("account-settings.test.js: OK (perfil, entrada Google\/convidado, idioma, acessibilidade, logout e sincronização automática)");

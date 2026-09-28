@@ -39,7 +39,7 @@ const file=name=>({name,mimeType:'image/png',buffer:Buffer.from('synthetic fixtu
   await input.setInputFiles(Array.from({length:7},(_,i)=>file(i+'.png')));
   assert.match(await page.locator('[data-ai-status]').innerText(),/8 arquivos/);
   assert.match(await page.locator('[data-ai-file-count]').innerText(),/^2 /);
-  await page.getByRole('button',{name:'Gerar resumo',exact:true}).click();
+  await page.getByRole('button',{name:'Gerar Resumo/Letra e Cifra',exact:true}).click();
   await page.waitForFunction(()=>window.testDrafts.length===1);
   assert.equal(requests.length,1);assert.ok(requests[0].indexOf('z_pagina.png')<requests[0].indexOf('m_pagina.png'));assert.ok(!requests[0].includes('a_pagina.png'));
   const draft=await page.evaluate(()=>window.testDrafts[0]);assert.equal(draft.sections.length,1);assert.equal(draft.fullChordSheet.content,result.fullChordSheet.content);

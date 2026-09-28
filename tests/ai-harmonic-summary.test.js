@@ -37,6 +37,15 @@ assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validat
 assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /título/.test(error.message));
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
+const modalSource = fs.readFileSync(path.join(root, "js/ai/ai-harmonic-summary.js"), "utf8");
+assert.match(modalSource, /\["texto", "📝 Texto"\]/);
+assert.match(modalSource, /data-ai-form=texto/);
+assert.match(modalSource, /field\("Tom", "tom"/);
+assert.match(modalSource, /function capoSelector\(\)/);
+assert.match(modalSource, /for \(let fret = 1; fret <= 12; fret \+= 1\)/);
+assert.match(modalSource, /input\.name = "capotraste"/);
+assert.match(modalSource, /field\("Cifras", "conteudo", "textarea", true\)/);
+assert.match(modalSource, /data\.conteudo=\[\.\.\.metadata,data\.conteudo\]/);
 
 const response = {
   schemaVersion: 2,

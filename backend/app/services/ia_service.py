@@ -215,6 +215,14 @@ class IaService:
             if source_text else
             "Transcreva a fonte visual em fullChordSheet.sections, preserve a associação acorde/letra e use exatamente [reconstruir] em fullChordSheet.content."
         )
+        if payload.tipo == "texto":
+            full_sheet_instruction = (
+                "Reorganize o texto em fullChordSheet.sections e use exatamente [reconstruir] em fullChordSheet.content. "
+                "Preserve rigorosamente a ordem musical das linhas e seções; não mova verso, refrão, ponte, introdução ou final. "
+                "Identifique cabeçalhos de seção, separe linhas de acordes das linhas de letra e associe cada acorde à posição "
+                "aproximada da palavra correspondente. Corrija somente espaçamento, quebras de linha, capitalização dos nomes "
+                "de seção e alinhamento visual. Nunca reescreva a letra, altere a sequência dos acordes ou acrescente conteúdo ausente."
+            )
         user_prompt = (
             "Analise uma única vez o conteúdo e retorne a cifra completa privada e o resumo harmônico curto.\n"
             "Todos os arquivos anexados são continuação de UMA música, na ordem fornecida. Não produza uma música por arquivo nem repita páginas.\n"
@@ -260,11 +268,18 @@ class IaService:
         normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
         if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
+            formatted_text = None
+            if payload.tipo == "texto" and normalized.fullChordSheet and normalized.fullChordSheet.sections:
+                formatted_text = render_full_chord_sheet(normalized.fullChordSheet)
             normalized.fullChordSheet = CifraCompleta(
                 source="web_source" if web_hit else "user_upload" if payload.tipo == "arquivo" else "user_text",
-                content=source_text,
+                content=formatted_text or source_text,
                 sections=normalized.fullChordSheet.sections if normalized.fullChordSheet else [],
             )
+            if formatted_text:
+                note = "Texto organizado por IA; revise o alinhamento entre acordes e palavras antes de salvar."
+                if note not in normalized.observacoes:
+                    normalized.observacoes.append(note)
             if web_hit:
                 self._apply_page_key_and_capo(normalized, web_hit)
                 note = f"Cifra obtida de {web_hit.url}; revise antes de salvar."

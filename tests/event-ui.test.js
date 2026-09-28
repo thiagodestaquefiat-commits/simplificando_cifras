@@ -80,7 +80,7 @@ const server = http.createServer((request, response) => {
       renderBandToolbar();
     });
     assert.equal(await page.locator("#active-band-select").inputValue(), "band-test");
-    await page.locator(".fab").click();
+    await page.getByRole("button", { name: "Novo evento", exact: false }).click();
     assert.equal(await page.locator("#fs-band").inputValue(), "band-test");
     assert.equal(await page.locator("#fs-date").getAttribute("type"), "date");
     assert.equal(await page.getByText("Toque para escolher no calendário", { exact: true }).count(), 1);

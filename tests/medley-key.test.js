@@ -23,7 +23,7 @@ assert.match(html,/#pane-medley\{flex-direction:column;align-items:stretch;/,'o 
 assert.match(html,/#medley-content\{width:100%;/);
 assert.match(html,/class="medley-empty"/,'o estado vazio centraliza a ação de adicionar bloco');
 assert.match(html,/\.medley-empty \.btn\{width:min\(100%,320px\);\}/);
-assert.match(html,/\.fab'\)\.style\.display=tab==='medley'\?'none':'flex'/,'o botão flutuante só desaparece na aba Medley');
+assert.doesNotMatch(html,/class="fab"/,'o botão flutuante foi removido da página principal');
 assert.doesNotMatch(html.slice(html.indexOf('function renderMedley(){'),html.indexOf('function abrirAddMedley(){')), /onclick="tocarMedley\(\)"/);
 assert.match(html.slice(html.indexOf('function renderMedley(){'),html.indexOf('function abrirAddMedley(){')), /onclick="limparMedley\(\)"[\s\S]*onclick="abrirSalvarMedley\(\)"/);
 
