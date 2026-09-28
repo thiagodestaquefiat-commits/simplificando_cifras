@@ -191,7 +191,9 @@ class DeepSeekProvider(OpenAIProvider):
             )
             raise classified from error
 
-        self._log_result("success", started_at, safe_context, "ok", response=response)
+        # Tokens de entrada/saída no log de sucesso, para acompanhar o custo por busca.
+        self._log_result("success", started_at, safe_context, "ok", response=response,
+                         response_diagnostics=self._safe_response_diagnostics(response, output_text))
         return parsed
 
     @classmethod

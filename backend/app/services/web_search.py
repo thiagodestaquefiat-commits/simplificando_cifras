@@ -104,6 +104,61 @@ class ChordSheetHit:
     content: str
     url: str
     source_name: str
+    key: str | None = None        # tom real da música (ex.: D)
+    shape_key: str | None = None  # tom da forma dos acordes escritos (ex.: C em "D com forma de C")
+    capo: int | None = None       # casa do capotraste
+
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_SCRIPT_RE = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
+_KEY_RE = re.compile(r"\bTom:\s*([A-G][#b]?m?)(?![\w#])(?:\s*\(\s*com forma de\s*([A-G][#b]?m?)(?![\w#])\s*\))?", re.IGNORECASE)
+_CAPO_RE = re.compile(r"\bCapotraste\s*(?::|na)?\s*(\d{1,2})\s*[ªºa°]?\s*casa", re.IGNORECASE)
+
+
+# O tom do Cifra Club é interativo (dá para transpor) e costuma vir em dados/atributos da página,
+# não no texto; o capotraste vem no texto. Procura em JSON/atributos antes do texto visível.
+_KEY_DATA_RES = (
+    re.compile(r"""["'](?:tom|key|tone|songKey|originalKey|cifra_tom)["']\s*:\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE),
+    re.compile(r"""data-(?:tom|key|tone)\s*=\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE),
+)
+_SHAPE_DATA_RE = re.compile(r"""["'](?:forma|shape|shapeKey|tomForma)["']\s*:\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE)
+
+
+def _key_name(value: str) -> str:
+    return value[0].upper() + value[1:]
+
+
+def extract_sheet_metadata(html: str | None) -> dict:
+    """Lê 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' da página (fora do <pre>)."""
+    if not html:
+        return {}
+    import html as html_lib
+    text = html_lib.unescape(_TAG_RE.sub(" ", _SCRIPT_RE.sub(" ", html)))
+    text = re.sub(r"\s+", " ", text)
+    meta = {}
+    key_match = _KEY_RE.search(text)
+    if key_match:
+        meta["key"] = _key_name(key_match.group(1))
+        if key_match.group(2):
+            meta["shape_key"] = _key_name(key_match.group(2))
+    else:
+        for pattern in _KEY_DATA_RES:
+            data_match = pattern.search(html)
+            if data_match:
+                meta["key"] = _key_name(data_match.group(1))
+                break
+        shape_match = _SHAPE_DATA_RE.search(html)
+        if shape_match:
+            meta["shape_key"] = _key_name(shape_match.group(1))
+    capo_match = _CAPO_RE.search(text)
+    if capo_match and 0 < int(capo_match.group(1)) <= 12:
+        meta["capo"] = int(capo_match.group(1))
+    if "key" not in meta:
+        # Diagnóstico: trecho em volta de "Tom" para ajustar o leitor se o HTML do site mudar.
+        around = [html[max(0, m.start() - 120):m.end() + 160].replace("\n", " ")
+                  for m in re.finditer(r"\btom\b", html, re.IGNORECASE)][:4]
+        logger.warning("sheet_key_not_found capo=%s snippets=%r", meta.get("capo"), around)
+    return meta
 
 
 class ScraperApiHttpClient:
@@ -191,29 +246,30 @@ RENDER_RETRY_MIN_SECONDS = 25
 
 
 def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool,
-                deadline: float | None = None) -> str | None:
+                deadline: float | None = None) -> tuple[str | None, dict]:
     supports_render = getattr(http_client, "supports_render", False)
     attempts = (False, True) if supports_render else (False,)
     for render in attempts:
         remaining = None if deadline is None else deadline - time.monotonic()
         if render and remaining is not None and remaining < RENDER_RETRY_MIN_SECONDS:
             logger.info("%s_render_retry_skipped url=%s remaining=%.1fs", name, url, remaining)
-            return None
+            return None, {}
         kwargs = {"render": render, "timeout_seconds": remaining} if supports_render else {}
         try:
             html, _final_url = http_client.get_text(url, allowed_hosts=hosts, allowed_content_types=("text/html",), **kwargs)
         except MusicSourceError as error:
             logger.warning("%s_fetch_failed=%s url=%s render=%s", name, error.__class__.__name__, url, render)
             if isinstance(error, (MusicSourceUnavailable,)) and "status 404" in str(error):
-                return None  # página não existe: não adianta renderizar
+                return None, {}  # página não existe: não adianta renderizar
             continue
         sheet = extract_chord_sheet(html, include_article=include_article)
         if sheet:
-            logger.info("%s_extract_ok url=%s render=%s sheet_len=%d", name, url, render, len(sheet))
-            return sheet
+            meta = extract_sheet_metadata(html)
+            logger.info("%s_extract_ok url=%s render=%s sheet_len=%d meta=%s", name, url, render, len(sheet), meta)
+            return sheet, meta
         preview = (html or "")[:300].replace("\n", " ")
         logger.warning("%s_extract_empty url=%s render=%s html_len=%d html_preview=%r", name, url, render, len(html or ""), preview)
-    return None
+    return None, {}
 
 
 _NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
@@ -266,7 +322,7 @@ def _ddg_search(query: str) -> list | None:
 
 
 def _find(titulo: str, artista: str | None, http_client, search_fn=None,
-          budget_seconds: float | None = None) -> tuple[ChordSheetHit | None, list]:
+          budget_seconds: float | None = None, allow_search: bool = True) -> tuple[ChordSheetHit | None, list]:
     client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
     _search = search_fn or _ddg_search
     deadline = time.monotonic() + budget_seconds if budget_seconds else None
@@ -281,11 +337,14 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         if out_of_time(f"direct:{name}"):
             return None, []
         url = direct_url(name, titulo, artista)
-        sheet = _fetch_page(url, client, name, hosts, include_article, deadline) if url else None
+        sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline) if url else (None, {})
         if sheet:
-            return ChordSheetHit(sheet, url, name), []
+            return ChordSheetHit(sheet, url, name, **meta), []
 
     all_results = []
+    if not allow_search:
+        logger.info("web_search_skipped reason=search_fallback_disabled")
+        return None, all_results
     for name, hosts, include_article in PAGE_SOURCES:
         if out_of_time(f"search:{name}"):
             break
@@ -301,9 +360,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         for url in urls:
             if out_of_time(f"fetch:{name}"):
                 return None, all_results
-            sheet = _fetch_page(url, client, name, hosts, include_article, deadline)
+            sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline)
             if sheet:
-                return ChordSheetHit(sheet, url, name), all_results
+                return ChordSheetHit(sheet, url, name, **meta), all_results
     return None, all_results
 
 
@@ -339,7 +398,7 @@ WEB_SEARCH_BUDGET_SECONDS = 75
 
 
 def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_fn=None,
-                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS):
+                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS, allow_search: bool = True):
     """Retorna (sheet_finder, chord_context_searcher) que compartilham UMA busca por música.
 
     Com SCRAPER_API_KEY, usa o ScraperAPI como proxy (contorna bloqueio de IP de datacenter no
@@ -357,7 +416,8 @@ def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_
     def lookup(titulo: str, artista: str | None = None):
         key = (titulo, artista)
         if key not in memo:
-            memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds)
+            memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds,
+                              allow_search=allow_search)
             hit = memo[key][0]
             if hit:
                 logger.info("chord_sheet_found source=%s url=%s chars=%d", hit.source_name, hit.url, len(hit.content))

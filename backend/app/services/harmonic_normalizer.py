@@ -187,6 +187,8 @@ SECTION_NAMES = {
     "verso": "Verso", "pre refrao": "Pré-Refrão", "pre-refrao": "Pré-Refrão",
     "refrao": "Refrão", "ponte": "Ponte", "interludio": "Interlúdio",
     "solo": "Solo", "final": "Final", "outro": "Final",
+    "primeira parte": "Primeira Parte", "segunda parte": "Segunda Parte",
+    "terceira parte": "Terceira Parte", "quarta parte": "Quarta Parte",
 }
 
 

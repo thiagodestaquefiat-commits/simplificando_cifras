@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v144-ai-integrated-release";
+const CACHE_NAME = "simplificando-cifras-v147-resumo-padrao";
 const ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +30,7 @@ const ASSETS = [
   "./js/import-library.js?v=1",
   "./js/chord-library.js",
   "./js/instruments/instrument-definitions.js",
-  "./js/instruments/multi-instrument-chord-library.js",
+  "./js/instruments/multi-instrument-chord-library.js?v=2",
   "./js/chord-utils.js",
   "./js/navigation-context.js",
   "./js/stage-preferences.js?v=3",
@@ -46,8 +46,8 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
-  "./js/ai/harmonic-summary-client.js?v=9",
-  "./js/ai/ai-harmonic-summary.js?v=5",
+  "./js/ai/harmonic-summary-client.js?v=13",
+  "./js/ai/ai-harmonic-summary.js?v=7",
   "./js/ai/ai-harmonic-summary.css?v=4",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",

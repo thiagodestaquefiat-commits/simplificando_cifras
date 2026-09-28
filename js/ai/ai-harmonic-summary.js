@@ -160,7 +160,7 @@
       const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
       if (kind === "not_found") {
         setBusy(false);
-        askForFile(searchPayload, "Não encontramos esta cifra. Envie um arquivo (PDF, foto ou TXT) da cifra para continuar.");
+        askForFile(searchPayload, error.message || "Não encontramos esta cifra. Envie um arquivo (PDF, foto ou TXT) da cifra para continuar.");
         return;
       }
       setStatus(kind, error.message || "Não foi possível buscar esta música.");

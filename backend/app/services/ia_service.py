@@ -6,6 +6,8 @@ from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
 from .harmonic_normalizer import ensure_client_chords, normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
+from .local_sheet_parser import parse_chord_sheet
+from .key_inference import infer_key, transpose_note
 from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
 from .shared_songs_service import CATALOG_FULL_SHEET_SOURCES, SharedSongService
@@ -48,15 +50,36 @@ Regras obrigatórias:
 """
 
 
+def _user_web_quota(limit: str):
+    """Conta buscas na web por usuário no mesmo armazenamento do rate limit (sem tabela nova)."""
+    try:
+        from limits import parse
+        from .. import limiter
+        item = parse(limit)
+    except Exception:  # noqa: BLE001 - limite inválido não pode derrubar a busca
+        logger.warning("scraper_user_limit_invalid=%r", limit)
+        return None
+
+    def quota(user_id) -> bool:
+        try:
+            return limiter.limiter.hit(item, "scraper_web_search", str(user_id or "anonimo"))
+        except Exception:  # noqa: BLE001
+            logger.warning("scraper_user_limit_check_failed", exc_info=True)
+            return True
+
+    return quota
+
+
 class IaService:
     def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context, sheet_finder=find_chord_sheet,
-                 shared_songs=None, shared_min_score: float = 0.9):
+                 shared_songs=None, shared_min_score: float = 0.9, web_quota=None):
         self._provider = provider
         self._sheet_finder = sheet_finder
         self._web_search = web_search
         self._research_max_output_tokens = research_max_output_tokens
         self._shared_songs = shared_songs
         self._shared_min_score = shared_min_score
+        self._web_quota = web_quota  # callable(user_id) -> bool; False = limite de buscas na web atingido
 
     @classmethod
     def from_config(cls, config):
@@ -71,11 +94,17 @@ class IaService:
             raise ApiError("servico_nao_configurado", str(error), 503) from error
         scraper_api_key = config.get("SCRAPER_API_KEY", "")
         from .web_search import make_web_searchers
-        # Um par de funções por requisição, compartilhando a mesma busca (sem scraping duplicado).
-        sheet_finder, web_search = make_web_searchers(scraper_api_key)
-        logger.info("web_search_backend=%s", "scraper_api" if scraper_api_key else "duckduckgo")
+        if config.get("SCRAPER_ENABLED", True):
+            # Um par de funções por requisição, compartilhando a mesma busca (sem scraping duplicado).
+            sheet_finder, web_search = make_web_searchers(
+                scraper_api_key, allow_search=bool(config.get("SCRAPER_SEARCH_FALLBACK", False)))
+            logger.info("web_search_backend=%s", "scraper_api" if scraper_api_key else "direct")
+        else:
+            sheet_finder, web_search = (lambda *args, **kwargs: None), (lambda *args, **kwargs: None)
+            logger.info("web_search_backend=disabled")
         return cls(provider, config["DEEPSEEK_MAX_OUTPUT_TOKENS"], web_search=web_search, sheet_finder=sheet_finder,
-                   shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9))
+                   shared_songs=SharedSongService, shared_min_score=config.get("SHARED_SONG_MIN_SCORE", 0.9),
+                   web_quota=_user_web_quota(config.get("SCRAPER_USER_LIMIT", "10 per day")))
 
     def _shared_song_result(self, payload: ResumoHarmonicoRequest, user_id: str | None = None) -> ResumoHarmonicoResponse | None:
         if self._shared_songs is None or not payload.titulo:
@@ -96,6 +125,43 @@ class IaService:
         except Exception:  # catálogo é otimização: qualquer falha cai para a IA
             logger.warning("shared_song_lookup_failed", exc_info=True)
             return None
+
+    @staticmethod
+    def _apply_page_key_and_capo(normalized: ResumoHarmonicoResponse, web_hit) -> None:
+        """Tom e capotraste vêm do cabeçalho da página, não da IA.
+
+        Padrão do ROUDY (biblioteca base): `tom` é o tom REAL da música e o capotraste fica à parte;
+        os acordes ficam escritos na forma. Ex.: "Alfa e Ômega" = tom E, capo 2, acordes em forma de D.
+        Cifra Club "Tom: D (com forma de C)" + "Capotraste: 2ª casa" -> tom D, capotraste 2, acordes em C.
+        """
+        real_key = getattr(web_hit, "key", None)
+        shape_key = getattr(web_hit, "shape_key", None)
+        capo = getattr(web_hit, "capo", None)
+        estimated = False
+        if not real_key:
+            # Página sem o tom legível (no Cifra Club ele é montado por JavaScript): estima pelos
+            # acordes escritos (a forma) e soma o capotraste. Ex.: acordes em C + capo 2 -> D.
+            chords = [chord for bloco in normalized.harmonicSummary.blocos for chord in bloco.acordes]
+            shape_key = shape_key or infer_key(chords)
+            if shape_key:
+                real_key = transpose_note(shape_key, capo or 0)
+                estimated = True
+        if real_key:
+            normalized.tom = real_key
+        if capo:
+            normalized.capotraste = capo
+        if real_key and capo and shape_key and shape_key != real_key:
+            note = f"Tom: {real_key} (acordes na forma de {shape_key}, capotraste na {capo}ª casa)."
+        elif real_key and capo:
+            note = f"Tom: {real_key}, capotraste na {capo}ª casa."
+        else:
+            note = None
+        if note and estimated:
+            note = note[:-1] + " — tom estimado pelos acordes; confira."
+        elif not note and estimated:
+            note = f"Tom estimado pelos acordes: {real_key}; confira."
+        if note and note not in normalized.observacoes:
+            normalized.observacoes.insert(0, note)
 
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         return ensure_client_chords(self._generate(payload, extracted, request_id, online_source, user_id))
@@ -120,6 +186,13 @@ class IaService:
         if knowledge_only:
             # Fluxo da busca: 1) catálogo do ROUDY (acima) 2) scraper 3) usuário envia arquivo/foto.
             # A IA nunca gera música do zero: sem cifra real, a busca termina aqui.
+            if self._web_quota is not None and not self._web_quota(user_id):
+                logger.info("ai_search_source=web_quota_exceeded user=%s", user_id)
+                raise ApiError(
+                    "limite_busca_web",
+                    "Você atingiu o limite diário de buscas na web. Envie um arquivo ou foto da cifra.",
+                    429,
+                )
             web_hit = self._sheet_finder(payload.titulo, payload.artista)
             if not web_hit or not clean_musical_text(web_hit.content, (payload.titulo, payload.artista)):
                 logger.info("ai_search_source=%s titulo=%r artista=%r",
@@ -156,8 +229,14 @@ class IaService:
             "</conteudo_usuario>"
         )
 
+        local_result = None
+        if web_hit and source_text:
+            # Cifra da web já vem estruturada: monta localmente, sem custo de IA.
+            local_result = parse_chord_sheet(source_text, payload.titulo, payload.artista,
+                                             key=getattr(web_hit, "key", None))
+            logger.info("web_sheet_parser=%s url=%s", "local" if local_result else "deepseek_fallback", web_hit.url)
         try:
-            result = self._provider.generate(
+            result = local_result or self._provider.generate(
                 SYSTEM_PROMPT,
                 user_prompt,
                 extracted if extracted is not None and (extracted.data_url or (extracted.items and extracted.text is None)) else None,
@@ -187,6 +266,7 @@ class IaService:
                 sections=normalized.fullChordSheet.sections if normalized.fullChordSheet else [],
             )
             if web_hit:
+                self._apply_page_key_and_capo(normalized, web_hit)
                 note = f"Cifra obtida de {web_hit.url}; revise antes de salvar."
                 if note not in normalized.observacoes:
                     normalized.observacoes.append(note)
