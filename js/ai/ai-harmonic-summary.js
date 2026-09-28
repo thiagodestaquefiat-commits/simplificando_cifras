@@ -120,22 +120,50 @@
     } finally { setBusy(false); }
   }
 
+  // Fluxo da busca: 1) catálogo do ROUDY 2) cifra na web (scraper) 3) arquivo/foto do usuário.
+  // O backend nunca inventa a música: sem fonte real ele responde "cifra_nao_encontrada".
+  function resultSourceInfo(data) {
+    const notes = Array.isArray(data?.observacoes) ? data.observacoes.join("\n") : "";
+    const match = notes.match(/(?:Cifra obtida de|Fonte:)\s*(https:\/\/[^\s;]+)/);
+    if (match) {
+      let host = null;
+      try { host = new URL(match[1]).hostname.replace(/^www\./, ""); } catch (_) {}
+      return { type: "online", name: host === "cifraclub.com.br" ? "Cifra Club" : host, url: match[1] };
+    }
+    return { type: "online", name: "Catálogo ROUDY", url: null };
+  }
+
+  function askForFile(searchPayload, message) {
+    updateMode("arquivo");
+    const fileForm = panel.querySelector("[data-ai-form=arquivo]");
+    const titleInput = fileForm?.querySelector("input[name=titulo]");
+    const artistInput = fileForm?.querySelector("input[name=artista]");
+    if (titleInput && !titleInput.value) titleInput.value = searchPayload.titulo || "";
+    if (artistInput && !artistInput.value) artistInput.value = searchPayload.artista || "";
+    setStatus("not_found", message);
+  }
+
   async function generateFromModelKnowledge(searchPayload) {
     setBusy(true);
-    setStatus("loading", "Nenhuma fonte disponível. Gerando com o conhecimento da IA…");
+    setStatus("loading", "Procurando a cifra no ROUDY e na web…");
     try {
       const result = await global.harmonicSummaryClient.generate("pesquisa", {
         titulo: searchPayload.titulo,
         artista: searchPayload.artista,
         modoGeracao: "conhecimento_modelo"
       });
-      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", { type: "ai_knowledge", name: "Somente IA — sem fonte autorizada", url: null });
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", resultSourceInfo(result.data));
       setBusy(false);
       close();
       global.openAiDraft(model, sourceSong);
     } catch (error) {
       const kind = error instanceof global.harmonicSummaryClient.HarmonicSummaryError ? error.kind : "server";
-      setStatus(kind, error.message || "Não foi possível gerar o resumo aproximado.");
+      if (kind === "not_found") {
+        setBusy(false);
+        askForFile(searchPayload, "Não encontramos esta cifra. Envie um arquivo (PDF, foto ou TXT) da cifra para continuar.");
+        return;
+      }
+      setStatus(kind, error.message || "Não foi possível buscar esta música.");
     } finally { setBusy(false); }
   }
 
