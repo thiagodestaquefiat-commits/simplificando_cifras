@@ -71,9 +71,13 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
             response.headers["Cache-Control"] = "no-store"
         return response
 
+    # Diagnóstico da Busca por IA: mostra no log de inicialização se o scraper tem chave
+    # (sem expor o valor). Sem SCRAPER_API_KEY o Cifra Club costuma bloquear o IP do Railway.
+    app.logger.warning("scraper_api_configured=%s", bool(app.config.get("SCRAPER_API_KEY")))
+
     @app.get("/health")
     def health():
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY"))})
 
     from .routes.events import blueprint as events_blueprint
     from .routes.locations import blueprint as locations_blueprint
