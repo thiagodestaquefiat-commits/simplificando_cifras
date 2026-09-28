@@ -90,9 +90,11 @@ def extract_chord_sheet(html: str | None, *, include_article: bool = False) -> s
 
 
 # Fontes de página em ordem de prioridade: (nome para log, hosts, aceita <article> como cifra).
+# Cifra Club primeiro: tem a cifra original do artista. O simplificacifras publica versões
+# simplificadas e costuma não ter a música; fica como segunda opção.
 PAGE_SOURCES = (
-    ("simplificacifras", SIMPLIFICACIFRAS_HOSTS, True),
     ("cifraclub", CIFRACLUB_HOSTS, False),
+    ("simplificacifras", SIMPLIFICACIFRAS_HOSTS, True),
 )
 SITE_DOMAINS = {"simplificacifras": "simplificacifras.com.br", "cifraclub": "cifraclub.com.br"}
 
@@ -110,25 +112,37 @@ class ScraperApiHttpClient:
     BASE_URL = "https://api.scraperapi.com/"
     SEARCH_URL = "https://api.scraperapi.com/structured/google/search"
 
-    def __init__(self, api_key: str, timeout_seconds: float = 20.0):
+    # A documentação do ScraperAPI recomenda 60-70s: ele tenta vários proxies antes de responder.
+    # Com 20s a requisição era cortada antes do sucesso e a busca caía na IA.
+    DEFAULT_TIMEOUT_SECONDS = 70.0
+    supports_render = True
+
+    def __init__(self, api_key: str, timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS):
         self._api_key = api_key
+        self._timeout_seconds = timeout_seconds
         self._client = httpx.Client(timeout=timeout_seconds, follow_redirects=True)
 
-    def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",)) -> tuple[str, str]:
-        # render=true é necessário para SPAs (ex: Cifra Club em React) que carregam acordes via JS.
-        # Custa 5 créditos/req no ScraperAPI em vez de 1, mas garante HTML completo.
-        # render=true renderiza JavaScript (SPA React do Cifra Club).
-        # country_code=br usa proxies residenciais brasileiros (melhor taxa de sucesso em sites .com.br).
-        # wait=3000 aguarda 3s após o JS executar para o React terminar de montar os acordes no DOM.
-        proxy_url = f"{self.BASE_URL}?api_key={self._api_key}&url={quote_plus(url)}&render=true&country_code=br&wait=3000"
+    def get_text(self, url: str, *, allowed_hosts: tuple[str, ...], allowed_content_types=("text/html",),
+                 render: bool = False, timeout_seconds: float | None = None) -> tuple[str, str]:
+        # O Cifra Club entrega a cifra no HTML inicial (<pre>), então a primeira tentativa é sem
+        # render (mais rápida e mais barata). render=true (JavaScript) fica como segunda tentativa.
+        # country_code=br usa proxies brasileiros (melhor taxa de sucesso em sites .com.br).
+        params = f"api_key={self._api_key}&url={quote_plus(url)}&country_code=br"
+        if render:
+            params += "&render=true&wait=3000"
+        timeout = max(5.0, min(self._timeout_seconds, timeout_seconds or self._timeout_seconds))
+        started = time.monotonic()
         try:
-            response = self._client.get(proxy_url)
+            response = self._client.get(f"{self.BASE_URL}?{params}", timeout=timeout)
         except httpx.TimeoutException as error:
+            logger.warning("scraper_api_timeout url=%s render=%s after=%.1fs", url, render, time.monotonic() - started)
             raise MusicSourceTimeout("ScraperAPI timeout") from error
         except httpx.HTTPError as error:
             raise MusicSourceUnavailable("ScraperAPI indisponível") from error
+        logger.info("scraper_api_response url=%s render=%s status=%d after=%.1fs",
+                    url, render, response.status_code, time.monotonic() - started)
         if response.status_code == 403:
-            raise MusicSourceUnavailable("ScraperAPI bloqueou a requisição")
+            raise MusicSourceUnavailable("ScraperAPI bloqueou a requisição (chave inválida ou sem créditos)")
         if response.status_code != 200:
             raise MusicSourceUnavailable(f"ScraperAPI retornou status {response.status_code}")
         content = response.content
@@ -173,20 +187,33 @@ def direct_url(name: str, titulo: str, artista: str | None) -> str | None:
     return f"https://www.cifraclub.com.br/{artist_slug}/{song_slug}/"
 
 
-def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool) -> str | None:
-    try:
-        html, _final_url = http_client.get_text(url, allowed_hosts=hosts, allowed_content_types=("text/html",))
-    except MusicSourceError as error:
-        logger.warning("%s_fetch_failed=%s url=%s", name, error.__class__.__name__, url)
-        return None
-    sheet = extract_chord_sheet(html, include_article=include_article)
-    if not sheet:
-        # Log primeiros 1000 chars do HTML para diagnóstico de extração falha
-        preview = (html or "")[:1000].replace("\n", " ")
-        logger.warning("%s_extract_empty url=%s html_len=%d html_preview=%r", name, url, len(html or ""), preview)
-    else:
-        logger.info("%s_extract_ok url=%s sheet_len=%d sheet_preview=%r", name, url, len(sheet), sheet[:200])
-    return sheet
+RENDER_RETRY_MIN_SECONDS = 25
+
+
+def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool,
+                deadline: float | None = None) -> str | None:
+    supports_render = getattr(http_client, "supports_render", False)
+    attempts = (False, True) if supports_render else (False,)
+    for render in attempts:
+        remaining = None if deadline is None else deadline - time.monotonic()
+        if render and remaining is not None and remaining < RENDER_RETRY_MIN_SECONDS:
+            logger.info("%s_render_retry_skipped url=%s remaining=%.1fs", name, url, remaining)
+            return None
+        kwargs = {"render": render, "timeout_seconds": remaining} if supports_render else {}
+        try:
+            html, _final_url = http_client.get_text(url, allowed_hosts=hosts, allowed_content_types=("text/html",), **kwargs)
+        except MusicSourceError as error:
+            logger.warning("%s_fetch_failed=%s url=%s render=%s", name, error.__class__.__name__, url, render)
+            if isinstance(error, (MusicSourceUnavailable,)) and "status 404" in str(error):
+                return None  # página não existe: não adianta renderizar
+            continue
+        sheet = extract_chord_sheet(html, include_article=include_article)
+        if sheet:
+            logger.info("%s_extract_ok url=%s render=%s sheet_len=%d", name, url, render, len(sheet))
+            return sheet
+        preview = (html or "")[:300].replace("\n", " ")
+        logger.warning("%s_extract_empty url=%s render=%s html_len=%d html_preview=%r", name, url, render, len(html or ""), preview)
+    return None
 
 
 _NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
@@ -254,7 +281,7 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         if out_of_time(f"direct:{name}"):
             return None, []
         url = direct_url(name, titulo, artista)
-        sheet = _fetch_page(url, client, name, hosts, include_article) if url else None
+        sheet = _fetch_page(url, client, name, hosts, include_article, deadline) if url else None
         if sheet:
             return ChordSheetHit(sheet, url, name), []
 
@@ -274,7 +301,7 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         for url in urls:
             if out_of_time(f"fetch:{name}"):
                 return None, all_results
-            sheet = _fetch_page(url, client, name, hosts, include_article)
+            sheet = _fetch_page(url, client, name, hosts, include_article, deadline)
             if sheet:
                 return ChordSheetHit(sheet, url, name), all_results
     return None, all_results
@@ -306,9 +333,9 @@ def search_chord_context(titulo: str, artista: str | None = None, http_client=No
     return _snippets(results)
 
 
-# Orçamento total da busca web por requisição. O gunicorn mata o worker em 120s e o DeepSeek
-# pode levar até DEEPSEEK_TIMEOUT_SECONDS; sem limite, 6 chamadas de 20s ao ScraperAPI já estourariam.
-WEB_SEARCH_BUDGET_SECONDS = 45
+# Orçamento total da busca web por requisição. Somado ao DeepSeek (DEEPSEEK_TIMEOUT_SECONDS=90),
+# precisa caber no timeout do gunicorn (180s no Dockerfile/Procfile).
+WEB_SEARCH_BUDGET_SECONDS = 75
 
 
 def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_fn=None,
