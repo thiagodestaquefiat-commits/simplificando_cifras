@@ -211,8 +211,9 @@ def test_research_uses_web_chord_sheet_in_text_flow():
     result = service.generate(request)
 
     assert web_search_calls == []
-    assert "<conteudo_usuario>" in provider.user_prompt
-    assert sheet in provider.user_prompt
+    assert provider.user_prompt == ""  # cifra da web é montada localmente: sem custo de IA
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]
+    assert result.harmonicSummary.blocos[0].fraseGuia == "Estátuas e cofres e paredes pintadas"
     assert result.fullChordSheet.source == "web_source"
     assert result.fullChordSheet.content == sheet
     assert "Cifra obtida de https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/; revise antes de salvar." in result.observacoes

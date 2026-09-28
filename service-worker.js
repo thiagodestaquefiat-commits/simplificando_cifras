@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v145-busca-sem-ia";
+const CACHE_NAME = "simplificando-cifras-v146-scraper-custo";
 const ASSETS = [
   "./",
   "./index.html",
@@ -46,8 +46,8 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
-  "./js/ai/harmonic-summary-client.js?v=11",
-  "./js/ai/ai-harmonic-summary.js?v=6",
+  "./js/ai/harmonic-summary-client.js?v=12",
+  "./js/ai/ai-harmonic-summary.js?v=7",
   "./js/ai/ai-harmonic-summary.css?v=4",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",

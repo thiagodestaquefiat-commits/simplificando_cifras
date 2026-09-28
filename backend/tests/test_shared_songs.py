@@ -68,8 +68,9 @@ def test_ia_service_ignores_low_score_match():
     catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data={}), 0.5))
     from app.services.web_search import ChordSheetHit
     web_hit = ChordSheetHit("C  G\nLetra da fonte", "https://www.cifraclub.com.br/a/x/", "cifraclub")
-    IaService(Provider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: web_hit).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="X", modoGeracao="conhecimento_modelo"))
-    assert calls
+    result = IaService(Provider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: web_hit).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="X", modoGeracao="conhecimento_modelo"))
+    assert "Cifra obtida de https://www.cifraclub.com.br/a/x/; revise antes de salvar." in result.observacoes
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G"] and not calls
 
 
 def test_own_library_has_priority_over_shared_catalog(client, app):

@@ -295,7 +295,7 @@ def _ddg_search(query: str) -> list | None:
 
 
 def _find(titulo: str, artista: str | None, http_client, search_fn=None,
-          budget_seconds: float | None = None) -> tuple[ChordSheetHit | None, list]:
+          budget_seconds: float | None = None, allow_search: bool = True) -> tuple[ChordSheetHit | None, list]:
     client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
     _search = search_fn or _ddg_search
     deadline = time.monotonic() + budget_seconds if budget_seconds else None
@@ -315,6 +315,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
             return ChordSheetHit(sheet, url, name, **meta), []
 
     all_results = []
+    if not allow_search:
+        logger.info("web_search_skipped reason=search_fallback_disabled")
+        return None, all_results
     for name, hosts, include_article in PAGE_SOURCES:
         if out_of_time(f"search:{name}"):
             break
@@ -368,7 +371,7 @@ WEB_SEARCH_BUDGET_SECONDS = 75
 
 
 def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_fn=None,
-                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS):
+                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS, allow_search: bool = True):
     """Retorna (sheet_finder, chord_context_searcher) que compartilham UMA busca por música.
 
     Com SCRAPER_API_KEY, usa o ScraperAPI como proxy (contorna bloqueio de IP de datacenter no
@@ -386,7 +389,8 @@ def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_
     def lookup(titulo: str, artista: str | None = None):
         key = (titulo, artista)
         if key not in memo:
-            memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds)
+            memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds,
+                              allow_search=allow_search)
             hit = memo[key][0]
             if hit:
                 logger.info("chord_sheet_found source=%s url=%s chars=%d", hit.source_name, hit.url, len(hit.content))
