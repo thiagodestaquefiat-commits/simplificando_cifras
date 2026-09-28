@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 import unicodedata
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -188,9 +189,39 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
     return sheet
 
 
-def _first_url(results, hosts: tuple[str, ...]) -> str | None:
-    return next((str(item.get("href")) for item in results
-                 if (urlparse(str(item.get("href") or "")).hostname or "").casefold() in hosts), None)
+_NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
+
+
+def _candidate_urls(results, hosts: tuple[str, ...], titulo: str | None = None, limit: int = 2) -> list[str]:
+    """URLs de cifra nos resultados, da mais provável para a menos provável.
+
+    Descarta páginas que não têm cifra (letra, impressão, videoaula) e coloca primeiro a URL cujo
+    slug da música é exatamente o título buscado, para não pegar um medley ("e-tudo-sobre-voce-ser-mudado")
+    antes da música certa ("e-tudo-sobre-voce").
+    """
+    song_slug = slugify(titulo)
+    ranked = []
+    for index, item in enumerate(results):
+        url = str(item.get("href") or "")
+        parsed = urlparse(url)
+        if (parsed.hostname or "").casefold() not in hosts:
+            continue
+        path = parsed.path.rstrip("/").casefold()
+        if not path or any(marker in path for marker in _NON_SHEET_PATHS):
+            continue
+        segments = [segment for segment in path.split("/") if segment]
+        if len(segments) < 2:  # página do artista, não da música
+            continue
+        last = segments[-1].removesuffix(".html")
+        score = 0 if song_slug and last == song_slug else 1 if song_slug and song_slug in last else 2
+        ranked.append((score, index, url))
+    unique = list(dict.fromkeys(url for _score, _index, url in sorted(ranked)))
+    return unique[:limit]
+
+
+def _first_url(results, hosts: tuple[str, ...], titulo: str | None = None) -> str | None:
+    urls = _candidate_urls(results, hosts, titulo, limit=1)
+    return urls[0] if urls else None
 
 
 def _ddg_search(query: str) -> list | None:
@@ -207,10 +238,21 @@ def _ddg_search(query: str) -> list | None:
     return results
 
 
-def _find(titulo: str, artista: str | None, http_client, search_fn=None) -> tuple[ChordSheetHit | None, list]:
+def _find(titulo: str, artista: str | None, http_client, search_fn=None,
+          budget_seconds: float | None = None) -> tuple[ChordSheetHit | None, list]:
     client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
     _search = search_fn or _ddg_search
+    deadline = time.monotonic() + budget_seconds if budget_seconds else None
+
+    def out_of_time(step: str) -> bool:
+        if deadline is not None and time.monotonic() >= deadline:
+            logger.warning("web_search_budget_exhausted step=%s budget=%ss", step, budget_seconds)
+            return True
+        return False
+
     for name, hosts, include_article in PAGE_SOURCES:
+        if out_of_time(f"direct:{name}"):
+            return None, []
         url = direct_url(name, titulo, artista)
         sheet = _fetch_page(url, client, name, hosts, include_article) if url else None
         if sheet:
@@ -218,24 +260,39 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None) -> tupl
 
     all_results = []
     for name, hosts, include_article in PAGE_SOURCES:
+        if out_of_time(f"search:{name}"):
+            break
         query = " ".join(part for part in (titulo, artista, "cifra", f"site:{SITE_DOMAINS[name]}") if part)
         results = _search(query)
         if results is None:
             continue
         all_results.extend(results)
-        url = _first_url(results, hosts)
-        if not url:
+        urls = [url for url in _candidate_urls(results, hosts, titulo) if url != direct_url(name, titulo, artista)]
+        if not urls:
             logger.warning("%s_no_url_in_results query=%r", name, query)
             continue
-        sheet = _fetch_page(url, client, name, hosts, include_article)
-        if sheet:
-            return ChordSheetHit(sheet, url, name), all_results
+        for url in urls:
+            if out_of_time(f"fetch:{name}"):
+                return None, all_results
+            sheet = _fetch_page(url, client, name, hosts, include_article)
+            if sheet:
+                return ChordSheetHit(sheet, url, name), all_results
     return None, all_results
 
 
 def find_chord_sheet(titulo: str, artista: str | None = None, http_client=None, search_fn=None) -> ChordSheetHit | None:
     """Procura a cifra: URL direta do simplificacifras, URL direta do Cifra Club e depois busca por site."""
     return _find(titulo, artista, http_client, search_fn)[0]
+
+
+def _snippets(results: list) -> str | None:
+    snippets = []
+    for item in results:
+        title = str(item.get("title") or "").strip()
+        body = str(item.get("body") or "").strip()[:MAX_SNIPPET_CHARS]
+        if title or body:
+            snippets.append(f"- {title}: {body}")
+    return "\n".join(snippets) or None
 
 
 def search_chord_context(titulo: str, artista: str | None = None, http_client=None, search_fn=None) -> str | None:
@@ -246,25 +303,47 @@ def search_chord_context(titulo: str, artista: str | None = None, http_client=No
     hit, results = _find(titulo, artista, http_client, search_fn)
     if hit:
         return hit.content
-    snippets = []
-    for item in results:
-        title = str(item.get("title") or "").strip()
-        body = str(item.get("body") or "").strip()[:MAX_SNIPPET_CHARS]
-        if title or body:
-            snippets.append(f"- {title}: {body}")
-    return "\n".join(snippets) or None
+    return _snippets(results)
 
 
-def make_web_searchers(scraper_api_key: str):
-    """Retorna (sheet_finder, chord_context_searcher) usando ScraperAPI como proxy.
+# Orçamento total da busca web por requisição. O gunicorn mata o worker em 120s e o DeepSeek
+# pode levar até DEEPSEEK_TIMEOUT_SECONDS; sem limite, 6 chamadas de 20s ao ScraperAPI já estourariam.
+WEB_SEARCH_BUDGET_SECONDS = 45
 
-    Uso: quando SCRAPER_API_KEY está configurado no Railway para contornar
-    bloqueio de IPs de datacenter no DuckDuckGo e nas fontes de cifras.
+
+def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_fn=None,
+                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS):
+    """Retorna (sheet_finder, chord_context_searcher) que compartilham UMA busca por música.
+
+    Com SCRAPER_API_KEY, usa o ScraperAPI como proxy (contorna bloqueio de IP de datacenter no
+    Railway). Sem chave, usa acesso direto + DuckDuckGo.
+
+    Antes, quando sheet_finder não achava a cifra, o chord_context_searcher refazia exatamente as
+    mesmas requisições (até 12 chamadas render=true ao ScraperAPI numa única busca). Agora o
+    resultado de _find é memorizado por (título, artista) e reaproveitado pelas duas funções.
     """
-    import functools
-    client = ScraperApiHttpClient(scraper_api_key)
-    search_fn = client.google_search
-    return (
-        functools.partial(find_chord_sheet, http_client=client, search_fn=search_fn),
-        functools.partial(search_chord_context, http_client=client, search_fn=search_fn),
-    )
+    if http_client is None and scraper_api_key:
+        client = ScraperApiHttpClient(scraper_api_key)
+        http_client, search_fn = client, search_fn or client.google_search
+    memo: dict[tuple[str, str | None], tuple[ChordSheetHit | None, list]] = {}
+
+    def lookup(titulo: str, artista: str | None = None):
+        key = (titulo, artista)
+        if key not in memo:
+            memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds)
+            hit = memo[key][0]
+            if hit:
+                logger.info("chord_sheet_found source=%s url=%s chars=%d", hit.source_name, hit.url, len(hit.content))
+            else:
+                logger.warning("chord_sheet_not_found titulo=%r artista=%r search_results=%d",
+                               titulo, artista, len(memo[key][1]))
+        return memo[key]
+
+    def sheet_finder(titulo: str, artista: str | None = None) -> ChordSheetHit | None:
+        return lookup(titulo, artista)[0]
+
+    def context_searcher(titulo: str, artista: str | None = None) -> str | None:
+        hit, results = lookup(titulo, artista)
+        return hit.content if hit else _snippets(results)
+
+    return sheet_finder, context_searcher

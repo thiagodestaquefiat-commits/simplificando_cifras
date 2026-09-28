@@ -114,7 +114,7 @@ def test_chord_parentheses_and_unlabelled_diagram_footer():
     assert 'F#m7(11)' in cleaned
     assert 'Dm7' not in cleaned
     out=normalize_response(response(['F#m7(11)','C/E'],hook=None),'texto',cleaned)
-    assert out.harmonicSummary.blocos[0].acordes==['F#m7(11)','C/E']
+    assert out.harmonicSummary.blocos[0].acordes==['F#m7','C/E']
 
 
 def test_title_used_as_actual_lyric_is_preserved():

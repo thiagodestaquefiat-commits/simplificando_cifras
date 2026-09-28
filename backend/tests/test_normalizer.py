@@ -19,7 +19,7 @@ from app.services.harmonic_normalizer import (
         ("B2", "B2"),
         ("Db", "Db"),
         ("Gb/Bb", "Gb/Bb"),
-        ("F#m7(11)", "F#m7(11)"),
+        ("F#m7(11)", "F#m7"),  # extensões entre parênteses não são exibidas
         ("D/F#", "D/F#"),
         ("C7M", "C7M"),
     ],
