@@ -106,3 +106,21 @@ def test_summary_follows_roudy_standard_for_real_sheet():
         ("Segunda Parte", "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
     ]
     assert (result.tom, result.capotraste) == ("D", 2)
+
+
+def test_key_is_estimated_from_chords_plus_capo_when_page_hides_it():
+    """Cifra Club monta o 'Tom: D' por JavaScript; o capotraste vem no HTML. C (forma) + capo 2 = D."""
+    from pathlib import Path
+    text = (Path(__file__).parent / "fixtures" / "cifraclub_isaias_9.txt").read_text(encoding="utf-8")
+    hit = ChordSheetHit(text, "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/", "cifraclub", capo=2)
+    result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
+    assert (result.tom, result.capotraste) == ("D", 2)
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G4", "Am"]
+    assert "tom estimado pelos acordes" in result.observacoes[0]
+
+
+def test_key_found_in_page_data_attributes():
+    html = '<div id="app" data-key="D"></div><div>Capotraste: 2ª casa</div><pre>C G Am</pre>'
+    assert web_search.extract_sheet_metadata(html) == {"key": "D", "capo": 2}
+    html_json = '<script>window.cifra = {"tom":"D","forma":"C"}</script><p>Capotraste: 2ª casa</p>'
+    assert web_search.extract_sheet_metadata(html_json) == {"key": "D", "shape_key": "C", "capo": 2}

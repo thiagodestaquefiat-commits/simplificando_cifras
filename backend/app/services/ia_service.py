@@ -7,6 +7,7 @@ from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, Re
 from .harmonic_normalizer import ensure_client_chords, normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
 from .local_sheet_parser import parse_chord_sheet
+from .key_inference import infer_key, transpose_note
 from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
 from .shared_songs_service import CATALOG_FULL_SHEET_SOURCES, SharedSongService
@@ -136,6 +137,15 @@ class IaService:
         real_key = getattr(web_hit, "key", None)
         shape_key = getattr(web_hit, "shape_key", None)
         capo = getattr(web_hit, "capo", None)
+        estimated = False
+        if not real_key:
+            # Página sem o tom legível (no Cifra Club ele é montado por JavaScript): estima pelos
+            # acordes escritos (a forma) e soma o capotraste. Ex.: acordes em C + capo 2 -> D.
+            chords = [chord for bloco in normalized.harmonicSummary.blocos for chord in bloco.acordes]
+            shape_key = shape_key or infer_key(chords)
+            if shape_key:
+                real_key = transpose_note(shape_key, capo or 0)
+                estimated = True
         if real_key:
             normalized.tom = real_key
         if capo:
@@ -146,6 +156,10 @@ class IaService:
             note = f"Tom: {real_key}, capotraste na {capo}ª casa."
         else:
             note = None
+        if note and estimated:
+            note = note[:-1] + " — tom estimado pelos acordes; confira."
+        elif not note and estimated:
+            note = f"Tom estimado pelos acordes: {real_key}; confira."
         if note and note not in normalized.observacoes:
             normalized.observacoes.insert(0, note)
 

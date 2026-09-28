@@ -115,8 +115,21 @@ _KEY_RE = re.compile(r"\bTom:\s*([A-G][#b]?m?)(?![\w#])(?:\s*\(\s*com forma de\s
 _CAPO_RE = re.compile(r"\bCapotraste\s*(?::|na)?\s*(\d{1,2})\s*[ªºa°]?\s*casa", re.IGNORECASE)
 
 
+# O tom do Cifra Club é interativo (dá para transpor) e costuma vir em dados/atributos da página,
+# não no texto; o capotraste vem no texto. Procura em JSON/atributos antes do texto visível.
+_KEY_DATA_RES = (
+    re.compile(r"""["'](?:tom|key|tone|songKey|originalKey|cifra_tom)["']\s*:\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE),
+    re.compile(r"""data-(?:tom|key|tone)\s*=\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE),
+)
+_SHAPE_DATA_RE = re.compile(r"""["'](?:forma|shape|shapeKey|tomForma)["']\s*:\s*["']([A-G][#b]?m?)["']""", re.IGNORECASE)
+
+
+def _key_name(value: str) -> str:
+    return value[0].upper() + value[1:]
+
+
 def extract_sheet_metadata(html: str | None) -> dict:
-    """Lê 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' do cabeçalho da página (fora do <pre>)."""
+    """Lê 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' da página (fora do <pre>)."""
     if not html:
         return {}
     import html as html_lib
@@ -125,12 +138,26 @@ def extract_sheet_metadata(html: str | None) -> dict:
     meta = {}
     key_match = _KEY_RE.search(text)
     if key_match:
-        meta["key"] = key_match.group(1)[0].upper() + key_match.group(1)[1:]
+        meta["key"] = _key_name(key_match.group(1))
         if key_match.group(2):
-            meta["shape_key"] = key_match.group(2)[0].upper() + key_match.group(2)[1:]
+            meta["shape_key"] = _key_name(key_match.group(2))
+    else:
+        for pattern in _KEY_DATA_RES:
+            data_match = pattern.search(html)
+            if data_match:
+                meta["key"] = _key_name(data_match.group(1))
+                break
+        shape_match = _SHAPE_DATA_RE.search(html)
+        if shape_match:
+            meta["shape_key"] = _key_name(shape_match.group(1))
     capo_match = _CAPO_RE.search(text)
     if capo_match and 0 < int(capo_match.group(1)) <= 12:
         meta["capo"] = int(capo_match.group(1))
+    if "key" not in meta:
+        # Diagnóstico: trecho em volta de "Tom" para ajustar o leitor se o HTML do site mudar.
+        around = [html[max(0, m.start() - 120):m.end() + 160].replace("\n", " ")
+                  for m in re.finditer(r"\btom\b", html, re.IGNORECASE)][:4]
+        logger.warning("sheet_key_not_found capo=%s snippets=%r", meta.get("capo"), around)
     return meta
 
 
