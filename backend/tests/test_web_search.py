@@ -302,3 +302,24 @@ def test_web_search_respects_time_budget(monkeypatch):
 
     hit, results = web_search._find("Música", "Artista", SlowClient(), lambda q: calls.append(q) or [], budget_seconds=45)
     assert hit is None and len(calls) == 1
+
+
+def test_search_prefers_exact_song_page_over_medley_and_lyrics():
+    """Caso real: Morada está em /ministerio-morada/, então a URL direta dá 404 e vale a busca."""
+    fetched = []
+    results = [{"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce-ser-mudado-medley/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/letra/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/"}]
+
+    class Client:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            fetched.append(url)
+            if url.endswith("/ministerio-morada/e-tudo-sobre-voce/"):
+                return "<pre>[Intro] Am  C  Am  C</pre>", url
+            raise MusicSourceUnavailable("404")
+
+    hit = web_search.find_chord_sheet("É Tudo Sobre Você", "Morada", http_client=Client(),
+                                      search_fn=lambda q: results if "cifraclub" in q else [])
+    assert hit.url == "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/"
+    assert not any("/letra" in url or "medley" in url for url in fetched)

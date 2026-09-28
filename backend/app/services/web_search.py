@@ -189,9 +189,39 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
     return sheet
 
 
-def _first_url(results, hosts: tuple[str, ...]) -> str | None:
-    return next((str(item.get("href")) for item in results
-                 if (urlparse(str(item.get("href") or "")).hostname or "").casefold() in hosts), None)
+_NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
+
+
+def _candidate_urls(results, hosts: tuple[str, ...], titulo: str | None = None, limit: int = 2) -> list[str]:
+    """URLs de cifra nos resultados, da mais provável para a menos provável.
+
+    Descarta páginas que não têm cifra (letra, impressão, videoaula) e coloca primeiro a URL cujo
+    slug da música é exatamente o título buscado, para não pegar um medley ("e-tudo-sobre-voce-ser-mudado")
+    antes da música certa ("e-tudo-sobre-voce").
+    """
+    song_slug = slugify(titulo)
+    ranked = []
+    for index, item in enumerate(results):
+        url = str(item.get("href") or "")
+        parsed = urlparse(url)
+        if (parsed.hostname or "").casefold() not in hosts:
+            continue
+        path = parsed.path.rstrip("/").casefold()
+        if not path or any(marker in path for marker in _NON_SHEET_PATHS):
+            continue
+        segments = [segment for segment in path.split("/") if segment]
+        if len(segments) < 2:  # página do artista, não da música
+            continue
+        last = segments[-1].removesuffix(".html")
+        score = 0 if song_slug and last == song_slug else 1 if song_slug and song_slug in last else 2
+        ranked.append((score, index, url))
+    unique = list(dict.fromkeys(url for _score, _index, url in sorted(ranked)))
+    return unique[:limit]
+
+
+def _first_url(results, hosts: tuple[str, ...], titulo: str | None = None) -> str | None:
+    urls = _candidate_urls(results, hosts, titulo, limit=1)
+    return urls[0] if urls else None
 
 
 def _ddg_search(query: str) -> list | None:
@@ -237,15 +267,16 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         if results is None:
             continue
         all_results.extend(results)
-        url = _first_url(results, hosts)
-        if not url:
+        urls = [url for url in _candidate_urls(results, hosts, titulo) if url != direct_url(name, titulo, artista)]
+        if not urls:
             logger.warning("%s_no_url_in_results query=%r", name, query)
             continue
-        if out_of_time(f"fetch:{name}"):
-            break
-        sheet = _fetch_page(url, client, name, hosts, include_article)
-        if sheet:
-            return ChordSheetHit(sheet, url, name), all_results
+        for url in urls:
+            if out_of_time(f"fetch:{name}"):
+                return None, all_results
+            sheet = _fetch_page(url, client, name, hosts, include_article)
+            if sheet:
+                return ChordSheetHit(sheet, url, name), all_results
     return None, all_results
 
 
