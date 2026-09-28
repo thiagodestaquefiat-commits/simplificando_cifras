@@ -10,44 +10,63 @@ from .content_extractor import clean_musical_text, is_technical_line, TECHNICAL_
 
 FLAT_ROOTS = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
 CHORD_RE = re.compile(
-    r"^(?P<root>[A-Ga-g](?:#|b)?)(?P<quality>[^/\s]{0,20})?(?:/(?P<bass>[A-Ga-g](?:#|b)?))?$"
-)
-QUALITY_RE = re.compile(
-    r"^(?:|m|5|6|7|9|11|13|2|4|sus|sus2|sus4|add9|maj7|M7|7M|7m|7\+|Δ7|"
-    r"m7|m9|m11|m13|m6|dim|°|o|aug|\+|#5|m7b5|ø|mMaj7|m7\(11\)|m\(add9\)|"
-    r"7\([#b]?\d+\)|maj7\(\d+\)|m7\([#b]?\d+\)|\(#5\)|\(add9\))$"
+    r"^(?P<root>[A-Ga-g](?:#|b)?)(?P<quality>(?:\([^()\s]{1,12}\)|[^/\s(]){0,20})(?:/(?P<bass>[A-Ga-g](?:#|b)?))?$"
 )
 
 
-# Qualidades que o frontend aceita (espelho de ALIASES em js/instruments/multi-instrument-chord-library.js).
-# Qualquer acorde enviado ao cliente precisa caber aqui, senão assertResponse() rejeita a resposta
-# inteira com "O servidor retornou um acorde inválido".
-CLIENT_QUALITIES = frozenset({
-    "", "maj", "maior", "m", "min", "menor", "-", "5", "6", "m6", "7", "dom",
-    "maj7", "M7", "7M", "7m", "7+", "Δ7", "m7", "min7", "mMaj7", "m(maj7)",
-    "9", "maj9", "M9", "m9", "add9", "(add9)", "11", "m11", "m7(11)", "13",
-    "2", "sus2", "4", "sus", "sus4", "dim", "°", "o", "m7(b5)", "m7b5", "ø",
-    "aug", "+", "#5", "(#5)",
-})
-# Notação brasileira comum (Cifra Club etc.) que o backend reconhece, mas o frontend ainda não:
-# converte para o equivalente exato quando existe, senão para o acorde-base mais próximo.
-CLIENT_EQUIVALENTS = {
-    "7(9)": "9", "7(11)": "11", "7(13)": "13",
-    "maj7(9)": "maj9", "m7(9)": "m9",
-    "7(4)": "sus4",
-    "m(add9)": "m", "m13": "m7",
+# Espelho de normalizeSuffix() em js/instruments/multi-instrument-chord-library.js.
+# O backend aceita exatamente o que o frontend aceita e PRESERVA a grafia original do acorde
+# (A7(9) continua A7(9)); o frontend só usa o equivalente para escolher o diagrama.
+CLIENT_ALIASES = {
+    "": "", "maj": "", "maior": "",
+    "m": "m", "min": "m", "menor": "m", "-": "m",
+    "5": "5", "6": "6", "m6": "m6", "7": "7", "dom": "7",
+    "maj7": "maj7", "M7": "maj7", "7M": "maj7", "7m": "maj7", "7+": "maj7", "Δ7": "maj7",
+    "m7": "m7", "min7": "m7", "mMaj7": "mMaj7", "m(maj7)": "mMaj7",
+    "9": "9", "maj9": "maj9", "M9": "maj9", "m9": "m9", "add9": "add9", "(add9)": "add9",
+    "11": "11", "m11": "m11", "m7(11)": "m11", "13": "13",
+    "2": "sus2", "sus2": "sus2", "4": "sus4", "sus": "sus4", "sus4": "sus4",
+    "dim": "dim", "°": "dim", "o": "dim",
+    "m7(b5)": "m7b5", "m7b5": "m7b5", "ø": "m7b5",
+    "aug": "aug", "+": "aug", "#5": "aug", "(#5)": "aug",
 }
+CLIENT_EXTRA_ALIASES = {"m13": "m11", "m(7M)": "mMaj7", "m(maj7)": "mMaj7", "7sus4": "sus4",
+                        "7sus": "sus4", "7(4)": "sus4", "m(add9)": "m", "m(9)": "m"}
+_EXTENSION_RE = re.compile(r"^[#b+-]?\d{1,2}[#b+-]?(?:[/,][#b+-]?\d{1,2}[#b+-]?)*$")
 
 
-def _client_quality(quality: str) -> str:
-    if quality in CLIENT_QUALITIES:
-        return quality
-    if quality in CLIENT_EQUIVALENTS:
-        return CLIENT_EQUIVALENTS[quality]
-    for prefix in ("maj7", "m7", "7"):
-        if quality.startswith(prefix + "("):
-            return prefix
-    return quality
+def _client_base_alias(suffix: str) -> str | None:
+    if suffix in CLIENT_ALIASES:
+        return CLIENT_ALIASES[suffix]
+    folded = suffix.casefold()
+    return next((value for key, value in CLIENT_ALIASES.items() if key.casefold() == folded), None)
+
+
+def client_suffix(suffix: str) -> str | None:
+    """Sufixo canônico (para diagrama) ou None se o frontend rejeitaria o acorde."""
+    suffix = (suffix or "").strip()
+    base = _client_base_alias(suffix)
+    if base is not None:
+        return base
+    if suffix in CLIENT_EXTRA_ALIASES:
+        return CLIENT_EXTRA_ALIASES[suffix]
+    match = re.fullmatch(r"(.*?)\(([^()]+)\)", suffix)
+    if not match or not _EXTENSION_RE.fullmatch(match.group(2)):
+        return None
+    base = _client_base_alias(match.group(1))
+    if base is None:
+        return None
+    tensions = re.split(r"[/,]", match.group(2))
+    if base == "7":
+        return next((value for key, value in (("4", "sus4"), ("13", "13"), ("11", "11"), ("9", "9")) if key in tensions), "7")
+    if base == "maj7":
+        return "maj9" if "9" in tensions else "maj7"
+    if base == "m7":
+        return "m11" if "11" in tensions else "m9" if "9" in tensions else "m7b5" if {"b5", "5-"} & set(tensions) else "m7"
+    if base == "":
+        return "add9" if "9" in tensions else "sus4" if "4" in tensions else ""
+    return base
+
 
 def _shown_root(value: str) -> str:
     return value[0].upper() + value[1:]
@@ -75,18 +94,10 @@ def _parse_chord(value: str) -> tuple[str, str]:
     # Uma segunda nota maiúscula fora do baixo indica acordes concatenados.
     if re.search(r"[A-G]", quality):
         raise ValueError(f"Acordes concatenados: {value}")
-    if not QUALITY_RE.fullmatch(quality):
+    canonical_quality = client_suffix(quality)
+    if canonical_quality is None:
         raise ValueError(f"Qualidade de acorde inválida: {value}")
-    display_aliases = {
-        "4": "sus4",
-        "7M": "maj7",
-        "M7": "maj7",
-        "m7M": "mMaj7",
-    }
-    canonical_aliases = {**display_aliases, "2": "sus2"}
-    quality = _client_quality(quality)
     display_quality = quality
-    canonical_quality = canonical_aliases.get(quality, quality)
     shown_bass = f"/{_shown_root(match.group('bass'))}" if match.group("bass") else ""
     canonical_bass = f"/{_canonical_root(match.group('bass'))}" if match.group("bass") else ""
     display_name = f"{_shown_root(match.group('root'))}{display_quality}{shown_bass}"
@@ -110,26 +121,11 @@ def normalize_chord(value: str) -> str:
     return _parse_chord(value)[0]
 
 
-def client_simplification(value: str) -> str | None:
-    """Se o acorde precisou ser adaptado ao vocabulário do app, devolve a grafia adaptada."""
-    compact = str(value or "").strip().replace("♯", "#").replace("♭", "b").replace(" ", "").rstrip(".")
-    match = CHORD_RE.fullmatch(compact)
-    if not match or _client_quality(match.group("quality") or "") == (match.group("quality") or ""):
-        return None
-    try:
-        return normalize_chord(compact)
-    except ValueError:
-        return None
-
-
 def is_client_chord(value: str) -> bool:
-    """Replica a validação do frontend (parseChord) para barrar acordes antes de responder."""
+    """Replica parseChord do frontend para barrar acordes antes de responder."""
     compact = str(value or "").strip().replace("♯", "#").replace("♭", "b").replace(" ", "")
     match = re.fullmatch(r"([A-Ga-g][#b]?)(.*?)(?:/([A-Ga-g][#b]?))?", compact)
-    if not match:
-        return False
-    quality = match.group(2)
-    return quality in CLIENT_QUALITIES or quality.casefold() in {item.casefold() for item in CLIENT_QUALITIES}
+    return bool(match) and client_suffix(match.group(2)) is not None
 
 
 def canonicalize_chord(value: str) -> str:
@@ -398,19 +394,6 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
             normalized.observacoes.append(f"Tom não validado: {normalized.tom}")
             normalized.tom = None
 
-    simplified = {}
-    for trecho in normalized.harmonicSummary.blocos:
-        for chord in trecho.acordes:
-            adapted = client_simplification(chord)
-            if adapted:
-                simplified[str(chord).strip()] = adapted
-    for section in (normalized.fullChordSheet.sections if normalized.fullChordSheet else []):
-        for line in section.linhas:
-            for item in line.acordes:
-                adapted = client_simplification(item.acorde)
-                if adapted:
-                    simplified[str(item.acorde).strip()] = adapted
-
     for trecho in normalized.harmonicSummary.blocos:
         chords = []
         for chord in trecho.acordes:
@@ -512,11 +495,6 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
     if invalid:
         normalized.observacoes.append(
             "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(invalid)))
-        )
-    if simplified:
-        normalized.observacoes.append(
-            "Acordes adaptados ao formato do app: "
-            + ", ".join(f"{original} → {adapted}" for original, adapted in sorted(simplified.items()))
         )
 
     if source_type == "pesquisa":
