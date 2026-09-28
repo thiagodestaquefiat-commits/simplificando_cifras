@@ -10,4 +10,4 @@ COPY . .
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "180", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "run:app"]
