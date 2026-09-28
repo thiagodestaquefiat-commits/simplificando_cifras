@@ -14,7 +14,8 @@ import pytest
 
 from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
 from app.services.harmonic_normalizer import (
-    ensure_client_chords, is_client_chord, normalize_chord, normalize_response, split_chord_token,
+    ensure_client_chords, is_client_chord, normalize_chord, normalize_response, simplify_chord_text,
+    split_chord_token,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,10 +25,30 @@ ORIGINAL_CHORDS = ["A7(9)", "E7(4)", "E7(4/9)", "C7(9-)", "C7(13)", "G7(#9)", "D
 REJECTED = ["Lá", "Sol", "Ré", "Dó", "C(xyz)", "Cfoo", "H7"]
 
 
+SIMPLIFIED = {"A7(9)": "A7", "E7(4)": "E7", "E7(4/9)": "E7", "C7(9-)": "C7", "C7(13)": "C7",
+              "G7(#9)": "G7", "Cmaj7(9)": "Cmaj7", "C7M(9)": "C7M", "Am7(9)": "Am7", "Am7(11)": "Am7",
+              "Bm7(b5)": "Bm7", "Am(add9)": "Am", "Am(7M)": "Am", "C(9)": "C", "A7(9)/C#": "A7/C#"}
+
+
 @pytest.mark.parametrize("chord", ORIGINAL_CHORDS)
-def test_original_spelling_is_preserved(chord):
-    assert normalize_chord(chord) == chord
+def test_chords_are_accepted_and_valid_for_the_app(chord):
     assert is_client_chord(chord)
+    assert is_client_chord(normalize_chord(chord))
+
+
+@pytest.mark.parametrize("chord, expected", SIMPLIFIED.items())
+def test_parenthetical_extensions_are_removed(chord, expected):
+    assert normalize_chord(chord) == expected
+
+
+@pytest.mark.parametrize("chord", ["A7M", "Am13", "A4", "B2", "A9", "C#m7", "E/G#", "Bb"])
+def test_chords_without_parentheses_keep_original_spelling(chord):
+    assert normalize_chord(chord) == chord
+
+
+def test_chord_sheet_text_is_simplified_keeping_alignment_and_lyrics():
+    text = "A7(9)     E7(4)    F#m  (2x)\nTudo (sobre) Você, Deus (Em)"
+    assert simplify_chord_text(text) == "A7        E7       F#m  (2x)\nTudo (sobre) Você, Deus (Em)"
 
 
 @pytest.mark.parametrize("chord", REJECTED)
@@ -69,14 +90,14 @@ def _response(chords, sheet_chords=None):
     return ResumoHarmonicoResponse.model_validate(data)
 
 
-def test_normalize_response_keeps_original_chords():
+def test_normalize_response_simplifies_chords():
     result = normalize_response(_response(["A7(9)", "E7(4)", "D"]), "pesquisa")
-    assert result.harmonicSummary.blocos[0].acordes == ["A7(9)", "E7(4)", "D"]
+    assert result.harmonicSummary.blocos[0].acordes == ["A7", "E7", "D"]
 
 
-def test_ensure_client_chords_keeps_valid_and_drops_only_unreadable():
+def test_ensure_client_chords_simplifies_cached_songs_and_drops_unreadable():
     cached = _response(["A7(9)", "Lá", "D"], sheet_chords=["E7(4)", "Sol"])
     fixed = ensure_client_chords(cached)
-    assert fixed.harmonicSummary.blocos[0].acordes == ["A7(9)", "D"]
-    assert [item.acorde for item in fixed.fullChordSheet.sections[0].linhas[0].acordes] == ["E7(4)"]
+    assert fixed.harmonicSummary.blocos[0].acordes == ["A7", "D"]
+    assert [item.acorde for item in fixed.fullChordSheet.sections[0].linhas[0].acordes] == ["E7"]
     assert any("Lá" in note and "Sol" in note for note in fixed.observacoes)

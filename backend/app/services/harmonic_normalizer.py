@@ -35,6 +35,34 @@ CLIENT_EXTRA_ALIASES = {"m13": "m11", "m(7M)": "mMaj7", "m(maj7)": "mMaj7", "7su
 _EXTENSION_RE = re.compile(r"^[#b+-]?\d{1,2}[#b+-]?(?:[/,][#b+-]?\d{1,2}[#b+-]?)*$")
 
 
+def simplify_quality(quality: str) -> str:
+    """Remove tudo que estiver entre parênteses: 7(9) -> 7, m(add9) -> m, m7(b5) -> m7."""
+    return re.sub(r"\([^()]*\)", "", quality or "")
+
+
+_PAREN_CHORD_TOKEN_RE = re.compile(r"(?<!\S)[A-G][#b]?[^\s/()]*\([^()\s]*\)[^\s/()]*(?:/[A-G][#b]?)?(?!\S)")
+
+
+def simplify_chord_text(text: str | None) -> str | None:
+    """Simplifica acordes com parênteses dentro de um texto de cifra, mantendo o alinhamento.
+
+    Só troca tokens que são acordes válidos; letra e marcações como (2x) ficam intactas.
+    """
+    if not text:
+        return text
+
+    def replace(match: re.Match) -> str:
+        token = match.group(0)
+        try:
+            simplified = normalize_chord(token)
+        except ValueError:
+            return token
+        return simplified + " " * (len(token) - len(simplified))
+
+    return "\n".join(_PAREN_CHORD_TOKEN_RE.sub(replace, line).rstrip() if "(" in line else line
+                     for line in text.split("\n"))
+
+
 def _client_base_alias(suffix: str) -> str | None:
     if suffix in CLIENT_ALIASES:
         return CLIENT_ALIASES[suffix]
@@ -94,6 +122,10 @@ def _parse_chord(value: str) -> tuple[str, str]:
     # Uma segunda nota maiúscula fora do baixo indica acordes concatenados.
     if re.search(r"[A-G]", quality):
         raise ValueError(f"Acordes concatenados: {value}")
+    if client_suffix(quality) is None:
+        raise ValueError(f"Qualidade de acorde inválida: {value}")
+    # Simplificação do ROUDY: extensões entre parênteses não são exibidas (A7(9) -> A7, E7(4) -> E7).
+    quality = simplify_quality(quality)
     canonical_quality = client_suffix(quality)
     if canonical_quality is None:
         raise ValueError(f"Qualidade de acorde inválida: {value}")
@@ -522,8 +554,6 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
     dropped = []
 
     def adapt(chord: str) -> str | None:
-        if is_client_chord(chord):
-            return chord
         try:
             candidate = normalize_chord(chord)
         except ValueError:
@@ -533,12 +563,13 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
         dropped.append(str(chord))
         return None
 
-    if fixed.tom and not is_client_chord(fixed.tom):
+    if fixed.tom:
         fixed.tom = adapt(fixed.tom)
     for trecho in fixed.harmonicSummary.blocos:
         trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
     fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
     if fixed.fullChordSheet:
+        fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:
             for line in section.linhas:
                 kept = []
