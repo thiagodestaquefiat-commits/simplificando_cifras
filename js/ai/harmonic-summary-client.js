@@ -207,6 +207,7 @@
       if (["arquivo_invalido", "tipo_arquivo_invalido", "pdf_paginas_invalidas"].includes(code)) {
         throw new HarmonicSummaryError("invalid_file", "Não foi possível ler este arquivo. Tente outro PDF, imagem ou TXT.", response.status);
       }
+      if (code === "servico_nao_configurado") throw new HarmonicSummaryError("server", "A busca está indisponível neste ambiente (serviço de IA não configurado).", response.status);
       if (code === "cifra_nao_encontrada") throw new HarmonicSummaryError("not_found", "Não encontramos a cifra desta música. Envie um arquivo ou foto da cifra.", response.status);
       if (code === "fonte_nao_selecionada") throw new HarmonicSummaryError("source_required", "Escolha uma fonte antes de gerar com IA.", response.status);
       if (code === "fonte_timeout") throw new HarmonicSummaryError("source_timeout", "A fonte demorou mais que o esperado. Tente novamente.", response.status);

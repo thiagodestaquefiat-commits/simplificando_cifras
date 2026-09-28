@@ -77,7 +77,8 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
 
     @app.get("/health")
     def health():
-        return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY"))})
+        return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY")),
+                        "deepseekConfigured": bool(app.config.get("DEEPSEEK_API_KEY"))})
 
     from .routes.events import blueprint as events_blueprint
     from .routes.locations import blueprint as locations_blueprint
