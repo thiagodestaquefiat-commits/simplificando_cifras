@@ -133,7 +133,7 @@
       return {
         type: "custom",
         label: clean(trecho.secao || "", 120),
-        hideLabel: Boolean(trecho.fraseGuia) || !trecho.secao,
+        hideLabel: !trecho.secao,  // padrão ROUDY: nome da seção + frase-guia + progressão
         lines: [{ lyrics: clean(trecho.fraseGuia, 80), repeticoes: trecho.repeticoes, chords }]
       };
     });

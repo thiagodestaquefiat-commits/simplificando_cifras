@@ -88,3 +88,21 @@ def test_daily_web_limit_per_user_asks_for_file():
     with pytest.raises(ApiError) as error:
         service.generate(request(), user_id="u1")
     assert error.value.code == "limite_busca_web" and error.value.status_code == 429
+
+
+def test_summary_follows_roudy_standard_for_real_sheet():
+    """Padrão ROUDY: seção + frase-guia curta + uma volta da progressão; seção repetida aparece uma vez."""
+    from pathlib import Path
+    text = (Path(__file__).parent / "fixtures" / "cifraclub_isaias_9.txt").read_text(encoding="utf-8")
+    hit = ChordSheetHit(text, "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/", "cifraclub", key="D", shape_key="C", capo=2)
+    result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
+    summary = [(b.secao, b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
+    assert summary == [
+        ("Intro", None, ["C", "G4", "Am"], 2),
+        ("Primeira Parte", "Um menino nasceu", ["C", "G4", "Am"], None),
+        ("Pré-Refrão", "E o Seu nome é", ["F7M", "Am", "Dm", "F7M", "Am", "G"], None),
+        ("Refrão", "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        ("Solo", None, ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        ("Segunda Parte", "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+    ]
+    assert (result.tom, result.capotraste) == ("C", 2)

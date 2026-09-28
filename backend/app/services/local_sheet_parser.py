@@ -82,15 +82,21 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
 
     sections = [section for section in sections if not section["tab"] and section["linhas"]][:_MAX_SECTIONS]
     blocos = []
+    seen = set()
     for section in sections:
         chords = [chord for line in section["linhas"] for chord, _ in line["acordes"]]
         if not chords:
             continue
         lyric = next((line["letra"] for line in section["linhas"] if line["letra"]), None)
-        guide = _guide_phrase(lyric)
-        for start in range(0, len(chords), _MAX_CHORDS):
-            blocos.append({"acordes": chords[start:start + _MAX_CHORDS], "repeticoes": None,
-                           "fraseGuia": guide if start == 0 else None, "secao": section["nome"]})
+        progression, repetitions = _condense(chords)
+        # Padrão ROUDY: seção + frase-guia curta + progressão de uma volta; cada seção uma vez.
+        identity = ((section["nome"] or "").casefold(), tuple(progression))
+        if identity in seen:
+            continue
+        seen.add(identity)
+        blocos.append({"acordes": progression[:_MAX_CHORDS],
+                       "repeticoes": repetitions if lyric is None else None,
+                       "fraseGuia": _guide_phrase(lyric), "secao": section["nome"]})
     if not blocos:
         return None
     first_chord = blocos[0]["acordes"][0]
@@ -116,15 +122,42 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     })
 
 
+_MAX_PROGRESSION = 8
+
+
+def _condense(chords: list[str]) -> tuple[list[str], int | None]:
+    """Reduz a sequência da seção a uma volta da progressão (padrão dos resumos do ROUDY).
+
+    - junta acordes iguais seguidos (C C G -> C G);
+    - se a sequência é um ciclo (C G4 Am C G4 Am ...), fica só o ciclo, com a contagem de voltas;
+    - sem ciclo e longa demais, fica a ordem em que cada acorde aparece pela primeira vez.
+    """
+    sequence = [chord for index, chord in enumerate(chords) if index == 0 or chord != chords[index - 1]]
+    for period in range(1, len(sequence) // 2 + 1):
+        if all(sequence[index] == sequence[index % period] for index in range(len(sequence))):
+            cycle = sequence[:period]
+            turns = len(sequence) // period if len(sequence) % period == 0 else None
+            return cycle, turns if turns and turns > 1 else None
+    if len(sequence) > _MAX_PROGRESSION:
+        return list(dict.fromkeys(sequence)), None
+    return sequence, None
+
+
 def _guide_phrase(lyric: str | None) -> str | None:
-    """Até 6 palavras do início da letra, copiadas literalmente (para no primeiro espaço duplo)."""
+    """Frase-guia curta copiada literalmente do início da letra.
+
+    Linha inteira quando tem até 6 palavras ("O céu começa a se abrir"); senão, as 4 primeiras.
+    Para no primeiro espaço duplo, porque a frase precisa existir igual no texto da cifra.
+    """
     if not lyric:
         return None
     words = []
     for match in re.finditer(r"(\S+)(\s*)", lyric.strip()):
         words.append(match.group(1))
-        if len(words) == 6 or match.group(2) not in ("", " "):
+        if match.group(2) not in ("", " "):
             break
+    if len(words) > 6:
+        words = words[:4]
     return " ".join(words) or None
 
 
