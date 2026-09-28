@@ -20,6 +20,9 @@ MAX_CANDIDATES = 10
 # contém apenas acordes (sem letra nem cifra completa), então não há problema
 # de privacidade independentemente da fonte (upload, texto, online ou manual).
 SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text", "ai_knowledge"}
+# Só letra enviada pelo próprio usuário entra completa no catálogo público. Cifra raspada da web
+# (web_source) ou gerada pela IA (model_knowledge) é compartilhada apenas como resumo harmônico.
+CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text"}
 
 
 def canonical_section(value) -> str | None:
@@ -213,20 +216,28 @@ class SharedSongService:
         if not blocos:
             return None
         capo = song_data.get("capo")
-        # Inclui a cifra completa (letra + acordes) no catálogo compartilhado,
-        # igual ao modelo do Cifra Club: cada usuário contribui com a cifra completa.
+        # Cifra completa (letra) só vai ao catálogo quando foi enviada pelo usuário.
+        # Web e IA: somente resumo harmônico, com o link da fonte nas observações.
         full_sheet = song_data.get("fullChordSheet")
         full_sheet_payload = None
+        observacoes = ["Cifra do catálogo compartilhado; revise antes de usar."]
+        source_info = song_data.get("sourceInfo") if isinstance(song_data.get("sourceInfo"), dict) else {}
+        source_url = str(source_info.get("url") or "").strip()
+        if not source_url:
+            # Busca por IA com cifra da web: o link só vem nas observações ("Cifra obtida de <url>;").
+            found = re.search(r"Cifra obtida de (https://\S+?);", str(song_data.get("notes") or ""))
+            source_url = found.group(1) if found else ""
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            valid_sources = {"user_upload", "user_text", "model_knowledge", "web_source"}
-            if content and source in valid_sources:
+            if content and source in CATALOG_FULL_SHEET_SOURCES:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],
                     "sections": full_sheet.get("sections") or [],
                 }
+        if source_url.startswith("https://") and not full_sheet_payload:
+            observacoes.append(f"Fonte: {source_url[:300]}")
         try:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
@@ -234,7 +245,7 @@ class SharedSongService:
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
                 "capotraste": capo if isinstance(capo, int) and 0 <= capo <= 12 else None,
                 "harmonicSummary": {"blocos": blocos[:40]},
-                "observacoes": ["Cifra do catálogo compartilhado; revise antes de usar."],
+                "observacoes": observacoes,
                 "confianca": "media",
                 "fullChordSheet": full_sheet_payload,
             })

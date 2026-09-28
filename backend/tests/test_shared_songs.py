@@ -120,3 +120,45 @@ def test_personal_match_matches_ai_response_format(client):
     assert data["fullChordSheet"]["source"] == "user_upload"
     assert data["fullChordSheet"]["content"] == song["fullChordSheet"]["content"]
     assert data["fullChordSheet"]["sections"][1]["linhas"][1]["letra"] == "Cantando alto hoje com a banda toda aqui"
+
+
+def _with_sheet(source, **overrides):
+    return ai_song(fullChordSheet={"source": source, "visibility": "private", "content": "G C\nLetra completa da música"}, **overrides)
+
+
+def test_web_scraped_song_goes_to_catalog_only_as_harmonic_summary(client, app):
+    token = register(client, "shared-web", "W")
+    song = _with_sheet("web_source", sourceInfo={"type": "ai_knowledge", "name": "IA", "url": None},
+                       notes="Confiança da IA: média.\nCifra obtida de https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/; revise antes de salvar.")
+    client.put("/api/library/songs/web", headers=auth(token), json={"songData": song})
+    with app.app_context():
+        stored = SharedSong.query.one()
+        assert stored.song_data["fullChordSheet"] is None
+        assert "Letra completa" not in str(stored.song_data)
+        assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
+        assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
+
+
+def test_ai_generated_lyrics_never_go_to_catalog(client, app):
+    token = register(client, "shared-ai", "I")
+    client.put("/api/library/songs/ai", headers=auth(token), json={"songData": _with_sheet("model_knowledge")})
+    with app.app_context():
+        assert SharedSong.query.one().song_data["fullChordSheet"] is None
+
+
+def test_user_uploaded_sheet_keeps_full_lyrics_in_catalog(client, app):
+    token = register(client, "shared-up", "U")
+    client.put("/api/library/songs/up", headers=auth(token), json={"songData": _with_sheet("user_upload", sourceInfo={"type": "upload"})})
+    with app.app_context():
+        assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
+
+
+def test_old_catalog_entries_with_web_lyrics_are_served_without_lyrics():
+    """Registros antigos no banco não são migrados: a letra é removida na leitura."""
+    data = {"titulo": "Asa Branca", "artista": "Luiz Gonzaga", "tom": "G", "confianca": "media",
+            "harmonicSummary": {"blocos": [{"acordes": ["G", "C"]}]},
+            "fullChordSheet": {"source": "web_source", "content": "G C\nLetra raspada"}}
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+    result = IaService(ExplodingProvider(), shared_songs=catalog).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Asa Branca", modoGeracao="conhecimento_modelo"))
+    assert result.fullChordSheet is None and result.harmonicSummary.blocos[0].acordes == ["G", "C"]
