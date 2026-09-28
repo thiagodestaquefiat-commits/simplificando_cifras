@@ -232,3 +232,23 @@ def test_search_without_catalog_or_web_sheet_asks_for_file_and_never_calls_ai():
     with pytest.raises(ApiError) as error:
         service.generate(request)
     assert error.value.code == "cifra_nao_encontrada" and error.value.status_code == 404
+
+
+def test_web_sheet_uses_page_key_shape_and_capo_not_ai_guess():
+    from app.services.web_search import ChordSheetHit
+
+    class Provider:
+        user_prompt = None
+
+        def generate(self, system_prompt, user_prompt, *args, **kwargs):
+            return ResumoHarmonicoResponse.model_validate({
+                "titulo": "Isaías 9", "tom": "D", "capotraste": None, "confianca": "alta",
+                "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}})
+
+    hit = ChordSheetHit("C  G4(6)  Am\nUm menino nasceu", "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/",
+                        "cifraclub", key="D", shape_key="C", capo=2)
+    service = IaService(Provider(), web_search=lambda *a: None, sheet_finder=lambda *a: hit)
+    result = service.generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes",
+                                                     modoGeracao="conhecimento_modelo"))
+    assert result.tom == "C" and result.capotraste == 2
+    assert result.observacoes[0] == "Tom real: D (forma de C, capotraste na 2ª casa)."

@@ -97,6 +97,29 @@ class IaService:
             logger.warning("shared_song_lookup_failed", exc_info=True)
             return None
 
+    @staticmethod
+    def _apply_page_key_and_capo(normalized: ResumoHarmonicoResponse, web_hit) -> None:
+        """Tom e capotraste vêm do cabeçalho da página, não da IA.
+
+        Convenção do ROUDY: `tom` é o tom dos acordes escritos (a forma) e o capotraste fica à parte.
+        Ex.: Cifra Club "Tom: D (com forma de C)" + "Capotraste: 2ª casa" -> tom C, capotraste 2.
+        """
+        written_key = getattr(web_hit, "shape_key", None) or getattr(web_hit, "key", None)
+        capo = getattr(web_hit, "capo", None)
+        if written_key:
+            normalized.tom = written_key
+        if capo:
+            normalized.capotraste = capo
+        real_key = getattr(web_hit, "key", None)
+        if real_key and capo and written_key and written_key != real_key:
+            note = f"Tom real: {real_key} (forma de {written_key}, capotraste na {capo}ª casa)."
+        elif real_key and capo:
+            note = f"Tom: {real_key}, capotraste na {capo}ª casa."
+        else:
+            note = None
+        if note and note not in normalized.observacoes:
+            normalized.observacoes.insert(0, note)
+
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         return ensure_client_chords(self._generate(payload, extracted, request_id, online_source, user_id))
 
@@ -187,6 +210,7 @@ class IaService:
                 sections=normalized.fullChordSheet.sections if normalized.fullChordSheet else [],
             )
             if web_hit:
+                self._apply_page_key_and_capo(normalized, web_hit)
                 note = f"Cifra obtida de {web_hit.url}; revise antes de salvar."
                 if note not in normalized.observacoes:
                     normalized.observacoes.append(note)

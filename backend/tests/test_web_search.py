@@ -369,3 +369,19 @@ def test_missing_page_is_not_rendered_again():
 def test_scraper_api_client_defaults_follow_docs():
     client = web_search.ScraperApiHttpClient("k")
     assert client.DEFAULT_TIMEOUT_SECONDS >= 60
+
+
+def test_page_metadata_key_shape_and_capo_are_extracted():
+    """Isaías 9 - Rodolfo Abrantes: 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' ficam fora do <pre>."""
+    url = web_search.direct_url("cifraclub", "Isaías 9", "Rodolfo Abrantes")
+    html = ('<div><b>Tom:</b> <button>D</button> (com forma de <a>C</a>)</div>'
+            '<div>Afinação: E A D G B E</div><div>Capotraste: 2ª casa</div><pre>C  G4(6)  Am</pre>')
+    client = _ScraperLike({(url, False): html})
+    hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
+    assert (hit.key, hit.shape_key, hit.capo) == ("D", "C", 2)
+    assert hit.content == "C  G4(6)  Am"
+
+
+def test_page_without_capo_keeps_only_key():
+    assert web_search.extract_sheet_metadata("<p>Tom: <b>F#m</b></p><pre>F#m D</pre>") == {"key": "F#m"}
+    assert web_search.extract_sheet_metadata("<pre>C G</pre>") == {}

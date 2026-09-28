@@ -104,6 +104,34 @@ class ChordSheetHit:
     content: str
     url: str
     source_name: str
+    key: str | None = None        # tom real da música (ex.: D)
+    shape_key: str | None = None  # tom da forma dos acordes escritos (ex.: C em "D com forma de C")
+    capo: int | None = None       # casa do capotraste
+
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_SCRIPT_RE = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
+_KEY_RE = re.compile(r"\bTom:\s*([A-G][#b]?m?)(?![\w#])(?:\s*\(\s*com forma de\s*([A-G][#b]?m?)(?![\w#])\s*\))?", re.IGNORECASE)
+_CAPO_RE = re.compile(r"\bCapotraste\s*(?::|na)?\s*(\d{1,2})\s*[ªºa°]?\s*casa", re.IGNORECASE)
+
+
+def extract_sheet_metadata(html: str | None) -> dict:
+    """Lê 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' do cabeçalho da página (fora do <pre>)."""
+    if not html:
+        return {}
+    import html as html_lib
+    text = html_lib.unescape(_TAG_RE.sub(" ", _SCRIPT_RE.sub(" ", html)))
+    text = re.sub(r"\s+", " ", text)
+    meta = {}
+    key_match = _KEY_RE.search(text)
+    if key_match:
+        meta["key"] = key_match.group(1)[0].upper() + key_match.group(1)[1:]
+        if key_match.group(2):
+            meta["shape_key"] = key_match.group(2)[0].upper() + key_match.group(2)[1:]
+    capo_match = _CAPO_RE.search(text)
+    if capo_match and 0 < int(capo_match.group(1)) <= 12:
+        meta["capo"] = int(capo_match.group(1))
+    return meta
 
 
 class ScraperApiHttpClient:
@@ -191,29 +219,30 @@ RENDER_RETRY_MIN_SECONDS = 25
 
 
 def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool,
-                deadline: float | None = None) -> str | None:
+                deadline: float | None = None) -> tuple[str | None, dict]:
     supports_render = getattr(http_client, "supports_render", False)
     attempts = (False, True) if supports_render else (False,)
     for render in attempts:
         remaining = None if deadline is None else deadline - time.monotonic()
         if render and remaining is not None and remaining < RENDER_RETRY_MIN_SECONDS:
             logger.info("%s_render_retry_skipped url=%s remaining=%.1fs", name, url, remaining)
-            return None
+            return None, {}
         kwargs = {"render": render, "timeout_seconds": remaining} if supports_render else {}
         try:
             html, _final_url = http_client.get_text(url, allowed_hosts=hosts, allowed_content_types=("text/html",), **kwargs)
         except MusicSourceError as error:
             logger.warning("%s_fetch_failed=%s url=%s render=%s", name, error.__class__.__name__, url, render)
             if isinstance(error, (MusicSourceUnavailable,)) and "status 404" in str(error):
-                return None  # página não existe: não adianta renderizar
+                return None, {}  # página não existe: não adianta renderizar
             continue
         sheet = extract_chord_sheet(html, include_article=include_article)
         if sheet:
-            logger.info("%s_extract_ok url=%s render=%s sheet_len=%d", name, url, render, len(sheet))
-            return sheet
+            meta = extract_sheet_metadata(html)
+            logger.info("%s_extract_ok url=%s render=%s sheet_len=%d meta=%s", name, url, render, len(sheet), meta)
+            return sheet, meta
         preview = (html or "")[:300].replace("\n", " ")
         logger.warning("%s_extract_empty url=%s render=%s html_len=%d html_preview=%r", name, url, render, len(html or ""), preview)
-    return None
+    return None, {}
 
 
 _NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
@@ -281,9 +310,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         if out_of_time(f"direct:{name}"):
             return None, []
         url = direct_url(name, titulo, artista)
-        sheet = _fetch_page(url, client, name, hosts, include_article, deadline) if url else None
+        sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline) if url else (None, {})
         if sheet:
-            return ChordSheetHit(sheet, url, name), []
+            return ChordSheetHit(sheet, url, name, **meta), []
 
     all_results = []
     for name, hosts, include_article in PAGE_SOURCES:
@@ -301,9 +330,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         for url in urls:
             if out_of_time(f"fetch:{name}"):
                 return None, all_results
-            sheet = _fetch_page(url, client, name, hosts, include_article, deadline)
+            sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline)
             if sheet:
-                return ChordSheetHit(sheet, url, name), all_results
+                return ChordSheetHit(sheet, url, name, **meta), all_results
     return None, all_results
 
 
