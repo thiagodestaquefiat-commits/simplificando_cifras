@@ -66,7 +66,9 @@ def test_ia_service_ignores_low_score_match():
             calls.append(1)
             return ResumoHarmonicoResponse.model_validate({"titulo": "X", "harmonicSummary": {"blocos": [{"acordes": ["C", "G"]}]}, "confianca": "media"})
     catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data={}), 0.5))
-    IaService(Provider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: None).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="X", modoGeracao="conhecimento_modelo"))
+    from app.services.web_search import ChordSheetHit
+    web_hit = ChordSheetHit("C  G\nLetra da fonte", "https://www.cifraclub.com.br/a/x/", "cifraclub")
+    IaService(Provider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: web_hit).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="X", modoGeracao="conhecimento_modelo"))
     assert calls
 
 
@@ -128,7 +130,7 @@ def _with_sheet(source, **overrides):
 
 def test_web_scraped_song_goes_to_catalog_only_as_harmonic_summary(client, app):
     token = register(client, "shared-web", "W")
-    song = _with_sheet("web_source", sourceInfo={"type": "ai_knowledge", "name": "IA", "url": None},
+    song = _with_sheet("web_source", sourceInfo={"type": "online", "name": "Cifra Club", "url": None},
                        notes="Confiança da IA: média.\nCifra obtida de https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/; revise antes de salvar.")
     client.put("/api/library/songs/web", headers=auth(token), json={"songData": song})
     with app.app_context():
@@ -162,3 +164,11 @@ def test_old_catalog_entries_with_web_lyrics_are_served_without_lyrics():
     result = IaService(ExplodingProvider(), shared_songs=catalog).generate(
         ResumoHarmonicoRequest(tipo="pesquisa", titulo="Asa Branca", modoGeracao="conhecimento_modelo"))
     assert result.fullChordSheet is None and result.harmonicSummary.blocos[0].acordes == ["G", "C"]
+
+
+def test_old_ai_only_drafts_do_not_go_to_catalog(client, app):
+    token = register(client, "shared-old-ai", "O")
+    song = ai_song(notes="Confiança da IA: média.\nGerado somente por IA, sem fonte autorizada; exige revisão humana antes de salvar.")
+    client.put("/api/library/songs/old-ai", headers=auth(token), json={"songData": song})
+    with app.app_context():
+        assert SharedSong.query.count() == 0

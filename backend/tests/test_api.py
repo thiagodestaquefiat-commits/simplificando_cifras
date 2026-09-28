@@ -136,104 +136,19 @@ class SnippetDDGS:
 
 
 @patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_research_model_knowledge_never_returns_ai_lyrics(generate, client, monkeypatch):
-    """Sem cifra real, a IA não escreve letra: mesmo que devolva uma, ela é descartada."""
+def test_search_without_source_returns_not_found_and_does_not_call_ai(generate, client, monkeypatch):
     monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
-    result = sample_result()
-    result.confianca = "alta"
-    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra gerada pelo modelo")
-    result.harmonicSummary.blocos[0].fraseGuia = "Trecho inventado que deve sumir"
-    generate.return_value = result
+    monkeypatch.setattr("app.services.web_search.SafeMusicSourceHttpClient.get_text",
+                        lambda *a, **k: (_ for _ in ()).throw(__import__("app.services.music_sources", fromlist=["x"]).MusicSourceUnavailable("404")))
     response = client.post(
         "/api/resumo-harmonico",
         json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
         headers=auth_headers(client),
     )
 
-    assert response.status_code == 200
-    data = response.get_json()
-    assert data["fullChordSheet"] is None
-    assert data["harmonicSummary"]["blocos"][0]["fraseGuia"] is None
-    assert data["confianca"] == "media"
-    assert any("exige revisão humana" in item for item in data["observacoes"])
-    assert generate.call_args.kwargs["context"]["max_output_tokens"] == client.application.config["DEEPSEEK_MAX_OUTPUT_TOKENS"]
-    prompt = generate.call_args.args[1]
-    assert "não escreva nenhuma letra" in prompt and "fullChordSheet deve ser null" in prompt
-    assert "Gere a cifra completa com letra" not in prompt
-
-
-@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_model_knowledge_sends_web_search_results_as_context(generate, client, monkeypatch):
-    class FakeDDGS:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-        def text(self, query, **kwargs):
-            assert "Canção teste" in query and "Artista" in query and "cifra" in query
-            assert "site:" in query and " OR " not in query
-            return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
-
-    monkeypatch.setattr("duckduckgo_search.DDGS", FakeDDGS)
-    generate.return_value = sample_result()
-    response = client.post(
-        "/api/resumo-harmonico",
-        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
-        headers=auth_headers(client),
-    )
-
-    assert response.status_code == 200
-    prompt = generate.call_args.args[1]
-    assert "Resultados de busca na web" in prompt
-    assert "apenas para conferir tom e acordes" in prompt
-    assert "Canção teste - Cifra: Db B4 Gb/Bb letra" in prompt
-    assert "não escreva nenhuma letra" in prompt
-
-
-@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_model_knowledge_still_works_when_web_search_fails(generate, client):
-    result = sample_result()
-    result.fullChordSheet = CifraCompleta(source="model_knowledge", content="C G\nLetra inventada")
-    generate.return_value = result
-    response = client.post(
-        "/api/resumo-harmonico",
-        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
-        headers=auth_headers(client),
-    )
-
-    assert response.status_code == 200
-    prompt = generate.call_args.args[1]
-    assert "Resultados de busca na web" not in prompt
-    assert "fullChordSheet deve ser null" in prompt
-    data = response.get_json()
-    assert data["fullChordSheet"] is None
-    assert data["harmonicSummary"]["blocos"]
-    assert "Nenhuma fonte encontrada. Apenas resumo harmônico disponível. Use Arquivo ou foto para cifra completa." in data["observacoes"]
-    assert generate.call_args.kwargs["context"]["reasoning_effort"] == "low"
-
-
-@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
-def test_model_knowledge_discards_ai_sections_with_lyrics(generate, client, monkeypatch):
-    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
-    result = sample_result()
-    result.fullChordSheet = CifraCompleta(source="user_text", content="[reconstruir]", sections=[
-        SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
-            letra="Linha gerada pelo modelo", acordes=[AcordePosicionado(acorde="Db", posicao=0)])])])
-    generate.return_value = result
-    response = client.post(
-        "/api/resumo-harmonico",
-        json={"tipo": "pesquisa", "titulo": "Canção teste", "modoGeracao": "conhecimento_modelo"},
-        headers=auth_headers(client),
-    )
-
-    assert response.status_code == 200
-    assert response.get_json()["fullChordSheet"] is None
-    assert "Linha gerada pelo modelo" not in response.get_data(as_text=True)
+    assert response.status_code == 404
+    assert response.get_json()["erro"]["codigo"] == "cifra_nao_encontrada"
+    generate.assert_not_called()
 
 
 @pytest.mark.parametrize("payload", [

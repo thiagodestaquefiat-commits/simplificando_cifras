@@ -1,3 +1,4 @@
+import pytest
 from app.schemas.resumo_harmonico import (
     AcordePosicionado,
     CifraCompleta,
@@ -217,12 +218,17 @@ def test_research_uses_web_chord_sheet_in_text_flow():
     assert "Cifra obtida de https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/; revise antes de salvar." in result.observacoes
 
 
-def test_research_keeps_model_knowledge_flow_without_web_chord_sheet():
-    provider = FakeProvider()
-    service = IaService(provider, web_search=lambda *args: None, sheet_finder=lambda *args: None)
+def test_search_without_catalog_or_web_sheet_asks_for_file_and_never_calls_ai():
+    """Fluxo: catálogo -> scraper -> arquivo/foto do usuário. A IA nunca inventa a música."""
+    from app.errors import ApiError
+
+    class ExplodingProvider:
+        def generate(self, *args, **kwargs):
+            raise AssertionError("A IA não pode gerar música sem fonte")
+
+    service = IaService(ExplodingProvider(), web_search=lambda *args: None, sheet_finder=lambda *args: None)
     request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Música", modoGeracao="conhecimento_modelo")
 
-    result = service.generate(request)
-
-    assert "<conteudo_usuario>" not in provider.user_prompt
-    assert result.fullChordSheet is None
+    with pytest.raises(ApiError) as error:
+        service.generate(request)
+    assert error.value.code == "cifra_nao_encontrada" and error.value.status_code == 404

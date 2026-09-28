@@ -19,7 +19,9 @@ MAX_CANDIDATES = 10
 # Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
 # contém apenas acordes (sem letra nem cifra completa), então não há problema
 # de privacidade independentemente da fonte (upload, texto, online ou manual).
-SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text", "ai_knowledge"}
+SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text"}
+# Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
+AI_ONLY_MARKER = "Gerado somente por IA"
 # Só letra enviada pelo próprio usuário entra completa no catálogo público. Cifra raspada da web
 # (web_source) ou gerada pela IA (model_knowledge) é compartilhada apenas como resumo harmônico.
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text"}
@@ -259,6 +261,9 @@ class SharedSongService:
             return None
         source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
         if source_type not in SHAREABLE_SOURCE_TYPES:
+            return None
+        if AI_ONLY_MARKER in str(song_data.get("notes") or ""):
+            # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
             return None
         normalized_title = normalize_text(song_data.get("title"))
         normalized_artist = normalize_text(song_data.get("artist")) or None
