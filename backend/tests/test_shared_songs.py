@@ -188,3 +188,37 @@ def test_old_ai_only_drafts_do_not_go_to_catalog(client, app):
     client.put("/api/library/songs/old-ai", headers=auth(token), json={"songData": song})
     with app.app_context():
         assert SharedSong.query.count() == 0
+
+
+def test_summary_only_catalog_song_is_completed_from_web_on_search():
+    """Caso real (Isaías 9): catálogo só com resumo -> a busca completa com a cifra da web."""
+    from app.services.web_search import ChordSheetHit
+    data = {"titulo": "Isaías 9", "artista": "Rodolfo Abrantes", "tom": "D", "confianca": "media",
+            "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}, "fullChordSheet": None}
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+    hit = ChordSheetHit("[Intro] C  G4  Am\n\n[Primeira Parte]\nC      G4   Am\nUm menino nasceu", "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/", "cifraclub", key="D", shape_key="C", capo=2)
+    request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo")
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request)
+    assert "Um menino nasceu" in result.fullChordSheet.content and result.fullChordSheet.source == "web_source"
+    # sem cifra na web (ou limite do dia): devolve o resumo do catálogo, sem erro
+    fallback = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: None).generate(request)
+    assert fallback.fullChordSheet is None and fallback.harmonicSummary.blocos[0].acordes == ["C", "G4", "Am"]
+    limited = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: hit, web_quota=lambda user: False).generate(request)
+    assert limited.fullChordSheet is None
+    # catálogo já completo: não gasta scraper
+    full = {**data, "fullChordSheet": {"source": "user_text", "content": "C G\nLetra"}}
+    calls = []
+    catalog_full = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=full), 0.97))
+    IaService(ExplodingProvider(), shared_songs=catalog_full, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1)).generate(request)
+    assert calls == []
+
+
+def test_catalog_keeps_capo_saved_as_text(client, app):
+    """O app salva 'Capotraste casa 2'; o catálogo perdia o capo (só aceitava número)."""
+    from app.services.shared_songs_service import parse_capo
+    assert [parse_capo(v) for v in (2, "2", "Capotraste casa 2", "2ª casa", "", None, "Sem", 0, 13)] == [2, 2, 2, 2, None, None, None, None, None]
+    token = register(client, "shared-capo", "C")
+    client.put("/api/library/songs/capo1", headers=auth(token), json={"songData": ai_song(title="Isaías 9", artist="Rodolfo Abrantes", originalKey="D", capo="Capotraste casa 2")})
+    with app.app_context():
+        stored = SharedSong.query.one()
+        assert stored.song_data["capotraste"] == 2 and stored.capo == "2"

@@ -29,6 +29,20 @@ AI_ONLY_MARKER = "Gerado somente por IA"
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 
 
+def parse_capo(value) -> int | None:
+    """Casa do capotraste a partir de 2, "2", "Capotraste casa 2" ou "2ª casa"."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        number = value
+    else:
+        match = re.search(r"\d{1,2}", str(value or ""))
+        if not match:
+            return None
+        number = int(match.group(0))
+    return number if 1 <= number <= 12 else None
+
+
 def canonical_section(value) -> str | None:
     """Mapeia rótulos livres (\"refrao 2\", \"Introdução\") para os nomes de seção aceitos pela IA."""
     key = normalize_text(value)
@@ -158,17 +172,13 @@ class SharedSongService:
         content = str(sheet.get("content") or "").strip()
         if not content:
             content = render_full_chord_sheet(SimpleNamespace(sections=sections)).strip()
-        capo = song_data.get("capo")
-        try:
-            capo = int(str(capo).strip()) if capo not in (None, "") else None
-        except ValueError:
-            capo = None
+        capo = parse_capo(song_data.get("capo"))
         try:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
                 "tom": str(song_data.get("key") or song_data.get("currentKey") or song_data.get("originalKey") or "").strip()[:20] or None,
-                "capotraste": capo if capo is not None and 0 <= capo <= 12 else None,
+                "capotraste": capo,
                 "harmonicSummary": {"blocos": blocos[:40]},
                 "observacoes": ["Encontrada na sua biblioteca pessoal."],
                 "confianca": "alta",
@@ -247,7 +257,7 @@ class SharedSongService:
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
-                "capotraste": capo if isinstance(capo, int) and 0 <= capo <= 12 else None,
+                "capotraste": parse_capo(capo),
                 "harmonicSummary": {"blocos": blocos[:40]},
                 "observacoes": observacoes,
                 "confianca": "media",
