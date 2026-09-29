@@ -14,6 +14,8 @@ assert.match(musicPane, /ai-generate-action/, "a integração não deve remover 
 assert.match(musicPane, /aria-label="Limpar busca do YouTube"/);
 assert.match(musicPane, /aria-label="Limpar busca da playlist"/);
 assert.match(musicPane, /id="playlist-voice-search"/, "a busca da playlist deve oferecer o botão de voz");
+assert.match(html, /#view-sd>#sd-content\{width:min\(100%,920px\);margin-inline:auto/, "o detalhe do evento deve ficar centralizado no desktop");
+assert.match(html, /#view-detail:not\(\.stage-mode\)\[style\*="display: flex"\]/, "o layout em duas colunas deve ser exclusivo da tela da música");
 assert.match(html, /window\.SpeechRecognition\|\|window\.webkitSpeechRecognition/, "a busca por voz deve usar a API compatível do navegador");
 assert.match(html, /input\.value=spoken;\s*renderMusicas\(\)/, "o resultado falado deve preencher e filtrar a playlist");
 assert.match(html, /function exactVoiceSongMatch\(spoken\)/, "a busca por voz deve identificar uma música com título exato");

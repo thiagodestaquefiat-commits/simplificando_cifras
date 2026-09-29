@@ -29,21 +29,25 @@
   }
 
   function createTracker(options={}){
-    const stableMs=options.stableMs||250,cooldownMs=options.cooldownMs||180;
-    let sequence=[],index=0,candidate=null,candidateSince=0,lastAdvance=-Infinity,lastMatchedRoot=null,armed=true;
-    function reset(next=[]){sequence=next;index=0;candidate=null;candidateSince=0;lastAdvance=-Infinity;lastMatchedRoot=null;armed=true;return current();}
+    const stableMs=options.stableMs||250,cooldownMs=options.cooldownMs||180,dropoutMs=options.dropoutMs||220;
+    let sequence=[],index=0,candidate=null,candidateSince=0,candidateLastSeen=0,lastAdvance=-Infinity,lastMatchedRoot=null,armed=true;
+    function reset(next=[]){sequence=next;index=0;candidate=null;candidateSince=0;candidateLastSeen=0;lastAdvance=-Infinity;lastMatchedRoot=null;armed=true;return current();}
     function current(){return sequence[index]||null;}
-    function align(blockIndex){const found=sequence.findIndex(item=>item.blockIndex>=blockIndex);index=found<0?sequence.length:found;candidate=null;candidateSince=0;armed=true;return current();}
-    function seek(nextIndex){index=Math.max(0,Math.min(sequence.length,Number(nextIndex)||0));candidate=null;candidateSince=0;armed=true;return current();}
+    function align(blockIndex){const found=sequence.findIndex(item=>item.blockIndex>=blockIndex);index=found<0?sequence.length:found;candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
+    function seek(nextIndex){index=Math.max(0,Math.min(sequence.length,Number(nextIndex)||0));candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
     function sample(note,time){
       const target=current();
-      if(note===null){candidate=null;candidateSince=0;armed=true;return {advanced:false,current:target,index};}
+      if(note===null){
+        if(candidate!==null&&time-candidateLastSeen<=dropoutMs)return {advanced:false,current:target,index};
+        candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return {advanced:false,current:target,index};
+      }
       if(!target)return {advanced:false,complete:true,current:null,index};
       if(note!==lastMatchedRoot)armed=true;
-      if(note!==target.root){candidate=note;candidateSince=time;armed=true;return {advanced:false,current:target,index};}
-      if(candidate!==note){candidate=note;candidateSince=time;return {advanced:false,current:target,index};}
+      if(note!==target.root){candidate=note;candidateSince=time;candidateLastSeen=time;armed=true;return {advanced:false,current:target,index};}
+      if(candidate!==note){candidate=note;candidateSince=time;candidateLastSeen=time;return {advanced:false,current:target,index};}
+      candidateLastSeen=time;
       if(!armed||time-lastAdvance<cooldownMs||time-candidateSince<stableMs)return {advanced:false,current:target,index};
-      const matched=target;index++;lastAdvance=time;lastMatchedRoot=note;armed=false;candidate=null;candidateSince=0;
+      const matched=target;index++;lastAdvance=time;lastMatchedRoot=note;armed=false;candidate=null;candidateSince=0;candidateLastSeen=0;
       return {advanced:true,matched,current:current(),complete:index>=sequence.length,index};
     }
     return Object.freeze({reset,current,align,seek,sample,getIndex:()=>index,getSequence:()=>sequence.slice()});

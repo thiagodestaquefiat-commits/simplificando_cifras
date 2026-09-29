@@ -1,11 +1,11 @@
-const CACHE_NAME = "simplificando-cifras-v153-official-local-merge";
+const CACHE_NAME = "simplificando-cifras-v157-test-song";
 const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
   "./js/tablature.js?v=1",
   "./js/song-model.js?v=5",
-  "./js/demo-library.js?v=3",
+  "./js/demo-library.js?v=4",
   "./js/song-repository.js?v=13",
   "./js/library-sync.js?v=16",
   "./js/event-model.js?v=5",
@@ -14,7 +14,7 @@ const ASSETS = [
   "./js/app-auth.js?v=11",
   "./js/ui-i18n.js?v=10",
   "./js/tuner.js?v=2",
-  "./js/smart-scroll.js?v=2",
+  "./js/smart-scroll.js?v=3",
   "./js/sync-realtime.js?v=1",
   "./js/band-client.js?v=1",
   "./js/location-service.js?v=2",

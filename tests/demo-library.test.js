@@ -28,6 +28,13 @@ const normalizeText = (value) => String(value || "").normalize("NFD").replace(/[
 assert.equal(demos.length, 4, "a biblioteca inicial deve ter exatamente quatro demos");
 assert.equal(new Set(demos.map((song) => song.id)).size, 4, "IDs das demos devem ser estáveis e únicos");
 assert.deepEqual(demos.map((song) => [song.title, song.artist, song.key]), expected);
+const localTestSong = demoLibrary.testSong();
+assert.equal(localTestSong.id, "teste-horizonte-de-luz");
+assert.match(localTestSong.title, /fictícia para testes/i);
+assert.ok(localTestSong.blocos.length >= 10, "a música local de teste precisa de um resumo harmônico extenso");
+assert.ok(localTestSong.fullChordSheet.content.length >= 1500, "a música local de teste precisa de letra e cifra relativamente grandes");
+assert.ok(window.songFormat.fromLegacy(localTestSong).sections.length >= 8, "a cifra de teste precisa manter várias seções");
+assert.ok(!demos.some((song) => song.id === localTestSong.id), "a música de teste local não deve entrar no catálogo oficial");
 demos.forEach((song) => {
   assert.ok(song.fullChordSheet?.content.includes("\n"), `${song.title} precisa de letra e cifra completas`);
   assert.equal(crypto.createHash("sha256").update(song.fullChordSheet.content).digest("hex"), fullChordSheetHashes.get(song.id), `${song.title} não pode alterar a cifra completa validada`);
