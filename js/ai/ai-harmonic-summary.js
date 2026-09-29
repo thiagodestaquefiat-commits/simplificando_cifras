@@ -25,6 +25,53 @@
     return wrap;
   }
 
+  // Microfone no campo: dita o título usando o reconhecimento de voz do navegador (sem custo).
+  function attachVoiceInput(fieldWrap) {
+    const input = fieldWrap.querySelector("input");
+    const Recognition = global.SpeechRecognition || global.webkitSpeechRecognition;
+    if (!input) return;
+    const box = element("span", "ai-summary-voice-box");
+    input.replaceWith(box);
+    box.appendChild(input);
+    const button = element("button", "ai-summary-voice", "🎙️");
+    button.type = "button";
+    button.setAttribute("aria-label", "Ditar título por voz");
+    button.title = "Ditar título por voz";
+    button.setAttribute("aria-pressed", "false");
+    box.appendChild(button);
+    let recognition = null;
+    const setListening = (value) => {
+      button.classList.toggle("listening", value);
+      button.setAttribute("aria-pressed", String(value));
+      button.setAttribute("aria-label", value ? "Ouvindo… toque para parar" : "Ditar título por voz");
+    };
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (busy) return;
+      if (recognition) { recognition.stop(); return; }
+      if (!Recognition) { setStatus("invalid_input", "Seu navegador não permite busca por voz. Digite o título."); return; }
+      recognition = new Recognition();
+      recognition.lang = (global.document && global.document.documentElement.lang) || "pt-BR";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = () => setListening(true);
+      recognition.onend = () => { setListening(false); recognition = null; };
+      recognition.onresult = (result) => {
+        const spoken = result.results && result.results[0] && result.results[0][0] ? String(result.results[0][0].transcript || "").trim() : "";
+        if (!spoken) return;
+        input.value = spoken.charAt(0).toUpperCase() + spoken.slice(1);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      };
+      recognition.onerror = (error) => {
+        if (error.error === "not-allowed" || error.error === "service-not-allowed") setStatus("invalid_input", "Permita o uso do microfone para ditar o título.");
+        else if (error.error === "no-speech") setStatus("invalid_input", "Não ouvi nada. Toque no microfone e fale o nome da música.");
+      };
+      try { recognition.start(); } catch (_error) { setListening(false); recognition = null; }
+    });
+  }
+
   function capoSelector() {
     const wrap = element("div", "ai-summary-field ai-summary-capo-field");
     wrap.appendChild(element("span", "ai-summary-label", "Capotraste"));
@@ -310,6 +357,7 @@
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
     const titleField = field("Título da música", "titulo", "text", true);
     titleField.querySelector("input").placeholder = "Ex: Oceans";
+    attachVoiceInput(titleField);
     const artistField = field("Artista", "artista", "text", false);
     artistField.querySelector("input").placeholder = "Ex: Hillsong UNITED";
     searchForm.append(titleField, artistField);
