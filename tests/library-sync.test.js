@@ -112,32 +112,33 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
 
  const preexisting=device('user-a',[song(100),song(101),song(102)],{migrationCandidate:true});await settle();assert.equal(preexisting.songs.length,8,'biblioteca local ainda não associada é preservada e combinada');assert.equal(preexisting.sync.getStatus().pending,0);assert.equal(preexisting.sync.getStatus().phase,'synced');
 
- const editA=a.songs;editA[1]={...editA[1],artist:'Edição concorrente A'};a.replace(editA);
- const editB=b.songs;editB[1]={...editB[1],artist:'Edição concorrente B'};b.replace(editB);await b.sync.syncNow();
- const conflict=await a.sync.pull();assert.equal(conflict.conflicts.length,1);assert.equal(a.songs[1].artist,'Edição concorrente A');assert.equal(a.sync.getStatus().phase,'conflict');
- assert.equal(a.songs[1].librarySync.conflict.remoteSongData.artist,'Edição concorrente B','as duas versões ficam preservadas');
- // Resolver conflito: manter a versão deste aparelho (A) → vai para a nuvem e B recebe; a versão descartada fica em backup.
- assert.equal(a.sync.listConflicts().length,1);const conflictItem=a.sync.listConflicts()[0];assert.equal(conflictItem.local.artist,'Edição concorrente A');assert.equal(conflictItem.remote.artist,'Edição concorrente B');
- a.sync.resolveConflict(conflictItem.clientId,'local');assert.equal(a.sync.listConflicts().length,0);assert.equal(a.songs[1].artist,'Edição concorrente A');
- await new Promise(resolve=>setTimeout(resolve,1300));await b.sync.pull();assert.equal(b.songs[1].artist,'Edição concorrente A','B recebe a versão escolhida em A');
- assert.equal(a.sync.conflictBackups().at(-1).songData.artist,'Edição concorrente B','versão descartada guardada em backup');
- // Resolver conflito: usar a versão da nuvem.
- const again=a.songs;again[1]={...again[1],artist:'A de novo'};a.replace(again);const againB=b.songs;againB[1]={...againB[1],artist:'B de novo'};b.replace(againB);await b.sync.syncNow();await a.sync.pull();
- const second=a.sync.listConflicts()[0];assert.ok(second,'novo conflito detectado');a.sync.resolveConflict(second.clientId,'remote');assert.equal(a.songs[1].artist,'B de novo');assert.equal(a.sync.getStatus().conflicts,0);
- await a.sync.pull();assert.equal(a.songs[1].artist,'B de novo','sem conflito depois de usar a versão da nuvem');assert.equal(a.sync.conflictBackups().at(-1).songData.artist,'A de novo');
- assert.throws(()=>a.sync.resolveConflict(second.clientId,'remote'),/Conflito não encontrado/);
+ // Edição concorrente: a alteração mais recente vence automaticamente; a outra vai para a cópia de segurança.
+ const editA=a.songs;editA[1]={...editA[1],artist:'Edição concorrente A',updatedAt:'2030-01-02T00:00:00.000Z'};a.replace(editA);
+ const editB=b.songs;editB[1]={...editB[1],artist:'Edição concorrente B',updatedAt:'2030-01-01T00:00:00.000Z'};b.replace(editB);await b.sync.syncNow();
+ const autoPull=await a.sync.pull();assert.equal(autoPull.conflicts.length,0,'sem conflito para o usuário resolver');assert.equal(autoPull.autoResolved[0].winner,'local');
+ assert.equal(a.songs[1].artist,'Edição concorrente A','A (mais recente) vence');assert.equal(a.sync.getStatus().conflicts,0);
+ assert.equal(a.sync.conflictBackups().at(-1).songData.artist,'Edição concorrente B','versão perdedora guardada');
+ await new Promise(resolve=>setTimeout(resolve,1300));await b.sync.pull();assert.equal(b.songs[1].artist,'Edição concorrente A','B recebe a versão mais recente sozinho');
+ // Agora a edição da nuvem é a mais recente: este aparelho aplica a versão da nuvem.
+ const again=a.songs;again[1]={...again[1],artist:'A de novo',updatedAt:'2030-02-01T00:00:00.000Z'};a.replace(again);const againB=b.songs;againB[1]={...againB[1],artist:'B de novo',updatedAt:'2030-02-02T00:00:00.000Z'};b.replace(againB);await b.sync.syncNow();
+ const remoteWins=await a.sync.pull();assert.equal(remoteWins.autoResolved[0].winner,'remote');assert.equal(a.songs[1].artist,'B de novo');assert.equal(a.sync.getStatus().conflicts,0);
+ assert.equal(a.sync.conflictBackups().at(-1).songData.artist,'A de novo','edição local perdedora guardada');
+ // Conflito antigo já gravado no aparelho (antes desta versão) é resolvido sozinho na próxima sincronização.
+ const stored=a.songs;stored[1]={...stored[1],librarySync:{...stored[1].librarySync,conflict:{remoteVersion:1,remoteSongData:{artist:'velho'},remoteUpdatedAt:null,detectedAt:'x'}}};a.replace(stored);
+ await a.sync.pull();assert.equal(a.sync.getStatus().conflicts,0,'conflito antigo resolvido automaticamente');assert.equal(a.songs[1].artist,'B de novo');
+ assert.throws(()=>a.sync.resolveConflict(a.songs[1].librarySync.clientId,'remote'),/Conflito não encontrado/,'resolução manual só existe para conflito pendente');
 
  const conflictSource=device('partial-conflict-owner',[song(1800)]);await settle();await conflictSource.sync.syncNow();
  const conflictLocal=device('partial-conflict-owner',[]);await settle();
  const conflictRemote=device('partial-conflict-owner',[]);await settle();const remoteEdit=conflictRemote.songs;remoteEdit[0]={...remoteEdit[0],artist:'Versão remota'};conflictRemote.replace(remoteEdit);await conflictRemote.sync.syncNow();
  const localEdit=conflictLocal.songs;localEdit[0]={...localEdit[0],artist:'Versão local'};localEdit.push(song(1801));conflictLocal.replace(localEdit);
  const partialConflictResult=await conflictLocal.sync.syncNow();const conflictClientId=conflictLocal.songs[0].librarySync.clientId;
- assert.equal(partialConflictResult.created,1,'conflito não bloqueia POST da música nova');assert.equal(remote.get('partial-conflict-owner').size,2,'backend recebe a música pendente independente');assert.equal(conflictLocal.songs[0].artist,'Versão local','versão local conflitante não é sobrescrita');assert.equal(conflictLocal.songs[0].librarySync.conflict.remoteSongData.artist,'Versão remota','versão remota conflitante é preservada');assert.equal(remote.get('partial-conflict-owner').get(conflictClientId).songData.artist,'Versão remota','POST não sobrescreve o registro conflitante');
+ assert.equal(partialConflictResult.created,1,'conflito não bloqueia POST da música nova');assert.equal(remote.get('partial-conflict-owner').size,2,'backend recebe a música pendente independente');assert.equal(conflictLocal.songs[0].artist,'Versão remota','empate de data: vale a versão da nuvem');assert.equal(conflictLocal.sync.conflictBackups().at(-1).songData.artist,'Versão local','versão local preservada na cópia de segurança');assert.equal(remote.get('partial-conflict-owner').get(conflictClientId).songData.artist,'Versão remota','registro da nuvem não é sobrescrito por versão mais antiga');
 
  const newerLocal=a.songs;newerLocal[2]={...newerLocal[2],artist:'Edição local mais nova',updatedAt:'2099-01-01T00:00:00.000Z'};a.replace(newerLocal);
  const newerRemote=b.songs;newerRemote[2]={...newerRemote[2],artist:'Edição remota mais antiga',updatedAt:'2026-01-01T00:00:00.000Z'};b.replace(newerRemote);await b.sync.syncNow();
  await a.sync.syncNow();assert.equal(a.songs[2].artist,'Edição local mais nova','a alteração mais recente vence automaticamente');
- await b.sync.pull();assert.equal(b.songs[2].artist,'Edição remota mais antiga','uma edição em conflito não é sobrescrita automaticamente no outro dispositivo');
+ await b.sync.pull();assert.equal(b.songs[2].artist,'Edição local mais nova','o outro aparelho converge para a alteração mais recente');
 
  const offline=device('offline-user',[song(200)],{online:false,consent:true});await settle();assert.equal(offline.sync.getStatus().phase,'offline');
  const offlineSongs=offline.songs;offlineSongs.push(song(201));offline.replace(offlineSongs);offline.sync.schedule();assert.equal(offline.songs.length,2);assert.equal(offline.storage.get('sc_songs_v1').length,2);
@@ -185,7 +186,7 @@ const settle=()=>new Promise(resolve=>setTimeout(resolve,15));
  remote.set('auto-resolve-owner',new Map([[joyClientId,{id:'server-joy',clientId:joyClientId,songData:structuredClone(remoteJoy),version:2,updatedAt:'2026-09-16T13:13:17.000Z',deletedAt:null}]]));
  const localJoy={id:'local-joy',title:'A alegria',artist:'',key:'C',blocos:remoteJoy.blocos,createdAt:'2026-08-21T14:33:04.566Z',updatedAt:'2026-08-21T14:33:04.566Z',librarySync:{clientId:joyClientId,serverVersion:null,contentHash:null,conflict:{remoteVersion:2,remoteSongData:structuredClone(remoteJoy)}}};
  const autoResolver=device('auto-resolve-owner',[localJoy,song('pending-1'),song('pending-2'),song('pending-3')],{consent:true});await settle();
- assert.equal(autoResolver.sync.getStatus().conflicts,1,'conflito preserva as duas versões');assert.ok(autoResolver.sync.getStatus().localPending>=3,'conflito não bloqueia as músicas pendentes independentes');
+ assert.equal(autoResolver.sync.getStatus().conflicts,0,'conflito antigo resolvido sozinho pela versão mais recente');assert.equal(autoResolver.songs.find(item=>item.librarySync?.clientId===joyClientId).updatedAt,remoteJoy.updatedAt,'vale a versão da nuvem, mais recente');assert.equal(autoResolver.sync.conflictBackups().at(-1).songData.id,'local-joy','versão local guardada');assert.ok(autoResolver.sync.getStatus().localPending>=3,'conflito não bloqueia as músicas pendentes independentes');
  await autoResolver.sync.syncNow();assert.equal(remote.get('auto-resolve-owner').size,4,'as músicas pendentes são enviadas depois da resolução automática');
  const autoResolverMobile=device('auto-resolve-owner',[]);await settle();assert.deepEqual([autoResolverMobile.songs.length,autoResolverMobile.sync.getStatus().conflicts],[4,0],'outro dispositivo recebe a biblioteca remota sem conflito local');
  assert.equal(recovered.sync.sameContent({...remoteSample.songData,librarySync:{clientId:'device-a'}},{...remoteSample.songData,librarySync:{clientId:'device-b'}}),true,'librarySync não participa do fingerprint musical');
