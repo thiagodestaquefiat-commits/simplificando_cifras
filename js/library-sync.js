@@ -68,7 +68,34 @@
   function deleteSong(song){if(!context?.markDeleted?.(song))return false;schedule();return true;}
   async function migrateLegacy(){if(!migrationCandidate)return null;if(!hasBackup()&&!markBackupReady())throw new Error("Não foi possível preservar a cópia local da biblioteca.");return syncNow();}
   function initialize(value){context=value;emit({local:context.getSongs().length});global.appAuth.subscribe(state=>{authenticated=Boolean(state.authenticated);const userId=authenticated&&state.user?.id;if(!userId){lastUserId=null;migrationCandidate=false;awaitingRemoteOnboarding=false;identityBlocked=false;if(ownerSessionActive&&context.deactivateOwner){context.setSongs(context.deactivateOwner());context.render();}ownerSessionActive=false;emit({phase:"unauthenticated",remote:0,pending:0,localPending:0,remotePending:0,conflicts:0,error:null});return;}if(userId===lastUserId){if(context.getSongs().filter(isDirty).length)schedule();else emit();return;}lastUserId=userId;ownerSessionActive=true;const ownerState=context.activateOwner?context.activateOwner(userId):null;if(ownerState){migrationCandidate=Boolean(ownerState.migrationCandidate);awaitingRemoteOnboarding=Boolean(ownerState.awaitingRemoteOnboarding);context.setSongs(ownerState.songs);context.render();}if(migrationCandidate){deferMigration();if(typeof context.onMigrationCandidate==="function")context.onMigrationCandidate({count:context.getSongs().length,userId});else migrateLegacy().catch(error=>emit({phase:isOnline()?"error":"offline",error:error.message}));return;}pull().then(result=>{if(result.status?.localPending)schedule();}).catch(()=>{});});global.addEventListener?.("online",()=>{if(migrationCandidate){deferMigration();return;}emit({phase:"pending",error:null});schedule();});global.addEventListener?.("offline",()=>emit({phase:"offline",error:null}));}
+  // Resolução de conflitos: o usuário escolhe, música a música, qual versão vale.
+  // A versão descartada é guardada em CONFLICT_BACKUP_KEY (nunca apagamos dados sem cópia).
+  const CONFLICT_BACKUP_KEY="sc_sync_conflict_backups_v1",CONFLICT_BACKUP_LIMIT=200;
+  function conflictSummary(song){const value=song||{},sections=Array.isArray(value.sections)?value.sections:[],blocos=Array.isArray(value.blocos)?value.blocos:[];const chords=blocos.length?blocos.map(item=>String(item?.c||"")).join(" ").split(/\s+/).filter(Boolean).length:sections.reduce((total,section)=>total+(section?.lines||[]).reduce((sum,line)=>sum+((line?.chords||[]).length),0),0);return {title:String(value.title||""),artist:String(value.artist||""),key:String(value.key||value.originalKey||""),capo:value.capo??"",chords,hasFullSheet:Boolean(value.fullChordSheet?.content),hasVideo:Boolean(value.youtubeVideoId),updatedAt:value.updatedAt||null};}
+  function listConflicts(){if(!context)return [];return context.getSongs().filter(song=>metadata(song).conflict).map(song=>{const meta=metadata(song),remote=meta.conflict.remoteSongData||{};return {clientId:meta.clientId,local:conflictSummary(wireSong(song)),remote:{...conflictSummary(remote),updatedAt:remote.updatedAt||meta.conflict.remoteUpdatedAt||null},remoteVersion:meta.conflict.remoteVersion};});}
+  function backupDiscarded(entry){try{const current=global.storage?.get(CONFLICT_BACKUP_KEY,[]);const list=Array.isArray(current)?current:[];list.push(entry);return global.storage?.set(CONFLICT_BACKUP_KEY,list.slice(-CONFLICT_BACKUP_LIMIT))!==false;}catch(_error){return false;}}
+  function resolveConflict(clientId,choice){
+    if(!context)throw new Error("Biblioteca indisponível.");
+    if(choice!=="local"&&choice!=="remote")throw new Error("Escolha inválida.");
+    const songs=context.getSongs().slice(),index=songs.findIndex(song=>metadata(song).clientId===clientId&&metadata(song).conflict);
+    if(index<0)throw new Error("Conflito não encontrado. Sincronize novamente.");
+    const local=songs[index],meta=metadata(local),conflict=meta.conflict,remoteData=clone(conflict.remoteSongData||{});
+    const discarded=choice==="local"?remoteData:wireSong(local);
+    if(!backupDiscarded({clientId,choice,discardedFrom:choice==="local"?"cloud":"device",resolvedAt:new Date().toISOString(),remoteVersion:conflict.remoteVersion,songData:discarded}))throw new Error("Não foi possível guardar a cópia da versão descartada. Nada foi alterado.");
+    if(choice==="remote"){
+      songs[index]={...remoteData,[META_KEY]:{clientId,serverVersion:conflict.remoteVersion,syncedAt:conflict.remoteUpdatedAt||null,contentHash:contentHash(remoteData),conflict:null}};
+    }else{
+      // Mantém a versão deste aparelho e a envia sobre a versão da nuvem que estava em conflito.
+      songs[index]={...wireSong(local),updatedAt:new Date().toISOString(),[META_KEY]:{clientId,serverVersion:conflict.remoteVersion,syncedAt:meta.syncedAt||null,contentHash:null,conflict:null}};
+    }
+    persist(songs);
+    const remaining=songs.filter(song=>metadata(song).conflict).length;
+    emit({conflicts:remaining,phase:remaining?"conflict":(choice==="local"?"pending":"synced")});
+    if(choice==="local")schedule();
+    return {remaining};
+  }
+  function conflictBackups(){const value=global.storage?.get(CONFLICT_BACKUP_KEY,[]);return Array.isArray(value)?value:[];}
   function subscribe(listener){listeners.add(listener);listener(status);return ()=>listeners.delete(listener);}
   function getStatus(){return status;}
-  global.librarySync=Object.freeze({consentKey:CONSENT_KEY,initialize,pull,review,syncNow,migrateLegacy,declineMigration,schedule,deleteSong,merge,prepared,wireSong,musicalPayload,contentHash,sameContent,structuralDiff,normalizeRemoteResponse,inspect,diagnostics,refreshServerAudit,markBackupReady,deferMigration,subscribe,getStatus});
+  global.librarySync=Object.freeze({consentKey:CONSENT_KEY,listConflicts,resolveConflict,conflictBackups,initialize,pull,review,syncNow,migrateLegacy,declineMigration,schedule,deleteSong,merge,prepared,wireSong,musicalPayload,contentHash,sameContent,structuralDiff,normalizeRemoteResponse,inspect,diagnostics,refreshServerAudit,markBackupReady,deferMigration,subscribe,getStatus});
 })(window);

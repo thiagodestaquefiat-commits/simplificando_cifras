@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v153-official-local-merge";
+const CACHE_NAME = "simplificando-cifras-v154-resolver-conflitos";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./js/song-model.js?v=5",
   "./js/demo-library.js?v=3",
   "./js/song-repository.js?v=13",
-  "./js/library-sync.js?v=16",
+  "./js/library-sync.js?v=17",
   "./js/event-model.js?v=5",
   "./js/event-repository.js?v=6",
   "./js/event-collaboration-client.js?v=11",
