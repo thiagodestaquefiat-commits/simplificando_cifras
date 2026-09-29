@@ -57,6 +57,8 @@ assert.match(html, /class="language-grid"/);
 assert.match(html, /function selectAppLanguage/);
 assert.match(html, /id="setting-high-contrast"/);
 assert.match(html, /id="setting-theme"/);
+assert.match(html, /id="setting-chord-color"/);
+assert.match(html, /CHORD_COLOR_OPTIONS/);
 assert.match(html, /id="setting-color-blind"/);
 assert.match(html, /\[100,110,120,130,140\]/);
 assert.doesNotMatch(html, /document\.body\.style\.zoom\s*=/, "o tamanho acessível não pode usar zoom global");

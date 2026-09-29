@@ -83,6 +83,34 @@
   SANTO_SHEET_LINES.push("", "[Pré-Refrão]", "A  B  C#m  F#m", "", "[Refrão Final]", "A  B  G#m  C#m  F#m7  E", "", "[Final]", "F#m7  B  E");
   const SANTO_SHEET = SANTO_SHEET_LINES.join("\n");
 
+  const TEST_SONG_SHEET = [
+    "[Intro]", "G  D  Em  C", "G  D  C", "",
+    "[Verso 1]", "G  D", "A manhã desenha caminhos", "Em  C", "Sobre a rua que aprendeu a esperar",
+    "G  D", "Cada passo guarda um destino", "Em  C", "Cada sonho encontra um lugar",
+    "Am  Em", "Mesmo quando a noite demora", "C  D", "Uma estrela insiste em brilhar", "",
+    "[Pré-Refrão]", "Am  Em", "Quando o medo sopra forte", "C  G", "E tenta a coragem esconder",
+    "Am  Em", "Eu respiro, encontro o norte", "C  D", "E escolho outra vez viver", "",
+    "[Refrão]", "G  D", "Vou seguir a luz no horizonte", "Em  C", "Sem deixar meu coração parar",
+    "G  D", "Se a distância erguer uma ponte", "Em  C", "Com esperança eu vou atravessar",
+    "Am  Em", "Cada acorde conta a história", "C  D", "De quem nunca deixou de tentar", "",
+    "[Interlúdio]", "G  D  Em  C", "G  D  C", "",
+    "[Verso 2]", "G  D", "Há sementes sob o silêncio", "Em  C", "Preparando um jardim para nascer",
+    "G  D", "Há respostas dentro do tempo", "Em  C", "Que somente a jornada faz entender",
+    "Am  Em", "Se o caminho mudar de repente", "C  D", "Dou um passo e começo a aprender", "",
+    "[Pré-Refrão 2]", "Am  Em", "Quando o vento muda o rumo", "C  G", "Eu não deixo a canção se perder",
+    "Am  Em", "Faço do presente um novo mundo", "C  D", "E encontro mais razões para crescer", "",
+    "[Refrão 2]", "G  D", "Vou seguir a luz no horizonte", "Em  C", "Sem deixar meu coração parar",
+    "G  D", "Se a distância erguer uma ponte", "Em  C", "Com esperança eu vou atravessar",
+    "Am  Em", "Cada acorde conta a história", "C  D", "De quem nunca deixou de tentar", "",
+    "[Ponte]", "Em  C", "Se eu cair, vou levantar", "G  D", "Se eu cansar, vou respirar",
+    "Em  C", "Se a voz falhar, vou escutar", "G  D", "O pulso firme a me guiar",
+    "Am  Em", "O que passou virou memória", "C  D", "O que virá podemos transformar", "",
+    "[Refrão Final]", "G  D", "Vou seguir a luz no horizonte", "Em  C", "Com os olhos prontos para enxergar",
+    "G  D", "Toda estrada guarda uma fonte", "Em  C", "Onde a vida aprende a recomeçar",
+    "Am  Em", "Cada acorde conta a história", "C  D", "De quem nunca deixou de tentar", "",
+    "[Final]", "G  D  Em  C", "G  D  C  G"
+  ].join("\n");
+
   const DEMO_SONGS = Object.freeze([
     demoSong("demo-ah-jesus-coracao-igual-ao-teu", "Ah, Jesus / Coração Igual ao Teu", "Julliany Souza", "G", [
       ["Intro", "C  G  Am"], ["Primeira Parte", "G  Em  Am  G  C  Cm", "Quem foi muito perdoado"],
@@ -108,6 +136,20 @@
       ["Segunda Parte", "E  A  C#m  B", "Quem foi perdoado"], ["Final", "F#m7  B  E"]
     ], "Resumo harmônico: em E, parte do ciclo A-B-G#m-C#m, apresenta verso e pré-refrão, abre no refrão congregacional e retorna com a segunda parte antes do final em F#m7-B-E.", SANTO_SHEET)
   ]);
+
+  const LOCAL_TEST_SONG = Object.freeze(demoSong("teste-horizonte-de-luz", "Horizonte de Luz (Música fictícia para testes)", "ROUDY — Conteúdo de teste", "G", [
+    ["Intro", "G  D  Em  C"],
+    ["Verso 1", "G  D  Em  C  Am", "A manhã desenha caminhos"],
+    ["Pré-Refrão", "Am  Em  C  G  D", "Quando o medo sopra forte"],
+    ["Refrão", "G  D  Em  C  Am", "Vou seguir a luz no horizonte"],
+    ["Interlúdio", "G  D  Em  C"],
+    ["Verso 2", "G  D  Em  C  Am", "Há sementes sob o silêncio"],
+    ["Pré-Refrão 2", "Am  Em  C  G  D", "Quando o vento muda o rumo"],
+    ["Refrão 2", "G  D  Em  C  Am", "Vou seguir a luz no horizonte"],
+    ["Ponte", "Em  C  G  D  Am", "Se eu cair, vou levantar"],
+    ["Refrão Final", "G  D  Em  C  Am", "Vou seguir a luz no horizonte"],
+    ["Final", "G  D  Em  C"]
+  ], "Resumo harmônico: música fictícia em G para testes. Os versos percorrem G-D-Em-C, os pré-refrões acrescentam Am e criam tensão em D, o refrão retorna ao ciclo principal, e a ponte parte de Em antes do refrão final.", TEST_SONG_SHEET));
 
   function demoSong(id, title, artist, key, blocks, summary, fullContent) {
     const blocos = blocks.map(([l, c, hook]) => ({
@@ -140,6 +182,7 @@
   function isLegacyCatalogSong(song) { return LEGACY_SIGNATURES.has(signature(song)); }
   function isDemoSong(song) { return DEMO_SONGS.some((demo) => String(demo.id) === String(song && song.id)); }
   function catalog() { return clone(DEMO_SONGS); }
+  function testSong() { return clone(LOCAL_TEST_SONG); }
   function migrate(songs) {
     const source = Array.isArray(songs) ? songs : [];
     return { songs: clone(source), removed: 0, seeded: false };
@@ -171,5 +214,5 @@
   function saveMedley(storage, medley) { return storage.set(MEDLEY_KEY, Array.isArray(medley) ? medley : []); }
   function markMigrated(storage, details) { storage.set(MIGRATION_KEY, { version: 1, ...details }); }
 
-  global.demoLibrary = Object.freeze({ catalog, migrate, signature, isLegacyCatalogSong, isDemoSong, loadMedley, saveMedley, markMigrated, migrationKey: MIGRATION_KEY });
+  global.demoLibrary = Object.freeze({ catalog, testSong, migrate, signature, isLegacyCatalogSong, isDemoSong, loadMedley, saveMedley, markMigrated, migrationKey: MIGRATION_KEY });
 })(window);
