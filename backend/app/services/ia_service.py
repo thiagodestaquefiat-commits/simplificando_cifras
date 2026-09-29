@@ -163,6 +163,19 @@ class IaService:
         if note and note not in normalized.observacoes:
             normalized.observacoes.insert(0, note)
 
+    def _complete_from_web(self, payload: ResumoHarmonicoRequest, user_id: str | None):
+        """Cifra da web para completar uma música do catálogo que só tem resumo (ou None)."""
+        try:
+            if self._web_quota is not None and not self._web_quota(user_id):
+                return None
+            hit = self._sheet_finder(payload.titulo, payload.artista)
+        except Exception:  # noqa: BLE001 - completar é opcional; o resumo continua disponível
+            logger.warning("catalog_completion_failed", exc_info=True)
+            return None
+        if not hit or not clean_musical_text(hit.content, (payload.titulo, payload.artista)):
+            return None
+        return hit
+
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         return ensure_client_chords(self._generate(payload, extracted, request_id, online_source, user_id))
 
@@ -178,11 +191,23 @@ class IaService:
         # Consulta o catálogo compartilhado antes de qualquer chamada à IA, inclusive quando o usuário
         # selecionou uma fonte online. Se outro usuário já salvou esta música com alta confiança, retorna
         # direto sem consumir tokens do DeepSeek.
+        web_hit = None
         if payload.tipo == "pesquisa":
             cached = self._shared_song_result(payload, user_id)
-            if cached is not None:
+            if cached is not None and (cached.fullChordSheet is not None or not knowledge_only):
                 return cached
-        web_hit = None
+            if cached is not None:
+                # Catálogo só com resumo (ex.: entrou antes de compartilharmos a letra da web): tenta
+                # completar com a cifra da web. Se não achar ou o limite do dia acabou, devolve o resumo.
+                completed = self._complete_from_web(payload, user_id)
+                if completed is None:
+                    logger.info("catalog_summary_only_served titulo=%r", payload.titulo)
+                    return cached
+                web_hit = completed
+                logger.info("catalog_summary_completed_from_web url=%s", web_hit.url)
+        if knowledge_only and web_hit is not None:
+            knowledge_only = False
+            has_online_source = True
         if knowledge_only:
             # Fluxo da busca: 1) catálogo do ROUDY (acima) 2) scraper 3) usuário envia arquivo/foto.
             # A IA nunca gera música do zero: sem cifra real, a busca termina aqui.
