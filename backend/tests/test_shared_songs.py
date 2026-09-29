@@ -129,17 +129,31 @@ def _with_sheet(source, **overrides):
     return ai_song(fullChordSheet={"source": source, "visibility": "private", "content": "G C\nLetra completa da música"}, **overrides)
 
 
-def test_web_scraped_song_goes_to_catalog_only_as_harmonic_summary(client, app):
+def test_web_scraped_song_goes_to_catalog_with_full_sheet_and_source(client, app):
+    """Decisão de 29/09/2026: cifra da web (Cifra Club) também é compartilhada, com o link da fonte."""
     token = register(client, "shared-web", "W")
     song = _with_sheet("web_source", sourceInfo={"type": "online", "name": "Cifra Club", "url": None},
                        notes="Confiança da IA: média.\nCifra obtida de https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/; revise antes de salvar.")
     client.put("/api/library/songs/web", headers=auth(token), json={"songData": song})
     with app.app_context():
         stored = SharedSong.query.one()
-        assert stored.song_data["fullChordSheet"] is None
-        assert "Letra completa" not in str(stored.song_data)
-        assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
+        assert stored.song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
+        assert stored.song_data["fullChordSheet"]["source"] == "web_source"
         assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
+
+
+def test_summary_only_catalog_entry_is_completed_when_saved_again_with_sheet(client, app):
+    """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa."""
+    token = register(client, "shared-upgrade", "U")
+    client.put("/api/library/songs/up1", headers=auth(token), json={"songData": ai_song()})
+    with app.app_context():
+        assert SharedSong.query.one().song_data["fullChordSheet"] is None
+    client.put("/api/library/songs/up1", headers=auth(token), json={"songData": _with_sheet("web_source")})
+    with app.app_context():
+        assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
+    friend = register(client, "shared-friend", "F")
+    found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(friend)).get_json()
+    assert found["match"]["title"] == "Asa Branca"
 
 
 def test_ai_generated_lyrics_never_go_to_catalog(client, app):
@@ -156,15 +170,16 @@ def test_user_uploaded_sheet_keeps_full_lyrics_in_catalog(client, app):
         assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
 
 
-def test_old_catalog_entries_with_web_lyrics_are_served_without_lyrics():
-    """Registros antigos no banco não são migrados: a letra é removida na leitura."""
-    data = {"titulo": "Asa Branca", "artista": "Luiz Gonzaga", "tom": "G", "confianca": "media",
-            "harmonicSummary": {"blocos": [{"acordes": ["G", "C"]}]},
-            "fullChordSheet": {"source": "web_source", "content": "G C\nLetra raspada"}}
-    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
-    result = IaService(ExplodingProvider(), shared_songs=catalog).generate(
-        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Asa Branca", modoGeracao="conhecimento_modelo"))
-    assert result.fullChordSheet is None and result.harmonicSummary.blocos[0].acordes == ["G", "C"]
+def test_catalog_serves_web_lyrics_but_not_ai_lyrics():
+    def serve(source):
+        data = {"titulo": "Asa Branca", "artista": "Luiz Gonzaga", "tom": "G", "confianca": "media",
+                "harmonicSummary": {"blocos": [{"acordes": ["G", "C"]}]},
+                "fullChordSheet": {"source": source, "content": "G C\nLetra"}}
+        catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+        return IaService(ExplodingProvider(), shared_songs=catalog).generate(
+            ResumoHarmonicoRequest(tipo="pesquisa", titulo="Asa Branca", modoGeracao="conhecimento_modelo"))
+    assert serve("web_source").fullChordSheet.content == "G C\nLetra"
+    assert serve("model_knowledge").fullChordSheet is None
 
 
 def test_old_ai_only_drafts_do_not_go_to_catalog(client, app):
