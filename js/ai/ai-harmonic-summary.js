@@ -25,7 +25,33 @@
     return wrap;
   }
 
-  // Microfone no campo: dita o título usando o reconhecimento de voz do navegador (sem custo).
+  // Microfone guiado: 1) fala o nome da música -> Título; 2) fala o artista -> Artista;
+  // 3) busca sozinho. Separar título e artista numa frase só não é confiável ("Casa de Deus"),
+  // por isso cada um é ditado na sua vez. Reconhecimento de voz do navegador (sem custo).
+  function listenOnce(Recognition, onText, onDone) {
+    const recognition = new Recognition();
+    let heard = "";
+    recognition.lang = (global.document && global.document.documentElement.lang) || "pt-BR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (result) => {
+      heard = result.results && result.results[0] && result.results[0][0] ? String(result.results[0][0].transcript || "").trim() : "";
+      if (heard) onText(heard);
+    };
+    recognition.onerror = (error) => { recognition.lastError = error && error.error; };
+    recognition.onend = () => onDone(heard, recognition.lastError || null);
+    recognition.start();
+    return recognition;
+  }
+
+  function capitalize(text) { return text ? text.charAt(0).toUpperCase() + text.slice(1) : text; }
+  // Nome de artista: cada palavra com inicial maiúscula, exceto conectores ("Ministério de Louvor").
+  function titleCase(text) {
+    const small = new Set(["de", "da", "do", "das", "dos", "e"]);
+    return String(text || "").split(/\s+/).map((word, index) => index && small.has(word.toLowerCase()) ? word.toLowerCase() : capitalize(word)).join(" ");
+  }
+
   function attachVoiceInput(fieldWrap) {
     const input = fieldWrap.querySelector("input");
     const Recognition = global.SpeechRecognition || global.webkitSpeechRecognition;
@@ -35,40 +61,44 @@
     box.appendChild(input);
     const button = element("button", "ai-summary-voice", "🎙️");
     button.type = "button";
-    button.setAttribute("aria-label", "Ditar título por voz");
-    button.title = "Ditar título por voz";
+    button.setAttribute("aria-label", "Buscar por voz: fale a música e depois o artista");
+    button.title = "Buscar por voz";
     button.setAttribute("aria-pressed", "false");
     box.appendChild(button);
-    let recognition = null;
+    let active = null;
     const setListening = (value) => {
       button.classList.toggle("listening", value);
       button.setAttribute("aria-pressed", String(value));
-      button.setAttribute("aria-label", value ? "Ouvindo… toque para parar" : "Ditar título por voz");
     };
+    const stop = () => { const current = active; active = null; setListening(false); if (current) current.abort ? current.abort() : current.stop(); };
+    const denied = (error) => error === "not-allowed" || error === "service-not-allowed";
     button.addEventListener("click", (event) => {
       event.preventDefault();
       if (busy) return;
-      if (recognition) { recognition.stop(); return; }
+      if (active) { stop(); setStatus("initial", ""); return; }
       if (!Recognition) { setStatus("invalid_input", "Seu navegador não permite busca por voz. Digite o título."); return; }
-      recognition = new Recognition();
-      recognition.lang = (global.document && global.document.documentElement.lang) || "pt-BR";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.onstart = () => setListening(true);
-      recognition.onend = () => { setListening(false); recognition = null; };
-      recognition.onresult = (result) => {
-        const spoken = result.results && result.results[0] && result.results[0][0] ? String(result.results[0][0].transcript || "").trim() : "";
-        if (!spoken) return;
-        input.value = spoken.charAt(0).toUpperCase() + spoken.slice(1);
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.focus();
-      };
-      recognition.onerror = (error) => {
-        if (error.error === "not-allowed" || error.error === "service-not-allowed") setStatus("invalid_input", "Permita o uso do microfone para ditar o título.");
-        else if (error.error === "no-speech") setStatus("invalid_input", "Não ouvi nada. Toque no microfone e fale o nome da música.");
-      };
-      try { recognition.start(); } catch (_error) { setListening(false); recognition = null; }
+      const artistInput = panel.querySelector("[data-ai-form=pesquisa] input[name=artista]");
+      setListening(true);
+      setStatus("loading", "🎙️ Fale o nome da música…");
+      try {
+        active = listenOnce(Recognition, (text) => { input.value = capitalize(text); }, (title, error) => {
+          if (!active) return;
+          if (!title) {
+            active = null; setListening(false);
+            setStatus("invalid_input", denied(error) ? "Permita o uso do microfone para buscar por voz." : "Não ouvi o nome da música. Toque no microfone e tente de novo.");
+            return;
+          }
+          setStatus("loading", `🎙️ "${capitalize(title)}" — agora fale o nome do artista (ou aguarde para buscar só pelo título)…`);
+          try {
+            active = listenOnce(Recognition, (artist) => { if (artistInput) artistInput.value = titleCase(artist); }, () => {
+              if (!active) return;
+              active = null; setListening(false);
+              setStatus("initial", "");
+              submit();
+            });
+          } catch (_error) { active = null; setListening(false); submit(); }
+        });
+      } catch (_error) { active = null; setListening(false); setStatus("invalid_input", "Não foi possível usar o microfone. Digite o título."); }
     });
   }
 

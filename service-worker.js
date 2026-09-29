@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v159-unificacao";
+const CACHE_NAME = "simplificando-cifras-v160-microfone-guiado";
 const ASSETS = [
   "./",
   "./index.html",
@@ -47,7 +47,7 @@ const ASSETS = [
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
   "./js/ai/harmonic-summary-client.js?v=13",
-  "./js/ai/ai-harmonic-summary.js?v=11",
+  "./js/ai/ai-harmonic-summary.js?v=12",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
