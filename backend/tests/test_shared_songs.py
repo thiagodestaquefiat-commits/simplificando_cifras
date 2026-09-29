@@ -211,3 +211,14 @@ def test_summary_only_catalog_song_is_completed_from_web_on_search():
     catalog_full = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=full), 0.97))
     IaService(ExplodingProvider(), shared_songs=catalog_full, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1)).generate(request)
     assert calls == []
+
+
+def test_catalog_keeps_capo_saved_as_text(client, app):
+    """O app salva 'Capotraste casa 2'; o catálogo perdia o capo (só aceitava número)."""
+    from app.services.shared_songs_service import parse_capo
+    assert [parse_capo(v) for v in (2, "2", "Capotraste casa 2", "2ª casa", "", None, "Sem", 0, 13)] == [2, 2, 2, 2, None, None, None, None, None]
+    token = register(client, "shared-capo", "C")
+    client.put("/api/library/songs/capo1", headers=auth(token), json={"songData": ai_song(title="Isaías 9", artist="Rodolfo Abrantes", originalKey="D", capo="Capotraste casa 2")})
+    with app.app_context():
+        stored = SharedSong.query.one()
+        assert stored.song_data["capotraste"] == 2 and stored.capo == "2"
