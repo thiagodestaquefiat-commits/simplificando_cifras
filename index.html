@@ -797,7 +797,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/song-model.js?v=5"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/song-repository.js?v=13"></script>
-<script src="js/library-sync.js?v=16"></script>
+<script src="js/library-sync.js?v=17"></script>
 <script src="js/event-model.js?v=5"></script>
 <script src="js/event-repository.js?v=6"></script>
 <script src="js/event-chat.js?v=2"></script>
@@ -2402,9 +2402,34 @@ function renderLibrarySyncPanel(state){
   const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
   const action=state.phase==='needs-consent'&&state.migrationCandidate
     ?`<button class="btn btn-outline" onclick="downloadMigrationBackup()">${state.backupReady?'✓ Backup completo baixado':'Baixar backup completo'}</button><button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync&&state.backupReady?'':'disabled'}>Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`
-    :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
+    :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`${state.conflicts?`<button class="btn btn-primary" onclick="openConflictResolver()">Resolver ${state.conflicts} conflito${state.conflicts===1?'':'s'}</button>`:''}<button class="btn ${state.conflicts?'btn-outline':'btn-primary'}" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
   const technical=`<section class="library-sync-panel" data-library-sync-status><strong>Detalhes da biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section><button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">Use estas ferramentas somente para recuperação ou quando solicitado pelo suporte. Nenhuma delas apaga automaticamente seus dados locais.</p>`;
   body.innerHTML=`${accountSubpageHeader('Ajuda e Suporte',librarySyncBackAction)}<section class="sync-friendly-card" data-library-sync-status aria-live="polite" data-state="${eventEsc(state.phase)}"><span class="sync-friendly-icon">${copy.icon}</span><span class="sync-friendly-copy"><strong>${eventEsc(copy.title)}</strong><p>${eventEsc(copy.message)}</p></span></section>${action}<details class="sync-advanced"><summary>Opções avançadas</summary><div class="sync-advanced-content">${technical}</div></details>`;
+}
+// Conflitos de sincronização: mostra as duas versões e o usuário escolhe qual vale.
+function conflictDate(value){const time=Date.parse(value||'');return Number.isFinite(time)?new Date(time).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'data desconhecida';}
+function conflictVersionCard(label,version,newer){
+  const details=[version.key?`Tom ${eventEsc(version.key)}`:'',version.capo?`Capo ${eventEsc(version.capo)}`:'',`${version.chords} acorde${version.chords===1?'':'s'}`,version.hasFullSheet?'Letra + Cifras':'',version.hasVideo?'Vídeo':''].filter(Boolean).join(' · ');
+  return `<div class="sync-diagnostic-section" style="gap:4px"><strong>${label}${newer?' <span style="color:#86efac;font-size:10px">(mais recente)</span>':''}</strong><span style="font-size:13px;color:var(--text)">${eventEsc(version.title||'Sem título')}</span><span style="font-size:11px;color:var(--text2)">${eventEsc(version.artist||'Sem artista')}</span><span style="font-size:11px;color:var(--text2)">${details}</span><span style="font-size:10px;color:var(--text2)">Alterada em ${conflictDate(version.updatedAt)}</span></div>`;
+}
+function openConflictResolver(){
+  const conflicts=librarySync.listConflicts();
+  if(!conflicts.length){showToast('✅ Nenhum conflito pendente.');openLibrarySync();return;}
+  const cards=conflicts.map(item=>{
+    const localTime=Date.parse(item.local.updatedAt||''),remoteTime=Date.parse(item.remote.updatedAt||'');
+    const localNewer=Number.isFinite(localTime)&&(!Number.isFinite(remoteTime)||localTime>remoteTime),remoteNewer=Number.isFinite(remoteTime)&&!localNewer;
+    const id=eventEsc(item.clientId);
+    return `<section class="library-sync-panel" data-conflict="${id}" style="gap:10px">${conflictVersionCard('📱 Neste aparelho',item.local,localNewer)}${conflictVersionCard('☁️ Na nuvem (outro aparelho)',item.remote,remoteNewer)}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict('${id}','local')">Manter deste aparelho</button><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict('${id}','remote')">Usar a da nuvem</button></div></section>`;
+  }).join('');
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Resolver conflitos','openLibrarySync')}<div class="event-permission-note">Estas músicas foram alteradas em dois aparelhos. Escolha qual versão vale; a outra fica guardada como cópia de segurança neste aparelho.</div>${cards}`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function resolveSyncConflict(clientId,choice){
+  try{
+    const result=librarySync.resolveConflict(clientId,choice);
+    showToast(choice==='local'?'✅ Versão deste aparelho mantida; enviando para a nuvem.':'✅ Versão da nuvem aplicada.');
+    if(result.remaining)openConflictResolver();else openLibrarySync();
+  }catch(error){showToast('⚠️ '+(error.message||'Não foi possível resolver o conflito.'));}
 }
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 async function downloadSyncDiagnostics(){
