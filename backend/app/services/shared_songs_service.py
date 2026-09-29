@@ -22,9 +22,11 @@ MAX_CANDIDATES = 10
 SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
-# Só letra enviada pelo próprio usuário entra completa no catálogo público. Cifra raspada da web
-# (web_source) ou gerada pela IA (model_knowledge) é compartilhada apenas como resumo harmônico.
-CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text"}
+# Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
+# (web_source, ex.: Cifra Club). Decisão de produto do MVP (29/09/2026), ciente do risco de direitos
+# autorais; SCRAPER_ENABLED=false desliga a busca na web se houver reclamação. Conteúdo gerado pela IA
+# (model_knowledge) continua fora.
+CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 
 
 def canonical_section(value) -> str | None:
@@ -238,7 +240,7 @@ class SharedSongService:
                     "content": content[:50000],
                     "sections": full_sheet.get("sections") or [],
                 }
-        if source_url.startswith("https://") and not full_sheet_payload:
+        if source_url.startswith("https://") and (not full_sheet_payload or full_sheet_payload["source"] == "web_source"):
             observacoes.append(f"Fonte: {source_url[:300]}")
         try:
             response = ResumoHarmonicoResponse.model_validate({
