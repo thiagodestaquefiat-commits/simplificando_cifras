@@ -1999,13 +1999,60 @@ function openSimpleSongEditor(model,sourceSong,options={}){
     <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
     ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
     ${normalized.sourceInfo?.type==='online'&&normalized.sourceInfo?.name?`<div style="font-size:11px;color:var(--text2);margin:-7px 0 14px;line-height:1.5;">Fonte: ${eventEsc(normalized.sourceInfo.name)}</div>`:''}
-    <div class="song-view-switch" style="--song-view-count:${fullSheet?3:2}" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button>${fullSheet?`<button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button>`:''}<button type="button" role="tab" aria-selected="false" data-simple-editor-view="tablature" onclick="setSimpleEditorView('tablature')">Tablatura</button></div>
+    <div class="song-view-switch" style="--song-view-count:3" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="tablature" onclick="setSimpleEditorView('tablature')">Tablatura</button></div>
+    ${fullSheet?'':`<div class="full-sheet-missing-hint" style="font-size:11px;color:var(--text2);margin:-6px 0 14px;line-height:1.5;">Esta música só tem o resumo harmônico. <button type="button" class="link-button" style="background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer" onclick="setSimpleEditorView('full')">Completar com letra e cifra</button></div>`}
     ${simpleSongEditorFields(normalized)}
-    ${fullSheet?`<div class="form-group" id="simple-editor-full" hidden><label class="form-label" for="ai-review-full-text">Letra + Cifras</label><textarea class="form-textarea" id="ai-review-full-text" style="min-height:360px;">${eventEsc(fullSheet.content)}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;">Conteúdo privado fornecido por você. Revise antes de salvar.</div></div>`:''}
+    ${simpleEditorFullSheetPanel(fullSheet)}
     <div id="simple-editor-tablature" hidden><div class="form-group"><label class="form-label" for="tablature-instrument">Instrumento</label><select class="form-input" id="tablature-instrument">${tabOptions}</select></div><div class="form-group"><label class="form-label" for="tablature-tuning">Afinação</label><input class="form-input" id="tablature-tuning" value="${eventEsc(tab?.tuning||'E A D G B E')}" placeholder="E A D G B E"></div><div class="form-group"><label class="form-label" for="tablature-capo">Capotraste</label><input class="form-input" id="tablature-capo" type="number" min="0" max="12" value="${tab?.capo||0}"></div><div class="form-group"><label class="form-label" for="tablature-content">Seções da tablatura</label><textarea class="form-textarea" id="tablature-content" style="min-height:330px;white-space:pre;overflow-x:auto" spellcheck="false" placeholder="[Intro]&#10;e|----------------0---|&#10;B|----------1---------|&#10;G|------0-------------|&#10;D|--2-----------------|&#10;A|--------------------|&#10;E|--------------------|">${eventEsc(window.tablature.serializeEditor(tab))}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;line-height:1.5;">Use títulos entre colchetes, como [Intro], [Riff] e [Solo]. Os espaços e símbolos serão preservados.</div></div><button class="btn btn-outline" type="button" onclick="previewTablatureEditor()">Pré-visualizar tablatura</button><div id="tablature-editor-preview" style="margin-top:12px;"></div></div>
     <button class="btn btn-primary" onclick="saveSimpleSongReview()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
+}
+// Letra + Cifras no editor: sempre disponível, para completar músicas que só têm o resumo harmônico.
+// Digitar/colar, ou anexar arquivo (TXT é lido no aparelho, sem custo; PDF/foto passam pela análise do servidor).
+function simpleEditorFullSheetPanel(fullSheet){
+  const empty=!fullSheet;
+  return `<div class="form-group" id="simple-editor-full" hidden>
+    <label class="form-label" for="ai-review-full-text">Letra + Cifras</label>
+    ${empty?'<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Complete a música com a letra e a cifra: digite ou cole abaixo, ou anexe um arquivo. O resumo harmônico continua como está.</div>':''}
+    <input type="file" id="full-sheet-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,application/pdf,image/png,image/jpeg,image/webp,text/plain" multiple hidden onchange="attachFullSheetFiles(this)">
+    <button class="btn btn-outline" type="button" id="full-sheet-attach" style="margin:0 0 10px" onclick="document.getElementById('full-sheet-file').click()">📎 ${empty?'Anexar arquivo ou foto':'Substituir por arquivo ou foto'}</button>
+    <div id="full-sheet-status" role="status" style="font-size:11px;color:var(--text2);margin:-4px 0 10px;line-height:1.5;" hidden></div>
+    <textarea class="form-textarea" id="ai-review-full-text" data-source="${eventEsc(fullSheet?.source||'')}" style="min-height:360px;white-space:pre;overflow-x:auto" spellcheck="false" placeholder="[Intro]&#10;C  G  Am  F&#10;&#10;[Verso]&#10;C          G&#10;Primeira linha da letra&#10;Am         F&#10;Segunda linha da letra">${fullSheet?eventEsc(fullSheet.content):''}</textarea>
+    <div style="font-size:10px;color:var(--text2);margin-top:6px;">Acordes na linha de cima e letra na linha de baixo. Revise antes de salvar.</div>
+  </div>`;
+}
+function setFullSheetStatus(message,isError){
+  const status=document.getElementById('full-sheet-status');if(!status)return;
+  status.hidden=!message;status.textContent=message||'';status.style.color=isError?'#fbbf24':'var(--text2)';
+}
+async function attachFullSheetFiles(input){
+  const files=[...(input?.files||[])];if(!files.length)return;
+  const textarea=document.getElementById('ai-review-full-text'),button=document.getElementById('full-sheet-attach');
+  if(!textarea)return;
+  if(textarea.value.trim()&&!appConfirm('Substituir o texto atual de Letra + Cifras pelo conteúdo do arquivo?')){input.value='';return;}
+  const isText=file=>/\.txt$/i.test(file.name)||file.type==='text/plain';
+  if(button)button.disabled=true;
+  try{
+    if(files.every(isText)){
+      const parts=await Promise.all(files.map(file=>file.text()));
+      textarea.value=parts.join('\n\n').replace(/\r\n?/g,'\n').trim();
+      textarea.dataset.source='user_upload';
+      setFullSheetStatus('Arquivo carregado. Revise e toque em Salvar.');
+      return;
+    }
+    setFullSheetStatus('Lendo o arquivo… isso pode levar alguns segundos.');
+    const title=document.getElementById('ai-review-title')?.value||'',artist=document.getElementById('ai-review-artist')?.value||'';
+    const result=await harmonicSummaryClient.generate('arquivo',{arquivos:files,titulo:title,artista:artist});
+    const content=result?.data?.fullChordSheet?.content||'';
+    if(!content.trim()){setFullSheetStatus('Não consegui ler a letra e a cifra deste arquivo. Tente outro arquivo ou cole o texto.',true);return;}
+    textarea.value=content;textarea.dataset.source='user_upload';
+    setFullSheetStatus('Letra e cifra lidas do arquivo. Revise e toque em Salvar. O resumo harmônico não foi alterado.');
+  }catch(error){
+    setFullSheetStatus(error?.message||'Não foi possível ler o arquivo. Tente novamente.',true);
+  }finally{
+    if(button)button.disabled=false;input.value='';
+  }
 }
 function setSimpleEditorView(view){
   const summary=document.getElementById('simple-editor-summary'),fullPanel=document.getElementById('simple-editor-full'),tabPanel=document.getElementById('simple-editor-tablature');
@@ -2020,8 +2067,11 @@ function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
   const fullInput=document.getElementById('ai-review-full-text');
-  const fullChanged=Boolean(fullInput&&fullInput.value.replace(/\r\n?/g,'\n').trim()!==simpleReviewDraft.model.fullChordSheet?.content);
-  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...simpleReviewDraft.model.fullChordSheet,content:fullInput.value,sections:fullChanged?[]:simpleReviewDraft.model.fullChordSheet.sections}):simpleReviewDraft.model.fullChordSheet;
+  const previousSheet=simpleReviewDraft.model.fullChordSheet;
+  const fullChanged=Boolean(fullInput&&fullInput.value.replace(/\r\n?/g,'\n').trim()!==previousSheet?.content);
+  // Letra + Cifras vazia mantém a música só com o resumo; texto novo vira cifra completa do usuário.
+  const fullSource=fullChanged?(fullInput.dataset.source==='user_upload'?'user_upload':'user_text'):previousSheet?.source;
+  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...(previousSheet||{}),source:fullSource,content:fullInput.value,sections:fullChanged?[]:(previousSheet?.sections||[])}):previousSheet;
   const tabContent=document.getElementById('tablature-content')?.value||'';
   const tablature=window.tablature.normalize({instrument:document.getElementById('tablature-instrument')?.value,tuning:document.getElementById('tablature-tuning')?.value,capo:document.getElementById('tablature-capo')?.value,sections:window.tablature.parseEditor(tabContent)});
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,tablature,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
