@@ -10,7 +10,7 @@ from test_event_permissions import auth, register
 def ai_song(**overrides):
     value = {
         "id": "ai-1", "title": "Asa Branca", "artist": "Luiz Gonzaga", "originalKey": "G", "capo": 0,
-        "source": "ai", "aiGenerated": True, "sourceInfo": {"type": "manual", "name": None, "url": None},
+        "source": "ai", "aiGenerated": True, "sourceInfo": {"type": "online", "name": None, "url": None},
         "sections": [{"label": "Verso", "hideLabel": False, "lines": [{"lyrics": "", "repeticoes": 2, "chords": [{"chord": "G", "position": 0}, {"chord": "C", "position": 3}]}]}],
     }
     value.update(overrides)
@@ -36,15 +36,26 @@ def test_ai_song_is_contributed_once_and_searchable(client, app):
     assert client.get("/api/shared-songs/search?title=", headers=auth(token)).status_code == 400
 
 
-def test_any_source_type_goes_to_catalog(client, app):
-    """Qualquer fonte válida (upload, manual, texto, online) entra no catálogo, independente de aiGenerated."""
+def test_only_search_and_file_songs_go_to_catalog(client, app):
+    """Busca por IA (online) e arquivo/foto (upload) entram no catálogo; Texto e músicas feitas à mão são pessoais."""
     token = register(client, "shared-b", "B")
-    # upload → DEVE entrar no catálogo
     client.put("/api/library/songs/up", headers=auth(token), json={"songData": ai_song(sourceInfo={"type": "upload"})})
-    # manual + aiGenerated=False → TAMBÉM deve entrar no catálogo (colaboração estilo Cifra Club)
-    client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Outra")})
+    client.put("/api/library/songs/web", headers=auth(token), json={"songData": ai_song(title="Da Busca")})
+    client.put("/api/library/songs/txt", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo={"type": "text"})})
+    client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Feita a Mao", sourceInfo={"type": "manual"})})
     with app.app_context():
-        assert SharedSong.query.count() == 2
+        assert sorted(song.title for song in SharedSong.query.all()) == ["Asa Branca", "Da Busca"]
+
+
+def test_typed_lyrics_stay_personal_even_on_shared_song(client, app):
+    """Letra digitada pelo usuário (user_text) não vai para o catálogo; o resumo da fonte real vai."""
+    token = register(client, "shared-c", "C")
+    typed = {"source": "user_text", "content": "G  C\nMinha versão", "sections": []}
+    client.put("/api/library/songs/one", headers=auth(token), json={"songData": ai_song(fullChordSheet=typed)})
+    with app.app_context():
+        stored = SharedSong.query.one()
+        assert stored.song_data["fullChordSheet"] is None
+        assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
 
 
 class ExplodingProvider:
@@ -90,13 +101,22 @@ def test_own_library_has_priority_over_shared_catalog(client, app):
 
 
 def test_ia_service_prefers_personal_song_over_catalog():
-    personal_data = {"titulo": "Minha", "harmonicSummary": {"blocos": [{"acordes": ["A"]}]}, "confianca": "media"}
+    # Cópia pessoal completa: o catálogo nem é consultado.
+    personal_data = {"titulo": "Minha", "harmonicSummary": {"blocos": [{"acordes": ["A", "D"]}]}, "confianca": "media",
+                     "fullChordSheet": {"source": "user_text", "content": "A D\nMinha letra"}}
     catalog = SimpleNamespace(
         search_personal=lambda user_id, title, artist: SimpleNamespace(summary=personal_data) if user_id == "u1" else None,
         search=lambda title, artist: (_ for _ in ()).throw(AssertionError("catálogo não deveria ser consultado")),
     )
     result = IaService(ExplodingProvider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha", modoGeracao="conhecimento_modelo"), user_id="u1")
-    assert result.titulo == "Minha"
+    assert result.titulo == "Minha" and result.fullChordSheet.content == "A D\nMinha letra"
+    # Cópia pessoal só com resumo e catálogo sem nada melhor: continua a do usuário.
+    summary_only = {**personal_data, "fullChordSheet": None}
+    catalog2 = SimpleNamespace(search_personal=lambda *a: SimpleNamespace(summary=summary_only), search=lambda *a: None)
+    web_calls = []
+    result2 = IaService(ExplodingProvider(), shared_songs=catalog2, web_search=lambda *a: None, sheet_finder=lambda *a: web_calls.append(1)).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha", modoGeracao="conhecimento_modelo"), user_id="u1")
+    assert result2.titulo == "Minha" and web_calls == [1], "sem letra em lugar nenhum: tenta a web uma vez e devolve o resumo"
 
 
 def test_personal_match_matches_ai_response_format(client):
@@ -222,3 +242,16 @@ def test_catalog_keeps_capo_saved_as_text(client, app):
     with app.app_context():
         stored = SharedSong.query.one()
         assert stored.song_data["capotraste"] == 2 and stored.capo == "2"
+
+
+def test_own_summary_only_copy_uses_catalog_full_sheet_before_web():
+    """Completar cifra: a cópia do usuário só tem resumo, o catálogo tem a letra -> usa o catálogo, sem scraper."""
+    personal_data = {"titulo": "Isaías 9", "artista": "Rodolfo Abrantes", "tom": "D", "confianca": "media",
+                     "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}, "fullChordSheet": None}
+    shared_data = {**personal_data, "fullChordSheet": {"source": "web_source", "content": "C G4 Am\nUm menino nasceu"}}
+    calls = []
+    catalog = SimpleNamespace(search_personal=lambda *a: SimpleNamespace(summary=personal_data),
+                              search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=shared_data), 0.97))
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1)).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo"), user_id="u1")
+    assert "Um menino nasceu" in result.fullChordSheet.content and calls == []
