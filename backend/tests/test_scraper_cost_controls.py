@@ -98,13 +98,13 @@ def test_summary_follows_roudy_standard_for_real_sheet():
     result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
     summary = [(b.secao, b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
     assert summary == [
-        ("Intro", None, ["C", "G4", "Am"], 2),
-        ("Primeira Parte", "Um menino nasceu", ["C", "G4", "Am"], None),
-        ("Pré-Refrão", "E o Seu nome é", ["F7M", "Am", "Dm", "F7M", "Am", "G"], None),
-        ("Refrão", "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-        ("Solo", None, ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-        ("Segunda Parte", "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-    ]
+        (None, None, ["C", "G4", "Am"], 2),
+        (None, "Um menino nasceu", ["C", "G4", "Am"], None),
+        (None, "E o Seu nome é", ["F7M", "Am", "Dm", "F7M", "Am", "G"], None),
+        (None, "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        (None, None, ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        (None, "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+    ], "padrão ROUDY: sem nomes de seção, só acordes e frases-gancho"
     assert (result.tom, result.capotraste) == ("D", 2)
 
 

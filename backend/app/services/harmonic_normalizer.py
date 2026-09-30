@@ -570,6 +570,9 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
     for trecho in fixed.harmonicSummary.blocos:
         trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
     fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
+    for trecho in fixed.harmonicSummary.blocos:
+        # Padrão ROUDY: resumo só com acordes e frases-gancho, sem nomes de seção.
+        trecho.secao = None
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:
