@@ -101,3 +101,13 @@ def test_ensure_client_chords_simplifies_cached_songs_and_drops_unreadable():
     assert fixed.harmonicSummary.blocos[0].acordes == ["A7", "D"]
     assert [item.acorde for item in fixed.fullChordSheet.sections[0].linhas[0].acordes] == ["E7"]
     assert any("Lá" in note and "Sol" in note for note in fixed.observacoes)
+
+
+def test_summary_blocks_are_condensed_roudy_style():
+    """Pais e Filhos: 'C D G C D G C D G C D G' deve virar 'C D G' 4x, venha de onde vier (IA, catálogo)."""
+    data = _response(["C", "D", "G"] * 4)
+    data.harmonicSummary.blocos.append(data.harmonicSummary.blocos[0].model_copy(update={"acordes": ["C", "D", "G"] * 4 + ["C", "D"], "fraseGuia": "Estátuas e cofres"}))
+    data.harmonicSummary.blocos.append(data.harmonicSummary.blocos[0].model_copy(update={"acordes": ["F", "Em", "C", "Bm", "Am", "D"], "fraseGuia": "Dorme agora"}))
+    fixed = ensure_client_chords(data)
+    assert [(b.acordes, b.repeticoes) for b in fixed.harmonicSummary.blocos] == [
+        (["C", "D", "G"], 4), (["C", "D", "G"], 4), (["F", "Em", "C", "Bm", "Am", "D"], None)]

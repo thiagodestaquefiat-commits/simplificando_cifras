@@ -816,7 +816,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=1"></script>
 <script src="js/study-metronome.js?v=2"></script>
-<script src="js/editor/song-format.js?v=9"></script>
+<script src="js/editor/song-format.js?v=10"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -1499,8 +1499,11 @@ function renderDetail(){
       return `<div class="smart-scroll-line" data-smart-line data-smart-chords="${eventEsc(smartLineChords)}">${lyricHtml+chordHtml}</div>`;
     }).join('');
     const labelHtml=section.showLabel&&section.label?renderMusicalText(section.label,totalShift):'';
-    const stageLabel=eventEsc(section.label||`Trecho ${sectionIndex+1}`);
-    return corpo||labelHtml?`<section class="wa-block"><h3 class="stage-summary-label">${stageLabel}</h3>${corpo}${labelHtml}</section>`:'';
+    // Identificação previsível do trecho (navegação do palco) fica só no atributo; o texto visível
+    // mostra acordes e ganchos, sem nomes de seção (padrão ROUDY).
+    const stageId=eventEsc(section.label||`Trecho ${sectionIndex+1}`);
+    const stageLabel=section.showLabel&&section.label?`<h3 class="stage-summary-label">${eventEsc(section.label)}</h3>`:'';
+    return corpo||labelHtml?`<section class="wa-block" data-stage-label="${stageId}">${stageLabel}${corpo}${labelHtml}</section>`:'';
   }).join('');
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)

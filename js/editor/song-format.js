@@ -179,12 +179,15 @@
     return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
   }
 
+  const SECTION_NAME = /^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)(?:\s*\d+)?\s*\]?\)?:?$/i;
+  function isSectionName(value) { return SECTION_NAME.test(String(value || "").trim()); }
+
   function simpleText(model) {
     const normalized = normalize(model);
     return normalized.sections.map((section, index) => {
       const rows = [];
       const label = cleanText(section.label, 120);
-      if (label && !new RegExp(`^(Trecho|Seção)\\s+${index + 1}$`, "i").test(label)) rows.push(label);
+      if (label && !isSectionName(label) && !new RegExp(`^(Trecho|Seção)\\s+${index + 1}$`, "i").test(label)) rows.push(label);
       section.lines.forEach((line) => {
         if (line.lyrics) rows.push(line.lyrics);
         if (line.chords.length) rows.push(renderChordLine(line.chords) + (line.repeticoes ? `  (${line.repeticoes}x)` : ""));
@@ -237,7 +240,7 @@
     const hasStructuredSource = Boolean(song && song.editorData && Array.isArray(song.editorData.sections));
     const technical = /^(?:afina[çc][ãa]o|tuning|metadados|diagramas?(?: de acordes)?|legenda(?: de acordes)?|acordes (?:utilizados|usados)|tom|artista|t[íi]tulo)\s*(?::.*)?$|^\d+$/i;
     const generic = /^(?:Se[çc][ãa]o|Trecho)(?:\s+\d+)?$/i;
-    const realSection = /^(?:Intro(?:dução)?|Verso|Pré[- ]refrão|Refrão|Ponte|Interlúdio|Solo|Final)(?:\s+\d+)?$/i;
+    const realSection = SECTION_NAME;
     const seen = new Set();
     const sections = normalized.sections.filter(section => !technical.test(section.label.trim())).map((section, sectionIndex) => {
       const lines = section.lines.filter(line => !technical.test(line.lyrics.trim())).map(line => ({
@@ -246,9 +249,11 @@
         chords: line.chords.map(item => ({ chord: item.chord, position: item.position }))
       }));
       const hasHook = lines.some(line => line.lyrics && !chordLine(line.lyrics));
+      // Padrão ROUDY: o resumo mostra só acordes e frases-gancho; nomes de seção (Intro, Primeira
+      // Parte, Pré-Refrão...) não aparecem, inclusive em músicas antigas (sem alterar o que está salvo).
       return { type: section.type, label: section.label,
         showLabel: !section.hideLabel && !generic.test(section.label) &&
-          !(hasHook && realSection.test(section.label)) &&
+          !realSection.test(section.label.trim()) &&
           (hasStructuredSource || Boolean(song?.blocos?.[sectionIndex]?.l)), lines };
     }).filter(section => {
       if (!section.lines.length) return false;
@@ -297,5 +302,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ isSectionName, types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);

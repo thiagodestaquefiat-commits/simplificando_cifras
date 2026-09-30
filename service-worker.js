@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v160-microfone-guiado";
+const CACHE_NAME = "simplificando-cifras-v161-resumo-sem-secoes";
 const ASSETS = [
   "./",
   "./index.html",
@@ -37,7 +37,7 @@ const ASSETS = [
   "./js/stage-offline.js?v=1",
   "./js/study-metronome.js?v=2",
   "./js/study-metronome.css?v=3",
-  "./js/editor/song-format.js?v=9",
+  "./js/editor/song-format.js?v=10",
   "./js/editor/song-editor-history.js",
   "./js/editor/song-editor-validation.js",
   "./js/editor/chord-simplifier.js",
