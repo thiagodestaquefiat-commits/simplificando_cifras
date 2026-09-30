@@ -10,7 +10,7 @@ from test_event_permissions import auth, register
 def ai_song(**overrides):
     value = {
         "id": "ai-1", "title": "Asa Branca", "artist": "Luiz Gonzaga", "originalKey": "G", "capo": 0,
-        "source": "ai", "aiGenerated": True, "sourceInfo": {"type": "manual", "name": None, "url": None},
+        "source": "ai", "aiGenerated": True, "sourceInfo": {"type": "online", "name": None, "url": None},
         "sections": [{"label": "Verso", "hideLabel": False, "lines": [{"lyrics": "", "repeticoes": 2, "chords": [{"chord": "G", "position": 0}, {"chord": "C", "position": 3}]}]}],
     }
     value.update(overrides)
@@ -36,15 +36,26 @@ def test_ai_song_is_contributed_once_and_searchable(client, app):
     assert client.get("/api/shared-songs/search?title=", headers=auth(token)).status_code == 400
 
 
-def test_any_source_type_goes_to_catalog(client, app):
-    """Qualquer fonte válida (upload, manual, texto, online) entra no catálogo, independente de aiGenerated."""
+def test_only_search_and_file_songs_go_to_catalog(client, app):
+    """Busca por IA (online) e arquivo/foto (upload) entram no catálogo; Texto e músicas feitas à mão são pessoais."""
     token = register(client, "shared-b", "B")
-    # upload → DEVE entrar no catálogo
     client.put("/api/library/songs/up", headers=auth(token), json={"songData": ai_song(sourceInfo={"type": "upload"})})
-    # manual + aiGenerated=False → TAMBÉM deve entrar no catálogo (colaboração estilo Cifra Club)
-    client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Outra")})
+    client.put("/api/library/songs/web", headers=auth(token), json={"songData": ai_song(title="Da Busca")})
+    client.put("/api/library/songs/txt", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo={"type": "text"})})
+    client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Feita a Mao", sourceInfo={"type": "manual"})})
     with app.app_context():
-        assert SharedSong.query.count() == 2
+        assert sorted(song.title for song in SharedSong.query.all()) == ["Asa Branca", "Da Busca"]
+
+
+def test_typed_lyrics_stay_personal_even_on_shared_song(client, app):
+    """Letra digitada pelo usuário (user_text) não vai para o catálogo; o resumo da fonte real vai."""
+    token = register(client, "shared-c", "C")
+    typed = {"source": "user_text", "content": "G  C\nMinha versão", "sections": []}
+    client.put("/api/library/songs/one", headers=auth(token), json={"songData": ai_song(fullChordSheet=typed)})
+    with app.app_context():
+        stored = SharedSong.query.one()
+        assert stored.song_data["fullChordSheet"] is None
+        assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
 
 
 class ExplodingProvider:

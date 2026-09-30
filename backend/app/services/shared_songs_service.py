@@ -19,7 +19,11 @@ MAX_CANDIDATES = 10
 # Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
 # contém apenas acordes (sem letra nem cifra completa), então não há problema
 # de privacidade independentemente da fonte (upload, texto, online ou manual).
-SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text"}
+# Só vai para o catálogo compartilhado o que veio de fonte real: Busca por IA (Cifra Club/catálogo) ou arquivo/foto.
+# Músicas digitadas (aba Texto) ou criadas à mão são versões pessoais: ficam só na biblioteca do usuário.
+SHAREABLE_SOURCE_TYPES = {"online", "upload"}
+# Letra + Cifras que o catálogo aceita receber (digitada pelo usuário = versão pessoal, não entra).
+CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
 # Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
@@ -244,7 +248,7 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            if content and source in CATALOG_FULL_SHEET_SOURCES:
+            if content and source in CONTRIBUTABLE_FULL_SHEET_SOURCES:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],

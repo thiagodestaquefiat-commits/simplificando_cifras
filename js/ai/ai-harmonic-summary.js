@@ -343,7 +343,7 @@
       const result = await global.harmonicSummaryClient.generate(mode, values());
       const sourceInfo = mode === "arquivo"
         ? { type: "upload", name: result.payload.arquivos.map(file=>file.name).join(' + ').slice(0,255), url: null }
-        : { type: "manual", name: null, url: null };
+        : { type: "text", name: null, url: null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
