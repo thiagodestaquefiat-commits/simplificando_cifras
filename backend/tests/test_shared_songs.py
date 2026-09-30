@@ -90,13 +90,22 @@ def test_own_library_has_priority_over_shared_catalog(client, app):
 
 
 def test_ia_service_prefers_personal_song_over_catalog():
-    personal_data = {"titulo": "Minha", "harmonicSummary": {"blocos": [{"acordes": ["A"]}]}, "confianca": "media"}
+    # Cópia pessoal completa: o catálogo nem é consultado.
+    personal_data = {"titulo": "Minha", "harmonicSummary": {"blocos": [{"acordes": ["A", "D"]}]}, "confianca": "media",
+                     "fullChordSheet": {"source": "user_text", "content": "A D\nMinha letra"}}
     catalog = SimpleNamespace(
         search_personal=lambda user_id, title, artist: SimpleNamespace(summary=personal_data) if user_id == "u1" else None,
         search=lambda title, artist: (_ for _ in ()).throw(AssertionError("catálogo não deveria ser consultado")),
     )
     result = IaService(ExplodingProvider(), shared_songs=catalog).generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha", modoGeracao="conhecimento_modelo"), user_id="u1")
-    assert result.titulo == "Minha"
+    assert result.titulo == "Minha" and result.fullChordSheet.content == "A D\nMinha letra"
+    # Cópia pessoal só com resumo e catálogo sem nada melhor: continua a do usuário.
+    summary_only = {**personal_data, "fullChordSheet": None}
+    catalog2 = SimpleNamespace(search_personal=lambda *a: SimpleNamespace(summary=summary_only), search=lambda *a: None)
+    web_calls = []
+    result2 = IaService(ExplodingProvider(), shared_songs=catalog2, web_search=lambda *a: None, sheet_finder=lambda *a: web_calls.append(1)).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha", modoGeracao="conhecimento_modelo"), user_id="u1")
+    assert result2.titulo == "Minha" and web_calls == [1], "sem letra em lugar nenhum: tenta a web uma vez e devolve o resumo"
 
 
 def test_personal_match_matches_ai_response_format(client):
@@ -222,3 +231,16 @@ def test_catalog_keeps_capo_saved_as_text(client, app):
     with app.app_context():
         stored = SharedSong.query.one()
         assert stored.song_data["capotraste"] == 2 and stored.capo == "2"
+
+
+def test_own_summary_only_copy_uses_catalog_full_sheet_before_web():
+    """Completar cifra: a cópia do usuário só tem resumo, o catálogo tem a letra -> usa o catálogo, sem scraper."""
+    personal_data = {"titulo": "Isaías 9", "artista": "Rodolfo Abrantes", "tom": "D", "confianca": "media",
+                     "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}, "fullChordSheet": None}
+    shared_data = {**personal_data, "fullChordSheet": {"source": "web_source", "content": "C G4 Am\nUm menino nasceu"}}
+    calls = []
+    catalog = SimpleNamespace(search_personal=lambda *a: SimpleNamespace(summary=personal_data),
+                              search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=shared_data), 0.97))
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1)).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo"), user_id="u1")
+    assert "Um menino nasceu" in result.fullChordSheet.content and calls == []

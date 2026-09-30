@@ -111,16 +111,22 @@ class IaService:
             return None
         try:
             personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
-            if personal is not None:
-                return ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary))
-            match = self._shared_songs.search(payload.titulo, payload.artista)
+            personal_result = ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary)) if personal is not None else None
+            if personal_result is not None and personal_result.fullChordSheet is not None:
+                return personal_result
+            # A cópia do próprio usuário não tem letra: o catálogo compartilhado pode ter (sem custo).
+            try:
+                match = self._shared_songs.search(payload.titulo, payload.artista)
+            except Exception:  # noqa: BLE001
+                logger.warning("shared_song_lookup_failed", exc_info=True)
+                return personal_result
             if match is None or match.score < self._shared_min_score:
-                return None
+                return personal_result
             shared = ResumoHarmonicoResponse.model_validate(match.song.song_data)
             if shared.fullChordSheet and shared.fullChordSheet.source not in CATALOG_FULL_SHEET_SOURCES:
-                # Catálogo público só exibe letra enviada pelo próprio usuário; cifra da web ou da IA
-                # fica restrita ao resumo harmônico (vale também para registros antigos, sem migração).
                 shared.fullChordSheet = None
+            if shared.fullChordSheet is None and personal_result is not None:
+                return personal_result
             return ensure_client_chords(shared)
         except Exception:  # catálogo é otimização: qualquer falha cai para a IA
             logger.warning("shared_song_lookup_failed", exc_info=True)

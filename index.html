@@ -1508,7 +1508,9 @@ function renderDetail(){
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
     :currentSongView==='tablature'?renderTablature(m.tablature):currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml?`<div class="${stageMode?'stage-harmonic-summary':''}">${blocosHtml}</div>`:`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica(${attrJs(m.id)})">Adicionar cifra</button></div>`);
-  document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml +
+  // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
+  const completeButton=hasFull?'':`<button class="btn btn-primary" id="complete-sheet-button" style="width:calc(100% - 24px);margin:12px 12px 0" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button>`;
+  document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml + completeButton +
     `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong(${attrJs(m.id)})"><span aria-hidden="true">🤖</span> Gerar Letra/Cifra com IA</button>`+
     `<div class="btn-row">
       <button class="btn btn-outline" onclick="editMusica(${attrJs(m.id)})"><span aria-hidden="true">✏️</span> Editar Cifra</button>
@@ -2086,6 +2088,37 @@ function saveSimpleSongReview(){
 function openAdvancedSongEditor(id){
   editMusica(id);
 }
+// Completar cifra: busca a Letra + Cifras (banco do ROUDY primeiro, depois Cifra Club) e só ACRESCENTA
+// à música. Resumo harmônico, tom e capo que o usuário já tem não mudam.
+let completingSongId=null;
+async function completeSongSheet(id){
+  const song=musicas.find(item=>String(item.id)===String(id));
+  if(!song||completingSongId)return;
+  const button=document.getElementById('complete-sheet-button');
+  completingSongId=song.id;
+  if(button){button.disabled=true;button.innerHTML='<span aria-hidden="true">⏳</span> Procurando a cifra…';}
+  try{
+    const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
+    const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
+    if(!sheet){showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;}
+    const current=musicas.find(item=>String(item.id)===String(song.id));
+    if(!current)return;
+    if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
+    musicas=updated.songs;salvar();renderMusicas();
+    currentSongView='full';openDetail(updated.song.id);
+    showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
+  }catch(error){
+    const kind=error?.kind;
+    if(kind==='not_found'){showToast('ℹ️ '+(error.message||'Não encontramos esta cifra.'));openCompleteSheetEditor(song.id);}
+    else showToast('⚠️ '+(error?.message||'Não foi possível completar agora. Tente novamente.'));
+  }finally{
+    completingSongId=null;
+    const again=document.getElementById('complete-sheet-button');
+    if(again){again.disabled=false;again.innerHTML='<span aria-hidden="true">📄</span> Completar cifra';}
+  }
+}
+function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 function generateAiForSong(id){
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
