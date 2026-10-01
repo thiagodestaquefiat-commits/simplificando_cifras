@@ -277,9 +277,12 @@ def test_base_library_song_completed_with_real_lyrics_reaches_catalog(client, ap
     typed = {"source": "user_text", "content": "G  C\nMinha versão", "sections": []}
     client.put("/api/library/songs/web", headers=auth(token), json={"songData": ai_song(title="A casa é sua", sourceInfo=base, fullChordSheet=web)})
     client.put("/api/library/songs/txt", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo=base, fullChordSheet=typed)})
+    upload = {"source": "user_upload", "content": "D  A\nLetra do PDF", "sections": []}
+    client.put("/api/library/songs/pdf", headers=auth(token), json={"songData": ai_song(title="Por Arquivo", sourceInfo=base, fullChordSheet=upload)})
     with app.app_context():
         songs = {song.title: song for song in SharedSong.query.all()}
-        assert list(songs) == ["A casa é sua"]
+        assert sorted(songs) == ["A casa é sua", "Por Arquivo"]
+        assert songs["Por Arquivo"].song_data["fullChordSheet"]["source"] == "user_upload"
         assert songs["A casa é sua"].song_data["fullChordSheet"]["content"].endswith("bem vindo aqui")
 
 

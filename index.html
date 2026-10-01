@@ -834,7 +834,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=11"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=13"></script>
+<script src="js/ai/harmonic-summary-client.js?v=14"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=13"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -2102,7 +2102,7 @@ async function completeSongSheet(id){
     const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
     if(!sheet){
       const limited=(result?.data?.observacoes||[]).some(note=>/Limite diário de buscas na web/i.test(String(note)));
-      if(limited){showToast('⏳ Você atingiu o limite diário de buscas no Cifra Club. Tente amanhã ou cole/anexe a cifra.');return;}
+      if(limited){showToast('⏳ Você atingiu o limite de busca na web.');return;}
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
     const current=musicas.find(item=>String(item.id)===String(song.id));

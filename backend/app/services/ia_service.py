@@ -231,7 +231,7 @@ class IaService:
                 logger.info("ai_search_source=web_quota_exceeded user=%s", user_id)
                 raise ApiError(
                     "limite_busca_web",
-                    "Você atingiu o limite diário de buscas na web. Envie um arquivo ou foto da cifra.",
+                    "Você atingiu o limite de busca na web.",
                     429,
                 )
             web_hit = self._sheet_finder(payload.titulo, payload.artista)
