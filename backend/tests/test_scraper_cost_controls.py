@@ -124,3 +124,41 @@ def test_key_found_in_page_data_attributes():
     assert web_search.extract_sheet_metadata(html) == {"key": "D", "capo": 2}
     html_json = '<script>window.cifra = {"tom":"D","forma":"C"}</script><p>Capotraste: 2ª casa</p>'
     assert web_search.extract_sheet_metadata(html_json) == {"key": "D", "shape_key": "C", "capo": 2}
+
+
+def test_song_with_featuring_in_cifraclub_slug_is_found_via_artist_list():
+    """Cifra Club: "A Boa Parte" fica em /a-boa-parte-part-florianopolis-house-of-prayer/; o endereço direto dá 404."""
+    calls = []
+    real = "https://www.cifraclub.com.br/nivea-soares/a-boa-parte-part-florianopolis-house-of-prayer/"
+    listing = ('<a href="/nivea-soares/a-boa-parte-ao-vivo/">ao vivo</a>'
+               f'<a href="{real}">A Boa Parte</a><a href="/nivea-soares/a-boa-noticia/">outra</a>')
+    page = "<html><body><pre>[Intro] E  B\n\nE        B\nA boa parte escolhi</pre></body></html>"
+
+    class Site:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(url)
+            if url.endswith("/musicas.html"):
+                return listing, url
+            if url == real:
+                return page, url
+            raise MusicSourceUnavailable("ScraperAPI retornou status 404")
+
+    finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
+    hit = finder("A Boa parte", "Nívea Soares")
+    assert hit is not None and hit.url == real and "A boa parte escolhi" in hit.content
+    assert calls[-2:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real]
+
+
+def test_artist_list_without_matching_song_gives_up_cheaply():
+    calls = []
+
+    class Site:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(url)
+            if url.endswith("/musicas.html"):
+                return '<a href="/artista/outra-musica/">x</a>', url
+            raise MusicSourceUnavailable("ScraperAPI retornou status 404")
+
+    finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
+    assert finder("Música", "Artista") is None
+    assert sum(url.endswith("/musicas.html") for url in calls) == 1
