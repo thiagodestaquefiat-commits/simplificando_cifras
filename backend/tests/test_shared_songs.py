@@ -255,3 +255,15 @@ def test_own_summary_only_copy_uses_catalog_full_sheet_before_web():
     result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1)).generate(
         ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo"), user_id="u1")
     assert "Um menino nasceu" in result.fullChordSheet.content and calls == []
+
+
+def test_summary_only_personal_song_has_no_fake_full_sheet(client, app):
+    """Música salva só com resumo não vira "Letra + Cifras": o Completar cifra precisa ir ao catálogo/Cifra Club."""
+    from app.services.shared_songs_service import SharedSongService
+    token = register(client, "personal-sum", "P")
+    client.put("/api/library/songs/casa", headers=auth(token), json={"songData": ai_song(title="A casa é sua", artist="Casa Worship")})
+    with app.app_context():
+        match = SharedSongService.search_personal("personal-sum", "A casa é sua", "Casa Worship")
+        assert match is not None
+        assert match.summary["fullChordSheet"] is None
+        assert match.summary["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]

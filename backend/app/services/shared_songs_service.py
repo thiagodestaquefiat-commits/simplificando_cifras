@@ -4,7 +4,6 @@ import re
 import unicodedata
 import uuid
 from dataclasses import dataclass
-from types import SimpleNamespace
 from difflib import SequenceMatcher
 
 from pydantic import ValidationError
@@ -13,7 +12,6 @@ from sqlalchemy import text
 from ..database import db
 from ..models import PersonalSong, SharedSong
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
-from .harmonic_normalizer import render_full_chord_sheet
 
 MAX_CANDIDATES = 10
 # Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
@@ -173,9 +171,10 @@ class SharedSongService:
             return None
         sheet = song_data.get("fullChordSheet") if isinstance(song_data.get("fullChordSheet"), dict) else {}
         source = sheet.get("source") if sheet.get("source") in {"user_upload", "user_text", "model_knowledge", "web_source"} else "user_text"
+        # Só há Letra + Cifras quando a música salva tem a cifra completa de verdade (mesma regra do app).
+        # Sem ela, as seções do editor são só o resumo harmônico: devolver isso como "letra" impedia o
+        # botão "Completar cifra" de buscar no catálogo/Cifra Club.
         content = str(sheet.get("content") or "").strip()
-        if not content:
-            content = render_full_chord_sheet(SimpleNamespace(sections=sections)).strip()
         capo = parse_capo(song_data.get("capo"))
         try:
             response = ResumoHarmonicoResponse.model_validate({
