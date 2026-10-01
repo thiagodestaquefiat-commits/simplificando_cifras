@@ -267,3 +267,43 @@ def test_summary_only_personal_song_has_no_fake_full_sheet(client, app):
         assert match is not None
         assert match.summary["fullChordSheet"] is None
         assert match.summary["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
+
+
+def test_base_library_song_completed_with_real_lyrics_reaches_catalog(client, app):
+    """Força-tarefa: música da biblioteca base (origem manual) completada pelo Cifra Club ou arquivo vai ao catálogo."""
+    token = register(client, "task-a", "A")
+    base = {"type": "manual", "name": "PDF fornecido pelo usuário", "url": None}
+    web = {"source": "web_source", "content": "G  C\nVocê é bem vindo aqui", "sections": []}
+    typed = {"source": "user_text", "content": "G  C\nMinha versão", "sections": []}
+    client.put("/api/library/songs/web", headers=auth(token), json={"songData": ai_song(title="A casa é sua", sourceInfo=base, fullChordSheet=web)})
+    client.put("/api/library/songs/txt", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo=base, fullChordSheet=typed)})
+    upload = {"source": "user_upload", "content": "D  A\nLetra do PDF", "sections": []}
+    client.put("/api/library/songs/pdf", headers=auth(token), json={"songData": ai_song(title="Por Arquivo", sourceInfo=base, fullChordSheet=upload)})
+    with app.app_context():
+        songs = {song.title: song for song in SharedSong.query.all()}
+        assert sorted(songs) == ["A casa é sua", "Por Arquivo"]
+        assert songs["Por Arquivo"].song_data["fullChordSheet"]["source"] == "user_upload"
+        assert songs["A casa é sua"].song_data["fullChordSheet"]["content"].endswith("bem vindo aqui")
+
+
+def test_teammate_completion_updates_summary_only_catalog_entry(client, app):
+    """Colega completa uma música que estava no catálogo só com resumo: o catálogo passa a ter a letra."""
+    first, second = register(client, "task-b", "B"), register(client, "task-c", "C")
+    client.put("/api/library/songs/s", headers=auth(first), json={"songData": ai_song(title="Ousado Amor")})
+    web = {"source": "web_source", "content": "G  C\nAntes de eu falar", "sections": []}
+    client.put("/api/library/songs/s", headers=auth(second), json={"songData": ai_song(title="Ousado Amor", fullChordSheet=web)})
+    with app.app_context():
+        assert SharedSong.query.one().song_data["fullChordSheet"]["source"] == "web_source"
+
+
+def test_complete_button_is_told_when_daily_web_limit_is_reached():
+    """Cópia só com resumo + limite do dia esgotado: devolve o resumo com o aviso de limite (sem chamar o scraper)."""
+    from app.services.ia_service import WEB_QUOTA_NOTE
+    personal_data = {"titulo": "Isaías 9", "artista": "Rodolfo Abrantes", "tom": "D", "confianca": "media",
+                     "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}, "fullChordSheet": None}
+    calls = []
+    catalog = SimpleNamespace(search_personal=lambda *a: SimpleNamespace(summary=personal_data), search=lambda *a: None)
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: calls.append(1),
+                       web_quota=lambda user_id: False).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo"), user_id="u1")
+    assert result.fullChordSheet is None and WEB_QUOTA_NOTE in result.observacoes and calls == []

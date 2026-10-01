@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v162-completar-cifra";
+const CACHE_NAME = "simplificando-cifras-v163-forca-tarefa";
 const ASSETS = [
   "./",
   "./index.html",
@@ -46,7 +46,7 @@ const ASSETS = [
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=5",
-  "./js/ai/harmonic-summary-client.js?v=13",
+  "./js/ai/harmonic-summary-client.js?v=14",
   "./js/ai/ai-harmonic-summary.js?v=13",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./manifest.webmanifest?v=15",

@@ -50,6 +50,10 @@ Regras obrigatórias:
 """
 
 
+WEB_QUOTA_EXCEEDED = object()
+WEB_QUOTA_NOTE = "Limite diário de buscas na web atingido."
+
+
 def _user_web_quota(limit: str):
     """Conta buscas na web por usuário no mesmo armazenamento do rate limit (sem tabela nova)."""
     try:
@@ -173,7 +177,8 @@ class IaService:
         """Cifra da web para completar uma música do catálogo que só tem resumo (ou None)."""
         try:
             if self._web_quota is not None and not self._web_quota(user_id):
-                return None
+                logger.info("catalog_completion_web_quota_exceeded user=%s", user_id)
+                return WEB_QUOTA_EXCEEDED
             hit = self._sheet_finder(payload.titulo, payload.artista)
         except Exception:  # noqa: BLE001 - completar é opcional; o resumo continua disponível
             logger.warning("catalog_completion_failed", exc_info=True)
@@ -206,6 +211,11 @@ class IaService:
                 # Catálogo só com resumo (ex.: entrou antes de compartilharmos a letra da web): tenta
                 # completar com a cifra da web. Se não achar ou o limite do dia acabou, devolve o resumo.
                 completed = self._complete_from_web(payload, user_id)
+                if completed is WEB_QUOTA_EXCEEDED:
+                    # Avisa o app (botão "Completar cifra") que não buscou por causa do limite do dia.
+                    if WEB_QUOTA_NOTE not in cached.observacoes:
+                        cached.observacoes.append(WEB_QUOTA_NOTE)
+                    return cached
                 if completed is None:
                     logger.info("catalog_summary_only_served titulo=%r", payload.titulo)
                     return cached
@@ -221,7 +231,7 @@ class IaService:
                 logger.info("ai_search_source=web_quota_exceeded user=%s", user_id)
                 raise ApiError(
                     "limite_busca_web",
-                    "Você atingiu o limite diário de buscas na web. Envie um arquivo ou foto da cifra.",
+                    "Você atingiu o limite de busca na web.",
                     429,
                 )
             web_hit = self._sheet_finder(payload.titulo, payload.artista)

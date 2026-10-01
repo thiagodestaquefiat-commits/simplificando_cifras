@@ -27,6 +27,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
   let mode = "found"; const requests = [];
   await page.route("**/api/resumo-harmonico", (r) => {
     requests.push(JSON.parse(r.request().postData() || "{}"));
+    if (mode === "limit") return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaVersion: 2, titulo: "Limite", artista: "X", tom: "G", capotraste: null, confianca: "media", observacoes: ["Limite diário de buscas na web atingido."], harmonicSummary: { blocos: [{ acordes: ["G", "D"], fraseGuia: null, secao: null }] }, fullChordSheet: null }) });
     if (mode === "missing") return r.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ erro: { codigo: "cifra_nao_encontrada", mensagem: "Não encontrada" } }) });
     return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaVersion: 2, titulo: "Só Resumo", artista: "Artista", tom: "E", capotraste: 4, confianca: "alta", observacoes: [],
       harmonicSummary: { blocos: [{ acordes: ["E", "B"], fraseGuia: null, secao: null }] },
@@ -64,7 +65,18 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     await page.locator("#ai-review-full-text").waitFor();
     const untouched = await page.evaluate((songId) => musicas.find((m) => String(m.id) === String(songId)), other);
     assert.ok(!untouched.fullChordSheet, "nada inventado quando não acha");
-    console.log("complete-song-sheet-button-ui.test.js: OK (acrescenta letra, mantém resumo/tom/capo, não encontrada abre editor)");
+    // Limite diário: avisa o usuário e não abre o editor nem altera a música.
+    mode = "limit";
+    const limited = await page.evaluate(() => {
+      musicas = songRepository.addOrReuse(musicas, { id: "resumo-only-4", title: "Limite", artist: "X", key: "G", capo: "", blocos: [{ l: "", c: "G  D" }] }).songs; salvar(); renderMusicas();
+      return musicas.find((m) => m.title === "Limite").id;
+    });
+    await page.evaluate(() => closeModal && closeModal());
+    await page.evaluate((songId) => openDetail(songId), limited);
+    await page.locator("#complete-sheet-button").click();
+    await page.getByText("Você atingiu o limite de busca na web.").waitFor();
+    assert.ok(!(await page.evaluate((songId) => musicas.find((m) => String(m.id) === String(songId)).fullChordSheet, limited)));
+    console.log("complete-song-sheet-button-ui.test.js: OK (acrescenta letra, mantém resumo/tom/capo, não encontrada abre editor, limite diário avisa)");
   } finally {
     await browser.close(); server.close();
   }

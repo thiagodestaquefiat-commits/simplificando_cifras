@@ -275,7 +275,11 @@ class SharedSongService:
         if not isinstance(song_data, dict):
             return None
         source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
-        if source_type not in SHAREABLE_SOURCE_TYPES:
+        full_sheet = song_data.get("fullChordSheet") if isinstance(song_data.get("fullChordSheet"), dict) else {}
+        has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
+        # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
+        # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
+        if source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
             return None
         if AI_ONLY_MARKER in str(song_data.get("notes") or ""):
             # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
