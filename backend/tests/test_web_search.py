@@ -197,7 +197,9 @@ def test_fallback_order_cifraclub_simplificacifras_then_search(monkeypatch):
     hit = web_search.find_chord_sheet("Música", "Artista", http_client=client)
 
     assert hit == web_search.ChordSheetHit("Am F", ddg_simplifica, "simplificacifras")
-    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, SIMPLIFICA_DIRECT, ddg_simplifica]
+    # Cifra Club sem cifra no endereço direto -> tenta uma vez a lista de músicas do artista antes da busca.
+    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, SIMPLIFICA_DIRECT,
+                                                  "https://www.cifraclub.com.br/artista/musicas.html", ddg_simplifica]
     assert queries == ["Música Artista cifra site:cifraclub.com.br", "Música Artista cifra site:simplificacifras.com.br"]
 
 
