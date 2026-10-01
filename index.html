@@ -2100,7 +2100,11 @@ async function completeSongSheet(id){
   try{
     const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
     const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
-    if(!sheet){showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;}
+    if(!sheet){
+      const limited=(result?.data?.observacoes||[]).some(note=>/Limite diário de buscas na web/i.test(String(note)));
+      if(limited){showToast('⏳ Você atingiu o limite diário de buscas no Cifra Club. Tente amanhã ou cole/anexe a cifra.');return;}
+      showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
+    }
     const current=musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
