@@ -4,6 +4,7 @@ import logging
 import re
 import time
 import unicodedata
+from difflib import SequenceMatcher
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import urlparse, quote_plus
@@ -326,6 +327,7 @@ def _ddg_search(query: str) -> list | None:
 
 _NON_SONG_SLUGS = {"discografia", "fotos", "videos", "letras", "musicas", "playlists"}
 # Versões alternativas ficam por último: prefere a versão principal da música.
+_FUZZY_MIN_RATIO = 0.9
 _VARIANT_WORDS = ("ao-vivo", "acustico", "playback", "instrumental", "versao", "medley", "remix", "live")
 
 
@@ -333,8 +335,9 @@ def _artist_song_url(titulo: str, artista: str, client, deadline: float | None =
     """URL da música na lista do artista no Cifra Club quando o nome dela tem complemento.
 
     Ex.: título "A Boa Parte" -> /nivea-soares/a-boa-parte-part-florianopolis-house-of-prayer/.
-    Aceita só slug igual ao título ou que começa com "<título>-"; entre vários, prefere o que não é
-    versão alternativa (ao vivo, acústico...) e depois o mais curto.
+    Compara pelo endereço e pelo título visível do link (o endereço pode ter erro de digitação:
+    "Que Se Abram Os Céus" fica em /que-se-abra-os-ceus/). Aceita igual ou "<título>-..."; sem isso,
+    um endereço quase igual (>= 90%). Entre vários, prefere a versão principal e depois o mais curto.
     """
     artist_slug, song_slug = slugify(artista), slugify(titulo)
     if not artist_slug or not song_slug:
@@ -348,12 +351,36 @@ def _artist_song_url(titulo: str, artista: str, client, deadline: float | None =
     except Exception as error:  # noqa: BLE001 - a lista do artista é só uma tentativa extra
         logger.warning("cifraclub_artist_list_failed=%s url=%s", error.__class__.__name__, list_url)
         return None
-    found = set(re.findall(rf"""href=["'](?:https?://(?:www\.)?cifraclub\.com\.br)?/{re.escape(artist_slug)}/([a-z0-9-]+)/?["'#?]""", html or ""))
-    matches = [slug for slug in found if slug not in _NON_SONG_SLUGS and (slug == song_slug or slug.startswith(song_slug + "-"))]
+    # Cada link da lista: (slug do endereço, título visível). O título visível é o mais confiável:
+    # o endereço às vezes tem erro de digitação do próprio Cifra Club ("que-se-abra-os-ceus").
+    link_re = re.compile(
+        rf"""<a\b[^>]*href=["'](?:https?://(?:www\.)?cifraclub\.com\.br)?/{re.escape(artist_slug)}/([a-z0-9-]+)/?["'#?][^>]*>(.*?)</a>""",
+        re.IGNORECASE | re.DOTALL,
+    )
+    links: dict[str, set[str]] = {}
+    for slug, text in link_re.findall(html or ""):
+        if slug in _NON_SONG_SLUGS:
+            continue
+        links.setdefault(slug, set()).add(slugify(_TAG_RE.sub(" ", text)))
+
+    def starts_like(value: str) -> bool:
+        return value == song_slug or value.startswith(song_slug + "-")
+
+    matches = [slug for slug, texts in links.items() if starts_like(slug) or any(starts_like(text) for text in texts)]
     if not matches:
-        logger.info("cifraclub_artist_list_no_match artist=%s song=%s songs=%d", artist_slug, song_slug, len(found))
+        # Último recurso: endereço quase igual ao título (comparando só o começo, para aceitar "-part-...").
+        def similarity(slug: str) -> float:
+            return max(SequenceMatcher(None, song_slug, slug).ratio(),
+                       SequenceMatcher(None, song_slug, slug[:len(song_slug)]).ratio())
+        matches = [slug for slug in links if similarity(slug) >= _FUZZY_MIN_RATIO]
+    if not matches:
+        logger.info("cifraclub_artist_list_no_match artist=%s song=%s songs=%d", artist_slug, song_slug, len(links))
         return None
-    best = min(matches, key=lambda slug: (slug != song_slug, any(word in slug for word in _VARIANT_WORDS), len(slug), slug))
+
+    def exact(slug: str) -> bool:
+        return slug == song_slug or song_slug in links[slug]
+
+    best = min(matches, key=lambda slug: (not exact(slug), any(word in slug for word in _VARIANT_WORDS), len(slug), slug))
     logger.info("cifraclub_artist_list_match artist=%s song=%s match=%s", artist_slug, song_slug, best)
     return f"https://www.cifraclub.com.br/{artist_slug}/{best}/"
 
