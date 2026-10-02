@@ -12,6 +12,7 @@ from .collaboration import (
     PersonalRepertoireOverride,
     PersonalSong,
     SharedSong,
+    SharedSongReport,
     UserAccessToken,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "PersonalRepertoireOverride",
     "PersonalSong",
     "SharedSong",
+    "SharedSongReport",
     "UserAccessToken",
 ]

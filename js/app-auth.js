@@ -8,6 +8,15 @@
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
   const CONFIG_KEY = "sc_public_auth_config_v1";
+  const AUTH_REQUEST_TIMEOUT_MS = 5000;
+
+  function withTimeout(promise, message, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
+    let timer = null;
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => { timer = global.setTimeout(() => reject(new Error(message)), timeoutMs); })
+    ]).finally(() => { if (timer != null) global.clearTimeout(timer); });
+  }
 
   function safeError(error) {
     if (!error) return null;
@@ -74,13 +83,14 @@
       if (!forceRefresh && cached && cached.enabled) config = cached;
       else {
         if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para verificar o login.");
-        const response = await global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" } });
+        const controller = typeof global.AbortController === "function" ? new global.AbortController() : null;
+        const response = await withTimeout(global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" }, ...(controller ? { signal: controller.signal } : {}) }), "A verificação do login demorou demais.").catch((error) => { controller?.abort(); throw error; });
         if (!response.ok) throw new Error("Configuração de login indisponível.");
         config = await response.json();
         if (config.enabled && global.localStorage) global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
       }
       if (!config.enabled) { emit(); return getState(); }
-      await loadSdk();
+      await withTimeout(loadSdk(), "O serviço de login demorou demais para carregar.");
       const code = initialCallbackCode;
       if (!client) {
         client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });

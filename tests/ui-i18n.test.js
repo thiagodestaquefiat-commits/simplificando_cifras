@@ -55,6 +55,6 @@ assert.equal(label.nodeValue, 'Akkorde');
 assert.equal(i18n.translate('2 músicas'), '2 Songs');
 
 const html = fs.readFileSync('index.html', 'utf8');
-assert.match(html, /ui-i18n\.js\?v=10/);
+assert.match(html, /ui-i18n\.js\?v=13/);
 assert.match(html, /window\.uiI18n\?\.setLanguage\(settings\.language\)/);
 console.log('ui-i18n.test.js: OK');

@@ -153,6 +153,14 @@ def delete_song(client_id):
     song = PersonalSong.query.filter_by(owner_user_id=g.current_user.id, client_id=_client_id(client_id)).first()
     if song is None or song.deleted_at is not None:
         return "", 204
+    expected_version = request.args.get("expectedVersion")
+    if expected_version is not None:
+        try:
+            matches = int(expected_version) == song.version
+        except (TypeError, ValueError):
+            matches = False
+        if not matches:
+            raise ApiError("conflito_versao", "A música mudou durante a exclusão. Tente novamente para preservar a nova edição.", 409)
     song.deleted_at, song.version = datetime.now(timezone.utc), song.version + 1
     db.session.commit()
     return "", 204

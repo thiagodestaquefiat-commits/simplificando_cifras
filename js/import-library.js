@@ -10,7 +10,7 @@
   }
 
   function extractSongs(payload){
-    if(!payload||typeof payload!=="object"||payload.formato!==FORMAT||Number(payload.versao)!==1)throw new Error("Este arquivo não é um backup válido do ROUDY.");
+    if(!payload||typeof payload!=="object"||payload.formato!==FORMAT||![1,2].includes(Number(payload.versao)))throw new Error("Este arquivo não é um backup válido do ROUDY.");
     const session=payload.origens?.sessaoAtual?.musicas;
     if(Array.isArray(session))return {songs:session,source:"sessaoAtual"};
     const raw=payload.origens?.armazenamentoUsuario?.armazenamentoBruto||{};
@@ -26,7 +26,7 @@
     return {clientId,localId};
   }
 
-  function musicalPayload(song){const copy=clone(song);delete copy.librarySync;return copy;}
+  function musicalPayload(song){const copy=clone(song);delete copy.librarySync;delete copy.accessContext;return copy;}
   function sameContent(left,right){return JSON.stringify(musicalPayload(left))===JSON.stringify(musicalPayload(right));}
   function matchingIndexes(collection,candidate){
     const target=identity(candidate),matches=new Set();
@@ -34,14 +34,14 @@
     return [...matches];
   }
 
-  function plan(payload,currentSongs){
+  function plan(payload,currentSongs,options={}){
     const extracted=extractSongs(payload),current=Array.isArray(currentSongs)?currentSongs:[],accepted=[],existing=[],conflicts=[],invalid=[],seen=[];
     extracted.songs.forEach((rawSong,index)=>{
       try{
         if(!rawSong||typeof rawSong!=="object"||Array.isArray(rawSong))throw new Error("Música inválida");
         const id=identity(rawSong);if(!id.clientId&&!id.localId)throw new Error("Identificador ausente");
         const stableRestoreTime=rawSong.updatedAt||rawSong.createdAt||"1970-01-01T00:00:00.000Z";
-        const song=global.songModel.create(clone(rawSong),{now:stableRestoreTime});
+        const song=global.songModel.create(global.libraryExporter.sanitize(rawSong),{now:stableRestoreTime});
         const duplicateInBackup=matchingIndexes(seen,song);
         if(duplicateInBackup.length){
           const prior=seen[duplicateInBackup[0]];
@@ -61,21 +61,39 @@
         accepted.push(song);
       }catch(error){invalid.push({index,message:String(error.message||error)});}
     });
-    return Object.freeze({format:payload.formato,version:payload.versao,source:extracted.source,total:extracted.songs.length,current:current.length,newSongs:accepted.length,existing:existing.length,conflicts:conflicts.length,invalid:invalid.length,accepted,existingItems:existing,conflictItems:conflicts,invalidItems:invalid});
+    const session=payload.origens?.sessaoAtual||{};
+    const included={eventos:Array.isArray(session.eventos)?session.eventos.length:0,medleys:Array.isArray(session.medleys)?session.medleys.length:0,configuracoes:Boolean(session.configuracoes&&Object.keys(session.configuracoes).length)};
+    return Object.freeze({format:payload.formato,version:payload.versao,ownerId:options.ownerId||null,sourceOwnerId:payload.escopo?.ownerId||null,source:extracted.source,total:extracted.songs.length,current:current.length,newSongs:accepted.length,existing:existing.length,conflicts:conflicts.length,invalid:invalid.length,accepted,existingItems:existing,conflictItems:conflicts,invalidItems:invalid,included});
   }
 
-  function parse(text,currentSongs){
+  function parse(text,currentSongs,options={}){
     if(typeof text!=="string"||!text.trim())throw new Error("Selecione um arquivo de backup JSON.");
     if(new Blob([text]).size>MAX_BACKUP_BYTES)throw new Error("O backup excede o limite de 25 MB.");
     let payload;try{payload=JSON.parse(text);}catch(_error){throw new Error("O arquivo selecionado não contém JSON válido.");}
-    return plan(payload,currentSongs);
+    return plan(payload,currentSongs,options);
   }
 
-  function apply(restorePlan,currentSongs){
+  function apply(restorePlan,currentSongs,options={}){
     if(!restorePlan||!Array.isArray(restorePlan.accepted))throw new Error("Revise o backup antes de restaurar.");
     const current=Array.isArray(currentSongs)?currentSongs:[];
-    const songs=[...current.map(clone),...restorePlan.accepted.map(clone)];
-    return {songs,restored:restorePlan.accepted.length,existing:restorePlan.existing,conflicts:restorePlan.conflicts,invalid:restorePlan.invalid};
+    if(restorePlan.invalid)throw new Error("O backup contém músicas inválidas. Nenhuma alteração foi aplicada.");
+    if(restorePlan.ownerId&&options.ownerId!==restorePlan.ownerId)throw new Error("A conta mudou. Selecione e revise o backup novamente.");
+    const selected=options.selectedIndices==null?restorePlan.accepted.map((_song,index)=>index):options.selectedIndices;
+    const songs=current.map(clone);let restored=0;
+    selected.forEach(index=>{
+      const candidate=restorePlan.accepted[index];if(!candidate)throw new Error("Seleção de música inválida.");
+      const matches=matchingIndexes(songs,candidate);
+      if(matches.length){if(matches.length===1&&sameContent(songs[matches[0]],candidate))return;throw new Error("A biblioteca mudou durante a revisão. Selecione o backup novamente.");}
+      const copy=clone(candidate);
+      // A restored song must not reuse a deleted/foreign cloud version or tombstone.
+      if(restorePlan.ownerId){delete copy.librarySync;copy.accessContext={scope:"personal",ownerId:restorePlan.ownerId==="guest"?null:restorePlan.ownerId,teamId:null};}
+      songs.push(copy);restored+=1;
+    });
+    (options.conflictIndices||[]).forEach(index=>{
+      const item=restorePlan.conflictItems[index];if(!item)throw new Error("Seleção de versão inválida.");
+      songs.push(global.libraryRecovery.copySong(item.backupSong,options.ownerId));restored+=1;
+    });
+    return {songs,restored,existing:restorePlan.existing,conflicts:restorePlan.conflicts,invalid:restorePlan.invalid};
   }
 
   global.libraryImporter=Object.freeze({format:FORMAT,maxBackupBytes:MAX_BACKUP_BYTES,extractSongs,plan,parse,apply,sameContent,identity});

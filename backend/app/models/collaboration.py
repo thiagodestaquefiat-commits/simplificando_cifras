@@ -73,6 +73,22 @@ class SharedSong(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
 
+class SharedSongReport(db.Model):
+    __tablename__ = "shared_song_reports"
+    __table_args__ = (db.UniqueConstraint("song_id", "reporter_id", name="uq_song_report_reporter"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    song_id = db.Column(db.String(36), db.ForeignKey("shared_songs.id"), nullable=False, index=True)
+    reporter_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id"), nullable=False)
+    reason = db.Column(db.String(40), nullable=False)
+    details = db.Column(db.String(2000), nullable=False, default="")
+    status = db.Column(db.String(20), nullable=False, default="pending", index=True)
+    review_note = db.Column(db.String(2000), nullable=False, default="")
+    reviewed_by = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+
+
 class Band(db.Model):
     __tablename__ = "bands"
 

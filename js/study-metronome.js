@@ -147,7 +147,7 @@
     displayBpm();
     setMeter("4/4", false);
     displayPlaying(false);
-    return Object.freeze({ setSong, stop, getBpm: () => bpm, getMeter: () => meter, isPlaying: () => timer !== null });
+    return Object.freeze({ setSong, start, stop, toggle: () => timer === null ? start() : stop(), setBpm, setMeter, getBpm: () => bpm, getMeter: () => meter, isPlaying: () => timer !== null });
   }
 
   global.studyMetronome = Object.freeze({ create });

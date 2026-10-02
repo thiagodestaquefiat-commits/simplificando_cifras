@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 const html = fs.readFileSync(require("node:path").resolve(__dirname, "..", "index.html"), "utf8");
+const assistant = fs.readFileSync(require("node:path").resolve(__dirname, "..", "js", "app-assistant.js"), "utf8");
 const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]).filter((source) => source.trim());
 assert.ok(scripts.length > 0, "index.html deve possuir scripts inline");
 scripts.forEach((source, index) => new vm.Script(source, { filename: `index-inline-${index + 1}.js` }));
@@ -20,4 +21,8 @@ assert.match(html, /window\.SpeechRecognition\|\|window\.webkitSpeechRecognition
 assert.match(html, /input\.value=spoken;\s*renderMusicas\(\)/, "o resultado falado deve preencher e filtrar a playlist");
 assert.match(html, /function exactVoiceSongMatch\(spoken\)/, "a busca por voz deve identificar uma música com título exato");
 assert.match(html, /if\(exactSong\)openDetail\(exactSong\.id\)/, "uma correspondência exata deve abrir a música diretamente");
+assert.match(html, /id="app-assistant-floating"/, "o assistente deve permanecer disponível nas telas internas");
+assert.match(html, /id="song-assistant-launch"/, "a tela da música deve manter o assistente no cabeçalho");
+assert.match(html, /id="event-assistant-launch"/, "a tela do evento deve manter o assistente no cabeçalho");
+assert.match(assistant, /profileOpen=overlayOpen&&Boolean\(element\("profile-name"\)\)/, "o assistente deve ficar oculto em Meu Perfil");
 console.log(`index-syntax.test.js: OK (${scripts.length} scripts)`);

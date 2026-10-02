@@ -20,6 +20,7 @@
   global.apiConfig = Object.freeze({
     get API_BASE_URL() { return configuredBaseUrl(); },
     harmonicSummaryEndpoint() { return endpoint("/api/resumo-harmonico"); },
+    sharedSongsEndpoint(path) { return endpoint("/api/shared-songs/" + String(path || "").replace(/^\//, "")); },
     musicSourceEndpoint(path) { return endpoint("/api/music-sources" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     authEndpoint(path) { return endpoint("/api/auth" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     locationEndpoint(path) { return endpoint("/api/locations" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },

@@ -122,6 +122,7 @@
     requireDependencies();
     const normalized = global.eventModel.normalizeCollection(events);
     if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, normalized);
+    if (global.storage.setMany) return global.storage.setMany([[STORAGE_KEY, normalized], [LEGACY_KEY, normalized]]);
     const currentSaved = global.storage.set(STORAGE_KEY, normalized);
     const legacySaved = global.storage.set(LEGACY_KEY, normalized);
     return currentSaved && legacySaved;
