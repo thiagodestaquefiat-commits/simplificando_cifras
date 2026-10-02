@@ -18,7 +18,7 @@
 <link rel="icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
-<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=7">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=8">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
@@ -813,7 +813,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/medley-repository.js?v=1"></script>
 <script src="js/song-repository.js?v=15"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
-<script src="js/library-sync.js?v=18"></script>
+<script src="js/library-sync.js?v=19"></script>
 <script src="js/event-model.js?v=5"></script>
 <script src="js/event-repository.js?v=7"></script>
 <script src="js/event-chat.js?v=2"></script>
@@ -833,7 +833,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=1"></script>
 <script src="js/study-metronome.js?v=3"></script>
-<script src="js/editor/song-format.js?v=9"></script>
+<script src="js/editor/song-format.js?v=10"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -852,8 +852,8 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=11"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=13"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=10"></script>
+<script src="js/ai/harmonic-summary-client.js?v=14"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=13"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1525,13 +1525,18 @@ function renderDetail(){
       return `<div class="smart-scroll-line" data-smart-line data-smart-chords="${eventEsc(smartLineChords)}">${lyricHtml+chordHtml}</div>`;
     }).join('');
     const labelHtml=section.showLabel&&section.label?renderMusicalText(section.label,totalShift):'';
-    const stageLabel=eventEsc(section.label||`Trecho ${sectionIndex+1}`);
-    return corpo||labelHtml?`<section class="wa-block"><h3 class="stage-summary-label">${stageLabel}</h3>${corpo}${labelHtml}</section>`:'';
+    // Identificação previsível do trecho (navegação do palco) fica só no atributo; o texto visível
+    // mostra acordes e ganchos, sem nomes de seção (padrão ROUDY).
+    const stageId=eventEsc(section.label||`Trecho ${sectionIndex+1}`);
+    const stageLabel=section.showLabel&&section.label?`<h3 class="stage-summary-label">${eventEsc(section.label)}</h3>`:'';
+    return corpo||labelHtml?`<section class="wa-block" data-stage-label="${stageId}">${stageLabel}${corpo}${labelHtml}</section>`:'';
   }).join('');
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
     :currentSongView==='tablature'?renderTablature(m.tablature):currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml?`<div class="${stageMode?'stage-harmonic-summary':''}">${blocosHtml}</div>`:`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica(${attrJs(m.id)})">Adicionar cifra</button></div>`);
-  document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml +
+  // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
+  const completeButton=hasFull?'':`<button class="btn btn-primary" id="complete-sheet-button" style="width:calc(100% - 24px);margin:12px 12px 0" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button>`;
+  document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml + completeButton +
     `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong(${attrJs(m.id)})"><span aria-hidden="true">🤖</span> Gerar Letra/Cifra com IA</button>`+
     `<div class="btn-row">
       <button class="btn btn-outline" onclick="editMusica(${attrJs(m.id)})"><span aria-hidden="true">✏️</span> Editar Cifra</button>
@@ -2110,6 +2115,45 @@ function saveSimpleSongReview(){
 function openAdvancedSongEditor(id){
   editMusica(id);
 }
+// Completar cifra: busca a Letra + Cifras (banco do ROUDY primeiro, depois Cifra Club) e só ACRESCENTA
+// à música. Resumo harmônico, tom e capo que o usuário já tem não mudam.
+let completingSongId=null;
+async function completeSongSheet(id){
+  const song=musicas.find(item=>String(item.id)===String(id));
+  if(!song||completingSongId)return;
+  const ownerAtStart=songRepository.getActiveOwnerId();
+  const button=document.getElementById('complete-sheet-button');
+  completingSongId=song.id;
+  if(button){button.disabled=true;button.innerHTML='<span aria-hidden="true">⏳</span> Procurando a cifra…';}
+  try{
+    const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
+    if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
+    if(!sheet){
+      const limited=(result?.data?.observacoes||[]).some(note=>/Limite diário de buscas na web/i.test(String(note)));
+      if(limited){showToast('⏳ Você atingiu o limite de busca na web.');return;}
+      showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
+    }
+    const current=musicas.find(item=>String(item.id)===String(song.id));
+    if(!current)return;
+    if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
+    if(!commitSongs(updated.songs))return;
+    renderMusicas();
+    currentSongView='full';openDetail(updated.song.id);
+    showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
+  }catch(error){
+    if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    const kind=error?.kind;
+    if(kind==='not_found'){showToast('ℹ️ '+(error.message||'Não encontramos esta cifra.'));openCompleteSheetEditor(song.id);}
+    else showToast('⚠️ '+(error?.message||'Não foi possível completar agora. Tente novamente.'));
+  }finally{
+    completingSongId=null;
+    const again=document.getElementById('complete-sheet-button');
+    if(again){again.disabled=false;again.innerHTML='<span aria-hidden="true">📄</span> Completar cifra';}
+  }
+}
+function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 function generateAiForSong(id){
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
@@ -2434,10 +2478,35 @@ function renderLibrarySyncPanel(state){
   const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
   const action=state.phase==='needs-consent'&&state.migrationCandidate
     ?`<button class="btn btn-outline" onclick="downloadMigrationBackup()">${state.backupReady?'✓ Backup completo baixado':'Baixar backup completo'}</button><button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync&&state.backupReady?'':'disabled'}>Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`
-    :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
+    :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`${state.conflicts?`<button class="btn btn-primary" onclick="openConflictResolver()">Resolver ${state.conflicts} conflito${state.conflicts===1?'':'s'}</button>`:''}<button class="btn ${state.conflicts?'btn-outline':'btn-primary'}" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
   const technical=`<section class="library-sync-panel" data-library-sync-status><strong>Detalhes da biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section><button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">Use estas ferramentas somente para recuperação ou quando solicitado pelo suporte. Nenhuma delas apaga automaticamente seus dados locais.</p>`;
   body.innerHTML=`${accountSubpageHeader('Ajuda e Suporte',librarySyncBackAction)}<section class="sync-friendly-card" data-library-sync-status aria-live="polite" data-state="${eventEsc(state.phase)}"><span class="sync-friendly-icon">${copy.icon}</span><span class="sync-friendly-copy"><strong>${eventEsc(copy.title)}</strong><p>${eventEsc(copy.message)}</p></span></section>${action}<details class="sync-advanced"><summary>Opções avançadas</summary><div class="sync-advanced-content"><button class="btn btn-outline" onclick="exportarBiblioteca()">Exportar meus dados</button>${technical}<button class="btn btn-outline" onclick="openLibraryRecovery()">Recuperar versões</button><p class="event-scope-note">O backup exporta músicas, eventos, medley e preferências da identidade atual. Nesta versão, a restauração é somente de músicas.</p></div></details>`;
   if(advancedWasOpen)body.querySelector('.sync-advanced').open=true;
+}
+// Conflitos de sincronização: mostra as duas versões e o usuário escolhe qual vale.
+function conflictDate(value){const time=Date.parse(value||'');return Number.isFinite(time)?new Date(time).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'data desconhecida';}
+function conflictVersionCard(label,version,newer){
+  const details=[version.key?`Tom ${eventEsc(version.key)}`:'',version.capo?`Capo ${eventEsc(version.capo)}`:'',`${version.chords} acorde${version.chords===1?'':'s'}`,version.hasFullSheet?'Letra + Cifras':'',version.hasVideo?'Vídeo':''].filter(Boolean).join(' · ');
+  return `<div class="sync-diagnostic-section" style="gap:4px"><strong>${label}${newer?' <span style="color:#86efac;font-size:10px">(mais recente)</span>':''}</strong><span data-no-i18n style="font-size:13px;color:var(--text)">${eventEsc(version.title||'Sem título')}</span><span data-no-i18n style="font-size:11px;color:var(--text2)">${eventEsc(version.artist||'Sem artista')}</span><span style="font-size:11px;color:var(--text2)">${details}</span><span style="font-size:10px;color:var(--text2)">Alterada em ${conflictDate(version.updatedAt)}</span></div>`;
+}
+function openConflictResolver(){
+  const conflicts=librarySync.listConflicts();
+  if(!conflicts.length){showToast('✅ Nenhum conflito pendente.');openLibrarySync();return;}
+  const cards=conflicts.map(item=>{
+    const localTime=Date.parse(item.local.updatedAt||''),remoteTime=Date.parse(item.remote.updatedAt||'');
+    const localNewer=Number.isFinite(localTime)&&(!Number.isFinite(remoteTime)||localTime>remoteTime),remoteNewer=Number.isFinite(remoteTime)&&!localNewer;
+    const id=eventEsc(item.clientId);
+    return `<section class="library-sync-panel" data-conflict="${id}" style="gap:10px">${conflictVersionCard('📱 Neste aparelho',item.local,localNewer)}${conflictVersionCard('☁️ Na nuvem (outro aparelho)',item.remote,remoteNewer)}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict(${attrJs(item.clientId)},'local')">Manter deste aparelho</button><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict(${attrJs(item.clientId)},'remote')">Usar a da nuvem</button></div></section>`;
+  }).join('');
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Resolver conflitos','openLibrarySync')}<div class="event-permission-note">Estas músicas foram alteradas em dois aparelhos. Escolha qual versão vale; a outra fica guardada como cópia de segurança neste aparelho.</div>${cards}`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function resolveSyncConflict(clientId,choice){
+  try{
+    const result=librarySync.resolveConflict(clientId,choice);
+    showToast(choice==='local'?'✅ Versão deste aparelho mantida; enviando para a nuvem.':'✅ Versão da nuvem aplicada.');
+    if(result.remaining)openConflictResolver();else openLibrarySync();
+  }catch(error){showToast('⚠️ '+(error.message||'Não foi possível resolver o conflito.'));}
 }
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 async function downloadSyncDiagnostics(){
@@ -2489,7 +2558,7 @@ async function openAccountModal(){
   const profile=accountProfile(),mode=currentAuthState.authenticated?'Conta conectada e protegida':'Perfil salvo neste dispositivo';
   const sync=accountSyncPresentation();
   const tunerIcon='<span class="tuner-menu-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6v17a8 8 0 0 0 16 0V6M24 31v12M10 18c-3 4-3 9 0 13M38 18c3 4 3 9 0 13"/></svg></span>';
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">${eventEsc(appText('account'))}</div><div class="account-summary">${accountAvatar(profile)}<div class="account-summary-info"><strong>${eventEsc(profile.name)}</strong><span>${eventEsc(profile.email||mode)}</span>${profile.email?`<span>${eventEsc(mode)}</span>`:''}</div></div><div class="account-menu"><button class="account-menu-button" type="button" onclick="openProfileSettings()"><span class="account-menu-icon">👤</span><span class="account-menu-copy"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openAppSettings()"><span class="account-menu-icon">⚙</span><span class="account-menu-copy"><strong>${eventEsc(appText('settings'))}</strong><small>${eventEsc(appText('settingsHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openTuner()">${tunerIcon}<span class="account-menu-copy"><strong>${eventEsc(appText('tuner'))}</strong><small>${eventEsc(appText('tunerHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>${currentAuthState.authenticated?`<div class="account-sync-badge" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><span class="account-sync-dot" aria-hidden="true"></span><span>${eventEsc(sync.text)}</span></div><button class="btn account-logout" type="button" onclick="logoutAppAccount()"><span aria-hidden="true">↪</span> ${eventEsc(appText('logout'))}</button>`:currentAuthState.enabled?`<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="loginAppAccount()">${eventEsc(appText('login'))}</button><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p>`:`<div class="event-permission-note" style="margin-top:14px">O login com Google será liberado quando o Supabase estiver configurado. O perfil local continua funcionando.</div><section class="account-contribution" aria-label="Contribua com o projeto"><p>${eventEsc(appText('contributionLead'))} <strong>${eventEsc(appText('contributionAny'))}</strong> ${eventEsc(appText('contributionMiddle'))} <strong>${eventEsc(appText('contributionScan'))}</strong></p><img class="account-contribution-qr" src="assets/qr-contribuicao.png?v=1" alt="QR Code para contribuir com o projeto ROUDY" width="220" height="220"><button class="btn btn-primary account-contribution-copy" type="button" onclick="copyRoudyPixCode()">${eventEsc(appText('pixCopy'))}</button><p class="account-contribution-help">${eventEsc(appText('pixHelp'))}</p><p class="account-contribution-thanks">${eventEsc(appText('contributionThanks'))}</p></section>`}<button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="closeModal()">Fechar</button>`;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">${eventEsc(appText('account'))}</div><div class="account-summary">${accountAvatar(profile)}<div class="account-summary-info"><strong>${eventEsc(profile.name)}</strong><span>${eventEsc(profile.email||mode)}</span>${profile.email?`<span>${eventEsc(mode)}</span>`:''}</div></div><div class="account-menu"><button class="account-menu-button" type="button" onclick="openProfileSettings()"><span class="account-menu-icon">👤</span><span class="account-menu-copy"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openAppSettings()"><span class="account-menu-icon">⚙</span><span class="account-menu-copy"><strong>${eventEsc(appText('settings'))}</strong><small>${eventEsc(appText('settingsHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openTuner()">${tunerIcon}<span class="account-menu-copy"><strong>${eventEsc(appText('tuner'))}</strong><small>${eventEsc(appText('tunerHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>${currentAuthState.authenticated?`<div class="account-sync-badge" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><span class="account-sync-dot" aria-hidden="true"></span><span>${eventEsc(sync.text)}</span></div><button class="btn account-logout" type="button" onclick="logoutAppAccount()"><span aria-hidden="true">↪</span> ${eventEsc(appText('logout'))}</button>`:currentAuthState.enabled?`<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="loginAppAccount()">${eventEsc(appText('login'))}</button><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p>`:`<div class="event-permission-note" style="margin-top:14px">O login com Google será liberado quando o Supabase estiver configurado. O perfil local continua funcionando.</div>`}<section class="account-contribution" aria-label="Contribua com o projeto"><p>${eventEsc(appText('contributionLead'))} <strong>${eventEsc(appText('contributionAny'))}</strong> ${eventEsc(appText('contributionMiddle'))} <strong>${eventEsc(appText('contributionScan'))}</strong></p><img class="account-contribution-qr" src="assets/qr-contribuicao.png?v=1" alt="QR Code para contribuir com o projeto ROUDY" width="220" height="220"><button class="btn btn-primary account-contribution-copy" type="button" onclick="copyRoudyPixCode()">${eventEsc(appText('pixCopy'))}</button><p class="account-contribution-help">${eventEsc(appText('pixHelp'))}</p><p class="account-contribution-thanks">${eventEsc(appText('contributionThanks'))}</p></section><button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="closeModal()">Fechar</button>`;
   const toolsButton=document.querySelector('#modal-body .account-menu-button[onclick="openTuner()"]');
   if(toolsButton){toolsButton.setAttribute('onclick','openToolsMenu()');toolsButton.innerHTML=`<span class="account-menu-icon">🛠</span><span class="account-menu-copy"><strong>${eventEsc(appText('tools'))}</strong><small>${eventEsc(appText('toolsHelp'))}</small></span><span class="account-menu-arrow">›</span>`;}
   document.getElementById('modal-overlay').style.display='flex';

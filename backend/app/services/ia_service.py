@@ -50,6 +50,10 @@ Regras obrigatórias:
 """
 
 
+WEB_QUOTA_EXCEEDED = object()
+WEB_QUOTA_NOTE = "Limite diário de buscas na web atingido."
+
+
 def _user_web_quota(limit: str):
     """Conta buscas na web por usuário no mesmo armazenamento do rate limit (sem tabela nova)."""
     try:
@@ -111,16 +115,22 @@ class IaService:
             return None
         try:
             personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
-            if personal is not None:
-                return ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary))
-            match = self._shared_songs.search(payload.titulo, payload.artista)
+            personal_result = ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary)) if personal is not None else None
+            if personal_result is not None and personal_result.fullChordSheet is not None:
+                return personal_result
+            # A cópia do próprio usuário não tem letra: o catálogo compartilhado pode ter (sem custo).
+            try:
+                match = self._shared_songs.search(payload.titulo, payload.artista)
+            except Exception:  # noqa: BLE001
+                logger.warning("shared_song_lookup_failed", exc_info=True)
+                return personal_result
             if match is None or match.score < self._shared_min_score:
-                return None
+                return personal_result
             shared = ResumoHarmonicoResponse.model_validate(match.song.song_data)
             if shared.fullChordSheet and shared.fullChordSheet.source not in CATALOG_FULL_SHEET_SOURCES:
-                # Catálogo público só exibe letra enviada pelo próprio usuário; cifra da web ou da IA
-                # fica restrita ao resumo harmônico (vale também para registros antigos, sem migração).
                 shared.fullChordSheet = None
+            if shared.fullChordSheet is None and personal_result is not None:
+                return personal_result
             return ensure_client_chords(shared)
         except Exception:  # catálogo é otimização: qualquer falha cai para a IA
             logger.warning("shared_song_lookup_failed", exc_info=True)
@@ -163,6 +173,20 @@ class IaService:
         if note and note not in normalized.observacoes:
             normalized.observacoes.insert(0, note)
 
+    def _complete_from_web(self, payload: ResumoHarmonicoRequest, user_id: str | None):
+        """Cifra da web para completar uma música do catálogo que só tem resumo (ou None)."""
+        try:
+            if self._web_quota is not None and not self._web_quota(user_id):
+                logger.info("catalog_completion_web_quota_exceeded user=%s", user_id)
+                return WEB_QUOTA_EXCEEDED
+            hit = self._sheet_finder(payload.titulo, payload.artista)
+        except Exception:  # noqa: BLE001 - completar é opcional; o resumo continua disponível
+            logger.warning("catalog_completion_failed", exc_info=True)
+            return None
+        if not hit or not clean_musical_text(hit.content, (payload.titulo, payload.artista)):
+            return None
+        return hit
+
     def generate(self, payload: ResumoHarmonicoRequest, extracted=None, request_id: str | None = None, online_source=None, user_id: str | None = None) -> ResumoHarmonicoResponse:
         return ensure_client_chords(self._generate(payload, extracted, request_id, online_source, user_id))
 
@@ -178,11 +202,28 @@ class IaService:
         # Consulta o catálogo compartilhado antes de qualquer chamada à IA, inclusive quando o usuário
         # selecionou uma fonte online. Se outro usuário já salvou esta música com alta confiança, retorna
         # direto sem consumir tokens do DeepSeek.
+        web_hit = None
         if payload.tipo == "pesquisa":
             cached = self._shared_song_result(payload, user_id)
-            if cached is not None:
+            if cached is not None and (cached.fullChordSheet is not None or not knowledge_only):
                 return cached
-        web_hit = None
+            if cached is not None:
+                # Catálogo só com resumo (ex.: entrou antes de compartilharmos a letra da web): tenta
+                # completar com a cifra da web. Se não achar ou o limite do dia acabou, devolve o resumo.
+                completed = self._complete_from_web(payload, user_id)
+                if completed is WEB_QUOTA_EXCEEDED:
+                    # Avisa o app (botão "Completar cifra") que não buscou por causa do limite do dia.
+                    if WEB_QUOTA_NOTE not in cached.observacoes:
+                        cached.observacoes.append(WEB_QUOTA_NOTE)
+                    return cached
+                if completed is None:
+                    logger.info("catalog_summary_only_served titulo=%r", payload.titulo)
+                    return cached
+                web_hit = completed
+                logger.info("catalog_summary_completed_from_web url=%s", web_hit.url)
+        if knowledge_only and web_hit is not None:
+            knowledge_only = False
+            has_online_source = True
         if knowledge_only:
             # Fluxo da busca: 1) catálogo do ROUDY (acima) 2) scraper 3) usuário envia arquivo/foto.
             # A IA nunca gera música do zero: sem cifra real, a busca termina aqui.
@@ -190,7 +231,7 @@ class IaService:
                 logger.info("ai_search_source=web_quota_exceeded user=%s", user_id)
                 raise ApiError(
                     "limite_busca_web",
-                    "Você atingiu o limite diário de buscas na web. Envie um arquivo ou foto da cifra.",
+                    "Você atingiu o limite de busca na web.",
                     429,
                 )
             web_hit = self._sheet_finder(payload.titulo, payload.artista)

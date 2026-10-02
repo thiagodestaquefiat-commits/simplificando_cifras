@@ -25,6 +25,83 @@
     return wrap;
   }
 
+  // Microfone guiado: 1) fala o nome da música -> Título; 2) fala o artista -> Artista;
+  // 3) busca sozinho. Separar título e artista numa frase só não é confiável ("Casa de Deus"),
+  // por isso cada um é ditado na sua vez. Reconhecimento de voz do navegador (sem custo).
+  function listenOnce(Recognition, onText, onDone) {
+    const recognition = new Recognition();
+    let heard = "";
+    recognition.lang = (global.document && global.document.documentElement.lang) || "pt-BR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (result) => {
+      heard = result.results && result.results[0] && result.results[0][0] ? String(result.results[0][0].transcript || "").trim() : "";
+      if (heard) onText(heard);
+    };
+    recognition.onerror = (error) => { recognition.lastError = error && error.error; };
+    recognition.onend = () => onDone(heard, recognition.lastError || null);
+    recognition.start();
+    return recognition;
+  }
+
+  function capitalize(text) { return text ? text.charAt(0).toUpperCase() + text.slice(1) : text; }
+  // Nome de artista: cada palavra com inicial maiúscula, exceto conectores ("Ministério de Louvor").
+  function titleCase(text) {
+    const small = new Set(["de", "da", "do", "das", "dos", "e"]);
+    return String(text || "").split(/\s+/).map((word, index) => index && small.has(word.toLowerCase()) ? word.toLowerCase() : capitalize(word)).join(" ");
+  }
+
+  function attachVoiceInput(fieldWrap) {
+    const input = fieldWrap.querySelector("input");
+    const Recognition = global.SpeechRecognition || global.webkitSpeechRecognition;
+    if (!input) return;
+    const box = element("span", "ai-summary-voice-box");
+    input.replaceWith(box);
+    box.appendChild(input);
+    const button = element("button", "ai-summary-voice", "🎙️");
+    button.type = "button";
+    button.setAttribute("aria-label", "Buscar por voz: fale a música e depois o artista");
+    button.title = "Buscar por voz";
+    button.setAttribute("aria-pressed", "false");
+    box.appendChild(button);
+    let active = null;
+    const setListening = (value) => {
+      button.classList.toggle("listening", value);
+      button.setAttribute("aria-pressed", String(value));
+    };
+    const stop = () => { const current = active; active = null; setListening(false); if (current) current.abort ? current.abort() : current.stop(); };
+    const denied = (error) => error === "not-allowed" || error === "service-not-allowed";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (busy) return;
+      if (active) { stop(); setStatus("initial", ""); return; }
+      if (!Recognition) { setStatus("invalid_input", "Seu navegador não permite busca por voz. Digite o título."); return; }
+      const artistInput = panel.querySelector("[data-ai-form=pesquisa] input[name=artista]");
+      setListening(true);
+      setStatus("loading", "🎙️ Fale o nome da música…");
+      try {
+        active = listenOnce(Recognition, (text) => { input.value = capitalize(text); }, (title, error) => {
+          if (!active) return;
+          if (!title) {
+            active = null; setListening(false);
+            setStatus("invalid_input", denied(error) ? "Permita o uso do microfone para buscar por voz." : "Não ouvi o nome da música. Toque no microfone e tente de novo.");
+            return;
+          }
+          setStatus("loading", `🎙️ "${capitalize(title)}" — agora fale o nome do artista (ou aguarde para buscar só pelo título)…`);
+          try {
+            active = listenOnce(Recognition, (artist) => { if (artistInput) artistInput.value = titleCase(artist); }, () => {
+              if (!active) return;
+              active = null; setListening(false);
+              setStatus("initial", "");
+              submit();
+            });
+          } catch (_error) { active = null; setListening(false); submit(); }
+        });
+      } catch (_error) { active = null; setListening(false); setStatus("invalid_input", "Não foi possível usar o microfone. Digite o título."); }
+    });
+  }
+
   function capoSelector() {
     const wrap = element("div", "ai-summary-field ai-summary-capo-field");
     wrap.appendChild(element("span", "ai-summary-label", "Capotraste"));
@@ -266,7 +343,7 @@
       const result = await global.harmonicSummaryClient.generate(mode, values());
       const sourceInfo = mode === "arquivo"
         ? { type: "upload", name: result.payload.arquivos.map(file=>file.name).join(' + ').slice(0,255), url: null }
-        : { type: "manual", name: null, url: null };
+        : { type: "text", name: null, url: null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
       setStatus("success", "Resumo gerado. Revise o rascunho antes de salvar.");
       setBusy(false);
@@ -310,6 +387,7 @@
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
     const titleField = field("Título da música", "titulo", "text", true);
     titleField.querySelector("input").placeholder = "Ex: Oceans";
+    attachVoiceInput(titleField);
     const artistField = field("Artista", "artista", "text", false);
     artistField.querySelector("input").placeholder = "Ex: Hillsong UNITED";
     searchForm.append(titleField, artistField);

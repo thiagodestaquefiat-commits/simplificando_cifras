@@ -165,6 +165,29 @@ def canonicalize_chord(value: str) -> str:
     return _parse_chord(value)[1]
 
 
+def condense_progression(chords: list[str], repetitions: int | None = None) -> tuple[list[str], int | None]:
+    """Resumo no padrão ROUDY: uma volta da progressão + quantas vezes ela se repete.
+
+    C D G C D G C D G C D G       -> C D G (4x)
+    C D G C D G C D G C D G C D   -> C D G (4x)  (sobra incompleta no fim é a volta seguinte começando)
+    Multiplica pela repetição que o bloco já tinha. Sequências sem padrão ficam como estão.
+    """
+    total = len(chords)
+    for unit_size in range(1, total // 2 + 1):
+        unit = chords[:unit_size]
+        if len(set(unit)) < min(2, unit_size) and unit_size > 1:
+            continue
+        turns = total // unit_size
+        if turns < 2 or any(chords[index] != unit[index % unit_size] for index in range(total)):
+            continue
+        if unit_size == 1 and total > 1:
+            # Um acorde só repetido (C C C) não é progressão; mantém um.
+            return unit, repetitions
+        combined = turns * (repetitions or 1)
+        return unit, combined if combined <= 99 else 99
+    return chords, repetitions
+
+
 def _compress_exact_repetition(chords: list[str]) -> tuple[list[str], int | None]:
     """Comprime apenas quando o trecho inteiro é a repetição exata de um padrão."""
     total = len(chords)
@@ -570,6 +593,12 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
     for trecho in fixed.harmonicSummary.blocos:
         trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
     fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
+    for trecho in fixed.harmonicSummary.blocos:
+        # Padrão ROUDY: resumo só com acordes e frases-gancho, sem nomes de seção.
+        trecho.secao = None
+        trecho.acordes, trecho.repeticoes = condense_progression(trecho.acordes, trecho.repeticoes)
+        if trecho.repeticoes == 1:
+            trecho.repeticoes = None
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:

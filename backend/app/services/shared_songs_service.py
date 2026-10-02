@@ -4,7 +4,6 @@ import re
 import unicodedata
 import uuid
 from dataclasses import dataclass
-from types import SimpleNamespace
 from difflib import SequenceMatcher
 
 from pydantic import ValidationError
@@ -13,13 +12,16 @@ from sqlalchemy import text
 from ..database import db
 from ..models import PersonalSong, SharedSong
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
-from .harmonic_normalizer import render_full_chord_sheet
 
 MAX_CANDIDATES = 10
 # Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
 # contém apenas acordes (sem letra nem cifra completa), então não há problema
 # de privacidade independentemente da fonte (upload, texto, online ou manual).
-SHAREABLE_SOURCE_TYPES = {"manual", "online", "upload", "text"}
+# Só vai para o catálogo compartilhado o que veio de fonte real: Busca por IA (Cifra Club/catálogo) ou arquivo/foto.
+# Músicas digitadas (aba Texto) ou criadas à mão são versões pessoais: ficam só na biblioteca do usuário.
+SHAREABLE_SOURCE_TYPES = {"online", "upload"}
+# Letra + Cifras que o catálogo aceita receber (digitada pelo usuário = versão pessoal, não entra).
+CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
 # Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
@@ -27,6 +29,20 @@ AI_ONLY_MARKER = "Gerado somente por IA"
 # autorais; SCRAPER_ENABLED=false desliga a busca na web se houver reclamação. Conteúdo gerado pela IA
 # (model_knowledge) continua fora.
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+
+
+def parse_capo(value) -> int | None:
+    """Casa do capotraste a partir de 2, "2", "Capotraste casa 2" ou "2ª casa"."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        number = value
+    else:
+        match = re.search(r"\d{1,2}", str(value or ""))
+        if not match:
+            return None
+        number = int(match.group(0))
+    return number if 1 <= number <= 12 else None
 
 
 def canonical_section(value) -> str | None:
@@ -155,20 +171,17 @@ class SharedSongService:
             return None
         sheet = song_data.get("fullChordSheet") if isinstance(song_data.get("fullChordSheet"), dict) else {}
         source = sheet.get("source") if sheet.get("source") in {"user_upload", "user_text", "model_knowledge", "web_source"} else "user_text"
+        # Só há Letra + Cifras quando a música salva tem a cifra completa de verdade (mesma regra do app).
+        # Sem ela, as seções do editor são só o resumo harmônico: devolver isso como "letra" impedia o
+        # botão "Completar cifra" de buscar no catálogo/Cifra Club.
         content = str(sheet.get("content") or "").strip()
-        if not content:
-            content = render_full_chord_sheet(SimpleNamespace(sections=sections)).strip()
-        capo = song_data.get("capo")
-        try:
-            capo = int(str(capo).strip()) if capo not in (None, "") else None
-        except ValueError:
-            capo = None
+        capo = parse_capo(song_data.get("capo"))
         try:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
                 "tom": str(song_data.get("key") or song_data.get("currentKey") or song_data.get("originalKey") or "").strip()[:20] or None,
-                "capotraste": capo if capo is not None and 0 <= capo <= 12 else None,
+                "capotraste": capo,
                 "harmonicSummary": {"blocos": blocos[:40]},
                 "observacoes": ["Encontrada na sua biblioteca pessoal."],
                 "confianca": "alta",
@@ -234,7 +247,7 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            if content and source in CATALOG_FULL_SHEET_SOURCES:
+            if content and source in CONTRIBUTABLE_FULL_SHEET_SOURCES:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],
@@ -247,7 +260,7 @@ class SharedSongService:
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
-                "capotraste": capo if isinstance(capo, int) and 0 <= capo <= 12 else None,
+                "capotraste": parse_capo(capo),
                 "harmonicSummary": {"blocos": blocos[:40]},
                 "observacoes": observacoes,
                 "confianca": "media",
@@ -262,7 +275,11 @@ class SharedSongService:
         if not isinstance(song_data, dict):
             return None
         source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
-        if source_type not in SHAREABLE_SOURCE_TYPES:
+        full_sheet = song_data.get("fullChordSheet") if isinstance(song_data.get("fullChordSheet"), dict) else {}
+        has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
+        # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
+        # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
+        if source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
             return None
         if AI_ONLY_MARKER in str(song_data.get("notes") or ""):
             # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
