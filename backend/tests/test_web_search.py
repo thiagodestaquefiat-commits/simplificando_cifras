@@ -198,8 +198,8 @@ def test_fallback_order_cifraclub_simplificacifras_then_search(monkeypatch):
 
     assert hit == web_search.ChordSheetHit("Am F", ddg_simplifica, "simplificacifras")
     # Cifra Club sem cifra no endereço direto -> tenta uma vez a lista de músicas do artista antes da busca.
-    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, SIMPLIFICA_DIRECT,
-                                                  "https://www.cifraclub.com.br/artista/musicas.html", ddg_simplifica]
+    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, "https://www.cifraclub.com.br/artista/musicas.html",
+                                                  SIMPLIFICA_DIRECT, ddg_simplifica]
     assert queries == ["Música Artista cifra site:cifraclub.com.br", "Música Artista cifra site:simplificacifras.com.br"]
 
 
@@ -358,7 +358,9 @@ def test_render_is_used_only_as_fallback():
     client = _ScraperLike({(url, True): "<pre>C  G4(6)  Am</pre>"})
     hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
     assert hit.content == "C  G4(6)  Am"
-    assert [call[1] for call in client.calls[:2]] == [False, True]
+    # Rápido primeiro; o render (lento) fica por último, depois da lista do artista e das outras fontes.
+    assert [call[1] for call in client.calls if call[0] == url] == [False, True]
+    assert client.calls[-1][:2] == (url, True)
 
 
 def test_missing_page_is_not_rendered_again():
@@ -387,3 +389,20 @@ def test_page_metadata_key_shape_and_capo_are_extracted():
 def test_page_without_capo_keeps_only_key():
     assert web_search.extract_sheet_metadata("<p>Tom: <b>F#m</b></p><pre>F#m D</pre>") == {"key": "F#m"}
     assert web_search.extract_sheet_metadata("<pre>C G</pre>") == {}
+
+
+def test_page_without_sheet_uses_artist_list_before_slow_render():
+    """Maranata / Lágrimas de Fogo: a página direta abre sem cifra; a cifra está em ...-pot-pourri/.
+    A lista do artista vem antes do render (lento), que antes esgotava o tempo da busca."""
+    direct = web_search.direct_url("cifraclub", "Maranata / Lágrimas de Fogo", "Vitohria Sounds")
+    assert direct == "https://www.cifraclub.com.br/vitohria-sounds/maranata-lagrimas-de-fogo/"
+    real = "https://www.cifraclub.com.br/vitohria-sounds/maranata-lagrimas-de-fogo-pot-pourri/"
+    client = _ScraperLike({
+        (direct, False): "<html><p>letra sem cifra</p></html>",
+        ("https://www.cifraclub.com.br/vitohria-sounds/musicas.html", False):
+            f'<a href="{real}">Maranata / Lágrimas de Fogo (pot-pourri)</a><a href="/vitohria-sounds/fome-e-sede/">Fome e Sede</a>',
+        (real, False): "<pre>G  D  Em  C\nMaranata</pre>",
+    })
+    hit = web_search.find_chord_sheet("Maranata / Lágrimas de Fogo", "Vitohria Sounds", http_client=client, search_fn=lambda q: [])
+    assert hit is not None and hit.url == real
+    assert not any(call[1] for call in client.calls), "não deveria usar o render"

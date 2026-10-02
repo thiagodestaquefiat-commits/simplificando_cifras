@@ -4,6 +4,7 @@ import logging
 import re
 import time
 import unicodedata
+from difflib import SequenceMatcher
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import urlparse, quote_plus
@@ -246,9 +247,9 @@ RENDER_RETRY_MIN_SECONDS = 25
 
 
 def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], include_article: bool,
-                deadline: float | None = None) -> tuple[str | None, dict]:
+                deadline: float | None = None, allow_render: bool = True) -> tuple[str | None, dict]:
     supports_render = getattr(http_client, "supports_render", False)
-    attempts = (False, True) if supports_render else (False,)
+    attempts = (False, True) if supports_render and allow_render else (False,)
     # Página carregou mas sem cifra (ex.: redirecionou para a página do artista): conta como "não achou".
     no_sheet = False
     for render in attempts:
@@ -262,7 +263,7 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
         except MusicSourceError as error:
             logger.warning("%s_fetch_failed=%s url=%s render=%s", name, error.__class__.__name__, url, render)
             if isinstance(error, (MusicSourceUnavailable,)) and "status 404" in str(error):
-                return None, {"not_found": True}  # página não existe: não adianta renderizar
+                return None, {"not_found": True, "http_404": True}  # página não existe: não adianta renderizar
             continue
         sheet = extract_chord_sheet(html, include_article=include_article)
         if sheet:
@@ -326,6 +327,7 @@ def _ddg_search(query: str) -> list | None:
 
 _NON_SONG_SLUGS = {"discografia", "fotos", "videos", "letras", "musicas", "playlists"}
 # Versões alternativas ficam por último: prefere a versão principal da música.
+_FUZZY_MIN_RATIO = 0.9
 _VARIANT_WORDS = ("ao-vivo", "acustico", "playback", "instrumental", "versao", "medley", "remix", "live")
 
 
@@ -333,8 +335,9 @@ def _artist_song_url(titulo: str, artista: str, client, deadline: float | None =
     """URL da música na lista do artista no Cifra Club quando o nome dela tem complemento.
 
     Ex.: título "A Boa Parte" -> /nivea-soares/a-boa-parte-part-florianopolis-house-of-prayer/.
-    Aceita só slug igual ao título ou que começa com "<título>-"; entre vários, prefere o que não é
-    versão alternativa (ao vivo, acústico...) e depois o mais curto.
+    Compara pelo endereço e pelo título visível do link (o endereço pode ter erro de digitação:
+    "Que Se Abram Os Céus" fica em /que-se-abra-os-ceus/). Aceita igual ou "<título>-..."; sem isso,
+    um endereço quase igual (>= 90%). Entre vários, prefere a versão principal e depois o mais curto.
     """
     artist_slug, song_slug = slugify(artista), slugify(titulo)
     if not artist_slug or not song_slug:
@@ -348,12 +351,36 @@ def _artist_song_url(titulo: str, artista: str, client, deadline: float | None =
     except Exception as error:  # noqa: BLE001 - a lista do artista é só uma tentativa extra
         logger.warning("cifraclub_artist_list_failed=%s url=%s", error.__class__.__name__, list_url)
         return None
-    found = set(re.findall(rf"""href=["'](?:https?://(?:www\.)?cifraclub\.com\.br)?/{re.escape(artist_slug)}/([a-z0-9-]+)/?["'#?]""", html or ""))
-    matches = [slug for slug in found if slug not in _NON_SONG_SLUGS and (slug == song_slug or slug.startswith(song_slug + "-"))]
+    # Cada link da lista: (slug do endereço, título visível). O título visível é o mais confiável:
+    # o endereço às vezes tem erro de digitação do próprio Cifra Club ("que-se-abra-os-ceus").
+    link_re = re.compile(
+        rf"""<a\b[^>]*href=["'](?:https?://(?:www\.)?cifraclub\.com\.br)?/{re.escape(artist_slug)}/([a-z0-9-]+)/?["'#?][^>]*>(.*?)</a>""",
+        re.IGNORECASE | re.DOTALL,
+    )
+    links: dict[str, set[str]] = {}
+    for slug, text in link_re.findall(html or ""):
+        if slug in _NON_SONG_SLUGS:
+            continue
+        links.setdefault(slug, set()).add(slugify(_TAG_RE.sub(" ", text)))
+
+    def starts_like(value: str) -> bool:
+        return value == song_slug or value.startswith(song_slug + "-")
+
+    matches = [slug for slug, texts in links.items() if starts_like(slug) or any(starts_like(text) for text in texts)]
     if not matches:
-        logger.info("cifraclub_artist_list_no_match artist=%s song=%s songs=%d", artist_slug, song_slug, len(found))
+        # Último recurso: endereço quase igual ao título (comparando só o começo, para aceitar "-part-...").
+        def similarity(slug: str) -> float:
+            return max(SequenceMatcher(None, song_slug, slug).ratio(),
+                       SequenceMatcher(None, song_slug, slug[:len(song_slug)]).ratio())
+        matches = [slug for slug in links if similarity(slug) >= _FUZZY_MIN_RATIO]
+    if not matches:
+        logger.info("cifraclub_artist_list_no_match artist=%s song=%s songs=%d", artist_slug, song_slug, len(links))
         return None
-    best = min(matches, key=lambda slug: (slug != song_slug, any(word in slug for word in _VARIANT_WORDS), len(slug), slug))
+
+    def exact(slug: str) -> bool:
+        return slug == song_slug or song_slug in links[slug]
+
+    best = min(matches, key=lambda slug: (not exact(slug), any(word in slug for word in _VARIANT_WORDS), len(slug), slug))
     logger.info("cifraclub_artist_list_match artist=%s song=%s match=%s", artist_slug, song_slug, best)
     return f"https://www.cifraclub.com.br/{artist_slug}/{best}/"
 
@@ -370,25 +397,51 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
             return True
         return False
 
-    cifraclub_missing = False
-    for name, hosts, include_article in PAGE_SOURCES:
-        if out_of_time(f"direct:{name}"):
-            return None, []
-        url = direct_url(name, titulo, artista)
-        sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline) if url else (None, {})
+    # 1) Cifra Club direto, só no modo rápido (sem render). O modo render pode levar ~60s e, se a página
+    #    não tem cifra (ex.: só existe /letra/), consumia o tempo todo antes de olhar a lista do artista.
+    if out_of_time("direct:cifraclub"):
+        return None, []
+    cifraclub_url = direct_url("cifraclub", titulo, artista)
+    cifraclub_missing = cifraclub_404 = False
+    if cifraclub_url:
+        sheet, meta = _fetch_page(cifraclub_url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline, allow_render=False)
         if sheet:
-            return ChordSheetHit(sheet, url, name, **meta), []
-        if name == "cifraclub" and meta.get("not_found"):
-            cifraclub_missing = True
+            return ChordSheetHit(sheet, cifraclub_url, "cifraclub", **meta), []
+        cifraclub_missing, cifraclub_404 = bool(meta.get("not_found")), bool(meta.get("http_404"))
 
-    # Endereço direto não existe (ex.: no Cifra Club a música é "a-boa-parte-part-florianopolis-house-of-prayer"):
-    # abre UMA vez a lista de músicas do artista e procura a que começa com o título. Mais barato que a busca no Google.
+    # 2) Endereço direto não existe ou não tem cifra (ex.: "a-boa-parte-part-florianopolis-house-of-prayer",
+    #    "maranata-lagrimas-de-fogo-pot-pourri"): abre UMA vez a lista de músicas do artista.
     if artista and cifraclub_missing and not out_of_time("artist_list:cifraclub"):
         url = _artist_song_url(titulo, artista, client, deadline)
         if url and not out_of_time("artist_song:cifraclub"):
             sheet, meta = _fetch_page(url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline)
             if sheet:
                 return ChordSheetHit(sheet, url, "cifraclub", **meta), []
+
+    # 3) Outras fontes pelo endereço direto (como antes).
+    for name, hosts, include_article in PAGE_SOURCES:
+        if name == "cifraclub":
+            continue
+        if out_of_time(f"direct:{name}"):
+            return None, []
+        url = direct_url(name, titulo, artista)
+        sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline) if url else (None, {})
+        if sheet:
+            return ChordSheetHit(sheet, url, name, **meta), []
+
+    # 4) Último recurso no Cifra Club: a página direta existia (não era 404) -> tenta com render se sobrar tempo.
+    if (cifraclub_url and not cifraclub_404 and getattr(client, "supports_render", False)
+            and not out_of_time("direct_render:cifraclub")):
+        remaining = None if deadline is None else deadline - time.monotonic()
+        if remaining is None or remaining >= RENDER_RETRY_MIN_SECONDS:
+            try:
+                html, _final = client.get_text(cifraclub_url, allowed_hosts=CIFRACLUB_HOSTS, allowed_content_types=("text/html",),
+                                               render=True, timeout_seconds=remaining)
+                sheet = extract_chord_sheet(html, include_article=False)
+                if sheet:
+                    return ChordSheetHit(sheet, cifraclub_url, "cifraclub", **extract_sheet_metadata(html)), []
+            except MusicSourceError as error:
+                logger.warning("cifraclub_render_failed=%s url=%s", error.__class__.__name__, cifraclub_url)
 
     all_results = []
     if not allow_search:

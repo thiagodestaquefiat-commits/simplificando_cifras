@@ -162,3 +162,33 @@ def test_artist_list_without_matching_song_gives_up_cheaply():
     finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
     assert finder("Música", "Artista") is None
     assert sum(url.endswith("/musicas.html") for url in calls) == 1
+
+
+def test_cifraclub_slug_typo_is_found_by_visible_title():
+    """Cifra Club: "Que Se Abram Os Céus" fica em /que-se-abra-os-ceus/ (erro no endereço deles)."""
+    real = "https://www.cifraclub.com.br/nivea-soares/que-se-abra-os-ceus/"
+    listing = ('<a href="/nivea-soares/que-se-abra-os-ceus/"><span>Que Se Abram Os Céus</span></a>'
+               '<a href="/nivea-soares/a-boa-noticia/">A Boa Notícia</a>')
+    page = "<html><body><pre>[Intro] A  E\n\nA        E\nQue se abram os céus</pre></body></html>"
+
+    class Site:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            if url.endswith("/musicas.html"):
+                return listing, url
+            if url == real:
+                return page, url
+            raise MusicSourceUnavailable("ScraperAPI retornou status 404")
+
+    finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
+    hit = finder("que se abram os céus", "Nívea soares")
+    assert hit is not None and hit.url == real
+
+
+def test_artist_list_does_not_pick_a_different_song():
+    listing = '<a href="/nivea-soares/a-boa-noticia/">A Boa Notícia</a><a href="/nivea-soares/ousado-amor/">Ousado Amor</a>'
+
+    class Site:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            return listing, url
+
+    assert web_search._artist_song_url("A Boa Parte", "Nívea Soares", Site()) is None
