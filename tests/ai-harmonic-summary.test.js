@@ -127,6 +127,13 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
   } });
   assert.equal(sentAuthorization, "Bearer test-access-token");
 
+  // Limite de busca na web: mostra o aviso do servidor (quantas buscas, quando libera, o que fazer).
+  const limitMessage = "Você atingiu o limite de busca na web (10 buscas a cada 24 horas). Novas buscas liberam hoje às 12:30. Enquanto isso, você pode enviar um arquivo ou foto da cifra.";
+  await assert.rejects(
+    context.harmonicSummaryClient.generate("texto", { conteudo: "Teste" }, { fetch: async () => ({ ok: false, status: 429, json: async () => ({ erro: { codigo: "limite_busca_web", mensagem: limitMessage } }) }) }),
+    (error) => error.kind === "not_found" && error.message === limitMessage
+  );
+  await expectApiError(429, "limite_busca_web", "not_found", /^Você atingiu o limite de busca na web\. Enquanto isso/);
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);
   await expectApiError(422, "provedor_rejeitou_requisicao", "provider_rejected", /processar este arquivo/);

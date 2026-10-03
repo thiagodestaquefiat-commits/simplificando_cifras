@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from datetime import datetime, timedelta, timezone
 from dataclasses import replace
 
 from ..errors import ApiError
@@ -54,24 +55,60 @@ WEB_QUOTA_EXCEEDED = object()
 WEB_QUOTA_NOTE = "Limite diário de buscas na web atingido."
 
 
-def _user_web_quota(limit: str):
-    """Conta buscas na web por usuário no mesmo armazenamento do rate limit (sem tabela nova)."""
-    try:
-        from limits import parse
-        from .. import limiter
-        item = parse(limit)
-    except Exception:  # noqa: BLE001 - limite inválido não pode derrubar a busca
-        logger.warning("scraper_user_limit_invalid=%r", limit)
-        return None
+# Brasil não tem horário de verão desde 2019: UTC-3 fixo (a imagem slim não traz tzdata).
+_BRASILIA = timezone(timedelta(hours=-3))
 
-    def quota(user_id) -> bool:
+
+def web_quota_message(amount: int | None = None, reset_at: float | None = None) -> str:
+    """Aviso do limite para o usuário: quantas buscas, quando libera e o que fazer enquanto isso."""
+    parts = ["Você atingiu o limite de busca na web"]
+    if amount:
+        parts[0] += f" ({amount} buscas a cada 24 horas)"
+    parts[0] += "."
+    if reset_at:
+        when = datetime.fromtimestamp(reset_at, _BRASILIA)
+        today = datetime.now(_BRASILIA).date()
+        day = "hoje" if when.date() == today else "amanhã" if (when.date() - today).days == 1 else when.strftime("%d/%m")
+        parts.append(f"Novas buscas liberam {day} às {when:%H:%M}.")
+    parts.append("Enquanto isso, você pode enviar um arquivo ou foto da cifra.")
+    return " ".join(parts)
+
+
+class _UserWebQuota:
+    """Conta buscas na web por usuário no mesmo armazenamento do rate limit (sem tabela nova)."""
+
+    def __init__(self, item):
+        self._item = item
+
+    def _key(self, user_id) -> str:
+        return str(user_id or "anonimo")
+
+    def __call__(self, user_id) -> bool:
+        from .. import limiter
         try:
-            return limiter.limiter.hit(item, "scraper_web_search", str(user_id or "anonimo"))
+            return limiter.limiter.hit(self._item, "scraper_web_search", self._key(user_id))
         except Exception:  # noqa: BLE001
             logger.warning("scraper_user_limit_check_failed", exc_info=True)
             return True
 
-    return quota
+    def message(self, user_id) -> str:
+        from .. import limiter
+        reset_at = None
+        try:
+            reset_at = limiter.limiter.get_window_stats(self._item, "scraper_web_search", self._key(user_id)).reset_time
+        except Exception:  # noqa: BLE001 - sem horário, o aviso continua útil
+            logger.warning("scraper_user_limit_stats_failed", exc_info=True)
+        return web_quota_message(self._item.amount, reset_at)
+
+
+def _user_web_quota(limit: str):
+    try:
+        from limits import parse
+        item = parse(limit)
+    except Exception:  # noqa: BLE001 - limite inválido não pode derrubar a busca
+        logger.warning("scraper_user_limit_invalid=%r", limit)
+        return None
+    return _UserWebQuota(item)
 
 
 class IaService:
@@ -173,6 +210,13 @@ class IaService:
         if note and note not in normalized.observacoes:
             normalized.observacoes.insert(0, note)
 
+    def _web_quota_message(self, user_id) -> str:
+        describe = getattr(self._web_quota, "message", None)
+        try:
+            return describe(user_id) if describe else web_quota_message()
+        except Exception:  # noqa: BLE001
+            return web_quota_message()
+
     def _complete_from_web(self, payload: ResumoHarmonicoRequest, user_id: str | None):
         """Cifra da web para completar uma música do catálogo que só tem resumo (ou None)."""
         try:
@@ -214,7 +258,7 @@ class IaService:
                 if completed is WEB_QUOTA_EXCEEDED:
                     # Avisa o app (botão "Completar cifra") que não buscou por causa do limite do dia.
                     if WEB_QUOTA_NOTE not in cached.observacoes:
-                        cached.observacoes.append(WEB_QUOTA_NOTE)
+                        cached.observacoes.extend([WEB_QUOTA_NOTE, self._web_quota_message(user_id)])
                     return cached
                 if completed is None:
                     logger.info("catalog_summary_only_served titulo=%r", payload.titulo)
@@ -229,11 +273,7 @@ class IaService:
             # A IA nunca gera música do zero: sem cifra real, a busca termina aqui.
             if self._web_quota is not None and not self._web_quota(user_id):
                 logger.info("ai_search_source=web_quota_exceeded user=%s", user_id)
-                raise ApiError(
-                    "limite_busca_web",
-                    "Você atingiu o limite de busca na web.",
-                    429,
-                )
+                raise ApiError("limite_busca_web", self._web_quota_message(user_id), 429)
             web_hit = self._sheet_finder(payload.titulo, payload.artista)
             if not web_hit or not clean_musical_text(web_hit.content, (payload.titulo, payload.artista)):
                 logger.info("ai_search_source=%s titulo=%r artista=%r",
