@@ -54,6 +54,10 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     assert.equal(String(saved.capo), "2", "capo mantido");
     assert.match(saved.blocos.map((b) => b.c).join(" "), /C\s+G\s+Am\s+F/, "resumo harmônico mantido");
     assert.equal(await page.locator("#complete-sheet-button").count(), 0, "botão some quando a música já está completa");
+    // Abas: Letra + Cifras primeiro, Resumo Harmônico depois; reabrir a música abre na primeira.
+    await page.evaluate((songId) => { closeDetail(); openDetail(songId); }, id);
+    assert.deepEqual(await page.locator("#detail-content .song-view-switch [role=tab]").allInnerTexts(), ["Letra + Cifras", "Resumo Harmônico"]);
+    assert.equal(await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).getAttribute("aria-selected"), "true");
     // Não encontrada: abre o editor na aba Letra + Cifras para colar ou anexar.
     mode = "missing";
     const other = await page.evaluate(() => {

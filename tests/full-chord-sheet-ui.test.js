@@ -64,7 +64,10 @@ const response = {
         musicas.push(song); setlists.push({ id: "event-private", title: "Evento", musicas: [song.id] }); openDetail(song.id);
       }, response);
 
-      assert.equal(await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).getAttribute("aria-selected"), "true");
+      // Abre na primeira aba (Letra + Cifras); o Resumo Harmônico fica na segunda.
+      assert.equal(await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).getAttribute("aria-selected"), "true");
+      assert.deepEqual(await page.locator("#detail-content .song-view-switch [role=tab]").allInnerTexts(), ["Letra + Cifras", "Resumo Harmônico"]);
+      await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).click();
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 0);
       const summary = await page.locator("#detail-content .wa-block").innerText();
       assert.match(summary, /C\s+G\s+Am\s+F \(2x\)/);
