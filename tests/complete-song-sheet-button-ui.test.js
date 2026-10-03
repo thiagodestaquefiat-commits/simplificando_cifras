@@ -27,7 +27,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
   let mode = "found"; const requests = [];
   await page.route("**/api/resumo-harmonico", (r) => {
     requests.push(JSON.parse(r.request().postData() || "{}"));
-    if (mode === "limit") return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaVersion: 2, titulo: "Limite", artista: "X", tom: "G", capotraste: null, confianca: "media", observacoes: ["Limite diário de buscas na web atingido."], harmonicSummary: { blocos: [{ acordes: ["G", "D"], fraseGuia: null, secao: null }] }, fullChordSheet: null }) });
+    if (mode === "limit") return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaVersion: 2, titulo: "Limite", artista: "X", tom: "G", capotraste: null, confianca: "media", observacoes: ["Limite diário de buscas na web atingido.", "Você atingiu o limite de busca na web (10 buscas a cada 24 horas). Novas buscas liberam hoje às 12:30. Enquanto isso, você pode enviar um arquivo ou foto da cifra."], harmonicSummary: { blocos: [{ acordes: ["G", "D"], fraseGuia: null, secao: null }] }, fullChordSheet: null }) });
     if (mode === "missing") return r.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ erro: { codigo: "cifra_nao_encontrada", mensagem: "Não encontrada" } }) });
     return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaVersion: 2, titulo: "Só Resumo", artista: "Artista", tom: "E", capotraste: 4, confianca: "alta", observacoes: [],
       harmonicSummary: { blocos: [{ acordes: ["E", "B"], fraseGuia: null, secao: null }] },
@@ -54,6 +54,10 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     assert.equal(String(saved.capo), "2", "capo mantido");
     assert.match(saved.blocos.map((b) => b.c).join(" "), /C\s+G\s+Am\s+F/, "resumo harmônico mantido");
     assert.equal(await page.locator("#complete-sheet-button").count(), 0, "botão some quando a música já está completa");
+    // Abas: Letra + Cifras primeiro, Resumo Harmônico depois; reabrir a música abre na primeira.
+    await page.evaluate((songId) => { closeDetail(); openDetail(songId); }, id);
+    assert.deepEqual(await page.locator("#detail-content .song-view-switch [role=tab]").allInnerTexts(), ["Letra + Cifras", "Resumo Harmônico"]);
+    assert.equal(await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).getAttribute("aria-selected"), "true");
     // Não encontrada: abre o editor na aba Letra + Cifras para colar ou anexar.
     mode = "missing";
     const other = await page.evaluate(() => {
@@ -74,7 +78,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     await page.evaluate(() => closeModal && closeModal());
     await page.evaluate((songId) => openDetail(songId), limited);
     await page.locator("#complete-sheet-button").click();
-    await page.getByText("Você atingiu o limite de busca na web.").waitFor();
+    await page.getByText("Novas buscas liberam hoje às 12:30").waitFor();
     assert.ok(!(await page.evaluate((songId) => musicas.find((m) => String(m.id) === String(songId)).fullChordSheet, limited)));
     console.log("complete-song-sheet-button-ui.test.js: OK (acrescenta letra, mantém resumo/tom/capo, não encontrada abre editor, limite diário avisa)");
   } finally {
