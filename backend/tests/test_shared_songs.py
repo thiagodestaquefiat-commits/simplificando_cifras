@@ -307,3 +307,39 @@ def test_complete_button_is_told_when_daily_web_limit_is_reached():
                        web_quota=lambda user_id: False).generate(
         ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes", modoGeracao="conhecimento_modelo"), user_id="u1")
     assert result.fullChordSheet is None and WEB_QUOTA_NOTE in result.observacoes and calls == []
+
+
+def test_catalog_summary_off_roudy_standard_is_rebuilt_from_saved_sheet():
+    """Resumo antigo do catálogo ("Primeira Parte:" + acordes crus) é remontado a partir da Letra + Cifras salva,
+    no padrão ROUDY: frase-guia + uma volta dos acordes + repetições. Sem IA e sem scraper."""
+    sheet = ("[Intro] Am  F  Dm  Am  F  Dm\n\n"
+             "[Primeira Parte]\n"
+             "Am        F         Dm\nLinha inventada um do verso\n"
+             "Am        F         Dm\nLinha inventada dois do verso\n\n"
+             "[Refrão]\n"
+             "Am   Am7   G6/A   Dm9/A\nFrase inventada do refrão\n"
+             "Am   Am7   G6/A   Dm9/A\nOutra frase do refrão\n")
+    messy = ("Am F Dm " * 5 + "Am Am7 G6/A Am Am7 G6/A Dm9/A").split()
+    data = {"titulo": "Minha alma", "artista": "O Rappa", "tom": "C", "capotraste": None, "confianca": "media",
+            "harmonicSummary": {"blocos": [{"acordes": messy, "fraseGuia": "Primeira Parte:"}]},
+            "fullChordSheet": {"source": "user_upload", "content": sheet, "sections": []}}
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: None).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha alma", artista="O Rappa", modoGeracao="conhecimento_modelo"))
+    blocks = [(b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
+    assert blocks == [
+        (None, ["Am", "F", "Dm"], 2),
+        ("Linha inventada um do verso", ["Am", "F", "Dm"], None),
+        ("Frase inventada do refrão", ["Am", "Am7", "G6/A", "Dm9/A"], None),
+    ], blocks
+    assert result.tom == "C" and result.fullChordSheet.content.strip() == sheet.strip()
+
+
+def test_good_catalog_summary_is_kept():
+    data = {"titulo": "Acende outra vez", "artista": "Jeferson e Suellen", "tom": "E", "confianca": "media",
+            "harmonicSummary": {"blocos": [{"acordes": ["C#m", "A", "E", "B"], "repeticoes": 4, "fraseGuia": "Ouço um barulho diferente"}]},
+            "fullChordSheet": {"source": "web_source", "content": "C#m A E B\nOutra coisa qualquer", "sections": []}}
+    catalog = SimpleNamespace(search_personal=lambda *a: None, search=lambda title, artist: SharedSongMatch(SimpleNamespace(song_data=data), 0.97))
+    result = IaService(ExplodingProvider(), shared_songs=catalog, web_search=lambda *a: None, sheet_finder=lambda *a: None).generate(
+        ResumoHarmonicoRequest(tipo="pesquisa", titulo="Acende outra vez", modoGeracao="conhecimento_modelo"))
+    assert [(b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos] == [("Ouço um barulho diferente", ["C#m", "A", "E", "B"], 4)]

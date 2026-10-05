@@ -224,3 +224,90 @@ def test_real_user_quota_reports_reset_time(app):
         quota = _user_web_quota("2 per day")
         assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
         assert "(2 buscas a cada 24 horas)" in quota.message("quota-user") and "liberam" in quota.message("quota-user")
+
+
+def test_catalog_summary_with_long_mixed_progression_is_split_roudy_style():
+    """Minha Alma (O Rappa) no catálogo: 'Primeira Parte:' como frase e 55 acordes numa linha só."""
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = ("Am F Dm " * 5 + "Am Am7 G6/A Am Am7 G6/A Dm9/A").split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "Minha alma", "artista": "O Rappa", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Primeira Parte:"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert [(b.acordes, b.repeticoes) for b in blocks][:2] == [(["Am", "F", "Dm"], 5), (["Am", "Am7", "G6/A"], 2)]
+    assert all(b.fraseGuia is None for b in blocks), "nome de seção não é frase-gancho"
+
+
+def test_normal_line_without_repetition_is_left_alone():
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = "C G Am F Dm Em G C D".split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "X", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Tu és bem-vindo aqui"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert len(blocks) == 1 and blocks[0].acordes == chords and blocks[0].fraseGuia == "Tu és bem-vindo aqui"
+
+
+def test_plain_text_section_headers_and_stanzas_follow_roudy_standard():
+    """Cifra Club com partes em texto ("Primeira Parte:", "Refrão:"), como em Minha Alma (O Rappa).
+    Cada estrofe vira um bloco com frase-guia; estrofe repetida em seguida vira (2x); parte repetida depois some."""
+    sheet = """Primeira Parte:
+
+Linha sem acorde que abre a parte
+           Am
+Segunda linha da parte
+                 F          Dm
+Terceira linha da parte
+              Am
+Quarta linha
+
+Segunda parte:
+
+Começo da segunda parte
+
+Linha seguinte
+        F                           Dm
+Mais uma linha
+                  Am
+Fim da estrofe
+
+
+Começo da segunda parte
+
+Linha seguinte
+        F                           Dm
+Mais uma linha
+                  Am
+Fim da estrofe
+
+Primeira Parte:
+
+Linha sem acorde que abre a parte
+                 F          Dm
+Terceira linha da parte
+              Am
+Quarta linha
+
+Refrão:
+
+       Am7
+Grades do refrão
+          G6/A       Am
+Outra linha
+        Am7          Dm9/A
+Mais uma
+
+      Am7             G6/A
+Segunda estrofe do refrão
+ Dm9/A           Am
+Linha final
+"""
+    blocks = [(b.fraseGuia, b.acordes, b.repeticoes)
+              for b in parse_chord_sheet(sheet, "Minha Alma", "O Rappa", key="Am").harmonicSummary.blocos]
+    assert blocks == [
+        ("Linha sem acorde que", ["Am", "F", "Dm", "Am"], None),
+        ("Começo da segunda parte", ["F", "Dm", "Am"], 2),
+        ("Grades do refrão", ["Am7", "G6/A", "Am", "Am7", "Dm9/A"], None),
+        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A", "Am"], None),
+    ], blocks
+    assert all(not (b[0] or "").endswith(":") for b in blocks), "nome de parte nunca vira frase"
