@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v194-perfil-convites-v261-main-contextual-ux";
+const CACHE_NAME = "simplificando-cifras-v264-youtube-add-microinteraction";
 const ASSETS = [
   "./",
   "./index.html",
@@ -77,7 +77,7 @@ const ASSETS = [
   "./js/youtube-song-linker.js?v=1",
   "./js/youtube-player.js?v=3",
   "./js/youtube-player-ui.js?v=3",
-  "./js/youtube-ui.js?v=2",
+  "./js/youtube-ui.js?v=3",
   "./js/export-library.js",
   "./js/export-library.js?v=2",
   "./js/export-library.js?v=3",

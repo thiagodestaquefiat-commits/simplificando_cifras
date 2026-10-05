@@ -28,6 +28,6 @@ assert.match(morph, /compactX.*progress/);
 assert.match(html, /\.event-participants-section \.event-member-card\{[^}]*pointer-events:none;cursor:default/);
 assert.doesNotMatch(html, /\.event-participants-section \.event-member-card:hover/);
 assert.match(markup, /event-leader-orbit-label/);
-assert.match(serviceWorker, /v261-main-contextual-ux/);
+assert.match(serviceWorker, /v264-youtube-add-microinteraction/);
 
 console.log('event-participants-morph.test.js: OK');
