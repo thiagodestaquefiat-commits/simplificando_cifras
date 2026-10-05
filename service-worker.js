@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v186-assistente-menus-conta";
+const CACHE_NAME = "simplificando-cifras-v187-github-unificado";
 const ASSETS = [
   "./",
   "./index.html",
@@ -96,7 +96,7 @@ const ASSETS = [
   "./js/editor/song-editor.css",
   "./js/ai/api-config.js?v=6",
   "./js/song-reports.js?v=1",
-  "./js/ai/harmonic-summary-client.js?v=14",
+  "./js/ai/harmonic-summary-client.js?v=15",
   "./js/ai/ai-harmonic-summary.js?v=13",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./manifest.webmanifest?v=15",

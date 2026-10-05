@@ -209,7 +209,7 @@
       }
       if (code === "servico_nao_configurado") throw new HarmonicSummaryError("server", "A busca está indisponível neste ambiente (serviço de IA não configurado).", response.status);
       if (code === "cifra_nao_encontrada") throw new HarmonicSummaryError("not_found", "Não encontramos esta cifra. Envie um arquivo (PDF, foto ou TXT) da cifra para continuar.", response.status);
-      if (code === "limite_busca_web") throw new HarmonicSummaryError("not_found", "Você atingiu o limite de busca na web.", response.status);
+      if (code === "limite_busca_web") throw new HarmonicSummaryError("not_found", clean(data?.erro?.mensagem, 400).trim() || "Você atingiu o limite de busca na web. Enquanto isso, você pode enviar um arquivo ou foto da cifra.", response.status);
       if (code === "fonte_nao_selecionada") throw new HarmonicSummaryError("source_required", "Escolha uma fonte antes de gerar com IA.", response.status);
       if (code === "fonte_timeout") throw new HarmonicSummaryError("source_timeout", "A fonte demorou mais que o esperado. Tente novamente.", response.status);
       if (code === "fonte_indisponivel") throw new HarmonicSummaryError("source_unavailable", "A fonte musical está temporariamente indisponível.", response.status);

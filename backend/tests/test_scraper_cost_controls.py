@@ -192,3 +192,35 @@ def test_artist_list_does_not_pick_a_different_song():
             return listing, url
 
     assert web_search._artist_song_url("A Boa Parte", "Nívea Soares", Site()) is None
+
+
+def test_limit_message_tells_how_many_when_it_frees_and_what_to_do():
+    import time
+    from app.services.ia_service import web_quota_message
+    message = web_quota_message(10, time.time() + 3600)
+    assert message.startswith("Você atingiu o limite de busca na web (10 buscas a cada 24 horas).")
+    assert "Novas buscas liberam " in message and " às " in message
+    assert message.endswith("Enquanto isso, você pode enviar um arquivo ou foto da cifra.")
+    assert web_quota_message() == "Você atingiu o limite de busca na web. Enquanto isso, você pode enviar um arquivo ou foto da cifra."
+
+
+def test_limit_error_carries_the_user_message():
+    class Quota:
+        def __call__(self, user_id):
+            return False
+
+        def message(self, user_id):
+            return "Você atingiu o limite de busca na web (10 buscas a cada 24 horas). Novas buscas liberam hoje às 12:30."
+
+    service = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: None, web_quota=Quota())
+    with pytest.raises(ApiError) as error:
+        service.generate(request(), user_id="u1")
+    assert error.value.code == "limite_busca_web" and "liberam hoje às 12:30" in error.value.message
+
+
+def test_real_user_quota_reports_reset_time(app):
+    from app.services.ia_service import _user_web_quota
+    with app.app_context():
+        quota = _user_web_quota("2 per day")
+        assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
+        assert "(2 buscas a cada 24 horas)" in quota.message("quota-user") and "liberam" in quota.message("quota-user")

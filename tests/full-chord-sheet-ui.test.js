@@ -52,7 +52,10 @@ const response = {
       await page.route("https://sdk.scdn.co/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
       await page.route("https://cdn.segment.com/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
       await page.route("https://example.test/**", (route) => route.fulfill({ status: 200, contentType: "image/png", body: Buffer.alloc(0) }));
+      await page.route('**/api/auth/config',route=>route.fulfill({json:{enabled:false}}));
       await page.goto(previewUrl || `http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(()=>loginGateAuthReady);
+      await page.evaluate(()=>continueWithoutLogin());
       await page.evaluate((raw) => {
         const model = harmonicSummaryClient.responseToEditorModel(raw, "guitar");
         const song = songModel.create({
@@ -64,7 +67,10 @@ const response = {
         musicas.push(song); setlists.push({ id: "event-private", title: "Evento", musicas: [song.id] }); openDetail(song.id);
       }, response);
 
-      assert.equal(await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).getAttribute("aria-selected"), "true");
+      // Abre na primeira aba (Letra + Cifras); o Resumo Harmônico fica na segunda.
+      assert.equal(await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).getAttribute("aria-selected"), "true");
+      assert.deepEqual(await page.locator("#detail-content .song-view-switch [role=tab]").allInnerTexts(), ["Letra + Cifras", "Resumo Harmônico"]);
+      await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).click();
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 0);
       const summary = await page.locator("#detail-content .wa-block").innerText();
       assert.match(summary, /C\s+G\s+Am\s+F \(2x\)/);
@@ -75,7 +81,7 @@ const response = {
       const fullBefore = await page.locator(".full-chord-sheet").innerText();
       await page.locator(".transpose-bar .t-btn").last().click();
       assert.match(await page.locator(".full-chord-sheet .is-chord").first().innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
-      await page.evaluate(() => enterStageMode());
+      await page.evaluate(() => {stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),sheetView:'full'});enterStageMode();});
       assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
       assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);

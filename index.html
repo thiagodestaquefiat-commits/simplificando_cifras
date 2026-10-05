@@ -855,7 +855,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=12"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=14"></script>
+<script src="js/ai/harmonic-summary-client.js?v=15"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=13"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -1533,7 +1533,7 @@ function renderDetail(){
   const hasTablature=Boolean(m.tablature?.sections?.length);
   if(currentSongView==='full'&&!hasFull||currentSongView==='tablature'&&!hasTablature)currentSongView='summary';
   const viewCount=1+Number(hasFull)+Number(hasTablature);
-  const switchHtml=viewCount>1?`<div class="song-view-switch" style="--song-view-count:${viewCount}" role="tablist" aria-label="Visualização da música"><button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button>${hasFull?`<button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button>`:''}${hasTablature?`<button type="button" role="tab" aria-selected="${currentSongView==='tablature'}" class="${currentSongView==='tablature'?'active':''}" onclick="setSongView('tablature')">Tablatura</button>`:''}</div>`:'';
+  const switchHtml=viewCount>1?`<div class="song-view-switch" style="--song-view-count:${viewCount}" role="tablist" aria-label="Visualização da música">${hasFull?`<button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button>`:''}<button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button>${hasTablature?`<button type="button" role="tab" aria-selected="${currentSongView==='tablature'}" class="${currentSongView==='tablature'?'active':''}" onclick="setSongView('tablature')">Tablatura</button>`:''}</div>`:'';
   const blocosHtml = summary.sections.map((section,sectionIndex)=>{
     const corpo=section.lines.map(line=>{
       const chords=line.chords.length?songFormat.renderChordLine(line.chords):'';
@@ -1604,7 +1604,8 @@ function openDetail(id,options={}){
   studyMetronome.setSong(m.id,appCurrentUser.id);
   const context=navigationContext.get();
   document.getElementById('btn-palco').hidden=!(context&&findEvent(context.playlistId));
-  if(!stageMode)currentSongView='summary';
+  // Abre na primeira aba: Letra + Cifras quando a música tem, senão o Resumo Harmônico.
+  if(!stageMode)currentSongView=m.fullChordSheet?.content?'full':'summary';
   const summary=songFormat.harmonicSummary(m);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
   document.getElementById('detail-title').textContent=summary.title;
@@ -2159,8 +2160,8 @@ async function completeSongSheet(id){
     if(ownerAtStart!==songRepository.getActiveOwnerId())return;
     const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
     if(!sheet){
-      const limited=(result?.data?.observacoes||[]).some(note=>/Limite diário de buscas na web/i.test(String(note)));
-      if(limited){showToast('⏳ Você atingiu o limite de busca na web.');return;}
+      const notes=(result?.data?.observacoes||[]).map(String),limited=notes.some(note=>/Limite diário de buscas na web/i.test(note));
+      if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
     const current=musicas.find(item=>String(item.id)===String(song.id));
