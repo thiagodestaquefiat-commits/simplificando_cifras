@@ -12,12 +12,12 @@
 <meta property="og:title" content="ROUDY">
 <meta property="og:description" content="Menos papel, menos distração, mais música.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="assets/icons/roudy-icon-v4-512.png">
+<meta property="og:image" content="assets/icons/roudy-icon-v4-512.png?v=15">
 <meta name="sc-api-base-url" content="https://simplificandocifras-production.up.railway.app">
-<link rel="manifest" href="manifest.webmanifest?v=14">
-<link rel="icon" href="assets/icons/roudy-icon-v4-48.png" sizes="48x48" type="image/png">
-<link rel="icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png" sizes="192x192">
+<link rel="manifest" href="manifest.webmanifest?v=15">
+<link rel="icon" href="assets/icons/roudy-icon-v4-48.png?v=15" sizes="48x48" type="image/png">
+<link rel="icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=5">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
@@ -40,8 +40,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .topbar{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
 .topbar-icon{font-size:22px;}
 .topbar-info{flex:1;min-width:0;}
+.topbar-title-row{display:flex;align-items:center;gap:8px}
 .topbar-title{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.app-assistant-launch{position:relative;display:grid;width:34px;height:34px;flex:0 0 34px;padding:0;place-items:center;border:1px solid rgba(96,165,250,.42);border-radius:11px;background:linear-gradient(145deg,#173a68,#10233a);color:#dbeafe;cursor:pointer;box-shadow:0 6px 18px rgba(37,99,235,.18)}
+.app-assistant-launch::after{content:'';position:absolute;right:4px;bottom:4px;width:6px;height:6px;border:2px solid #10233a;border-radius:50%;background:#4ade80}.app-assistant-launch.listening{color:#fff;border-color:#60a5fa;animation:assistant-pulse 1.15s ease-in-out infinite}.app-assistant-launch svg{width:20px;height:20px}@keyframes assistant-pulse{50%{transform:scale(1.08);box-shadow:0 0 0 7px rgba(59,130,246,.13)}}
+.app-assistant-launch[hidden]{display:none}.app-assistant-floating{position:fixed;z-index:140;right:max(14px,env(safe-area-inset-right));bottom:max(82px,calc(18px + env(safe-area-inset-bottom)));width:46px;height:46px;border-radius:15px;box-shadow:0 12px 32px rgba(37,99,235,.38)}.app-assistant-floating svg{width:24px;height:24px}
+.detail-header .app-assistant-launch{width:38px;height:38px;flex-basis:38px;border-radius:11px}.detail-header .app-assistant-launch svg{width:21px;height:21px}
+.assistant-overlay{position:fixed;inset:0;z-index:260;display:grid;place-items:end center;padding:18px;background:rgba(0,0,0,.7);backdrop-filter:blur(7px)}.assistant-overlay[hidden]{display:none}.assistant-panel{width:min(100%,520px);overflow:hidden;border:1px solid rgba(96,165,250,.3);border-radius:22px;background:linear-gradient(180deg,#10233a,#081525);box-shadow:0 24px 70px rgba(0,0,0,.55)}.assistant-header{display:flex;padding:17px 18px;align-items:center;gap:12px;border-bottom:1px solid rgba(148,163,184,.15)}.assistant-avatar{position:relative;display:grid;width:44px;height:44px;flex:0 0 44px;place-items:center;border-radius:14px;background:linear-gradient(145deg,#2563eb,#15345e);font-size:22px}.assistant-avatar::after{content:'';position:absolute;right:3px;bottom:3px;width:8px;height:8px;border:2px solid #15345e;border-radius:50%;background:#4ade80}.assistant-heading{min-width:0;flex:1}.assistant-heading strong,.assistant-heading span{display:block}.assistant-heading strong{font-size:16px}.assistant-heading span{margin-top:3px;color:#9fb4ce;font-size:10px}.assistant-close{width:38px;height:38px;border:1px solid rgba(148,163,184,.2);border-radius:11px;background:rgba(255,255,255,.04);color:#dbeafe;font-size:20px;cursor:pointer}.assistant-body{padding:17px}.assistant-message{min-height:70px;padding:14px;border:1px solid rgba(96,165,250,.18);border-radius:14px;background:rgba(3,10,20,.38);color:#dbeafe;font-size:13px;line-height:1.5}.assistant-message[data-kind="error"]{border-color:rgba(248,113,113,.4);color:#fecaca}.assistant-message[data-kind="success"]{border-color:rgba(74,222,128,.35);color:#bbf7d0}.assistant-examples{display:flex;margin:12px 0;gap:7px;overflow-x:auto;scrollbar-width:none}.assistant-examples button{flex:0 0 auto;padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:999px;background:rgba(255,255,255,.04);color:#b9c9dc;font:700 10px/1.2 inherit;cursor:pointer}.assistant-command-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}.assistant-command{height:46px;padding:0 13px;border:1px solid rgba(148,163,184,.24);border-radius:12px;background:#081522;color:#f8fafc;font:600 13px inherit;outline:none}.assistant-command:focus{border-color:#60a5fa}.assistant-mic{display:grid;width:44px;height:44px;padding:0;place-items:center;border:1px solid #3b82f6;border-radius:12px;background:#2563eb;color:#fff;font-size:18px;cursor:pointer}.assistant-mic.listening{background:#dc2626;border-color:#fb7185;animation:assistant-pulse 1.15s ease-in-out infinite}.assistant-send{width:100%;min-height:45px;margin-top:9px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font:800 13px inherit;cursor:pointer}.assistant-help{margin:11px 3px 0;color:#8196af;font-size:9px;line-height:1.45;text-align:center}
+body[data-account-menu-open] .app-assistant-launch{display:none!important}
 .topbar-sub{font-size:11px;color:var(--accent);margin-top:1px;}
+.username-input-wrap{position:relative}.username-input-wrap input{padding-right:44px}.username-indicator{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:21px;font-weight:800;color:var(--text2)}.profile-username[data-status=available] .username-indicator{color:#22c55e}.profile-username[data-status=unavailable] .username-indicator{color:#ef4444}.profile-username[data-status=available] input{border-color:#22c55e}.profile-username[data-status=unavailable] input{border-color:#ef4444}.profile-username button[hidden]{display:none!important}
+.profile-instruments-dropdown{border:1px solid var(--border);border-radius:11px;background:var(--bg2)}.profile-instruments-dropdown summary{display:flex;justify-content:space-between;gap:12px;padding:15px;cursor:pointer;color:var(--text);font-size:14px;list-style:none}.profile-instruments-dropdown summary::-webkit-details-marker{display:none}.profile-instruments-dropdown[open] summary span{transform:rotate(180deg)}.profile-instruments-dropdown .profile-instruments{display:flex;flex-direction:column;max-height:280px;overflow-y:auto;padding:0 10px 10px;gap:6px}.profile-instruments-dropdown summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.profile-instruments-fieldset{margin:0 0 20px;padding:0;border:0;min-width:0}.profile-instruments{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.profile-instrument-choice{display:flex;gap:8px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer}.profile-instrument-choice:has(input:checked){border-color:var(--accent);background:var(--accent2)}.profile-instrument-choice input{accent-color:var(--accent);width:17px;height:17px;flex:0 0 17px}
 .export-library-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:7px 9px;font:600 11px/1.2 inherit;cursor:pointer;white-space:nowrap;}
 .export-library-btn:hover{background:var(--accent2);}
 .library-sync-panel{display:grid;gap:14px;margin:12px 0 16px;padding:16px;border:1px solid var(--border);border-radius:14px;background:rgba(7,17,31,.45)}
@@ -51,6 +61,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .library-sync-state{display:flex;align-items:flex-start;gap:9px;color:var(--text2);font-size:13px;line-height:1.45}.library-sync-state strong{display:block;color:var(--text);font-size:14px}
 .library-sync-state[data-state="synced"]{color:#86efac}.library-sync-state[data-state="conflict"],.library-sync-state[data-state="error"]{color:#fbbf24}
 .sync-diagnostic-section{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.025)}.sync-diagnostic-section>strong{font-size:13px}.sync-diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;color:var(--text2);font-size:11px}.sync-diagnostic-grid span{display:flex;justify-content:space-between;gap:8px}.sync-diagnostic-grid b{color:var(--text)}
+.backup-song-list{display:grid;gap:8px;max-height:45vh;overflow:auto}.backup-song-choice{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;min-height:48px}.backup-song-choice>span{flex:1;min-width:0;overflow-wrap:anywhere}.backup-song-choice small{display:block;color:var(--text2);margin-top:4px}.backup-song-choice input{width:20px;height:20px;flex:none}.backup-song-choice .btn{width:auto;margin:0;font-size:12px;padding:10px}
+.sync-friendly-card{display:flex;margin:8px 0 10px;padding:11px 12px;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;background:rgba(7,17,31,.3);text-align:left}.sync-friendly-icon{display:grid;width:32px;height:32px;flex:0 0 32px;place-items:center;border-radius:50%;background:rgba(96,165,250,.1);font-size:16px}.sync-friendly-copy{min-width:0}.sync-friendly-card strong{display:block;font-size:13px}.sync-friendly-card p{margin-top:2px;color:var(--text2);font-size:10px;line-height:1.4}.sync-advanced{margin-top:10px;border:1px solid var(--border);border-radius:13px;background:rgba(7,17,31,.32);overflow:hidden}.sync-advanced>summary{display:flex;min-height:48px;padding:0 13px;align-items:center;justify-content:space-between;color:var(--text);font-size:11px;font-weight:800;cursor:pointer;list-style:none}.sync-advanced>summary::-webkit-details-marker{display:none}.sync-advanced>summary::after{content:'⌄';color:var(--text2);font-size:16px;transition:transform .2s}.sync-advanced[open]>summary::after{transform:rotate(180deg)}.sync-advanced-content{padding:0 12px 12px}.sync-advanced-content .library-sync-panel{margin:0 0 10px}.sync-advanced-content .btn{width:100%;margin-top:8px}
 /* TABS */
 .tab-bar{background:var(--bg2);display:flex;border-bottom:1px solid var(--border);}
 .tab{flex:1;padding:11px 4px;text-align:center;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;font-weight:500;}
@@ -59,8 +71,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .search-bar{padding:9px 12px;background:var(--bg2);border-bottom:1px solid var(--border);}
 .search-wrap{position:relative;}
 .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:15px;}
-.search-input{width:100%;background:var(--bg3);border:none;border-radius:9px;padding:8px 13px 8px 34px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
+.search-input{width:100%;background:var(--bg3);border:none;border-radius:9px;padding:8px 72px 8px 34px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
 .search-input::placeholder{color:var(--text2);}
+.settings-color-select{min-width:145px;font-size:11px}
+.stage-mode{--chord-color:var(--app-chord-color,#E8896B)!important}
+.playlist-voice-search{position:absolute;right:36px;top:50%;width:30px;height:30px;transform:translateY(-50%);display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:var(--text2);font-size:16px;cursor:pointer;transition:color .15s,background .15s,transform .15s}.playlist-voice-search:hover,.playlist-voice-search:focus-visible{background:rgba(255,255,255,.08);color:var(--text)}.playlist-voice-search.listening{background:rgba(239,68,68,.16);color:#fb7185;animation:voice-search-pulse 1.1s ease-in-out infinite}.playlist-voice-search:disabled{opacity:.4;cursor:not-allowed}@keyframes voice-search-pulse{50%{transform:translateY(-50%) scale(1.13)}}
 /* LIST */
 .content{flex:none;overflow-y:visible;padding-bottom:72px;}
 .section-label{padding:7px 15px 3px;font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;text-transform:uppercase;background:var(--bg);}
@@ -71,9 +86,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .music-title{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .music-sub{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .key-badge{font-size:13px;background:rgba(232,137,107,.14);color:var(--music-accent);padding:4px 10px;border-radius:10px;font-weight:700;flex-shrink:0;}
-/* FAB */
-.fab{position:fixed;bottom:22px;right:max(16px,calc((100vw - 720px)/2 + 16px));width:54px;height:54px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(217,119,87,.4);transition:transform .15s;font-size:26px;color:#fff;font-weight:300;}
-.fab:hover{transform:scale(1.06);}
 /* DETAIL VIEW */
 .detail-view{display:none;position:fixed;inset:0 auto 0 50%;transform:translateX(-50%);width:100%;max-width:720px;height:100dvh;background:var(--bg);overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;flex-direction:column;z-index:10;box-shadow:0 0 32px rgba(0,0,0,.28);}
 .detail-header{background:var(--bg2);padding:13px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;}
@@ -215,6 +227,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:620px;padding:18px 16px 24px;max-height:92dvh;overflow-x:hidden;overflow-y:auto;}
 .modal-handle{width:34px;height:3px;background:var(--bg3);border-radius:2px;margin:0 auto 16px;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;}
+.profile-modal-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.profile-modal-header .modal-title{margin:0;}
+.profile-back-button{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.35);border-radius:11px;background:rgba(37,99,235,.16);color:#dbeafe;font-family:inherit;font-size:22px;font-weight:700;line-height:1;cursor:pointer;}
+.profile-back-button:hover,.profile-back-button:focus-visible{border-color:#60a5fa;background:rgba(37,99,235,.3);outline:none;}
 .form-group{margin-bottom:11px;}
 .form-label{font-size:11px;color:var(--text2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .form-input{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
@@ -229,6 +245,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .empty-state{text-align:center;padding:48px 20px;color:var(--text2);}
 .empty-state .emoji{font-size:44px;margin-bottom:12px;}
 .empty-state p{font-size:14px;}
+#pane-medley{flex-direction:column;align-items:stretch;}
+#medley-content{width:100%;min-width:0;box-sizing:border-box;}
+.medley-empty{display:flex;width:100%;flex-direction:column;align-items:center;}
+.medley-empty .empty-state{width:100%;box-sizing:border-box;}
+.medley-empty .btn{width:min(100%,320px);}
 /* SD numbered */
 .sd-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .sd-num{width:24px;height:24px;background:var(--accent2);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
@@ -253,11 +274,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 html{background:#000}
 body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 50% -12%,rgba(255,255,255,.075),transparent 34rem),#000}
 button,input,textarea,select{font:inherit}
-button,.tab,.music-item,.setlist-item,.fab,.chip,.capo-opt{-webkit-tap-highlight-color:transparent}
+button,.tab,.music-item,.setlist-item,.chip,.capo-opt{-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.music-item:focus-visible{outline:3px solid rgba(59,130,246,.45);outline-offset:2px}
 .app{max-width:720px;background:linear-gradient(180deg,#0c0c0c,var(--bg) 22%);border-inline:1px solid rgba(255,255,255,.07);box-shadow:0 0 70px rgba(0,0,0,.62)}
 .topbar{min-height:78px;padding:14px 18px;gap:13px;background:rgba(5,5,5,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/icons/roudy-icon-v4-192.png') center/cover no-repeat;box-shadow:0 7px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.14)}
+.topbar-icon{width:46px;height:46px;flex:0 0 46px;overflow:hidden;border-radius:14px;color:transparent;font-size:0;background:url('assets/icons/roudy-icon-v4-192.png?v=15') center/cover no-repeat;box-shadow:0 7px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.14)}
 .topbar-title{font-size:19px;font-weight:900;letter-spacing:1.3px}.topbar-sub{font-size:11px;color:#d4d4d4;font-weight:600;margin-top:3px}
 .brand-login-lockup{display:grid;margin:0 auto 18px;justify-items:center;text-align:center}.brand-login-lockup img{width:58px;height:58px;margin-bottom:8px}.brand-login-lockup strong{font-size:30px;font-weight:900;letter-spacing:1.5px}.brand-login-lockup span{margin-top:10px;color:#d4d4d4;font-size:13px;line-height:1.45}
 .export-library-btn{min-height:36px;padding:8px 12px;color:#dbeafe;background:rgba(37,99,235,.1);border:1px solid rgba(96,165,250,.32);border-radius:11px;font-size:10.5px;transition:background .2s,border-color .2s,transform .2s}
@@ -280,7 +301,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .music-item:hover,.setlist-item:hover{background:var(--surface-hover);border-color:rgba(96,165,250,.28);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.16)}
 .music-avatar,.sl-avatar{width:42px;height:42px;border-radius:12px;color:#93c5fd;background:linear-gradient(145deg,rgba(37,99,235,.22),rgba(34,197,94,.08));border:1px solid rgba(96,165,250,.16)}
 .music-title,.sl-title{font-size:14px;font-weight:700;letter-spacing:-.1px}.music-sub,.sl-sub{color:var(--text2);font-size:11.5px;margin-top:4px}.key-badge,.detail-key-badge{color:var(--music-accent);background:rgba(232,137,107,.13);border:1px solid rgba(232,137,107,.3);border-radius:9px;padding:5px 9px}.sl-count{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.18)}
-.fab{right:max(18px,calc((100vw - 720px)/2 + 18px));bottom:22px;width:58px;height:58px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 12px 32px rgba(37,99,235,.42)}.fab:hover{transform:translateY(-2px) scale(1.03)}
 .detail-view{max-width:720px;background:linear-gradient(180deg,#0b1728,var(--bg) 24%);box-shadow:var(--shadow)}.detail-header{min-height:68px;padding:12px 16px;background:rgba(7,17,31,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.back-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:rgba(37,99,235,.1);font-size:20px}.detail-title{font-size:16px;font-weight:800;letter-spacing:-.25px}.detail-capo,.detail-artist{font-size:11.5px;color:var(--text2)}
 #chord-diagrams-section{background:transparent!important;border-bottom:0!important}.chord-strip-wrap{padding:9px 10px 12px;background:transparent!important;gap:8px;scroll-snap-type:x proximity}.chord-card{min-width:95px;min-height:114px;padding:5px 7px;border:0;border-radius:0;background:transparent!important;box-shadow:none}.chord-card-name{color:var(--chord-color);font-size:11px}.capo-opt{border-radius:9px;background:var(--bg3)}.capo-opt.active{background:var(--music-accent);border-color:var(--music-accent);box-shadow:0 4px 12px rgba(232,137,107,.24)}
 .transpose-bar{border:1px solid var(--border);background:linear-gradient(145deg,rgba(17,31,51,.9),rgba(11,23,40,.92));box-shadow:0 7px 20px rgba(0,0,0,.12)}.transpose-key{color:var(--music-accent)}.t-btn{background:#16263c;border-color:rgba(148,163,184,.18)}.t-btn:hover{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}
@@ -293,7 +313,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .btn{min-height:43px;border-radius:11px;transition:transform .18s,background .18s,border-color .18s,opacity .18s}.btn:hover{transform:translateY(-1px);opacity:1}.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 7px 18px rgba(37,99,235,.2)}.btn-outline{color:#93c5fd;border-color:rgba(96,165,250,.5)}
 .modal-overlay{background:rgba(2,6,13,.8);backdrop-filter:blur(6px)}.modal{max-width:640px;padding:20px 18px 28px;border:1px solid rgba(148,163,184,.16);border-bottom:0;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#12233a,#0b1728);box-shadow:0 -20px 60px rgba(0,0,0,.36)}.modal-handle{width:42px;background:#334155}.modal-title{font-size:17px;font-weight:800;letter-spacing:-.2px}.form-input,.form-textarea{min-height:43px;border-color:var(--border);border-radius:11px;background:#0d1b2e}.form-input:focus,.form-textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(37,99,235,.12)}.chip{border-radius:9px;background:#132238}.chip.selected{background:var(--accent2);color:#93c5fd;border-color:#3b82f6}.empty-state{padding:64px 22px}.stage-mode .detail-header{background:rgba(5,11,20,.92)}.stage-mode .chord-block{box-shadow:none}
 @media (min-width:721px){.modal-overlay{align-items:center;padding:24px}.modal{border-radius:22px;border-bottom:1px solid rgba(148,163,184,.16);max-height:88dvh}}
-@media (max-width:520px){.app,.detail-view{border:0}.topbar{min-height:70px;padding:11px 12px}.topbar-icon{width:42px;height:42px;flex-basis:42px;border-radius:12px}.topbar-title{font-size:16px}.tab-bar{padding-inline:9px}.content{padding-inline:9px}.music-item,.setlist-item{min-height:63px;margin-bottom:6px}.search-wrap::after{display:none}.search-input{padding-right:14px}}
+@media (max-width:520px){.app,.detail-view{border:0}.topbar{min-height:70px;padding:11px 12px}.topbar-icon{width:42px;height:42px;flex-basis:42px;border-radius:12px}.topbar-title{font-size:16px}.tab-bar{padding-inline:9px}.content{padding-inline:9px}.music-item,.setlist-item{min-height:63px;margin-bottom:6px}.search-wrap::after{display:none}.search-input{padding-right:72px}}
 @media (max-width:360px){.topbar{gap:8px}.topbar-icon{width:38px;height:38px;flex-basis:38px}.export-library-btn{max-width:72px;white-space:normal;line-height:1.05}.tab{font-size:11px;padding:9px 3px}.music-item{padding-inline:9px;gap:9px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 /* PLAYER SPOTIFY — barra fixa e tela expandida */
@@ -382,10 +402,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .location-combobox{position:relative}.location-status{display:block;min-height:15px;margin-top:5px;color:var(--text2);font-size:9px;line-height:1.4}.location-status.error{color:#fca5a5}.location-results{position:absolute;z-index:18;top:calc(100% - 18px);left:0;right:0;max-height:230px;margin:0;padding:5px;overflow-y:auto;border:1px solid rgba(96,165,250,.28);border-radius:12px;background:#0b192b;box-shadow:0 18px 36px rgba(0,0,0,.38)}.location-results[hidden]{display:none}.location-option{display:flex;width:100%;padding:10px;border:0;border-radius:9px;background:transparent;color:#fff;text-align:left;cursor:pointer;flex-direction:column;gap:3px}.location-option:hover,.location-option[aria-selected="true"]{background:rgba(59,130,246,.18)}.location-option strong{font-size:11px}.location-option span{color:#a7b4c7;font-size:9px;line-height:1.4}.event-map-preview[hidden]{display:none}.event-map-card{margin:10px 0 15px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#0b192b}.event-map-card img{display:block;width:100%;height:auto;min-height:180px;max-height:330px;object-fit:cover;background:#132238}.event-map-card.compact img{min-height:130px;max-height:210px}.event-map-card figcaption{display:grid;padding:9px 11px;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}.event-map-card figcaption span{overflow:hidden;color:#dbeafe;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.event-map-card figcaption>a{color:#86efac;font-size:10px;font-weight:800;text-decoration:none}.event-map-card figcaption small{grid-column:1/-1;color:#64748b;font-size:7px}.event-map-card figcaption small a{color:#7c8da5}.event-map-error{padding:24px 14px;color:#94a3b8;font-size:10px;text-align:center}
 .event-map-viewport{position:relative;height:260px;overflow:hidden;background:#132238}.event-map-card.compact .event-map-viewport{height:190px}.event-map-viewport>img{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;object-fit:cover}.event-map-canvas{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s ease}.event-map-card.interactive-ready .event-map-canvas{opacity:1;pointer-events:auto}.event-map-loading{position:absolute;z-index:1;inset:0;display:grid;color:#94a3b8;font-size:10px;place-items:center;background:linear-gradient(110deg,#0e2035,#152b45,#0e2035);background-size:220% 100%;animation:event-map-pulse 1.5s ease infinite}.event-map-loading[hidden],.event-map-recenter[hidden]{display:none}.event-map-recenter{position:absolute;z-index:3;right:10px;bottom:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(7,17,31,.86);color:#fff;font-size:9px;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.25);cursor:pointer}.event-map-recenter:hover{background:#10243d}.event-map-canvas .maplibregl-ctrl-attrib{font-size:8px}.event-map-canvas .maplibregl-ctrl-top-right{top:8px;right:8px}@keyframes event-map-pulse{0%,100%{background-position:0 0}50%{background-position:100% 0}}@media(max-width:520px){.event-map-viewport{height:230px}.event-map-card.compact .event-map-viewport{height:175px}}
 .app-account-btn{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.25);border-radius:50%;background:#10233a;color:#dbeafe;font-size:10px;font-weight:900;cursor:pointer}.app-account-btn.authenticated{border-color:rgba(34,197,94,.42);background:#0d352e;color:#86efac}.band-toolbar{display:grid;padding:7px 12px;grid-template-columns:minmax(0,1fr) auto;gap:7px;border-bottom:1px solid var(--border);background:rgba(8,20,35,.9)}.band-toolbar select{min-width:0;height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:#10233a;color:#dbeafe;font-size:10px}.band-toolbar button{min-height:34px;padding:0 10px;border:1px solid rgba(96,165,250,.3);border-radius:9px;background:rgba(37,99,235,.1);color:#bfdbfe;font-size:9px;font-weight:800;cursor:pointer}.band-card{margin-bottom:9px;padding:11px;border:1px solid var(--border);border-radius:12px;background:#0d1d30}.band-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}.band-card header strong{font-size:13px}.band-card header span{color:#86efac;font-size:8px;font-weight:900;text-transform:uppercase}.band-member-row{display:flex;margin-top:7px;padding-top:7px;align-items:center;gap:7px;border-top:1px solid rgba(148,163,184,.12);font-size:10px}.band-member-row span:first-child{flex:1}.band-member-row small{color:#94a3b8}.band-inline-actions{display:flex;margin-top:9px;gap:6px;flex-wrap:wrap}.band-inline-actions button{min-height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:#132238;color:#cbd5e1;font-size:9px;cursor:pointer}
-.account-summary{display:flex;margin-bottom:14px;padding:12px;align-items:center;gap:11px;border:1px solid var(--border);border-radius:14px;background:rgba(7,17,31,.5)}.account-avatar{display:grid;width:52px;height:52px;flex:0 0 52px;place-items:center;overflow:hidden;border-radius:50%;background:linear-gradient(145deg,#2563eb,#164e63);color:#fff;font-size:15px;font-weight:900}.account-avatar img{width:100%;height:100%;object-fit:cover}.account-summary-info{min-width:0;flex:1}.account-summary-info strong,.account-summary-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-summary-info span{margin-top:3px;color:var(--text2);font-size:10px}.account-menu{display:grid;gap:8px}.account-menu-button{display:grid;width:100%;min-height:52px;padding:8px 11px;grid-template-columns:34px minmax(0,1fr) 18px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:rgba(19,34,56,.74);color:var(--text);text-align:left;cursor:pointer}.account-menu-button:hover{background:rgba(37,99,235,.14)}.account-menu-icon{display:grid;width:32px;height:32px;place-items:center;border-radius:9px;background:rgba(96,165,250,.1);color:#bfdbfe;font-size:16px}.account-menu-copy strong,.account-menu-copy small{display:block}.account-menu-copy strong{font-size:12px}.account-menu-copy small{margin-top:2px;color:var(--text2);font-size:9px}.account-menu-arrow{color:#64748b;font-size:16px}.account-logout{width:100%;margin-top:14px;border:1px solid rgba(248,113,113,.32);background:rgba(239,68,68,.12);color:#fca5a5}.profile-photo-editor{display:flex;margin-bottom:14px;align-items:center;gap:12px}.profile-photo-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.profile-photo-change,.profile-photo-remove{display:inline-flex;min-height:36px;padding:0 12px;align-items:center;justify-content:center;border:1px solid rgba(148,163,184,.25);border-radius:10px;background:#132238;color:#dbeafe;font-family:inherit;font-size:10px;font-weight:700;line-height:1;white-space:nowrap;cursor:pointer}.profile-photo-change:hover,.profile-photo-remove:hover{border-color:#60a5fa;background:rgba(37,99,235,.15)}.profile-photo-input{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}.settings-group{margin-bottom:15px}.settings-group-title{margin-bottom:7px;color:#93c5fd;font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}.settings-row{display:flex;min-height:48px;padding:8px 10px;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);background:rgba(7,17,31,.28)}.settings-row:first-of-type{border-radius:11px 11px 0 0}.settings-row:last-of-type{border-bottom:0;border-radius:0 0 11px 11px}.settings-row-copy strong,.settings-row-copy small{display:block}.settings-row-copy strong{font-size:11px}.settings-row-copy small{margin-top:2px;color:var(--text2);font-size:8px}.settings-select{max-width:48%;min-height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:#0d1b2e;color:var(--text);font:600 10px inherit}.settings-toggle{position:relative;width:42px;height:24px;flex:0 0 42px}.settings-toggle input{position:absolute;opacity:0}.settings-toggle span{position:absolute;inset:0;border-radius:13px;background:#334155;cursor:pointer;transition:.2s}.settings-toggle span::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}.settings-toggle input:checked+span{background:#2563eb}.settings-toggle input:checked+span::after{transform:translateX(18px)}
+.account-summary{display:flex;margin-bottom:14px;padding:12px;align-items:center;gap:11px;border:1px solid var(--border);border-radius:14px;background:rgba(7,17,31,.5)}.account-avatar{display:grid;width:52px;height:52px;flex:0 0 52px;place-items:center;overflow:hidden;border-radius:50%;background:linear-gradient(145deg,#2563eb,#164e63);color:#fff;font-size:15px;font-weight:900}.account-avatar img{width:100%;height:100%;object-fit:cover}.account-summary-info{min-width:0;flex:1}.account-summary-info strong,.account-summary-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-summary-info span{margin-top:3px;color:var(--text2);font-size:10px}.account-menu{display:grid;gap:8px}.account-menu-button{display:grid;width:100%;min-height:52px;padding:8px 11px;grid-template-columns:34px minmax(0,1fr) 18px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:rgba(19,34,56,.74);color:var(--text);text-align:left;cursor:pointer}.account-menu-button:hover{background:rgba(37,99,235,.14)}.account-menu-icon{display:grid;width:32px;height:32px;place-items:center;border-radius:9px;background:rgba(96,165,250,.1);color:#bfdbfe;font-size:16px}.account-menu-copy strong,.account-menu-copy small{display:block}.account-menu-copy strong{font-size:12px}.account-menu-copy small{margin-top:2px;color:var(--text2);font-size:9px}.account-menu-arrow{color:#64748b;font-size:16px}.account-sync-badge{display:flex;margin:12px 2px 0;align-items:center;justify-content:center;gap:6px;color:var(--text2);font-size:9px;font-weight:700}.account-sync-dot{width:7px;height:7px;border-radius:50%;background:#f59e0b}.account-sync-badge[data-state="synced"] .account-sync-dot{background:#22c55e}.account-sync-badge[data-state="syncing"] .account-sync-dot{background:#60a5fa;animation:sync-pulse 1s infinite}.account-sync-badge[data-state="offline"] .account-sync-dot{background:#94a3b8}@keyframes sync-pulse{50%{opacity:.35}}.account-logout{width:100%;margin-top:14px;border:1px solid rgba(248,113,113,.32);background:rgba(239,68,68,.12);color:#fca5a5}.profile-photo-editor{display:flex;margin-bottom:14px;align-items:center;gap:12px}.profile-photo-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.profile-photo-change,.profile-photo-remove{display:inline-flex;min-height:36px;padding:0 12px;align-items:center;justify-content:center;border:1px solid rgba(148,163,184,.25);border-radius:10px;background:#132238;color:#dbeafe;font-family:inherit;font-size:10px;font-weight:700;line-height:1;white-space:nowrap;cursor:pointer}.profile-photo-change:hover,.profile-photo-remove:hover{border-color:#60a5fa;background:rgba(37,99,235,.15)}.profile-photo-input{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}.settings-group{margin-bottom:15px}.settings-group-title{margin-bottom:7px;color:#93c5fd;font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}.settings-row{display:flex;min-height:48px;padding:8px 10px;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);background:rgba(7,17,31,.28)}.settings-row:first-of-type{border-radius:11px 11px 0 0}.settings-row:last-of-type{border-bottom:0;border-radius:0 0 11px 11px}.settings-row-copy strong,.settings-row-copy small{display:block}.settings-row-copy strong{font-size:11px}.settings-row-copy small{margin-top:2px;color:var(--text2);font-size:8px}.settings-select{max-width:48%;min-height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:#0d1b2e;color:var(--text);font:600 10px inherit}.settings-toggle{position:relative;width:42px;height:24px;flex:0 0 42px}.settings-toggle input{position:absolute;opacity:0}.settings-toggle span{position:absolute;inset:0;border-radius:13px;background:#334155;cursor:pointer;transition:.2s}.settings-toggle span::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}.settings-toggle input:checked+span{background:#2563eb}.settings-toggle input:checked+span::after{transform:translateX(18px)}
+.language-intro{margin:-2px 0 14px;color:var(--text2);font-size:10px;line-height:1.45}.language-grid{display:grid;margin-bottom:16px;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.language-card{display:grid;min-width:0;min-height:94px;padding:12px 7px;place-items:center;align-content:center;gap:8px;border:1px solid var(--border);border-radius:14px;background:rgba(19,34,56,.74);color:var(--text);font:700 10px/1.25 inherit;text-align:center;cursor:pointer;transition:.18s}.language-card:hover{border-color:rgba(96,165,250,.62);transform:translateY(-1px)}.language-card.is-selected{border-color:#60a5fa;background:linear-gradient(145deg,rgba(37,99,235,.3),rgba(14,116,144,.18));box-shadow:0 0 0 2px rgba(96,165,250,.13)}.language-flag{font-size:31px;line-height:1;filter:saturate(.94);text-shadow:0 3px 8px rgba(0,0,0,.22)}.language-card-name{overflow-wrap:anywhere}.language-card-check{position:absolute;opacity:0}.language-card.is-selected .language-card-check{position:static;opacity:1;color:#93c5fd;font-size:10px}.language-card.is-selected .language-card-name{margin-top:-3px}@media(max-width:390px){.language-grid{gap:7px}.language-card{min-height:88px;padding-inline:4px;font-size:9px}.language-flag{font-size:27px}}
 .profile-image-editor{position:fixed;inset:0;z-index:160;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.86);backdrop-filter:blur(8px)}.profile-image-editor[hidden]{display:none}.profile-image-editor-card{display:flex;width:min(760px,100%);max-height:calc(100dvh - 24px);overflow:hidden;flex-direction:column;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:#101827;color:#fff;box-shadow:0 24px 70px rgba(0,0,0,.62)}.profile-image-editor-header{display:flex;min-height:54px;padding:8px 12px;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.12)}.profile-image-editor-header strong{flex:1;font-size:14px}.profile-image-editor-close{display:grid;width:36px;height:36px;place-items:center;border:0;border-radius:50%;background:transparent;color:#e5e7eb;font-size:24px;cursor:pointer}.profile-image-editor-body{display:grid;min-height:0;grid-template-columns:minmax(0,1fr) 210px}.profile-crop-stage{display:grid;min-height:0;padding:18px;place-items:center;background:#6b7280}.profile-crop-canvas-wrap{position:relative;width:min(100%,480px);aspect-ratio:1;overflow:hidden;background:#111;touch-action:none;cursor:grab}.profile-crop-canvas-wrap.is-dragging{cursor:grabbing}.profile-crop-canvas{display:block;width:100%;height:100%}.profile-crop-mask{position:absolute;inset:0;border-radius:0;background:radial-gradient(circle at center,transparent 0 48%,rgba(0,0,0,.58) 48.4% 100%);pointer-events:none}.profile-crop-ring{position:absolute;inset:2%;border:2px solid rgba(255,255,255,.9);border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.2)}.profile-image-tools{display:flex;padding:16px 14px;overflow-y:auto;flex-direction:column;gap:15px;background:#111827}.profile-image-tool-title{font-size:11px;font-weight:800}.profile-image-tool-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.profile-image-tool-actions button{display:grid;height:38px;padding:0;place-items:center;border:1px solid rgba(255,255,255,.13);border-radius:9px;background:#1f2937;color:#f8fafc;font-size:18px;cursor:pointer}.profile-image-slider label{display:flex;margin-bottom:7px;justify-content:space-between;color:#cbd5e1;font-size:9px}.profile-image-slider input{width:100%;accent-color:#60a5fa}.profile-image-editor-footer{display:grid;margin-top:auto;grid-template-columns:1fr 1fr;gap:8px}.profile-image-editor-footer button{min-height:40px;border-radius:10px;font:800 10px inherit;cursor:pointer}.profile-image-cancel{border:1px solid rgba(255,255,255,.2);background:transparent;color:#e2e8f0}.profile-image-apply{border:0;background:#2563eb;color:#fff}@media(max-width:620px){.profile-image-editor{padding:0}.profile-image-editor-card{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.profile-image-editor-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.profile-crop-stage{padding:10px}.profile-crop-canvas-wrap{width:min(100%,calc(100dvh - 330px));min-width:230px}.profile-image-tools{padding:11px 13px;gap:10px}.profile-image-tool-actions button{height:34px}.profile-image-editor-footer button{min-height:38px}}
 html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009e73;--danger:#d55e00}html.a11y-high-contrast{--bg:#000;--bg2:#050505;--bg3:#111;--surface:#050505;--surface-hover:#171717;--accent:#ffd400;--accent2:rgba(255,212,0,.18);--text:#fff;--text2:#eee;--border:rgba(255,255,255,.42);--music-accent:#ffd400;--chord-color:#ffd400;--success:#00ff85;--danger:#ff6b6b}html.a11y-high-contrast button:focus-visible,html.a11y-high-contrast input:focus-visible,html.a11y-high-contrast select:focus-visible{outline:3px solid #ffd400!important;outline-offset:2px}
-.song-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 15.3px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:11.7px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
+.song-view-switch{display:grid;grid-template-columns:repeat(var(--song-view-count,2),minmax(0,1fr));gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 15.3px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:11.7px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
+.tablature-view{display:grid;gap:12px}.tablature-toolbar{display:flex;padding:10px 12px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:10px}.tablature-toolbar strong{color:var(--text);font-size:11px}.tablature-toolbar span:nth-child(3){margin-left:auto}.tablature-size-btn{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);font-weight:900;cursor:pointer}.tablature-section{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.tablature-section h3{padding:10px 14px;border-bottom:1px solid var(--border);color:#93c5fd;font-size:11px;letter-spacing:.6px;text-transform:uppercase}.tablature-scroll{overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}.tablature-content{min-width:max-content;color:#f8fafc;font:600 var(--tablature-font-size,13px)/1.55 'JetBrains Mono',Consolas,monospace;white-space:pre}.tablature-note{padding:11px 13px;border:1px solid rgba(245,158,11,.25);border-radius:11px;background:rgba(245,158,11,.06);color:var(--text2);font-size:10px;line-height:1.45}
 
 .event-section-title--center{text-align:center}
 .event-repertoire-list{display:block}
@@ -476,6 +498,8 @@ html[data-ui-scale] .account-menu-copy small,
 html[data-ui-scale] .settings-row-copy small{font-size:calc(9px + var(--a11y-text-add) * .75);line-height:1.35}
 html[data-ui-scale] .account-menu-button,
 html[data-ui-scale] .settings-row{min-height:calc(52px + var(--a11y-touch-add))}
+.language-flag{position:relative;display:block;width:42px;height:27px;overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:3px;background:#64748b;font-size:0;box-shadow:0 3px 8px rgba(0,0,0,.28)}
+.language-flag[data-language="pt-BR"]{background:radial-gradient(circle at 50% 50%,#1746a2 0 17%,transparent 18%),linear-gradient(150deg,transparent 31%,#f6d629 32% 68%,transparent 69%),linear-gradient(30deg,transparent 31%,#f6d629 32% 68%,transparent 69%),#169447}.language-flag[data-language="es"]{background:linear-gradient(#aa151b 0 25%,#f1bf00 25% 75%,#aa151b 75%)}.language-flag[data-language="en"]{background:linear-gradient(33deg,transparent 42%,#fff 43% 48%,#c8102e 49% 53%,#fff 54% 59%,transparent 60%),linear-gradient(-33deg,transparent 42%,#fff 43% 48%,#c8102e 49% 53%,#fff 54% 59%,transparent 60%),linear-gradient(90deg,transparent 40%,#fff 40% 45%,#c8102e 45% 55%,#fff 55% 60%,transparent 60%),linear-gradient(transparent 35%,#fff 35% 42%,#c8102e 42% 58%,#fff 58% 65%,transparent 65%),#16437e}.language-flag[data-language="it"]{background:linear-gradient(90deg,#009246 0 33.33%,#fff 33.33% 66.66%,#ce2b37 66.66%)}.language-flag[data-language="fr"]{background:linear-gradient(90deg,#002395 0 33.33%,#fff 33.33% 66.66%,#ed2939 66.66%)}.language-flag[data-language="de"]{background:linear-gradient(#151515 0 33.33%,#dd0000 33.33% 66.66%,#ffce00 66.66%)}
 html[data-ui-scale] .settings-select{min-height:calc(34px + var(--a11y-touch-add));font-size:calc(10px + var(--a11y-text-add))}
 @media(max-width:430px){
   html[data-ui-scale] .youtube-search-input{min-width:0}
@@ -1115,11 +1139,12 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/youtube-player.js?v=7"></script>
 <script src="js/youtube-player-ui.js?v=18"></script>
 <script src="js/youtube-ui.js?v=2"></script>
-<script src="js/export-library.js"></script>
-<script src="js/import-library.js?v=1"></script>
+<script src="js/export-library.js?v=4"></script>
+<script src="js/library-recovery.js?v=2"></script>
+<script src="js/import-library.js?v=3"></script>
 <script src="js/chord-library.js"></script>
 <script src="js/instruments/instrument-definitions.js"></script>
-<script src="js/instruments/multi-instrument-chord-library.js"></script>
+<script src="js/instruments/multi-instrument-chord-library.js?v=2"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=3"></script>
@@ -1262,9 +1287,10 @@ function maybeShowSongScaleHint(){const key=`sc_song_pinch_hint_v1:${appCurrentU
 new MutationObserver(updateSongControls).observe(document.getElementById('metronome-bpm'),{childList:true,subtree:true});
 document.getElementById('metronome-meter').addEventListener('change',updateSongControls);
 let setlists=[];
+let automaticEventOffline=null;
 let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
 
-let musicas=[
+const musicasLegadasParaMigracao=[
   {id:1,title:'A alegria',key:'A',capo:'',blocos:[{l:'A alegria',c:'A  D  A  G D\nA  B7  E'},{l:'O sentimento',c:'A  A7  D  F\nA  E  A  E'},{l:'posso pisar numa tropa',c:'A  A7  D  F  (3x)\nA  E  A  E'},{l:'Aleluia',c:'A  D  A\nB7  E'}]},
   {id:2,title:'A Ele a glória',key:'G',capo:'',blocos:[{l:'',c:'C  D  Em\nC  D  G  D  Em'}]},
   {id:3,title:'A casa é sua',key:'G',capo:'',blocos:[{l:'Você é bem vindo aqui',c:'G  Em7  C  G  C/G  G'},{l:'Essa casa é sua',c:'C  D4  Em  Bm7'},{l:'Apareça',c:'C  Am7  G  Bm7'}]},
@@ -1352,6 +1378,7 @@ let musicas=[
   {id:85,title:'Uma nova história',key:'A',capo:'',blocos:[{l:'Sai de tua tenda',c:'F#m  E  B  D'},{l:'Filho meu',c:'F#m  E  D  B  D'},{l:'Uma nova História',c:'A  D  E'}]},
   {id:86,title:'Você me leva ao deserto',key:'A',capo:'',blocos:[{l:'Introdução',c:'F#m7  E  A9  (2x)'},{l:'Eu calei minha tristeza',c:'F#m7  E  A9  (2x)'},{l:'Eu coloquei os meus desejos',c:'D9  E  F#m7  D9  E'},{l:'Estou seguindo meu caminho',c:'F#m7  E  A9  (2x)'},{l:'Na tua identidade',c:'D9  E  F#m7  D9  E\nF#m7  E  A9'},{l:'Você me leva ao deserto',c:'F#m7  E  D9\nF#m7  E  A9  (2x)'},{l:'Pra me dizer no fim',c:'D  E  F#m7  E  A9'}]}
 ];
+let musicas=demoLibrary.catalog();
 
 // ── DIAGRAMAS DE ACORDES ──────────────────────────────────────────────
 const SK_INSTRUMENT='sc_instrument_v1';
@@ -2115,6 +2142,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
+  if(!contextualSong){const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -2195,12 +2223,14 @@ new ResizeObserver(measureStageHeader).observe(document.getElementById('stage-pe
 async function enterStageMode(){
   const vd=document.getElementById('view-detail');if(!vd)return;
   if(stageMode)return;
+  stopSmartScroll();
   studyMetronome.stop();
   document.getElementById('study-metronome').hidden=true;
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),contentMode:'lyrics-chords',theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
+  currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
   const packData=stageContextData();
-  try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
-  stageMode=true;scrollSpeed=activeStagePreferences.autoScrollSpeed;
+  if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
+  stageMode=true;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
   vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
   vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
   vd.classList.toggle('stage-controls-always',activeStagePreferences.controlsMode==='always');
@@ -2231,6 +2261,8 @@ async function exitStageMode(restorePlayer=true){
 function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode();}
 
 function closeDetail(){
+  stopSmartScroll();
+  detailEditBaseline=null;detailEditOwner=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
@@ -2275,8 +2307,37 @@ function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarge
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
+const smartScrollController=window.smartScroll.create({stableMs:250,cooldownMs:180,getPitchShift:()=>selectedCapo});
+function updateSmartScrollUI(state={active:false}){
+  const button=document.getElementById('btn-smart-scroll'),status=document.getElementById('smart-scroll-status');
+  if(button){button.classList.toggle('active',Boolean(state.active));button.innerHTML=state.active?'⏹ Parar rolagem <span class="smart-scroll-beta">BETA</span>':'🎧 Rolagem inteligente <span class="smart-scroll-beta">BETA</span>';}
+  document.querySelectorAll('.smart-scroll-line.smart-scroll-current').forEach(line=>line.classList.remove('smart-scroll-current'));
+  document.querySelectorAll('.smart-chord-token.smart-chord-current').forEach(chord=>chord.classList.remove('smart-chord-current'));
+  if(state.result?.advanced&&state.result.matched?.chordElement)state.result.matched.chordElement.classList.add('smart-chord-played');
+  if(state.current?.element)state.current.element.classList.add('smart-scroll-current');
+  if(state.current?.chordElement)state.current.chordElement.classList.add('smart-chord-current');
+  if(!status)return;
+  if(state.completed){status.textContent='Cifra concluída';return;}
+  if(!state.active){status.textContent='Experimental';return;}
+  status.textContent=state.current?`Próximo: ${state.current.chord} · ${state.index+1}/${state.total}`:'Cifra concluída';
+}
+function stopSmartScroll(){smartScrollController.stop();document.querySelectorAll('.smart-chord-token').forEach(chord=>chord.classList.remove('smart-chord-played','smart-chord-current'));updateSmartScrollUI();}
+async function toggleSmartScroll(){
+  if(smartScrollController.isActive()){stopSmartScroll();return;}
+  stopAutoScroll();
+  document.querySelectorAll('.smart-chord-token').forEach(chord=>chord.classList.remove('smart-chord-played','smart-chord-current'));
+  const button=document.getElementById('btn-smart-scroll');if(button)button.disabled=true;
+  try{
+    const started=await smartScrollController.start(document.getElementById('view-detail'),updateSmartScrollUI);
+    if(started)showToast('🎧 Rolagem inteligente Beta iniciada. Toque os acordes na ordem exibida.');
+  }catch(error){
+    const message=error?.message==='no_chords'?'Esta música ainda não possui acordes reconhecíveis.':error?.name==='NotAllowedError'||error?.name==='SecurityError'?'Permita o acesso ao microfone para usar a rolagem inteligente.':error?.name==='NotFoundError'?'Nenhum microfone foi encontrado.':'Não foi possível iniciar a rolagem inteligente.';
+    stopSmartScroll();showToast('⚠️ '+message);
+  }finally{if(button?.isConnected)button.disabled=false;}
+}
 function toggleAutoScroll(){if(scrollTimer!==null||document.getElementById('view-detail').classList.contains('stage-scroll-compact'))stopAutoScroll();else startAutoScroll();revealStageControls();}
 function startAutoScroll(){
+  stopSmartScroll();
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll'),stageButton=document.getElementById('stage-scroll-toggle');
   toggleSongControls(false);
   studyMetronome.start();
@@ -2305,9 +2366,10 @@ function setSongScrollSpeed(value){
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
-  const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();revealStageControls();
+  updateDetailSaveButton();
 }
 function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}const view=document.getElementById('view-detail'),wasCompact=stageMode&&view.classList.contains('stage-scroll-compact');stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});view.scrollTop=0;if(stageMode&&(wasCompact||activeStagePreferences?.autoScroll))startAutoScroll();}
 
@@ -2874,9 +2936,9 @@ function sharePlaylist(id){
     ms.map((m,i)=>(i+1)+'. '+m.title+(m.artist?' — '+m.artist:'')+(m.key?' | Tom: '+m.key:'')+(m.capo?' | '+m.capo:'')).join('\n')+
     '\n\n📱 ROUDY';
   if(navigator.share){
-    navigator.share({title:s.title,text:texto}).catch(()=>prompt('Copie:',texto));
+    navigator.share({title:s.title,text:texto}).catch(()=>appPrompt('Copie:',texto));
   } else {
-    prompt('Copie e envie:',texto);
+    appPrompt('Copie e envie:',texto);
   }
 }
 
@@ -2941,28 +3003,77 @@ async function acceptPendingEventInvitation(){
 const legacyCurrentUser=storage.get('sc_current_user_v1',{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null})||{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null};
 let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
 let appCurrentUser=Object.freeze({...appIdentity.user,role:appIdentity.user.role||'Liderança'});
-let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false;
+let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false,loginGatePassed=false,loginGateAuthReady=false,promptedGuestLibraryOwner=null;
 const ACCOUNT_PROFILES_KEY='sc_account_profiles_v1',APP_SETTINGS_KEY='sc_settings_v3';
-const APP_SETTINGS_DEFAULT={language:'pt-BR',highContrast:false,colorBlind:false,scale:100};
+const CHORD_COLOR_OPTIONS=Object.freeze({coral:'#E8896B',red:'#EF4444',orange:'#F59E0B',yellow:'#FACC15',green:'#22C55E',blue:'#3B82F6',purple:'#A78BFA',pink:'#F472B6',white:'#F8FAFC'});
+const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',highContrast:false,colorBlind:false,scale:100,chordColor:'coral'};
 const APP_TRANSLATIONS={
   'pt-BR':{tabPlaylist:'Playlist',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encontre um vídeo para adicionar à sua playlist',youtubePlaceholder:'Pesquisar música, artista ou link no YouTube',playlistPlaceholder:'Buscar música na playlist',search:'Pesquisar',account:'Minha conta',myProfile:'Meu Perfil',profileHelp:'Edite sua foto e seus dados pessoais',settings:'Configurações',settingsHelp:'Idioma, acessibilidade e preferências',backup:'Backup e dados',backupHelp:'Restauração e estado da sincronização automática',logout:'Sair da conta',login:'Entrar com Google'},
   'en':{tabPlaylist:'Playlist',tabEvents:'Events',tabMedley:'Medley',youtubeHelp:'Find a video to add to your playlist',youtubePlaceholder:'Search music, artist or YouTube link',playlistPlaceholder:'Search music in playlist',search:'Search',account:'My account',myProfile:'My Profile',profileHelp:'Edit your photo and personal information',settings:'Settings',settingsHelp:'Language, accessibility and preferences',backup:'Backup and data',backupHelp:'Restore and automatic sync status',logout:'Log out',login:'Sign in with Google'},
   'es':{tabPlaylist:'Playlist',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encuentra un video para agregar a tu playlist',youtubePlaceholder:'Buscar música, artista o enlace de YouTube',playlistPlaceholder:'Buscar música en la playlist',search:'Buscar',account:'Mi cuenta',myProfile:'Mi Perfil',profileHelp:'Edita tu foto y datos personales',settings:'Configuración',settingsHelp:'Idioma, accesibilidad y preferencias',backup:'Copia y datos',backupHelp:'Restauración y estado de sincronización automática',logout:'Cerrar sesión',login:'Ingresar con Google'}
 };
+APP_TRANSLATIONS.it={tabPlaylist:'🎵 Playlist',tabEvents:'📅 Eventi',tabMedley:'🎛️ Medley',youtubeHelp:'Trova un video da aggiungere alla playlist',youtubePlaceholder:'Cerca musica, artista o link YouTube',playlistPlaceholder:'Cerca nella playlist',search:'Cerca',account:'Il mio account',myProfile:'Il mio profilo',profileHelp:'Modifica foto e dati personali',settings:'Impostazioni',settingsHelp:'Lingua, accessibilità e preferenze',synced:'Sincronizzato automaticamente',syncing:'Sincronizzazione…',offline:'Offline · modifiche salvate',syncPending:'Sincronizzazione in sospeso',logout:'Esci',login:'Accedi con Google'};
+APP_TRANSLATIONS.fr={tabPlaylist:'🎵 Playlist',tabEvents:'📅 Événements',tabMedley:'🎛️ Medley',youtubeHelp:'Trouvez une vidéo à ajouter à votre playlist',youtubePlaceholder:'Rechercher musique, artiste ou lien YouTube',playlistPlaceholder:'Rechercher dans la playlist',search:'Rechercher',account:'Mon compte',myProfile:'Mon profil',profileHelp:'Modifier la photo et les informations personnelles',settings:'Paramètres',settingsHelp:'Langue, accessibilité et préférences',synced:'Synchronisé automatiquement',syncing:'Synchronisation…',offline:'Hors ligne · modifications conservées',syncPending:'Synchronisation en attente',logout:'Se déconnecter',login:'Se connecter avec Google'};
+APP_TRANSLATIONS.de={tabPlaylist:'🎵 Playlist',tabEvents:'📅 Veranstaltungen',tabMedley:'🎛️ Medley',youtubeHelp:'Finde ein Video für deine Playlist',youtubePlaceholder:'Musik, Interpret oder YouTube-Link suchen',playlistPlaceholder:'Playlist durchsuchen',search:'Suchen',account:'Mein Konto',myProfile:'Mein Profil',profileHelp:'Foto und persönliche Daten bearbeiten',settings:'Einstellungen',settingsHelp:'Sprache, Barrierefreiheit und Einstellungen',synced:'Automatisch synchronisiert',syncing:'Synchronisierung…',offline:'Offline · Änderungen gespeichert',syncPending:'Synchronisierung ausstehend',logout:'Abmelden',login:'Mit Google anmelden'};
+Object.assign(APP_TRANSLATIONS['pt-BR'],{contributionLead:'O Roudy está te abençoando? Se sim, caso queira retribuir,',contributionAny:'qualquer valor é bem-vindo',contributionMiddle:'e ajuda a manter o projeto vivo, trazer melhorias e desenvolver novos recursos.',contributionScan:'Para contribuir, basta escanear o QR Code abaixo.',contributionThanks:'Obrigado por fazer parte do projeto!',pixCopy:'Copiar código Pix',pixHelp:'No celular, copie o código e use a opção Pix Copia e Cola no aplicativo do seu banco.'});
+Object.assign(APP_TRANSLATIONS.en,{contributionLead:'Is ROUDY blessing you? If so, and you would like to give back,',contributionAny:'any amount is welcome',contributionMiddle:'and helps keep the project alive, deliver improvements and develop new features.',contributionScan:'To contribute, scan the QR Code below.',contributionThanks:'Thank you for being part of the project!',pixCopy:'Copy Pix code',pixHelp:'On your phone, copy the code and use the Pix Copy and Paste option in your banking app.'});
+Object.assign(APP_TRANSLATIONS.es,{contributionLead:'¿ROUDY te está bendiciendo? Si quieres retribuir,',contributionAny:'cualquier cantidad es bienvenida',contributionMiddle:'y ayuda a mantener vivo el proyecto, incorporar mejoras y desarrollar nuevas funciones.',contributionScan:'Para contribuir, escanea el código QR.',contributionThanks:'¡Gracias por formar parte del proyecto!',pixCopy:'Copiar código Pix',pixHelp:'En el celular, copia el código y usa la opción Pix Copiar y Pegar de tu aplicación bancaria.'});
+Object.assign(APP_TRANSLATIONS.it,{contributionLead:'ROUDY ti sta aiutando? Se vuoi ricambiare,',contributionAny:'qualsiasi importo è benvenuto',contributionMiddle:'e aiuta a mantenere vivo il progetto, migliorarlo e sviluppare nuove funzioni.',contributionScan:'Per contribuire, scansiona il codice QR qui sotto.',contributionThanks:'Grazie per far parte del progetto!',pixCopy:'Copia codice Pix',pixHelp:'Sul telefono, copia il codice e usa l’opzione Pix Copia e Incolla nell’app della tua banca.'});
+Object.assign(APP_TRANSLATIONS.fr,{contributionLead:'ROUDY vous aide ? Si vous souhaitez contribuer,',contributionAny:'chaque montant est le bienvenu',contributionMiddle:'et aide à faire vivre le projet, à l’améliorer et à développer de nouvelles fonctions.',contributionScan:'Pour contribuer, scannez le QR Code ci-dessous.',contributionThanks:'Merci de faire partie du projet !',pixCopy:'Copier le code Pix',pixHelp:'Sur votre téléphone, copiez le code et utilisez l’option Pix Copier-Coller de votre application bancaire.'});
+Object.assign(APP_TRANSLATIONS.de,{contributionLead:'Hilft dir ROUDY? Wenn du etwas zurückgeben möchtest,',contributionAny:'ist jeder Betrag willkommen',contributionMiddle:'und hilft, das Projekt am Leben zu halten, zu verbessern und neue Funktionen zu entwickeln.',contributionScan:'Scanne zum Unterstützen den QR-Code unten.',contributionThanks:'Danke, dass du Teil des Projekts bist!',pixCopy:'Pix-Code kopieren',pixHelp:'Kopiere den Code auf deinem Smartphone und nutze Pix Copy & Paste in deiner Banking-App.'});
+Object.assign(APP_TRANSLATIONS['pt-BR'],{voiceSearch:'Buscar por voz',voiceListening:'Ouvindo… toque para cancelar',voiceUnsupported:'A busca por voz não está disponível neste navegador.',voiceDenied:'Permita o acesso ao microfone para usar a busca por voz.',voiceNoSpeech:'Não ouvi nada. Toque no microfone e tente novamente.'});
+Object.assign(APP_TRANSLATIONS.en,{voiceSearch:'Search by voice',voiceListening:'Listening… tap to cancel',voiceUnsupported:'Voice search is not available in this browser.',voiceDenied:'Allow microphone access to use voice search.',voiceNoSpeech:'I did not hear anything. Tap the microphone and try again.'});
+Object.assign(APP_TRANSLATIONS.es,{voiceSearch:'Buscar por voz',voiceListening:'Escuchando… toca para cancelar',voiceUnsupported:'La búsqueda por voz no está disponible en este navegador.',voiceDenied:'Permite el acceso al micrófono para usar la búsqueda por voz.',voiceNoSpeech:'No escuché nada. Toca el micrófono e inténtalo de nuevo.'});
+Object.assign(APP_TRANSLATIONS.it,{voiceSearch:'Cerca con la voce',voiceListening:'In ascolto… tocca per annullare',voiceUnsupported:'La ricerca vocale non è disponibile in questo browser.',voiceDenied:'Consenti l’accesso al microfono per usare la ricerca vocale.',voiceNoSpeech:'Non ho sentito nulla. Tocca il microfono e riprova.'});
+Object.assign(APP_TRANSLATIONS.fr,{voiceSearch:'Recherche vocale',voiceListening:'Écoute… touchez pour annuler',voiceUnsupported:'La recherche vocale n’est pas disponible dans ce navigateur.',voiceDenied:'Autorisez l’accès au microphone pour utiliser la recherche vocale.',voiceNoSpeech:'Je n’ai rien entendu. Touchez le microphone et réessayez.'});
+Object.assign(APP_TRANSLATIONS.de,{voiceSearch:'Sprachsuche',voiceListening:'Höre zu… zum Abbrechen tippen',voiceUnsupported:'Die Sprachsuche ist in diesem Browser nicht verfügbar.',voiceDenied:'Erlaube den Mikrofonzugriff, um die Sprachsuche zu verwenden.',voiceNoSpeech:'Ich habe nichts gehört. Tippe auf das Mikrofon und versuche es erneut.'});
+Object.assign(APP_TRANSLATIONS['pt-BR'],{tuner:'Afinador',tunerHelp:'Afine violão ou guitarra pelo microfone',tunerInstrument:'Violão e guitarra',tunerAuto:'Automático',tunerChooseString:'Escolha uma corda ou use o modo automático',tunerString:'Cordas · afinação padrão',tunerTarget:'Alvo',tunerStart:'Ativar microfone',tunerStop:'Desativar microfone',tunerListening:'Toque uma corda para começar',tunerInTune:'Afinado!',tunerFlat:'Aperte um pouco a corda',tunerSharp:'Afrouxe um pouco a corda',tunerWrongString:'Toque a corda selecionada',tunerMicOff:'Microfone desligado',tunerPermission:'Permita o acesso ao microfone nas configurações do navegador.',tunerNoMic:'Nenhum microfone encontrado neste dispositivo.',tunerUnavailable:'O microfone exige HTTPS ou acesso local.',tunerError:'Não foi possível iniciar o afinador.',tunerPrivacy:'O áudio é processado no dispositivo e não é gravado nem enviado.'});
+Object.assign(APP_TRANSLATIONS['pt-BR'],{tunerUkulele:'Ukulele',tunerBass:'Contrabaixo',tunerViolin:'Violino'});
+Object.assign(APP_TRANSLATIONS.en,{tunerUkulele:'Ukulele',tunerBass:'Bass',tunerViolin:'Violin'});
+Object.assign(APP_TRANSLATIONS.es,{tunerUkulele:'Ukelele',tunerBass:'Bajo',tunerViolin:'Violín'});
+Object.assign(APP_TRANSLATIONS.en,{tuner:'Tuner',tunerHelp:'Tune your acoustic or electric guitar with the microphone',tunerInstrument:'Acoustic and electric guitar',tunerAuto:'Automatic',tunerChooseString:'Choose a string or use automatic mode',tunerString:'Strings · standard tuning',tunerTarget:'Target',tunerStart:'Turn on microphone',tunerStop:'Turn off microphone',tunerListening:'Play a string to begin',tunerInTune:'In tune!',tunerFlat:'Tighten the string a little',tunerSharp:'Loosen the string a little',tunerWrongString:'Play the selected string',tunerMicOff:'Microphone off',tunerPermission:'Allow microphone access in your browser settings.',tunerNoMic:'No microphone found on this device.',tunerUnavailable:'The microphone requires HTTPS or a local connection.',tunerError:'Could not start the tuner.',tunerPrivacy:'Audio is processed on your device. It is not recorded or uploaded.'});
+Object.assign(APP_TRANSLATIONS.es,{tuner:'Afinador',tunerHelp:'Afina tu guitarra acústica o eléctrica con el micrófono',tunerInstrument:'Guitarra acústica y eléctrica',tunerAuto:'Automático',tunerChooseString:'Elige una cuerda o usa el modo automático',tunerString:'Cuerdas · afinación estándar',tunerTarget:'Objetivo',tunerStart:'Activar micrófono',tunerStop:'Desactivar micrófono',tunerListening:'Toca una cuerda para empezar',tunerInTune:'¡Afinado!',tunerFlat:'Tensa un poco la cuerda',tunerSharp:'Afloja un poco la cuerda',tunerWrongString:'Toca la cuerda seleccionada',tunerMicOff:'Micrófono apagado',tunerPermission:'Permite el acceso al micrófono en la configuración del navegador.',tunerNoMic:'No se encontró ningún micrófono en este dispositivo.',tunerUnavailable:'El micrófono requiere HTTPS o una conexión local.',tunerError:'No se pudo iniciar el afinador.',tunerPrivacy:'El audio se procesa en tu dispositivo. No se graba ni se envía.'});
+Object.assign(APP_TRANSLATIONS['pt-BR'],{tools:'Ferramentas',toolsHelp:'Afinador e metrônomo para seus estudos',metronome:'Metrônomo',metronomeHelp:'Pratique com andamento e compasso precisos',metronomeEdit:'Editar',metronomeStart:'Iniciar',metronomeStop:'Parar'});
+Object.assign(APP_TRANSLATIONS.en,{tools:'Tools',toolsHelp:'Tuner and metronome for your practice',metronome:'Metronome',metronomeHelp:'Practice with precise tempo and meter',metronomeEdit:'Edit',metronomeStart:'Start',metronomeStop:'Stop'});
+Object.assign(APP_TRANSLATIONS.es,{tools:'Herramientas',toolsHelp:'Afinador y metrónomo para practicar',metronome:'Metrónomo',metronomeHelp:'Practica con tempo y compás precisos',metronomeEdit:'Editar',metronomeStart:'Iniciar',metronomeStop:'Parar'});
+Object.assign(APP_TRANSLATIONS.it,{tools:'Strumenti',toolsHelp:'Accordatore e metronomo per esercitarsi',metronome:'Metronomo',metronomeHelp:'Esercitati con tempo e misura precisi',metronomeEdit:'Modifica',metronomeStart:'Avvia',metronomeStop:'Ferma',tuner:'Accordatore',tunerHelp:'Accorda il tuo strumento con il microfono',tunerInstrument:'Chitarra acustica ed elettrica',tunerUkulele:'Ukulele',tunerBass:'Basso',tunerViolin:'Violino'});
+Object.assign(APP_TRANSLATIONS.fr,{tools:'Outils',toolsHelp:'Accordeur et métronome pour vous entraîner',metronome:'Métronome',metronomeHelp:'Entraînez-vous avec un tempo précis',metronomeEdit:'Modifier',metronomeStart:'Démarrer',metronomeStop:'Arrêter',tuner:'Accordeur',tunerHelp:'Accordez votre instrument avec le microphone',tunerInstrument:'Guitare acoustique et électrique',tunerUkulele:'Ukulélé',tunerBass:'Basse',tunerViolin:'Violon'});
+Object.assign(APP_TRANSLATIONS.de,{tools:'Werkzeuge',toolsHelp:'Stimmgerät und Metronom zum Üben',metronome:'Metronom',metronomeHelp:'Übe mit präzisem Tempo und Takt',metronomeEdit:'Bearbeiten',metronomeStart:'Starten',metronomeStop:'Stoppen',tuner:'Stimmgerät',tunerHelp:'Stimme dein Instrument mit dem Mikrofon',tunerInstrument:'Akustik- und E-Gitarre',tunerUkulele:'Ukulele',tunerBass:'Bass',tunerViolin:'Violine'});
+APP_TRANSLATIONS['pt-BR'].tunerHelp='Afine seu instrumento pelo microfone';
+APP_TRANSLATIONS.en.tunerHelp='Tune your instrument with the microphone';
+APP_TRANSLATIONS.es.tunerHelp='Afina tu instrumento con el micrófono';
 let pendingProfileAvatar=null,profileImageEditorState=null;
 function accountProfiles(){const value=storage.get(ACCOUNT_PROFILES_KEY,{});return value&&typeof value==='object'?value:{};}
-function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
-function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};storage.set(ACCOUNT_PROFILES_KEY,profiles);}
+const PROFILE_MUSICAL_ROLES=['Vocalista','Backing vocal','Guitarrista','Violonista','Baixista','Baterista','Tecladista','Pianista','Percussionista','Ukulele','Violinista','Viola','Saxofonista','Flautista','Trompetista','Outro'];
+function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:(Array.isArray(saved.instruments)?saved.instruments:Array.isArray(remote.instruments)?remote.instruments:[]).filter(value=>PROFILE_MUSICAL_ROLES.includes(value)),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
+function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
 function accountAvatar(profile,className='account-avatar'){return `<span class="${className}" id="account-profile-avatar">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
-function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
-function appText(key){const language=loadAppSettings().language;return (APP_TRANSLATIONS[language]||APP_TRANSLATIONS['pt-BR'])[key]||APP_TRANSLATIONS['pt-BR'][key]||key;}
+function accountSyncPresentation(state=librarySync.getStatus()){
+  if(!navigator.onLine||state.phase==='offline')return {state:'offline',text:appText('offline')};
+  if(state.phase==='syncing')return {state:'syncing',text:appText('syncing')};
+  if(state.phase==='synced'&&state.lastConfirmedAt&&!state.pending&&!state.conflicts)return {state:'synced',text:uiI18n.translate('Tudo atualizado')};
+  return {state:'pending',text:appText('syncPending')};
+}
+function updateAccountSyncBadge(state){const badge=document.getElementById('account-sync-badge');if(!badge)return;const value=accountSyncPresentation(state);badge.dataset.state=value.state;badge.querySelector('span:last-child').textContent=value.text;}
+let shownRecoveryCount=0;
+function updateLibrarySyncHint(state){const hint=document.getElementById('library-sync-hint');if(hint){const copy=librarySyncCopy(state);hint.hidden=state.phase==='needs-consent';hint.textContent=uiI18n.translate(copy.title);hint.dataset.state=state.phase;}if(Number(state.recovered)>shownRecoveryCount){shownRecoveryCount=Number(state.recovered);showToast(uiI18n.translate('Encontramos outra edição desta música e preservamos uma cópia para você.'));}if(!state.authenticated)shownRecoveryCount=0;}
+function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),theme:['light','dark','system'].includes(saved?.theme)?saved.theme:'dark',chordColor:Object.hasOwn(CHORD_COLOR_OPTIONS,saved?.chordColor)?saved.chordColor:'coral',scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
+function appText(key){const language=document.documentElement.lang||loadAppSettings().language;return (APP_TRANSLATIONS[language]||APP_TRANSLATIONS['pt-BR'])[key]||APP_TRANSLATIONS['pt-BR'][key]||key;}
 function applyAppSettings(settings=loadAppSettings()){
   const root=document.documentElement,scale=Math.max(100,Math.min(140,Number(settings.scale)||100));
+  const theme=['light','dark','system'].includes(settings.theme)?settings.theme:'dark';
+  const resolvedTheme=theme==='system'&&window.matchMedia?.('(prefers-color-scheme: light)').matches?'light':theme==='system'?'dark':theme;
+  root.dataset.themeChoice=theme;root.dataset.theme=resolvedTheme;
+  const chordColor=CHORD_COLOR_OPTIONS[settings.chordColor]||CHORD_COLOR_OPTIONS.coral;
+  root.style.setProperty('--app-chord-color',chordColor);root.style.setProperty('--chord-color',chordColor);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',resolvedTheme==='light'?'#f5f7fb':'#050505');
   root.lang=settings.language||'pt-BR';root.classList.toggle('a11y-high-contrast',Boolean(settings.highContrast));root.classList.toggle('a11y-colorblind',Boolean(settings.colorBlind));
   root.dataset.uiScale=String(scale);document.body.style.removeProperty('zoom');document.body.style.removeProperty('width');document.body.style.removeProperty('min-height');
   const dictionary=APP_TRANSLATIONS[settings.language]||APP_TRANSLATIONS['pt-BR'];
   document.querySelectorAll('[data-i18n]').forEach(node=>{const value=dictionary[node.dataset.i18n];if(value)node.textContent=value;});
   document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{const value=dictionary[node.dataset.i18nPlaceholder];if(value)node.placeholder=value;});
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(node=>{const value=dictionary[node.dataset.i18nAriaLabel];if(value){node.setAttribute('aria-label',value);node.title=value;}});
+  window.uiI18n?.setLanguage(settings.language);
 }
 function applyProfileRuntime(profile){appCurrentUser=Object.freeze({...appCurrentUser,name:profile.name,email:profile.email,phone:profile.phone,avatarUrl:profile.avatarUrl});storage.set('sc_current_user_v1',appCurrentUser);if(appIdentity.status!=='supabase'){appIdentity={...appIdentity,user:{...appIdentity.user,...appCurrentUser}};storage.set('sc_collaboration_identity_v1',appIdentity);}renderAccountButton();renderSetlists();renderContextualHomeCard();}
 let chatReplyTo=null,chatLimit=40;
@@ -3138,47 +3249,94 @@ async function refreshEventSyncDiagnostics(){
   return eventSyncDiagnostics;
 }
 function librarySyncCopy(state){
-  if(state.phase==='unauthenticated')return {icon:'☁️',title:'Sincronização desativada',message:'Entre na sua conta para sincronizar sua biblioteca.'};
+  if(state.phase==='unauthenticated')return {icon:'◌',title:'Alterações salvas neste dispositivo',message:'Sem login, seus dados ficam somente neste dispositivo.'};
   if(state.phase==='syncing')return {icon:'↻',title:'Sincronizando biblioteca',message:'Estamos validando suas músicas com segurança.'};
-  if(state.phase==='offline')return {icon:'◌',title:'Você está offline',message:'Suas músicas continuam disponíveis neste dispositivo.'};
-  if(state.phase==='conflict')return {icon:'⚠',title:`${state.conflicts} conflito${state.conflicts===1?'':'s'} precisa${state.conflicts===1?'':'m'} de atenção`,message:'As versões local e remota foram preservadas. Nada foi sobrescrito.'};
-  if(state.phase==='error')return {icon:'⚠',title:'Não foi possível concluir a sincronização',message:state.error||'Suas músicas locais estão preservadas. Tente novamente.'};
+  if(state.phase==='offline')return {icon:'◌',title:'Aguardando conexão para sincronizar',message:'Suas músicas continuam disponíveis neste dispositivo.'};
+  if(state.phase==='conflict')return {icon:'◌',title:'Alterações salvas neste dispositivo',message:'As versões foram preservadas. A sincronização será retomada com segurança.'};
+  if(state.phase==='error')return {icon:'⚠',title:'Não foi possível sincronizar agora',message:'Seus dados locais foram preservados. Tentaremos novamente quando houver conexão.'};
   if(state.phase==='needs-consent')return {icon:'☁️',title:`Encontramos ${state.local} música${state.local===1?'':'s'} neste dispositivo`,message:'Você pode salvá-las na sua conta ROUDY para acessá-las em outros dispositivos.'};
-  if(state.phase==='pending')return {icon:'↥',title:`${state.pending} música${state.pending===1?'':'s'} aguardando sincronização`,message:state.remotePending?'Existem alterações locais ou remotas prontas para serem conciliadas.':'Suas alterações locais ainda precisam chegar à nuvem.'};
-  return {icon:'✓',title:'Biblioteca sincronizada',message:'As músicas deste dispositivo estão atualizadas.'};
+  if(state.phase==='pending')return {icon:'↥',title:'Alterações salvas neste dispositivo',message:'A sincronização continua automaticamente.'};
+  if(state.phase==='synced'&&state.lastConfirmedAt&&!state.pending&&!state.conflicts)return {icon:'✓',title:'Tudo atualizado',message:'A sincronização da biblioteca foi confirmada.'};
+  return {icon:'◌',title:'Alterações salvas neste dispositivo',message:'Aguardando confirmação da sincronização.'};
 }
 function renderLibrarySyncPanel(state){
   const body=document.getElementById('modal-body');if(!body)return;
+  const advancedWasOpen=Boolean(body.querySelector('.sync-advanced')?.open);
   const copy=librarySyncCopy(state),ownerOverride=state.migrationCandidate&&state.backupReady,canSync=state.authenticated&&state.online&&(!state.identityBlocked||ownerOverride)&&state.phase!=='syncing';
   const events=eventSyncDiagnostics,cloudEvents=events.cloud==null?'—':events.cloud;
   const action=state.phase==='needs-consent'&&state.migrationCandidate
     ?`<button class="btn btn-outline" onclick="downloadMigrationBackup()">${state.backupReady?'✓ Backup completo baixado':'Baixar backup completo'}</button><button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync&&state.backupReady?'':'disabled'}>Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`
-    :!state.authenticated
-    ?'<button class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button>'
-    :`<button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Sincronizar agora':'Sincronizar com minha conta'}</button>`;
-  body.innerHTML=`<div class="modal-title">Sincronização</div><section class="library-sync-panel" data-library-sync-status aria-live="polite"><strong>Biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><div class="library-sync-state" data-state="${eventEsc(state.phase)}"><span>${copy.icon}</span><div><strong>${eventEsc(copy.title)}</strong>${eventEsc(copy.message)}</div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section>${action}<button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">A cópia deste dispositivo será preservada. A sincronização, o diagnóstico e a restauração não apagam músicas locais nem eventos.</p><button class="btn btn-outline" onclick="closeModal()">Fechar</button>`;
+    :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`${state.conflicts?`<button class="btn btn-primary" onclick="openConflictResolver()">Resolver ${state.conflicts} conflito${state.conflicts===1?'':'s'}</button>`:''}<button class="btn ${state.conflicts?'btn-outline':'btn-primary'}" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
+  const technical=`<section class="library-sync-panel" data-library-sync-status><strong>Detalhes da biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section><button class="btn btn-outline" onclick="selectLibraryBackup()">Importar Backup de Perfil</button><button class="btn btn-outline" onclick="exportarBiblioteca()">Exportar Backup do Perfil</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar Diagnóstico para Suporte</button><p class="event-scope-note">Use estas ferramentas somente para recuperação ou quando solicitado pelo suporte. Nenhuma delas apaga automaticamente seus dados locais.</p>`;
+  body.innerHTML=`${accountSubpageHeader('Ajuda e Suporte',librarySyncBackAction)}<section class="sync-friendly-card" data-library-sync-status aria-live="polite" data-state="${eventEsc(state.phase)}"><span class="sync-friendly-icon">${copy.icon}</span><span class="sync-friendly-copy"><strong>${eventEsc(copy.title)}</strong><p>${eventEsc(copy.message)}</p></span></section>${action}<details class="sync-advanced"><summary>Opções avançadas</summary><div class="sync-advanced-content">${technical}<p class="event-scope-note">O backup inclui músicas, perfil, medley, favoritos e preferências. A importação é automática: preserva os dados atuais e recupera os ausentes ou versões diferentes como cópias. Eventos não são incluídos.</p></div></details>`;
+  if(advancedWasOpen)body.querySelector('.sync-advanced').open=true;
+}
+// Conflitos de sincronização: mostra as duas versões e o usuário escolhe qual vale.
+function conflictDate(value){const time=Date.parse(value||'');return Number.isFinite(time)?new Date(time).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'data desconhecida';}
+function conflictVersionCard(label,version,newer){
+  const details=[version.key?`Tom ${eventEsc(version.key)}`:'',version.capo?`Capo ${eventEsc(version.capo)}`:'',`${version.chords} acorde${version.chords===1?'':'s'}`,version.hasFullSheet?'Letra + Cifras':'',version.hasVideo?'Vídeo':''].filter(Boolean).join(' · ');
+  return `<div class="sync-diagnostic-section" style="gap:4px"><strong>${label}${newer?' <span style="color:#86efac;font-size:10px">(mais recente)</span>':''}</strong><span data-no-i18n style="font-size:13px;color:var(--text)">${eventEsc(version.title||'Sem título')}</span><span data-no-i18n style="font-size:11px;color:var(--text2)">${eventEsc(version.artist||'Sem artista')}</span><span style="font-size:11px;color:var(--text2)">${details}</span><span style="font-size:10px;color:var(--text2)">Alterada em ${conflictDate(version.updatedAt)}</span></div>`;
+}
+function openConflictResolver(){
+  const conflicts=librarySync.listConflicts();
+  if(!conflicts.length){showToast('✅ Nenhum conflito pendente.');openLibrarySync();return;}
+  const cards=conflicts.map(item=>{
+    const localTime=Date.parse(item.local.updatedAt||''),remoteTime=Date.parse(item.remote.updatedAt||'');
+    const localNewer=Number.isFinite(localTime)&&(!Number.isFinite(remoteTime)||localTime>remoteTime),remoteNewer=Number.isFinite(remoteTime)&&!localNewer;
+    const id=eventEsc(item.clientId);
+    return `<section class="library-sync-panel" data-conflict="${id}" style="gap:10px">${conflictVersionCard('📱 Neste aparelho',item.local,localNewer)}${conflictVersionCard('☁️ Na nuvem (outro aparelho)',item.remote,remoteNewer)}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict(${attrJs(item.clientId)},'local')">Manter deste aparelho</button><button class="btn btn-outline" style="margin:0" onclick="resolveSyncConflict(${attrJs(item.clientId)},'remote')">Usar a da nuvem</button></div></section>`;
+  }).join('');
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Resolver conflitos','openLibrarySync')}<div class="event-permission-note">Estas músicas foram alteradas em dois aparelhos. Escolha qual versão vale; a outra fica guardada como cópia de segurança neste aparelho.</div>${cards}`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function resolveSyncConflict(clientId,choice){
+  try{
+    const result=librarySync.resolveConflict(clientId,choice);
+    showToast(choice==='local'?'✅ Versão deste aparelho mantida; enviando para a nuvem.':'✅ Versão da nuvem aplicada.');
+    if(result.remaining)openConflictResolver();else openLibrarySync();
+  }catch(error){showToast('⚠️ '+(error.message||'Não foi possível resolver o conflito.'));}
 }
 function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.markBackupReady())throw new Error('Não foi possível registrar o backup neste dispositivo.');renderLibrarySyncPanel(librarySync.getStatus());}catch(error){showToast('⚠️ '+error.message);}}
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
-  try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:5,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v126-sync-button',librarySyncVersion:12,frontendBuild:'auto-sync-account-v2'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:librarySync.diagnostics(),events:eventSyncDiagnostics,storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
+try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:5,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v126-sync-button',librarySyncVersion:12,frontendBuild:'auto-sync-account-v2'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:safeLibraryDiagnostics(),events:{device:Number(eventSyncDiagnostics.device)||0,cloud:Number(eventSyncDiagnostics.cloud)||0,deviceOnly:Number(eventSyncDiagnostics.deviceOnly)||0,cloudOnly:Number(eventSyncDiagnostics.cloudOnly)||0},storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
   catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
+function safeLibraryDiagnostics(){const report=librarySync.diagnostics();return {generatedAt:report.generatedAt,phase:report.syncState.phase,identityBlocked:Boolean(report.syncState.identityBlocked),summary:report.summary,remoteContract:report.remoteContract?{valid:report.remoteContract.valid,rawCount:report.remoteContract.rawCount,normalizedCount:report.remoteContract.normalizedCount,rejectedCount:report.remoteContract.rejectedCount}:null};}
 function syncDiagnosticMaskEmail(value){const email=String(value||''),parts=email.split('@');if(parts.length!==2)return null;return `${parts[0].slice(0,2)}***@${parts[1]}`;}
-let libraryRestoreDraft=null;
+function backupOwnerId(){return currentAuthState.authenticated?String(currentAuthState.user?.id||''): 'guest';}
+function requireBackupIdentity(){
+  const owner=backupOwnerId();
+  if(currentAuthState.authenticated&&(!owner||songRepository.getActiveOwnerId()!==owner||authLinking))throw new Error('Aguarde sua conta carregar antes de usar o backup.');
+  if(!currentAuthState.authenticated&&songRepository.getActiveOwnerId())throw new Error('Aguarde a troca de conta terminar.');
+  return owner;
+}
 function selectLibraryBackup(){
   const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.hidden=true;
-  input.addEventListener('change',async()=>{const file=input.files&&input.files[0];input.remove();if(!file)return;try{const plan=libraryImporter.parse(await file.text(),musicas);libraryRestoreDraft={plan,fileName:file.name};renderLibraryRestoreReview(plan);}catch(error){showToast('⚠️ '+error.message);}});
+  input.addEventListener('change',async()=>{const file=input.files&&input.files[0];input.remove();if(!file)return;try{const ownerId=requireBackupIdentity();if(file.size>libraryImporter.maxBackupBytes)throw new Error('O backup excede o limite de 25 MB.');const text=await file.text();if(ownerId!==requireBackupIdentity())throw new Error('A conta mudou. Selecione o backup novamente.');importProfileBackup(text,ownerId);}catch(error){showToast('⚠️ '+error.message);}});
   document.body.appendChild(input);input.click();
 }
-function renderLibraryRestoreReview(plan){
-  const blocked=plan.invalid>0;
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Backup encontrado</div><section class="library-sync-panel"><div class="library-sync-state"><span>🛟</span><div><strong>${plan.total} música${plan.total===1?'':'s'}</strong>Revise o resultado antes de restaurar.</div></div><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${plan.current}</strong></div><div class="library-sync-count"><span>Novas</span><strong>${plan.newSongs}</strong></div><div class="library-sync-count"><span>Já existentes</span><strong>${plan.existing}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${plan.conflicts}</strong></div></div>${plan.invalid?`<div class="library-sync-state" data-state="error"><span>⚠</span><div><strong>${plan.invalid} item${plan.invalid===1?' inválido':'s inválidos'}</strong>Nenhum dado será alterado enquanto o arquivo contiver itens inválidos.</div></div>`:''}${plan.conflicts?`<div class="library-sync-state" data-state="conflict"><span>⚠</span><div><strong>Conflitos não serão sobrescritos</strong>Somente músicas novas serão adicionadas.</div></div>`:''}</section><button class="btn btn-primary" onclick="confirmLibraryRestore()" ${blocked?'disabled':''}>Restaurar</button><button class="btn btn-outline" onclick="openLibrarySync()">Cancelar</button>`;
-}
-function confirmLibraryRestore(){
-  if(!libraryRestoreDraft)return;
-  try{const result=libraryImporter.apply(libraryRestoreDraft.plan,musicas);if(!songRepository.save(result.songs))throw new Error('Não foi possível gravar a biblioteca neste dispositivo.');musicas=result.songs;renderMusicas();librarySync.schedule();libraryRestoreDraft=null;showToast(`✅ ${result.restored} música(s) restauradas; ${result.conflicts} conflito(s) preservados.`);openLibrarySync();}catch(error){showToast('⚠️ '+error.message);}
+function importProfileBackup(text,ownerId=requireBackupIdentity()){
+  if(ownerId!==requireBackupIdentity())throw new Error('A conta mudou. Selecione o backup novamente.');
+  const plan=libraryImporter.parse(text,musicas,{ownerId}),session=libraryExporter.sanitize(JSON.parse(text).origens?.sessaoAtual||{}),result=libraryImporter.apply(plan,musicas,{ownerId,automatic:true});
+  const current=accountProfile(),profiles=accountProfiles(),profile={...(profiles[String(appCurrentUser.id)]||{})};
+  if((!current.name||(!currentAuthState.authenticated&&current.name==='Você'))&&typeof session.perfil?.name==='string')profile.name=session.perfil.name.trim().slice(0,120);
+  if(!current.avatarUrl&&typeof session.perfil?.avatarUrl==='string'&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/.test(session.perfil.avatarUrl))profile.avatarUrl=session.perfil.avatarUrl;
+  if(!current.location&&typeof session.perfil?.location==='string')profile.location=session.perfil.location.trim().slice(0,120);
+  if(!current.instruments.length&&Array.isArray(session.perfil?.instruments))profile.instruments=PROFILE_MUSICAL_ROLES.filter(role=>session.perfil.instruments.includes(role));
+  const preferences=storage.get(APP_SETTINGS_KEY,{})||{},nextPreferences={...preferences};
+  const validators={language:v=>['pt-BR','en','es','it','fr','de'].includes(v),theme:v=>['light','dark','system'].includes(v),chordColor:v=>Object.hasOwn(CHORD_COLOR_OPTIONS,v),scale:v=>[100,110,120,130,140].includes(v),highContrast:v=>typeof v==='boolean',colorBlind:v=>typeof v==='boolean'};
+  for(const [key,validate] of Object.entries(validators))if(!Object.hasOwn(preferences,key)&&validate(session.configuracoes?.[key]))nextPreferences[key]=session.configuracoes[key];
+  const ids=new Set(result.songs.map(s=>String(s.id))),favorites=storage.get('sc_favorites_v2',storage.get('cifras_favoritos_v1',[]));
+  const nextFavorites=[...new Map([...(Array.isArray(favorites)?favorites:[]),...(Array.isArray(session.favoritos)?session.favoritos:[]).filter(id=>ids.has(String(id)))].map(id=>[String(id),id])).values()];
+  const nextMedley=JSON.parse(JSON.stringify(medleyBlocos));
+  for(const raw of Array.isArray(session.medleys)?session.medleys:[]){if(!raw||typeof raw!=='object'||typeof raw.chords!=='string'||typeof raw.musicTitle!=='string')continue;const block={musicTitle:raw.musicTitle,musicId:raw.musicId,blocoIdx:Number(raw.blocoIdx)||0,label:String(raw.label||''),chords:raw.chords,key:String(raw.key||''),capo:songFormat.parseCapo(raw.capo)};if(!nextMedley.some(current=>JSON.stringify(current)===JSON.stringify(block)))nextMedley.push(block);}
+  const medleyKey=medleyActiveOwner?'sc_personal_medley_caches_v1':'sc_guest_medley_v1';
+  const writes=[[ACCOUNT_PROFILES_KEY,{...profiles,[String(appCurrentUser.id)]:profile}],[APP_SETTINGS_KEY,nextPreferences],['sc_favorites_v2',nextFavorites],[medleyKey,medleyActiveOwner?{...(storage.get(medleyKey,{})||{}),[medleyActiveOwner]:nextMedley}:nextMedley]],previous=writes.map(([key])=>[key,storage.get(key,null)]);
+  try{for(const [key,value] of writes)if(!storage.set(key,value))throw new Error('Não foi possível gravar o backup.');if(!songRepository.save(result.songs))throw new Error('Não foi possível gravar as músicas.');}
+  catch(error){for(const [key,value] of previous)storage.set(key,value);throw error;}
+  musicas=result.songs;medleyBlocos=nextMedley;applyAppSettings();applyProfileRuntime(accountProfile());renderMusicas();renderMedley();librarySync.schedule();showToast(`✅ Backup importado: ${result.restored} música(s) recuperadas. Seus dados atuais foram mantidos.`);openLibrarySync();return result;
 }
 async function confirmLibrarySync(){
   const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
@@ -3186,12 +3344,191 @@ async function confirmLibrarySync(){
   catch(error){renderLibrarySyncPanel(librarySync.getStatus());showToast('⚠️ '+error.message);}
 }
 async function openAccountModal(){
+  document.body.setAttribute('data-account-menu-open','true');
+  window.roudyAssistant?.updateLaunchVisibility();
+  stopTuner();
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const profile=accountProfile(),mode=currentAuthState.authenticated?'Conta conectada e protegida':'Perfil salvo neste dispositivo';
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">${eventEsc(appText('account'))}</div><div class="account-summary">${accountAvatar(profile)}<div class="account-summary-info"><strong>${eventEsc(profile.name)}</strong><span>${eventEsc(profile.email||mode)}</span>${profile.email?`<span>${eventEsc(mode)}</span>`:''}</div></div><div class="account-menu"><button class="account-menu-button" type="button" onclick="openProfileSettings()"><span class="account-menu-icon">👤</span><span class="account-menu-copy"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openAppSettings()"><span class="account-menu-icon">⚙</span><span class="account-menu-copy"><strong>${eventEsc(appText('settings'))}</strong><small>${eventEsc(appText('settingsHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openLibrarySync()"><span class="account-menu-icon">↥</span><span class="account-menu-copy"><strong>${eventEsc(appText('backup'))}</strong><small>${eventEsc(appText('backupHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>${currentAuthState.authenticated?`<button class="btn account-logout" type="button" onclick="logoutAppAccount()"><span aria-hidden="true">↪</span> ${eventEsc(appText('logout'))}</button>`:currentAuthState.enabled?`<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="loginAppAccount()">${eventEsc(appText('login'))}</button><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p>`:`<div class="event-permission-note" style="margin-top:14px">O login com Google será liberado quando o Supabase estiver configurado. O perfil local continua funcionando.</div>`}<button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="closeModal()">Fechar</button>`;
+  const sync=accountSyncPresentation();
+  const tunerIcon='<span class="tuner-menu-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6v17a8 8 0 0 0 16 0V6M24 31v12M10 18c-3 4-3 9 0 13M38 18c3 4 3 9 0 13"/></svg></span>';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">${eventEsc(appText('account'))}</div><div class="account-summary">${accountAvatar(profile)}<div class="account-summary-info"><strong>${eventEsc(profile.name)}</strong><span>${eventEsc(profile.email||mode)}</span>${profile.email?`<span>${eventEsc(mode)}</span>`:''}</div></div><div class="account-menu"><button class="account-menu-button" type="button" onclick="openProfileSettings()"><span class="account-menu-icon">👤</span><span class="account-menu-copy"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openAppSettings()"><span class="account-menu-icon">⚙</span><span class="account-menu-copy"><strong>${eventEsc(appText('settings'))}</strong><small>${eventEsc(appText('settingsHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openTuner()">${tunerIcon}<span class="account-menu-copy"><strong>${eventEsc(appText('tuner'))}</strong><small>${eventEsc(appText('tunerHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>${currentAuthState.authenticated?`<div class="account-sync-badge" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><span class="account-sync-dot" aria-hidden="true"></span><span>${eventEsc(sync.text)}</span></div><button class="btn account-logout" type="button" onclick="logoutAppAccount()"><span aria-hidden="true">↪</span> ${eventEsc(appText('logout'))}</button>`:currentAuthState.enabled?`<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="loginAppAccount()">${eventEsc(appText('login'))}</button><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p>`:`<div class="event-permission-note" style="margin-top:14px">O login com Google será liberado quando o Supabase estiver configurado. O perfil local continua funcionando.</div>`}<section class="account-contribution" aria-label="Contribua com o projeto"><p>${eventEsc(appText('contributionLead'))} <strong>${eventEsc(appText('contributionAny'))}</strong> ${eventEsc(appText('contributionMiddle'))} <strong>${eventEsc(appText('contributionScan'))}</strong></p><img class="account-contribution-qr" src="assets/qr-contribuicao.png?v=1" alt="QR Code para contribuir com o projeto ROUDY" width="220" height="220"><button class="btn btn-primary account-contribution-copy" type="button" onclick="copyRoudyPixCode()">${eventEsc(appText('pixCopy'))}</button><p class="account-contribution-help">${eventEsc(appText('pixHelp'))}</p><p class="account-contribution-thanks">${eventEsc(appText('contributionThanks'))}</p></section><button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="closeModal()">Fechar</button>`;
+  const toolsButton=document.querySelector('#modal-body .account-menu-button[onclick="openTuner()"]');
+  if(toolsButton){toolsButton.setAttribute('onclick','openToolsMenu()');toolsButton.innerHTML=`<span class="account-menu-icon">🛠</span><span class="account-menu-copy"><strong>${eventEsc(appText('tools'))}</strong><small>${eventEsc(appText('toolsHelp'))}</small></span><span class="account-menu-arrow">›</span>`;}
   document.getElementById('modal-overlay').style.display='flex';
 }
-function openProfileSettings(){const profile=accountProfile();pendingProfileAvatar=profile.avatarUrl;document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('myProfile'))}</div><div class="profile-photo-editor">${accountAvatar(profile)}<div class="profile-photo-actions"><label class="profile-photo-change" for="profile-photo-input">Alterar foto</label><input class="profile-photo-input" id="profile-photo-input" type="file" accept="image/*" onchange="profilePhotoSelected(this)"><button class="profile-photo-remove" type="button" onclick="removeProfilePhoto()">Remover</button></div></div><div class="form-group"><label class="form-label" for="profile-name">Nome</label><input class="form-input" id="profile-name" maxlength="80" value="${eventEsc(profile.name)}"></div><div class="form-group"><label class="form-label" for="profile-phone">Número de celular</label><input class="form-input" id="profile-phone" type="tel" maxlength="24" autocomplete="tel" placeholder="(00) 00000-0000" value="${eventEsc(profile.phone)}"></div><div class="form-group"><label class="form-label" for="profile-email">E-mail</label><input class="form-input" id="profile-email" type="email" maxlength="160" autocomplete="email" value="${eventEsc(profile.email)}"></div><button class="btn btn-primary" style="width:100%" type="button" onclick="saveProfileSettings()">Salvar perfil</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="openAccountModal()">Voltar</button>`;}
+
+let playlistVoiceRecognition=null;
+let playlistVoiceListening=false;
+function normalizedVoiceSearchText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function exactVoiceSongMatch(spoken){
+  const target=normalizedVoiceSearchText(spoken);
+  if(!target)return null;
+  const matches=musicas.filter(song=>normalizedVoiceSearchText(song.title)===target);
+  return matches.length===1?matches[0]:null;
+}
+function setPlaylistVoiceListening(listening){
+  playlistVoiceListening=Boolean(listening);
+  const button=document.getElementById('playlist-voice-search');
+  if(!button)return;
+  button.classList.toggle('listening',playlistVoiceListening);
+  button.setAttribute('aria-pressed',String(playlistVoiceListening));
+  button.setAttribute('aria-label',appText(playlistVoiceListening?'voiceListening':'voiceSearch'));
+  button.title=appText(playlistVoiceListening?'voiceListening':'voiceSearch');
+}
+function togglePlaylistVoiceSearch(){
+  if(playlistVoiceListening){playlistVoiceRecognition?.stop();return;}
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Recognition){showToast('⚠️ '+appText('voiceUnsupported'));return;}
+  const recognition=new Recognition();
+  playlistVoiceRecognition=recognition;
+  recognition.lang=document.documentElement.lang||'pt-BR';
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  recognition.maxAlternatives=1;
+  recognition.onstart=()=>setPlaylistVoiceListening(true);
+  recognition.onend=()=>{setPlaylistVoiceListening(false);if(playlistVoiceRecognition===recognition)playlistVoiceRecognition=null;};
+  recognition.onresult=event=>{
+    const spoken=event.results?.[0]?.[0]?.transcript?.trim()||'';
+    const input=document.getElementById('search-music');
+    if(!spoken||!input)return;
+    input.value=spoken;
+    renderMusicas();
+    const exactSong=exactVoiceSongMatch(spoken);
+    if(exactSong)openDetail(exactSong.id);
+    else input.focus();
+  };
+  recognition.onerror=event=>{
+    if(event.error==='not-allowed'||event.error==='service-not-allowed')showToast('⚠️ '+appText('voiceDenied'));
+    else if(event.error==='no-speech')showToast(appText('voiceNoSpeech'));
+  };
+  try{recognition.start();}catch(_error){setPlaylistVoiceListening(false);}
+}
+const ROUDY_PIX_COPY_PASTE='00020126770014BR.GOV.BCB.PIX013622ff841b-23ce-4c8e-876b-66164cc3eea40215Abençoe o Roudy5204000053039865802BR5925Thiago dos Santos de Frei6009SAO PAULO62140510ht1C1GiwpB6304293E';
+async function copyRoudyPixCode(){
+  try{
+    if(!navigator.clipboard?.writeText)throw new Error('clipboard_unavailable');
+    await navigator.clipboard.writeText(ROUDY_PIX_COPY_PASTE);
+    showToast('✅ Código Pix copiado. Abra seu banco e escolha Pix Copia e Cola.');
+  }catch(_error){appPrompt('Copie o código Pix:',ROUDY_PIX_COPY_PASTE);}
+}
+function openToolsMenu(){
+  stopTuner();toolsMetronome.stop();
+  const tunerIcon='<span class="tuner-menu-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6v17a8 8 0 0 0 16 0V6M24 31v12M10 18c-3 4-3 9 0 13M38 18c3 4 3 9 0 13"/></svg></span>';
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('tools'))}<div class="account-menu"><button class="account-menu-button" type="button" onclick="openTuner()">${tunerIcon}<span class="account-menu-copy"><strong>${eventEsc(appText('tuner'))}</strong><small>${eventEsc(appText('tunerHelp'))}</small></span><span class="account-menu-arrow">›</span></button><button class="account-menu-button" type="button" onclick="openToolsMetronome()"><span class="account-menu-icon">♩</span><span class="account-menu-copy"><strong>${eventEsc(appText('metronome'))}</strong><small>${eventEsc(appText('metronomeHelp'))}</small></span><span class="account-menu-arrow">›</span></button></div>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+const toolsMetronome=(()=>{
+  let bpm=127,meter=4,beat=0,timer=null,audioContext=null;
+  function paint(){
+    const panel=document.getElementById('tools-metronome');if(!panel)return;
+    panel.classList.toggle('is-running',timer!==null);
+    const output=document.getElementById('tools-metronome-bpm');if(output)output.textContent=String(bpm);
+    const previous=document.getElementById('tools-metronome-bpm-prev'),next=document.getElementById('tools-metronome-bpm-next'),wheel=document.getElementById('tools-metronome-bpm-wheel');if(previous)previous.textContent=String(Math.min(240,bpm+1));if(next)next.textContent=String(Math.max(30,bpm-1));if(wheel)wheel.setAttribute('aria-valuenow',String(bpm));
+    const action=document.getElementById('tools-metronome-action');if(action)action.textContent=appText(timer===null?'metronomeStart':'metronomeStop');
+    document.querySelectorAll('.tools-metronome-beat').forEach((item,index)=>item.classList.toggle('is-active',timer!==null&&index===beat));
+  }
+  function click(){
+    if(!audioContext)return;
+    const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),now=audioContext.currentTime;
+    oscillator.frequency.value=beat===0?1050:760;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(beat===0?.18:.11,now+.004);gain.gain.exponentialRampToValueAtTime(.0001,now+.065);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(now);oscillator.stop(now+.07);
+    paint();beat=(beat+1)%meter;
+  }
+  async function start(){
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass){showToast('O áudio do metrônomo não está disponível.');return;}
+    try{audioContext||=new AudioContextClass();await audioContext.resume();beat=0;click();timer=setInterval(click,60000/bpm);paint();}catch(error){stop();showToast('Não foi possível iniciar o metrônomo.');}
+  }
+  function stop(){if(timer!==null)clearInterval(timer);timer=null;beat=0;paint();}
+  function toggle(){timer===null?start():stop();}
+  function setBpm(value){const wasPlaying=timer!==null;stop();bpm=Math.max(30,Math.min(240,Math.round(value)));storage.set('tools-metronome-bpm-v1',bpm);paint();if(wasPlaying)return start();}
+  function setMeter(value){const wasPlaying=timer!==null;stop();meter=[2,3,4,6].includes(Number(value))?Number(value):4;storage.set('tools-metronome-meter-v1',meter);renderToolsMetronomeBeats();if(wasPlaying)return start();}
+  function load(){bpm=Math.max(30,Math.min(240,Number(storage.get('tools-metronome-bpm-v1',127))||127));meter=[2,3,4,6].includes(Number(storage.get('tools-metronome-meter-v1',4)))?Number(storage.get('tools-metronome-meter-v1',4)):4;}
+  return Object.freeze({load,stop,toggle,setBpm,setMeter,getBpm:()=>bpm,getMeter:()=>meter,isPlaying:()=>timer!==null});
+})();
+function renderToolsMetronomeBeats(){const holder=document.getElementById('tools-metronome-beats');if(holder)holder.innerHTML=Array.from({length:toolsMetronome.getMeter()},(_,index)=>`<span class="tools-metronome-beat">${index+1}</span>`).join('');}
+let toolsMetronomeDrag=null;
+function startToolsMetronomeDrag(event){const wheel=event.currentTarget;toolsMetronomeDrag={pointerId:event.pointerId,startY:event.clientY,startBpm:toolsMetronome.getBpm(),lastBpm:toolsMetronome.getBpm()};wheel.setPointerCapture?.(event.pointerId);wheel.classList.add('is-dragging');event.preventDefault();}
+function moveToolsMetronomeDrag(event){if(!toolsMetronomeDrag||event.pointerId!==toolsMetronomeDrag.pointerId)return;const value=Math.max(30,Math.min(240,toolsMetronomeDrag.startBpm+Math.round((toolsMetronomeDrag.startY-event.clientY)/9)));if(value!==toolsMetronomeDrag.lastBpm){toolsMetronomeDrag.lastBpm=value;toolsMetronome.setBpm(value);}event.preventDefault();}
+function endToolsMetronomeDrag(event){if(!toolsMetronomeDrag||event.pointerId!==toolsMetronomeDrag.pointerId)return;event.currentTarget.classList.remove('is-dragging');toolsMetronomeDrag=null;}
+function stepToolsMetronomeBpm(amount){toolsMetronome.setBpm(toolsMetronome.getBpm()+amount);}
+function handleToolsMetronomeKey(event){if(event.key==='ArrowUp'){stepToolsMetronomeBpm(1);event.preventDefault();}else if(event.key==='ArrowDown'){stepToolsMetronomeBpm(-1);event.preventDefault();}else if(event.key==='PageUp'){stepToolsMetronomeBpm(5);event.preventDefault();}else if(event.key==='PageDown'){stepToolsMetronomeBpm(-5);event.preventDefault();}}
+function openToolsMetronome(){
+  toolsMetronome.stop();toolsMetronome.load();
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('metronome'),'openToolsMenu')}<section class="tools-metronome" id="tools-metronome"><div class="tools-metronome-beats" id="tools-metronome-beats" aria-label="Tempos do compasso"></div><div class="tools-metronome-display"><span class="tools-metronome-side">BPM</span><div class="tools-metronome-bpm-wheel" id="tools-metronome-bpm-wheel" role="slider" tabindex="0" aria-label="BPM" aria-valuemin="30" aria-valuemax="240" aria-valuenow="${toolsMetronome.getBpm()}" onpointerdown="startToolsMetronomeDrag(event)" onpointermove="moveToolsMetronomeDrag(event)" onpointerup="endToolsMetronomeDrag(event)" onpointercancel="endToolsMetronomeDrag(event)" onkeydown="handleToolsMetronomeKey(event)"><span class="tools-metronome-bpm-adjacent tools-metronome-bpm-prev" id="tools-metronome-bpm-prev">${Math.min(240,toolsMetronome.getBpm()+1)}</span><strong class="tools-metronome-bpm" id="tools-metronome-bpm">${toolsMetronome.getBpm()}</strong><span class="tools-metronome-bpm-adjacent tools-metronome-bpm-next" id="tools-metronome-bpm-next">${Math.max(30,toolsMetronome.getBpm()-1)}</span><small class="tools-metronome-drag-hint">↕ arraste</small></div><button class="tools-metronome-side" type="button" onclick="toggleToolsMetronomeEditor()"><strong>${eventEsc(appText('metronomeEdit'))}</strong></button></div><div class="tools-metronome-editor" id="tools-metronome-editor" hidden><button class="tools-metronome-step" type="button" onclick="toolsMetronome.setBpm(toolsMetronome.getBpm()-1)">−</button><select class="tools-metronome-meter" aria-label="Compasso" onchange="toolsMetronome.setMeter(this.value)">${[2,3,4,6].map(value=>`<option value="${value}" ${toolsMetronome.getMeter()===value?'selected':''}>${value}/${value===6?8:4}</option>`).join('')}</select><button class="tools-metronome-step" type="button" onclick="toolsMetronome.setBpm(toolsMetronome.getBpm()+1)">+</button></div><button class="tools-metronome-action" id="tools-metronome-action" type="button" onclick="toolsMetronome.toggle()">${eventEsc(appText('metronomeStart'))}</button></section>`;
+  renderToolsMetronomeBeats();document.getElementById('modal-overlay').style.display='flex';
+}
+function toggleToolsMetronomeEditor(){const editor=document.getElementById('tools-metronome-editor');if(editor)editor.hidden=!editor.hidden;}
+const tunerController=window.appTuner.create();
+let tunerSelectedIndex=null,tunerLastFrequency=null,tunerInstrument='guitar';
+function tunerStrings(){return window.appTuner.instruments[tunerInstrument];}
+function renderTunerStrings(){
+  const holder=document.getElementById('tuner-strings');if(!holder)return;
+  const language=document.documentElement.lang,strings=tunerStrings();
+  holder.style.setProperty('--tuner-string-count',strings.length);
+  holder.innerHTML=strings.map((string,index)=>`<button class="tuner-string" type="button" data-tuner-string="${index}" onclick="selectTunerString(${index})" aria-label="${eventEsc(string.note)}"><strong>${eventEsc(string.note)}</strong><small>${eventEsc(language==='en'?string.note.replace(/[0-9]/g,''):string.label)}</small></button>`).join('');
+}
+function selectTunerInstrument(value){
+  if(!Object.hasOwn(window.appTuner.instruments,value))return;
+  tunerInstrument=value;tunerSelectedIndex=null;renderTunerStrings();
+  document.getElementById('tuner-auto')?.classList.add('is-selected');
+  updateTunerDisplay(tunerLastFrequency);
+}
+function stopTuner(){
+  tunerController.stop();tunerLastFrequency=null;
+  const panel=document.getElementById('tuner-panel');if(!panel)return;
+  panel.classList.remove('is-listening','is-in-tune');
+  const action=document.getElementById('tuner-microphone');if(action){action.textContent=appText('tunerStart');action.classList.remove('is-active');action.disabled=false;}
+  const status=document.getElementById('tuner-status');if(status)status.textContent=appText('tunerMicOff');
+  const needle=document.getElementById('tuner-needle');if(needle)needle.style.transform='rotate(0deg)';
+}
+function openTuner(){
+  stopTuner();tunerSelectedIndex=null;
+  const instrumentOptions=[['guitar','tunerInstrument'],['ukulele','tunerUkulele'],['bass','tunerBass'],['violin','tunerViolin']].map(([value,key])=>`<option value="${value}" ${tunerInstrument===value?'selected':''}>${eventEsc(appText(key))}</option>`).join('');
+  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('tuner'))}<section class="tuner-panel" id="tuner-panel"><div class="tuner-topline"><select class="tuner-instrument-select" id="tuner-instrument" aria-label="${eventEsc(appText('tuner'))}" onchange="selectTunerInstrument(this.value)">${instrumentOptions}</select><button class="tuner-auto is-selected" type="button" id="tuner-auto" onclick="selectTunerString(null)">${eventEsc(appText('tunerAuto'))}</button></div><div class="tuner-note" id="tuner-note" aria-live="off">—</div><div class="tuner-frequency" id="tuner-frequency">— Hz</div><div class="tuner-target" id="tuner-target"></div><div class="tuner-gauge" role="img" aria-label="${eventEsc(appText('tuner'))}"><span class="tuner-gauge-label tuner-gauge-label--flat">♭</span><span class="tuner-tick tuner-tick--left" style="--tuner-tick-angle:-20deg"></span><span class="tuner-tick tuner-tick--middle-left" style="--tuner-tick-angle:-10deg"></span><span class="tuner-tick tuner-tick--center" style="--tuner-tick-angle:0deg"></span><span class="tuner-tick tuner-tick--middle-right" style="--tuner-tick-angle:10deg"></span><span class="tuner-tick tuner-tick--right" style="--tuner-tick-angle:20deg"></span><span class="tuner-gauge-label tuner-gauge-label--sharp">♯</span><span class="tuner-needle" id="tuner-needle"></span></div><div class="tuner-status" id="tuner-status" role="status">${eventEsc(appText('tunerChooseString'))}</div><div class="tuner-strings-title">${eventEsc(appText('tunerString'))}</div><div class="tuner-strings" id="tuner-strings"></div><div class="tuner-actions"><button type="button" id="tuner-microphone" onclick="toggleTunerMicrophone()">${eventEsc(appText('tunerStart'))}</button></div><p class="tuner-footnote">${eventEsc(appText('tunerPrivacy'))}</p></section>`;
+  const tunerBack=document.querySelector('#modal-body .profile-back-button');if(tunerBack)tunerBack.setAttribute('onclick','openToolsMenu()');
+  renderTunerStrings();
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function selectTunerString(index){
+  tunerSelectedIndex=Number.isInteger(index)&&index>=0&&index<tunerStrings().length?index:null;
+  document.querySelectorAll('[data-tuner-string]').forEach(button=>button.classList.toggle('is-selected',Number(button.dataset.tunerString)===tunerSelectedIndex));
+  document.getElementById('tuner-auto')?.classList.toggle('is-selected',tunerSelectedIndex===null);
+  updateTunerDisplay(tunerLastFrequency);
+}
+function updateTunerDisplay(frequency){
+  const panel=document.getElementById('tuner-panel');if(!panel)return;
+  tunerLastFrequency=frequency;
+  const target=tunerSelectedIndex===null?null:tunerStrings()[tunerSelectedIndex];
+  const note=frequency?window.appTuner.noteForFrequency(frequency,target?.frequency):null;
+  const noteNode=document.getElementById('tuner-note'),frequencyNode=document.getElementById('tuner-frequency');
+  const targetNode=document.getElementById('tuner-target'),status=document.getElementById('tuner-status'),needle=document.getElementById('tuner-needle');
+  targetNode.textContent=target?`${appText('tunerTarget')}: ${target.note}`:'';
+  if(!note){noteNode.textContent=target?.note||'—';frequencyNode.textContent='— Hz';needle.style.transform='rotate(0deg)';panel.classList.remove('is-in-tune');status.textContent=tunerController.isRunning()?appText('tunerListening'):appText('tunerChooseString');return;}
+  noteNode.innerHTML=`${eventEsc(note.name)}<small>${note.octave}</small>`;
+  frequencyNode.textContent=`${new Intl.NumberFormat(document.documentElement.lang||'pt-BR',{maximumFractionDigits:1,minimumFractionDigits:1}).format(note.frequency)} Hz`;
+  const cents=note.cents;
+  needle.style.transform=`rotate(${Math.max(-45,Math.min(45,cents*.9))}deg)`;
+  const inTune=Math.abs(cents)<8;
+  panel.classList.toggle('is-in-tune',inTune);
+  status.textContent=target&&Math.abs(cents)>100?appText('tunerWrongString'):inTune?appText('tunerInTune'):cents<0?appText('tunerFlat'):appText('tunerSharp');
+}
+async function toggleTunerMicrophone(){
+  if(tunerController.isRunning()){stopTuner();return;}
+  const action=document.getElementById('tuner-microphone');if(action)action.disabled=true;
+  try{
+    const started=await tunerController.start(updateTunerDisplay);
+    const panel=document.getElementById('tuner-panel');if(!started||!panel){tunerController.stop();return;}
+    panel.classList.add('is-listening');
+    action.textContent=appText('tunerStop');action.classList.add('is-active');
+    updateTunerDisplay(null);
+  }catch(error){
+    stopTuner();
+    const status=document.getElementById('tuner-status');
+    if(status)status.textContent=appText(error?.name==='NotAllowedError'||error?.name==='SecurityError'?'tunerPermission':error?.name==='NotFoundError'?'tunerNoMic':error?.message==='microphone_unavailable'?'tunerUnavailable':'tunerError');
+  }finally{if(action?.isConnected)action.disabled=false;}
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&tunerController.isRunning())stopTuner();});
+window.addEventListener('pagehide',()=>tunerController.stop());
+function openProfileSettings(){const profile=accountProfile();pendingProfileAvatar=profile.avatarUrl;document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('myProfile'))}<div class="profile-photo-editor">${accountAvatar(profile)}<div class="profile-photo-actions"><label class="profile-photo-change" for="profile-photo-input">Alterar foto</label><input class="profile-photo-input" id="profile-photo-input" type="file" accept="image/*" onchange="profilePhotoSelected(this)"><button class="profile-photo-remove" type="button" onclick="removeProfilePhoto()">Remover</button></div></div><div class="form-group"><label class="form-label" for="profile-name">Nome</label><input class="form-input" id="profile-name" maxlength="80" value="${eventEsc(profile.name)}"></div><div class="form-group profile-username"><label class="form-label" for="profile-username">Selecione um nome de usuário único</label><div class="username-input-wrap"><input id="profile-username" class="form-input" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ex: thiago_musico" disabled aria-describedby="username-status"><span class="username-indicator" aria-hidden="true">…</span></div><p id="username-status" class="event-scope-note" role="status" aria-live="polite">A confirmação de um nome único exige login e conexão com o servidor.</p><button class="btn btn-outline" id="username-confirm" type="button" disabled>Confirmar nome de usuário</button></div><div class="form-group"><label class="form-label" for="profile-phone">Número de celular</label><input class="form-input" id="profile-phone" type="tel" maxlength="24" autocomplete="tel" placeholder="(00) 00000-0000" value="${eventEsc(profile.phone)}"></div><div class="form-group"><label class="form-label" for="profile-email">E-mail</label><input class="form-input" id="profile-email" type="email" maxlength="160" autocomplete="email" value="${eventEsc(profile.email)}"></div><div class="form-group"><label class="form-label" for="profile-location">Localização</label><input class="form-input" id="profile-location" maxlength="120" autocomplete="address-level2" placeholder="Ex: São Paulo, SP" value="${eventEsc(profile.location)}"></div><fieldset class="profile-instruments-fieldset"><legend class="form-label">Instrumentos e funções musicais</legend><p class="event-scope-note">Selecione uma ou mais opções.</p><details class="profile-instruments-dropdown"><summary>Selecionar instrumentos e funções <span aria-hidden="true">⌄</span></summary><div class="profile-instruments">${PROFILE_MUSICAL_ROLES.map((role,index)=>`<label class="profile-instrument-choice"><input type="checkbox" name="profile-instruments" value="${eventEsc(role)}" ${profile.instruments.includes(role)?'checked':''}><span>${eventEsc(role)}</span></label>`).join('')}</div></details></fieldset><button class="btn btn-primary" style="width:100%" type="button" onclick="saveProfileSettings()">Salvar perfil</button>`;window.profileUsername?.attach();}
 function profilePhotoSelected(input){const file=input&&input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')||file.size>5*1024*1024){showToast('⚠️ Escolha uma imagem de até 5 MB.');input.value='';return;}const reader=new FileReader();reader.onload=()=>loadProfilePhotoEditorSource(reader.result);reader.onerror=()=>{showToast('⚠️ Não foi possível abrir essa imagem.');input.value='';};reader.readAsDataURL(file);}
 function loadProfilePhotoEditorSource(source){const image=new Image();image.onload=()=>openProfilePhotoEditor(image);image.onerror=()=>{showToast('⚠️ Não foi possível abrir essa imagem.');const input=document.getElementById('profile-photo-input');if(input)input.value='';};image.src=source;}
 function openProfilePhotoEditor(image){closeProfilePhotoEditor();const editor=document.createElement('section');editor.id='profile-image-editor';editor.className='profile-image-editor';editor.setAttribute('role','dialog');editor.setAttribute('aria-modal','true');editor.setAttribute('aria-label','Editar imagem');editor.innerHTML=`<div class="profile-image-editor-card"><header class="profile-image-editor-header"><strong>Editar imagem</strong><button class="profile-image-editor-close" type="button" onclick="closeProfilePhotoEditor()" aria-label="Fechar editor">×</button></header><div class="profile-image-editor-body"><div class="profile-crop-stage"><div class="profile-crop-canvas-wrap" id="profile-crop-canvas-wrap"><canvas class="profile-crop-canvas" id="profile-crop-canvas" width="600" height="600"></canvas><span class="profile-crop-mask"></span><span class="profile-crop-ring"></span></div></div><aside class="profile-image-tools"><div class="profile-image-tool-title">Recortar e ajustar</div><div class="profile-image-tool-actions"><button type="button" onclick="profileEditorRotate(-90)" aria-label="Girar para a esquerda">↶</button><button type="button" onclick="profileEditorRotate(90)" aria-label="Girar para a direita">↷</button><button type="button" onclick="profileEditorFlip('x')" aria-label="Espelhar horizontalmente">↔</button><button type="button" onclick="profileEditorFlip('y')" aria-label="Espelhar verticalmente">↕</button></div><div class="profile-image-slider"><label for="profile-image-zoom"><span>Zoom</span><output id="profile-image-zoom-value">100%</output></label><input id="profile-image-zoom" type="range" min="1" max="3" value="1" step="0.01" oninput="profileEditorZoom(this.value)"></div><div class="profile-image-slider"><label for="profile-image-rotation"><span>Girar</span><output id="profile-image-rotation-value">0°</output></label><input id="profile-image-rotation" type="range" min="-180" max="180" value="0" step="1" oninput="profileEditorRotation(this.value)"></div><div class="profile-image-editor-footer"><button class="profile-image-cancel" type="button" onclick="closeProfilePhotoEditor()">Cancelar</button><button class="profile-image-apply" type="button" onclick="applyProfilePhotoEdit()">Usar foto</button></div></aside></div></div>`;document.body.appendChild(editor);profileImageEditorState={image,zoom:1,rotation:0,flipX:1,flipY:1,offsetX:0,offsetY:0,drag:null};const wrap=document.getElementById('profile-crop-canvas-wrap');wrap.addEventListener('pointerdown',event=>{const state=profileImageEditorState;if(!state)return;wrap.setPointerCapture(event.pointerId);state.drag={x:event.clientX,y:event.clientY,offsetX:state.offsetX,offsetY:state.offsetY};wrap.classList.add('is-dragging');});wrap.addEventListener('pointermove',event=>{const state=profileImageEditorState;if(!state||!state.drag)return;const rect=wrap.getBoundingClientRect(),ratio=600/rect.width;state.offsetX=state.drag.offsetX+(event.clientX-state.drag.x)*ratio;state.offsetY=state.drag.offsetY+(event.clientY-state.drag.y)*ratio;renderProfilePhotoEditor();});const stop=()=>{if(profileImageEditorState)profileImageEditorState.drag=null;wrap.classList.remove('is-dragging');};wrap.addEventListener('pointerup',stop);wrap.addEventListener('pointercancel',stop);renderProfilePhotoEditor();}
@@ -3203,8 +3540,8 @@ function profileEditorFlip(axis){if(!profileImageEditorState)return;if(axis==='y
 function applyProfilePhotoEdit(){const source=document.getElementById('profile-crop-canvas');if(!source)return;const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;canvas.getContext('2d').drawImage(source,0,0,256,256);pendingProfileAvatar=canvas.toDataURL('image/jpeg',.86);const target=document.getElementById('account-profile-avatar');if(target)target.innerHTML=`<img src="${pendingProfileAvatar}" alt="Foto de perfil">`;closeProfilePhotoEditor();}
 function closeProfilePhotoEditor(){document.getElementById('profile-image-editor')?.remove();profileImageEditorState=null;const input=document.getElementById('profile-photo-input');if(input)input.value='';}
 function removeProfilePhoto(){pendingProfileAvatar=null;const target=document.getElementById('account-profile-avatar');if(target)target.textContent=eventInitials(document.getElementById('profile-name')?.value||appCurrentUser.name);}
-async function saveProfileSettings(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const previous=accountProfile(),profile={name,phone,email,avatarUrl:pendingProfileAvatar};saveAccountProfile(profile);applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{currentAuthState=await appAuth.updateProfile(profile);remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
-function settingsFromForm(){return {language:document.getElementById('setting-language')?.value||'pt-BR',highContrast:Boolean(document.getElementById('setting-high-contrast')?.checked),colorBlind:Boolean(document.getElementById('setting-color-blind')?.checked),scale:Number(document.getElementById('setting-scale')?.value)||100};}
+async function saveProfileSettings(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const previous=accountProfile(),profile={name,phone,email,location:document.getElementById('profile-location')?.value.trim().slice(0,120)||'',instruments:PROFILE_MUSICAL_ROLES.filter(role=>Array.from(document.querySelectorAll('input[name="profile-instruments"]:checked')).some(input=>input.value===role)),avatarUrl:pendingProfileAvatar};if(!saveAccountProfile(profile)){showToast('⚠️ Não foi possível salvar o perfil neste dispositivo.');return;}applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{currentAuthState=await appAuth.updateProfile(profile);remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
+function settingsFromForm(){const saved=loadAppSettings(),language=document.getElementById('setting-language'),theme=document.getElementById('setting-theme'),chordColor=document.getElementById('setting-chord-color'),highContrast=document.getElementById('setting-high-contrast'),colorBlind=document.getElementById('setting-color-blind'),scale=document.getElementById('setting-scale');return {...saved,language:language?.value||saved.language,theme:theme?.value||saved.theme,chordColor:chordColor?.value||saved.chordColor,highContrast:highContrast?Boolean(highContrast.checked):saved.highContrast,colorBlind:colorBlind?Boolean(colorBlind.checked):saved.colorBlind,scale:scale?Number(scale.value)||saved.scale:saved.scale};}
 function previewAppSettings(){applyAppSettings(settingsFromForm());}
 function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('settings'))}</div><section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Aumenta textos e áreas de toque sem ampliar o layout</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="cancelAppSettings()">Voltar</button>`;}
 const openAppSettingsWithoutCover=openAppSettings;
@@ -3215,6 +3552,16 @@ openAppSettings=function(){
 };
 function saveAppSettings(){const value=settingsFromForm();storage.set(APP_SETTINGS_KEY,value);applyAppSettings(value);showToast('✅ Configurações salvas.');openAccountModal();}
 function cancelAppSettings(){applyAppSettings(loadAppSettings());openAccountModal();}
+function openGuestLibraryImportPrompt({count=0,userId=null}={}){
+  if(!currentAuthState.authenticated||!count||String(promptedGuestLibraryOwner||'')===String(userId||''))return;
+  promptedGuestLibraryOwner=String(userId||'');
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Músicas encontradas neste dispositivo</div><div class="event-permission-note">Encontramos <strong>${Number(count)} música${Number(count)===1?'':'s'}</strong> criadas enquanto o aplicativo estava sem login. Elas continuam preservadas localmente.</div><p style="margin:16px 2px;color:var(--text2);font-size:11px;line-height:1.55">Deseja adicionar essas músicas à sua conta? Depois disso, elas também serão sincronizadas nos outros dispositivos em que você entrar.</p><button class="btn btn-primary" style="width:100%" type="button" onclick="confirmGuestLibraryImport(this)">Adicionar à minha conta</button><button class="btn btn-outline" style="width:100%;margin-top:9px" type="button" onclick="keepGuestLibrarySeparate(this)">Agora não</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+async function confirmGuestLibraryImport(button){if(button)button.disabled=true;try{showToast('Sincronizando músicas locais…');await librarySync.migrateLegacy();closeModal();showToast('✅ Músicas adicionadas à sua conta.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível adicionar as músicas agora.'));}}
+async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;try{await librarySync.declineMigration();closeModal();showToast('As músicas locais continuam salvas neste dispositivo.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível carregar sua conta.'));}}
+function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if(state.authenticated||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
+function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
 async function logoutAppAccount(){try{await appAuth.signOut();closeModal();showToast('Conta desconectada. Seus dados locais foram preservados.');}catch(error){showToast('⚠️ '+error.message);}}
 async function openBandManager(){
@@ -3244,7 +3591,7 @@ function eventSongModel(song,edit,fallbackEdit){
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
 function eventSongVariant(event,item,userId){
-  const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return null;
+  const song=eventSongSource(event,item);if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
   return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song),personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
 }
@@ -3292,7 +3639,7 @@ function openAddSetlist(prefill){
     <div class="form-group"><label class="form-label">Repertório compartilhado — arraste para ordenar</label><div id="pl-selected"></div></div>
     <div class="form-group"><label class="form-label">Adicionar músicas</label><input class="form-input" id="pl-search" placeholder="Buscar música..."><div id="pl-all" style="max-height:190px;overflow-y:auto;margin-top:7px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);"></div></div>
     <div id="pl-count" style="font-size:10px;color:var(--text2);margin-bottom:12px;"></div>
-    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome do integrante"><select class="form-input" id="event-member-role">${roleOptions}</select><button type="button" class="btn btn-outline" onclick="eventInviteMember()">Convidar Integrante</button></div><p class="event-scope-note">O convite será enviado por link. O integrante aparece aqui após entrar com sua conta e aceitar.</p></div>
+    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome para convite por link"><select class="form-input" id="event-member-role">${roleOptions}</select><button type="button" class="btn btn-outline" onclick="eventUserInvites.openEditor()">Convidar Integrante</button></div><p class="event-scope-note">Busque um usuário ou envie um link. O integrante entra no evento somente após aceitar o convite.</p></div>
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
   const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));if(!eventMembers.some(member=>String(member.id)===String(selectedLeaderId)))eventMembers.unshift({...appCurrentUser,isCurrentUser:true});renderMembers();}});
@@ -3316,8 +3663,8 @@ function openAddSetlist(prefill){
       if(navigator.share){try{await navigator.share({title:'Convite para '+invitation.eventTitle,text,url:link.href});return;}catch(error){if(error.name==='AbortError'){showToast('Convite criado. Toque em Convidar Integrante para gerar outro link.');return;}}}
       if(navigator.clipboard?.writeText){
         try{await navigator.clipboard.writeText(text+'\n'+link.href);showToast('🔗 Link do convite copiado para compartilhar.');}
-        catch(_error){prompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);}
-      }else prompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);
+        catch(_error){appPrompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);}
+      }else appPrompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);
     }catch(error){showToast('⚠️ '+error.message);}finally{button.disabled=false;}
   };
   window.eventRemoveMember=index=>{const member=eventMembers[index];if(!member||String(member.id)===String(selectedLeaderId))return;eventMembers.splice(index,1);renderMembers();};
@@ -3448,7 +3795,7 @@ function renderSetlists(){
 }
 
 async function syncEventsNow(silent){
-  if(eventSyncRunning)return;
+  if(eventSyncRunning||navigator.onLine===false)return;
   eventSyncRunning=true;
   const button=document.getElementById('event-sync-action'),status=document.getElementById('event-sync-status');
   if(button)button.disabled=true;if(status)status.textContent='Postando alterações…';
@@ -3623,7 +3970,7 @@ function openSD(id){
   const eventMeta=`<div class="event-meta-card"><div class="event-meta-item"><i class="event-meta-icon">${metaIcons.date}</i><small>Data</small><span>${eventEsc(eventDisplayDate(event.date))}</span>${eventWeekday?`<em>${eventEsc(eventWeekday)}</em>`:''}</div><div class="event-meta-item"><i class="event-meta-icon">${metaIcons.time}</i><small>Horário</small><span>${eventEsc(event.time||'A definir')}</span></div><div class="event-meta-item"><i class="event-meta-icon">${metaIcons.place}</i><small>Local</small><span>${eventEsc(event.location||'A definir')}</span></div><div class="event-meta-item"><i class="event-meta-icon">${metaIcons.info}</i><small>Informações</small><span>${eventEsc(event.description||'Sem observações')}</span></div></div>`;
   document.getElementById('sd-content').innerHTML=`${eventMeta}<div id="event-detail-map" class="event-map-preview" hidden></div><div class="event-section-title event-section-title--repertoire">Repertório oficial do evento</div>${rows?`<div class="event-repertoire-list">${rows}</div>`:'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música neste evento</p></div>'}<div class="event-stage-action"><button type="button" class="event-stage-entry" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${eventParticipantsMarkup(event)}<div class="btn-row" style="margin-top:16px;"><button class="btn btn-outline" onclick="editSetlistById('${eventEsc(event.id)}')">✏️ Editar</button><button class="btn btn-outline" onclick="sharePlaylist('${eventEsc(event.id)}')">🔗 Compartilhar</button><button class="btn btn-danger" onclick="deleteSetlist('${eventEsc(event.id)}')">🗑️ Excluir</button></div>`;
   renderEventChatButton(event);
-  if(currentAuthState.authenticated)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
+  if(currentAuthState.authenticated&&options.refreshChat!==false)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
   renderEventNoticeButton(event);
   eventMapPreview.render(document.getElementById('event-detail-map'),event.eventLocation);
   document.getElementById('view-sd').style.display='flex';document.getElementById('view-sd').style.zIndex='15';
@@ -3692,7 +4039,7 @@ function renderEventChatButton(event){
 function openEventSongEdit(eventId,itemId){
   const event=findEvent(eventId),item=event&&event.repertoire.find(value=>String(value.id)===String(itemId));if(!event||!item)return;
   if(!eventModel.canAccess(event,appCurrentUser.id)){showToast('🔒 Você não integra este evento');return;}
-  const song=musicas.find(value=>String(value.id)===String(item.songId)),personal=item.personalEdits[appCurrentUser.id]||null,canShared=eventModel.canEditShared(event,appCurrentUser.id);if(!song)return;
+  const song=eventSongSource(event,item),personal=item.personalEdits[appCurrentUser.id]||null,canShared=eventModel.canEditShared(event,appCurrentUser.id);if(!song)return;
   eventSongEditDraft={eventId:event.id,itemId:item.id,song,personal,models:{shared:eventSongModel(song,item.shared),personal:eventSongModel(song,personal||item.shared,personal?item.shared:null)},edits:{shared:item.shared,personal:personal||item.shared}};
   document.getElementById('modal-body').innerHTML=`<div class="modal-title">Editar música</div><div class="event-scope-tabs"><label class="chip selected"><input type="radio" name="event-edit-scope" value="personal" checked> Pessoal — somente para mim</label>${canShared?'<label class="chip"><input type="radio" name="event-edit-scope" value="shared"> Compartilhada — todos do evento</label>':''}</div><p class="event-scope-note">${canShared?'Escolha conscientemente o destino da alteração. A versão compartilhada será registrada como mudança oficial.':'Como integrante, você pode personalizar sua visualização sem alterar o repertório oficial.'}</p><div id="event-song-editor-fields"></div><button class="btn btn-primary" onclick="saveEventSongEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')">Salvar</button>${personal?`<button class="btn btn-outline event-personal-reset" onclick="clearEventPersonalEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')">Usar novamente a versão oficial</button>`:''}<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   function renderScope(scope){const model=eventSongEditDraft.models[scope],edit=eventSongEditDraft.edits[scope];document.getElementById('event-song-editor-fields').innerHTML=simpleSongEditorFields(model,{chordSheet:edit.chordSheet||songFormat.simpleText(model),includeNotes:true,notes:edit.notes});}
@@ -3717,8 +4064,8 @@ async function saveEventSongEdit(eventId,itemId){
 }
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}
 
-function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.repertoire.map(item=>({item,song:musicas.find(song=>String(song.id)===String(item.songId))})).filter(value=>value.song);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map(({item,song},index)=>{const key=item.shared.key||song.key;return(index+1)+'. '+(item.shared.title||song.title)+(key?' | Tom: '+key:'');}).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else prompt('Copie e compartilhe:',text);}
-async function deleteSetlist(id){const event=findEvent(id);if(!event||!confirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}if(event.remoteVersion!=null)eventCollaboration.queueEventDeletion(event.id);setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
+function sharePlaylist(id){const event=findEvent(id);if(!event)return;const songs=event.repertoire.map(item=>({item,song:musicas.find(song=>String(song.id)===String(item.songId))})).filter(value=>value.song);const text='📅 '+event.title+'\n'+[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')+'\n\n'+songs.map(({item,song},index)=>{const key=item.shared.key||song.key;return(index+1)+'. '+(item.shared.title||song.title)+(key?' | Tom: '+key:'');}).join('\n')+'\n\n👥 '+event.members.map(member=>member.name+' — '+member.role).join(', ');if(navigator.share)navigator.share({title:event.title,text}).catch(()=>{});else appPrompt('Copie e compartilhe:',text);}
+async function deleteSetlist(id){const event=findEvent(id);if(!event||!appConfirm('Excluir este evento?'))return;const permissionActor=eventPermissionActor(event);try{eventModel.requireLeader(event,permissionActor.id);if(event.remoteVersion!=null)await eventCollaboration.deleteEvent(event,appCurrentUser);setlists=eventRepository.removeShared(setlists,id,permissionActor);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}if(event.remoteVersion!=null)eventCollaboration.queueEventDeletion(event.id);setlists=eventRepository.removeShared(setlists,id,permissionActor);}eventRepository.save(setlists);closeSD();showToast('Evento excluído');}
 
 async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);eventChat.markRead(event.id);}catch(error){showToast('⚠️ '+error.message);}renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
@@ -3743,7 +4090,7 @@ function renderEventChatMessages(scrollEnd){
     }
     const time=document.createElement('span');time.className='event-message-time';time.textContent=new Date(message.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});bubble.appendChild(time);row.appendChild(bubble);target.appendChild(row);
   });
-  eventChat.markRead(event.id);if(scrollEnd)requestAnimationFrame(()=>{target.scrollTop=target.scrollHeight;});
+  eventChat.markRead(event.id);window.notificationCenter?.markChatRead(event.id);if(scrollEnd)requestAnimationFrame(()=>{target.scrollTop=target.scrollHeight;});
 }
 function renderPollMessage(bubble,eventId,message){const title=document.createElement('div');title.className='event-poll-question';title.textContent='📊 '+message.poll.question;bubble.appendChild(title);const uniqueVoters=new Set(Object.values(message.poll.votes||{}).flat());message.poll.options.forEach(option=>{const voters=message.poll.votes[option.id]||[],percent=uniqueVoters.size?Math.round(voters.length/uniqueVoters.size*100):0;const item=document.createElement('div');item.className='event-poll-option'+(voters.includes(appCurrentUser.id)?' selected':'');item.addEventListener('click',()=>eventChat.vote(eventId,message.id,option.id));const fill=document.createElement('span');fill.className='event-poll-option-fill';fill.style.width=percent+'%';const content=document.createElement('span');content.className='event-poll-option-content';const votersText=message.poll.showVoters&&voters.length?' · '+voters.map(id=>{const member=findEvent(eventId).members.find(value=>String(value.id)===String(id));return member?member.name:(String(id)===String(appCurrentUser.id)?appCurrentUser.name:'Membro');}).join(', '):'';content.innerHTML='<span>'+eventEsc(option.label)+eventEsc(votersText)+'</span><strong>'+voters.length+' · '+percent+'%</strong>';item.append(fill,content);bubble.appendChild(item);});const total=document.createElement('span');total.className='event-poll-total';total.textContent=uniqueVoters.size+' participante(s) votaram';bubble.appendChild(total);}
 function sendEventMessage(){const input=document.getElementById('event-chat-input'),event=findEvent(currentSdId);if(!event)return;try{eventChat.sendText(event.id,input.value,chatReplyTo);input.value='';cancelChatReply();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
@@ -3751,33 +4098,32 @@ function handleChatKey(event){if(event.key==='Enter'&&!event.shiftKey){event.pre
 function insertChatEmoji(){const input=document.getElementById('event-chat-input');input.value+=' 🙏';input.focus();}
 function replyEventMessage(messageId){chatReplyTo=messageId;const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(messageId)),preview=document.getElementById('event-chat-reply');preview.hidden=false;preview.innerHTML='<button type="button" onclick="cancelChatReply()">×</button>Respondendo a <strong>'+eventEsc(message&&message.sender.name||'mensagem')+'</strong>: '+eventEsc(message&&message.content||message&&message.poll&&message.poll.question||'');document.getElementById('event-chat-input').focus();}
 function cancelChatReply(){chatReplyTo=null;const preview=document.getElementById('event-chat-reply');preview.hidden=true;preview.textContent='';}
-function editChatMessage(message){const content=prompt('Editar mensagem:',message.content);if(content!=null){eventChat.edit(currentSdId,message.id,content);renderEventChatMessages(false);}}
-function deleteChatMessage(message){if(confirm('Excluir sua mensagem?')){eventChat.remove(currentSdId,message.id);renderEventChatMessages(false);}}
+function editChatMessage(message){const content=appPrompt('Editar mensagem:',message.content);if(content!=null){eventChat.edit(currentSdId,message.id,content);renderEventChatMessages(false);}}
+function deleteChatMessage(message){if(appConfirm('Excluir sua mensagem?')){eventChat.remove(currentSdId,message.id);renderEventChatMessages(false);}}
 function copyChatMessage(message){navigator.clipboard&&navigator.clipboard.writeText(message.content||message.poll&&message.poll.question||'').then(()=>showToast('Mensagem copiada')).catch(()=>{});}
 function openPollModal(){document.getElementById('modal-body').innerHTML='<div class="modal-title">Nova enquete</div><div class="form-group"><label class="form-label">Pergunta</label><input class="form-input" id="poll-question" placeholder="Qual música devemos usar?"></div><div class="form-group"><label class="form-label">Opções — uma por linha</label><textarea class="form-textarea" id="poll-options" placeholder="Música A\nMúsica B\nMúsica C"></textarea></div><label class="chip"><input type="checkbox" id="poll-multiple"> Permitir múltiplas escolhas</label><label class="chip selected"><input type="checkbox" id="poll-voters" checked> Mostrar quem votou</label><button class="btn btn-primary" onclick="submitEventPoll()">Publicar enquete</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>';document.getElementById('modal-overlay').style.display='flex';}
 function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:document.getElementById('poll-question').value,options:document.getElementById('poll-options').value.split(/\n/),multiple:document.getElementById('poll-multiple').checked,showVoters:document.getElementById('poll-voters').checked});closeModal();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
 
+function receiveInvitedEvent(event){setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();automaticEventOffline.schedule();}
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
-function closeModal(){closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;libraryRestoreDraft=null;}
+function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
 
 function exportarBiblioteca(options={}){
+  const ownerId=requireBackupIdentity();
   const result=libraryExporter.export({
-    catalogoPadrao,
+    ownerId,authenticated:currentAuthState.authenticated,
     musicas,
-    events:setlists,
-    playlists:setlists,
+    perfil:accountProfile(),
     medleys:medleyBlocos,
     favoritos:storage.get('sc_favorites_v2',storage.get('cifras_favoritos_v1',[])),
-    configuracoes:{
+    configuracoes:{...loadAppSettings(),
       instrumento:currentInstrument,
       velocidadeAutoScroll:scrollSpeed,
       tamanhoFontePalco:stageFontSizes[stageFontIndex]
     }
   });
-  const userMessage=result.storedCount
-    ?`${result.storedCount} música(s) da biblioteca salva e ${result.standardCount} do catálogo padrão exportadas.`
-    :`${result.standardCount} música(s) do catálogo padrão exportadas. Nenhuma biblioteca salva foi encontrada.`;
-  if(!options.quiet){showToast('✅ '+userMessage);alert('Exportação concluída!\n\n'+userMessage+'\nEventos, repertórios, medleys, favoritos, configurações e armazenamento bruto também foram incluídos.');}
+  const userMessage=`${result.storedCount} música(s) da identidade atual exportadas.`;
+  if(!options.quiet){showToast('✅ '+userMessage);alert('Arquivo de backup gerado!\n\n'+userMessage+'\nInclui músicas, nome e foto do perfil, medley, favoritos e preferências. Não inclui eventos. Não inclui sessões, tokens ou caches de outras contas.\n\nA importação complementa os dados atuais sem substituir músicas. Guarde o arquivo em um local seguro.');}
   return result;
 }
 
@@ -3796,10 +4142,41 @@ async function migrateLegacyEventsInBackground(){
 }
 
 // carrega dados salvos
+function eventSongSource(event,item){
+  if(!item)return null;
+  const local=musicas.find(song=>String(song.id)===String(item.songId));
+  if(local)return local;
+  const saved=automaticEventOffline?.song(event,item);if(saved)return saved;
+  const shared=item.shared||{};if(!shared.chordSheet?.trim())return null;
+  return songFormat.toLegacy(songFormat.normalize({id:item.songId,title:shared.title||'Música do evento',artist:shared.artist||'',originalKey:shared.key||'',currentKey:shared.key||'',capo:shared.capo||'',sections:songFormat.sectionsFromSimpleText(shared.chordSheet)}));
+}
+automaticEventOffline=eventOffline.create({
+  getScope:()=>{
+    if(authLinking||!loginGateAuthReady)return null;
+    if(currentAuthState.authenticated){
+      if(!currentAuthState.user?.id||eventRepository.getActiveOwnerId()!==String(appCurrentUser.id))return null;
+      return {ownerId:'account:'+currentAuthState.user.id,actorId:String(appCurrentUser.id)};
+    }
+    return {ownerId:'guest',actorId:String(appCurrentUser.id)};
+  },
+  getEvents:()=>setlists,getSong:eventSongSource,canAccess:(event,userId)=>eventModel.canAccess(event,userId),
+  getPreferences:userId=>stagePreferences.load(userId),
+  onError:()=>showToast('⚠️ Não foi possível guardar todo o repertório neste dispositivo. Mantenha o app aberto e tente novamente com conexão.'),
+  onLoaded:()=>{renderSetlists();if(currentSdId&&document.getElementById('view-sd').style.display==='flex')openSD(currentSdId);}
+});
 applyAppSettings();
 appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
-const catalogoPadrao=songModel.normalizeCollection(JSON.parse(JSON.stringify(musicas)));
+const catalogoPadrao=songModel.normalizeCollection(demoLibrary.catalog());
 musicas=songRepository.load(catalogoPadrao);
+const ambienteLocalTeste=location.hostname==='127.0.0.1'||location.hostname==='localhost';
+if(ambienteLocalTeste&&typeof demoLibrary.testSong==='function'){
+  const musicaTeste=demoLibrary.testSong();
+  if(!musicas.some(musica=>String(musica.id)===String(musicaTeste.id))){
+    musicas=[...musicas,...songModel.normalizeCollection([musicaTeste])];
+    songRepository.save(musicas);
+  }
+}
+medleyBlocos=medleyRepository.load(null);
 setlists=eventRepository.load(setlists,appIdentity);
 eventChat.initialize({getEvent:findEvent,getCurrentUser:()=>appCurrentUser});
 eventChat.subscribe(eventId=>{
@@ -3816,8 +4193,18 @@ renderAccountButton();renderBandToolbar();
 // Legacy ownership is never claimed automatically. After Supabase restores the
 // session, refresh the events owned by that account so permissions use the
 // backend identity instead of a stale local copy.
+let accountAuthGeneration=0;
 appAuth.subscribe(async state=>{
-  currentAuthState=state;renderAccountButton();
+  const accountGeneration=++accountAuthGeneration;
+  const previousAuthState=currentAuthState;
+  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){automaticEventOffline.clear();closeModal();}
+  const signedOutOwnerId=previousAuthState.authenticated&&!state.authenticated?String(appCurrentUser.id||''):'';
+  if(previousAuthState.authenticated&&state.authenticated&&previousAuthState.user?.id!==state.user?.id){
+    setlists=eventRepository.deactivateOwner(setlists);stashMedleyForOwner(appCurrentUser.id);
+    currentSdId=null;activeBandId=null;document.getElementById('event-chat-view').hidden=true;
+    document.getElementById('view-sd').style.display='none';closeDetail();switchTab('musicas');
+  }
+  currentAuthState=state;renderAccountButton();renderLoginGate(state);
   if(!state.authenticated){
     contextAcknowledgements.resetHydration();
     appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
@@ -3825,31 +4212,35 @@ appAuth.subscribe(async state=>{
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     appBands=[];eventBackgroundSyncReady=false;renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();showEventInvitationLogin();return;
   }
-  if(authLinking||!state.authenticated||!state.user)return;
+  if(!state.authenticated||!state.user)return;
   authLinking=true;
   const previousUser=appCurrentUser;
   try{
     appIdentity=await eventCollaboration.ensureRegistered(previousUser);
-    if(!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
+    if(accountGeneration!==accountAuthGeneration||!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
+    restoreMedleyForOwner(appCurrentUser.id);
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+    if(navigator.onLine===false){eventBackgroundSyncReady=true;renderAccountButton();renderSetlists();renderBandToolbar();return;}
     const acceptedInvitation=await acceptPendingEventInvitation();
+    if(accountGeneration!==accountAuthGeneration)return;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
+    if(accountGeneration!==accountAuthGeneration)return;
     setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);
     await contextAcknowledgements.hydrate(appCurrentUser.id);
     if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
-  }catch(error){showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{authLinking=false;}
+  }catch(error){if(accountGeneration===accountAuthGeneration)showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(catalogoPadrao),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
-librarySync.subscribe(state=>{if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
-appAuth.initialize();
+appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 window.addEventListener('online',()=>{if(!currentAuthState.authenticated)return;contextAcknowledgements.flush(appCurrentUser.id).then(()=>renderContextualHomeCard()).catch(()=>{});});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
@@ -3864,8 +4255,8 @@ youtubeUI.initialize({
 });
 youtubePlayerUI.initialize({
   getSongs:()=>musicas,
-  setSongs:(songs)=>{musicas=songs;},
-  persistSongs:(songs)=>songRepository.save(songs),
+  setSongs:stageDetailVideoSongs,
+  persistSongs:(songs)=>detailEditBaseline?true:songRepository.save(songs),
   renderSongs:renderMusicas,
   showToast
 });

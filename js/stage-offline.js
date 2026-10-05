@@ -34,6 +34,13 @@
       bpm: song.bpm ?? null,
       timeSignature: song.timeSignature || '',
       blocos: Array.isArray(song.blocos) ? song.blocos : [],
+      originalKey: song.originalKey || song.key || '',
+      currentKey: song.currentKey || song.key || '',
+      instrumento: song.instrumento || song.instrument || '',
+      editorData: song.editorData || null,
+      sections: song.sections || null,
+      harmonicSummary: song.harmonicSummary || null,
+      tablature: song.tablature || null,
       fullChordSheet: song.fullChordSheet || '',
       personalNotes: song.personalNotes || '',
       sharedNotes: song.sharedNotes || ''
@@ -46,7 +53,7 @@
     const preparedSongs = (Array.isArray(songs) ? songs : []).map(compactSong).filter(Boolean);
     const now = new Date().toISOString();
     const pack = {
-      version: 1,
+      version: 2,
       userId: String(userId || 'local-user'),
       contextId: String(contextId || 'single-song'),
       preparedAt: now,
@@ -67,7 +74,7 @@
     const entries = Object.entries(nextRoot)
       .sort((left, right) => String(right[1]?.preparedAt || '').localeCompare(String(left[1]?.preparedAt || '')))
       .slice(0, MAX_PACKAGES);
-    api.set(STORAGE_KEY, Object.fromEntries(entries));
+    if(api.set(STORAGE_KEY, Object.fromEntries(entries))===false)throw new Error('Não foi possível salvar o repertório neste dispositivo.');
     return pack;
   }
 
@@ -84,5 +91,5 @@
     return required.every((id) => saved.has(id));
   }
 
-  global.stageOffline = { STORAGE_KEY, prepare, get, isReady };
+  global.stageOffline = { STORAGE_KEY, compactSong, prepare, get, isReady };
 })(window);

@@ -97,6 +97,7 @@ Principais operações:
 
 - `GET/POST /events`: listar os eventos do integrante ou criar um evento;
 - `GET/PUT/DELETE /events/<id>`: consultar, substituir ou excluir um evento;
+- `PATCH /events/<id>/leader`: transferir a liderança para outro integrante (somente pelo líder atual);
 - `POST /events/<id>/invitations`: o criador autenticado com Google gera um convite de uso único com nome e função musical;
 - `POST /invitations/<token>/accept`: a pessoa autenticada aceita o convite e entra no evento (e na equipe vinculada, como integrante comum);
 - `PATCH /events/<id>/repertoire/<item>/shared`: editar título, artista, tom, capotraste, cifra e observações oficiais;

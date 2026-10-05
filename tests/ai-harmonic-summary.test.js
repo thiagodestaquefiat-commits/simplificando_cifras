@@ -36,6 +36,15 @@ assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", { 
 assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Canção ", artista: " Cantor ", sourceProvider: "licensed", sourceId: "version-1" }))), { tipo: "pesquisa", titulo: "Canção", artista: "Cantor", sourceProvider: "licensed", sourceId: "version-1" });
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
+const modalSource = fs.readFileSync(path.join(root, "js/ai/ai-harmonic-summary.js"), "utf8");
+assert.match(modalSource, /\["texto", "📝 Texto"\]/);
+assert.match(modalSource, /data-ai-form=texto/);
+assert.match(modalSource, /field\("Tom", "tom"/);
+assert.match(modalSource, /function capoSelector\(\)/);
+assert.match(modalSource, /for \(let fret = 1; fret <= 12; fret \+= 1\)/);
+assert.match(modalSource, /input\.name = "capotraste"/);
+assert.match(modalSource, /field\("Cifras", "conteudo", "textarea", true\)/);
+assert.match(modalSource, /data\.conteudo=\[\.\.\.metadata,data\.conteudo\]/);
 
 const response = {
   schemaVersion: 2,
@@ -68,6 +77,16 @@ assert.doesNotMatch(model.title + model.sections[0].lines[0].lyrics, /[<>]/);
 assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, harmonicSummary: { blocos: [{ acordes: ["H7"], fraseGuia: "x" }] } }), (error) => error.kind === "invalid_data");
 
 (async () => {
+  let searchRequest;
+  const searchResult = await context.harmonicSummaryClient.searchSources({ titulo: " Música ", artista: " Artista " }, { fetch: async (url, options) => {
+    searchRequest = { url, options };
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ providerId: "licensed", sourceId: "one" }] }) };
+  } });
+  assert.equal(searchRequest.url, "https://backend.example/api/music-sources/search");
+  assert.deepEqual(JSON.parse(searchRequest.options.body), { titulo: "Música", artista: "Artista" });
+  assert.equal(searchRequest.options.headers.Authorization, "Bearer test-access-token");
+  assert.equal(searchResult.candidates[0].sourceId, "one");
+
   const oversizedJson = {
     ok: false,
     status: 413,
@@ -107,6 +126,13 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
   } });
   assert.equal(sentAuthorization, "Bearer test-access-token");
 
+  // Limite de busca na web: mostra o aviso do servidor (quantas buscas, quando libera, o que fazer).
+  const limitMessage = "Você atingiu o limite de busca na web (10 buscas a cada 24 horas). Novas buscas liberam hoje às 12:30. Enquanto isso, você pode enviar um arquivo ou foto da cifra.";
+  await assert.rejects(
+    context.harmonicSummaryClient.generate("texto", { conteudo: "Teste" }, { fetch: async () => ({ ok: false, status: 429, json: async () => ({ erro: { codigo: "limite_busca_web", mensagem: limitMessage } }) }) }),
+    (error) => error.kind === "not_found" && error.message === limitMessage
+  );
+  await expectApiError(429, "limite_busca_web", "not_found", /^Você atingiu o limite de busca na web\. Enquanto isso/);
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);
   await expectApiError(422, "provedor_rejeitou_requisicao", "provider_rejected", /processar este arquivo/);

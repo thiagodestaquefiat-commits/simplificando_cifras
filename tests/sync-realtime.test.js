@@ -94,5 +94,11 @@ vm.runInContext(source, context, { filename: "sync-realtime.js" });
   documentListeners.visibilitychange();
   assert.ok(removed.includes("roudy-sync-v1:user:user-1"), "os canais devem fechar com o app em segundo plano");
 
+  window.document.visibilityState='visible';window.navigator={onLine:false};
+  const beforeOffline=channels.length;window.syncRealtime.setEventIds(['offline-event']);
+  assert.equal(channels.length,beforeOffline,'sem rede não tenta abrir canais');
+  window.navigator.onLine=true;window.appAuth.createRealtimeChannel=()=>{throw Error('SDK ainda indisponível');};
+  assert.doesNotThrow(()=>window.syncRealtime.setEventIds(['offline-event']),'a leitura não depende do SDK de realtime');
+
   console.log("sync-realtime.test.js: OK (conta, eventos, debounce, eco e ciclo de vida)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

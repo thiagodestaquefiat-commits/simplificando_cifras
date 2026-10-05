@@ -15,13 +15,24 @@
     return value && value.user && value.user.id ? value : null;
   }
 
-  function readPersonalQueue() {
+  function personalQueueOwner() {
+    const state = global.appAuth && global.appAuth.getState && global.appAuth.getState();
+    const token = global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken();
+    return token && state && state.user && state.user.id ? 'account:' + state.user.id : 'local:' + (readIdentity() && readIdentity().user.id || 'guest');
+  }
+
+  function allPersonalOperations() {
     const value = global.storage && global.storage.get(PERSONAL_QUEUE_KEY, []);
     return Array.isArray(value) ? value : [];
   }
 
+  function readPersonalQueue() {
+    return allPersonalOperations().filter(item => item.ownerId === personalQueueOwner());
+  }
+
   function queuePersonalOperation(eventId, itemId, action, changes) {
     const operation = {
+      ownerId: personalQueueOwner(),
       eventId: String(eventId), itemId: String(itemId),
       action: action === "delete" ? "delete" : "upsert",
       changes: action === "delete" ? null : {
@@ -31,14 +42,14 @@
       },
       queuedAt: new Date().toISOString()
     };
-    const queue = readPersonalQueue().filter((item) => !(String(item.eventId) === operation.eventId && String(item.itemId) === operation.itemId));
+    const queue = allPersonalOperations().filter((item) => !(item.ownerId === operation.ownerId && String(item.eventId) === operation.eventId && String(item.itemId) === operation.itemId));
     queue.push(operation);
     global.storage.set(PERSONAL_QUEUE_KEY, queue);
     return operation;
   }
 
-  function clearPersonalOperation(eventId, itemId) {
-    const queue = readPersonalQueue().filter((item) => !(String(item.eventId) === String(eventId) && String(item.itemId) === String(itemId)));
+  function clearPersonalOperation(eventId, itemId, ownerId = personalQueueOwner()) {
+    const queue = allPersonalOperations().filter((item) => !(item.ownerId === ownerId && String(item.eventId) === String(eventId) && String(item.itemId) === String(itemId)));
     global.storage.set(PERSONAL_QUEUE_KEY, queue);
   }
 
@@ -142,7 +153,17 @@
   async function ensureRegistered(fallback) {
     let identity = readIdentity() || ensureLocalIdentity(fallback);
     if (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken()) {
-      const user = await request("/me", { method: "GET" });
+      const subject=global.appAuth.getState?.().user?.id,key=subject?'sc_event_account_identity_v1:'+encodeURIComponent(subject):null;
+      let user;
+      try{
+        if(global.navigator?.onLine===false)throw new CollaborationError('Sem conexão.',0,'offline');
+        user=await request("/me", { method: "GET" });
+        if(key)global.storage.set(key,{subject,user});
+      }catch(error){
+        const saved=key&&global.storage.get(key,null);
+        if(!error.offline||saved?.subject!==subject||!saved.user?.id)throw error;
+        user=saved.user;
+      }
       // Authentication is not consent to transfer legacy ownership. Keep the
       // device identity untouched; use the authenticated identity only in memory.
       return { user, accessToken: null, status: "supabase", legacyUserIds: [] };
@@ -228,6 +249,35 @@
     });
   }
 
+  async function invitationRequest(path, options) {
+    const owner = global.appAuth?.getState?.().user?.id;
+    if (!owner || !global.appAuth?.getAccessToken?.()) throw new CollaborationError("Entre com sua conta para acessar os convites.",403,"login_necessario");
+    const result = await request(path, options);
+    if (global.appAuth?.getState?.().user?.id !== owner) throw new CollaborationError("A conta foi alterada. Tente novamente.",409,"conta_alterada");
+    return result;
+  }
+  const searchUsers = (query, offset=0) => invitationRequest('/directory/users?q='+encodeURIComponent(query)+'&offset='+encodeURIComponent(offset));
+  const inviteUser = (eventId,userId,role) => invitationRequest('/events/'+encodeURIComponent(eventId)+'/direct-invitations',{method:'POST',body:JSON.stringify({userId,role})});
+  const listInvitations = () => invitationRequest('/direct-invitations');
+  const getUsername = () => invitationRequest('/me/username');
+  const checkUsername = username => invitationRequest('/usernames/availability?username='+encodeURIComponent(username));
+  const claimUsername = username => invitationRequest('/me/username',{method:'POST',body:JSON.stringify({username})});
+  async function respondInvitation(id,action){
+    const body=await invitationRequest('/direct-invitations/'+encodeURIComponent(id)+'/respond',{method:'POST',body:JSON.stringify({action})});
+    if(body?.event){global.syncRealtime?.publishEvent(body.event.id);return {event:fromRemote(body.event)};}
+    return body;
+  }
+
+  async function transferLeadership(event, nextLeaderId, fallback) {
+    await ensureRegistered(fallback);
+    const body = await request("/events/" + encodeURIComponent(event.id) + "/leader", {
+      method: "PATCH",
+      body: JSON.stringify({ leaderId: String(nextLeaderId), remoteVersion: event.remoteVersion })
+    });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(event.id);
+    return fromRemote(body);
+  }
+
   async function acceptInvitation(token) {
     if (!global.appAuth || !global.appAuth.getAccessToken || !global.appAuth.getAccessToken()) {
       throw new CollaborationError("Entre com sua conta para aceitar o convite.", 403, "login_necessario");
@@ -286,12 +336,16 @@
   }
 
   async function flushPersonalQueue(fallback) {
+    const ownerId = personalQueueOwner();
     await ensureRegistered(fallback);
+    if (ownerId !== personalQueueOwner()) return [];
     const synchronized = [];
     for (const operation of readPersonalQueue()) {
+      if (ownerId !== personalQueueOwner()) break;
       const path = "/events/" + encodeURIComponent(operation.eventId) + "/repertoire/" + encodeURIComponent(operation.itemId) + "/personal";
       const body = await request(path, operation.action === "delete" ? { method: "DELETE" } : { method: "PUT", body: JSON.stringify(operation.changes) });
-      clearPersonalOperation(operation.eventId, operation.itemId);
+      if (ownerId !== personalQueueOwner()) break;
+      clearPersonalOperation(operation.eventId, operation.itemId, ownerId);
       if (global.syncRealtime) global.syncRealtime.publishPersonalEvent(operation.eventId);
       synchronized.push(fromRemote(body));
     }

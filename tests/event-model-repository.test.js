@@ -45,6 +45,12 @@ const collaborative = window.eventModel.create({
 assert.equal(window.eventModel.isLeader(collaborative, "leader"), true);
 assert.equal(window.eventModel.canEditShared(collaborative, "member"), false);
 assert.throws(() => window.eventModel.applySharedEdit(collaborative, "item-1", "member", { key: "D" }), /Somente o líder/);
+const transferred = window.eventModel.transferLeadership(collaborative, "leader", "member");
+assert.equal(transferred.leaderId, "member");
+assert.equal(window.eventModel.canEditShared(transferred, "member"), true);
+assert.equal(window.eventModel.canEditShared(transferred, "leader"), false);
+assert.throws(() => window.eventModel.transferLeadership(collaborative, "member", "leader"), /Somente o líder/);
+assert.throws(() => window.eventModel.transferLeadership(collaborative, "leader", "outsider"), /integrante válido/);
 const personal = window.eventModel.applyPersonalEdit(collaborative, "item-1", "member", { title: "Versão pessoal", artist: "Equipe", key: "A", capo: "0", chordSheet: "Verso\nA D E", notes: "Minha voz" });
 assert.equal(personal.repertoire[0].shared.key, "G");
 assert.equal(personal.repertoire[0].personalEdits.member.key, "A");
@@ -67,5 +73,9 @@ const accountB = window.eventRepository.activateOwner("account-b", activatedA.ev
 assert.deepEqual(accountB.events, [], "outra conta não pode receber o cache da conta A");
 const returnedA = window.eventRepository.activateOwner(accountA.id, accountB.events, accountA, []);
 assert.equal(returnedA.events.length, 1, "a conta A deve recuperar seu cache contextualizado");
+const signedOutEvents = window.eventRepository.deactivateOwner(returnedA.events);
+assert.deepEqual(signedOutEvents, [], "logout deve retirar eventos privados da interface");
+const restoredA = window.eventRepository.activateOwner(accountA.id, [], accountA, []);
+assert.equal(restoredA.events.length, 1, "novo login deve restaurar os eventos da conta");
 
 console.log("event-model-repository.test.js: OK");

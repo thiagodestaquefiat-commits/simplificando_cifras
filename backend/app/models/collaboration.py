@@ -19,6 +19,13 @@ class CollaborationUser(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
 
+class UserHandle(db.Model):
+    __tablename__ = "user_handles"
+    user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), primary_key=True)
+    username = db.Column(db.String(24), nullable=False, unique=True, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+
+
 class UserAccessToken(db.Model):
     __tablename__ = "user_access_tokens"
 
@@ -53,6 +60,40 @@ class PersonalSong(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
     deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class SharedSong(db.Model):
+    __tablename__ = "shared_songs"
+    __table_args__ = (db.Index("idx_search", "normalized_title", "normalized_artist", mysql_prefix="FULLTEXT"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    artist = db.Column(db.String(255), nullable=True)
+    normalized_title = db.Column(db.String(255), nullable=False)
+    normalized_artist = db.Column(db.String(255), nullable=True)
+    song_key = db.Column(db.String(20), nullable=True)
+    capo = db.Column(db.String(50), nullable=True)
+    song_data = db.Column(db.JSON, nullable=False)
+    contributed_by = db.Column(db.String(80), nullable=True)
+    times_searched = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class SharedSongReport(db.Model):
+    __tablename__ = "shared_song_reports"
+    __table_args__ = (db.UniqueConstraint("song_id", "reporter_id", name="uq_song_report_reporter"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    song_id = db.Column(db.String(36), db.ForeignKey("shared_songs.id"), nullable=False, index=True)
+    reporter_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id"), nullable=False)
+    reason = db.Column(db.String(40), nullable=False)
+    details = db.Column(db.String(2000), nullable=False, default="")
+    status = db.Column(db.String(20), nullable=False, default="pending", index=True)
+    review_note = db.Column(db.String(2000), nullable=False, default="")
+    reviewed_by = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
 
 class Band(db.Model):
@@ -129,6 +170,21 @@ class EventInvitation(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
     accepted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class DirectEventInvitation(db.Model):
+    __tablename__ = "direct_event_invitations"
+    __table_args__ = (db.UniqueConstraint("event_id", "recipient_id", name="uq_direct_event_recipient"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    recipient_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_by = db.Column(db.String(80), nullable=False)
+    musical_role = db.Column(db.String(80), nullable=False, default="Outra")
+    status = db.Column(db.String(16), nullable=False, default="pending")
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    responded_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 
 class EventMember(db.Model):

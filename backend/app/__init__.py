@@ -71,9 +71,15 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
             response.headers["Cache-Control"] = "no-store"
         return response
 
+    # Diagnóstico da Busca por IA: mostra no log de inicialização se o scraper tem chave
+    # (sem expor o valor). Sem SCRAPER_API_KEY o Cifra Club costuma bloquear o IP do Railway.
+    app.logger.warning("scraper_api_configured=%s", bool(app.config.get("SCRAPER_API_KEY")))
+
     @app.get("/health")
     def health():
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY")),
+                        "deepseekConfigured": bool(app.config.get("DEEPSEEK_API_KEY")),
+                        "appVersion": "v167-aviso-limite"})
 
     from .routes.events import blueprint as events_blueprint
     from .routes.locations import blueprint as locations_blueprint
@@ -82,6 +88,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.music_sources import blueprint as music_sources_blueprint
     from .routes.library import blueprint as library_blueprint
     from .routes.youtube import blueprint as youtube_blueprint
+    from .routes.shared_songs import blueprint as shared_songs_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
@@ -92,6 +99,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(music_sources_blueprint)
     app.register_blueprint(library_blueprint)
     app.register_blueprint(youtube_blueprint)
+    app.register_blueprint(shared_songs_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

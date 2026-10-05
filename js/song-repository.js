@@ -25,6 +25,17 @@
     return global.songModel.normalizeCollection(Array.isArray(collection) ? collection : []);
   }
 
+  function migrateCollection(collection) {
+    const migration = global.demoLibrary ? global.demoLibrary.migrate(collection) : { songs: collection, removed: 0, seeded: false };
+    const songs = normalized(migration.songs);
+    if (migration.removed && global.demoLibrary) global.demoLibrary.markMigrated(global.storage, { removed: migration.removed, seeded: migration.seeded });
+    return { ...migration, songs };
+  }
+
+  function hasStoredLibrary() {
+    return Array.isArray(global.storage.get(CURRENT_STORAGE_KEY, null)) || Array.isArray(global.storage.get(LEGACY_STORAGE_KEY, null));
+  }
+
   function ownerCaches() {
     const value = global.storage.get(OWNER_CACHES_KEY, {});
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -42,7 +53,7 @@
 
   function filterDeleted(ownerId, collection) {
     const deleted = deletedClientIds(ownerId);
-    return normalized(collection).filter((song) => {
+    return migrateCollection(collection).songs.filter((song) => {
       const clientId = String(song && song.librarySync && song.librarySync.clientId || "").trim();
       return !clientId || !deleted.has(clientId);
     });
@@ -62,6 +73,7 @@
     const ownerValues = deletions[activeOwnerId] && typeof deletions[activeOwnerId] === "object" ? deletions[activeOwnerId] : {};
     const existing = ownerValues[clientId];
     const entry = existing && typeof existing === "object" ? existing : { deletedAt: typeof existing === "string" ? existing : new Date().toISOString(), confirmedAt: null };
+    if (typeof songOrClientId === "object" && songOrClientId?.librarySync?.serverVersion != null && entry.serverVersion == null) entry.serverVersion = songOrClientId.librarySync.serverVersion;
     if (confirmed && !entry.confirmedAt) entry.confirmedAt = new Date().toISOString();
     ownerValues[clientId] = entry;
     deletions[activeOwnerId] = ownerValues;
@@ -128,8 +140,14 @@
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const candidate = filterDeleted(nextOwner, Array.isArray(stored) ? stored : Array.isArray(legacy) ? legacy : []);
+    const seedOnlyCandidate = Boolean(global.storage.get(SEED_ONLY_KEY, false)) && candidate.length > 0 &&
+      global.demoLibrary && candidate.every((song) => global.demoLibrary.isDemoSong(song));
     const hasPersonalCandidate = candidate.length > 0 && storedLibraryExistedAtBoot;
     const canUseLegacyCandidate = (!reservedOwner || reservedOwner === nextOwner) && hasPersonalCandidate;
+    if (seedOnlyCandidate && (!Array.isArray(caches[nextOwner]) || caches[nextOwner].every((song) => global.demoLibrary.isDemoSong(song)))) {
+      legacyCandidateOwnerId = null;
+      return { songs: [], migrationCandidate: false, ownerId: nextOwner, awaitingRemoteOnboarding: true };
+    }
     if (Array.isArray(caches[nextOwner])) {
       caches[nextOwner] = filterDeleted(nextOwner, caches[nextOwner]);
       if (canUseLegacyCandidate) {
@@ -139,11 +157,17 @@
         return {
           songs: mergeLegacyWithOwnerCache(candidate, caches[nextOwner]),
           migrationCandidate,
-          ownerId: nextOwner
+          ownerId: nextOwner,
+          awaitingRemoteOnboarding: !migrationCandidate
         };
       }
       legacyCandidateOwnerId = null;
-      return { songs: normalized(caches[nextOwner]), migrationCandidate: false, ownerId: nextOwner };
+      return {
+        songs: normalized(caches[nextOwner]),
+        migrationCandidate: false,
+        ownerId: nextOwner,
+        awaitingRemoteOnboarding: true
+      };
     }
     if (canUseLegacyCandidate) {
       if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
@@ -151,7 +175,7 @@
       return { songs: normalized(candidate), migrationCandidate: true, ownerId: nextOwner };
     }
     legacyCandidateOwnerId = null;
-    return { songs: [], migrationCandidate: false, ownerId: nextOwner };
+    return { songs: [], migrationCandidate: false, ownerId: nextOwner, awaitingRemoteOnboarding: true };
   }
 
   // Encerra a sessão de dono ativo (logout). O cache privado da conta em
@@ -164,13 +188,24 @@
   // "deslogado" passaria a se qualificar como candidata de migração
   // silenciosa (activateOwner) para a conta que logar a seguir, mesmo que
   // seja a mesma conta que acabou de sair.
-  function deactivateOwner(defaultSongs) {
+  function deactivateOwner(currentSongs, anonymousSongs) {
+    if (activeOwnerId && Array.isArray(currentSongs) && activeOwnerId !== legacyCandidateOwnerId) {
+      saveOwnerCache(activeOwnerId, currentSongs);
+    }
     activeOwnerId = null;
     legacyCandidateOwnerId = null;
+    if (arguments.length > 1) {
+      const anonymous = migrateCollection(Array.isArray(anonymousSongs) ? anonymousSongs : []).songs;
+      global.storage.set(SEED_ONLY_KEY, false);
+      global.storage.set(CURRENT_STORAGE_KEY, anonymous);
+      global.storage.set(LEGACY_STORAGE_KEY, anonymous);
+      return anonymous;
+    }
+    const defaultSongs = currentSongs;
     const stored = global.storage.get(CURRENT_STORAGE_KEY, null);
-    if (Array.isArray(stored)) return normalized(stored);
+    if (Array.isArray(stored)) return migrateCollection(stored).songs;
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
-    return normalized(Array.isArray(legacy) ? legacy : defaultSongs);
+    return migrateCollection(Array.isArray(legacy) ? legacy : defaultSongs).songs;
   }
 
   function confirmActiveOwner(collection) {
@@ -183,17 +218,30 @@
     return saved;
   }
 
+  function declineActiveOwnerMigration() {
+    if (!activeOwnerId) return false;
+    const reservedOwner = String(global.storage.get(LEGACY_OWNER_KEY, "") || "").trim();
+    if (reservedOwner === activeOwnerId) global.storage.set(LEGACY_OWNER_KEY, "");
+    const caches = ownerCaches();
+    caches[activeOwnerId] = [];
+    const saved = global.storage.set(OWNER_CACHES_KEY, caches);
+    legacyCandidateOwnerId = null;
+    return saved;
+  }
+
   function load(defaultSongs) {
     requireDependencies();
     const current = global.storage.get(CURRENT_STORAGE_KEY, null);
     if (Array.isArray(current)) {
       storedLibraryExistedAtBoot = current.length > 0;
-      return global.songModel.normalizeCollection(current);
+      const migration = migrateCollection(current);
+      if (migration.removed) persistCurrent(migration.songs);
+      return migration.songs;
     }
 
     const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
     const source = Array.isArray(legacy) ? legacy : defaultSongs;
-    const songs = global.songModel.normalizeCollection(source);
+    const songs = migrateCollection(source).songs;
     storedLibraryExistedAtBoot = songs.length > 0;
     if (!Array.isArray(legacy)) global.storage.set(SEED_ONLY_KEY, true);
     persistCurrent(songs);
@@ -203,7 +251,11 @@
   function save(collection) {
     requireDependencies();
     const songs = activeOwnerId ? filterDeleted(activeOwnerId, collection) : global.songModel.normalizeCollection(collection);
+    const previous = activeOwnerId && activeOwnerId !== legacyCandidateOwnerId
+      ? ownerCaches()[activeOwnerId] || [] : global.storage.get(CURRENT_STORAGE_KEY, []);
+    if (global.libraryRecovery && !global.libraryRecovery.beforeSave(activeOwnerId || "guest", previous, songs)) return false;
     if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
+    if (global.storage.setMany) return global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs], [LEGACY_STORAGE_KEY, songs]]);
     global.storage.set(SEED_ONLY_KEY, false);
     const savedCurrent = global.storage.set(CURRENT_STORAGE_KEY, songs);
     const savedLegacy = global.storage.set(LEGACY_STORAGE_KEY, songs);
@@ -253,17 +305,20 @@
     ownerDeletionsKey: OWNER_DELETIONS_KEY,
     legacyOwnerKey: LEGACY_OWNER_KEY,
     seedOnlyKey: SEED_ONLY_KEY,
+    hasStoredLibrary,
     load,
     save,
     activateOwner,
     deactivateOwner,
     confirmActiveOwner,
+    declineActiveOwnerMigration,
     addOrReuse,
     update,
     remove,
     markDeleted,
     confirmDeleted,
     getDeletedClientIds: () => activeOwnerId ? [...deletedClientIds(activeOwnerId)] : [],
+    getActiveOwnerId: () => activeOwnerId,
     getPendingDeletedClientIds: () => {
       if (!activeOwnerId) return [];
       const values = ownerDeletions()[activeOwnerId] || {};

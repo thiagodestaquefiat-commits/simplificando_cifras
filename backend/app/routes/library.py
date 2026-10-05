@@ -12,6 +12,7 @@ from ..database import db
 from ..errors import ApiError
 from ..models import ExternalIdentity, PersonalSong
 from ..services.collaboration_auth import authenticated
+from ..services.shared_songs_service import SharedSongService
 
 blueprint = Blueprint("library", __name__, url_prefix="/api/library/songs")
 MAX_ITEMS = 500
@@ -61,11 +62,13 @@ def _upsert(client_id, song_data, expected_version=None):
         song = PersonalSong(id=str(uuid.uuid4()), owner_user_id=g.current_user.id, client_id=client_id,
                             song_data=song_data, version=1)
         db.session.add(song)
+        SharedSongService.contribute(song_data, g.current_user.id)
         return song, "created"
     if song.song_data == song_data and song.deleted_at is None:
         return song, "existing"
     song.song_data, song.deleted_at, song.version = song_data, None, song.version + 1
     song.updated_at = datetime.now(timezone.utc)
+    SharedSongService.contribute(song_data, g.current_user.id)
     return song, "updated"
 
 
@@ -150,6 +153,14 @@ def delete_song(client_id):
     song = PersonalSong.query.filter_by(owner_user_id=g.current_user.id, client_id=_client_id(client_id)).first()
     if song is None or song.deleted_at is not None:
         return "", 204
+    expected_version = request.args.get("expectedVersion")
+    if expected_version is not None:
+        try:
+            matches = int(expected_version) == song.version
+        except (TypeError, ValueError):
+            matches = False
+        if not matches:
+            raise ApiError("conflito_versao", "A música mudou durante a exclusão. Tente novamente para preservar a nova edição.", 409)
     song.deleted_at, song.version = datetime.now(timezone.utc), song.version + 1
     db.session.commit()
     return "", 204

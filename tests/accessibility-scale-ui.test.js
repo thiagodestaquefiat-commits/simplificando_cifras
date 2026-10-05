@@ -98,7 +98,6 @@ function isInside(rect, width) {
             aiButton: rect(".playlist-ai-action"),
             musicCard: rect(".music-item"),
             musicAvatar: rect(".music-avatar"),
-            fab: rect(".fab"),
             titleFont: Number.parseFloat(titleStyle.fontSize),
             secondaryFont: Number.parseFloat(secondaryStyle.fontSize)
           };
@@ -117,8 +116,7 @@ function isInside(rect, width) {
           youtubeButton: metrics.youtubeButton.rect,
           playlistSearch: metrics.playlistSearch,
           aiButton: metrics.aiButton,
-          musicCard: metrics.musicCard,
-          fab: metrics.fab
+          musicCard: metrics.musicCard
         })) assert.ok(isInside(rect, width), `${width}px/${scale}%: ${name} saiu da viewport`);
         assert.equal(metrics.tabs.length, 3, `${width}px/${scale}%: navegação deve manter três itens`);
         metrics.tabs.forEach((tab, index) => {
@@ -133,12 +131,11 @@ function isInside(rect, width) {
         assert.equal(errors.length, 0, `${width}px/${scale}%: erros: ${errors.join(" | ")}`);
 
         const key = `${width}`;
-        if (scale === 100) stableSizes.set(key, { logo: metrics.logo, avatar: metrics.musicAvatar, fab: metrics.fab, titleFont: metrics.titleFont });
+        if (scale === 100) stableSizes.set(key, { logo: metrics.logo, avatar: metrics.musicAvatar, titleFont: metrics.titleFont });
         if (scale === 140) {
           const baseline = stableSizes.get(key);
           assert.equal(metrics.logo.width, baseline.logo.width, `${width}px: logo não deve crescer com o texto`);
           assert.equal(metrics.musicAvatar.width, baseline.avatar.width, `${width}px: ícone do card não deve crescer com o texto`);
-          assert.equal(metrics.fab.width, baseline.fab.width, `${width}px: FAB não deve crescer com o texto`);
           assert.ok(metrics.titleFont > baseline.titleFont, `${width}px: título deve ganhar legibilidade no nível máximo`);
         }
         await context.close();

@@ -115,11 +115,12 @@
     function setBpm(value) {
       bpm = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(value)));
       displayBpm();
-      if (songKey !== null) {
+      if (songKey !== null && options.shouldPersist?.() !== false) {
         const saved = storage.get(STORAGE_KEY, {});
         storage.set(STORAGE_KEY, { ...saved, [songKey]: bpm });
       }
-      if (timer !== null) { stop(); start(); }
+      options.onChange?.();
+      if (timer !== null) { stop(); return start(); }
     }
 
     function setMeter(value, persist = true) {

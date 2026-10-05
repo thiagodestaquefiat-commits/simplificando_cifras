@@ -6,8 +6,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, g, jsonify, request
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 
 from ..database import db
+from .. import limiter
 from ..errors import ApiError
 from ..models import (
     CollaborationUser,
@@ -16,6 +19,7 @@ from ..models import (
     BandMember,
     Event,
     EventInvitation,
+    DirectEventInvitation,
     EventChange,
     EventMessage,
     ExternalIdentity,
@@ -735,8 +739,8 @@ def update_event(event_id: str):
     payload = _json()
     _expected_version(payload, event.version)
     members, leader_id = _members_payload(payload, g.current_user)
-    if leader_id != (event.creator_id or event.leader_id):
-        raise ApiError("lider_fixo", "Somente o criador do evento pode ser líder.", 403)
+    if leader_id != event.leader_id:
+        raise ApiError("transferencia_exclusiva", "Use a opção de transferência de liderança para trocar o líder.", 403)
     band_id = _band_id_payload(payload, members)
     event.title = _text(payload.get("title"), 160, "title", True)
     event.event_date = _text(payload.get("date"), 10, "date")
@@ -745,7 +749,7 @@ def update_event(event_id: str):
     _assign_location(event, _location_payload(payload))
     event.description = _text(payload.get("description"), 10000, "description")
     event.band_id = band_id
-    event.leader_id = event.creator_id or event.leader_id
+    event.leader_id = leader_id
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
     _replace_members(event, members)
@@ -755,6 +759,235 @@ def update_event(event_id: str):
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 
 
+@blueprint.patch("/events/<event_id>/leader")
+@authenticated
+def transfer_event_leadership(event_id: str):
+    event = _event_or_404(event_id)
+    _leader(event, g.current_user.id)
+    payload = _json()
+    _expected_version(payload, event.version)
+    next_leader_id = _identifier(payload.get("leaderId"), "leaderId")
+    if next_leader_id == event.leader_id:
+        raise ApiError("lider_inalterado", "Este integrante já é o líder do evento.", 400)
+    next_leader = EventMember.query.filter_by(event_id=event.id, user_id=next_leader_id).first()
+    if next_leader is None:
+        raise ApiError("lider_invalido", "O novo líder precisa ser integrante do evento.", 400)
+    event.leader_id = next_leader_id
+    event.version += 1
+    event.updated_at = datetime.now(timezone.utc)
+    _change(event, "event.leader.transferred", f"transferiu a liderança para {next_leader.name}")
+    db.session.commit()
+    return jsonify(_serialize_event(event, g.current_user.id)), 200
+
+
+def _account_required():
+    if g.auth_provider != "supabase":
+        raise ApiError("login_necessario", "Entre com sua conta para acessar os convites.", 403)
+
+
+def _public_profile(user):
+    # Legacy profiles can use an email as their display name. Never expose it.
+    name = user.name if "@" not in user.name else "Usuário Roudy"
+    avatar = user.avatar_url if str(user.avatar_url or "").startswith("https://") else None
+    handle = db.session.get(UserHandle, user.id)
+    return {"id": user.id, "name": name, "avatarUrl": avatar, "username": handle.username if handle else None}
+
+
+HANDLE_PATTERN = re.compile(r"^[a-z0-9_]{3,24}$")
+RESERVED_HANDLES = {"admin", "administrator", "administrador", "roudy", "suporte", "support", "moderador", "root", "system"}
+
+
+def _username(value):
+    username = str(value or "").strip().lower()
+    if not HANDLE_PATTERN.fullmatch(username) or username in RESERVED_HANDLES:
+        raise ApiError("nome_usuario_invalido", "Use de 3 a 24 letras sem acento, números ou _. Este nome pode estar reservado.", 400)
+    return username
+
+
+@blueprint.get("/me/username")
+@authenticated
+def get_username():
+    _account_required()
+    handle = db.session.get(UserHandle, g.current_user.id)
+    db.session.commit()
+    return jsonify({"username": handle.username if handle else None})
+
+
+@blueprint.get("/usernames/availability")
+@authenticated
+@limiter.limit("60 per minute", key_func=lambda: g.current_user.id)
+def username_availability():
+    _account_required()
+    username = _username(request.args.get("username"))
+    available = UserHandle.query.filter_by(username=username).first() is None
+    db.session.commit()
+    return jsonify({"username": username, "available": available})
+
+
+@blueprint.post("/me/username")
+@authenticated
+@limiter.limit("20 per hour", key_func=lambda: g.current_user.id)
+def claim_username():
+    _account_required()
+    username = _username(_json().get("username"))
+    existing = db.session.get(UserHandle, g.current_user.id)
+    if existing:
+        if existing.username != username:
+            raise ApiError("nome_usuario_fixo", "Seu nome de usuário já foi definido e não pode ser alterado.", 409)
+        db.session.commit()
+        return jsonify({"username": existing.username}), 200
+    db.session.add(UserHandle(user_id=g.current_user.id, username=username))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        # Both uniqueness constraints are authoritative, even for concurrent requests.
+        existing = db.session.get(UserHandle, g.current_user.id)
+        if existing and existing.username == username:
+            return jsonify({"username": username}), 200
+        code = "nome_usuario_fixo" if existing else "nome_usuario_ocupado"
+        raise ApiError(code, "O nome já foi definido nesta conta." if existing else "Este nome de usuário não está disponível.", 409) from None
+    return jsonify({"username": username}), 201
+
+
+def _utc(value):
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+
+
+@blueprint.get("/directory/users")
+@authenticated
+@limiter.limit("60 per minute", key_func=lambda: g.current_user.id)
+def search_registered_users():
+    _account_required()
+    query = _text(request.args.get("q"), 120, "q")
+    try:
+        offset = int(request.args.get("offset", 0))
+    except ValueError:
+        raise ApiError("entrada_invalida", "Página inválida.", 400) from None
+    if not 0 <= offset <= 10000:
+        raise ApiError("entrada_invalida", "Página inválida.", 400)
+    if len(query.lstrip('@')) < 2:
+        return jsonify({"users": [], "nextOffset": None})
+    rows = (CollaborationUser.query.filter(
+        CollaborationUser.id.in_(db.session.query(ExternalIdentity.user_id).filter_by(provider="supabase")),
+        CollaborationUser.id != g.current_user.id,
+        ~CollaborationUser.name.contains("@"),
+        or_(CollaborationUser.name.ilike("%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", escape="\\"),
+            CollaborationUser.id.in_(db.session.query(UserHandle.user_id).filter(UserHandle.username.contains(query.lstrip('@').lower(), autoescape=True)))),
+    ).order_by(CollaborationUser.name, CollaborationUser.id).offset(offset).limit(21).all())
+    db.session.commit()
+    return jsonify({"users": [_public_profile(user) for user in rows[:20]],
+                    "nextOffset": offset + 20 if len(rows) > 20 else None})
+
+
+def _direct_invitation_json(invitation, event):
+    sender = db.session.get(CollaborationUser, invitation.created_by)
+    band = db.session.get(Band, event.band_id) if event.band_id else None
+    return {"id": invitation.id, "eventId": event.id, "eventTitle": event.title,
+            "eventDate": event.event_date, "role": invitation.musical_role,
+            "bandName": band.name if band else None,
+            "inviter": _public_profile(sender) if sender else {"name": "Líder"},
+            "expiresAt": _iso(invitation.expires_at)}
+
+
+@blueprint.post("/events/<event_id>/direct-invitations")
+@authenticated
+@limiter.limit("20 per hour", key_func=lambda: g.current_user.id)
+def create_direct_invitation(event_id):
+    _account_required()
+    event = Event.query.filter_by(id=event_id).with_for_update().first()
+    if event is None:
+        raise ApiError("evento_nao_encontrado", "Evento não encontrado.", 404)
+    _leader(event, g.current_user.id)
+    payload = _json()
+    target_id = _identifier(payload.get("userId"), "userId")
+    target = db.session.get(CollaborationUser, target_id)
+    if target is None or not ExternalIdentity.query.filter_by(provider="supabase", user_id=target_id).first():
+        raise ApiError("usuario_invalido", "Usuário não encontrado.", 404)
+    if target_id == g.current_user.id or EventMember.query.filter_by(event_id=event.id, user_id=target_id).first():
+        raise ApiError("ja_integrante", "Essa pessoa já participa do evento.", 409)
+    role = _text(payload.get("role"), 80, "role") or "Outra"
+    if role.casefold() in {"líder", "lider", "liderança", "lideranca"}:
+        raise ApiError("funcao_invalida", "O convite não transfere liderança.", 400)
+    now = datetime.now(timezone.utc)
+    invitation = DirectEventInvitation.query.filter_by(event_id=event.id, recipient_id=target_id).with_for_update().first()
+    if invitation and invitation.status == "pending" and _utc(invitation.expires_at) > now and invitation.created_by == event.leader_id:
+        raise ApiError("convite_pendente", "Já existe um convite pendente para essa pessoa.", 409)
+    if invitation is None:
+        invitation = DirectEventInvitation(id=str(uuid.uuid4()), event_id=event.id, recipient_id=target_id)
+        db.session.add(invitation)
+    # A new id prevents an old notification from answering a reissued invitation.
+    invitation.id = str(uuid.uuid4())
+    invitation.created_by = g.current_user.id
+    invitation.musical_role = role
+    invitation.status = "pending"
+    invitation.created_at = now
+    invitation.expires_at = now + timedelta(days=7)
+    invitation.responded_at = None
+    db.session.commit()
+    return jsonify(_direct_invitation_json(invitation, event)), 201
+
+
+@blueprint.get("/direct-invitations")
+@authenticated
+@limiter.limit("60 per minute", key_func=lambda: g.current_user.id)
+def list_direct_invitations():
+    _account_required()
+    rows = (db.session.query(DirectEventInvitation, Event).join(Event, Event.id == DirectEventInvitation.event_id)
+            .filter(DirectEventInvitation.recipient_id == g.current_user.id,
+                    DirectEventInvitation.status == "pending",
+                    DirectEventInvitation.expires_at > datetime.now(timezone.utc),
+                    DirectEventInvitation.created_by == Event.leader_id)
+            .order_by(DirectEventInvitation.created_at.desc()).all())
+    result = [_direct_invitation_json(invitation, event) for invitation, event in rows]
+    db.session.commit()
+    return jsonify({"invitations": result})
+
+
+@blueprint.post("/direct-invitations/<invitation_id>/respond")
+@authenticated
+def respond_direct_invitation(invitation_id):
+    _account_required()
+    action = _json().get("action")
+    if action not in {"accept", "reject"}:
+        raise ApiError("entrada_invalida", "Escolha aceitar ou rejeitar.", 400)
+    # Lock event before invitation, in the same order as invitation creation.
+    initial = DirectEventInvitation.query.filter_by(id=invitation_id, recipient_id=g.current_user.id).first()
+    if initial is None:
+        raise ApiError("convite_invalido", "Convite não encontrado.", 404)
+    event = Event.query.filter_by(id=initial.event_id).with_for_update().first()
+    invitation = DirectEventInvitation.query.filter_by(id=invitation_id, recipient_id=g.current_user.id).populate_existing().with_for_update().first()
+    if invitation is None or event is None:
+        raise ApiError("convite_invalido", "Convite não encontrado.", 404)
+    if invitation.status != "pending":
+        if invitation.status == "accepted" and action == "accept":
+            _member(event, g.current_user.id)
+            return jsonify({"event": _serialize_event(event, g.current_user.id)})
+        if invitation.status == "rejected" and action == "reject":
+            return jsonify({"status": "rejected"})
+        raise ApiError("convite_respondido", "O convite já foi respondido.", 409)
+    if _utc(invitation.expires_at) <= datetime.now(timezone.utc) or invitation.created_by != event.leader_id:
+        raise ApiError("convite_expirado", "Convite expirado. Peça um novo convite ao líder.", 410)
+    if action == "accept":
+        if not EventMember.query.filter_by(event_id=event.id, user_id=g.current_user.id).first():
+            db.session.add(EventMember(event_id=event.id, user_id=g.current_user.id, name=_public_profile(g.current_user)["name"],
+                                       avatar_url=g.current_user.avatar_url, role=invitation.musical_role))
+            event.version += 1
+            event.updated_at = datetime.now(timezone.utc)
+            _change(event, "event.member.joined", "aceitou o convite para participar")
+        if event.band_id and not BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first():
+            db.session.add(BandMember(band_id=event.band_id, user_id=g.current_user.id,
+                                      access_role="member", musical_role=invitation.musical_role))
+            band = db.session.get(Band, event.band_id)
+            band.updated_at = datetime.now(timezone.utc)
+        invitation.status = "accepted"
+    else:
+        invitation.status = "rejected"
+    invitation.responded_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return jsonify({"event": _serialize_event(event, g.current_user.id)} if action == "accept" else {"status": "rejected"})
+
+
 @blueprint.post("/events/<event_id>/invitations")
 @authenticated
 def create_event_invitation(event_id: str):
@@ -762,10 +995,6 @@ def create_event_invitation(event_id: str):
     _leader(event, g.current_user.id)
     if g.auth_provider != "supabase":
         raise ApiError("login_necessario", "Entre com sua conta para enviar convites.", 403)
-    if event.band_id:
-        band_role = BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first()
-        if band_role is None or band_role.access_role not in {"owner", "leader"}:
-            raise ApiError("permissao_insuficiente", "Somente líderes da equipe podem convidar novos integrantes.", 403)
     payload = _json()
     name = _text(payload.get("name"), 120, "name", True)
     role = _text(payload.get("role"), 80, "role") or "Outra"

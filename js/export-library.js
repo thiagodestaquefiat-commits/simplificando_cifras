@@ -1,64 +1,38 @@
 (function (global) {
   "use strict";
 
-  const KNOWN_KEYS = Object.freeze({
-    musicas: ["cifras_musicas_v1", "sc_musicas_v2", "sc_songs_v1"],
-    playlists: ["cifras_setlists_v1", "sc_playlists_v2"],
-    eventos: ["sc_events_v1"],
-    chatEventos: ["sc_event_messages_v1", "sc_event_chat_read_v1"],
-    medleys: ["cifras_medleys_v1", "sc_medleys_v2", "cifras_medley_v1"],
-    favoritos: ["cifras_favoritos_v1", "sc_favorites_v2"],
-    configuracoes: ["cifras_configuracoes_v1", "sc_settings_v2", "cifras_settings_v1"]
-  });
-
-  function parseRawValue(rawValue) {
-    if (rawValue === null || rawValue === undefined) return null;
-    try {
-      return JSON.parse(rawValue);
-    } catch {
-      return rawValue;
-    }
-  }
-
-  function selectKnownData(rawSnapshot, keys) {
-    const selected = {};
-    keys.forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(rawSnapshot, key)) {
-        selected[key] = parseRawValue(rawSnapshot[key]);
-      }
+  // Never read browser-wide snapshots: they can contain sessions and other accounts.
+  const PRIVATE_KEYS = /^(?:__proto__|prototype|constructor|token|id_?token|access_?token|refresh_?token|authorization|password|secret|api_?key|service_?role_?key|client_?secret|session|auth|pkce|code_?verifier)$/i;
+  function sanitize(value) {
+    if (Array.isArray(value)) return value.map(sanitize);
+    if (!value || typeof value !== "object") return value;
+    const result = {};
+    Object.entries(value).forEach(([key, item]) => {
+      if (!PRIVATE_KEYS.test(key)) result[key] = sanitize(item);
     });
-    return selected;
+    return result;
   }
 
   function buildExport(context) {
-    const rawSnapshot = global.storage.snapshotRaw();
-    const persisted = {};
-    Object.entries(KNOWN_KEYS).forEach(([group, keys]) => {
-      persisted[group] = selectKnownData(rawSnapshot, keys);
-    });
+    if (!context || !Array.isArray(context.musicas)) throw new Error("Aguarde sua biblioteca carregar antes de exportar.");
+    const ownerId = String(context.ownerId || "guest");
+    const songs = sanitize(context.musicas);
+    const ids = new Set(songs.map(song => String(song.id)));
 
     return {
       formato: "simplificando-cifras-exportacao",
-      versao: 1,
+      versao: 3,
       exportadoEm: new Date().toISOString(),
+      escopo: { tipo: context.authenticated ? "conta" : "visitante", ownerId },
+      restauracaoDisponivel: ["musicas", "perfil", "medleys", "favoritos", "configuracoes"],
       origens: {
-        catalogoPadrao: {
-          descricao: "Catálogo incluído no aplicativo",
-          musicas: context.catalogoPadrao
-        },
-        armazenamentoUsuario: {
-          descricao: "Valores persistidos no navegador, preservados por chave e formato",
-          dadosConhecidos: persisted,
-          armazenamentoBruto: rawSnapshot
-        },
         sessaoAtual: {
-          descricao: "Estado em memória no momento da exportação",
-          musicas: context.musicas,
-          eventos: context.events || context.playlists,
-          playlists: context.playlists,
-          medleys: context.medleys,
-          favoritos: context.favoritos,
-          configuracoes: context.configuracoes
+          descricao: "Dados da identidade ativa. Não inclui credenciais nem armazenamento bruto.",
+          musicas: songs,
+          perfil: sanitize({name:context.perfil?.name||'',avatarUrl:context.perfil?.avatarUrl||null,location:String(context.perfil?.location||'').slice(0,120),instruments:Array.isArray(context.perfil?.instruments)?context.perfil.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[]}),
+          medleys: sanitize(context.medleys || []),
+          favoritos: sanitize((context.favoritos || []).filter(id => ids.has(String(id)))),
+          configuracoes: sanitize(context.configuracoes || {})
         }
       }
     };
@@ -72,17 +46,16 @@
     const date = new Date().toISOString().slice(0, 10);
     link.href = url;
     link.download = `roudy-biblioteca-${date}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    try { document.body.appendChild(link); link.click(); }
+    finally { link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
   }
 
   global.libraryExporter = Object.freeze({
+    sanitize,
     export(context) {
       const payload = buildExport(context);
       downloadExport(payload);
-      const standardCount = Array.isArray(context.catalogoPadrao) ? context.catalogoPadrao.length : 0;
+      const standardCount = 0;
       const storedCount = Array.isArray(context.musicas) ? context.musicas.length : 0;
       return { standardCount, storedCount, payload };
     },

@@ -85,11 +85,40 @@
     const root = match[1].toUpperCase() + match[2];
     return FLATS[root] || root;
   }
-  function normalizeSuffix(value) {
-    const suffix = String(value || "").trim();
+  function baseAlias(suffix) {
     if (Object.prototype.hasOwnProperty.call(ALIASES, suffix)) return ALIASES[suffix];
     const alias = Object.keys(ALIASES).find((key) => key.toLowerCase() === suffix.toLowerCase());
     return alias === undefined ? null : ALIASES[alias];
+  }
+  // Notação brasileira com extensões entre parênteses (Cifra Club etc.): A7(9), E7(4), E7(4/9),
+  // C7(9-), Cmaj7(9), Am7(9), C(9), Am13. A grafia original é preservada em displayName e na
+  // transposição; o sufixo canônico abaixo serve só para escolher o diagrama mais próximo.
+  const EXTENSION_RE = /^[#b+-]?\d{1,2}[#b+-]?(?:[/,][#b+-]?\d{1,2}[#b+-]?)*$/;
+  const EXTRA_ALIASES = Object.freeze({ m13: "m11", "m(7M)": "mMaj7", "m(maj7)": "mMaj7", "7sus4": "sus4", "7sus": "sus4", "7(4)": "sus4", "m(add9)": "m", "m(9)": "m" });
+  function extendedSuffix(suffix) {
+    if (Object.prototype.hasOwnProperty.call(EXTRA_ALIASES, suffix)) return EXTRA_ALIASES[suffix];
+    const match = suffix.match(/^(.*?)\(([^()]+)\)$/);
+    if (!match || !EXTENSION_RE.test(match[2])) return null;
+    const base = baseAlias(match[1]);
+    if (base === null) return null;
+    const tensions = match[2].split(/[/,]/).map((item) => item.replace(/[()]/g, ""));
+    const plain = (value) => tensions.includes(value);
+    if (base === "7") {
+      if (plain("4")) return "sus4";
+      if (plain("13")) return "13";
+      if (plain("11")) return "11";
+      if (plain("9")) return "9";
+      return "7";
+    }
+    if (base === "maj7") return plain("9") ? "maj9" : "maj7";
+    if (base === "m7") return plain("11") ? "m11" : plain("9") ? "m9" : plain("b5") || plain("5-") ? "m7b5" : "m7";
+    if (base === "") return plain("9") ? "add9" : plain("4") ? "sus4" : "";
+    return base;
+  }
+  function normalizeSuffix(value) {
+    const suffix = String(value || "").trim();
+    const base = baseAlias(suffix);
+    return base !== null ? base : extendedSuffix(suffix);
   }
   function parseChord(value) {
     const compact = String(value || "").trim().replace(/♯/g, "#").replace(/♭/g, "b").replace(/\s+/g, "");

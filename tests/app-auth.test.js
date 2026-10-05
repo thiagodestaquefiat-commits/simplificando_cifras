@@ -76,13 +76,17 @@ function createAuthHarness(options = {}) {
   });
   assert.ok(states.some((state) => state.authenticated), "a interface deve receber o estado autenticado");
   assert.doesNotMatch(JSON.stringify(callback.calls.logs), /access-token|pkce-code|anon-public/, "o diagnóstico não pode registrar tokens, code ou anon key");
-  const updatedProfile=await callback.window.appAuth.updateProfile({name:"Novo Nome",phone:"47999990000",email:"novo@example.com"});
+  const updatedProfile=await callback.window.appAuth.updateProfile({name:"Novo Nome",phone:"47999990000",email:"novo@example.com",location:'São Paulo, SP',instruments:['Vocalista','Guitarrista']});
   assert.equal(callback.calls.updateUser.length,1);
   assert.equal(callback.calls.updateUser[0].data.full_name,"Novo Nome");
   assert.equal(callback.calls.updateUser[0].data.phone,"47999990000");
   assert.equal(callback.calls.updateUser[0].email,"novo@example.com");
   assert.equal(updatedProfile.user.name,"Novo Nome");
   assert.equal(updatedProfile.user.email,"novo@example.com");
+  assert.equal(callback.calls.updateUser[0].data.location,'São Paulo, SP');
+  assert.deepEqual(JSON.parse(JSON.stringify(callback.calls.updateUser[0].data.instruments)),['Vocalista','Guitarrista']);
+  assert.equal(updatedProfile.user.location,'São Paulo, SP');
+  assert.deepEqual(JSON.parse(JSON.stringify(updatedProfile.user.instruments)),['Vocalista','Guitarrista']);
 
   const detected = createAuthHarness({ href: "https://simplificandocifras.netlify.app/?code=already-detected", initialSession: { access_token: "existing", user: callback.user } });
   const detectedState = await detected.window.appAuth.initialize();
@@ -134,5 +138,5 @@ function createAuthHarness(options = {}) {
   assert.equal(reloadState.authenticated, true, "getSession deve restaurar a sessão persistida após reload/reabertura");
   assert.equal(reloaded.calls.exchange.length, 0);
 
-  console.log("app-auth.test.js: OK (configuração, instância única, PKCE único, persistência, renovação, logout e redirects)");
+  console.log("app-auth.test.js: OK (Google, PKCE, persistência, renovação, logout e redirects)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

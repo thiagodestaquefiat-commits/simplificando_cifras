@@ -7,6 +7,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import create_app
+from app.services.music_sources import MusicSourceUnavailable
 
 
 class TestConfig:
@@ -40,6 +41,24 @@ class TestConfig:
     MUSIC_SOURCE_SEARCH_RATE_LIMIT = "1000 per minute"
     MUSIC_SOURCE_MIN_SCORE = 0.62
     MUSIC_SOURCE_MAX_RESULTS = 8
+
+
+@pytest.fixture(autouse=True)
+def no_web_search(monkeypatch):
+    """Testes nunca acessam o DuckDuckGo de verdade."""
+    class OfflineDDGS:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("web search disabled in tests")
+
+    class OfflineHttpClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def get_text(self, url, **kwargs):
+            raise MusicSourceUnavailable("network disabled in tests")
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", OfflineDDGS)
+    monkeypatch.setattr("app.services.web_search.SafeMusicSourceHttpClient", OfflineHttpClient)
 
 
 @pytest.fixture()

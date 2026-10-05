@@ -53,20 +53,22 @@ def resumo_harmonico():
     )
     online_source = None
     if payload.tipo == "pesquisa":
-        if not payload.sourceProvider or not payload.sourceId:
+        if payload.modoGeracao != "conhecimento_modelo" and (not payload.sourceProvider or not payload.sourceId):
             raise ApiError("fonte_nao_selecionada", "Escolha uma fonte antes de gerar a música.", 400)
-        try:
-            online_source = current_app.extensions["music_source_registry"].fetch(payload.sourceProvider, payload.sourceId)
-        except MusicSourceTimeout as error:
-            raise ApiError("fonte_timeout", "A fonte demorou mais que o esperado.", 504) from error
-        except MusicSourceUnavailable as error:
-            raise ApiError("fonte_indisponivel", "A fonte musical está temporariamente indisponível.", 503) from error
-        except MusicSourceInvalid as error:
-            raise ApiError("fonte_invalida", "A fonte selecionada não pôde ser processada.", 422) from error
-        extracted = ExtractedContent(
-            "text", online_source.content, "text/plain",
-            filename=None, size_bytes=len(online_source.content.encode("utf-8")),
-        )
+        if payload.sourceProvider and payload.sourceId:
+            try:
+                online_source = current_app.extensions["music_source_registry"].fetch(payload.sourceProvider, payload.sourceId)
+            except MusicSourceTimeout as error:
+                raise ApiError("fonte_timeout", "A fonte demorou mais que o esperado.", 504) from error
+            except MusicSourceUnavailable as error:
+                raise ApiError("fonte_indisponivel", "A fonte musical está temporariamente indisponível.", 503) from error
+            except MusicSourceInvalid as error:
+                raise ApiError("fonte_invalida", "A fonte selecionada não pôde ser processada.", 422) from error
+            extracted = ExtractedContent(
+                "text", online_source.content, "text/plain",
+                filename=None, size_bytes=len(online_source.content.encode("utf-8")),
+            )
     service = IaService.from_config(current_app.config)
-    result = service.generate(payload, extracted, request_id=g.get("request_id", ""), online_source=online_source)
+    result = service.generate(payload, extracted, request_id=g.get("request_id", ""), online_source=online_source,
+                            user_id=g.current_user.id)
     return jsonify(result.model_dump(mode="json")), 200

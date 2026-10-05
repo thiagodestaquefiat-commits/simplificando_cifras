@@ -36,6 +36,7 @@ class Config:
     DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
     DEEPSEEK_TIMEOUT_SECONDS = float(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", "90"))
     DEEPSEEK_MAX_OUTPUT_TOKENS = int(os.getenv("DEEPSEEK_MAX_OUTPUT_TOKENS", "12000"))
+    DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS = int(os.getenv("DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS", "1200"))
 
     CORS_ALLOWED_ORIGINS = _csv(
         "CORS_ALLOWED_ORIGINS",
@@ -71,7 +72,18 @@ class Config:
     YOUTUBE_SEARCH_RATE_LIMIT = os.getenv("YOUTUBE_SEARCH_RATE_LIMIT", "20 per minute")
     YOUTUBE_CONFIG_RATE_LIMIT = os.getenv("YOUTUBE_CONFIG_RATE_LIMIT", "60 per minute")
 
+    SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
+    # Interruptor: SCRAPER_ENABLED=false desliga a busca na web sem novo deploy (fica catálogo + arquivo/foto).
+    SCRAPER_ENABLED = os.getenv("SCRAPER_ENABLED", "true").strip().lower() not in {"0", "false", "no", "nao", "não", "off"}
+    # Busca no Google via ScraperAPI custa 25 créditos por consulta; desligada por padrão (só URL direta, 1 crédito).
+    SCRAPER_SEARCH_FALLBACK = os.getenv("SCRAPER_SEARCH_FALLBACK", "false").strip().lower() in {"1", "true", "yes", "sim", "on"}
+    # Buscas na web por usuário (só conta quando a música não está no catálogo).
+    SCRAPER_USER_LIMIT = os.getenv("SCRAPER_USER_LIMIT", "10 per day")
+
     MUSIC_SOURCE_SEARCH_RATE_LIMIT = os.getenv("MUSIC_SOURCE_SEARCH_RATE_LIMIT", "30 per minute")
+    SHARED_SONG_MIN_SCORE = float(os.getenv("SHARED_SONG_MIN_SCORE", "0.9"))
+    SHARED_SONG_SEARCH_RATE_LIMIT = os.getenv("SHARED_SONG_SEARCH_RATE_LIMIT", "30 per minute")
+    SHARED_SONG_REVIEWER_IDS = _csv("SHARED_SONG_REVIEWER_IDS", "")
     MUSIC_SOURCE_MIN_SCORE = float(os.getenv("MUSIC_SOURCE_MIN_SCORE", "0.62"))
     MUSIC_SOURCE_MAX_RESULTS = int(os.getenv("MUSIC_SOURCE_MAX_RESULTS", "8"))
     MUSIC_SOURCE_MAX_DOWNLOAD_BYTES = int(os.getenv("MUSIC_SOURCE_MAX_DOWNLOAD_BYTES", "1000000"))

@@ -1,3 +1,4 @@
+import pytest
 from app.schemas.resumo_harmonico import (
     AcordePosicionado,
     CifraCompleta,
@@ -59,6 +60,44 @@ def test_request_preserves_musical_line_breaks():
     assert request.conteudo == "C  G\nPrimeira frase\nAm  F"
 
 
+def test_text_uses_ai_sections_to_format_full_chord_sheet_without_reordering_music():
+    provider = FakeProvider()
+    original_generate = provider.generate
+
+    def generate(system_prompt, user_prompt, media=None, context=None):
+        result = original_generate(system_prompt, user_prompt, media, context)
+        result.fullChordSheet = CifraCompleta(
+            source="user_text",
+            content="[reconstruir]",
+            sections=[
+                SecaoCifraCompleta(nome="Verso", linhas=[LinhaCifraCompleta(
+                    letra="Primeira frase",
+                    acordes=[AcordePosicionado(acorde="C", posicao=0), AcordePosicionado(acorde="G", posicao=9)],
+                )]),
+                SecaoCifraCompleta(nome="Refrão", linhas=[LinhaCifraCompleta(
+                    letra="Segunda frase",
+                    acordes=[AcordePosicionado(acorde="Am", posicao=0), AcordePosicionado(acorde="F", posicao=8)],
+                )]),
+            ],
+        )
+        result.harmonicSummary = ResumoEstruturado(blocos=[
+            TrechoHarmonico(acordes=["C", "G"], fraseGuia="Primeira frase", secao="Verso"),
+            TrechoHarmonico(acordes=["Am", "F"], fraseGuia="Segunda frase", secao="Refrão"),
+        ])
+        return result
+
+    provider.generate = generate
+    source = "VERSO\nC       G\nPrimeira frase\nREFRAO\nAm      F\nSegunda frase"
+    result = IaService(provider).generate(ResumoHarmonicoRequest(tipo="texto", titulo="Teste", conteudo=source))
+
+    assert "Reorganize o texto" in provider.user_prompt
+    assert "Preserve rigorosamente a ordem musical" in provider.user_prompt
+    assert result.fullChordSheet.content == "[Verso]\nC        G\nPrimeira frase\n\n[Refrão]\nAm      F\nSegunda frase"
+    assert [section.nome for section in result.fullChordSheet.sections] == ["Verso", "Refrão"]
+    assert [block.acordes for block in result.harmonicSummary.blocos] == [["C", "G"], ["Am", "F"]]
+    assert any("Texto organizado por IA" in note for note in result.observacoes)
+
+
 def test_text_clears_guide_not_present_in_user_content():
     provider = FakeProvider()
     service = IaService(provider)
@@ -67,7 +106,7 @@ def test_text_clears_guide_not_present_in_user_content():
     assert result.harmonicSummary.blocos[0].fraseGuia is None
 
 
-def test_research_prompt_allows_known_song_without_external_source():
+def test_research_without_authorized_source_never_calls_provider():
     provider = FakeProvider()
     service = IaService(provider)
     request = ResumoHarmonicoRequest(
@@ -76,16 +115,14 @@ def test_research_prompt_allows_known_song_without_external_source():
         artista="Cazuza",
     )
 
-    result = service.generate(request)
+    from app.errors import ApiError
+    import pytest
 
-    assert result.titulo == "Teste"
-    assert "música amplamente conhecida" in provider.user_prompt
-    assert "versão harmônica mais conhecida" in provider.user_prompt
-    assert "Não exija uma fonte externa" in provider.user_prompt
-    assert "Retorne trechos vazios somente quando" in provider.user_prompt
-    assert "não conhecer acordes suficientes" in provider.user_prompt
-    assert "não tente completar lacunas" not in provider.user_prompt
-    assert result.fullChordSheet is None
+    with pytest.raises(ApiError) as raised:
+        service.generate(request)
+
+    assert raised.value.code == "fonte_nao_selecionada"
+    assert provider.user_prompt == ""
 
 
 def test_visual_upload_uses_same_analysis_for_full_sheet_and_summary():
@@ -150,3 +187,107 @@ def test_multipage_visual_pdf_pipeline_returns_summary_and_private_full_sheet():
     assert result.fullChordSheet.visibility == "private"
     assert result.fullChordSheet.source == "user_upload"
     assert result.fullChordSheet.content == "[Refrão]\nC        G\nDigno é o Senhor"
+
+
+def test_shared_catalog_skips_provider_even_with_online_source():
+    """Catálogo compartilhado tem prioridade sobre qualquer fonte online para evitar chamadas desnecessárias ao DeepSeek."""
+    from app.schemas.resumo_harmonico import ResumoEstruturado, TrechoHarmonico
+    from app.services.content_extractor import ExtractedContent
+    from unittest.mock import MagicMock
+
+    provider = FakeProvider()
+    cached_response = ResumoHarmonicoResponse(
+        titulo="Wonderwall",
+        artista="Oasis",
+        tom="Fa#m",
+        harmonicSummary=ResumoEstruturado(blocos=[TrechoHarmonico(acordes=["F#m", "A", "E"], fraseGuia="Today is gonna be")]),
+        observacoes=["Resumo do catálogo compartilhado; revise antes de usar."],
+        confianca="media",
+    )
+
+    fake_shared = MagicMock()
+    fake_shared.search_personal.return_value = None
+    match = MagicMock()
+    match.score = 0.95
+    match.song.song_data = cached_response.model_dump(mode="json")
+    fake_shared.search.return_value = match
+
+    online_source = MagicMock()
+    online_source.content = "F#m A E\nToday is gonna be the day"
+    extracted = ExtractedContent("text", online_source.content, "text/plain")
+
+    service = IaService(provider, shared_songs=fake_shared)
+    request = ResumoHarmonicoRequest(
+        tipo="pesquisa",
+        titulo="Wonderwall",
+        artista="Oasis",
+        sourceProvider="simplificacifras",
+        sourceId="wonderwall-oasis",
+    )
+
+    result = service.generate(request, extracted=extracted, online_source=online_source)
+
+    # Provedor NÃO deve ser chamado quando catálogo compartilhado tem a música
+    assert provider.user_prompt == ""
+    assert result.titulo == "Wonderwall"
+    assert result.artista == "Oasis"
+
+
+def test_research_uses_web_chord_sheet_in_text_flow():
+    from app.services.web_search import ChordSheetHit
+
+    provider = FakeProvider()
+    web_search_calls = []
+    sheet = "C  G\nEstátuas e cofres e paredes pintadas"
+    service = IaService(
+        provider,
+        web_search=lambda *args: web_search_calls.append(args),
+        sheet_finder=lambda titulo, artista: ChordSheetHit(sheet, "https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/", "cifraclub"),
+    )
+    request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Pais e Filhos", artista="Legião Urbana", modoGeracao="conhecimento_modelo")
+
+    result = service.generate(request)
+
+    assert web_search_calls == []
+    assert provider.user_prompt == ""  # cifra da web é montada localmente: sem custo de IA
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G"]
+    assert result.harmonicSummary.blocos[0].fraseGuia == "Estátuas e cofres e paredes pintadas"
+    assert result.fullChordSheet.source == "web_source"
+    assert result.fullChordSheet.content == sheet
+    assert "Cifra obtida de https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/; revise antes de salvar." in result.observacoes
+
+
+def test_search_without_catalog_or_web_sheet_asks_for_file_and_never_calls_ai():
+    """Fluxo: catálogo -> scraper -> arquivo/foto do usuário. A IA nunca inventa a música."""
+    from app.errors import ApiError
+
+    class ExplodingProvider:
+        def generate(self, *args, **kwargs):
+            raise AssertionError("A IA não pode gerar música sem fonte")
+
+    service = IaService(ExplodingProvider(), web_search=lambda *args: None, sheet_finder=lambda *args: None)
+    request = ResumoHarmonicoRequest(tipo="pesquisa", titulo="Música", modoGeracao="conhecimento_modelo")
+
+    with pytest.raises(ApiError) as error:
+        service.generate(request)
+    assert error.value.code == "cifra_nao_encontrada" and error.value.status_code == 404
+
+
+def test_web_sheet_uses_page_key_shape_and_capo_not_ai_guess():
+    from app.services.web_search import ChordSheetHit
+
+    class Provider:
+        user_prompt = None
+
+        def generate(self, system_prompt, user_prompt, *args, **kwargs):
+            return ResumoHarmonicoResponse.model_validate({
+                "titulo": "Isaías 9", "tom": "D", "capotraste": None, "confianca": "alta",
+                "harmonicSummary": {"blocos": [{"acordes": ["C", "G4", "Am"]}]}})
+
+    hit = ChordSheetHit("C  G4(6)  Am\nUm menino nasceu", "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/",
+                        "cifraclub", key="D", shape_key="C", capo=2)
+    service = IaService(Provider(), web_search=lambda *a: None, sheet_finder=lambda *a: hit)
+    result = service.generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="Isaías 9", artista="Rodolfo Abrantes",
+                                                     modoGeracao="conhecimento_modelo"))
+    assert result.tom == "D" and result.capotraste == 2
+    assert result.observacoes[0] == "Tom: D (acordes na forma de C, capotraste na 2ª casa)."

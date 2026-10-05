@@ -10,13 +10,90 @@ from .content_extractor import clean_musical_text, is_technical_line, TECHNICAL_
 
 FLAT_ROOTS = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
 CHORD_RE = re.compile(
-    r"^(?P<root>[A-Ga-g](?:#|b)?)(?P<quality>[^/\s]{0,20})?(?:/(?P<bass>[A-Ga-g](?:#|b)?))?$"
+    r"^(?P<root>[A-Ga-g](?:#|b)?)(?P<quality>(?:\([^()\s]{1,12}\)|[^/\s(]){0,20})(?:/(?P<bass>[A-Ga-g](?:#|b)?))?$"
 )
-QUALITY_RE = re.compile(
-    r"^(?:|m|5|6|7|9|11|13|2|4|sus|sus2|sus4|add9|maj7|M7|7M|7m|7\+|Δ7|"
-    r"m7|m9|m11|m13|m6|dim|°|o|aug|\+|#5|m7b5|ø|mMaj7|m7\(11\)|m\(add9\)|"
-    r"7\([#b]?\d+\)|maj7\(\d+\)|m7\([#b]?\d+\)|\(#5\)|\(add9\))$"
-)
+
+
+# Espelho de normalizeSuffix() em js/instruments/multi-instrument-chord-library.js.
+# O backend aceita exatamente o que o frontend aceita e PRESERVA a grafia original do acorde
+# (A7(9) continua A7(9)); o frontend só usa o equivalente para escolher o diagrama.
+CLIENT_ALIASES = {
+    "": "", "maj": "", "maior": "",
+    "m": "m", "min": "m", "menor": "m", "-": "m",
+    "5": "5", "6": "6", "m6": "m6", "7": "7", "dom": "7",
+    "maj7": "maj7", "M7": "maj7", "7M": "maj7", "7m": "maj7", "7+": "maj7", "Δ7": "maj7",
+    "m7": "m7", "min7": "m7", "mMaj7": "mMaj7", "m(maj7)": "mMaj7",
+    "9": "9", "maj9": "maj9", "M9": "maj9", "m9": "m9", "add9": "add9", "(add9)": "add9",
+    "11": "11", "m11": "m11", "m7(11)": "m11", "13": "13",
+    "2": "sus2", "sus2": "sus2", "4": "sus4", "sus": "sus4", "sus4": "sus4",
+    "dim": "dim", "°": "dim", "o": "dim",
+    "m7(b5)": "m7b5", "m7b5": "m7b5", "ø": "m7b5",
+    "aug": "aug", "+": "aug", "#5": "aug", "(#5)": "aug",
+}
+CLIENT_EXTRA_ALIASES = {"m13": "m11", "m(7M)": "mMaj7", "m(maj7)": "mMaj7", "7sus4": "sus4",
+                        "7sus": "sus4", "7(4)": "sus4", "m(add9)": "m", "m(9)": "m"}
+_EXTENSION_RE = re.compile(r"^[#b+-]?\d{1,2}[#b+-]?(?:[/,][#b+-]?\d{1,2}[#b+-]?)*$")
+
+
+def simplify_quality(quality: str) -> str:
+    """Remove tudo que estiver entre parênteses: 7(9) -> 7, m(add9) -> m, m7(b5) -> m7."""
+    return re.sub(r"\([^()]*\)", "", quality or "")
+
+
+_PAREN_CHORD_TOKEN_RE = re.compile(r"(?<!\S)[A-G][#b]?[^\s/()]*\([^()\s]*\)[^\s/()]*(?:/[A-G][#b]?)?(?!\S)")
+
+
+def simplify_chord_text(text: str | None) -> str | None:
+    """Simplifica acordes com parênteses dentro de um texto de cifra, mantendo o alinhamento.
+
+    Só troca tokens que são acordes válidos; letra e marcações como (2x) ficam intactas.
+    """
+    if not text:
+        return text
+
+    def replace(match: re.Match) -> str:
+        token = match.group(0)
+        try:
+            simplified = normalize_chord(token)
+        except ValueError:
+            return token
+        return simplified + " " * (len(token) - len(simplified))
+
+    return "\n".join(_PAREN_CHORD_TOKEN_RE.sub(replace, line).rstrip() if "(" in line else line
+                     for line in text.split("\n"))
+
+
+def _client_base_alias(suffix: str) -> str | None:
+    if suffix in CLIENT_ALIASES:
+        return CLIENT_ALIASES[suffix]
+    folded = suffix.casefold()
+    return next((value for key, value in CLIENT_ALIASES.items() if key.casefold() == folded), None)
+
+
+def client_suffix(suffix: str) -> str | None:
+    """Sufixo canônico (para diagrama) ou None se o frontend rejeitaria o acorde."""
+    suffix = (suffix or "").strip()
+    base = _client_base_alias(suffix)
+    if base is not None:
+        return base
+    if suffix in CLIENT_EXTRA_ALIASES:
+        return CLIENT_EXTRA_ALIASES[suffix]
+    match = re.fullmatch(r"(.*?)\(([^()]+)\)", suffix)
+    if not match or not _EXTENSION_RE.fullmatch(match.group(2)):
+        return None
+    base = _client_base_alias(match.group(1))
+    if base is None:
+        return None
+    tensions = re.split(r"[/,]", match.group(2))
+    if base == "7":
+        return next((value for key, value in (("4", "sus4"), ("13", "13"), ("11", "11"), ("9", "9")) if key in tensions), "7")
+    if base == "maj7":
+        return "maj9" if "9" in tensions else "maj7"
+    if base == "m7":
+        return "m11" if "11" in tensions else "m9" if "9" in tensions else "m7b5" if {"b5", "5-"} & set(tensions) else "m7"
+    if base == "":
+        return "add9" if "9" in tensions else "sus4" if "4" in tensions else ""
+    return base
 
 
 def _shown_root(value: str) -> str:
@@ -45,17 +122,14 @@ def _parse_chord(value: str) -> tuple[str, str]:
     # Uma segunda nota maiúscula fora do baixo indica acordes concatenados.
     if re.search(r"[A-G]", quality):
         raise ValueError(f"Acordes concatenados: {value}")
-    if not QUALITY_RE.fullmatch(quality):
+    if client_suffix(quality) is None:
         raise ValueError(f"Qualidade de acorde inválida: {value}")
-    display_aliases = {
-        "4": "sus4",
-        "7M": "maj7",
-        "M7": "maj7",
-        "m7M": "mMaj7",
-    }
-    canonical_aliases = {**display_aliases, "2": "sus2"}
+    # Simplificação do ROUDY: extensões entre parênteses não são exibidas (A7(9) -> A7, E7(4) -> E7).
+    quality = simplify_quality(quality)
+    canonical_quality = client_suffix(quality)
+    if canonical_quality is None:
+        raise ValueError(f"Qualidade de acorde inválida: {value}")
     display_quality = quality
-    canonical_quality = canonical_aliases.get(quality, quality)
     shown_bass = f"/{_shown_root(match.group('bass'))}" if match.group("bass") else ""
     canonical_bass = f"/{_canonical_root(match.group('bass'))}" if match.group("bass") else ""
     display_name = f"{_shown_root(match.group('root'))}{display_quality}{shown_bass}"
@@ -79,9 +153,39 @@ def normalize_chord(value: str) -> str:
     return _parse_chord(value)[0]
 
 
+def is_client_chord(value: str) -> bool:
+    """Replica parseChord do frontend para barrar acordes antes de responder."""
+    compact = str(value or "").strip().replace("♯", "#").replace("♭", "b").replace(" ", "")
+    match = re.fullmatch(r"([A-Ga-g][#b]?)(.*?)(?:/([A-Ga-g][#b]?))?", compact)
+    return bool(match) and client_suffix(match.group(2)) is not None
+
+
 def canonicalize_chord(value: str) -> str:
     """Retorna a forma interna em sustenidos para busca e comparação."""
     return _parse_chord(value)[1]
+
+
+def condense_progression(chords: list[str], repetitions: int | None = None) -> tuple[list[str], int | None]:
+    """Resumo no padrão ROUDY: uma volta da progressão + quantas vezes ela se repete.
+
+    C D G C D G C D G C D G       -> C D G (4x)
+    C D G C D G C D G C D G C D   -> C D G (4x)  (sobra incompleta no fim é a volta seguinte começando)
+    Multiplica pela repetição que o bloco já tinha. Sequências sem padrão ficam como estão.
+    """
+    total = len(chords)
+    for unit_size in range(1, total // 2 + 1):
+        unit = chords[:unit_size]
+        if len(set(unit)) < min(2, unit_size) and unit_size > 1:
+            continue
+        turns = total // unit_size
+        if turns < 2 or any(chords[index] != unit[index % unit_size] for index in range(total)):
+            continue
+        if unit_size == 1 and total > 1:
+            # Um acorde só repetido (C C C) não é progressão; mantém um.
+            return unit, repetitions
+        combined = turns * (repetitions or 1)
+        return unit, combined if combined <= 99 else 99
+    return chords, repetitions
 
 
 def _compress_exact_repetition(chords: list[str]) -> tuple[list[str], int | None]:
@@ -106,6 +210,8 @@ SECTION_NAMES = {
     "verso": "Verso", "pre refrao": "Pré-Refrão", "pre-refrao": "Pré-Refrão",
     "refrao": "Refrão", "ponte": "Ponte", "interludio": "Interlúdio",
     "solo": "Solo", "final": "Final", "outro": "Final",
+    "primeira parte": "Primeira Parte", "segunda parte": "Segunda Parte",
+    "terceira parte": "Terceira Parte", "quarta parte": "Quarta Parte",
 }
 
 
@@ -460,3 +566,54 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
 
     normalized.observacoes = list(dict.fromkeys(normalized.observacoes))[:20]
     return normalized
+
+
+def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
+    """Última barreira antes de responder: todo acorde precisa passar no parseChord do frontend.
+
+    Um único acorde fora do vocabulário faz o frontend descartar a resposta inteira, então aqui
+    adaptamos o que for possível e omitimos o resto, registrando em observacoes.
+    Vale também para respostas vindas do catálogo compartilhado, que não passam por normalize_response.
+    """
+    fixed = response.model_copy(deep=True)
+    dropped = []
+
+    def adapt(chord: str) -> str | None:
+        try:
+            candidate = normalize_chord(chord)
+        except ValueError:
+            candidate = None
+        if candidate and is_client_chord(candidate):
+            return candidate
+        dropped.append(str(chord))
+        return None
+
+    if fixed.tom:
+        fixed.tom = adapt(fixed.tom)
+    for trecho in fixed.harmonicSummary.blocos:
+        trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
+    fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
+    for trecho in fixed.harmonicSummary.blocos:
+        # Padrão ROUDY: resumo só com acordes e frases-gancho, sem nomes de seção.
+        trecho.secao = None
+        trecho.acordes, trecho.repeticoes = condense_progression(trecho.acordes, trecho.repeticoes)
+        if trecho.repeticoes == 1:
+            trecho.repeticoes = None
+    if fixed.fullChordSheet:
+        fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
+        for section in fixed.fullChordSheet.sections:
+            for line in section.linhas:
+                kept = []
+                for item in line.acordes:
+                    chord = adapt(item.acorde)
+                    if chord:
+                        item.acorde = chord
+                        kept.append(item)
+                line.acordes = kept
+    if dropped:
+        note = "Acordes não reconhecidos foram omitidos: " + ", ".join(sorted(set(dropped)))
+        if note not in fixed.observacoes:
+            fixed.observacoes = (fixed.observacoes + [note])[:20]
+    if not fixed.harmonicSummary.blocos:
+        raise ApiError("resultado_nao_confiavel", "Não foi possível produzir um resumo harmônico confiável.", 422)
+    return fixed

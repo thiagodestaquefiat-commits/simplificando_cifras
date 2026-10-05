@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.schemas.resumo_harmonico import ResumoEstruturado, ResumoHarmonicoResponse, TrechoHarmonico
+from app.schemas.resumo_harmonico import AcordePosicionado, CifraCompleta, LinhaCifraCompleta, ResumoEstruturado, SecaoCifraCompleta, ResumoHarmonicoResponse, TrechoHarmonico
 from app.services.providers import (
     ProviderInvalidResponse,
     ProviderRateLimit,
@@ -117,6 +117,49 @@ def test_research_requires_explicit_source_selection(client):
     )
     assert response.status_code == 400
     assert response.get_json()["erro"]["codigo"] == "fonte_nao_selecionada"
+
+
+class SnippetDDGS:
+    """Busca web simulada que devolve um resultado (sem página do Cifra Club)."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def text(self, query, **kwargs):
+        return [{"title": "Canção teste - Cifra", "href": "https://example.com", "body": "Db B4 Gb/Bb letra"}]
+
+
+@patch("app.services.providers.deepseek_provider.DeepSeekProvider.generate")
+def test_search_without_source_returns_not_found_and_does_not_call_ai(generate, client, monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", SnippetDDGS)
+    monkeypatch.setattr("app.services.web_search.SafeMusicSourceHttpClient.get_text",
+                        lambda *a, **k: (_ for _ in ()).throw(__import__("app.services.music_sources", fromlist=["x"]).MusicSourceUnavailable("404")))
+    response = client.post(
+        "/api/resumo-harmonico",
+        json={"tipo": "pesquisa", "titulo": "Canção teste", "artista": "Artista", "modoGeracao": "conhecimento_modelo"},
+        headers=auth_headers(client),
+    )
+
+    assert response.status_code == 404
+    assert response.get_json()["erro"]["codigo"] == "cifra_nao_encontrada"
+    generate.assert_not_called()
+
+
+@pytest.mark.parametrize("payload", [
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "sourceProvider": "licensed", "sourceId": "one"},
+    {"tipo": "pesquisa", "titulo": "Canção", "modoGeracao": "conhecimento_modelo", "conteudo": "https://malicioso.example"},
+    {"tipo": "texto", "conteudo": "C G", "modoGeracao": "conhecimento_modelo"},
+])
+def test_model_knowledge_mode_rejects_sources_urls_and_other_flows(payload, client):
+    response = client.post("/api/resumo-harmonico", json=payload, headers=auth_headers(client))
+    assert response.status_code == 400
+    assert response.get_json()["erro"]["codigo"] == "entrada_invalida"
 
 
 def test_source_search_returns_ranked_options_without_content(client):

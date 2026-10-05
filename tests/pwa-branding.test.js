@@ -8,6 +8,8 @@ const projectRoot = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, "manifest.webmanifest"), "utf8"));
 const indexHtml = fs.readFileSync(path.join(projectRoot, "index.html"), "utf8");
 const serviceWorker = fs.readFileSync(path.join(projectRoot, "service-worker.js"), "utf8");
+const cachedAssets=JSON.parse(serviceWorker.slice(serviceWorker.indexOf('['),serviceWorker.indexOf('];')+1));
+assert.equal(new Set(cachedAssets).size,cachedAssets.length,'O cache offline não pode ter URLs duplicadas');
 const requiredIcons = [
   ["assets/icons/roudy-icon-v4-192.png", "192x192", "any"],
   ["assets/icons/roudy-icon-v4-512.png", "512x512", "any"],
@@ -28,24 +30,31 @@ assert.equal(manifest.scope, ".");
 assert.equal(manifest.display, "standalone");
 assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
-assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
+assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
 assert.match(serviceWorker, /simplificando-cifras-v152-ios-tab-material/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
-assert.match(serviceWorker, /event-collaboration-client\.js\?v=9/);
+assert.match(serviceWorker, /event-collaboration-client\.js\?v=11/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
-assert.match(indexHtml, /js\/editor\/song-format\.js\?v=8/);
-assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=8/);
-assert.match(indexHtml, /js\/song-model\.js\?v=4/);
-assert.match(serviceWorker, /js\/song-model\.js\?v=4/);
-assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=8/);
-assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=8/);
+assert.match(indexHtml, /js\/editor\/song-format\.js\?v=10/);
+assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=10/);
+assert.match(indexHtml, /js\/song-model\.js\?v=5/);
+assert.match(serviceWorker, /js\/song-model\.js\?v=5/);
+assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=15/);
+assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=15/);
+for(const match of indexHtml.matchAll(/(?:src|href)="(js\/[^"\s]+)"/g))assert.ok(serviceWorker.includes('"./'+match[1]+'"'),`Recurso da interface ausente do cache offline: ${match[1]}`);
 assert.match(serviceWorker, /js\/song-model\.js/);
-assert.match(serviceWorker, /js\/song-repository\.js/);
-assert.match(serviceWorker, /js\/library-sync\.js\?v=11/);
+assert.match(serviceWorker, /js\/demo-library\.js\?v=4/);
+assert.match(serviceWorker, /js\/app-assistant\.js\?v=1/);
+assert.match(serviceWorker, /js\/app-assistant\.js\?v=2/);
+assert.match(serviceWorker, /js\/app-assistant\.js\?v=3/);
+assert.match(serviceWorker, /js\/app-assistant\.js\?v=4/);
+assert.match(serviceWorker, /js\/app-assistant\.js\?v=5/);
+assert.match(serviceWorker, /js\/song-repository\.js\?v=13/);
+assert.match(serviceWorker, /js\/library-sync\.js\?v=17/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
@@ -113,10 +122,12 @@ const server = http.createServer((request, response) => {
   try {
     const url = process.env.PWA_TEST_URL || `http://127.0.0.1:${server.address().port}/`;
     await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.getByText("Continuar sem login", {exact:true}).click();
+    const initialSongCount=await page.locator('.music-item').count();
     const devtools = await context.newCDPSession(page);
     const appManifest = await devtools.send("Page.getAppManifest");
     assert.deepEqual(appManifest.errors, [], `Manifesto inválido no Chrome DevTools: ${JSON.stringify(appManifest.errors)}`);
-    assert.match(appManifest.url, /manifest\.webmanifest\?v=14$/);
+    assert.match(appManifest.url, /manifest\.webmanifest\?v=15$/);
     for (const [src] of requiredIcons) {
       const response = await page.request.get(new URL(src, url).href);
       assert.equal(response.status(), 200, `${src} não retornou HTTP 200`);
@@ -134,6 +145,7 @@ const server = http.createServer((request, response) => {
     assert.match(download.suggestedFilename(), /^roudy-biblioteca-\d{4}-\d{2}-\d{2}\.json$/);
     const backupJson = await page.evaluate(() => JSON.stringify(libraryExporter.buildExport({
       catalogoPadrao: [],
+      ownerId: "guest",
       musicas: [musicas[0]],
       events: [],
       playlists: [],
@@ -142,20 +154,21 @@ const server = http.createServer((request, response) => {
       configuracoes: {}
     })));
     await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: /Configurações/ }).click();
+    await page.getByRole("button", { name: /Ajuda e Suporte/ }).click();
     await page.getByRole("button", { name: /Backup e dados/ }).click();
+    await page.locator('.sync-advanced summary').click();
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
+    await page.getByRole("button", { name: "Importar Backup de Perfil", exact: true }).click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles({ name: "backup-seguro.json", mimeType: "application/json", buffer: Buffer.from(backupJson) });
-    await page.getByText("Backup encontrado", { exact: true }).waitFor();
-    assert.match(await page.locator("#modal-body").innerText(), /1 música[\s\S]*Novas\s*0[\s\S]*Já existentes\s*1[\s\S]*Conflitos\s*0/);
-    await page.getByRole("button", { name: "Restaurar", exact: true }).click();
-    assert.equal(await page.locator(".music-item").count(), 86, "restauração idempotente não duplica a biblioteca");
+    await page.waitForFunction(()=>document.getElementById('toast')?.textContent.includes('Backup importado'));
+    assert.equal(await page.locator(".music-item").count(), initialSongCount, "restauração idempotente não duplica as músicas iniciais");
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
-    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+    await page.evaluate(()=>closeModal());
     const serviceWorkerState = await page.evaluate(async () => {
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Cache offline não ativou em 20 segundos')),20000))]);
       if (registration.active && registration.active.state !== "activated") {
         await new Promise((resolve) => registration.active.addEventListener("statechange", () => {
           if (registration.active.state === "activated") resolve();
@@ -168,7 +181,7 @@ const server = http.createServer((request, response) => {
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
     assert.equal(await page.title(), "ROUDY");
-    assert.equal(await page.locator(".music-item").count(), 86);
+    assert.equal(await page.locator(".music-item").count(), initialSongCount);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), persistedPlaylists);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_favoritos_v1")), persistedFavorites);
     assert.equal(errors.length, 0, [...errors, ...failedRequests].join(" | "));

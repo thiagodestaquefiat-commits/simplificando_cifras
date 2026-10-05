@@ -52,7 +52,10 @@ const response = {
       await page.route("https://sdk.scdn.co/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
       await page.route("https://cdn.segment.com/**", (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
       await page.route("https://example.test/**", (route) => route.fulfill({ status: 200, contentType: "image/png", body: Buffer.alloc(0) }));
+      await page.route('**/api/auth/config',route=>route.fulfill({json:{enabled:false}}));
       await page.goto(previewUrl || `http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(()=>loginGateAuthReady);
+      await page.evaluate(()=>continueWithoutLogin());
       await page.evaluate((raw) => {
         const model = harmonicSummaryClient.responseToEditorModel(raw, "guitar");
         const song = songModel.create({
@@ -87,7 +90,7 @@ const response = {
       const fullBefore = await page.locator('.song-page[data-page-index="1"] .full-chord-sheet').innerText();
       await page.evaluate(() => transpose(1));
       assert.match(await page.locator(".full-chord-sheet .is-chord").first().innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
-      await page.evaluate(() => enterStageMode());
+      await page.evaluate(() => {stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),sheetView:'full'});enterStageMode();});
       assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
       assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
       assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);

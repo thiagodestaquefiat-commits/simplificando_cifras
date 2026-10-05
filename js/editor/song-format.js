@@ -29,7 +29,7 @@
     if (!content) return null;
     return {
       visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
+      source: ["user_text", "model_knowledge", "web_source"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         nome: cleanText(section && section.nome || "", 80) || null,
@@ -144,19 +144,20 @@
       aiConfidence: ["alta", "media", "baixa"].includes(value.aiConfidence) ? value.aiConfidence : null,
       sections: Array.isArray(value.sections) && value.sections.length ? value.sections.map(normalizeSection) : [normalizeSection({}, 0)],
       fullChordSheet: normalizeFullChordSheet(value.fullChordSheet || fallback.fullChordSheet),
+      tablature: global.tablature?.normalize(value.tablature || fallback.tablature) || null,
       notes: cleanText(value.notes || ""), createdAt: value.createdAt || now, updatedAt: now
     };
   }
 
   function fromLegacy(song) {
-    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet });
+    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet, tablature: song.tablature || song.editorData.tablature });
     return normalize({
       id: song && song.id, title: song && song.title, artist: song && song.artist,
       originalKey: song && song.key, currentKey: song && song.key, capo: parseCapo(song && song.capo),
       instrument: song && song.instrumento, status: "draft", source: "existing",
       sections: Array.isArray(song && song.blocos) ? song.blocos.map(legacyBlockToSection) : undefined,
       accessContext: song && song.accessContext, sourceInfo: song && song.sourceInfo,
-      fullChordSheet: song && song.fullChordSheet,
+      fullChordSheet: song && song.fullChordSheet, tablature: song && song.tablature,
       notes: song && song.notes, bpm: song && song.bpm, createdAt: song && song.createdAt
     });
   }
@@ -178,12 +179,15 @@
     return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
   }
 
+  const SECTION_NAME = /^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)(?:\s*\d+)?\s*\]?\)?:?$/i;
+  function isSectionName(value) { return SECTION_NAME.test(String(value || "").trim()); }
+
   function simpleText(model) {
     const normalized = normalize(model);
     return normalized.sections.map((section, index) => {
       const rows = [];
       const label = cleanText(section.label, 120);
-      if (label && !new RegExp(`^(Trecho|Seção)\\s+${index + 1}$`, "i").test(label)) rows.push(label);
+      if (label && !isSectionName(label) && !new RegExp(`^(Trecho|Seção)\\s+${index + 1}$`, "i").test(label)) rows.push(label);
       section.lines.forEach((line) => {
         if (line.lyrics) rows.push(line.lyrics);
         if (line.chords.length) rows.push(renderChordLine(line.chords) + (line.repeticoes ? `  (${line.repeticoes}x)` : ""));
@@ -236,7 +240,7 @@
     const hasStructuredSource = Boolean(song && song.editorData && Array.isArray(song.editorData.sections));
     const technical = /^(?:afina[çc][ãa]o|tuning|metadados|diagramas?(?: de acordes)?|legenda(?: de acordes)?|acordes (?:utilizados|usados)|tom|artista|t[íi]tulo)\s*(?::.*)?$|^\d+$/i;
     const generic = /^(?:Se[çc][ãa]o|Trecho)(?:\s+\d+)?$/i;
-    const realSection = /^(?:Intro(?:dução)?|Verso|Pré[- ]refrão|Refrão|Ponte|Interlúdio|Solo|Final)(?:\s+\d+)?$/i;
+    const realSection = SECTION_NAME;
     const seen = new Set();
     const sections = normalized.sections.filter(section => !technical.test(section.label.trim())).map((section, sectionIndex) => {
       const lines = section.lines.filter(line => !technical.test(line.lyrics.trim())).map(line => ({
@@ -245,9 +249,11 @@
         chords: line.chords.map(item => ({ chord: item.chord, position: item.position }))
       }));
       const hasHook = lines.some(line => line.lyrics && !chordLine(line.lyrics));
+      // Padrão ROUDY: o resumo mostra só acordes e frases-gancho; nomes de seção (Intro, Primeira
+      // Parte, Pré-Refrão...) não aparecem, inclusive em músicas antigas (sem alterar o que está salvo).
       return { type: section.type, label: section.label,
         showLabel: !section.hideLabel && !generic.test(section.label) &&
-          !(hasHook && realSection.test(section.label)) &&
+          !realSection.test(section.label.trim()) &&
           (hasStructuredSource || Boolean(song?.blocos?.[sectionIndex]?.l)), lines };
     }).filter(section => {
       if (!section.lines.length) return false;
@@ -291,9 +297,10 @@
       accessContext: normalized.accessContext, sourceInfo: normalized.sourceInfo,
       createdAt: normalized.createdAt, updatedAt: normalized.updatedAt,
       fullChordSheet: normalized.fullChordSheet,
+      tablature: normalized.tablature,
       editorData: normalized
     };
   }
 
-  global.songFormat = Object.freeze({ types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ isSectionName, types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);

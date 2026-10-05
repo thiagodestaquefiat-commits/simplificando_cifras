@@ -1,0 +1,408 @@
+import pytest
+
+from app.services import web_search
+from app.services.music_sources import MusicSourceUnavailable
+
+
+def fake_ddgs(results):
+    class FakeDDGS:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def text(self, query, **kwargs):
+            return results
+
+    return FakeDDGS
+
+
+class FakeHttpClient:
+    def __init__(self, html=None, error=None):
+        self.html, self.error, self.calls = html, error, []
+
+    def get_text(self, url, *, allowed_hosts, allowed_content_types):
+        self.calls.append((url, allowed_hosts, allowed_content_types))
+        if self.error:
+            raise self.error
+        return self.html, url
+
+
+RESULTS = [
+    {"title": "Letra", "href": "https://www.letras.mus.br/artista/musica/", "body": "trecho da letra"},
+    {"title": "Cifra Club", "href": "https://www.cifraclub.com.br/artista/musica/", "body": "G D Em C"},
+    {"title": "Outra cifra", "href": "https://www.cifraclub.com.br/artista/outra/", "body": "A E"},
+]
+
+
+def test_fetches_first_cifraclub_result_and_uses_chord_sheet(monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(RESULTS))
+    client = FakeHttpClient('<html><script>var x=1</script><div class="cifra_cnt"><pre><b>G</b>   D\nLetra da música</pre></div></html>')
+
+    context = web_search.search_chord_context("Música", http_client=client)
+
+    assert context == "G   D\nLetra da música"
+    assert [call[0] for call in client.calls] == ["https://www.cifraclub.com.br/artista/musica/"]
+    assert client.calls[0][1] == web_search.CIFRACLUB_HOSTS
+    assert client.calls[0][2] == ("text/html",)
+
+
+def test_chord_sheet_is_limited_to_20000_chars(monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(RESULTS))
+    client = FakeHttpClient(f"<pre>{'G D ' * 6000}</pre>")
+
+    assert len(web_search.search_chord_context("Música", http_client=client)) == 20000
+
+
+@pytest.mark.parametrize("client", [
+    FakeHttpClient(error=MusicSourceUnavailable("fora do ar")),
+    FakeHttpClient("<html><p>sem cifra</p></html>"),
+])
+def test_falls_back_to_snippets_when_fetch_fails_or_has_no_chord_sheet(monkeypatch, client):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(RESULTS))
+
+    context = web_search.search_chord_context("Música", http_client=client)
+
+    assert "- Cifra Club: G D Em C" in context
+    assert context.count("- Cifra Club: G D Em C") == 2
+    assert "- Letra: trecho da letra" in context
+
+
+def test_does_not_fetch_without_cifraclub_result(monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(RESULTS[:1]))
+    client = FakeHttpClient("<pre>G</pre>")
+
+    assert web_search.search_chord_context("Música", http_client=client) == "- Letra: trecho da letra\n- Letra: trecho da letra"
+    assert client.calls == []
+
+
+@pytest.mark.parametrize("html, expected", [
+    ('<div class="cifra">Am <span>F</span><br>ok</div>', "Am F\nok"),
+    ('<div class="chord">C</div><p>fora</p>', "C"),
+    ("<p>nada</p>", None),
+])
+def test_extract_chord_sheet_uses_cifra_or_chord_classes(html, expected):
+    assert web_search.extract_chord_sheet(html) == expected
+
+
+class RoutingHttpClient:
+    def __init__(self, pages):
+        self.pages, self.calls = pages, []
+
+    def get_text(self, url, *, allowed_hosts, allowed_content_types):
+        self.calls.append((url, allowed_hosts))
+        page = self.pages[url]
+        if isinstance(page, Exception):
+            raise page
+        return page, url
+
+
+SIMPLIFICA_URL = "https://www.simplificacifras.com.br/artista/musica/"
+PRIORITY_RESULTS = RESULTS + [{"title": "Simplifica", "href": SIMPLIFICA_URL, "body": "C G"}]
+
+
+def test_queries_each_site_separately_without_or(monkeypatch):
+    queries = []
+
+    class CapturingDDGS(fake_ddgs([])):
+        def text(self, query, **kwargs):
+            queries.append(query)
+            return []
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", CapturingDDGS)
+    web_search.search_chord_context("Música", "Artista", http_client=FakeHttpClient(error=MusicSourceUnavailable("x")))
+
+    assert queries == ["Música Artista cifra site:cifraclub.com.br", "Música Artista cifra site:simplificacifras.com.br"]
+    assert all(" OR " not in query for query in queries)
+
+
+def test_cifraclub_is_fetched_before_simplificacifras_even_if_ranked_lower(monkeypatch):
+    """Cifra Club tem a cifra original; simplificacifras (versão simplificada) é só a segunda opção."""
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(list(reversed(PRIORITY_RESULTS))))
+    client = RoutingHttpClient({"https://www.cifraclub.com.br/artista/musica/": "<pre>G D</pre>"})
+
+    assert web_search.search_chord_context("Música", http_client=client) == "G D"
+    assert client.calls == [("https://www.cifraclub.com.br/artista/musica/", web_search.CIFRACLUB_HOSTS)]
+
+
+def test_falls_back_to_simplificacifras_when_cifraclub_fails(monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs(PRIORITY_RESULTS))
+    client = RoutingHttpClient({
+        "https://www.cifraclub.com.br/artista/musica/": MusicSourceUnavailable("fora do ar"),
+        "https://www.cifraclub.com.br/artista/outra/": MusicSourceUnavailable("fora do ar"),
+        SIMPLIFICA_URL: "<article>C   G\nLetra simplificada</article>",
+    })
+
+    assert web_search.search_chord_context("Música", http_client=client) == "C   G\nLetra simplificada"
+    assert [call[0] for call in client.calls][-1] == SIMPLIFICA_URL
+    assert all("cifraclub" in call[0] for call in client.calls[:-1])
+
+
+@pytest.mark.parametrize("texto, expected", [
+    ("Legião Urbana", "legiao-urbana"),
+    ("Pais e Filhos", "pais-e-filhos"),
+    ("  Ação & Reação!! ", "acao-reacao"),
+    (None, ""),
+])
+def test_slugify(texto, expected):
+    assert web_search.slugify(texto) == expected
+
+
+def test_extract_chord_sheet_tolerates_none():
+    assert web_search.extract_chord_sheet(None) is None
+
+
+SIMPLIFICA_DIRECT = "https://www.simplificacifras.com.br/cifras/artista/musica"
+CIFRACLUB_DIRECT = "https://www.cifraclub.com.br/artista/musica/"
+
+
+def test_direct_url_is_tried_before_duckduckgo(monkeypatch):
+    queries = []
+
+    class CapturingDDGS(fake_ddgs([])):
+        def text(self, query, **kwargs):
+            queries.append(query)
+            return []
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", CapturingDDGS)
+    client = RoutingHttpClient({CIFRACLUB_DIRECT: "<pre>C G\nLetra</pre>"})
+
+    hit = web_search.find_chord_sheet("Música", "Artista", http_client=client)
+
+    assert hit == web_search.ChordSheetHit("C G\nLetra", CIFRACLUB_DIRECT, "cifraclub")
+    assert client.calls == [(CIFRACLUB_DIRECT, web_search.CIFRACLUB_HOSTS)]
+    assert queries == []
+
+
+def test_fallback_order_cifraclub_simplificacifras_then_search(monkeypatch):
+    queries = []
+    ddg_simplifica = "https://www.simplificacifras.com.br/cifras/artista/musica-ao-vivo"
+
+    class CapturingDDGS(fake_ddgs([])):
+        def text(self, query, **kwargs):
+            queries.append(query)
+            return [{"title": "S", "href": ddg_simplifica, "body": ""}]
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", CapturingDDGS)
+    client = RoutingHttpClient({
+        SIMPLIFICA_DIRECT: MusicSourceUnavailable("404"),
+        CIFRACLUB_DIRECT: "<html><p>sem cifra</p></html>",
+        ddg_simplifica: "<pre>Am F</pre>",
+    })
+
+    hit = web_search.find_chord_sheet("Música", "Artista", http_client=client)
+
+    assert hit == web_search.ChordSheetHit("Am F", ddg_simplifica, "simplificacifras")
+    # Cifra Club sem cifra no endereço direto -> tenta uma vez a lista de músicas do artista antes da busca.
+    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, "https://www.cifraclub.com.br/artista/musicas.html",
+                                                  SIMPLIFICA_DIRECT, ddg_simplifica]
+    assert queries == ["Música Artista cifra site:cifraclub.com.br", "Música Artista cifra site:simplificacifras.com.br"]
+
+
+def test_pais_e_filhos_comes_from_cifraclub_direct_without_duckduckgo(monkeypatch):
+    class FailingDDGS:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("DuckDuckGo não deveria ser chamado")
+
+    monkeypatch.setattr("duckduckgo_search.DDGS", FailingDDGS)
+    cifraclub = "https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/"
+    client = RoutingHttpClient({
+        "https://www.simplificacifras.com.br/cifras/legiao-urbana/pais-e-filhos": MusicSourceUnavailable("404"),
+        cifraclub: '<div class="cifra_cnt"><pre>C  G\nEstátuas e cofres</pre></div>',
+    })
+
+    hit = web_search.find_chord_sheet("Pais e Filhos", "Legião Urbana", http_client=client)
+
+    assert hit == web_search.ChordSheetHit("C  G\nEstátuas e cofres", cifraclub, "cifraclub")
+
+
+def test_find_chord_sheet_returns_none_when_nothing_found(monkeypatch):
+    monkeypatch.setattr("duckduckgo_search.DDGS", fake_ddgs([]))
+    client = FakeHttpClient(error=MusicSourceUnavailable("x"))
+
+    assert web_search.find_chord_sheet("Música", "Artista", http_client=client) is None
+
+
+@pytest.mark.parametrize("html, expected", [
+    ("<article><pre>G D</pre><p>comentários</p></article>", "G D"),
+    ('<article><div class="cifra">Am F</div></article>', "Am F"),
+    ("<article>C G<br>Letra</article>", "C G\nLetra"),
+])
+def test_simplificacifras_extraction_tries_pre_then_cifra_then_article(html, expected):
+    assert web_search.extract_chord_sheet(html, include_article=True) == expected
+
+
+def test_article_is_ignored_for_other_sources():
+    assert web_search.extract_chord_sheet("<article>texto qualquer</article>") is None
+
+
+# --- ScraperAPI ---
+
+def test_scraper_api_client_uses_search_fn():
+    """make_web_searchers retorna funções que usam o search_fn do ScraperApiHttpClient."""
+    calls = []
+
+    class FakeScraperClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(("fetch", url))
+            raise MusicSourceUnavailable("bloqueado")
+
+        def google_search(self, query, max_results=5):
+            calls.append(("search", query))
+            return []
+
+    import functools
+    client = FakeScraperClient()
+    sheet_finder = functools.partial(web_search.find_chord_sheet, http_client=client, search_fn=client.google_search)
+
+    result = sheet_finder("Música Teste", "Artista Teste")
+    assert result is None
+    # Deve ter tentado fetch direto e depois buscado pelo Google
+    fetch_calls = [c for c in calls if c[0] == "fetch"]
+    search_calls = [c for c in calls if c[0] == "search"]
+    assert len(fetch_calls) >= 1, "Deve ter tentado URL direta"
+    assert len(search_calls) >= 1, "Deve ter feito busca via search_fn"
+
+
+def test_make_web_searchers_returns_bound_functions():
+    """make_web_searchers exporta um par (sheet_finder, context_searcher) callable."""
+    sheet_finder, context_searcher = web_search.make_web_searchers("fake_key_for_test")
+    assert callable(sheet_finder)
+    assert callable(context_searcher)
+
+
+def test_make_web_searchers_shares_one_lookup_between_finder_and_context():
+    """Sem cifra encontrada, o contexto não pode refazer todo o scraping (dobrava créditos do ScraperAPI)."""
+    calls = []
+
+    class FakeClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(("fetch", url))
+            raise MusicSourceUnavailable("bloqueado")
+
+    def fake_search(query):
+        calls.append(("search", query))
+        return [{"href": "https://example.com/x", "title": "Título", "body": "trecho"}]
+
+    sheet_finder, context_searcher = web_search.make_web_searchers("k", http_client=FakeClient(), search_fn=fake_search)
+    assert sheet_finder("Música", "Artista") is None
+    first_round = len(calls)
+    assert context_searcher("Música", "Artista") == "- Título: trecho\n- Título: trecho"
+    assert len(calls) == first_round
+
+
+def test_web_search_respects_time_budget(monkeypatch):
+    clock = iter([0, 0, 100, 100, 100, 100, 100])
+    monkeypatch.setattr(web_search.time, "monotonic", lambda: next(clock))
+    calls = []
+
+    class SlowClient:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            calls.append(url)
+            raise MusicSourceUnavailable("lento")
+
+    hit, results = web_search._find("Música", "Artista", SlowClient(), lambda q: calls.append(q) or [], budget_seconds=45)
+    assert hit is None and len(calls) == 1
+
+
+def test_search_prefers_exact_song_page_over_medley_and_lyrics():
+    """Caso real: Morada está em /ministerio-morada/, então a URL direta dá 404 e vale a busca."""
+    fetched = []
+    results = [{"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce-ser-mudado-medley/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/letra/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/"},
+               {"href": "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/"}]
+
+    class Client:
+        def get_text(self, url, *, allowed_hosts, allowed_content_types):
+            fetched.append(url)
+            if url.endswith("/ministerio-morada/e-tudo-sobre-voce/"):
+                return "<pre>[Intro] Am  C  Am  C</pre>", url
+            raise MusicSourceUnavailable("404")
+
+    hit = web_search.find_chord_sheet("É Tudo Sobre Você", "Morada", http_client=Client(),
+                                      search_fn=lambda q: results if "cifraclub" in q else [])
+    assert hit.url == "https://www.cifraclub.com.br/ministerio-morada/e-tudo-sobre-voce/"
+    assert not any("/letra" in url or "medley" in url for url in fetched)
+
+
+class _ScraperLike:
+    supports_render = True
+
+    def __init__(self, pages):
+        self.pages, self.calls = pages, []
+
+    def get_text(self, url, *, allowed_hosts, allowed_content_types, render=False, timeout_seconds=None):
+        self.calls.append((url, render, timeout_seconds))
+        page = self.pages.get((url, render))
+        if isinstance(page, Exception):
+            raise page
+        return page or "<html>sem cifra</html>", url
+
+
+def test_cifraclub_is_tried_first_without_render():
+    url = web_search.direct_url("cifraclub", "Isaías 9", "Rodolfo Abrantes")
+    assert url == "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/"
+    client = _ScraperLike({(url, False): "<pre>C  G4(6)  Am</pre>"})
+    hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
+    assert hit.source_name == "cifraclub" and hit.content == "C  G4(6)  Am"
+    assert client.calls[0][:2] == (url, False) and len(client.calls) == 1
+
+
+def test_render_is_used_only_as_fallback():
+    url = web_search.direct_url("cifraclub", "Isaías 9", "Rodolfo Abrantes")
+    client = _ScraperLike({(url, True): "<pre>C  G4(6)  Am</pre>"})
+    hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
+    assert hit.content == "C  G4(6)  Am"
+    # Rápido primeiro; o render (lento) fica por último, depois da lista do artista e das outras fontes.
+    assert [call[1] for call in client.calls if call[0] == url] == [False, True]
+    assert client.calls[-1][:2] == (url, True)
+
+
+def test_missing_page_is_not_rendered_again():
+    url = web_search.direct_url("cifraclub", "Música", "Artista")
+    client = _ScraperLike({(url, False): MusicSourceUnavailable("ScraperAPI retornou status 404")})
+    web_search.find_chord_sheet("Música", "Artista", http_client=client, search_fn=lambda q: [])
+    assert (url, True) not in [(call[0], call[1]) for call in client.calls]
+
+
+def test_scraper_api_client_defaults_follow_docs():
+    client = web_search.ScraperApiHttpClient("k")
+    assert client.DEFAULT_TIMEOUT_SECONDS >= 60
+
+
+def test_page_metadata_key_shape_and_capo_are_extracted():
+    """Isaías 9 - Rodolfo Abrantes: 'Tom: D (com forma de C)' e 'Capotraste: 2ª casa' ficam fora do <pre>."""
+    url = web_search.direct_url("cifraclub", "Isaías 9", "Rodolfo Abrantes")
+    html = ('<div><b>Tom:</b> <button>D</button> (com forma de <a>C</a>)</div>'
+            '<div>Afinação: E A D G B E</div><div>Capotraste: 2ª casa</div><pre>C  G4(6)  Am</pre>')
+    client = _ScraperLike({(url, False): html})
+    hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
+    assert (hit.key, hit.shape_key, hit.capo) == ("D", "C", 2)
+    assert hit.content == "C  G4(6)  Am"
+
+
+def test_page_without_capo_keeps_only_key():
+    assert web_search.extract_sheet_metadata("<p>Tom: <b>F#m</b></p><pre>F#m D</pre>") == {"key": "F#m"}
+    assert web_search.extract_sheet_metadata("<pre>C G</pre>") == {}
+
+
+def test_page_without_sheet_uses_artist_list_before_slow_render():
+    """Maranata / Lágrimas de Fogo: a página direta abre sem cifra; a cifra está em ...-pot-pourri/.
+    A lista do artista vem antes do render (lento), que antes esgotava o tempo da busca."""
+    direct = web_search.direct_url("cifraclub", "Maranata / Lágrimas de Fogo", "Vitohria Sounds")
+    assert direct == "https://www.cifraclub.com.br/vitohria-sounds/maranata-lagrimas-de-fogo/"
+    real = "https://www.cifraclub.com.br/vitohria-sounds/maranata-lagrimas-de-fogo-pot-pourri/"
+    client = _ScraperLike({
+        (direct, False): "<html><p>letra sem cifra</p></html>",
+        ("https://www.cifraclub.com.br/vitohria-sounds/musicas.html", False):
+            f'<a href="{real}">Maranata / Lágrimas de Fogo (pot-pourri)</a><a href="/vitohria-sounds/fome-e-sede/">Fome e Sede</a>',
+        (real, False): "<pre>G  D  Em  C\nMaranata</pre>",
+    })
+    hit = web_search.find_chord_sheet("Maranata / Lágrimas de Fogo", "Vitohria Sounds", http_client=client, search_fn=lambda q: [])
+    assert hit is not None and hit.url == real
+    assert not any(call[1] for call in client.calls), "não deveria usar o render"

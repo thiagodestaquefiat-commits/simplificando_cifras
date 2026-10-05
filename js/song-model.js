@@ -53,7 +53,7 @@
     return {
       ...value,
       visibility: "private",
-      source: value.source === "user_text" ? "user_text" : "user_upload",
+      source: ["user_text", "model_knowledge", "web_source"].includes(value.source) ? value.source : "user_upload",
       content,
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         ...(section && typeof section === "object" ? section : {}),
@@ -115,6 +115,7 @@
       accessContext: normalizeAccessContext(source.accessContext),
       sourceInfo: normalizeSourceInfo(source.sourceInfo),
       fullChordSheet: normalizeFullChordSheet(source.fullChordSheet),
+      tablature: global.tablature?.normalize(source.tablature) || null,
       createdAt: source.createdAt || now,
       updatedAt: source.updatedAt || source.createdAt || now
     };

@@ -20,8 +20,8 @@ function richSong(index){
 const original=Array.from({length:138},(_,index)=>richSong(index+1));
 memory.set('sc_songs_v1',JSON.stringify(original));memory.set('cifras_musicas_v1',JSON.stringify(original));memory.set('unknown_future_key','raw-preserved');
 const payload=context.libraryExporter.buildExport({catalogoPadrao:[],musicas:original,events:[],playlists:[],medleys:[],favoritos:[],configuracoes:{}});
-assert.deepEqual(payload.origens.sessaoAtual.musicas,original,'exportação preserva o Song completo');
-assert.equal(payload.origens.armazenamentoUsuario.armazenamentoBruto.unknown_future_key,'raw-preserved');
+assert.equal(JSON.stringify(payload.origens.sessaoAtual.musicas),JSON.stringify(original),'exportação preserva o Song completo');
+assert.equal(payload.origens.armazenamentoUsuario,undefined,'exportação não inclui armazenamento bruto');
 
 const emptyPlan=context.libraryImporter.plan(payload,[]);
 assert.deepEqual([emptyPlan.total,emptyPlan.current,emptyPlan.newSongs,emptyPlan.existing,emptyPlan.conflicts,emptyPlan.invalid],[138,0,138,0,0,0]);

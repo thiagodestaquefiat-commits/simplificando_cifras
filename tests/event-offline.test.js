@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const memory=new Map(),ctx={window:null,setTimeout,clearTimeout,storage:{get:(k,f)=>memory.has(k)?structuredClone(memory.get(k)):f,set:(k,v)=>{memory.set(k,structuredClone(v));return true;}}};ctx.window=ctx;
+for(const file of ['stage-offline','event-offline'])vm.runInNewContext(fs.readFileSync(`js/${file}.js`,'utf8'),ctx);
+let scope={ownerId:'account:A',actorId:'A'},events=[],songs=[],fail=false,reads=0,writes=0,warnings=[];
+const saved=new Map(),store={read:async id=>{reads++;return structuredClone(saved.get(id)||null);},write:async r=>{writes++;if(fail)throw Error('quota');saved.set(r.ownerId,structuredClone(r));}};
+const options={store,getScope:()=>scope,getEvents:()=>events,getSong:(_e,i)=>songs.find(s=>s.id===i.songId),canAccess:(e,id)=>e.members.some(m=>m.id===id),getPreferences:()=>({fontSize:28}),onError:e=>warnings.push(e.message)};
+const make=(id,n)=>({id,title:'Evento '+n,members:[{id:'A'}],repertoire:[{id:'item-'+n,songId:'song-'+n,shared:{key:'C'},personalEdits:{A:{key:'D',notes:'minha'},B:{notes:'secreta'}}}]});
+const create=()=>ctx.eventOffline.create(options);
+(async()=>{
+  events=Array.from({length:15},(_,n)=>make('event-'+n,n));songs=events.map((e,n)=>({id:'song-'+n,title:'Música '+n,key:'C',blocos:[{c:'C G'}],editorData:{sections:[{lines:[{lyrics:'Gancho',chords:[{chord:'C',position:0}]}]}]},fullChordSheet:{content:'C G\nMinha letra'},tablature:{sections:[{content:'e|--0--|'}]},personalNotes:'entrada'}));
+  let controller=create();await controller.flush();
+  assert.equal(saved.get('account:A').packages.length,15,'nenhuma expulsão arbitrária de eventos');
+  const pack=saved.get('account:A').packages[0];assert.equal(pack.songs[0].song.fullChordSheet.content,'C G\nMinha letra');assert.ok(pack.songs[0].song.editorData);assert.ok(pack.songs[0].song.tablature);assert.deepEqual(Object.keys(pack.event.repertoire[0].personalEdits),['A']);
+  const before=writes;await controller.flush();assert.equal(writes,before,'renderização repetida não regrava');
+  controller.clear();songs=[];controller=create();await controller.flush();assert.equal(controller.song(events[0],events[0].repertoire[0]).title,'Música 0','reabertura lê pacote existente sem biblioteca pessoal');
+  scope={ownerId:'account:B',actorId:'B'};assert.equal(controller.song(events[0],events[0].repertoire[0]),null);await controller.flush();assert.equal(saved.get('account:B').packages.length,0,'conta B não recebe eventos de A');
+  scope={ownerId:'account:A',actorId:'A'};songs=[{...pack.songs[0].song,title:'Atualizada'}];fail=true;await controller.flush();assert.equal(saved.get('account:A').packages[0].songs[0].song.title,'Música 0','quota mantém cópia confirmada');assert.equal(controller.song(events[0],events[0].repertoire[0]).title,'Música 0');assert.equal(warnings.length,1);await controller.flush();assert.equal(warnings.length,1,'erro não repete a cada render');
+  fail=false;await controller.flush();assert.equal(saved.get('account:A').packages[0].songs[0].song.title,'Atualizada');
+  events=events.slice(1);await controller.flush();assert.equal(controller.song(make('event-0',0),make('event-0',0).repertoire[0]),null,'exclusão confirmada não ressuscita evento');
+  const fallback=ctx.eventOffline.createStore();await fallback.write({ownerId:'guest',value:1});assert.equal((await fallback.read('guest')).value,1);assert.equal(await fallback.read('account:A'),null);
+  const pending=[];const delayed={...store,read:id=>new Promise(resolve=>pending.push(()=>resolve(saved.get(id))))};scope={ownerId:'account:A',actorId:'A'};const late=ctx.eventOffline.create({...options,store:delayed});const attempt=late.flush();await new Promise(r=>setTimeout(r,0));scope={ownerId:'account:B',actorId:'B'};late.clear();pending[0]();await attempt;assert.equal(late.song(events[0],events[0].repertoire[0]),null,'resposta tardia descartada');
+  console.log('event-offline.test.js: OK (automático, formatos, 15 eventos, reabertura, A/B, quota, retry, exclusão e resposta tardia)');
+})().catch(e=>{console.error(e);process.exitCode=1;});

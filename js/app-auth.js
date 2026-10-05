@@ -5,9 +5,20 @@
   let session = null;
   let initializationPromise = null;
   let callbackExchangeAttempted = false;
+  let offlineSession = false;
+  let authSubscription = null;
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
   const CONFIG_KEY = "sc_public_auth_config_v1";
+  const AUTH_REQUEST_TIMEOUT_MS = 5000;
+
+  function withTimeout(promise, message, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
+    let timer = null;
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => { timer = global.setTimeout(() => reject(new Error(message)), timeoutMs); })
+    ]).finally(() => { if (timer != null) global.clearTimeout(timer); });
+  }
 
   function safeError(error) {
     if (!error) return null;
@@ -39,6 +50,8 @@
         name: String(metadata.full_name || metadata.name || user.email || "Usuário"),
         email: String(user.email || ""),
         avatarUrl: metadata.avatar_url || metadata.picture || null,
+        location: String(metadata.location || '').trim().slice(0,120),
+        instruments: Array.isArray(metadata.instruments)?metadata.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[],
         role: "Liderança"
       } : null
     };
@@ -68,30 +81,43 @@
     });
   }
 
+  function sessionStorageKey(){return config.supabaseUrl?'sb-'+new URL(config.supabaseUrl).hostname.split('.')[0]+'-auth-token':null;}
+  function restoreOfflineSession(){
+    if(!config.enabled)return false;
+    const key=sessionStorageKey(),saved=key&&JSON.parse(global.localStorage.getItem(key)||'null');
+    if(!saved?.access_token||!saved.user?.id)return false;
+    // Leitura local da sessão existente, sem criar login nem renovar tokens.
+    session=saved;offlineSession=true;emit();return true;
+  }
   async function initializeOnce(forceRefresh, initialCallbackCode) {
     try {
       const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
       if (!forceRefresh && cached && cached.enabled) config = cached;
       else {
         if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para verificar o login.");
-        const response = await global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" } });
+        const controller = typeof global.AbortController === "function" ? new global.AbortController() : null;
+        const response = await withTimeout(global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" }, ...(controller ? { signal: controller.signal } : {}) }), "A verificação do login demorou demais.").catch((error) => { controller?.abort(); throw error; });
         if (!response.ok) throw new Error("Configuração de login indisponível.");
         config = await response.json();
         if (config.enabled && global.localStorage) global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
       }
       if (!config.enabled) { emit(); return getState(); }
-      await loadSdk();
+      if(global.navigator?.onLine===false){restoreOfflineSession();return getState();}
+      await withTimeout(loadSdk(), "O serviço de login demorou demais para carregar.");
       const code = initialCallbackCode;
       if (!client) {
         client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
-        client.auth.onAuthStateChange((_event, nextSession) => {
+        const subscription=client.auth.onAuthStateChange((_event, nextSession) => {
+          offlineSession=false;
           session = nextSession;
           emit();
         });
+        authSubscription=subscription?.data?.subscription||null;
       }
       const result = await client.auth.getSession();
       if (result.error) throw result.error;
       session = result.data && result.data.session || null;
+      offlineSession=false;
       if (code && !session && !callbackExchangeAttempted) {
         callbackExchangeAttempted = true;
         const exchange = await client.auth.exchangeCodeForSession(code);
@@ -103,7 +129,7 @@
       return getState();
     } catch (error) {
       if (global.console && typeof global.console.error === "function") global.console.error("[app-auth] authentication failed", JSON.stringify(safeError(error)));
-      config = { ...config, error: "Não foi possível concluir o login com Google. Tente novamente." };
+      config = { ...config, error: "Não foi possível concluir o login. Tente novamente." };
       emit();
       return getState();
     }
@@ -127,6 +153,7 @@
   }
 
   async function signOut() {
+    if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
     const result = await client.auth.signOut();
     if (result.error) throw result.error;
@@ -141,7 +168,9 @@
       data: {
         ...session.user.user_metadata,
         full_name: String(profile.name || "").trim(),
-        phone: String(profile.phone || "").trim()
+        phone: String(profile.phone || "").trim(),
+        location: String(profile.location || '').trim().slice(0,120),
+        instruments: Array.isArray(profile.instruments)?profile.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[]
       }
     };
     const nextEmail = String(profile.email || "").trim();
@@ -159,11 +188,13 @@
     if (!client || !session || !session.user) throw new Error("Entre na sua conta para ativar as atualizações em tempo real.");
     return client.channel(String(topic || ""), options || {});
   }
+
   function removeRealtimeChannel(channel) {
     if (!client || !channel) return Promise.resolve("ok");
     return client.removeChannel(channel);
   }
   function refreshConfiguration() { return initialize(true); }
+  global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
   global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);
