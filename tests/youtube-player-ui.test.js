@@ -59,15 +59,15 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).borderStyle), "none", "os diagramas não devem usar cartões contornados");
     assert.equal(await page.locator(".chord-card").first().evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "os diagramas devem usar o fundo natural do aplicativo");
     assert.equal(await page.locator("#chord-diagrams-section").evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "a seção de diagramas deve ser transparente");
-    assert.equal(await page.locator(".chord-line").first().evaluate((node) => getComputedStyle(node).fontSize), "19.8px", "as cifras devem ficar 10% menores fora do modo palco");
-    assert.equal(await page.locator(".letra-linha").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as letras devem ficar 10% menores fora do modo palco");
-    assert.equal(await player.evaluate((node) => getComputedStyle(node).position), "sticky");
+    assert.equal(await page.locator(".chord-line").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as cifras devem usar a escala musical base");
+    assert.equal(await page.locator(".letra-linha").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as letras devem usar a escala musical base");
+    assert.equal(await player.evaluate((node) => getComputedStyle(node).position), "relative", "o player deve sair naturalmente da viewport durante a leitura");
     assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
 
     await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).click();
     await page.locator("#youtube-iframe-player").waitFor({ state: "visible" });
     const changeButton = page.getByRole("button", { name: "Escolher outro vídeo" });
-    assert.match(await changeButton.innerText(), /Trocar vídeo/);
+    assert.match(await changeButton.innerText(), /Trocar/);
     assert.equal(await changeButton.evaluate((node) => node.parentElement?.classList.contains("youtube-player-actions")), true, "o botão de troca deve ficar no menu retrátil");
     assert.equal(await page.locator(".youtube-player-bar").count(), 0, "o cabeçalho acima do vídeo deve ser removido");
     assert.equal(await page.locator(".youtube-player-status").evaluate((node) => node.classList.contains("is-visually-hidden")), true, "o status deve permanecer apenas para leitores de tela");
@@ -89,7 +89,7 @@ const server = http.createServer((request, response) => {
     await page.locator("#view-detail").evaluate((node) => { node.scrollTop = 700; });
     await page.waitForTimeout(50);
     const topAfter = await player.evaluate((node) => node.getBoundingClientRect().top);
-    assert.ok(Math.abs(topBefore - topAfter) <= 2, `${topBefore} != ${topAfter}`);
+    assert.ok(topAfter < topBefore - 500, `${topBefore} != ${topAfter}`);
 
     await page.getByRole("button", { name: "Repetir trecho" }).click();
     const repeatPanel = page.getByRole("dialog", { name: "Selecionar trecho para repetir" });
@@ -125,9 +125,10 @@ const server = http.createServer((request, response) => {
     assert.notEqual(Math.round(afterDrag.y), Math.round(beforeDrag.y), "o miniplayer deve poder ser arrastado");
 
     await page.getByRole("button", { name: "Fechar player" }).click();
-    assert.equal(await page.locator("#youtube-iframe-player").count(), 0, "o iframe deve ser removido ao recolher");
-    assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
-    console.log("youtube-player-ui.test.js: OK (menu retrátil, repetição A-B, miniplayer arrastável e fechamento seguro)");
+    assert.equal(await page.locator("#youtube-iframe-player").count(), 0, "o iframe deve ser removido ao fechar");
+    assert.equal(await page.locator("#youtube-song-search-input").count(), 1, "fechar deve retornar diretamente à busca");
+    assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 0);
+    console.log("youtube-player-ui.test.js: OK (controles sobre a mídia, repetição A-B, miniplayer e fechamento para busca)");
   } finally {
     await context.close();
     await browser.close();

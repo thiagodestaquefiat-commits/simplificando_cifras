@@ -5,6 +5,7 @@
   let busy = false;
   let sourceSong = null;
   let selectedFiles = [];
+  let searchPanel = null;
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -111,6 +112,71 @@
     } finally { setBusy(false); }
   }
 
+  async function generateFiles(files) {
+    const selected = Array.from(files || []);
+    global.harmonicSummaryClient.validatePayload("arquivo", { arquivos: selected });
+    const result = await global.harmonicSummaryClient.generate("arquivo", { titulo: "", artista: "", arquivos: selected });
+    const sourceInfo = { type: "upload", name: result.payload.arquivos.map(file => file.name).join(" + ").slice(0, 255), url: null };
+    const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
+    if (typeof global.saveAiGeneratedSong !== "function") throw new Error("Não foi possível adicionar a música gerada.");
+    return global.saveAiGeneratedSong(model);
+  }
+
+  function closeSearch() {
+    if (!searchPanel) return;
+    const input=searchPanel.querySelector('[name="ai-search-title"]'),results=searchPanel.querySelector('[data-ai-search-results]'),status=searchPanel.querySelector('[data-ai-search-status]');
+    if(input){input.value="";input.blur()}if(results)results.replaceChildren();if(status)status.textContent="";
+    searchPanel.hidden=true;document.getElementById("playlist-ai-normal").hidden=false;searchPanel=null;
+  }
+
+  async function generateSearchResult(candidate, title, artist) {
+    if (!searchPanel || busy) return;
+    busy = true;
+    const status = searchPanel.querySelector("[data-ai-search-status]");
+    searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = true);
+    status.textContent = "Analisando esta versão e criando a música…";
+    try {
+      const result = await global.harmonicSummaryClient.generate("pesquisa", { titulo: candidate.title || title, artista: candidate.artist || artist, sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
+      const sourceInfo = { type: "online", name: candidate.sourceName || candidate.title || title, url: candidate.sourceUrl || null };
+      const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
+      busy = false; closeSearch();
+      global.saveAiGeneratedSong(model);
+    } catch (error) {
+      busy = false;
+      if (!searchPanel) return;
+      searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
+      status.textContent = error?.message || "Não foi possível gerar esta música.";
+    }
+  }
+
+  async function runSearch() {
+    if (!searchPanel || busy) return;
+    const query = searchPanel.querySelector('[name="ai-search-title"]').value.trim();
+    const parts=query.split(/\s+(?:—|–|-)\s+/),title=(parts.shift()||"").trim(),artist=parts.join(" ").trim();
+    const status = searchPanel.querySelector("[data-ai-search-status]"),results = searchPanel.querySelector("[data-ai-search-results]");
+    if (!title) { status.textContent = "Digite o nome da música."; return; }
+    busy = true; results.replaceChildren(); status.textContent = "Buscando versões…";
+    searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = true);
+    try {
+      const candidates = await global.harmonicSummaryClient.searchSources(title, artist);
+      status.textContent = candidates.length ? "Escolha a versão correta:" : "Nenhuma versão encontrada. Confira o nome e o cantor.";
+      candidates.forEach(candidate => {
+        const button = element("button", "ai-song-search-result"); button.type = "button";
+        const copy = element("span", "ai-song-search-result-copy"); copy.append(element("strong", "", candidate.title || title), element("small", "", candidate.artist || artist || "Artista não informado"));
+        const source = element("span", "ai-song-search-source", candidate.sourceName || "Fonte musical");
+        button.append(copy, source); button.addEventListener("click", () => generateSearchResult(candidate, title, artist)); results.appendChild(button);
+      });
+    } catch (error) { status.textContent = error?.message || "Não foi possível realizar a busca."; }
+    finally { busy = false; if (searchPanel) searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false); }
+  }
+
+  function openSearch() {
+    const mode=document.getElementById("playlist-ai-search-mode");if(!mode||!mode.hidden)return;
+    searchPanel=mode;document.getElementById("playlist-ai-normal").hidden=true;mode.hidden=false;
+    if(!mode.dataset.bound){mode.querySelector(".playlist-ai-search-back").addEventListener("click",closeSearch);mode.querySelector("form").addEventListener("submit",event=>{event.preventDefault();runSearch()});mode.dataset.bound="true"}
+    const input=mode.querySelector('[name="ai-search-title"]');input.focus({preventScroll:true});input.setSelectionRange(input.value.length,input.value.length);
+  }
+
   function close() {
     if (busy || !panel) return;
     panel.remove();
@@ -158,15 +224,22 @@
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
-    updateMode("texto");
+    const initialMode = options?.mode === "arquivo" ? "arquivo" : "texto";
+    updateMode(initialMode);
+    if (initialMode === "arquivo" && options?.files?.length) addFiles(options.files);
     if (sourceSong) {
       textForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
       textForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
       fileForm.querySelector('[name="titulo"]').value = sourceSong.title || "";
       fileForm.querySelector('[name="artista"]').value = sourceSong.artist || "";
     }
-    textForm.querySelector("textarea").focus();
+    if (initialMode === "arquivo") {
+      if (options?.pickFile) fileInput.click();
+      else fileInput.focus();
+    } else {
+      textForm.querySelector("textarea").focus();
+    }
   }
 
-  global.aiHarmonicSummary = Object.freeze({ open, close, get busy() { return busy; } });
+  global.aiHarmonicSummary = Object.freeze({ open, close, openSearch, generateFiles, get busy() { return busy; } });
 })(window);

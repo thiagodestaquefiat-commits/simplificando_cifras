@@ -5,16 +5,17 @@
   const METER_STORAGE_KEY = "study-metronome-meter-v1";
   const MIN_BPM = 30;
   const MAX_BPM = 240;
-  const METERS = Object.freeze({ "2/4": 2, "3/4": 3, "4/4": 4, "6/8": 6 });
+  const METERS = Object.freeze({ "2/4": 2, "3/4": 3, "4/4": 4, "5/4": 5, "6/8": 6, "12/8": 12 });
 
   function create(root, storage, onError) {
-    const bpmOutput = root.querySelector("#metronome-bpm");
+    const controlsScope = typeof root.closest === "function" ? root.closest(".song-bpm-picker") || root : root;
+    const bpmOutput = controlsScope.querySelector("#metronome-bpm");
     const playButton = root.querySelector("#metronome-play");
     const meterSelect = root.querySelector("#metronome-meter");
     const beatsContainer = root.querySelector(".metronome-beats");
     const beats = Array.from(root.querySelectorAll(".metronome-beat"));
     let bpm = 72;
-    let meter = "4/4";
+    let meter = null;
     let songKey = null;
     let audioContext = null;
     let output = null;
@@ -29,9 +30,11 @@
     }
 
     function displayPlaying(playing) {
-      playButton.textContent = playing ? "Ⅱ" : "▶";
-      playButton.setAttribute("aria-label", playing ? "Pausar metrônomo" : "Iniciar metrônomo");
-      playButton.setAttribute("aria-pressed", String(playing));
+      if (playButton) {
+        playButton.textContent = playing ? "Ⅱ" : "▶";
+        playButton.setAttribute("aria-label", playing ? "Pausar metrônomo" : "Iniciar metrônomo");
+        playButton.setAttribute("aria-pressed", String(playing));
+      }
       root.classList.toggle("is-playing", playing);
       if (!playing) beats.forEach(beat => beat.classList.remove("is-active"));
     }
@@ -82,7 +85,7 @@
     }
 
     async function start() {
-      if (timer !== null || starting) return;
+      if (!meter || timer !== null || starting) return false;
       const AudioContextClass = global.AudioContext || global.webkitAudioContext;
       if (!AudioContextClass) {
         onError("O áudio do metrônomo não está disponível neste navegador.");
@@ -106,6 +109,7 @@
       } finally {
         starting = false;
       }
+      return timer !== null;
     }
 
     function setBpm(value) {
@@ -119,15 +123,15 @@
     }
 
     function setMeter(value, persist = true) {
-      meter = Object.prototype.hasOwnProperty.call(METERS, value) ? value : "4/4";
-      meterSelect.value = meter;
-      beatsContainer.setAttribute("aria-label", `${METERS[meter]} tempos do compasso`);
-      beats.forEach((beat, index) => { beat.hidden = index >= METERS[meter]; });
+      meter = Object.prototype.hasOwnProperty.call(METERS, value) ? value : null;
+      meterSelect.value = meter || "";
+      beatsContainer.setAttribute("aria-label", meter ? `${METERS[meter]} tempos do compasso` : "Metrônomo desativado");
+      beats.forEach((beat, index) => { beat.hidden = !meter || index >= METERS[meter]; });
       if (persist && songKey !== null) {
         const saved = storage.get(METER_STORAGE_KEY, {});
         storage.set(METER_STORAGE_KEY, { ...saved, [songKey]: meter });
       }
-      if (timer !== null) { stop(); start(); }
+      if (timer !== null) { stop(); if (meter) start(); }
     }
 
     function setSong(songId, userId) {
@@ -140,14 +144,14 @@
       setMeter(storage.get(METER_STORAGE_KEY, {})[songKey], false);
     }
 
-    root.querySelector("#metronome-minus").addEventListener("click", () => setBpm(bpm - 1));
-    root.querySelector("#metronome-plus").addEventListener("click", () => setBpm(bpm + 1));
+    controlsScope.querySelector("#metronome-minus").addEventListener("click", () => setBpm(bpm - 1));
+    controlsScope.querySelector("#metronome-plus").addEventListener("click", () => setBpm(bpm + 1));
     meterSelect.addEventListener("change", () => setMeter(meterSelect.value));
-    playButton.addEventListener("click", () => timer === null ? start() : stop());
+    if (playButton) playButton.addEventListener("click", () => timer === null ? start() : stop());
     displayBpm();
-    setMeter("4/4", false);
+    setMeter(null, false);
     displayPlaying(false);
-    return Object.freeze({ setSong, stop, getBpm: () => bpm, getMeter: () => meter, isPlaying: () => timer !== null });
+    return Object.freeze({ setSong, setBpm, setMeter, start, stop, getBpm: () => bpm, getMeter: () => meter, isEnabled: () => meter !== null, isPlaying: () => timer !== null });
   }
 
   global.studyMetronome = Object.freeze({ create });

@@ -38,7 +38,8 @@
       songId: value.songId == null ? null : value.songId,
       order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
       shared: repertoireEdit(value.shared),
-      personalEdits: Object.fromEntries(Object.entries(value.personalEdits && typeof value.personalEdits === "object" ? value.personalEdits : {}).map(([userId, edit]) => [text(userId), repertoireEdit(edit)]).filter(([userId]) => userId))
+      personalEdits: Object.fromEntries(Object.entries(value.personalEdits && typeof value.personalEdits === "object" ? value.personalEdits : {}).map(([userId, edit]) => [text(userId), repertoireEdit(edit)]).filter(([userId]) => userId)),
+      preparation: value.preparation && typeof value.preparation === "object" ? { ...value.preparation } : null
     };
   }
 
@@ -50,6 +51,11 @@
       actorName: text(value.actorName) || "Alguém",
       kind: text(value.kind) || "event.updated",
       summary: text(value.summary) || "Atualizou o evento",
+      songId: text(value.songId) || null,
+      changeType: text(value.changeType) || null,
+      before: Object.prototype.hasOwnProperty.call(value, "before") ? value.before : null,
+      after: Object.prototype.hasOwnProperty.call(value, "after") ? value.after : null,
+      affectedUsers: Array.isArray(value.affectedUsers) ? value.affectedUsers.map(String) : [],
       createdAt: value.createdAt || new Date().toISOString()
     };
   }

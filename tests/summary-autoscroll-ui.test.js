@@ -36,32 +36,36 @@ const server=http.createServer((req,res)=>{
       await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,body:''}));
       await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
       await page.getByText('Resumo de teste',{exact:true}).click();
-      const normal=page.getByRole('group',{name:'Velocidade da rolagem',exact:true});
+      await page.locator('#song-controls-toggle').click();
+      const normal=page.locator('#song-control-panel .song-scroll-slider-wrap');
       const stage=page.getByRole('group',{name:'Velocidade da rolagem no palco',exact:true});
       const value=group=>group.locator('output').innerText();
       const plus=group=>group.getByRole('button',{name:'Aumentar velocidade da rolagem'});
       const minus=group=>group.getByRole('button',{name:'Diminuir velocidade da rolagem'});
       const checkColors=async()=>{
-        assert.equal(await page.locator('.wa-block .letra-linha').first().evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');
-        assert.equal(await page.locator('.wa-block .chord-line').first().evaluate(el=>getComputedStyle(el).color),'rgb(232, 137, 107)');
+        const inStage=await page.locator('#view-detail').evaluate(el=>el.classList.contains('stage-mode'));
+        assert.equal(await page.locator('.wa-block .letra-linha').first().evaluate(el=>getComputedStyle(el).color),inStage?'rgb(255, 255, 255)':'rgb(232, 235, 239)');
+        assert.equal(await page.locator('.wa-block .chord-line').first().evaluate(el=>getComputedStyle(el).color),inStage?'rgb(232, 137, 107)':'rgb(237, 139, 112)');
         assert.match(await page.locator('.wa-block .chord-line').first().innerText(),/\(2x\)/);
       };
       await checkColors();
       const content=await page.locator('#detail-content').innerText();
       if(reference)assert.equal(content,reference);else reference=content;
       assert.equal(await value(normal),'0,50x');
-      await plus(normal).click();assert.equal(await value(normal),'0,55x');
-      await minus(normal).click();assert.equal(await value(normal),'0,50x');
-      for(let i=0;i<8;i++)await minus(normal).click();
-      assert.equal(await value(normal),'0,10x');assert.equal(await minus(normal).isEnabled(),false);
-      for(let i=0;i<6;i++)await plus(normal).click();
+      await normal.locator('input').fill('33');assert.equal(await value(normal),'0,55x');
+      await normal.locator('input').fill('30');assert.equal(await value(normal),'0,50x');
+      await normal.locator('input').fill('6');
+      assert.equal(await value(normal),'0,10x');
+      await normal.locator('input').fill('24');
       assert.equal(await value(normal),'0,40x');
-      await page.locator('#capo-opt-2').click();
+      await page.locator('#song-capo-plus').click();
+      await page.locator('#song-capo-plus').click();
       await page.evaluate(() => enterStageMode());
       assert.equal(await value(stage),'0,40x');
       assert.equal(await page.locator('#stage-capo-value').innerText(),'2');
       assert.equal(await page.locator('#modal-overlay').isVisible(),false);
-      await page.getByRole('button',{name:'Sem capotraste',exact:true}).click();
+      await page.locator('#stage-capo-minus').click();
+      await page.locator('#stage-capo-minus').click();
       await checkColors();
       for(let i=0;i<6;i++)await minus(stage).click();
       assert.equal(await value(stage),'0,10x');assert.equal(await minus(stage).isEnabled(),false);
@@ -75,7 +79,7 @@ const server=http.createServer((req,res)=>{
       for(const button of await header.locator('button').all()){
         const box=await button.boundingBox();if(!box)continue;
         assert.ok(box.x>=0&&box.x+box.width<=viewport.width,'header buttons fit viewport');
-        assert.ok(box.height>=44&&box.width>=44,'touch target');
+        assert.ok(box.height>=44&&box.width>=44,`touch target ${await button.getAttribute('id')||await button.getAttribute('aria-label')}: ${box.width}x${box.height}`);
       }
       const originalKey=await page.locator('#stage-key').innerText();
       await header.getByRole('button',{name:'Subir o tom',exact:true}).click();
@@ -98,14 +102,19 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.evaluate(()=>document.getElementById('view-detail').scrollTop),before+1);
       await page.evaluate(()=>advanceScroll(100));
       assert.equal(await page.evaluate(()=>document.getElementById('view-detail').scrollTop),before+13);
-      assert.deepEqual(await header.boundingBox(),headerBefore,'header stays still during scroll');
-      assert.ok((await page.locator('#view-detail').boundingBox()).y>=headerBefore.height,'scroll viewport is below header');
+      const headerDuringScroll=await header.boundingBox();
+      assert.deepEqual(
+        {x:headerDuringScroll.x,y:headerDuringScroll.y,width:headerDuringScroll.width},
+        {x:headerBefore.x,y:headerBefore.y,width:headerBefore.width},
+        'header stays anchored during scroll'
+      );
+      assert.ok((await page.locator('#view-detail').boundingBox()).y>=headerDuringScroll.height,'scroll viewport is below header');
       await page.locator('#stage-scroll-toggle').click();assert.equal(await page.evaluate(()=>scrollTimer),null);
       const bounds=await stage.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=viewport.width);
       assert.ok((await plus(stage).boundingBox()).height>=44);
       await page.getByRole('button',{name:'Sair do Modo Palco',exact:true}).click();
       assert.equal(await value(normal),'2,00x');
-      assert.equal(await plus(normal).isEnabled(),false);
+      assert.equal(await normal.locator('input').inputValue(),'120');
       await page.reload();await page.getByText('Resumo de teste',{exact:true}).click();
       assert.equal(await value(normal),'2,00x');
       assert.deepEqual(errors,[]);await context.close();

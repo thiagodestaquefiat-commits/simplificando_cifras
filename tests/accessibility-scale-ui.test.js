@@ -95,7 +95,7 @@ function isInside(rect, width) {
               scrollWidth: youtubeButton.scrollWidth
             },
             playlistSearch: rect("#search-music"),
-            aiButton: rect(".ai-generate-action"),
+            aiButton: rect(".playlist-ai-action"),
             musicCard: rect(".music-item"),
             musicAvatar: rect(".music-avatar"),
             fab: rect(".fab"),

@@ -11,6 +11,7 @@ from ..database import db
 from ..errors import ApiError
 from ..models import (
     CollaborationUser,
+    ContextAcknowledgement,
     Band,
     BandMember,
     Event,
@@ -24,10 +25,19 @@ from ..models import (
     UserAccessToken,
 )
 from ..services.collaboration_auth import authenticated, issue_access_token, token_digest
+from ..services.preparation_receipts import (
+    StaleRevision,
+    ReceiptConflict,
+    content_identity,
+    mark_reviewed,
+    serialize_preparation,
+    serialize_receipt,
+)
 
 
 blueprint = Blueprint("events", __name__, url_prefix="/api/collaboration")
 IDENTIFIER = re.compile(r"^[A-Za-z0-9_.:-]{3,120}$")
+CONTEXT_ACTION_TYPES = {"REVIEW_CHANGED_SONG", "START_PREPARATION", "CONTINUE_PREPARATION", "ENTER_STAGE_MODE"}
 # Formato canônico de UUID (8-4-4-4-12 hex) — é o formato que o Supabase usa
 # para `subject`. Reservado: um id de CollaborationUser criado por aqui nunca
 # pode ter essa forma, senão um cliente poderia registrar antecipadamente um
@@ -164,7 +174,9 @@ def _leader(event: Event, user_id: str) -> EventMember:
     return member
 
 
-def _change(event: Event, kind: str, summary: str) -> None:
+def _change(event: Event, kind: str, summary: str, *, song_id: str | None = None,
+            change_type: str | None = None, before=None, after=None,
+            affected_users: list[str] | None = None) -> None:
     db.session.add(EventChange(
         id=str(uuid.uuid4()),
         event_id=event.id,
@@ -172,6 +184,11 @@ def _change(event: Event, kind: str, summary: str) -> None:
         actor_name=g.current_user.name,
         kind=kind,
         summary=summary,
+        song_id=song_id,
+        change_type=change_type,
+        before_value=before,
+        after_value=after,
+        affected_users=affected_users,
     ))
 
 
@@ -226,6 +243,11 @@ def _restore_legacy_changes(event: Event, payload: dict) -> bool:
             actor_name=_text(raw.get("actorName"), 120, "notifications.actorName") or g.current_user.name,
             kind=_text(raw.get("kind"), 80, "notifications.kind") or "event.updated",
             summary=_text(raw.get("summary"), 300, "notifications.summary") or "Atualizou o evento",
+            song_id=_text(raw.get("songId"), 120, "notifications.songId") or None,
+            change_type=_text(raw.get("changeType"), 80, "notifications.changeType") or None,
+            before_value=raw.get("before"),
+            after_value=raw.get("after"),
+            affected_users=raw.get("affectedUsers") if isinstance(raw.get("affectedUsers"), list) else None,
             created_at=_datetime(raw.get("createdAt"), datetime.now(timezone.utc)),
         ))
         restored = True
@@ -259,6 +281,7 @@ def _serialize_event(event: Event, user_id: str) -> dict:
                 "notes": personal.personal_notes,
                 "updatedAt": _iso(personal.updated_at),
             },
+            "preparation": serialize_preparation(event, item, user_id),
         })
     return {
         "id": event.id,
@@ -301,6 +324,11 @@ def _serialize_event(event: Event, user_id: str) -> dict:
             "actorName": item.actor_name,
             "kind": item.kind,
             "summary": item.summary,
+            "songId": item.song_id,
+            "changeType": item.change_type,
+            "before": item.before_value,
+            "after": item.after_value,
+            "affectedUsers": item.affected_users or [],
             "createdAt": _iso(item.created_at),
         } for item in list(event.changes)[-50:]],
         "permissions": {
@@ -396,6 +424,9 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
     keep = {item["id"] for item in items}
     for existing in list(event.repertoire):
         if existing.id not in keep:
+            _change(event, "repertoire.song.removed", f"removeu {existing.shared_title or 'uma música'} do repertório",
+                    song_id=existing.song_id, change_type="SONG_REMOVED",
+                    before={"repertoireItemId": existing.id, "songId": existing.song_id}, after=None)
             db.session.delete(existing)
         else:
             existing.position += 100000
@@ -408,7 +439,20 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
                 shared_title=value["title"], shared_artist=value["artist"], shared_key=value["key"],
                 shared_capo=value["capo"], shared_chord_sheet=value["chordSheet"], shared_notes=value["notes"],
             ))
+            _change(event, "repertoire.song.added", f"adicionou {value['title'] or 'uma música'} ao repertório",
+                    song_id=value["songId"], change_type="SONG_ADDED", before=None,
+                    after={"repertoireItemId": value["id"], "songId": value["songId"]})
         else:
+            before = {
+                "key": existing.shared_key, "capo": existing.shared_capo,
+                "chordSheet": content_identity(existing.shared_chord_sheet),
+                "notes": content_identity(existing.shared_notes),
+            }
+            after = {
+                "key": value["key"], "capo": value["capo"],
+                "chordSheet": content_identity(value["chordSheet"]),
+                "notes": content_identity(value["notes"]),
+            }
             existing.song_id = value["songId"]
             existing.position = value["position"]
             existing.shared_title = value["title"]
@@ -417,6 +461,16 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
             existing.shared_capo = value["capo"]
             existing.shared_chord_sheet = value["chordSheet"]
             existing.shared_notes = value["notes"]
+            for field, change_type, kind in [
+                ("key", "KEY_CHANGED", "repertoire.key.updated"),
+                ("capo", "CAPO_CHANGED", "repertoire.capo.updated"),
+                ("chordSheet", "STRUCTURE_CHANGED", "repertoire.structure.updated"),
+                ("notes", "PERFORMANCE_NOTES_CHANGED", "repertoire.notes.updated"),
+            ]:
+                if before[field] != after[field]:
+                    _change(event, kind, f"alterou {field} de {value['title'] or 'uma música'}",
+                            song_id=value["songId"], change_type=change_type,
+                            before=before[field], after=after[field])
 
 
 @blueprint.post("/users")
@@ -778,7 +832,12 @@ def update_shared_item(event_id: str, item_id: str):
     item = db.session.get(EventRepertoireItem, item_id)
     if item is None or item.event_id != event.id:
         raise ApiError("item_nao_encontrado", "A música não pertence a este repertório.", 404)
-    previous_key = item.shared_key
+    before = {
+        "key": item.shared_key,
+        "capo": item.shared_capo,
+        "chordSheet": content_identity(item.shared_chord_sheet),
+        "notes": content_identity(item.shared_notes),
+    }
     item.shared_key = _text(payload.get("key"), 32, "key")
     item.shared_title = _text(payload.get("title"), 160, "title")
     item.shared_artist = _text(payload.get("artist"), 160, "artist")
@@ -787,13 +846,105 @@ def update_shared_item(event_id: str, item_id: str):
     item.shared_notes = _text(payload.get("notes"), 10000, "notes")
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
-    if item.shared_key != previous_key:
+    after = {
+        "key": item.shared_key,
+        "capo": item.shared_capo,
+        "chordSheet": content_identity(item.shared_chord_sheet),
+        "notes": content_identity(item.shared_notes),
+    }
+    musical_changes = [
+        ("key", "KEY_CHANGED", "repertoire.key.updated"),
+        ("capo", "CAPO_CHANGED", "repertoire.capo.updated"),
+        ("chordSheet", "STRUCTURE_CHANGED", "repertoire.structure.updated"),
+        ("notes", "PERFORMANCE_NOTES_CHANGED", "repertoire.notes.updated"),
+    ]
+    recorded = False
+    for field, change_type, kind in musical_changes:
+        if before[field] == after[field]:
+            continue
         title = item.shared_title or "uma música"
-        _change(event, "repertoire.key.updated", f"alterou o tom oficial de {title} de {previous_key or '—'} para {item.shared_key or '—'}")
-    else:
-        _change(event, "repertoire.song.updated", "alterou uma música do repertório compartilhado")
+        summary = (f"alterou o tom oficial de {title} de {before[field] or '—'} para {after[field] or '—'}"
+                   if field == "key" else f"alterou {field} de {title}")
+        _change(event, kind, summary, song_id=item.song_id, change_type=change_type,
+                before=before[field], after=after[field])
+        recorded = True
+    if not recorded:
+        _change(event, "repertoire.metadata.updated", "alterou metadados de uma música do repertório compartilhado",
+                song_id=item.song_id, change_type="METADATA_CHANGED")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
+
+
+@blueprint.post("/events/<event_id>/repertoire/<item_id>/review")
+@authenticated
+def review_repertoire_item(event_id: str, item_id: str):
+    event = _event_or_404(event_id)
+    _member(event, g.current_user.id)
+    item = db.session.get(EventRepertoireItem, item_id)
+    if item is None or item.event_id != event.id:
+        raise ApiError("item_nao_encontrado", "A música não pertence a este repertório.", 404)
+    payload = _json()
+    client_receipt_id = _identifier(payload.get("clientReceiptId"), "clientReceiptId")
+    expected_revision = _text(payload.get("expectedRevision"), 64, "expectedRevision", True)
+    reviewed_at = _datetime(payload.get("reviewedAt"), datetime.now(timezone.utc))
+    if reviewed_at > datetime.now(timezone.utc) + timedelta(minutes=10):
+        raise ApiError("data_invalida", "A confirmação possui uma data futura inválida.", 400)
+    try:
+        receipt, created = mark_reviewed(event, item, g.current_user.id, client_receipt_id, expected_revision, reviewed_at)
+    except StaleRevision as error:
+        raise ApiError("revisao_desatualizada", "A música mudou antes da sincronização. Revise a versão atual.", 409,
+                       details={"currentRevision": error.current_revision}) from None
+    except ReceiptConflict:
+        raise ApiError("confirmacao_duplicada", "Esta confirmação já foi usada em outro contexto.", 409) from None
+    db.session.commit()
+    return jsonify({
+        "receipt": serialize_receipt(receipt),
+        "preparation": serialize_preparation(event, item, g.current_user.id),
+        "created": created,
+    }), 201 if created else 200
+
+
+def _serialize_context_acknowledgement(value: ContextAcknowledgement) -> dict:
+    return {
+        "id": value.id, "userId": value.user_id, "eventId": value.event_id,
+        "fingerprint": value.fingerprint, "actionType": value.action_type,
+        "acknowledgedAt": value.acknowledged_at.isoformat(),
+    }
+
+
+@blueprint.get("/context-acknowledgements")
+@authenticated
+def list_context_acknowledgements():
+    values = ContextAcknowledgement.query.filter_by(user_id=g.current_user.id).order_by(ContextAcknowledgement.acknowledged_at.desc()).all()
+    return jsonify({"acknowledgements": [_serialize_context_acknowledgement(value) for value in values]}), 200
+
+
+@blueprint.post("/context-acknowledgements")
+@authenticated
+def acknowledge_context_action():
+    payload = _json()
+    event_id = _identifier(payload.get("eventId"), "eventId")
+    event = _event_or_404(event_id)
+    _member(event, g.current_user.id)
+    fingerprint = _text(payload.get("fingerprint"), 300, "fingerprint", True)
+    action_type = _text(payload.get("actionType"), 80, "actionType", True)
+    if action_type not in CONTEXT_ACTION_TYPES:
+        raise ApiError("acao_invalida", "A ação contextual não é reconhecida.", 400)
+    acknowledged_at = _datetime(payload.get("acknowledgedAt"), datetime.now(timezone.utc))
+    if acknowledged_at > datetime.now(timezone.utc) + timedelta(minutes=10):
+        raise ApiError("data_invalida", "O reconhecimento possui uma data futura inválida.", 400)
+    existing = ContextAcknowledgement.query.filter_by(user_id=g.current_user.id, fingerprint=fingerprint).first()
+    if existing is not None:
+        if existing.event_id != event.id or existing.action_type != action_type:
+            raise ApiError("reconhecimento_duplicado", "Esta identificação já foi usada em outro contexto.", 409)
+        return jsonify({"acknowledgement": _serialize_context_acknowledgement(existing), "created": False}), 200
+    value = ContextAcknowledgement(
+        id=str(uuid.uuid4()), user_id=g.current_user.id, event_id=event.id,
+        fingerprint=fingerprint, action_type=action_type, acknowledged_at=acknowledged_at,
+    )
+    db.session.add(value)
+    db.session.commit()
+    return jsonify({"acknowledgement": _serialize_context_acknowledgement(value), "created": True}), 201
 
 
 @blueprint.put("/events/<event_id>/repertoire/<item_id>/personal")

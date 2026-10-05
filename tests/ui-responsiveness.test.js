@@ -113,7 +113,8 @@ async function openApp(browser, baseUrl, width, height) {
     )]);
     assert.deepEqual(missingCatalogChords, [], `Acordes do catálogo sem diagrama: ${missingCatalogChords.join(", ")}`);
 
-    await page.getByPlaceholder("Buscar música na playlist").fill("A alegria");
+    await page.getByRole("button", { name: "Buscar música", exact: true }).click();
+    await page.getByPlaceholder("Buscar músicas, artistas...").fill("A alegria");
     await page.getByText("A alegria", { exact: true }).click();
     assert.equal(await page.locator("#btn-previous-song").isVisible(), false);
     assert.equal(await page.locator("#btn-next-song").isVisible(), false);
@@ -134,17 +135,17 @@ async function openApp(browser, baseUrl, width, height) {
     });
     assert.equal(lastCardVisible, true);
 
+    await page.locator('#song-controls-toggle').click();
     await page.getByRole("button", { name: "Subir o tom", exact: true }).click();
     assert.match(await page.locator("#detail-key").textContent(), /Bb/);
-    await page.locator("#capo-opt-1").click();
-    assert.ok(await page.locator("#capo-opt-1").evaluate((element) => element.classList.contains("active")));
+    await page.locator("#song-capo-plus").click();
+    assert.equal(await page.locator("#song-control-capo-expanded").innerText(), "1");
 
     assert.equal(await page.locator("#btn-palco").isVisible(), false);
     await page.evaluate(() => enterStageMode());
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), false);
     assert.equal(await page.locator(".transpose-bar").isVisible(), false);
-    await page.getByRole("button", { name: "Aumentar fonte", exact: true }).click();
     await page.locator("#detail-content").evaluate((element) => { element.style.minHeight = "2000px"; element.style.flexShrink = "0"; });
     const controlsBeforeScroll = await page.locator(".stage-performance-header").boundingBox();
     const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
@@ -165,7 +166,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), true);
 
     await page.locator(".back-btn").first().click();
-    await page.getByPlaceholder("Buscar música na playlist").fill("");
+    await page.getByPlaceholder("Buscar músicas, artistas...").fill("");
     await page.getByText("Quem é esse", { exact: true }).click();
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.ok(await page.getByText("A9", { exact: true }).count() > 0);
@@ -184,6 +185,7 @@ async function openApp(browser, baseUrl, width, height) {
     await page.locator("#btn-next-song").click();
     assert.equal(await page.locator("#detail-title").textContent(), "A Ele a glória");
     assert.equal(await page.locator("#btn-previous-song").isEnabled(), true);
+    await page.locator('#song-controls-toggle').click();
     await page.locator("#btn-palco").click();
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     await page.locator("#stage-next").click();

@@ -30,7 +30,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=14"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v125-auto-sync/);
+assert.match(serviceWorker, /simplificando-cifras-v152-ios-tab-material/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
@@ -49,7 +49,7 @@ assert.match(serviceWorker, /js\/library-sync\.js\?v=11/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=5/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=5/);
-for (const [script, version] of [["youtube-api", 4], ["youtube-song-linker", 1], ["youtube-player", 3], ["youtube-player-ui", 3], ["youtube-ui", 2]]) {
+for (const [script, version] of [["youtube-api", 6], ["youtube-song-linker", 1], ["youtube-player", 4], ["youtube-player-ui", 6], ["youtube-ui", 2]]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }

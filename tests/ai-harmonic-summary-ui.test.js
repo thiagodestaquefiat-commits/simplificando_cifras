@@ -41,7 +41,7 @@ const success = {
     assert.equal(await page.locator("#ai-summary-overlay").isVisible(), true);
     assert.equal(await page.getByRole("tab", { name: "Pesquisa", exact: true }).count(), 0);
     assert.equal(await page.getByRole("button", { name: "Buscar fontes", exact: true }).count(), 0);
-    assert.deepEqual(await page.getByRole("tab").allTextContents(), ["Arquivo", "Texto"]);
+    assert.deepEqual(await page.locator("#ai-summary-overlay").getByRole("tab").allTextContents(), ["Arquivo", "Texto"]);
     await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
     assert.match(await page.locator("[data-ai-status]").innerText(), /Cole uma cifra/);
 

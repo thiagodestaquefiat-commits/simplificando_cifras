@@ -62,8 +62,11 @@ function element() {
 
   metronome.setSong('song-1', 'user-1');
   assert.equal(metronome.getBpm(), 72);
-  assert.equal(metronome.getMeter(), '4/4');
-  assert.equal(beats.filter(beat => !beat.hidden).length, 4);
+  assert.equal(metronome.getMeter(), null);
+  assert.equal(beats.filter(beat => !beat.hidden).length, 0);
+  controls['#metronome-play'].click();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(metronome.isPlaying(), false, 'sem compasso o play geral não inicia o metrônomo');
   controls['#metronome-plus'].click();
   assert.equal(metronome.getBpm(), 73);
   assert.equal(saved.get('study-metronome-bpm-v1')['user-1:song-1'], 73);
@@ -82,7 +85,7 @@ function element() {
   assert.equal(interval, null);
   metronome.setSong('song-2', 'user-1');
   assert.equal(metronome.getBpm(), 72);
-  assert.equal(metronome.getMeter(), '4/4');
+  assert.equal(metronome.getMeter(), null);
   metronome.setSong('song-1', 'user-1');
   assert.equal(metronome.getBpm(), 73);
   assert.equal(metronome.getMeter(), '3/4');

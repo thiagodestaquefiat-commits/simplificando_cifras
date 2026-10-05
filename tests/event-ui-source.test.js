@@ -3,8 +3,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const html = fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8");
-assert.match(html, />🎵 Playlist</);
-assert.match(html, />📅 Eventos</);
+assert.match(html, /id="primary-tabs" role="tablist"/);
+assert.match(html, /class="tab-indicator" aria-hidden="true"/);
+assert.match(html, /id="tab-musicas"[\s\S]*?aria-selected="true"[\s\S]*?>Playlist<\/span>/);
+assert.match(html, /id="tab-setlists"[\s\S]*?aria-selected="false"[\s\S]*?>Eventos<\/span>/);
+assert.match(html, /id="tab-medley"[\s\S]*?aria-selected="false"[\s\S]*?>Medley<\/span>/);
+assert.match(html, /--active-segment[\s\S]*?transition:transform 220ms/);
 assert.match(html, /event-model\.js/);
 assert.match(html, /event-repository\.js/);
 assert.match(html, /event-collaboration-client\.js/);

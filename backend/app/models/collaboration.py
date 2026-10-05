@@ -112,6 +112,8 @@ class Event(db.Model):
     repertoire = db.relationship("EventRepertoireItem", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventRepertoireItem.position")
     changes = db.relationship("EventChange", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventChange.created_at")
     messages = db.relationship("EventMessage", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin", order_by="EventMessage.created_at")
+    review_receipts = db.relationship("SongReviewReceipt", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin")
+    context_acknowledgements = db.relationship("ContextAcknowledgement", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin")
 
 
 class EventInvitation(db.Model):
@@ -187,6 +189,45 @@ class EventChange(db.Model):
     actor_name = db.Column(db.String(120), nullable=False)
     kind = db.Column(db.String(80), nullable=False)
     summary = db.Column(db.String(300), nullable=False)
+    song_id = db.Column(db.String(120), nullable=True, index=True)
+    change_type = db.Column(db.String(80), nullable=True)
+    before_value = db.Column(db.JSON, nullable=True)
+    after_value = db.Column(db.JSON, nullable=True)
+    affected_users = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class SongReviewReceipt(db.Model):
+    __tablename__ = "song_review_receipts"
+    __table_args__ = (
+        db.UniqueConstraint("event_id", "repertoire_item_id", "user_id", name="uq_song_review_receipt_context"),
+        db.UniqueConstraint("user_id", "client_receipt_id", name="uq_song_review_receipt_client"),
+    )
+
+    id = db.Column(db.String(36), primary_key=True)
+    user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    repertoire_item_id = db.Column(db.String(80), db.ForeignKey("event_repertoire_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    song_id = db.Column(db.String(120), nullable=False, index=True)
+    band_id = db.Column(db.String(80), nullable=True, index=True)
+    revision_hash = db.Column(db.String(64), nullable=False)
+    revision_payload = db.Column(db.JSON, nullable=False)
+    client_receipt_id = db.Column(db.String(80), nullable=False)
+    reviewed_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class ContextAcknowledgement(db.Model):
+    __tablename__ = "context_acknowledgements"
+    __table_args__ = (db.UniqueConstraint("user_id", "fingerprint", name="uq_context_ack_user_fingerprint"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    fingerprint = db.Column(db.String(300), nullable=False)
+    action_type = db.Column(db.String(80), nullable=False)
+    acknowledged_at = db.Column(db.DateTime(timezone=True), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
 
 

@@ -31,7 +31,9 @@ const uploadPayload = context.harmonicSummaryClient.validatePayload("arquivo", {
 assert.equal(uploadPayload.tipo, "arquivo");
 assert.equal(uploadPayload.arquivo, upload);
 assert.equal(uploadPayload.titulo, "Música");
-assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /Modo/.test(error.message));
+assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /nome da música/i.test(error.message));
+assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Canção" }), (error) => error.kind === "source_required");
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Canção ", artista: " Cantor ", sourceProvider: "licensed", sourceId: "version-1" }))), { tipo: "pesquisa", titulo: "Canção", artista: "Cantor", sourceProvider: "licensed", sourceId: "version-1" });
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
 

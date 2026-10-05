@@ -64,16 +64,28 @@ const response = {
         musicas.push(song); setlists.push({ id: "event-private", title: "Evento", musicas: [song.id] }); openDetail(song.id);
       }, response);
 
-      assert.equal(await page.getByRole("tab", { name: "Resumo Harmônico", exact: true }).getAttribute("aria-selected"), "true");
-      assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 0);
-      const summary = await page.locator("#detail-content .wa-block").innerText();
+      assert.equal(await page.getByRole("button", { name: "Página 2 de 4 — Letra e cifra", exact: true }).getAttribute("aria-current"), "page");
+      assert.equal(await page.locator('.song-page[data-page-index="1"]').getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
+      if(viewport.width===390){
+        const swipe=async(direction)=>{await page.evaluate((value)=>{const content=document.getElementById('detail-content'),from=value==='left'?310:80,to=value==='left'?70:320,y=Math.min(innerHeight-90,content.getBoundingClientRect().top+90),fire=(type,x)=>content.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:41,pointerType:'touch',clientX:x,clientY:y,buttons:type==='pointerup'?0:1}));fire('pointerdown',from);fire('pointermove',to);fire('pointerup',to);},direction);await page.waitForTimeout(260)};
+        await swipe('left');assert.equal(await page.evaluate(()=>currentSongPage),2);
+        await swipe('left');assert.equal(await page.evaluate(()=>currentSongPage),3);
+        await swipe('left');assert.equal(await page.evaluate(()=>currentSongPage),3,'não deve haver wrap na última página');
+        await swipe('right');assert.equal(await page.evaluate(()=>currentSongPage),2);
+        await swipe('right');assert.equal(await page.evaluate(()=>currentSongPage),1);
+        await swipe('right');assert.equal(await page.evaluate(()=>currentSongPage),0);
+        await swipe('right');assert.equal(await page.evaluate(()=>currentSongPage),0,'não deve haver wrap na primeira página');
+        await page.getByRole("button", { name: "Página 2 de 4 — Letra e cifra", exact: true }).click();
+      }
+      await page.getByRole("button", { name: "Página 1 de 4 — Resumo harmônico", exact: true }).click();
+      const summary = await page.locator('.song-page[data-page-index="0"] .wa-block').innerText();
       assert.match(summary, /C\s+G\s+Am\s+F \(2x\)/);
       assert.match(summary, /Frase curta do refrão/);
 
-      await page.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();
-      assert.equal(await page.getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
-      const fullBefore = await page.locator(".full-chord-sheet").innerText();
-      await page.locator(".transpose-bar .t-btn").last().click();
+      await page.getByRole("button", { name: "Página 2 de 4 — Letra e cifra", exact: true }).click();
+      assert.equal(await page.locator('.song-page[data-page-index="1"]').getByText("Primeira linha completa fornecida pelo usuário", { exact: true }).count(), 1);
+      const fullBefore = await page.locator('.song-page[data-page-index="1"] .full-chord-sheet').innerText();
+      await page.evaluate(() => transpose(1));
       assert.match(await page.locator(".full-chord-sheet .is-chord").first().innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
       await page.evaluate(() => enterStageMode());
       assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
@@ -81,7 +93,7 @@ const response = {
       assert.match(await page.locator("#detail-content .full-chord-sheet").innerText(), /Db\s+Ab\s+Bbm\s+Gb/);
       await page.getByRole("button", { name: "Sair do Modo Palco", exact: true }).click();
 
-      await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
+      await page.evaluate(() => editMusica("private-song"));
       assert.equal(await page.getByLabel("Cifra / Resumo", { exact: true }).count(), 1);
       const editorModal = page.locator("#modal-body");
       await editorModal.getByRole("tab", { name: "Letra + Cifras", exact: true }).click();

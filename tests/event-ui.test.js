@@ -143,7 +143,7 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator('#lista-setlists .event-sync-badge').count(), 0);
     assert.equal(await page.getByText('● Sincronizado', { exact: true }).count(), 0);
     assert.match(await page.locator('#lista-setlists').innerText(), /Culto de teste/);
-    assert.match(await page.locator('#lista-setlists').innerText(), /música\(s\).*membro\(s\)/);
+    assert.match(await page.locator('#lista-setlists').innerText(), /música\(s\).*pessoa/);
     assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 1);
     assert.equal(await page.locator(".event-scope-badge").count(), 0);
     assert.equal(await page.evaluate(() => document.getElementById("event-chat-fab").closest("#view-sd") !== null), true);

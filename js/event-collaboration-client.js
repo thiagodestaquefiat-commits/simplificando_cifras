@@ -65,12 +65,13 @@
   }
 
   class CollaborationError extends Error {
-    constructor(message, status, code, requestId) {
+    constructor(message, status, code, requestId, details) {
       super(message);
       this.name = "CollaborationError";
       this.status = Number(status) || 0;
       this.code = code || "erro_colaboracao";
       this.requestId = requestId == null ? "" : String(requestId);
+      this.details = details && typeof details === "object" ? details : null;
       this.offline = this.status === 0;
     }
   }
@@ -133,7 +134,7 @@
     const body = response.status === 204 ? null : await response.json().catch(() => null);
     if (!response.ok) {
       const error = body && body.erro || {};
-      throw new CollaborationError(error.mensagem || "Não foi possível sincronizar o evento.", response.status, error.codigo, error.requestId);
+      throw new CollaborationError(error.mensagem || "Não foi possível sincronizar o evento.", response.status, error.codigo, error.requestId, error.detalhes);
     }
     return body;
   }
@@ -265,6 +266,25 @@
     return fromRemote(body);
   }
 
+  async function markSongAsReviewed(receipt, fallback) {
+    await ensureRegistered(fallback);
+    return request("/events/" + encodeURIComponent(receipt.eventId) + "/repertoire/" + encodeURIComponent(receipt.repertoireItemId) + "/review", {
+      method: "POST",
+      body: JSON.stringify({ clientReceiptId: receipt.clientReceiptId, expectedRevision: receipt.reviewedRevision, reviewedAt: receipt.reviewedAt })
+    });
+  }
+
+  async function listContextAcknowledgements() {
+    return request("/context-acknowledgements", { method: "GET" });
+  }
+
+  async function acknowledgeContextAction(value) {
+    return request("/context-acknowledgements", {
+      method: "POST",
+      body: JSON.stringify({ fingerprint: value.fingerprint, eventId: value.eventId, actionType: value.actionType, acknowledgedAt: value.acknowledgedAt })
+    });
+  }
+
   async function flushPersonalQueue(fallback) {
     await ensureRegistered(fallback);
     const synchronized = [];
@@ -318,5 +338,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, saveSharedItem, savePersonalItem, clearPersonalItem, markSongAsReviewed, listContextAcknowledgements, acknowledgeContextAction, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);
