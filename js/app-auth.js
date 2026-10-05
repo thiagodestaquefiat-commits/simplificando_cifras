@@ -5,6 +5,8 @@
   let session = null;
   let initializationPromise = null;
   let callbackExchangeAttempted = false;
+  let offlineSession = false;
+  let authSubscription = null;
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
   const CONFIG_KEY = "sc_public_auth_config_v1";
@@ -77,6 +79,14 @@
     });
   }
 
+  function sessionStorageKey(){return config.supabaseUrl?'sb-'+new URL(config.supabaseUrl).hostname.split('.')[0]+'-auth-token':null;}
+  function restoreOfflineSession(){
+    if(!config.enabled)return false;
+    const key=sessionStorageKey(),saved=key&&JSON.parse(global.localStorage.getItem(key)||'null');
+    if(!saved?.access_token||!saved.user?.id)return false;
+    // Leitura local da sessão existente, sem criar login nem renovar tokens.
+    session=saved;offlineSession=true;emit();return true;
+  }
   async function initializeOnce(forceRefresh, initialCallbackCode) {
     try {
       const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
@@ -90,18 +100,22 @@
         if (config.enabled && global.localStorage) global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
       }
       if (!config.enabled) { emit(); return getState(); }
+      if(global.navigator?.onLine===false){restoreOfflineSession();return getState();}
       await withTimeout(loadSdk(), "O serviço de login demorou demais para carregar.");
       const code = initialCallbackCode;
       if (!client) {
         client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
-        client.auth.onAuthStateChange((_event, nextSession) => {
+        const subscription=client.auth.onAuthStateChange((_event, nextSession) => {
+          offlineSession=false;
           session = nextSession;
           emit();
         });
+        authSubscription=subscription?.data?.subscription||null;
       }
       const result = await client.auth.getSession();
       if (result.error) throw result.error;
       session = result.data && result.data.session || null;
+      offlineSession=false;
       if (code && !session && !callbackExchangeAttempted) {
         callbackExchangeAttempted = true;
         const exchange = await client.auth.exchangeCodeForSession(code);
@@ -137,6 +151,7 @@
   }
 
   async function signOut() {
+    if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
     const result = await client.auth.signOut();
     if (result.error) throw result.error;
@@ -175,6 +190,7 @@
     return client.removeChannel(channel);
   }
   function refreshConfiguration() { return initialize(true); }
+  global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
   global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

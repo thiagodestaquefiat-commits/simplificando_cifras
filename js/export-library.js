@@ -18,27 +18,18 @@
     const ownerId = String(context.ownerId || "guest");
     const songs = sanitize(context.musicas);
     const ids = new Set(songs.map(song => String(song.id)));
-    const events = sanitize(context.events || context.playlists || []).map(event => ({
-      ...event,
-      repertoire: (event.repertoire || []).map(item => ({
-        ...item,
-        personalEdits: item.personalEdits && item.personalEdits[ownerId]
-          ? { [ownerId]: item.personalEdits[ownerId] } : {}
-      }))
-    }));
 
     return {
       formato: "simplificando-cifras-exportacao",
-      versao: 2,
+      versao: 3,
       exportadoEm: new Date().toISOString(),
       escopo: { tipo: context.authenticated ? "conta" : "visitante", ownerId },
-      restauracaoDisponivel: ["musicas"],
+      restauracaoDisponivel: ["musicas", "perfil", "medleys", "favoritos", "configuracoes"],
       origens: {
         sessaoAtual: {
           descricao: "Dados da identidade ativa. Não inclui credenciais nem armazenamento bruto.",
           musicas: songs,
-          eventos: events,
-          playlists: events,
+          perfil: sanitize({name:context.perfil?.name||'',avatarUrl:context.perfil?.avatarUrl||null}),
           medleys: sanitize(context.medleys || []),
           favoritos: sanitize((context.favoritos || []).filter(id => ids.has(String(id)))),
           configuracoes: sanitize(context.configuracoes || {})

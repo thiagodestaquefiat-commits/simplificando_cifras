@@ -134,9 +134,9 @@ Aceite: todos os blocos respeitam o tom escolhido; salvamento cria conteúdo rea
 
 ### RF-08 — Modo palco e rolagem automática
 
-Implementado: leitura dedicada, navegação ordenada quando vinculada ao evento, repertório rápido, controles de tom/capo/fonte/velocidade e preparação offline. Conteúdos de resumo são separados em blocos. Wake Lock e fullscreen dependem das capacidades do navegador.
+Implementado: leitura dedicada, navegação ordenada quando vinculada ao evento, repertório rápido, controles de tom/capo/fonte/velocidade e armazenamento offline automático dos repertórios recebidos. Sem botão de preparação, selo ou indicador de disponibilidade offline. Conteúdos de resumo são separados em blocos. Wake Lock e fullscreen dependem das capacidades do navegador.
 
-Aceite: repertório segue a ordem oficial; primeira/última música têm limites claros; rolagem para ao sair; fechar palco devolve navegação utilizável; pacote offline preparado mantém leitura essencial.
+Aceite: repertório segue a ordem oficial; primeira/última música têm limites claros; rolagem para ao sair; fechar palco devolve navegação utilizável; conteúdo recebido é salvo automaticamente por conta em IndexedDB, com transação e verificação de leitura. Resumo, cifra completa, editor, tablatura e ajustes pessoais recebidos permanecem reabríveis sem rede. Falha de gravação mantém a última cópia válida e é avisada sem sucesso falso. Nova autenticação, vídeos, IA e conteúdo nunca recebido exigem internet. A migração integral da biblioteca para IndexedDB não faz parte desta entrega.
 
 Configurações e presets existem na base, mas o fluxo atual de entrada também aplica preferências específicas. Qualquer promessa de personalização por preset deve ser conferida na interface efetivamente entregue.
 
@@ -146,7 +146,7 @@ Experimental: microfone, detecção de frequência via módulo do afinador, conv
 
 Comportamento requerido: marcar acorde reconhecido em verde; avançar suavemente ao concluir linha/bloco; preservar progresso durante silêncio e arrasto manual; realinhar ao reconhecer o alvo seguinte; ao finalizar sequência, pausar e voltar ao início; nova execução reinicia marcações.
 
-Limite técnico: reconhecer a fundamental não equivale a identificar um acorde completo. Acordes polifônicos, ruído, inversões, voz e acompanhamento podem produzir falsos positivos/negativos. O beta não deve ser apresentado como reconhecimento garantido da harmonia.
+Leitura local atualizada: além da fundamental, a rolagem usa picos espectrais agrupados por nota para comparar a combinação ao acorde esperado, com filtros de amplitude/afinação, estabilidade, capotraste e rearticulação. Acordes polifônicos, ruído, inversões, voz e acompanhamento ainda podem produzir falsos positivos/negativos. Tônica isolada continua suportada e não distingue a qualidade do acorde. O beta não deve ser apresentado como reconhecimento garantido da harmonia.
 
 Aceite deve combinar testes de sequência simulada com sessões reais de microfone, instrumentos e navegadores. Não foi realizado teste acústico nesta revisão.
 
@@ -172,7 +172,9 @@ Dentro da música, iniciar/parar e ajustar metrônomo usam a ferramenta integrad
 
 “Gerar com IA”, “criar música com IA” e variações abrem a ferramenta. Preenchimento e geração autônomos por voz não estão implementados.
 
-Limitações atuais a resolver: comandos de rolagem usam alternância em alguns caminhos, portanto “desativar” pode não ser idempotente; abrir metrônomo ainda tem um caminho que abre Ferramentas mesmo na música; números por extenso, sinônimos e compassos têm cobertura parcial. Os comandos são majoritariamente em português, mesmo com interface em outro idioma.
+Etapa 5 local: ativar/desativar rolagem e afinador respeita o estado atual, sem alternância involuntária. Abrir metrônomo na música utiliza a ferramenta integrada. Há números por extenso para BPM, compasso e capotraste; validação de faixas; sinônimos adicionais; desambiguação de músicas por título e artista; contenção de falhas e execução serial. O assistente só anuncia início dos controles de áudio após verificar o estado real. Seus testes integram a suíte obrigatória.
+
+Limites: os comandos continuam majoritariamente em português, mesmo com interface em outro idioma. Não há interpretação irrestrita, diálogo persistente de desambiguação ou garantia de reconhecimento acústico; nomes/intenções ambíguos exigem novo comando. As confirmações destrutivas existentes continuam sendo feitas na tela.
 
 Aceite: intenção suportada executa uma única ação; resposta informa falha reconhecível; comando desconhecido não altera dados; operações destrutivas preservam confirmação do fluxo existente; destino fica imediatamente visível.
 
@@ -242,7 +244,7 @@ Identidade de música não é apenas seu título. Dados legados, campos opcionai
 - **Privacidade:** isolamento entre identidades; diagnóstico não deve expor tokens; distinguir áudio local do afinador de reconhecimento de voz dependente do navegador e eventualmente de serviço externo.
 - **Acessibilidade:** botões identificáveis, foco de teclado, rótulos, contraste, temas e escala; estados não podem depender exclusivamente de cor.
 - **Responsividade:** celular, tablet e desktop, retrato e paisagem; conteúdos de música/evento centralizados e controles sem sobreposição.
-- **Offline:** conteúdo previamente preparado disponível; login, IA, mapas, mídia e sincronização não são garantidos sem rede.
+- **Offline:** repertórios recebidos salvos automaticamente neste dispositivo, sem ação ou indicador de preparação; restauração da sessão previamente armazenada permite leitura local após reabertura. Novo login, IA, mapas, mídia e sincronização exigem rede. Logout offline encerra o acesso à conta no dispositivo.
 - **Performance:** busca local responsiva e processamento externo com estados de progresso/erro; limites e cache reduzem custo e bloqueios.
 - **Compatibilidade:** testar APIs de microfone, SpeechRecognition, AudioContext, Wake Lock e fullscreen nos navegadores-alvo; oferecer alternativas manuais.
 - **Observabilidade:** registrar duração, tipo de entrada e erro com minimização de conteúdo sensível; medir resultado de sync e falhas de navegação.

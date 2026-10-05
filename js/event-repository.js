@@ -198,5 +198,5 @@
     return { uploaded, failures };
   }
 
-  global.eventRepository = Object.freeze({ storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
+  global.eventRepository = Object.freeze({ getActiveOwnerId:()=>activeOwnerId, storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
 })(window);

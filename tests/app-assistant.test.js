@@ -5,7 +5,7 @@ const vm = require("node:vm");
 
 const calls = [], elements = new Map();
 const makeElement = id => ({id,style:{},dataset:{},classList:{toggle(){},contains(){return false},remove(){}},setAttribute(){},focus(){}});
-const document = {documentElement:{lang:"pt-BR"},getElementById(id){if(!elements.has(id))elements.set(id,makeElement(id));return elements.get(id)},querySelectorAll(){return []}};
+const document = {documentElement:{lang:"pt-BR"},getElementById(id){if(!elements.has(id))elements.set(id,makeElement(id));return elements.get(id)},querySelector(){return null},querySelectorAll(){return []}};
 const settings = {language:"pt-BR",theme:"dark",chordColor:"coral",highContrast:false,colorBlind:false,scale:100};
 const context = {
   console,setTimeout,clearTimeout,document,showToast(){},SpeechSynthesisUtterance:null,
@@ -24,6 +24,31 @@ context.findEvent=id=>context.setlists.find(event=>event.id===id);context.window
 vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,"..","js","app-assistant.js"),"utf8"),context);
 
 (async()=>{
+  let smartActive=false,tunerActive=false,smartStarts=0,tunerStarts=0;
+  context.smartScrollController={isActive:()=>smartActive};context.tunerController={isRunning:()=>tunerActive};context.scrollTimer=null;
+  context.toggleSmartScroll=async()=>{smartStarts++;smartActive=!smartActive;};context.stopSmartScroll=()=>{smartActive=false;};context.toggleTunerMicrophone=async()=>{tunerStarts++;tunerActive=!tunerActive;};context.stopTuner=()=>{tunerActive=false;};context.startAutoScroll=()=>{context.scrollTimer=1;};context.stopAutoScroll=()=>{context.scrollTimer=null;};
+  context.currentDetailId=1;document.getElementById('view-detail').style.display='flex';
+  for(const command of ['ative a rolagem inteligente','ligar rolagem por áudio','retome a rolagem inteligente'])assert.equal((await context.roudyAssistant.run(command)).ok,true);
+  assert.equal(smartStarts,1,'ativação repetida não reinicia progresso');
+  for(const command of ['interrompa a rolagem inteligente','desligar rolagem inteligente'])assert.equal((await context.roudyAssistant.run(command)).ok,true);
+  assert.equal(smartActive,false);assert.equal(smartStarts,1);
+  for(const command of ['iniciar rolagem automática','continuar rolagem automática'])await context.roudyAssistant.run(command);assert.equal(context.scrollTimer,1);
+  await context.roudyAssistant.run('desabilite a rolagem automática');assert.equal(context.scrollTimer,null);
+  await context.roudyAssistant.run('iniciar afinador');await context.roudyAssistant.run('ative o afinador');assert.equal(tunerStarts,1);await context.roudyAssistant.run('interromper afinador');assert.equal(tunerActive,false);
+  await context.roudyAssistant.run('ativar alto contraste');assert.equal(settings.highContrast,true);await context.roudyAssistant.run('desative alto contraste');assert.equal(settings.highContrast,false);
+  await context.roudyAssistant.run('metrônomo em cento e vinte e cinco');assert.equal(context.studyMetronome.bpm,125);
+  await context.roudyAssistant.run('compasso seis por oito');assert.ok(calls.some(c=>c[0]==='songMeter'&&c[1]==='6/8'));
+  assert.equal((await context.roudyAssistant.run('compasso dois por oito')).ok,false);
+  assert.equal((await context.roudyAssistant.run('metrônomo em duzentos e cinquenta')).ok,false);assert.equal(context.studyMetronome.bpm,125);
+  const contextualStart=calls.length;await context.roudyAssistant.run('abrir metrônomo');assert.equal(calls.slice(contextualStart).some(c=>c[0]==='metronome'),false);
+  await context.roudyAssistant.run('compasso 3/4');assert.equal(calls.at(-1)[1],'3/4');
+  let playing=false,starts=0;context.studyMetronome.isPlaying=()=>playing;context.studyMetronome.start=async()=>{starts++;playing=true;};context.studyMetronome.stop=()=>{playing=false;calls.push(['songMetronomeStop']);};
+  await context.roudyAssistant.run('iniciar metrônomo');await context.roudyAssistant.run('continue o metrônomo');assert.equal(starts,1,'repetir início não reinicia metrônomo');await context.roudyAssistant.run('silencie o metrônomo');assert.equal(playing,false);
+  context.studyMetronome.start=async()=>{};assert.equal((await context.roudyAssistant.run('iniciar metrônomo')).ok,false,'falha de áudio não anuncia início');context.studyMetronome.start=async()=>{playing=true;calls.push(['songMetronomeStart']);};
+  const unknownStart=calls.length;assert.equal((await context.roudyAssistant.run('xyz sem comando')).ok,false);assert.equal(calls.length,unknownStart);
+  context.toggleSmartScroll=async()=>{throw new Error('Microfone bloqueado');};assert.equal((await context.roudyAssistant.run('iniciar rolagem inteligente')).ok,false);
+  context.musicas.push({id:2,title:'A Alegria',artist:'Outro'});const ambiguousStart=calls.length;assert.equal((await context.roudyAssistant.run('abrir A Alegria')).ok,false);assert.equal(calls.length,ambiguousStart);await context.roudyAssistant.run('abrir A Alegria de Outro');assert.equal(calls.at(-1)[1],2);context.musicas.pop();
+  context.currentDetailId=null;document.getElementById('view-detail').style.display='none';
   await context.roudyAssistant.run("mude o idioma para inglês");assert.equal(settings.language,"en");
   await context.roudyAssistant.run("afinador para ukulele");assert.ok(calls.some(call=>call[0]==="tunerInstrument"&&call[1]==="ukulele"));
   await context.roudyAssistant.run("metrônomo em 132 bpm");assert.ok(calls.some(call=>call[0]==="bpm"&&call[1]===132));

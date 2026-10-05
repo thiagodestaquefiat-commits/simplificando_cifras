@@ -7,7 +7,7 @@
   const MAX_BPM = 240;
   const METERS = Object.freeze({ "2/4": 2, "3/4": 3, "4/4": 4, "6/8": 6 });
 
-  function create(root, storage, onError) {
+  function create(root, storage, onError, options = {}) {
     const bpmOutput = root.querySelector("#metronome-bpm");
     const playButton = root.querySelector("#metronome-play");
     const meterSelect = root.querySelector("#metronome-meter");
@@ -111,11 +111,12 @@
     function setBpm(value) {
       bpm = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(value)));
       displayBpm();
-      if (songKey !== null) {
+      if (songKey !== null && options.shouldPersist?.() !== false) {
         const saved = storage.get(STORAGE_KEY, {});
         storage.set(STORAGE_KEY, { ...saved, [songKey]: bpm });
       }
-      if (timer !== null) { stop(); start(); }
+      options.onChange?.();
+      if (timer !== null) { stop(); return start(); }
     }
 
     function setMeter(value, persist = true) {
@@ -123,11 +124,12 @@
       meterSelect.value = meter;
       beatsContainer.setAttribute("aria-label", `${METERS[meter]} tempos do compasso`);
       beats.forEach((beat, index) => { beat.hidden = index >= METERS[meter]; });
-      if (persist && songKey !== null) {
+      if (persist && songKey !== null && options.shouldPersist?.() !== false) {
         const saved = storage.get(METER_STORAGE_KEY, {});
         storage.set(METER_STORAGE_KEY, { ...saved, [songKey]: meter });
       }
-      if (timer !== null) { stop(); start(); }
+      options.onChange?.();
+      if (timer !== null) { stop(); return start(); }
     }
 
     function setSong(songId, userId) {

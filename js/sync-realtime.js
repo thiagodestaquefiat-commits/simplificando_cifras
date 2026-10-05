@@ -50,12 +50,14 @@
   }
 
   function ensure(kind, id) {
+    if(global.navigator?.onLine===false)return null;
     if (!authenticatedUserId || !visible() || !global.appAuth || !global.appAuth.createRealtimeChannel) return null;
     const key = `${kind}:${id}`;
     if (channels.has(key)) return channels.get(key);
     let readyResolve;
     const ready = new Promise((resolve) => { readyResolve = resolve; });
-    const channel = global.appAuth.createRealtimeChannel(topic(kind, id), { config: { broadcast: { self: false, ack: true } } });
+    let channel;
+    try{channel=global.appAuth.createRealtimeChannel(topic(kind, id), { config: { broadcast: { self: false, ack: true } } });}catch(_error){return null;}
     const entry = { channel, ready, readyResolve, subscribed: false };
     channels.set(key, entry);
     channel.on("broadcast", { event: "invalidate" }, (message) => receive(kind, id, message));
@@ -140,6 +142,7 @@
       global.document.addEventListener("visibilitychange", () => visible() ? connect() : disconnect());
     }
     global.addEventListener && global.addEventListener("online", connect);
+    global.addEventListener && global.addEventListener("offline", disconnect);
   }
 
   global.syncRealtime = Object.freeze({ initialize, setEventIds, publishLibrary, publishEvent, publishChat, publishPersonalEvent });

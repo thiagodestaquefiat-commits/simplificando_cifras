@@ -26,7 +26,7 @@ const server=http.createServer((req,res)=>{
       await page.evaluate(()=>renderLibrarySyncPanel({phase:'synced',authenticated:true,online:true,pending:0,conflicts:0,lastConfirmedAt:'2026-10-01'}));
       assert.equal(await page.getByText('Tudo atualizado',{exact:true}).isVisible(),true);
       if(!await page.locator('.sync-advanced').evaluate(el=>el.open))await page.locator('.sync-advanced summary').click();
-      assert.equal(await page.getByText('Recuperar versões',{exact:true}).isVisible(),true);
+      assert.equal(await page.getByText('Recuperar versões',{exact:true}).count(),0);
       await page.evaluate(()=>renderLibrarySyncPanel({phase:'offline',authenticated:true,online:false,pending:1,conflicts:0}));
       assert.equal(await page.getByText('Aguardando conexão para sincronizar',{exact:true}).isVisible(),true);
       assert.equal(await page.locator('.sync-advanced').evaluate(el=>el.open),true,'atualização mantém opções abertas');

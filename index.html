@@ -46,6 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .app-assistant-launch[hidden]{display:none}.app-assistant-floating{position:fixed;z-index:140;right:max(14px,env(safe-area-inset-right));bottom:max(82px,calc(18px + env(safe-area-inset-bottom)));width:46px;height:46px;border-radius:15px;box-shadow:0 12px 32px rgba(37,99,235,.38)}.app-assistant-floating svg{width:24px;height:24px}
 .detail-header .app-assistant-launch{width:38px;height:38px;flex-basis:38px;border-radius:11px}.detail-header .app-assistant-launch svg{width:21px;height:21px}
 .assistant-overlay{position:fixed;inset:0;z-index:260;display:grid;place-items:end center;padding:18px;background:rgba(0,0,0,.7);backdrop-filter:blur(7px)}.assistant-overlay[hidden]{display:none}.assistant-panel{width:min(100%,520px);overflow:hidden;border:1px solid rgba(96,165,250,.3);border-radius:22px;background:linear-gradient(180deg,#10233a,#081525);box-shadow:0 24px 70px rgba(0,0,0,.55)}.assistant-header{display:flex;padding:17px 18px;align-items:center;gap:12px;border-bottom:1px solid rgba(148,163,184,.15)}.assistant-avatar{position:relative;display:grid;width:44px;height:44px;flex:0 0 44px;place-items:center;border-radius:14px;background:linear-gradient(145deg,#2563eb,#15345e);font-size:22px}.assistant-avatar::after{content:'';position:absolute;right:3px;bottom:3px;width:8px;height:8px;border:2px solid #15345e;border-radius:50%;background:#4ade80}.assistant-heading{min-width:0;flex:1}.assistant-heading strong,.assistant-heading span{display:block}.assistant-heading strong{font-size:16px}.assistant-heading span{margin-top:3px;color:#9fb4ce;font-size:10px}.assistant-close{width:38px;height:38px;border:1px solid rgba(148,163,184,.2);border-radius:11px;background:rgba(255,255,255,.04);color:#dbeafe;font-size:20px;cursor:pointer}.assistant-body{padding:17px}.assistant-message{min-height:70px;padding:14px;border:1px solid rgba(96,165,250,.18);border-radius:14px;background:rgba(3,10,20,.38);color:#dbeafe;font-size:13px;line-height:1.5}.assistant-message[data-kind="error"]{border-color:rgba(248,113,113,.4);color:#fecaca}.assistant-message[data-kind="success"]{border-color:rgba(74,222,128,.35);color:#bbf7d0}.assistant-examples{display:flex;margin:12px 0;gap:7px;overflow-x:auto;scrollbar-width:none}.assistant-examples button{flex:0 0 auto;padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:999px;background:rgba(255,255,255,.04);color:#b9c9dc;font:700 10px/1.2 inherit;cursor:pointer}.assistant-command-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}.assistant-command{height:46px;padding:0 13px;border:1px solid rgba(148,163,184,.24);border-radius:12px;background:#081522;color:#f8fafc;font:600 13px inherit;outline:none}.assistant-command:focus{border-color:#60a5fa}.assistant-mic{display:grid;width:44px;height:44px;padding:0;place-items:center;border:1px solid #3b82f6;border-radius:12px;background:#2563eb;color:#fff;font-size:18px;cursor:pointer}.assistant-mic.listening{background:#dc2626;border-color:#fb7185;animation:assistant-pulse 1.15s ease-in-out infinite}.assistant-send{width:100%;min-height:45px;margin-top:9px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font:800 13px inherit;cursor:pointer}.assistant-help{margin:11px 3px 0;color:#8196af;font-size:9px;line-height:1.45;text-align:center}
+body[data-account-menu-open] .app-assistant-launch{display:none!important}
 .topbar-sub{font-size:11px;color:var(--accent);margin-top:1px;}
 .export-library-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:7px 9px;font:600 11px/1.2 inherit;cursor:pointer;white-space:nowrap;}
 .export-library-btn:hover{background:var(--accent2);}
@@ -815,24 +816,25 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=19"></script>
 <script src="js/event-model.js?v=5"></script>
-<script src="js/event-repository.js?v=7"></script>
+<script src="js/event-repository.js?v=8"></script>
 <script src="js/event-chat.js?v=2"></script>
 <script src="js/youtube-api.js?v=4"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
 <script src="js/youtube-player.js?v=3"></script>
 <script src="js/youtube-player-ui.js?v=3"></script>
 <script src="js/youtube-ui.js?v=2"></script>
-<script src="js/export-library.js?v=2"></script>
+<script src="js/export-library.js?v=3"></script>
 <script src="js/library-recovery.js?v=2"></script>
-<script src="js/import-library.js?v=2"></script>
+<script src="js/import-library.js?v=3"></script>
 <script src="js/chord-library.js"></script>
 <script src="js/instruments/instrument-definitions.js"></script>
 <script src="js/instruments/multi-instrument-chord-library.js?v=2"></script>
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=3"></script>
-<script src="js/stage-offline.js?v=1"></script>
-<script src="js/study-metronome.js?v=3"></script>
+<script src="js/stage-offline.js?v=2"></script>
+<script src="js/event-offline.js?v=1"></script>
+<script src="js/study-metronome.js?v=5"></script>
 <script src="js/editor/song-format.js?v=10"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
@@ -842,15 +844,16 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/editor/song-editor.js"></script>
 <script src="js/ai/api-config.js?v=6"></script>
 <script src="js/song-reports.js?v=1"></script>
-<script src="js/app-auth.js?v=12"></script>
+<script src="js/app-auth.js?v=13"></script>
 <script src="js/ui-i18n.js?v=13"></script>
-<script src="js/tuner.js?v=2"></script>
-<script src="js/smart-scroll.js?v=3"></script>
-<script src="js/sync-realtime.js?v=1"></script>
+<script src="js/tuner.js?v=3"></script>
+<script src="js/chord-audio.js?v=1"></script>
+<script src="js/smart-scroll.js?v=4"></script>
+<script src="js/sync-realtime.js?v=2"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=11"></script>
+<script src="js/event-collaboration-client.js?v=12"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=14"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=13"></script>
@@ -913,7 +916,24 @@ function showToast(msg){
 }
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentLocationAutocomplete=null, tablatureFontSize=13;
-const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast);
+let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
+const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
+function detailEditableState(){
+  const song=currentDetailSongOverride||musicas.find(s=>String(s.id)===String(currentDetailId));
+  return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
+}
+function updateDetailSaveButton(){
+  const button=document.getElementById('detail-save-changes');if(!button)return;
+  button.hidden=!detailEditBaseline||JSON.stringify(detailEditableState())===JSON.stringify(detailEditBaseline);
+}
+function saveDetailChanges(){
+  if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return;
+  const source=musicas.find(s=>String(s.id)===String(currentDetailId));if(!source)return;
+  const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
+  if(!commitSongs(result.songs))return;
+  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();renderMusicas();showToast('✅ Alterações da música salvas');
+}
+function stageDetailVideoSongs(songs){if(detailEditBaseline){currentDetailSongOverride=songs.find(s=>String(s.id)===String(currentDetailId));updateDetailSaveButton();}else musicas=songs;}
 function toggleStudyPanel(){
   const panel=document.getElementById('study-music-panel');
   const content=document.getElementById('study-panel-content');
@@ -927,6 +947,7 @@ function toggleStudyPanel(){
 function appConfirm(message){return window.confirm(uiI18n.translate(message));}
 function appPrompt(message,value){return window.prompt(uiI18n.translate(message),value);}
 let setlists=[];
+let automaticEventOffline=null;
 let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
 
 const musicasLegadasParaMigracao=[
@@ -1347,6 +1368,7 @@ function setInstrument(inst){
   if(capoSelector) capoSelector.style.display=(info.renderer==='keyboard'||currentInstrument==='cavaquinho'||currentInstrument==='viola-caipira-cebolao-e')?'none':'flex';
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
   if(m) renderChordStrip(m);
+  updateDetailSaveButton();
 }
 
 let selectedCapo=0, storedCapo=0;
@@ -1444,12 +1466,12 @@ function renderTablature(value){
   const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3><div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
   return `<div class="tablature-view" style="--tablature-font-size:${tablatureFontSize}px"><div class="tablature-toolbar"><strong>${eventEsc(instrumentLabels[tab.instrument]||instrumentLabels.other)}</strong><span>Afinação: ${eventEsc(tab.tuning)}</span><span>Capotraste: ${tab.capo||'Sem'}</span><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(-1)" aria-label="Diminuir tablatura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(1)" aria-label="Aumentar tablatura">A+</button></div><p class="tablature-note">A tablatura é exibida exatamente como foi cadastrada e não é alterada ao transpor o tom.</p>${sections}</div>`;
 }
-function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');}
+function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
 function setSongView(view){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
   currentSongView=view==='tablature'&&song?.tablature?'tablature':view==='full'&&song?.fullChordSheet?'full':'summary';
   // guarda a escolha do usuário (Resumo Harmônico ou Letra + Cifras) para o Modo Palco abrir direto nela
-  if(!stageMode&&currentSongView!=='tablature'){try{stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),sheetView:currentSongView});}catch(error){}}
+  if(!detailEditBaseline&&!stageMode&&currentSongView!=='tablature'){try{stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),sheetView:currentSongView});}catch(error){}}
   stopSmartScroll();
   renderDetail();
 }
@@ -1541,7 +1563,8 @@ function renderDetail(){
     `<div class="btn-row">
       <button class="btn btn-outline" onclick="editMusica(${attrJs(m.id)})"><span aria-hidden="true">✏️</span> Editar Cifra</button>
       <button class="btn btn-danger" onclick="deleteMusica(${attrJs(m.id)})">🗑️ Excluir da Playlist</button>
-    </div>`;
+    </div><button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>`;
+  updateDetailSaveButton();
   fitFullChordSheet();
   songReports.attach(m,document.getElementById('detail-content').querySelector('.btn-row'));
   if(smartScrollController?.isActive())smartScrollController.sync();
@@ -1563,6 +1586,7 @@ function updatePlaylistNavigation(){
 }
 
 function openDetail(id,options={}){
+  detailEditBaseline=null;
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
   } else if(!options.preserveNavigation){
@@ -1570,9 +1594,10 @@ function openDetail(id,options={}){
   }
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0;
-  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!baseSong) return;
+  const activeContext=navigationContext.get(),activeEvent=activeContext&&findEvent(activeContext.playlistId);
+  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride||(activeEvent&&eventSongSource(activeEvent,activeEvent.repertoire.find(item=>String(item.songId)===String(id)))); if(!baseSong) return;
   let contextualSong=options.songOverride||null;
-  if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
+  if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
   document.getElementById('study-metronome').hidden=false;
@@ -1589,6 +1614,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
+  if(!contextualSong){const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -1609,7 +1635,7 @@ function openDetail(id,options={}){
 function openDetailFromPlaylist(playlistId,index){
   const playlist=setlists.find(item=>String(item.id)===String(playlistId));
   if(!playlist) return;
-  const availableItems=playlist.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=playlist.repertoire.filter(item=>eventSongSource(playlist,item));
   const orderedIds=availableItems.map(item=>item.songId),item=availableItems[index];
   const songId=item&&item.songId;
   if(songId===undefined) return;
@@ -1618,13 +1644,13 @@ function openDetailFromPlaylist(playlistId,index){
 function openDetailFromEventItem(eventId,itemId){
   const event=findEvent(eventId);
   if(!event)return;
-  const availableItems=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=event.repertoire.filter(item=>eventSongSource(event,item));
   const index=availableItems.findIndex(item=>String(item.id)===String(itemId));
   if(index<0){showToast('Esta música ainda não está disponível neste dispositivo.');return;}
   openDetailFromPlaylist(event.id,index);
 }
 function openStageFromEvent(eventId){
-  const event=findEvent(eventId),hasSongs=event&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const event=findEvent(eventId),hasSongs=event&&event.repertoire.some(item=>eventSongSource(event,item));
   if(!event||!hasSongs){showToast('Adicione uma música ao repertório antes de abrir o Modo Palco');return;}
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
@@ -1655,8 +1681,8 @@ async function enterStageMode(){
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),contentMode:'lyrics-chords',theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
   currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
   const packData=stageContextData();
-  try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:packData.event,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Espaço offline limitado; o palco continuará disponível');}
-  stageMode=true;scrollSpeed=activeStagePreferences.autoScrollSpeed;
+  if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
+  stageMode=true;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
   vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
   vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
   vd.classList.toggle('stage-controls-always',activeStagePreferences.controlsMode==='always');
@@ -1687,6 +1713,7 @@ function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode()
 
 function closeDetail(){
   stopSmartScroll();
+  detailEditBaseline=null;detailEditOwner=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
@@ -1731,7 +1758,7 @@ function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarge
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
-const smartScrollController=window.smartScroll.create({stableMs:250,cooldownMs:180});
+const smartScrollController=window.smartScroll.create({stableMs:250,cooldownMs:180,getPitchShift:()=>selectedCapo});
 function updateSmartScrollUI(state={active:false}){
   const button=document.getElementById('btn-smart-scroll'),status=document.getElementById('smart-scroll-status');
   if(button){button.classList.toggle('active',Boolean(state.active));button.innerHTML=state.active?'⏹ Parar rolagem <span class="smart-scroll-beta">BETA</span>':'🎧 Rolagem inteligente <span class="smart-scroll-beta">BETA</span>';}
@@ -1780,14 +1807,15 @@ function updateScrollSpeedControls(){
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
-  const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();revealStageControls();
+  updateDetailSaveButton();
 }
 function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}const view=document.getElementById('view-detail'),wasCompact=stageMode&&view.classList.contains('stage-scroll-compact');stopAutoScroll();openDetail(target.songId,{preserveNavigation:true});view.scrollTop=0;if(stageMode&&(wasCompact||activeStagePreferences?.autoScroll))startAutoScroll();}
 
 const stageFontSizes=[22,28,34];let stageFontIndex=1;
-function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');if(activeStagePreferences)activeStagePreferences=stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});fitFullChordSheet();return normalized;}
+function applyStageFont(size){const normalized=Math.max(18,Math.min(48,size));document.getElementById('view-detail').style.setProperty('--stage-chord-size',normalized+'px');document.getElementById('view-detail').style.setProperty('--stage-lyric-size',Math.max(18,normalized-2)+'px');detailStageFont=normalized;if(activeStagePreferences)activeStagePreferences=detailEditBaseline?{...activeStagePreferences,fontSize:normalized}:stagePreferences.save(appCurrentUser.id,{...activeStagePreferences,fontSize:normalized});updateDetailSaveButton();fitFullChordSheet();return normalized;}
 function adjustStageFont(delta){const size=applyStageFont((activeStagePreferences?.fontSize||28)+delta);activeStagePreferences={...activeStagePreferences,fontSize:size};showToast(`Fonte: ${size}px`);revealStageControls();}
 function cycleStageFont(){stageFontIndex=(stageFontIndex+1)%stageFontSizes.length;applyStageFont(stageFontSizes[stageFontIndex]);document.getElementById('btn-font').textContent='Fonte '+['P','M','G'][stageFontIndex];}
 
@@ -1970,6 +1998,7 @@ function clearPlaylistSearch(){
 }
 
 function renderMusicas(){
+  automaticEventOffline?.schedule();
   const q=(document.getElementById('search-music').value||'').toLowerCase();
   const sorted=[...musicas].filter(m=>m.title.toLowerCase().includes(q)||(m.artist||'').toLowerCase().includes(q)||(m.key||'').toLowerCase().includes(q)).sort((a,b)=>a.title.localeCompare(b.title,'pt'));
   document.getElementById('count-label').textContent=musicas.length+' músicas';
@@ -2479,8 +2508,8 @@ function renderLibrarySyncPanel(state){
   const action=state.phase==='needs-consent'&&state.migrationCandidate
     ?`<button class="btn btn-outline" onclick="downloadMigrationBackup()">${state.backupReady?'✓ Backup completo baixado':'Baixar backup completo'}</button><button class="btn btn-primary" onclick="confirmLibrarySync()" ${canSync&&state.backupReady?'':'disabled'}>Salvar na minha conta</button><button class="btn btn-outline" onclick="deferLibraryMigration()">Agora não</button>`
     :state.authenticated&&['pending','error','conflict','needs-consent'].includes(state.phase)?`${state.conflicts?`<button class="btn btn-primary" onclick="openConflictResolver()">Resolver ${state.conflicts} conflito${state.conflicts===1?'':'s'}</button>`:''}<button class="btn ${state.conflicts?'btn-outline':'btn-primary'}" onclick="confirmLibrarySync()" ${canSync?'':'disabled'}>${state.consented?'Tentar sincronizar novamente':'Ativar sincronização'}</button>`:'';
-  const technical=`<section class="library-sync-panel" data-library-sync-status><strong>Detalhes da biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section><button class="btn btn-outline" onclick="selectLibraryBackup()">Restaurar backup</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar diagnóstico</button><p class="event-scope-note">Use estas ferramentas somente para recuperação ou quando solicitado pelo suporte. Nenhuma delas apaga automaticamente seus dados locais.</p>`;
-  body.innerHTML=`${accountSubpageHeader('Ajuda e Suporte',librarySyncBackAction)}<section class="sync-friendly-card" data-library-sync-status aria-live="polite" data-state="${eventEsc(state.phase)}"><span class="sync-friendly-icon">${copy.icon}</span><span class="sync-friendly-copy"><strong>${eventEsc(copy.title)}</strong><p>${eventEsc(copy.message)}</p></span></section>${action}<details class="sync-advanced"><summary>Opções avançadas</summary><div class="sync-advanced-content"><button class="btn btn-outline" onclick="exportarBiblioteca()">Exportar meus dados</button>${technical}<button class="btn btn-outline" onclick="openLibraryRecovery()">Recuperar versões</button><p class="event-scope-note">O backup exporta músicas, eventos, medley e preferências da identidade atual. Nesta versão, a restauração é somente de músicas.</p></div></details>`;
+  const technical=`<section class="library-sync-panel" data-library-sync-status><strong>Detalhes da biblioteca</strong><div class="library-sync-counts"><div class="library-sync-count"><span>Neste dispositivo</span><strong>${Number(state.local)||0}</strong></div><div class="library-sync-count"><span>Na nuvem</span><strong>${Number(state.remote)||0}</strong></div><div class="library-sync-count"><span>Para enviar</span><strong>${Number(state.localPending)||0}</strong></div><div class="library-sync-count"><span>Para baixar</span><strong>${Number(state.remotePending)||0}</strong></div><div class="library-sync-count"><span>Conflitos</span><strong>${Number(state.conflicts)||0}</strong></div></div><section class="sync-diagnostic-section"><strong>Eventos</strong><div class="sync-diagnostic-grid"><span>Neste dispositivo <b>${events.device}</b></span><span>Na nuvem <b>${cloudEvents}</b></span><span>Somente neste dispositivo <b>${events.deviceOnly}</b></span><span>Somente na nuvem <b>${events.cloudOnly}</b></span></div>${events.deviceOnly?'<small class="event-scope-note">Eventos locais antigos não serão transferidos automaticamente.</small>':''}</section></section><button class="btn btn-outline" onclick="selectLibraryBackup()">Importar Backup de Perfil</button><button class="btn btn-outline" onclick="exportarBiblioteca()">Exportar Backup do Perfil</button><button class="btn btn-outline" onclick="downloadSyncDiagnostics()">Baixar Diagnóstico para Suporte</button><p class="event-scope-note">Use estas ferramentas somente para recuperação ou quando solicitado pelo suporte. Nenhuma delas apaga automaticamente seus dados locais.</p>`;
+  body.innerHTML=`${accountSubpageHeader('Ajuda e Suporte',librarySyncBackAction)}<section class="sync-friendly-card" data-library-sync-status aria-live="polite" data-state="${eventEsc(state.phase)}"><span class="sync-friendly-icon">${copy.icon}</span><span class="sync-friendly-copy"><strong>${eventEsc(copy.title)}</strong><p>${eventEsc(copy.message)}</p></span></section>${action}<details class="sync-advanced"><summary>Opções avançadas</summary><div class="sync-advanced-content">${technical}<p class="event-scope-note">O backup inclui músicas, perfil, medley, favoritos e preferências. A importação é automática: preserva os dados atuais e recupera os ausentes ou versões diferentes como cópias. Eventos não são incluídos.</p></div></details>`;
   if(advancedWasOpen)body.querySelector('.sync-advanced').open=true;
 }
 // Conflitos de sincronização: mostra as duas versões e o usuário escolhe qual vale.
@@ -2517,7 +2546,6 @@ try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAu
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
 function safeLibraryDiagnostics(){const report=librarySync.diagnostics();return {generatedAt:report.generatedAt,phase:report.syncState.phase,identityBlocked:Boolean(report.syncState.identityBlocked),summary:report.summary,remoteContract:report.remoteContract?{valid:report.remoteContract.valid,rawCount:report.remoteContract.rawCount,normalizedCount:report.remoteContract.normalizedCount,rejectedCount:report.remoteContract.rejectedCount}:null};}
 function syncDiagnosticMaskEmail(value){const email=String(value||''),parts=email.split('@');if(parts.length!==2)return null;return `${parts[0].slice(0,2)}***@${parts[1]}`;}
-let libraryRestoreDraft=null;
 function backupOwnerId(){return currentAuthState.authenticated?String(currentAuthState.user?.id||''): 'guest';}
 function requireBackupIdentity(){
   const owner=backupOwnerId();
@@ -2527,25 +2555,27 @@ function requireBackupIdentity(){
 }
 function selectLibraryBackup(){
   const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.hidden=true;
-  input.addEventListener('change',async()=>{const file=input.files&&input.files[0];input.remove();if(!file)return;try{const ownerId=requireBackupIdentity();if(file.size>libraryImporter.maxBackupBytes)throw new Error('O backup excede o limite de 25 MB.');const text=await file.text();if(ownerId!==requireBackupIdentity())throw new Error('A conta mudou. Selecione o backup novamente.');const plan=libraryImporter.parse(text,musicas,{ownerId});libraryRestoreDraft={plan,fileName:file.name};renderLibraryRestoreReview(plan);}catch(error){showToast('⚠️ '+error.message);}});
+  input.addEventListener('change',async()=>{const file=input.files&&input.files[0];input.remove();if(!file)return;try{const ownerId=requireBackupIdentity();if(file.size>libraryImporter.maxBackupBytes)throw new Error('O backup excede o limite de 25 MB.');const text=await file.text();if(ownerId!==requireBackupIdentity())throw new Error('A conta mudou. Selecione o backup novamente.');importProfileBackup(text,ownerId);}catch(error){showToast('⚠️ '+error.message);}});
   document.body.appendChild(input);input.click();
 }
-function renderLibraryRestoreReview(plan){
-  const blocked=plan.invalid>0;
-  const choices=plan.accepted.map((song,index)=>`<label class="backup-song-choice"><input type="checkbox" data-restore-song="${index}" checked><span><strong data-no-i18n>${eventEsc(song.title)}</strong><small data-no-i18n>${eventEsc(song.artist||'Sem artista')}</small></span></label>`).join('');
-  const conflicts=plan.conflictItems.map((item,index)=>`<label class="backup-song-choice"><input type="checkbox" data-restore-conflict="${index}"><span><strong data-no-i18n>${eventEsc(item.title)}</strong><small>Adicionar a versão do backup como cópia, sem substituir a atual</small></span></label>`).join('');
-  document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Backup encontrado','openLibrarySync')}<section class="library-sync-panel"><strong>${eventEsc(libraryRestoreDraft.fileName)}</strong><p>${plan.total} música(s): ${plan.newSongs} nova(s), ${plan.existing} já existente(s), ${plan.conflicts} versão(ões) diferente(s).</p><p>Escolha as músicas que deseja adicionar. Nenhuma música atual será substituída.</p>${blocked?'<p role="alert">O arquivo contém músicas inválidas. A restauração foi bloqueada.</p>':''}${choices?`<h3>Músicas novas</h3><div class="backup-song-list">${choices}</div>`:''}${conflicts?`<h3>Versões diferentes</h3><div class="backup-song-list">${conflicts}</div>`:''}<p class="event-scope-note">Somente músicas serão restauradas. Eventos, medleys, favoritos e preferências não serão importados. ${plan.included.eventos} evento(s) e ${plan.included.medleys} bloco(s) de medley encontrados no arquivo.</p></section><button class="btn btn-primary" onclick="confirmLibraryRestore()" ${blocked?'disabled':''}>Restaurar músicas selecionadas</button>`;
-}
-function confirmLibraryRestore(){
-  if(!libraryRestoreDraft)return;
-  try{const ownerId=requireBackupIdentity(),selectedIndices=[...document.querySelectorAll('[data-restore-song]:checked')].map(input=>Number(input.dataset.restoreSong)),conflictIndices=[...document.querySelectorAll('[data-restore-conflict]:checked')].map(input=>Number(input.dataset.restoreConflict));if(!selectedIndices.length&&!conflictIndices.length)throw new Error('Selecione pelo menos uma música para restaurar.');const result=libraryImporter.apply(libraryRestoreDraft.plan,musicas,{ownerId,selectedIndices,conflictIndices});if(!songRepository.save(result.songs))throw new Error('Não foi possível gravar a biblioteca neste dispositivo. A restauração não foi concluída.');musicas=result.songs;renderMusicas();librarySync.schedule();libraryRestoreDraft=null;showToast(`✅ ${result.restored} música(s) adicionadas. As versões atuais foram mantidas.`);openLibrarySync();}catch(error){showToast('⚠️ '+error.message);}
-}
-let libraryRecoveryOwner=null;
-function openLibraryRecovery(){
-  try{const ownerId=requireBackupIdentity();libraryRecoveryOwner=ownerId;const versions=libraryRecovery.list(ownerId),rows=versions.map((entry,index)=>`<div class="backup-song-choice"><span>${eventEsc(entry.song.title)}<small>${eventEsc(new Date(entry.savedAt).toLocaleString())} · ${eventEsc(entry.reason)}</small></span><button type="button" class="btn btn-outline" onclick="recoverLibraryVersion(${index})">Recuperar como cópia</button></div>`).join('');document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Recuperar versões','openLibrarySync')}<p>Versões locais anteriores de músicas editadas ou excluídas. Recuperar adiciona uma cópia e não substitui a música atual.</p><p class="event-scope-note">Até 20 versões recentes por identidade, limitadas a 1 MB. Não substitui um backup exportado e não recupera alterações anteriores à instalação desta função.</p><div class="backup-song-list">${rows||'<p>Nenhuma versão disponível nesta identidade.</p>'}</div>`;}catch(error){showToast('⚠️ '+error.message);}
-}
-function recoverLibraryVersion(index){
-try{const ownerId=requireBackupIdentity();if(ownerId!==libraryRecoveryOwner)throw new Error('A conta mudou. Abra novamente a recuperação.');const entry=libraryRecovery.list(ownerId)[index];if(!entry)throw new Error('Esta versão não está mais disponível.');const song=libraryRecovery.copySong(entry.song,ownerId),next=[...musicas,song];if(!songRepository.save(next))throw new Error('Não foi possível salvar a cópia recuperada.');musicas=next;renderMusicas();librarySync.schedule();showToast('✅ Versão recuperada como uma nova música.');openLibraryRecovery();}catch(error){showToast('⚠️ '+error.message);}
+function importProfileBackup(text,ownerId=requireBackupIdentity()){
+  if(ownerId!==requireBackupIdentity())throw new Error('A conta mudou. Selecione o backup novamente.');
+  const plan=libraryImporter.parse(text,musicas,{ownerId}),session=libraryExporter.sanitize(JSON.parse(text).origens?.sessaoAtual||{}),result=libraryImporter.apply(plan,musicas,{ownerId,automatic:true});
+  const current=accountProfile(),profiles=accountProfiles(),profile={...(profiles[String(appCurrentUser.id)]||{})};
+  if((!current.name||(!currentAuthState.authenticated&&current.name==='Você'))&&typeof session.perfil?.name==='string')profile.name=session.perfil.name.trim().slice(0,120);
+  if(!current.avatarUrl&&typeof session.perfil?.avatarUrl==='string'&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/.test(session.perfil.avatarUrl))profile.avatarUrl=session.perfil.avatarUrl;
+  const preferences=storage.get(APP_SETTINGS_KEY,{})||{},nextPreferences={...preferences};
+  const validators={language:v=>['pt-BR','en','es','it','fr','de'].includes(v),theme:v=>['light','dark','system'].includes(v),chordColor:v=>Object.hasOwn(CHORD_COLOR_OPTIONS,v),scale:v=>[100,110,120,130,140].includes(v),highContrast:v=>typeof v==='boolean',colorBlind:v=>typeof v==='boolean'};
+  for(const [key,validate] of Object.entries(validators))if(!Object.hasOwn(preferences,key)&&validate(session.configuracoes?.[key]))nextPreferences[key]=session.configuracoes[key];
+  const ids=new Set(result.songs.map(s=>String(s.id))),favorites=storage.get('sc_favorites_v2',storage.get('cifras_favoritos_v1',[]));
+  const nextFavorites=[...new Map([...(Array.isArray(favorites)?favorites:[]),...(Array.isArray(session.favoritos)?session.favoritos:[]).filter(id=>ids.has(String(id)))].map(id=>[String(id),id])).values()];
+  const nextMedley=JSON.parse(JSON.stringify(medleyBlocos));
+  for(const raw of Array.isArray(session.medleys)?session.medleys:[]){if(!raw||typeof raw!=='object'||typeof raw.chords!=='string'||typeof raw.musicTitle!=='string')continue;const block={musicTitle:raw.musicTitle,musicId:raw.musicId,blocoIdx:Number(raw.blocoIdx)||0,label:String(raw.label||''),chords:raw.chords,key:String(raw.key||''),capo:songFormat.parseCapo(raw.capo)};if(!nextMedley.some(current=>JSON.stringify(current)===JSON.stringify(block)))nextMedley.push(block);}
+  const medleyKey=medleyActiveOwner?'sc_personal_medley_caches_v1':'sc_guest_medley_v1';
+  const writes=[[ACCOUNT_PROFILES_KEY,{...profiles,[String(appCurrentUser.id)]:profile}],[APP_SETTINGS_KEY,nextPreferences],['sc_favorites_v2',nextFavorites],[medleyKey,medleyActiveOwner?{...(storage.get(medleyKey,{})||{}),[medleyActiveOwner]:nextMedley}:nextMedley]],previous=writes.map(([key])=>[key,storage.get(key,null)]);
+  try{for(const [key,value] of writes)if(!storage.set(key,value))throw new Error('Não foi possível gravar o backup.');if(!songRepository.save(result.songs))throw new Error('Não foi possível gravar as músicas.');}
+  catch(error){for(const [key,value] of previous)storage.set(key,value);throw error;}
+  musicas=result.songs;medleyBlocos=nextMedley;applyAppSettings();applyProfileRuntime(accountProfile());renderMusicas();renderMedley();librarySync.schedule();showToast(`✅ Backup importado: ${result.restored} música(s) recuperadas. Seus dados atuais foram mantidos.`);openLibrarySync();return result;
 }
 async function confirmLibrarySync(){
   const button=document.querySelector('#modal-body .btn-primary');if(button)button.disabled=true;
@@ -2553,6 +2583,8 @@ async function confirmLibrarySync(){
   catch(error){renderLibrarySyncPanel(librarySync.getStatus());showToast('⚠️ '+error.message);}
 }
 async function openAccountModal(){
+  document.body.setAttribute('data-account-menu-open','true');
+  window.roudyAssistant?.updateLaunchVisibility();
   stopTuner();
   if(!currentAuthState.enabled&&navigator.onLine){currentAuthState=await appAuth.refreshConfiguration();renderAccountButton();}
   const profile=accountProfile(),mode=currentAuthState.authenticated?'Conta conectada e protegida':'Perfil salvo neste dispositivo';
@@ -2646,8 +2678,8 @@ const toolsMetronome=(()=>{
   }
   function stop(){if(timer!==null)clearInterval(timer);timer=null;beat=0;paint();}
   function toggle(){timer===null?start():stop();}
-  function setBpm(value){const wasPlaying=timer!==null;stop();bpm=Math.max(30,Math.min(240,Math.round(value)));storage.set('tools-metronome-bpm-v1',bpm);paint();if(wasPlaying)start();}
-  function setMeter(value){const wasPlaying=timer!==null;stop();meter=[2,3,4,6].includes(Number(value))?Number(value):4;storage.set('tools-metronome-meter-v1',meter);renderToolsMetronomeBeats();if(wasPlaying)start();}
+  function setBpm(value){const wasPlaying=timer!==null;stop();bpm=Math.max(30,Math.min(240,Math.round(value)));storage.set('tools-metronome-bpm-v1',bpm);paint();if(wasPlaying)return start();}
+  function setMeter(value){const wasPlaying=timer!==null;stop();meter=[2,3,4,6].includes(Number(value))?Number(value):4;storage.set('tools-metronome-meter-v1',meter);renderToolsMetronomeBeats();if(wasPlaying)return start();}
   function load(){bpm=Math.max(30,Math.min(240,Number(storage.get('tools-metronome-bpm-v1',127))||127));meter=[2,3,4,6].includes(Number(storage.get('tools-metronome-meter-v1',4)))?Number(storage.get('tools-metronome-meter-v1',4)):4;}
   return Object.freeze({load,stop,toggle,setBpm,setMeter,getBpm:()=>bpm,getMeter:()=>meter,isPlaying:()=>timer!==null});
 })();
@@ -2803,7 +2835,7 @@ function eventSongModel(song,edit,fallbackEdit){
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
 function eventSongVariant(event,item,userId){
-  const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return null;
+  const song=eventSongSource(event,item);if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
   return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song),personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
 }
@@ -2914,7 +2946,7 @@ function refreshStageNavigationOrder(){
   if(!context)return;
   const event=findEvent(context.playlistId);
   if(!event)return;
-  const availableItems=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=event.repertoire.filter(item=>eventSongSource(event,item));
   const orderedIds=availableItems.map(item=>item.songId);
   if(!orderedIds.length)return;
   const currentSongId=context.songIds[context.currentIndex];
@@ -2925,6 +2957,7 @@ function refreshStageNavigationOrder(){
   navigationContext.setPlaylist(event.id,orderedIds,nextIndex);
 }
 function renderSetlists(){
+  automaticEventOffline?.schedule();
   refreshStageNavigationOrder();
   if(window.syncRealtime)syncRealtime.setEventIds(setlists.map(event=>event.id));
   const target=document.getElementById('lista-setlists');
@@ -2932,14 +2965,14 @@ function renderSetlists(){
   const visible=activeBandId?setlists.filter(event=>String(event.bandId||'')===String(activeBandId)):setlists;
   if(!visible.length){target.innerHTML='<div class="empty-state"><div class="emoji">📅</div><p>Nenhum evento nesta equipe</p></div>';return;}
   target.innerHTML=[...visible].sort((a,b)=>eventSortValue(b)-eventSortValue(a)||String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).map(event=>{
-    const songs=event.musicas.map(id=>musicas.find(song=>String(song.id)===String(id))).filter(Boolean);
+    const songs=event.repertoire.map(item=>eventSongSource(event,item)).filter(Boolean);
     const unread=(()=>{try{return eventChat.unreadCount(event.id);}catch(error){return 0;}})();
     return `<div class="setlist-item" onclick="openSD('${eventEsc(event.id)}')"><div class="event-card-avatar">📅</div><div class="sl-info"><div class="sl-title">${eventEsc(event.title)}</div><div class="sl-sub">${eventEsc([eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ')||'Sem data definida')} · ${songs.length} música(s) · ${event.members.length} membro(s)</div></div>${unread?`<span class="event-card-unread">${unread}</span>`:`<span class="sl-count">${songs.length}</span>`}</div>`;
   }).join('');
 }
 
 async function syncEventsNow(silent){
-  if(eventSyncRunning)return;
+  if(eventSyncRunning||navigator.onLine===false)return;
   eventSyncRunning=true;
   const button=document.getElementById('event-sync-action'),status=document.getElementById('event-sync-status');
   if(button)button.disabled=true;if(status)status.textContent='Postando alterações…';
@@ -2991,9 +3024,9 @@ function openSD(id){
   const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id);
   document.getElementById('sd-title').textContent=event.title;
   document.getElementById('sd-date').textContent=[eventDisplayDate(event.date),event.time,event.location].filter(Boolean).join(' · ');
-  const availableItems=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=event.repertoire.filter(item=>eventSongSource(event,item));
   const rows=availableItems.map((item,index)=>{
-    const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return'';
+    const song=eventSongSource(event,item);if(!song)return'';
     const effective=eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id),variant=eventSongVariant(event,item,appCurrentUser.id);
     const officialKey=item.shared.key||song.key||'',displayKey=canShared?officialKey:(variant.key||song.key||''),notes=effective.effective.notes||'';
     const keyControl=canShared?`<div class="event-official-key-control" data-item-id="${eventEsc(item.id)}" role="group" aria-label="Tom oficial de ${eventEsc(variant.title)}"><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',-1)" aria-label="Descer tom oficial de ${eventEsc(variant.title)}" ${officialKey?'':'disabled'}>−</button><output aria-live="polite" title="Tom oficial">${eventEsc(displayKey||'—')}</output><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',1)" aria-label="Subir tom oficial de ${eventEsc(variant.title)}" ${officialKey?'':'disabled'}>+</button></div>`:`<span style="font-size:10px;color:var(--accent);font-family:monospace;font-weight:800;pointer-events:none;" title="Tom desta versão">${eventEsc(displayKey)}</span>`;
@@ -3105,7 +3138,7 @@ function renderEventChatButton(event){
 function openEventSongEdit(eventId,itemId){
   const event=findEvent(eventId),item=event&&event.repertoire.find(value=>String(value.id)===String(itemId));if(!event||!item)return;
   if(!eventModel.canAccess(event,appCurrentUser.id)){showToast('🔒 Você não integra este evento');return;}
-  const song=musicas.find(value=>String(value.id)===String(item.songId)),personal=item.personalEdits[appCurrentUser.id]||null,canShared=eventModel.canEditShared(event,appCurrentUser.id);if(!song)return;
+  const song=eventSongSource(event,item),personal=item.personalEdits[appCurrentUser.id]||null,canShared=eventModel.canEditShared(event,appCurrentUser.id);if(!song)return;
   eventSongEditDraft={eventId:event.id,itemId:item.id,song,personal,models:{shared:eventSongModel(song,item.shared),personal:eventSongModel(song,personal||item.shared,personal?item.shared:null)},edits:{shared:item.shared,personal:personal||item.shared}};
   document.getElementById('modal-body').innerHTML=`<div class="modal-title">Editar música</div><div class="event-scope-tabs"><label class="chip selected"><input type="radio" name="event-edit-scope" value="personal" checked> Pessoal — somente para mim</label>${canShared?'<label class="chip"><input type="radio" name="event-edit-scope" value="shared"> Compartilhada — todos do evento</label>':''}</div><p class="event-scope-note">${canShared?'Escolha conscientemente o destino da alteração. A versão compartilhada será registrada como mudança oficial.':'Como integrante, você pode personalizar sua visualização sem alterar o repertório oficial.'}</p><div id="event-song-editor-fields"></div><button class="btn btn-primary" onclick="saveEventSongEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')">Salvar</button>${personal?`<button class="btn btn-outline event-personal-reset" onclick="clearEventPersonalEdit('${eventEsc(event.id)}','${eventEsc(item.id)}')">Usar novamente a versão oficial</button>`:''}<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   function renderScope(scope){const model=eventSongEditDraft.models[scope],edit=eventSongEditDraft.edits[scope];document.getElementById('event-song-editor-fields').innerHTML=simpleSongEditorFields(model,{chordSheet:edit.chordSheet||songFormat.simpleText(model),includeNotes:true,notes:edit.notes});}
@@ -3171,14 +3204,14 @@ function openPollModal(){document.getElementById('modal-body').innerHTML='<div c
 function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:document.getElementById('poll-question').value,options:document.getElementById('poll-options').value.split(/\n/),multiple:document.getElementById('poll-multiple').checked,showVoters:document.getElementById('poll-voters').checked});closeModal();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
 
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
-function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;libraryRestoreDraft=null;}
+function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}document.getElementById('modal-overlay').style.display='none';document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
 
 function exportarBiblioteca(options={}){
   const ownerId=requireBackupIdentity();
   const result=libraryExporter.export({
     ownerId,authenticated:currentAuthState.authenticated,
     musicas,
-    events:setlists.filter(event=>eventModel.canAccess(event,appCurrentUser.id)),
+    perfil:accountProfile(),
     medleys:medleyBlocos,
     favoritos:storage.get('sc_favorites_v2',storage.get('cifras_favoritos_v1',[])),
     configuracoes:{...loadAppSettings(),
@@ -3188,7 +3221,7 @@ function exportarBiblioteca(options={}){
     }
   });
   const userMessage=`${result.storedCount} música(s) da identidade atual exportadas.`;
-  if(!options.quiet){showToast('✅ '+userMessage);alert('Arquivo de backup gerado!\n\n'+userMessage+'\nInclui os eventos acessíveis, medley e preferências atuais. Não inclui sessões, tokens ou caches de outras contas.\n\nNesta versão, a restauração é somente de músicas. Guarde o arquivo em um local seguro.');}
+  if(!options.quiet){showToast('✅ '+userMessage);alert('Arquivo de backup gerado!\n\n'+userMessage+'\nInclui músicas, nome e foto do perfil, medley, favoritos e preferências. Não inclui eventos. Não inclui sessões, tokens ou caches de outras contas.\n\nA importação complementa os dados atuais sem substituir músicas. Guarde o arquivo em um local seguro.');}
   return result;
 }
 
@@ -3207,6 +3240,28 @@ async function migrateLegacyEventsInBackground(){
 }
 
 // carrega dados salvos
+function eventSongSource(event,item){
+  if(!item)return null;
+  const local=musicas.find(song=>String(song.id)===String(item.songId));
+  if(local)return local;
+  const saved=automaticEventOffline?.song(event,item);if(saved)return saved;
+  const shared=item.shared||{};if(!shared.chordSheet?.trim())return null;
+  return songFormat.toLegacy(songFormat.normalize({id:item.songId,title:shared.title||'Música do evento',artist:shared.artist||'',originalKey:shared.key||'',currentKey:shared.key||'',capo:shared.capo||'',sections:songFormat.sectionsFromSimpleText(shared.chordSheet)}));
+}
+automaticEventOffline=eventOffline.create({
+  getScope:()=>{
+    if(authLinking||!loginGateAuthReady)return null;
+    if(currentAuthState.authenticated){
+      if(!currentAuthState.user?.id||eventRepository.getActiveOwnerId()!==String(appCurrentUser.id))return null;
+      return {ownerId:'account:'+currentAuthState.user.id,actorId:String(appCurrentUser.id)};
+    }
+    return {ownerId:'guest',actorId:String(appCurrentUser.id)};
+  },
+  getEvents:()=>setlists,getSong:eventSongSource,canAccess:(event,userId)=>eventModel.canAccess(event,userId),
+  getPreferences:userId=>stagePreferences.load(userId),
+  onError:()=>showToast('⚠️ Não foi possível guardar todo o repertório neste dispositivo. Mantenha o app aberto e tente novamente com conexão.'),
+  onLoaded:()=>{renderSetlists();if(currentSdId&&document.getElementById('view-sd').style.display==='flex')openSD(currentSdId);}
+});
 applyAppSettings();
 appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
 const catalogoPadrao=songModel.normalizeCollection(demoLibrary.catalog());
@@ -3239,7 +3294,7 @@ let accountAuthGeneration=0;
 appAuth.subscribe(async state=>{
   const accountGeneration=++accountAuthGeneration;
   const previousAuthState=currentAuthState;
-  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){libraryRestoreDraft=null;libraryRecoveryOwner=null;closeModal();}
+  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){automaticEventOffline.clear();closeModal();}
   const signedOutOwnerId=previousAuthState.authenticated&&!state.authenticated?String(appCurrentUser.id||''):'';
   if(previousAuthState.authenticated&&state.authenticated&&previousAuthState.user?.id!==state.user?.id){
     setlists=eventRepository.deactivateOwner(setlists);stashMedleyForOwner(appCurrentUser.id);
@@ -3275,6 +3330,7 @@ appAuth.subscribe(async state=>{
     restoreMedleyForOwner(appCurrentUser.id);
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
+    if(navigator.onLine===false){eventBackgroundSyncReady=true;renderAccountButton();renderSetlists();renderBandToolbar();return;}
     const acceptedInvitation=await acceptPendingEventInvitation();
     if(accountGeneration!==accountAuthGeneration)return;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
@@ -3284,12 +3340,12 @@ appAuth.subscribe(async state=>{
     eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
-  }catch(error){if(accountGeneration===accountAuthGeneration)showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{if(accountGeneration===accountAuthGeneration)authLinking=false;}
+  }catch(error){if(accountGeneration===accountAuthGeneration)showToast('⚠️ Não foi possível consultar sua conta. Tente novamente pela área de equipes.');}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
 });
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
-appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);});
+appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
 checkShareParam();
@@ -3303,13 +3359,13 @@ youtubeUI.initialize({
 });
 youtubePlayerUI.initialize({
   getSongs:()=>musicas,
-  setSongs:(songs)=>{musicas=songs;},
-  persistSongs:(songs)=>songRepository.save(songs),
+  setSongs:stageDetailVideoSongs,
+  persistSongs:(songs)=>detailEditBaseline?true:songRepository.save(songs),
   renderSongs:renderMusicas,
   showToast
 });
 </script>
-<script src="js/app-assistant.js?v=17"></script>
+<script src="js/app-assistant.js?v=20"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){

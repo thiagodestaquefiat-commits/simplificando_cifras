@@ -35,13 +35,14 @@
     function current(){return sequence[index]||null;}
     function align(blockIndex){const found=sequence.findIndex(item=>item.blockIndex>=blockIndex);index=found<0?sequence.length:found;candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
     function seek(nextIndex){index=Math.max(0,Math.min(sequence.length,Number(nextIndex)||0));candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
-    function sample(note,time){
+    function sample(note,time,onset=false){
       const target=current();
       if(note===null){
         if(candidate!==null&&time-candidateLastSeen<=dropoutMs)return {advanced:false,current:target,index};
         candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return {advanced:false,current:target,index};
       }
       if(!target)return {advanced:false,complete:true,current:null,index};
+      if(onset&&time-lastAdvance>=cooldownMs)armed=true;
       if(note!==lastMatchedRoot)armed=true;
       if(note!==target.root){candidate=note;candidateSince=time;candidateLastSeen=time;armed=true;return {advanced:false,current:target,index};}
       if(candidate!==note){candidate=note;candidateSince=time;candidateLastSeen=time;return {advanced:false,current:target,index};}
@@ -54,8 +55,9 @@
   }
 
   function create(options={}){
-    const tracker=createTracker(options),tuner=options.tuner||global.appTuner?.create();
+    const tracker=createTracker(options),tuner=options.tuner||global.appTuner?.create({spectrum:true});
     let active=false,container=null,onUpdate=()=>{},manualTimer=0,manualIntentUntil=0,manualDisplaced=false,programmaticUntil=0;
+    let previousRms=0;
     const blocks=()=>container?.querySelectorAll('[data-smart-line]')||[];
     function sync(){const previousIndex=tracker.getIndex();tracker.reset(buildSequence(blocks()));tracker.seek(previousIndex);emit();}
     function emit(extra={}){onUpdate({active,current:tracker.current(),index:tracker.getIndex(),total:tracker.getSequence().length,...extra});}
@@ -73,11 +75,13 @@
       if(container){programmaticUntil=performance.now()+1600;container.scrollTo({top:0,behavior:'smooth'});}
       emit({completed:true,result});
     }
-    function handleFrequency(frequency){
+    function handleFrequency(frequency,audioFrame){
       if(!active)return;
-      const note=noteFromFrequency(frequency),target=tracker.current();
+      const target=tracker.current(),shift=Number(options.getPitchShift?.()||0);
+      const note=audioFrame&&global.chordAudio ? (target&&global.chordAudio.matches(global.chordAudio.chroma(audioFrame),target.chord,shift)?target.root:null) : ((noteFromFrequency(frequency)===null)?null:(noteFromFrequency(frequency)-shift+120)%12);
       if(manualDisplaced&&target&&note===target.root){manualDisplaced=false;scrollToBlock(target.blockIndex,true);}
-      const result=tracker.sample(note,performance.now());
+      const rms=audioFrame?.rms||0,onset=rms>.018&&previousRms>0&&rms>previousRms*1.9;previousRms=rms;
+      const result=tracker.sample(note,performance.now(),onset);
       if(result.advanced&&result.current&&result.current.blockIndex!==result.matched.blockIndex)scrollToBlock(result.current.blockIndex);
       if(result.complete){finish(result);return;}
       emit({frequency,result});
@@ -91,7 +95,7 @@
     }
     async function start(nextContainer,nextUpdate){
       if(active)return true;
-      container=nextContainer;onUpdate=nextUpdate||(()=>{});manualDisplaced=false;tracker.reset(buildSequence(blocks()));
+      container=nextContainer;onUpdate=nextUpdate||(()=>{});manualDisplaced=false;previousRms=0;tracker.reset(buildSequence(blocks()));
       if(!tracker.getSequence().length)throw new Error('no_chords');
       const ownContainer=container;ownContainer.addEventListener('scroll',onScroll,{passive:true});
       addManualListeners();

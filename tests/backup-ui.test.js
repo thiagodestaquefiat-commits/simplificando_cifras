@@ -22,29 +22,34 @@ const server=http.createServer((req,res)=>{
     await page.getByText('Continuar sem login',{exact:true}).click();
     await page.evaluate(()=>openLibrarySync());
     await page.locator('.sync-advanced summary').click();
-    assert.equal(await page.getByText('Exportar meus dados',{exact:true}).isVisible(),true);
-    assert.equal(await page.getByText('Recuperar versões',{exact:true}).isVisible(),true);
+    assert.equal(await page.getByText('Exportar Backup do Perfil',{exact:true}).isVisible(),true);
+    assert.equal(await page.evaluate(()=>document.querySelector('button[onclick="selectLibraryBackup()"]')?.nextElementSibling?.textContent),'Exportar Backup do Perfil','exportação logo abaixo da importação');
+    assert.equal(await page.getByText('Recuperar versões',{exact:true}).count(),0);
     const fixture=await page.evaluate(()=>{
       const original=songModel.create({id:'backup-ui-original',title:'Teste <img src=x onerror=alert(1)>',key:'D',blocos:[{c:'D A'}]});
       commitSongs([...musicas,original]);
       return libraryExporter.buildExport({ownerId:'guest',musicas:[{...original,key:'C'},songModel.create({id:'backup-ui-new',title:'Nova do backup',key:'G',blocos:[{c:'G D'}]})],events:[{id:'old-event'}],medleys:[],configuracoes:{theme:'dark'}});
     });
-    await page.getByText('Restaurar backup',{exact:true}).click();
+    await page.getByText('Importar Backup de Perfil',{exact:true}).click();
     await page.locator('body > input[type="file"]').setInputFiles({name:'backup-seguro.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture))});
-    await page.locator('[data-restore-song]').waitFor();
+    await page.waitForFunction(()=>musicas.some(s=>s.id==='backup-ui-new'));
     assert.equal(await page.locator('#modal-body img').count(),0,'títulos do backup não executam HTML');
-    assert.match(await page.locator('#modal-body').innerText(),/Somente músicas serão restauradas/);
-    await page.locator('[data-restore-song]').uncheck();
-    await page.locator('[data-restore-conflict]').check();
-    await page.getByText('Restaurar músicas selecionadas',{exact:true}).click();
+    assert.equal(await page.locator('[data-restore-song]').count(),0,'sem seleção manual');
     const after=await page.evaluate(()=>musicas.filter(song=>String(song.id).startsWith('backup-ui')||song.title.includes('cópia recuperada')).map(song=>({id:song.id,key:song.key,title:song.title})));
     assert.equal(after.find(song=>song.id==='backup-ui-original').key,'D');
-    assert.equal(after.some(song=>song.id==='backup-ui-new'),false);
+    assert.equal(after.some(song=>song.id==='backup-ui-new'),true);
     assert.equal(after.some(song=>song.key==='C'&&song.title.includes('cópia recuperada')),true);
+    const count=await page.evaluate(()=>musicas.length);await page.evaluate(payload=>importProfileBackup(JSON.stringify(payload)),fixture);assert.equal(await page.evaluate(()=>musicas.length),count,'reimportação não duplica músicas');
+    const additions=await page.evaluate(()=>{
+      storage.set('sc_settings_v3',{theme:'dark'});storage.set('sc_favorites_v2',['backup-ui-original']);
+      const oldEvents=JSON.stringify(setlists),backup=libraryExporter.buildExport({ownerId:'guest',musicas:[musicas.find(s=>s.id==='backup-ui-new')],perfil:{name:'Nome recuperado',avatarUrl:'data:image/png;base64,aGVsbG8='},favoritos:['backup-ui-new'],medleys:[{musicTitle:'Nova do backup',musicId:'backup-ui-new',blocoIdx:0,label:'Intro',chords:'G D',key:'G',capo:0}],configuracoes:{theme:'light',language:'es'},events:[{id:'nao-importar'}]});
+      importProfileBackup(JSON.stringify(backup));const first=medleyBlocos.length;importProfileBackup(JSON.stringify(backup));
+      return {theme:loadAppSettings().theme,language:loadAppSettings().language,name:accountProfile().name,favorites:storage.get('sc_favorites_v2',[]),medleys:medleyBlocos.length,first,events:JSON.stringify(setlists)===oldEvents,exportedEvents:backup.origens.sessaoAtual.eventos??null};
+    });
+    assert.equal(additions.theme,'dark','preferência atual não é substituída');assert.equal(additions.language,'es');assert.equal(additions.name,'Nome recuperado');assert.deepEqual(additions.favorites,['backup-ui-original','backup-ui-new']);assert.equal(additions.medleys,additions.first);assert.equal(additions.events,true);assert.equal(additions.exportedEvents,null);
+    await page.evaluate(()=>{storage.set('sc_settings_v3',{...loadAppSettings(),language:'pt-BR'});applyAppSettings();});
 
-    await page.evaluate(()=>{const old=musicas.find(song=>song.id==='backup-ui-original');commitSongs(musicas.map(song=>song.id===old.id?{...song,key:'E'}:song));openLibraryRecovery();});
-    await page.getByText('Recuperar como cópia',{exact:true}).first().click();
-    assert.equal(await page.evaluate(()=>musicas.some(song=>song.key==='D'&&song.title.includes('cópia recuperada'))),true);
+    assert.equal(await page.evaluate(()=>typeof window.openLibraryRecovery),'undefined','fluxo removido do app');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'interface sem transbordamento no celular');
 
     // A simulated quota failure must leave the editor open, without success or mutation.
@@ -61,13 +66,13 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.evaluate(()=>musicas.some(song=>song.title==='Não pode confirmar salvamento')),false);
     await page.evaluate(()=>restoreStorage());
     await page.setViewportSize({width:1440,height:1000});
-    await page.evaluate(()=>{closeModal();openLibraryRecovery();});
+    await page.evaluate(()=>{closeModal();openLibrarySync();});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'interface sem transbordamento no desktop');
     const downloadPromise=page.waitForEvent('download');
     await page.evaluate(()=>{closeModal();exportarBiblioteca({quiet:true});});
     const download=await downloadPromise;assert.match(download.suggestedFilename(),/^roudy-biblioteca-.*\.json$/);
     const content=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
-    assert.equal(content.versao,2);assert.equal(content.escopo.tipo,'visitante');assert.equal(content.origens.armazenamentoUsuario,undefined);
+    assert.equal(content.versao,3);assert.equal(content.escopo.tipo,'visitante');assert.equal(content.origens.armazenamentoUsuario,undefined);assert.equal(content.origens.sessaoAtual.eventos,undefined);
     assert.deepEqual(errors,[]);
     console.log('backup-ui.test.js: OK (celular/desktop, download, seleção, cópia, recuperação, XSS e quota)');
   }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

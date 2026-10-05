@@ -10,7 +10,7 @@
   }
 
   function extractSongs(payload){
-    if(!payload||typeof payload!=="object"||payload.formato!==FORMAT||![1,2].includes(Number(payload.versao)))throw new Error("Este arquivo não é um backup válido do ROUDY.");
+    if(!payload||typeof payload!=="object"||payload.formato!==FORMAT||![1,2,3].includes(Number(payload.versao)))throw new Error("Este arquivo não é um backup válido do ROUDY.");
     const session=payload.origens?.sessaoAtual?.musicas;
     if(Array.isArray(session))return {songs:session,source:"sessaoAtual"};
     const raw=payload.origens?.armazenamentoUsuario?.armazenamentoBruto||{};
@@ -26,7 +26,7 @@
     return {clientId,localId};
   }
 
-  function musicalPayload(song){const copy=clone(song);delete copy.librarySync;delete copy.accessContext;return copy;}
+  function musicalPayload(song){const copy=clone(song);delete copy.librarySync;delete copy.accessContext;delete copy.updatedAt;delete copy.createdAt;return copy;}
   function sameContent(left,right){return JSON.stringify(musicalPayload(left))===JSON.stringify(musicalPayload(right));}
   function matchingIndexes(collection,candidate){
     const target=identity(candidate),matches=new Set();
@@ -89,8 +89,10 @@
       if(restorePlan.ownerId){delete copy.librarySync;copy.accessContext={scope:"personal",ownerId:restorePlan.ownerId==="guest"?null:restorePlan.ownerId,teamId:null};}
       songs.push(copy);restored+=1;
     });
-    (options.conflictIndices||[]).forEach(index=>{
+    (options.conflictIndices||(options.automatic?restorePlan.conflictItems.map((_,i)=>i):[])).forEach(index=>{
       const item=restorePlan.conflictItems[index];if(!item)throw new Error("Seleção de versão inválida.");
+      const comparable=musicalPayload(item.backupSong);delete comparable.id;delete comparable.title;
+      if(songs.some(song=>{if(song.title!==`${item.backupSong.title} — cópia recuperada`)return false;const value=musicalPayload(song);delete value.id;delete value.title;return JSON.stringify(value)===JSON.stringify(comparable);}))return;
       songs.push(global.libraryRecovery.copySong(item.backupSong,options.ownerId));restored+=1;
     });
     return {songs,restored,existing:restorePlan.existing,conflicts:restorePlan.conflicts,invalid:restorePlan.invalid};

@@ -17,6 +17,7 @@ const toasts = [];
 const context = {
   findEvent: id => id === event.id ? event : null,
   musicas: [{ id: 'a' }, { id: 'c' }],
+  eventSongSource:(_event,item)=>['a','c'].includes(item.songId)?{id:item.songId}:null,
   openDetailFromPlaylist: (eventId, index) => opened.push([eventId, index]),
   showToast: message => toasts.push(message)
 };

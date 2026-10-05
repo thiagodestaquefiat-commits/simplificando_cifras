@@ -33,7 +33,7 @@ assert.match(settingsMarkup,/onclick="openHelpSupport\(\)"/);
 assert.match(settingsMarkup,/Ajuda e Suporte/);
 assert.match(settingsMarkup,/openLibrarySync\('openHelpSupport'\)/);
 assert.match(html,/accountSubpageHeader\('Ajuda e Suporte',librarySyncBackAction\)/);
-assert.match(html,/accountSubpageHeader\('Backup encontrado','openLibrarySync'\)/);
+assert.match(html,/importProfileBackup\(text,ownerId\)/);
 assert.match(html, /openAppSettings\(\)/);
 assert.match(html, /profilePhotoSelected\(this\)/);
 assert.match(html, /openProfilePhotoEditor\(image\)/);

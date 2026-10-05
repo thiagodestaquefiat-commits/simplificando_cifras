@@ -40,15 +40,15 @@ const payload = window.libraryExporter.buildExport(context);
 const result = window.libraryExporter.export(context);
 
 assert.equal(payload.formato, "simplificando-cifras-exportacao");
-assert.equal(payload.versao, 2);
+assert.equal(payload.versao, 3);
 assert.deepEqual(Object.keys(payload.origens), [
   "sessaoAtual"
 ]);
 assert.equal(payload.origens.armazenamentoUsuario, undefined);
 assert.equal(payload.escopo.ownerId, "owner-a");
 assert.doesNotMatch(JSON.stringify(payload), /secret-session|Private B|Segredo B|chave_desconhecida/);
-assert.deepEqual(payload.origens.sessaoAtual.playlists, payload.origens.sessaoAtual.eventos);
-assert.deepEqual(payload.origens.sessaoAtual.eventos[0].repertoire[0].personalEdits, { "owner-a": { notes: "Minha nota" } });
+assert.equal(payload.origens.sessaoAtual.playlists, undefined);
+assert.equal(payload.origens.sessaoAtual.eventos, undefined);
 assert.deepEqual(payload.origens.sessaoAtual.medleys, context.medleys);
 assert.deepEqual(payload.origens.sessaoAtual.favoritos, context.favoritos);
 assert.deepEqual(payload.origens.sessaoAtual.configuracoes, context.configuracoes);

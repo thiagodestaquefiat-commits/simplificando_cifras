@@ -24,5 +24,5 @@ assert.match(html, /if\(exactSong\)openDetail\(exactSong\.id\)/, "uma correspond
 assert.match(html, /id="app-assistant-floating"/, "o assistente deve permanecer disponível nas telas internas");
 assert.match(html, /id="song-assistant-launch"/, "a tela da música deve manter o assistente no cabeçalho");
 assert.match(html, /id="event-assistant-launch"/, "a tela do evento deve manter o assistente no cabeçalho");
-assert.match(assistant, /profileOpen=overlayOpen&&Boolean\(element\("profile-name"\)\)/, "o assistente deve ficar oculto em Meu Perfil");
+assert.match(assistant,/data-account-menu-open/,'oculto nos menus da conta');
 console.log(`index-syntax.test.js: OK (${scripts.length} scripts)`);

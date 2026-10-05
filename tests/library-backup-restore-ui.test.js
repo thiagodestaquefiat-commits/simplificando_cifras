@@ -50,12 +50,10 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
     await page.getByRole("button", { name: /Backup e dados/ }).click();
     const chooserPromise = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
+    await page.getByRole("button", { name: "Importar Backup de Perfil", exact: true }).click();
     const chooser = await chooserPromise;
     await chooser.setFiles({ name: "biblioteca-138.json", mimeType: "application/json", buffer: Buffer.from(backup) });
-    await page.getByText("Backup encontrado", { exact: true }).waitFor();
-    assert.match(await page.locator("#modal-body").innerText(), /138 músicas[\s\S]*Neste dispositivo\s*0[\s\S]*Novas\s*138[\s\S]*Já existentes\s*0[\s\S]*Conflitos\s*0/);
-    await page.getByRole("button", { name: "Restaurar", exact: true }).click();
+    await page.waitForFunction(()=>musicas.length===138);
     assert.equal(await page.locator(".music-item").count(), 138);
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("sc_songs_v1")).length), 138);
     assert.equal(await page.evaluate(() => localStorage.getItem("cifras_setlists_v1")), '[{"id":"evento-intacto","title":"Evento intacto"}]');
@@ -74,11 +72,10 @@ const server = http.createServer((request, response) => {
     await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
     await page.getByRole("button", { name: /Backup e dados/ }).click();
     const repeatChooserPromise = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Restaurar backup", exact: true }).click();
+    await page.getByRole("button", { name: "Importar Backup de Perfil", exact: true }).click();
     const repeatChooser = await repeatChooserPromise;
     await repeatChooser.setFiles({ name: "biblioteca-138.json", mimeType: "application/json", buffer: Buffer.from(backup) });
-    assert.match(await page.locator("#modal-body").innerText(), /Novas\s*0[\s\S]*Já existentes\s*138[\s\S]*Conflitos\s*0/);
-    await page.getByRole("button", { name: "Restaurar", exact: true }).click();
+    await page.waitForFunction(()=>document.getElementById('toast')?.textContent.includes('Backup importado'));
     assert.equal(await page.locator(".music-item").count(), 138);
     console.log("library-backup-restore-ui.test.js: OK (138 músicas, revisão, restauração, amostra, palco e idempotência)");
   } finally {
