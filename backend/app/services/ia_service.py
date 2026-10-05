@@ -5,7 +5,7 @@ from dataclasses import replace
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
-from .harmonic_normalizer import ensure_client_chords, normalize_response, render_full_chord_sheet
+from .harmonic_normalizer import ensure_client_chords, is_section_name, normalize_response, render_full_chord_sheet
 from .content_extractor import clean_musical_text
 from .local_sheet_parser import parse_chord_sheet
 from .key_inference import infer_key, transpose_note
@@ -51,6 +51,7 @@ Regras obrigatórias:
 """
 
 
+_MAX_CHORDS_PER_BLOCK = 16  # um bloco do resumo é uma volta da progressão; muito além disso é cifra crua
 WEB_QUOTA_EXCEEDED = object()
 WEB_QUOTA_NOTE = "Limite diário de buscas na web atingido."
 
@@ -111,6 +112,43 @@ def _user_web_quota(limit: str):
     return _UserWebQuota(item)
 
 
+def summary_off_standard(result: ResumoHarmonicoResponse) -> bool:
+    """Resumo fora do padrão ROUDY (frase-guia + uma volta dos acordes + repetições).
+
+    Ex.: música antiga do catálogo com "Primeira Parte:" no lugar da frase e 50+ acordes num bloco.
+    """
+    blocks = result.harmonicSummary.blocos
+    if not blocks:
+        return True
+    if any(block.fraseGuia and is_section_name(block.fraseGuia) for block in blocks):
+        return True
+    if any(len(block.acordes) > _MAX_CHORDS_PER_BLOCK for block in blocks):
+        return True
+    return not any(block.fraseGuia for block in blocks)
+
+
+def roudy_summary(result: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
+    """Remonta o resumo a partir da Letra + Cifras salva quando o resumo guardado está fora do padrão.
+
+    Sem IA e sem ScraperAPI: usa o mesmo montador local da cifra do Cifra Club. Tom, capo e a
+    Letra + Cifras continuam os da música; só o resumo é refeito (na resposta, nada muda no banco).
+    """
+    sheet = result.fullChordSheet
+    if not sheet or not (sheet.content or "").strip() or not summary_off_standard(result):
+        return result
+    try:
+        rebuilt = parse_chord_sheet(sheet.content, result.titulo, result.artista, key=result.tom)
+    except Exception:  # noqa: BLE001 - remontar é melhoria; o resumo original continua valendo
+        logger.warning("roudy_summary_rebuild_failed", exc_info=True)
+        return result
+    if rebuilt is None or not any(block.fraseGuia for block in rebuilt.harmonicSummary.blocos):
+        return result
+    fixed = result.model_copy(deep=True)
+    fixed.harmonicSummary = rebuilt.harmonicSummary
+    logger.info("roudy_summary_rebuilt titulo=%r blocos=%d", result.titulo, len(fixed.harmonicSummary.blocos))
+    return fixed
+
+
 class IaService:
     def __init__(self, provider, research_max_output_tokens=12000, web_search=search_chord_context, sheet_finder=find_chord_sheet,
                  shared_songs=None, shared_min_score: float = 0.9, web_quota=None):
@@ -152,7 +190,7 @@ class IaService:
             return None
         try:
             personal = self._shared_songs.search_personal(user_id, payload.titulo, payload.artista) if user_id else None
-            personal_result = ensure_client_chords(ResumoHarmonicoResponse.model_validate(personal.summary)) if personal is not None else None
+            personal_result = ensure_client_chords(roudy_summary(ResumoHarmonicoResponse.model_validate(personal.summary))) if personal is not None else None
             if personal_result is not None and personal_result.fullChordSheet is not None:
                 return personal_result
             # A cópia do próprio usuário não tem letra: o catálogo compartilhado pode ter (sem custo).
@@ -168,7 +206,7 @@ class IaService:
                 shared.fullChordSheet = None
             if shared.fullChordSheet is None and personal_result is not None:
                 return personal_result
-            return ensure_client_chords(shared)
+            return ensure_client_chords(roudy_summary(shared))
         except Exception:  # catálogo é otimização: qualquer falha cai para a IA
             logger.warning("shared_song_lookup_failed", exc_info=True)
             return None
