@@ -1240,12 +1240,28 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',1800);
 }
 // ── STATE ─────────────────────────────────────────────────────────────
-let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=1, currentLocationAutocomplete=null;
-const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast);
+let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=1, currentLocationAutocomplete=null, tablatureFontSize=13;
+let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
+const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
+function detailEditableState(){
+  const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
+  return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
+}
+function updateDetailSaveButton(){
+  const button=document.getElementById('detail-save-changes');if(!button)return;
+  button.hidden=!detailEditBaseline||JSON.stringify(detailEditableState())===JSON.stringify(detailEditBaseline);
+}
+function saveDetailChanges(){
+  if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return;
+  const source=musicas.find(item=>String(item.id)===String(currentDetailId));if(!source)return;
+  const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
+  if(!commitSongs(result.songs))return;
+  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();renderMusicas();showToast('✅ Alterações da música salvas');
+}
 function stageDetailVideoSongs(songs){
-  if(typeof detailEditBaseline!=='undefined'&&detailEditBaseline){
+  if(detailEditBaseline){
     currentDetailSongOverride=songs.find(song=>String(song.id)===String(currentDetailId));
-    if(typeof updateDetailSaveButton==='function')updateDetailSaveButton();
+    updateDetailSaveButton();
     return;
   }
   musicas=songs;
@@ -1260,6 +1276,8 @@ function toggleStudyPanel(){
   button.setAttribute('aria-expanded',String(!collapsed));
   button.setAttribute('aria-label',collapsed?'Expandir painel de acordes':'Recolher painel de acordes');
 }
+function appConfirm(message){return window.confirm(uiI18n.translate(message));}
+function appPrompt(message,value){return window.prompt(uiI18n.translate(message),value);}
 const SONG_TEXT_SCALE_MIN=.8,SONG_TEXT_SCALE_MAX=1.55;
 let songTextScale=1,songScaleFeedbackTimer=null;
 function songTextScaleStorageKey(){return `sc_song_text_scale_v1:${appCurrentUser?.id||'local'}`}
