@@ -35,5 +35,24 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,new URL(
     assert.equal(await page.locator('#song-assistant-launch').isVisible(),false,menu);
   }
   await page.evaluate(()=>{closeModal();roudyAssistant.updateLaunchVisibility();});assert.equal(await page.locator('#song-assistant-launch').isVisible(),true,'reaparece fora da conta');
+  await page.evaluate(async()=>{await openAccountModal();openProfileSettings();});
+  await page.locator('#profile-location').fill('São Paulo, SP');
+  assert.equal(await page.getByLabel('Selecione um nome de usuário único',{exact:true}).isVisible(),true,'campo aparece mesmo para convidado');
+  assert.equal(await page.locator('input[name="profile-instruments"][value="Vocalista"]').isVisible(),false,'lista inicia recolhida');
+  await page.locator('.profile-instruments-dropdown summary').click();
+  await page.locator('input[name="profile-instruments"][value="Vocalista"]').check();
+  await page.locator('input[name="profile-instruments"][value="Guitarrista"]').check();
+  await page.getByRole('button',{name:'Salvar perfil',exact:true}).click();
+  await page.evaluate(()=>openProfileSettings());
+  assert.equal(await page.locator('#profile-location').inputValue(),'São Paulo, SP');
+  assert.equal(await page.locator('input[name="profile-instruments"]:checked').count(),2);
+  assert.equal(await page.locator('#app-assistant-floating').isVisible(),false,'assistente permanece oculto no perfil');
+  await page.locator('#profile-location').fill('');
+  await page.locator('.profile-instruments-dropdown summary').click();
+  await page.locator('input[name="profile-instruments"][value="Vocalista"]').uncheck();
+  await page.locator('input[name="profile-instruments"][value="Guitarrista"]').uncheck();
+  await page.getByRole('button',{name:'Salvar perfil',exact:true}).click();await page.evaluate(()=>openProfileSettings());
+  assert.equal(await page.locator('#profile-location').inputValue(),'');
+  assert.equal(await page.locator('input[name="profile-instruments"]:checked').count(),0,'remoção dos campos também é salva');
   assert.deepEqual(errors,[]);console.log('assistant-context-ui.test.js: OK (contexto real, BPM falado, compasso, rolagem, cor, capotraste e navegação)');
 }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

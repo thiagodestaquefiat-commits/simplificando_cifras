@@ -29,7 +29,7 @@
         sessaoAtual: {
           descricao: "Dados da identidade ativa. Não inclui credenciais nem armazenamento bruto.",
           musicas: songs,
-          perfil: sanitize({name:context.perfil?.name||'',avatarUrl:context.perfil?.avatarUrl||null}),
+          perfil: sanitize({name:context.perfil?.name||'',avatarUrl:context.perfil?.avatarUrl||null,location:String(context.perfil?.location||'').slice(0,120),instruments:Array.isArray(context.perfil?.instruments)?context.perfil.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[]}),
           medleys: sanitize(context.medleys || []),
           favoritos: sanitize((context.favoritos || []).filter(id => ids.has(String(id)))),
           configuracoes: sanitize(context.configuracoes || {})

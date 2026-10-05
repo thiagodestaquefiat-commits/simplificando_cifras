@@ -1,9 +1,11 @@
 from .collaboration import (
     CollaborationUser,
+    UserHandle,
     Band,
     BandMember,
     Event,
     EventInvitation,
+    DirectEventInvitation,
     ExternalIdentity,
     EventChange,
     EventMessage,
@@ -18,10 +20,12 @@ from .collaboration import (
 
 __all__ = [
     "CollaborationUser",
+    "UserHandle",
     "Band",
     "BandMember",
     "Event",
     "EventInvitation",
+    "DirectEventInvitation",
     "ExternalIdentity",
     "EventChange",
     "EventMessage",

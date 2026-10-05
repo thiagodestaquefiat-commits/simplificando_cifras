@@ -19,6 +19,13 @@ class CollaborationUser(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
 
+class UserHandle(db.Model):
+    __tablename__ = "user_handles"
+    user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), primary_key=True)
+    username = db.Column(db.String(24), nullable=False, unique=True, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+
+
 class UserAccessToken(db.Model):
     __tablename__ = "user_access_tokens"
 
@@ -161,6 +168,21 @@ class EventInvitation(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
     accepted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class DirectEventInvitation(db.Model):
+    __tablename__ = "direct_event_invitations"
+    __table_args__ = (db.UniqueConstraint("event_id", "recipient_id", name="uq_direct_event_recipient"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    event_id = db.Column(db.String(80), db.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
+    recipient_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_by = db.Column(db.String(80), nullable=False)
+    musical_role = db.Column(db.String(80), nullable=False, default="Outra")
+    status = db.Column(db.String(16), nullable=False, default="pending")
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    responded_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 
 class EventMember(db.Model):

@@ -50,6 +50,8 @@
         name: String(metadata.full_name || metadata.name || user.email || "Usuário"),
         email: String(user.email || ""),
         avatarUrl: metadata.avatar_url || metadata.picture || null,
+        location: String(metadata.location || '').trim().slice(0,120),
+        instruments: Array.isArray(metadata.instruments)?metadata.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[],
         role: "Liderança"
       } : null
     };
@@ -166,7 +168,9 @@
       data: {
         ...session.user.user_metadata,
         full_name: String(profile.name || "").trim(),
-        phone: String(profile.phone || "").trim()
+        phone: String(profile.phone || "").trim(),
+        location: String(profile.location || '').trim().slice(0,120),
+        instruments: Array.isArray(profile.instruments)?profile.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[]
       }
     };
     const nextEmail = String(profile.email || "").trim();

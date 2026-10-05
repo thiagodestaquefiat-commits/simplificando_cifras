@@ -34,6 +34,7 @@ const context = {
   medleys: [{ musicId: 99 }],
   favoritos: ["99"],
   configuracoes: { tema: "escuro" }
+  ,perfil:{name:'Músico',location:'São Paulo, SP',instruments:['Vocalista','Guitarrista'],email:'private@example.test',phone:'private-phone'}
 };
 
 const payload = window.libraryExporter.buildExport(context);
@@ -41,6 +42,9 @@ const result = window.libraryExporter.export(context);
 
 assert.equal(payload.formato, "simplificando-cifras-exportacao");
 assert.equal(payload.versao, 3);
+assert.equal(payload.origens.sessaoAtual.perfil.location,'São Paulo, SP');
+assert.deepEqual(payload.origens.sessaoAtual.perfil.instruments,['Vocalista','Guitarrista']);
+assert.doesNotMatch(JSON.stringify(payload),/private@example|private-phone/);
 assert.deepEqual(Object.keys(payload.origens), [
   "sessaoAtual"
 ]);

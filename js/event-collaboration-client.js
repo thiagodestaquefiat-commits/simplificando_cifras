@@ -248,6 +248,25 @@
     });
   }
 
+  async function invitationRequest(path, options) {
+    const owner = global.appAuth?.getState?.().user?.id;
+    if (!owner || !global.appAuth?.getAccessToken?.()) throw new CollaborationError("Entre com sua conta para acessar os convites.",403,"login_necessario");
+    const result = await request(path, options);
+    if (global.appAuth?.getState?.().user?.id !== owner) throw new CollaborationError("A conta foi alterada. Tente novamente.",409,"conta_alterada");
+    return result;
+  }
+  const searchUsers = (query, offset=0) => invitationRequest('/directory/users?q='+encodeURIComponent(query)+'&offset='+encodeURIComponent(offset));
+  const inviteUser = (eventId,userId,role) => invitationRequest('/events/'+encodeURIComponent(eventId)+'/direct-invitations',{method:'POST',body:JSON.stringify({userId,role})});
+  const listInvitations = () => invitationRequest('/direct-invitations');
+  const getUsername = () => invitationRequest('/me/username');
+  const checkUsername = username => invitationRequest('/usernames/availability?username='+encodeURIComponent(username));
+  const claimUsername = username => invitationRequest('/me/username',{method:'POST',body:JSON.stringify({username})});
+  async function respondInvitation(id,action){
+    const body=await invitationRequest('/direct-invitations/'+encodeURIComponent(id)+'/respond',{method:'POST',body:JSON.stringify({action})});
+    if(body?.event){global.syncRealtime?.publishEvent(body.event.id);return {event:fromRemote(body.event)};}
+    return body;
+  }
+
   async function transferLeadership(event, nextLeaderId, fallback) {
     await ensureRegistered(fallback);
     const body = await request("/events/" + encodeURIComponent(event.id) + "/leader", {
@@ -353,5 +372,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, searchUsers, inviteUser, listInvitations, respondInvitation, getUsername, checkUsername, claimUsername, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);
