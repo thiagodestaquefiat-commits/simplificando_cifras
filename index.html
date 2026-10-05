@@ -1131,13 +1131,17 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
   </section>
 </div>
 
-<script src="js/storage.js"></script>
-<script src="js/song-model.js?v=4"></script>
-<script src="js/song-repository.js?v=8"></script>
-<script src="js/library-sync.js?v=12"></script>
-<script src="js/event-model.js?v=4"></script>
+<script src="js/storage.js?v=2"></script>
+<script src="js/tablature.js?v=1"></script>
+<script src="js/song-model.js?v=5"></script>
+<script src="js/demo-library.js?v=4"></script>
+<script src="js/medley-repository.js?v=1"></script>
+<script src="js/song-repository.js?v=15"></script>
+<script src="js/library-sync-policy.js?v=1"></script>
+<script src="js/library-sync.js?v=19"></script>
+<script src="js/event-model.js?v=5"></script>
 <script src="js/context-intelligence.js?v=2"></script>
-<script src="js/event-repository.js?v=7"></script>
+<script src="js/event-repository.js?v=8"></script>
 <script src="js/event-chat.js?v=2"></script>
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -1153,29 +1157,39 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/chord-utils.js"></script>
 <script src="js/navigation-context.js"></script>
 <script src="js/stage-preferences.js?v=3"></script>
-<script src="js/stage-offline.js?v=1"></script>
+<script src="js/stage-offline.js?v=2"></script>
+<script src="js/event-offline.js?v=1"></script>
 <script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=8"></script>
+<script src="js/editor/song-format.js?v=10"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=5"></script>
-<script src="js/app-auth.js?v=9"></script>
-<script src="js/sync-realtime.js?v=1"></script>
+<script src="js/ai/api-config.js?v=6"></script>
+<script src="js/song-reports.js?v=1"></script>
+<script src="js/app-auth.js?v=14"></script>
+<script src="js/ui-i18n.js?v=13"></script>
+<script src="js/tuner.js?v=3"></script>
+<script src="js/chord-audio.js?v=1"></script>
+<script src="js/smart-scroll.js?v=4"></script>
+<script src="js/sync-realtime.js?v=2"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=11"></script>
+<script src="js/event-collaboration-client.js?v=14"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
 <script src="js/context-delivery.js?v=1"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=9"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=8"></script>
+<script src="js/ai/harmonic-summary-client.js?v=15"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=13"></script>
 <script src="js/ai/camera-capture.js?v=2"></script>
+<script src="js/app-assistant.js?v=20"></script>
+<script src="js/event-user-invites.js?v=4"></script>
+<script src="js/notification-center.js?v=1"></script>
+<script src="js/profile-username.js?v=3"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1228,6 +1242,14 @@ function showToast(msg){
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=1, currentLocationAutocomplete=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast);
+function stageDetailVideoSongs(songs){
+  if(typeof detailEditBaseline!=='undefined'&&detailEditBaseline){
+    currentDetailSongOverride=songs.find(song=>String(song.id)===String(currentDetailId));
+    if(typeof updateDetailSaveButton==='function')updateDetailSaveButton();
+    return;
+  }
+  musicas=songs;
+}
 function toggleStudyPanel(){
   const panel=document.getElementById('study-music-panel');
   const content=document.getElementById('study-panel-content');
