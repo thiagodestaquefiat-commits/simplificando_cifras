@@ -1,4 +1,4 @@
-const CACHE_NAME = "simplificando-cifras-v264-youtube-add-microinteraction";
+const CACHE_NAME = "simplificando-cifras-v265-playlist-search-add-motion";
 const ASSETS = [
   "./",
   "./index.html",
@@ -115,7 +115,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=6",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=15",
-  "./js/ai/ai-harmonic-summary.js?v=13",
+  "./js/ai/ai-harmonic-summary.js?v=14",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",

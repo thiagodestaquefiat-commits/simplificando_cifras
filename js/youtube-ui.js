@@ -48,33 +48,6 @@
     return error?.message || "O YouTube não conseguiu concluir a busca.";
   }
 
-  function isAlreadyAdded(video) {
-    if (!appContext || !video) return false;
-    try {
-      const candidate = global.songModel.create(video);
-      return Boolean(global.songModel.findDuplicate(appContext.getSongs(), candidate));
-    } catch (_) {
-      return false;
-    }
-  }
-
-  function addIconMarkup() {
-    return '<svg class="youtube-add-btn-icon youtube-add-btn-icon--plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.25"></circle><path d="M12 8v8M8 12h8"></path></svg><svg class="youtube-add-btn-icon youtube-add-btn-icon--check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.6 12.2 2.8 2.8 6.2-6.3" fill="none"></path></svg>';
-  }
-
-  function setAddButtonState(button, video, added, animate) {
-    const title = String(video?.title || "Música").trim();
-    button.classList.toggle("is-added", added);
-    button.classList.toggle("is-confirming", Boolean(added && animate));
-    button.setAttribute("aria-pressed", String(added));
-    button.setAttribute("aria-label", added ? `“${title}” adicionada à playlist` : `Adicionar “${title}” à playlist`);
-    button.disabled = added;
-    if (animate) {
-      const animatedIcon = button.querySelector(added ? ".youtube-add-btn-icon--check" : ".youtube-add-btn-icon--plus");
-      animatedIcon?.addEventListener("animationend", () => button.classList.remove("is-confirming", "is-reverting"), { once: true });
-    }
-  }
-
   function renderResults(videos) {
     const container = resultsElement();
     if (!container) return;
@@ -96,13 +69,9 @@
         element("div", "youtube-video-title", video.title),
         element("div", "youtube-video-channel", video.youtubeChannelTitle || video.artist || "YouTube")
       );
-      const addButton = element("button", "youtube-add-btn");
+      const addButton = element("button", "youtube-add-btn", "Adicionar");
       addButton.type = "button";
-      addButton.innerHTML = addIconMarkup();
-      setAddButtonState(addButton, video, isAlreadyAdded(video), false);
-      addButton.addEventListener("pointerdown", () => addButton.classList.add("is-pressed"));
-      ["pointerup", "pointercancel", "pointerleave"].forEach(type => addButton.addEventListener(type, () => addButton.classList.remove("is-pressed")));
-      addButton.addEventListener("click", () => addVideo(index, addButton));
+      addButton.addEventListener("click", () => addVideo(index));
       row.append(cover, info, addButton);
       container.appendChild(row);
     });
@@ -160,29 +129,17 @@
     closeResults();
   }
 
-  function addVideo(index, button) {
-    const video = currentResults[index];
-    if (!appContext || !video || button?.classList.contains("is-pending") || button?.classList.contains("is-added")) return;
-    if (button) {
-      button.classList.add("is-pending");
-      setAddButtonState(button, video, true, true);
-    }
-    try {
-      const result = global.songRepository.addOrReuse(appContext.getSongs(), video);
-      appContext.setSongs(result.songs);
-      appContext.save();
-      appContext.renderSongs();
-      if (button) button.classList.remove("is-pending");
-      return result.song;
-    } catch (error) {
-      if (button) {
-        button.classList.remove("is-pending", "is-confirming", "is-added");
-        button.classList.add("is-reverting");
-        setAddButtonState(button, video, false, true);
-      }
-      appContext.showToast(error?.message || "Não foi possível adicionar a música à playlist.");
-      return null;
-    }
+  function addVideo(index) {
+    if (!appContext || !currentResults[index]) return;
+    const result = global.songRepository.addOrReuse(appContext.getSongs(), currentResults[index]);
+    appContext.setSongs(result.songs);
+    appContext.save();
+    appContext.renderSongs();
+    appContext.showToast(result.created
+      ? "✅ Música adicionada com vídeo do YouTube."
+      : "ℹ️ A música já existia e foi vinculada ao YouTube.");
+    closeResults();
+    appContext.openSong(result.song.id);
   }
 
   function initialize(context) { appContext = context; }

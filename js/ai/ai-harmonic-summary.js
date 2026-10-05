@@ -377,24 +377,56 @@
     searchPanel.hidden=true;document.getElementById("playlist-ai-normal").hidden=false;searchPanel=null;
   }
 
-  async function generateSearchResult(candidate, title, artist) {
+  function searchCandidateAdded(candidate, title, artist) {
+    try {
+      return Boolean(global.playlistContainsSong({ ...candidate, title: candidate.title || title, artist: candidate.artist || artist }));
+    } catch (_) { return false; }
+  }
+
+  function addStateIcon() {
+    return '<svg class="youtube-add-btn-icon youtube-add-btn-icon--plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.25"></circle><path d="M12 8v8M8 12h8"></path></svg><svg class="youtube-add-btn-icon youtube-add-btn-icon--check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.6 12.2 2.8 2.8 6.2-6.3" fill="none"></path></svg>';
+  }
+
+  function setSearchAddState(button, name, added, animate) {
+    button.classList.toggle("is-added", added);
+    button.classList.toggle("is-confirming", Boolean(added && animate));
+    button.disabled = added;
+    button.setAttribute("aria-pressed", String(added));
+    button.setAttribute("aria-label", added ? `“${name}” adicionada à playlist` : `Adicionar “${name}” à playlist`);
+    if (animate) {
+      const icon = button.querySelector(added ? ".youtube-add-btn-icon--check" : ".youtube-add-btn-icon--plus");
+      icon?.addEventListener("animationend", () => button.classList.remove("is-confirming", "is-reverting"), { once: true });
+    }
+  }
+
+  async function generateSearchResult(candidate, title, artist, addButton) {
     if (!searchPanel || busy) return;
     busy = true;
     const status = searchPanel.querySelector("[data-ai-search-status]");
+    const name = candidate.title || title;
+    addButton.classList.add("is-pending");
+    setSearchAddState(addButton, name, true, true);
     searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = true);
     status.textContent = "Analisando esta versão e criando a música…";
     try {
       const result = await global.harmonicSummaryClient.generate("pesquisa", { titulo: candidate.title || title, artista: candidate.artist || artist, sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
       const sourceInfo = { type: "online", name: candidate.sourceName || candidate.title || title, url: candidate.sourceUrl || null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
-      busy = false; closeSearch();
-      global.saveAiGeneratedSong(model);
+      global.saveAiGeneratedSong(model, { open: false, notify: false });
+      addButton.classList.remove("is-pending");
+      status.textContent = `“${name}” adicionada à playlist.`;
     } catch (error) {
       busy = false;
       if (!searchPanel) return;
+      addButton.classList.remove("is-pending", "is-confirming", "is-added");
+      addButton.classList.add("is-reverting");
+      setSearchAddState(addButton, name, false, true);
       searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
       status.textContent = error?.message || "Não foi possível gerar esta música.";
+      return;
     }
+    busy = false;
+    if (searchPanel) searchPanel.querySelectorAll("button:not(.is-added),input").forEach(control => control.disabled = false);
   }
 
   async function runSearch() {
@@ -409,10 +441,15 @@
       const candidates = await global.harmonicSummaryClient.searchSources(title, artist);
       status.textContent = candidates.length ? "Escolha a versão correta:" : "Nenhuma versão encontrada. Confira o nome e o cantor.";
       candidates.forEach(candidate => {
-        const button = element("button", "ai-song-search-result"); button.type = "button";
+        const row = element("div", "ai-song-search-result");
         const copy = element("span", "ai-song-search-result-copy"); copy.append(element("strong", "", candidate.title || title), element("small", "", candidate.artist || artist || "Artista não informado"));
         const source = element("span", "ai-song-search-source", candidate.sourceName || "Fonte musical");
-        button.append(copy, source); button.addEventListener("click", () => generateSearchResult(candidate, title, artist)); results.appendChild(button);
+        const addButton=element("button","playlist-search-add-btn");addButton.type="button";addButton.innerHTML=addStateIcon();
+        const name=candidate.title||title;setSearchAddState(addButton,name,searchCandidateAdded(candidate,title,artist),false);
+        addButton.addEventListener("pointerdown",()=>addButton.classList.add("is-pressed"));
+        ["pointerup","pointercancel","pointerleave"].forEach(type=>addButton.addEventListener(type,()=>addButton.classList.remove("is-pressed")));
+        addButton.addEventListener("click",()=>generateSearchResult(candidate,title,artist,addButton));
+        row.append(copy,source,addButton);results.appendChild(row);
       });
     } catch (error) { status.textContent = error?.message || "Não foi possível realizar a busca."; }
     finally { busy = false; if (searchPanel) searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false); }

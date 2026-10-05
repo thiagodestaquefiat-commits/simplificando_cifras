@@ -20,6 +20,6 @@ assert.match(html, /--event-icon-scale/);
 assert.match(html, /linear-gradient\(105deg,#f0f2f5/);
 assert.match(html, /requestAnimationFrame\(renderHeader\)/);
 assert.match(html, /prefers-reduced-motion:reduce/);
-assert.match(sw, /v264-youtube-add-microinteraction/);
+assert.match(sw, /v265-playlist-search-add-motion/);
 
 console.log('events-library-header.test.js: OK');
