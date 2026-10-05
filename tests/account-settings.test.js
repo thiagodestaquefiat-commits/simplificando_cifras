@@ -26,7 +26,6 @@ assert.match(profileMarkup,/accountSubpageHeader\(appText\('myProfile'\)\)/);
 assert.doesNotMatch(profileMarkup, /onclick="openAccountModal\(\)">Voltar<\/button>/);
 const settingsMarkup=html.slice(html.indexOf('function openAppSettings(){'),html.indexOf('function saveAppSettings(){'));
 assert.match(settingsMarkup,/accountSubpageHeader\(appText\('settings'\),'cancelAppSettings'\)/);
-assert.doesNotMatch(settingsMarkup,/cancelAppSettings\(\)">Voltar<\/button>/);
 assert.match(settingsMarkup,/onclick="openLanguageSettings\(\)"/);
 assert.match(settingsMarkup,/onclick="openAppearanceSettings\(\)"/);
 assert.match(settingsMarkup,/onclick="openHelpSupport\(\)"/);

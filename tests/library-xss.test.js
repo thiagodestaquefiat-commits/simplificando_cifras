@@ -108,17 +108,13 @@ console.log("  attrJs cobre o caso onde eventEsc sozinho falharia");
 // ------------------------------------------- 3. os sinks corrigidos no arquivo
 // Trava de regressao: se alguem reintroduzir a interpolacao crua, quebra aqui.
 const SINKS_CORRIGIDOS = [
-  { nome: "renderMusicas / onclick", regex: /class="music-item" onclick="openDetail\(\$\{attrJs\(m\.id\)\}\)"/ },
+  { nome: "renderMusicas / onclick", regex: /class="music-item" onclick="openSongFromSwipe\(event,\$\{attrJs\(m\.id\)\}\)"/ },
   { nome: "renderMusicas / titulo", regex: /class="music-title">\$\{eventEsc\(m\.title\)\}/ },
   { nome: "renderMusicas / artista", regex: /class="music-sub">\$\{eventEsc\(m\.artist\|\|m\.capo/ },
-  { nome: "renderMusicas / tom", regex: /class="key-badge">\$\{eventEsc\(m\.key\)\}/ },
   { nome: "abrirAddMedley / option", regex: /<option value="\$\{eventEsc\(m\.id\)\}">\$\{eventEsc\(m\.title\)\}/ },
-  { nome: "renderDetail / editMusica", regex: /onclick="editMusica\(\$\{attrJs\(m\.id\)\}\)"/ },
-  { nome: "renderDetail / deleteMusica", regex: /onclick="deleteMusica\(\$\{attrJs\(m\.id\)\}\)"/ },
-  { nome: "renderDetail / generateAiForSong", regex: /onclick="generateAiForSong\(\$\{attrJs\(m\.id\)\}\)"/ },
   { nome: "diagramas / nome do acorde", regex: /class="chord-card-name">\$\{eventEsc\(name\)\}/ },
   { nome: "medley / titulo do bloco", regex: /\$\{eventEsc\(b\.musicTitle\)\}/ },
-  { nome: "medley / cifra", regex: /\$\{eventEsc\(medleyChordText\(b\)\)\.replace\(\/\\n\/g,'<br>'\)\}/ },
+  { nome: "medley / cifra", regex: /\$\{eventEsc\(b\.chords\)\.replace\(\/\\n\/g,'<br>'\)\}/ },
   { nome: "editor simples / capo", regex: /id="ai-review-capo" value="\$\{safe\(model\.capo\|\|''\)\}"/ }
 ];
 

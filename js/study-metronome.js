@@ -7,7 +7,7 @@
   const MAX_BPM = 240;
   const METERS = Object.freeze({ "2/4": 2, "3/4": 3, "4/4": 4, "5/4": 5, "6/8": 6, "12/8": 12 });
 
-  function create(root, storage, onError) {
+  function create(root, storage, onError, options = {}) {
     const controlsScope = typeof root.closest === "function" ? root.closest(".song-bpm-picker") || root : root;
     const bpmOutput = controlsScope.querySelector("#metronome-bpm");
     const playButton = root.querySelector("#metronome-play");
@@ -128,10 +128,11 @@
       meterSelect.value = meter || "";
       beatsContainer.setAttribute("aria-label", meter ? `${METERS[meter]} tempos do compasso` : "Metrônomo desativado");
       beats.forEach((beat, index) => { beat.hidden = !meter || index >= METERS[meter]; });
-      if (persist && songKey !== null) {
+      if (persist && songKey !== null && options.shouldPersist?.() !== false) {
         const saved = storage.get(METER_STORAGE_KEY, {});
         storage.set(METER_STORAGE_KEY, { ...saved, [songKey]: meter });
       }
+      options.onChange?.();
       if (timer !== null) { stop(); if (meter) start(); }
     }
 
