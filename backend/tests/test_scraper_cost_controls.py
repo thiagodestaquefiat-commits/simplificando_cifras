@@ -224,3 +224,25 @@ def test_real_user_quota_reports_reset_time(app):
         quota = _user_web_quota("2 per day")
         assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
         assert "(2 buscas a cada 24 horas)" in quota.message("quota-user") and "liberam" in quota.message("quota-user")
+
+
+def test_catalog_summary_with_long_mixed_progression_is_split_roudy_style():
+    """Minha Alma (O Rappa) no catálogo: 'Primeira Parte:' como frase e 55 acordes numa linha só."""
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = ("Am F Dm " * 5 + "Am Am7 G6/A Am Am7 G6/A Dm9/A").split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "Minha alma", "artista": "O Rappa", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Primeira Parte:"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert [(b.acordes, b.repeticoes) for b in blocks][:2] == [(["Am", "F", "Dm"], 5), (["Am", "Am7", "G6/A"], 2)]
+    assert all(b.fraseGuia is None for b in blocks), "nome de seção não é frase-gancho"
+
+
+def test_normal_line_without_repetition_is_left_alone():
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = "C G Am F Dm Em G C D".split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "X", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Tu és bem-vindo aqui"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert len(blocks) == 1 and blocks[0].acordes == chords and blocks[0].fraseGuia == "Tu és bem-vindo aqui"
