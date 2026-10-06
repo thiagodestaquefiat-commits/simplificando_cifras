@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 
+from flask import current_app, has_app_context
 from pydantic import ValidationError
 from sqlalchemy import text
 
@@ -29,6 +30,23 @@ AI_ONLY_MARKER = "Gerado somente por IA"
 # autorais; SCRAPER_ENABLED=false desliga a busca na web se houver reclamação. Conteúdo gerado pela IA
 # (model_knowledge) continua fora.
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+
+
+# Artistas com nome parecido ("Luiz Gonzaga" x "Luiz Gonzaga e Banda") são a mesma música no catálogo.
+SAME_ARTIST_MIN_RATIO = 0.8
+
+
+def open_contribution() -> bool:
+    """Força-tarefa: com CATALOG_OPEN_CONTRIBUTION ligado, toda música salva entra no catálogo."""
+    return bool(has_app_context() and current_app.config.get("CATALOG_OPEN_CONTRIBUTION", False))
+
+
+def same_artist(first: str | None, second: str | None) -> bool:
+    if not first or not second:
+        return True
+    if first == second or first in second or second in first:
+        return True
+    return SequenceMatcher(None, first, second).ratio() >= SAME_ARTIST_MIN_RATIO
 
 
 def parse_capo(value) -> int | None:
@@ -247,7 +265,8 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            if content and source in CONTRIBUTABLE_FULL_SHEET_SOURCES:
+            accepted = CATALOG_FULL_SHEET_SOURCES if open_contribution() else CONTRIBUTABLE_FULL_SHEET_SOURCES
+            if content and source in accepted:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],
@@ -270,6 +289,18 @@ class SharedSongService:
             return None
         return response.model_dump(mode="json")
 
+    @staticmethod
+    def _existing(normalized_title: str, normalized_artist: str | None) -> SharedSong | None:
+        """Mesma música no catálogo: título igual e artista igual ou parecido (evita duplicar ao completar)."""
+        exact = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
+        if exact is not None:
+            return exact
+        same_title = SharedSong.query.filter_by(normalized_title=normalized_title).all()
+        similar = [song for song in same_title if same_artist(song.normalized_artist, normalized_artist)]
+        # Prefere a versão que ainda não tem letra: é ela que precisa ser completada.
+        similar.sort(key=lambda song: (song.song_data or {}).get("fullChordSheet") is not None)
+        return similar[0] if similar else None
+
     @classmethod
     def contribute(cls, song_data, user_id) -> SharedSong | None:
         if not isinstance(song_data, dict):
@@ -279,10 +310,12 @@ class SharedSongService:
         has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
         # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
         # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
-        if source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
+        open_mode = open_contribution()
+        if not open_mode and source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
             return None
-        if AI_ONLY_MARKER in str(song_data.get("notes") or ""):
+        if not open_mode and AI_ONLY_MARKER in str(song_data.get("notes") or "") and not has_real_lyrics:
             # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
+            # Com letra de fonte real (PDF/arquivo ou Cifra Club) a música já foi corrigida e entra.
             return None
         normalized_title = normalize_text(song_data.get("title"))
         normalized_artist = normalize_text(song_data.get("artist")) or None
@@ -292,7 +325,7 @@ class SharedSongService:
         if summary is None:
             return None
         new_has_full = summary.get("fullChordSheet") is not None
-        existing = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
+        existing = cls._existing(normalized_title, normalized_artist)
         if existing is not None:
             # Atualiza o catálogo apenas se a nova versão é mais completa:
             # tem cifra completa e a versão existente não tem.
