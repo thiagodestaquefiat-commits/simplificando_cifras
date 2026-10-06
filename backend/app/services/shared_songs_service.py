@@ -34,6 +34,8 @@ CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 
 # Artistas com nome parecido ("Luiz Gonzaga" x "Luiz Gonzaga e Banda") são a mesma música no catálogo.
 SAME_ARTIST_MIN_RATIO = 0.8
+# Diferença de pontuação em que duas entradas do catálogo contam como a mesma música na busca.
+SAME_SONG_SCORE_MARGIN = 0.1
 
 
 def open_contribution() -> bool:
@@ -119,19 +121,35 @@ class SharedSongService:
 
     @staticmethod
     def _candidates(title: str, artist: str) -> list[SharedSong]:
+        # Título exatamente igual entra sempre: o FULLTEXT do MySQL ignora palavras curtas e às vezes
+        # não traz a versão com letra entre os primeiros resultados.
+        found = {song.id: song for song in SharedSong.query.filter_by(normalized_title=title).limit(50).all()}
         if db.engine.dialect.name == "mysql":
-            ids = db.session.execute(
-                text(
-                    "SELECT id FROM shared_songs "
-                    "WHERE MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) "
-                    "ORDER BY MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) DESC "
-                    "LIMIT :limit"
-                ),
-                {"query": f"{title} {artist}".strip(), "limit": MAX_CANDIDATES},
-            ).scalars().all()
-            return SharedSong.query.filter(SharedSong.id.in_(ids)).all() if ids else []
-        # Fallback LIKE para PostgreSQL e SQLite (sem índice FULLTEXT).
-        return SharedSong.query.filter(SharedSong.normalized_title.contains(title)).limit(MAX_CANDIDATES).all()
+            try:
+                ids = db.session.execute(
+                    text(
+                        "SELECT id FROM shared_songs "
+                        "WHERE MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) "
+                        "ORDER BY MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) DESC "
+                        "LIMIT :limit"
+                    ),
+                    {"query": f"{title} {artist}".strip(), "limit": MAX_CANDIDATES},
+                ).scalars().all()
+            except Exception:  # noqa: BLE001 - sem índice FULLTEXT, fica a busca por título igual
+                db.session.rollback()
+                ids = []
+            missing = [song_id for song_id in ids if song_id not in found]
+            if missing:
+                found.update({song.id: song for song in SharedSong.query.filter(SharedSong.id.in_(missing)).all()})
+        else:
+            # Fallback LIKE para PostgreSQL e SQLite (sem índice FULLTEXT).
+            found.update({song.id: song for song in SharedSong.query.filter(SharedSong.normalized_title.contains(title)).limit(MAX_CANDIDATES).all()})
+        return list(found.values())
+
+    @staticmethod
+    def _has_full_sheet(song: SharedSong) -> bool:
+        sheet = (song.song_data or {}).get("fullChordSheet")
+        return isinstance(sheet, dict) and bool(str(sheet.get("content") or "").strip())
 
     @classmethod
     def search(cls, title, artist=None) -> SharedSongMatch | None:
@@ -142,7 +160,10 @@ class SharedSongService:
                   for song in cls._candidates(normalized_title, normalized_artist)]
         if not scored:
             return None
-        best = max(scored, key=lambda match: match.score)
+        # Entre versões praticamente iguais da mesma música (ex.: uma só com resumo e outra completada),
+        # entrega a que tem Letra + Cifras.
+        top = max(match.score for match in scored)
+        best = max(scored, key=lambda match: (match.score >= top - SAME_SONG_SCORE_MARGIN and cls._has_full_sheet(match.song), match.score))
         best.song.times_searched = (best.song.times_searched or 0) + 1
         db.session.commit()
         return best
