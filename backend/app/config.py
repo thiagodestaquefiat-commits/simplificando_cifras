@@ -81,10 +81,8 @@ class Config:
     SCRAPER_USER_LIMIT = os.getenv("SCRAPER_USER_LIMIT", "10 per day")
 
     MUSIC_SOURCE_SEARCH_RATE_LIMIT = os.getenv("MUSIC_SOURCE_SEARCH_RATE_LIMIT", "30 per minute")
-    # Força-tarefa (out/2026): CATALOG_OPEN_CONTRIBUTION=true faz TODA música adicionada ou completada ir ao
-    # catálogo compartilhado (inclusive Texto, manuais e as antigas "somente IA"). Para voltar às regras
-    # normais (só Busca/arquivo/foto e letra de fonte real), defina CATALOG_OPEN_CONTRIBUTION=false no Railway.
-    CATALOG_OPEN_CONTRIBUTION = os.getenv("CATALOG_OPEN_CONTRIBUTION", "true").strip().lower() not in {"0", "false", "no", "nao", "não", "off"}
+    # Política do produto: nunca publicar Texto/manual por uma variável legada.
+    CATALOG_OPEN_CONTRIBUTION = False
     SHARED_SONG_MIN_SCORE = float(os.getenv("SHARED_SONG_MIN_SCORE", "0.9"))
     SHARED_SONG_SEARCH_RATE_LIMIT = os.getenv("SHARED_SONG_SEARCH_RATE_LIMIT", "30 per minute")
     SHARED_SONG_REVIEWER_IDS = _csv("SHARED_SONG_REVIEWER_IDS", "")

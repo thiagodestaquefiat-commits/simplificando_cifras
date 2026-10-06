@@ -6,7 +6,6 @@ import uuid
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 
-from flask import current_app, has_app_context
 from pydantic import ValidationError
 from sqlalchemy import text
 
@@ -15,21 +14,20 @@ from ..models import PersonalSong, SharedSong, SharedSongReport
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
 
 MAX_CANDIDATES = 10
-# Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
-# contém apenas acordes (sem letra nem cifra completa), então não há problema
-# de privacidade independentemente da fonte (upload, texto, online ou manual).
 # Só vai para o catálogo compartilhado o que veio de fonte real: Busca por IA (Cifra Club/catálogo) ou arquivo/foto.
 # Músicas digitadas (aba Texto) ou criadas à mão são versões pessoais: ficam só na biblioteca do usuário.
 SHAREABLE_SOURCE_TYPES = {"online", "upload"}
 # Letra + Cifras que o catálogo aceita receber (digitada pelo usuário = versão pessoal, não entra).
 CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
+# Fontes que podem ser LIDAS na busca (inclusive da biblioteca pessoal).
+# Isso não autoriza publicar conteúdo de Texto no catálogo.
+CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
 # Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
 # (web_source, ex.: Cifra Club). Decisão de produto do MVP (29/09/2026), ciente do risco de direitos
 # autorais; SCRAPER_ENABLED=false desliga a busca na web se houver reclamação. Conteúdo gerado pela IA
 # (model_knowledge) continua fora.
-CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 
 
 # Artistas com nome parecido ("Luiz Gonzaga" x "Luiz Gonzaga e Banda") são a mesma música no catálogo.
@@ -39,8 +37,8 @@ SAME_SONG_SCORE_MARGIN = 0.1
 
 
 def open_contribution() -> bool:
-    """Força-tarefa: com CATALOG_OPEN_CONTRIBUTION ligado, toda música salva entra no catálogo."""
-    return bool(has_app_context() and current_app.config.get("CATALOG_OPEN_CONTRIBUTION", False))
+    """Compatibilidade legada: contribuição aberta foi encerrada por privacidade."""
+    return False
 
 
 def same_artist(first: str | None, second: str | None) -> bool:
@@ -286,7 +284,7 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            accepted = CATALOG_FULL_SHEET_SOURCES if open_contribution() else CONTRIBUTABLE_FULL_SHEET_SOURCES
+            accepted = CONTRIBUTABLE_FULL_SHEET_SOURCES
             if content and source in accepted:
                 full_sheet_payload = {
                     "source": source,
@@ -331,10 +329,9 @@ class SharedSongService:
         has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
         # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
         # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
-        open_mode = open_contribution()
-        if not open_mode and source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
+        if source_type not in SHAREABLE_SOURCE_TYPES:
             return None
-        if not open_mode and AI_ONLY_MARKER in str(song_data.get("notes") or "") and not has_real_lyrics:
+        if AI_ONLY_MARKER in str(song_data.get("notes") or "") and not has_real_lyrics:
             # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
             # Com letra de fonte real (PDF/arquivo ou Cifra Club) a música já foi corrigida e entra.
             return None

@@ -13,24 +13,23 @@ def catalog(app):
         return {song.title: song.song_data.get("fullChordSheet") for song in SharedSong.query.all()}
 
 
-def test_open_mode_sends_every_saved_song_to_catalog(client, app):
+def test_legacy_open_flag_cannot_publish_private_songs(client, app):
     app.config["CATALOG_OPEN_CONTRIBUTION"] = True
     token = register(client, "open-a", "A")
     client.put("/api/library/songs/t", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo={"type": "text"}, fullChordSheet=TYPED)})
     client.put("/api/library/songs/m", headers=auth(token), json={"songData": ai_song(title="Feita a Mao", aiGenerated=False, sourceInfo={"type": "manual"})})
     client.put("/api/library/songs/i", headers=auth(token), json={"songData": ai_song(title="Velha IA", notes=AI_ONLY)})
     stored = catalog(app)
-    assert set(stored) == {"Digitada", "Feita a Mao", "Velha IA"}
-    assert stored["Digitada"]["content"] == "G   C\nMinha versão"
+    assert stored == {}
 
 
-def test_pdf_completes_old_ai_only_song_even_with_normal_rules(client, app):
+def test_completing_existing_personal_song_stays_private(client, app):
     token = register(client, "open-b", "B")
     old = ai_song(title="Velha IA", sourceInfo={"type": "manual"}, notes=AI_ONLY)
     client.put("/api/library/songs/s", headers=auth(token), json={"songData": old})
     assert catalog(app) == {}
     client.put("/api/library/songs/s", headers=auth(token), json={"songData": {**old, "fullChordSheet": PDF}})
-    assert catalog(app)["Velha IA"]["source"] == "user_upload"
+    assert catalog(app) == {}
 
 
 def test_completion_with_slightly_different_artist_updates_existing_entry(client, app):

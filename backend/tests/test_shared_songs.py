@@ -162,7 +162,7 @@ def test_web_scraped_song_goes_to_catalog_with_full_sheet_and_source(client, app
         assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
 
 
-def test_summary_only_catalog_entry_is_completed_when_saved_again_with_sheet(client, app):
+def test_personal_completion_does_not_change_catalog_entry(client, app):
     """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa."""
     token = register(client, "shared-upgrade", "U")
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": ai_song()})
@@ -170,7 +170,7 @@ def test_summary_only_catalog_entry_is_completed_when_saved_again_with_sheet(cli
         assert SharedSong.query.one().song_data["fullChordSheet"] is None
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": _with_sheet("web_source")})
     with app.app_context():
-        assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
+        assert SharedSong.query.one().song_data["fullChordSheet"] is None
     friend = register(client, "shared-friend", "F")
     found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(friend)).get_json()
     assert found["match"]["title"] == "Asa Branca"
@@ -269,8 +269,8 @@ def test_summary_only_personal_song_has_no_fake_full_sheet(client, app):
         assert match.summary["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
 
 
-def test_base_library_song_completed_with_real_lyrics_reaches_catalog(client, app):
-    """Força-tarefa: música da biblioteca base (origem manual) completada pelo Cifra Club ou arquivo vai ao catálogo."""
+def test_manual_origin_stays_private_even_with_full_sheet(client, app):
+    """Origem manual permanece privada; anexar letra não libera compartilhamento."""
     token = register(client, "task-a", "A")
     base = {"type": "manual", "name": "PDF fornecido pelo usuário", "url": None}
     web = {"source": "web_source", "content": "G  C\nVocê é bem vindo aqui", "sections": []}
@@ -281,9 +281,7 @@ def test_base_library_song_completed_with_real_lyrics_reaches_catalog(client, ap
     client.put("/api/library/songs/pdf", headers=auth(token), json={"songData": ai_song(title="Por Arquivo", sourceInfo=base, fullChordSheet=upload)})
     with app.app_context():
         songs = {song.title: song for song in SharedSong.query.all()}
-        assert sorted(songs) == ["A casa é sua", "Por Arquivo"]
-        assert songs["Por Arquivo"].song_data["fullChordSheet"]["source"] == "user_upload"
-        assert songs["A casa é sua"].song_data["fullChordSheet"]["content"].endswith("bem vindo aqui")
+        assert songs == {}
 
 
 def test_teammate_completion_updates_summary_only_catalog_entry(client, app):

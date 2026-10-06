@@ -36,7 +36,7 @@ blueprint = Blueprint("events", __name__, url_prefix="/api/collaboration")
 
 @blueprint.get("/capabilities")
 def collaboration_capabilities():
-    response = jsonify({"eventSongData": 1})
+    response = jsonify({"eventSongData": 1, "catalogContribution": "initial-online-upload-only", "textManualPrivate": True, "personalEditsPrivate": True})
     response.headers["Cache-Control"] = "no-store"
     return response
 
