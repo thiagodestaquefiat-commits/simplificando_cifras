@@ -52,3 +52,22 @@ def test_different_artist_stays_a_different_song(client, app):
     client.put("/api/library/songs/b", headers=auth(token), json={"songData": ai_song(id="b", title="Ruja o Leão", artist="Fernandinho", fullChordSheet=PDF)})
     with app.app_context():
         assert SharedSong.query.count() == 2
+
+
+def test_search_prefers_version_with_lyrics_among_same_song(client, app):
+    """Duas entradas da mesma música (uma só resumo, outra completada): a busca entrega a com letra."""
+    token = register(client, "open-f", "F")
+    client.put("/api/library/songs/a", headers=auth(token), json={"songData": ai_song(title="Quando o céu invade a terra", artist="")})
+    client.put("/api/library/songs/b", headers=auth(token), json={"songData": ai_song(id="b", title="Quando o ceu invade a terra", artist="Ministério X", fullChordSheet=PDF)})
+    reader = register(client, "open-g", "G")
+    found = client.get("/api/shared-songs/search?title=Quando%20o%20c%C3%A9u%20invade%20a%20terra", headers=auth(reader)).get_json()["match"]
+    assert found["songData"]["fullChordSheet"]["content"] == PDF["content"]
+
+
+def test_search_keeps_exact_song_over_other_artist_with_lyrics(client, app):
+    token = register(client, "open-h", "H")
+    client.put("/api/library/songs/a", headers=auth(token), json={"songData": ai_song(title="Emaus", artist="Morada")})
+    client.put("/api/library/songs/b", headers=auth(token), json={"songData": ai_song(id="b", title="Emaus", artist="Banda Totalmente Outra", fullChordSheet=PDF)})
+    reader = register(client, "open-i", "I")
+    found = client.get("/api/shared-songs/search?title=Emaus&artist=Morada", headers=auth(reader)).get_json()["match"]
+    assert found["artist"] == "Morada"
