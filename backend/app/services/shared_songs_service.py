@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from sqlalchemy import text
 
 from ..database import db
-from ..models import PersonalSong, SharedSong
+from ..models import PersonalSong, SharedSong, SharedSongReport
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
 
 MAX_CANDIDATES = 10
@@ -371,3 +371,60 @@ class SharedSongService:
         )
         db.session.add(song)
         return song
+
+
+def _keeper_rank(song: SharedSong):
+    """Qual entrada fica: a que tem Letra + Cifras, depois a mais buscada, depois a mais antiga."""
+    created = song.created_at.timestamp() if song.created_at else 0
+    return (not SharedSongService._has_full_sheet(song), -(song.times_searched or 0), created, song.id)
+
+
+def duplicate_groups() -> list[list[SharedSong]]:
+    """Entradas repetidas do catálogo: mesmo título e artista igual/parecido (ou sem artista).
+
+    A primeira entrada de cada grupo é a que fica. Entrada sem artista só entra num grupo quando o
+    título tem um único artista; com artistas diferentes ela é ambígua e fica de fora.
+    """
+    by_title: dict[str, list[SharedSong]] = {}
+    for song in SharedSong.query.order_by(SharedSong.created_at, SharedSong.id).all():
+        by_title.setdefault(song.normalized_title, []).append(song)
+    groups = []
+    for songs in by_title.values():
+        if len(songs) < 2:
+            continue
+        clusters: list[list[SharedSong]] = []
+        for song in (item for item in songs if item.normalized_artist):
+            target = next((cluster for cluster in clusters
+                           if any(same_artist(song.normalized_artist, other.normalized_artist) for other in cluster)), None)
+            if target is None:
+                clusters.append([song])
+            else:
+                target.append(song)
+        no_artist = [song for song in songs if not song.normalized_artist]
+        if len(clusters) == 1:
+            clusters[0].extend(no_artist)
+        elif not clusters:
+            clusters.append(no_artist)
+        groups.extend(sorted(cluster, key=_keeper_rank) for cluster in clusters if len(cluster) > 1)
+    return groups
+
+
+def merge_duplicates(group: list[SharedSong]) -> SharedSong:
+    """Junta o grupo na primeira entrada: soma as buscas, completa o artista e move os relatos.
+
+    Apaga do catálogo as entradas repetidas. Não toca em nenhuma biblioteca pessoal.
+    """
+    keeper, extras = group[0], group[1:]
+    for extra in extras:
+        keeper.times_searched = (keeper.times_searched or 0) + (extra.times_searched or 0)
+        if not keeper.normalized_artist and extra.normalized_artist:
+            keeper.artist, keeper.normalized_artist = extra.artist, extra.normalized_artist
+        for report in SharedSongReport.query.filter_by(song_id=extra.id).all():
+            if SharedSongReport.query.filter_by(song_id=keeper.id, reporter_id=report.reporter_id).first():
+                db.session.delete(report)  # a mesma pessoa já relatou a entrada que fica
+            else:
+                report.song_id = keeper.id
+        db.session.flush()
+        db.session.delete(extra)
+    db.session.flush()
+    return keeper
