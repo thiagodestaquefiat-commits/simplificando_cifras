@@ -212,6 +212,7 @@ class EventRepertoireItem(db.Model):
     shared_capo = db.Column(db.String(20), nullable=False, default="")
     shared_chord_sheet = db.Column(db.Text, nullable=False, default="")
     shared_notes = db.Column(db.Text, nullable=False, default="")
+    shared_song_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -230,6 +231,7 @@ class PersonalRepertoireOverride(db.Model):
     personal_capo = db.Column(db.String(20), nullable=False, default="")
     personal_chord_sheet = db.Column(db.Text, nullable=False, default="")
     personal_notes = db.Column(db.Text, nullable=False, default="")
+    personal_song_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 

@@ -1,0 +1,33 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+(async()=>{let browser;try{
+  browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const page=await (await browser.newContext({serviceWorkers:'block',viewport:{width:390,height:844}})).newPage();
+  await page.route('**/api/**',r=>r.fulfill({json:{enabled:false,songs:[],events:[],bands:[]}}));
+  await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
+  await page.goto('http://127.0.0.1:4173/?teste-repeticoes=1',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.smartScroll&&loginGateAuthReady);
+  const result=await page.evaluate(async()=>{
+    continueWithoutLogin();musicas.push({id:'repeat-fixture',title:'Teste repetição',artist:'Teste',key:'G',blocos:[{l:'Tu és bem-vindo',c:'G Em C G D (4x)\nC D Em (2x)\nC D Em D'}]});
+    openDetail('repeat-fixture');setSongView('summary');
+    const lines=Array.from(document.querySelectorAll('[data-smart-line]'));
+    const repeats=lines.map(l=>l.dataset.smartRepeat);
+    let clock=0,frame;Object.defineProperty(performance,'now',{value:()=>clock,configurable:true});
+    const controller=smartScroll.create({tuner:{start(callback){frame=callback;return Promise.resolve(true);},stop(){}}});
+    await controller.start(document.getElementById('view-detail'),updateSmartScrollUI);
+    const play=()=>{frame(null);clock+=300;const root=controller.tracker.current().root,freq=440*Math.pow(2,((root-9+12)%12)/12);frame(freq);clock+=250;frame(freq);clock+=300;};
+    for(let i=0;i<5;i++)play();
+    const afterFirst={block:controller.tracker.current().blockIndex,round:controller.tracker.current().repetition,green:lines[0].querySelectorAll('.smart-chord-played').length,status:document.getElementById('smart-scroll-status').textContent};
+    for(let i=0;i<15;i++)play();
+    const afterFourth={block:controller.tracker.current().blockIndex,green:lines[0].querySelectorAll('.smart-chord-played').length};
+    for(let i=0;i<6;i++)play();
+    const afterSecondLine=controller.tracker.current().blockIndex;
+    for(let i=0;i<4;i++)play();
+    return {repeats,afterFirst,afterFourth,afterSecondLine,active:controller.isActive(),status:document.getElementById('smart-scroll-status').textContent};
+  });
+  assert.deepEqual(result.repeats,['4','2','1']);
+  assert.equal(result.afterFirst.block,0);assert.equal(result.afterFirst.round,2);assert.equal(result.afterFirst.green,0);assert.match(result.afterFirst.status,/Volta 2\/4/);
+  assert.equal(result.afterFourth.block,1);assert.equal(result.afterFourth.green,5);
+  assert.equal(result.afterSecondLine,2);assert.equal(result.active,false);assert.equal(result.status,'Cifra concluída');
+  console.log('smart-scroll-repeat-ui.test.js: OK (4x, 2x, marcação por volta e conclusão no celular)');
+}finally{await browser?.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

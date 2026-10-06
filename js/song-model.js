@@ -88,7 +88,7 @@
   }
 
   function create(input, options) {
-    const source = input || {};
+    const source = global.tablature?.prepareSong(input || {}) || input || {};
     const settings = options || {};
     const title = cleanText(source.title);
     if (!title) throw new TypeError("Song precisa de um título.");

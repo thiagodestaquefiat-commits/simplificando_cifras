@@ -32,6 +32,14 @@ from ..services.collaboration_auth import authenticated, issue_access_token, tok
 
 
 blueprint = Blueprint("events", __name__, url_prefix="/api/collaboration")
+
+
+@blueprint.get("/capabilities")
+def collaboration_capabilities():
+    response = jsonify({"eventSongData": 1})
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
 IDENTIFIER = re.compile(r"^[A-Za-z0-9_.:-]{3,120}$")
 # Formato canônico de UUID (8-4-4-4-12 hex) — é o formato que o Supabase usa
 # para `subject`. Reservado: um id de CollaborationUser criado por aqui nunca
@@ -253,12 +261,14 @@ def _serialize_event(event: Event, user_id: str) -> dict:
             "shared": {
                 "title": item.shared_title, "artist": item.shared_artist,
                 "key": item.shared_key, "capo": item.shared_capo,
+                **({"songData": item.shared_song_data} if item.shared_song_data else {}),
                 "chordSheet": item.shared_chord_sheet, "notes": item.shared_notes,
             },
             "personal": None if personal is None else {
                 "title": personal.personal_title,
                 "artist": personal.personal_artist,
                 "key": personal.personal_key,
+                **({"songData": personal.personal_song_data} if personal.personal_song_data else {}),
                 "capo": personal.personal_capo,
                 "chordSheet": personal.personal_chord_sheet,
                 "notes": personal.personal_notes,
@@ -352,6 +362,16 @@ def _members_payload(payload: dict, actor) -> tuple[list[dict], str]:
     return members, leader_id
 
 
+def _event_song_data(value):
+    if value is None:
+        return None
+    from .library import _payload
+    fields = {"id", "title", "artist", "key", "capo", "blocos", "editorData", "fullChordSheet", "tablature", "playbackSettings", "bpm", "instrumento", "originalKey", "currentKey", "notes", "coverUrl", "youtubeVideoId", "youtubeUrl", "youtubeChannelTitle", "songFormatVersion"}
+    if not isinstance(value, dict):
+        raise ApiError("musica_invalida", "Cópia da música inválida.", 400)
+    return _payload({key: item for key, item in value.items() if key in fields})
+
+
 def _repertoire_payload(payload: dict) -> list[dict]:
     raw_items = payload.get("repertoire", [])
     if not isinstance(raw_items, list):
@@ -376,6 +396,7 @@ def _repertoire_payload(payload: dict) -> list[dict]:
             "capo": _text(shared.get("capo"), 20, "shared.capo"),
             "chordSheet": _text(shared.get("chordSheet"), 100000, "shared.chordSheet"),
             "notes": _text(shared.get("notes"), 10000, "shared.notes"),
+            "songData": _event_song_data(shared.get("songData")),
         })
     return values
 
@@ -412,6 +433,7 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
                 id=value["id"], event_id=event.id, song_id=value["songId"], position=value["position"],
                 shared_title=value["title"], shared_artist=value["artist"], shared_key=value["key"],
                 shared_capo=value["capo"], shared_chord_sheet=value["chordSheet"], shared_notes=value["notes"],
+                shared_song_data=value["songData"],
             ))
         else:
             existing.song_id = value["songId"]
@@ -422,6 +444,8 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
             existing.shared_capo = value["capo"]
             existing.shared_chord_sheet = value["chordSheet"]
             existing.shared_notes = value["notes"]
+            if value["songData"] is not None:
+                existing.shared_song_data = value["songData"]
 
 
 @blueprint.post("/users")
@@ -1015,6 +1039,8 @@ def update_shared_item(event_id: str, item_id: str):
     item.shared_capo = _text(payload.get("capo"), 20, "capo")
     item.shared_chord_sheet = _text(payload.get("chordSheet"), 100000, "chordSheet")
     item.shared_notes = _text(payload.get("notes"), 10000, "notes")
+    if "songData" in payload:
+        item.shared_song_data = _event_song_data(payload["songData"])
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
     if item.shared_key != previous_key:
@@ -1045,6 +1071,8 @@ def update_personal_item(event_id: str, item_id: str):
     override.personal_capo = _text(payload.get("capo"), 20, "capo")
     override.personal_chord_sheet = _text(payload.get("chordSheet"), 100000, "chordSheet")
     override.personal_notes = _text(payload.get("notes"), 10000, "notes")
+    if "songData" in payload:
+        override.personal_song_data = _event_song_data(payload["songData"])
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 

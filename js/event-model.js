@@ -27,6 +27,7 @@
       capo: text(value.capo),
       chordSheet: String(value.chordSheet == null ? "" : value.chordSheet),
       notes: text(value.notes),
+      ...(value.songData&&typeof value.songData==='object'?{songData:JSON.parse(JSON.stringify(value.songData))}:{}),
       updatedAt: value.updatedAt || new Date().toISOString()
     };
   }
@@ -165,6 +166,7 @@
         capo: personal ? personal.capo : item.shared.capo,
         chordSheet: personal ? personal.chordSheet : item.shared.chordSheet,
         notes: personal ? personal.notes : item.shared.notes,
+        songData: personal?.songData || item.shared.songData || null,
         scope: personal ? "personal" : "shared"
       }
     };
@@ -178,7 +180,7 @@
       ...normalized,
       repertoire: normalized.repertoire.map((item) => String(item.id) !== String(itemId) ? item : {
         ...item,
-        personalEdits: { ...item.personalEdits, [String(userId)]: repertoireEdit(changes) }
+        personalEdits: { ...item.personalEdits, [String(userId)]: repertoireEdit({...item.personalEdits[String(userId)],...changes}) }
       })
     });
   }
@@ -205,7 +207,7 @@
       ...normalized,
       repertoire: normalized.repertoire.map((item) => String(item.id) !== String(itemId) ? item : {
         ...item,
-        shared: repertoireEdit(changes)
+        shared: repertoireEdit({...item.shared,...changes})
       })
     });
   }

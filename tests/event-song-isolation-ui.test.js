@@ -1,0 +1,27 @@
+const assert=require('node:assert/strict');const {chromium}=require('playwright');
+(async()=>{let browser;try{
+  browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const context=await browser.newContext({serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/api/**',r=>r.fulfill({json:{enabled:false,songs:[],events:[],bands:[]}}));await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
+  await page.goto('http://127.0.0.1:4173/?teste-isolamento=1',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>loginGateAuthReady&&window.eventModel);
+  await page.evaluate(()=>{continueWithoutLogin();eventCollaboration=Object.freeze({...eventCollaboration,saveSharedEvent:async()=>{throw {offline:true,status:0};}});musicas.push({id:'isolated-song',title:'Canção original',artist:'Autor',key:'G',capo:'2',blocos:[{l:'Verso original',c:'G C D'}],fullChordSheet:{source:'user_text',content:'G C D\nLetra original'},playbackSettings:{semitones:2,capo:3,bpm:96,meter:'3/4',scrollSpeed:1.4}});openDetail('isolated-song');window.__libraryBefore=JSON.stringify(musicas);window.__chordsBefore=Array.from(document.querySelectorAll('[data-smart-chord-token]')).map(e=>e.textContent);closeDetail();openAddSetlist();plAdd('isolated-song');document.getElementById('fs-title').value='Evento isolado';});
+  await page.evaluate(()=>saveSetlist());
+  await page.evaluate(()=>{window.__eventId=setlists.at(-1).id;openDetailFromPlaylist(window.__eventId,0);});
+  assert.deepEqual(await page.evaluate(()=>Array.from(document.querySelectorAll('[data-smart-chord-token]')).map(e=>e.textContent)),await page.evaluate(()=>window.__chordsBefore),'evento começa com o que estava na playlist');
+  assert.equal(await page.evaluate(()=>studyMetronome.getBpm()),96);
+  await page.evaluate(async()=>{transpose(1);selectCapo(5);studyMetronome.setBpm(111);studyMetronome.setMeter('6/8');stageDetailVideoSongs([{...currentDetailSongOverride,youtubeVideoId:'abcdefghijk',youtubeUrl:'https://www.youtube.com/watch?v=abcdefghijk'}]);await saveDetailChanges();});
+  assert.equal(await page.evaluate(()=>JSON.stringify(musicas)===window.__libraryBefore),true,'tom/capo/BPM/vídeo não modificam playlist');
+  assert.equal(await page.evaluate(()=>studyMetronome.getBpm()),111);assert.equal(await page.evaluate(()=>selectedCapo),5);
+  await page.evaluate(()=>{closeDetail();openDetail('isolated-song');});assert.equal(await page.evaluate(()=>studyMetronome.getBpm()),96);assert.equal(await page.evaluate(()=>selectedCapo),3);
+  await page.evaluate(()=>{closeDetail();openDetailFromPlaylist(window.__eventId,0);editMusica('isolated-song');});
+  await page.locator('#ai-review-title').fill('Canção só do evento');
+  await page.evaluate(()=>setSimpleEditorView('full'));
+  await page.locator('#ai-review-full-text').fill('A E\nLetra só do evento');
+  await page.evaluate(()=>saveSimpleSongReview());
+  assert.equal(await page.locator('#detail-title').textContent(),'Canção só do evento');
+  assert.equal(await page.evaluate(()=>JSON.stringify(musicas)===window.__libraryBefore),true,'editor completo não grava biblioteca');
+  await page.evaluate(()=>{closeDetail();musicas=musicas.map(s=>s.id==='isolated-song'?{...s,title:'Mudança posterior da playlist'}:s);openDetailFromPlaylist(window.__eventId,0);});
+  assert.equal(await page.locator('#detail-title').textContent(),'Canção só do evento','alteração posterior na playlist não troca a cópia do evento');
+  assert.equal(await page.evaluate(()=>currentDetailSongOverride.fullChordSheet.content),'A E\nLetra só do evento');
+  assert.deepEqual(errors,[]);console.log('event-song-isolation-ui.test.js: OK (cópia inicial, tom, capo, BPM, vídeo, editor e playlist preservada)');
+}finally{await browser?.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

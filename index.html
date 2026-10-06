@@ -812,15 +812,15 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
 
 <script src="js/storage.js?v=2"></script>
-<script src="js/tablature.js?v=1"></script>
-<script src="js/song-model.js?v=5"></script>
+<script src="js/tablature.js?v=2"></script>
+<script src="js/song-model.js?v=6"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/medley-repository.js?v=1"></script>
 <script src="js/song-repository.js?v=15"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=19"></script>
-<script src="js/event-model.js?v=5"></script>
-<script src="js/event-repository.js?v=8"></script>
+<script src="js/event-model.js?v=6"></script>
+<script src="js/event-repository.js?v=9"></script>
 <script src="js/event-chat.js?v=2"></script>
 <script src="js/youtube-api.js?v=4"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -839,7 +839,7 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=1"></script>
 <script src="js/study-metronome.js?v=5"></script>
-<script src="js/editor/song-format.js?v=10"></script>
+<script src="js/editor/song-format.js?v=11"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -852,12 +852,12 @@ html[data-theme="light"]:not(.a11y-high-contrast) .tuner-panel{background:linear
 <script src="js/ui-i18n.js?v=13"></script>
 <script src="js/tuner.js?v=3"></script>
 <script src="js/chord-audio.js?v=1"></script>
-<script src="js/smart-scroll.js?v=4"></script>
+<script src="js/smart-scroll.js?v=5"></script>
 <script src="js/sync-realtime.js?v=2"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=14"></script>
+<script src="js/event-collaboration-client.js?v=15"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=15"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=13"></script>
@@ -921,6 +921,7 @@ function showToast(msg){
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentLocationAutocomplete=null, tablatureFontSize=13;
 let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
+let detailEventContext=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
 function detailEditableState(){
   const song=currentDetailSongOverride||musicas.find(s=>String(s.id)===String(currentDetailId));
@@ -930,8 +931,9 @@ function updateDetailSaveButton(){
   const button=document.getElementById('detail-save-changes');if(!button)return;
   button.hidden=!detailEditBaseline||JSON.stringify(detailEditableState())===JSON.stringify(detailEditBaseline);
 }
-function saveDetailChanges(){
+async function saveDetailChanges(){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return;
+  if(detailEventContext){const song=currentDetailSongOverride;if(song)await saveContextEventSong(detailEventContext,eventSongCopy({...song,...detailEditableState().video},detailEditableState()));return;}
   const source=musicas.find(s=>String(s.id)===String(currentDetailId));if(!source)return;
   const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
   if(!commitSongs(result.songs))return;
@@ -1372,6 +1374,7 @@ function setInstrument(inst){
   if(capoSelector) capoSelector.style.display=(info.renderer==='keyboard'||currentInstrument==='cavaquinho'||currentInstrument==='viola-caipira-cebolao-e')?'none':'flex';
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
   if(m) renderChordStrip(m);
+  if(m)renderDetail();
   updateDetailSaveButton();
 }
 
@@ -1430,7 +1433,8 @@ function renderSmartChordTokens(chordLine){
 
 function renderSmartFullChordLine(chordLine){
   const normalized=String(chordLine||'').split(/\s+/).filter(Boolean).join(' ');
-  return `<div class="smart-scroll-line" data-smart-line data-smart-chords="${eventEsc(normalized)}"><div class="full-chord-line is-chord">${renderSmartChordTokens(chordLine)}</div></div>`;
+  const repeat=smartScroll.repeatCount(chordLine);
+  return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${repeat}" data-smart-chords="${eventEsc(normalized)}"><div class="full-chord-line is-chord">${renderSmartChordTokens(chordLine)}</div></div>`;
 }
 
 function renderFullChordSheet(sheet,totalShift){
@@ -1467,13 +1471,14 @@ function renderFullChordSheet(sheet,totalShift){
 function renderTablature(value){
   const tab=window.tablature.normalize(value);if(!tab)return '';
   const instrumentLabels={guitar:'Violão / Guitarra',bass:'Contrabaixo',ukulele:'Ukulele',violin:'Violino',other:'Outro'};
-  const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3><div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
+  const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3>${section.tuning?`<p class="tablature-note">Afinação: ${eventEsc(section.tuning)}</p>`:''}<div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
   return `<div class="tablature-view" style="--tablature-font-size:${tablatureFontSize}px"><div class="tablature-toolbar"><strong>${eventEsc(instrumentLabels[tab.instrument]||instrumentLabels.other)}</strong><span>Afinação: ${eventEsc(tab.tuning)}</span><span>Capotraste: ${tab.capo||'Sem'}</span><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(-1)" aria-label="Diminuir tablatura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(1)" aria-label="Aumentar tablatura">A+</button></div><p class="tablature-note">A tablatura é exibida exatamente como foi cadastrada e não é alterada ao transpor o tom.</p>${sections}</div>`;
 }
 function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
 function setSongView(view){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
-  currentSongView=view==='tablature'&&song?.tablature?'tablature':view==='full'&&song?.fullChordSheet?'full':'summary';
+  const separated=tablature.prepareSong(song);
+  currentSongView=view==='tablature'&&tablature.compatible(separated?.tablature,currentInstrument)?'tablature':view==='full'&&separated?.fullChordSheet?'full':'summary';
   // guarda a escolha do usuário (Resumo Harmônico ou Letra + Cifras) para o Modo Palco abrir direto nela
   if(!detailEditBaseline&&!stageMode&&currentSongView!=='tablature'){try{stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),sheetView:currentSongView});}catch(error){}}
   stopSmartScroll();
@@ -1533,11 +1538,12 @@ function renderDetail(){
   sl.style.color=currentSemitones===0?'var(--text2)':currentSemitones>0?'var(--accent)':'#e2954b';
   // shapes exibidos: storedCapo - selectedCapo + transpose
   const totalShift=currentSemitones+storedCapo-selectedCapo;
-  const hasFull=Boolean(m.fullChordSheet?.content);
-  const hasTablature=Boolean(m.tablature?.sections?.length);
+  const separated=tablature.prepareSong(m),visibleTablature=tablature.compatible(separated.tablature,currentInstrument);
+  const hasFull=Boolean(separated.fullChordSheet?.content);
+  const hasTablature=Boolean(visibleTablature?.sections?.length);
   if(currentSongView==='full'&&!hasFull||currentSongView==='tablature'&&!hasTablature)currentSongView='summary';
   const viewCount=1+Number(hasFull)+Number(hasTablature);
-  const switchHtml=viewCount>1?`<div class="song-view-switch" style="--song-view-count:${viewCount}" role="tablist" aria-label="Visualização da música">${hasFull?`<button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button>`:''}<button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button>${hasTablature?`<button type="button" role="tab" aria-selected="${currentSongView==='tablature'}" class="${currentSongView==='tablature'?'active':''}" onclick="setSongView('tablature')">Tablatura</button>`:''}</div>`:'';
+  const switchHtml=viewCount>1?`<div class="song-view-switch" style="--song-view-count:${viewCount}" role="tablist" aria-label="Visualização da música">${hasFull?`<button type="button" role="tab" aria-selected="${currentSongView==='full'}" class="${currentSongView==='full'?'active':''}" onclick="setSongView('full')">Letra + Cifras</button>`:''}<button type="button" role="tab" aria-selected="${currentSongView==='summary'}" class="${currentSongView==='summary'?'active':''}" onclick="setSongView('summary')">Resumo Harmônico</button>${hasTablature?`<button type="button" role="tab" aria-selected="${currentSongView==='tablature'}" class="${currentSongView==='tablature'?'active':''}" onclick="setSongView('tablature')">Tablaturas</button>`:''}</div>`:'';
   const blocosHtml = summary.sections.map((section,sectionIndex)=>{
     const corpo=section.lines.map(line=>{
       const chords=line.chords.length?songFormat.renderChordLine(line.chords):'';
@@ -1548,7 +1554,8 @@ function renderDetail(){
       const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
       const lyricHtml=lyricText?renderMusicalText(lyricText,totalShift):'';
       const smartLineChords=String(shiftedChords||'').split(/\s+/).filter(Boolean).join(' ');
-      return `<div class="smart-scroll-line" data-smart-line data-smart-chords="${eventEsc(smartLineChords)}">${lyricHtml+chordHtml}</div>`;
+      const smartRepeat=line.repeticoes||smartScroll.repeatCount(line.lyrics,0)||(section.lines.length===1?smartScroll.repeatCount(section.label,0):0)||1;
+      return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${smartRepeat}" data-smart-chords="${eventEsc(smartLineChords)}">${lyricHtml+chordHtml}</div>`;
     }).join('');
     const labelHtml=section.showLabel&&section.label?renderMusicalText(section.label,totalShift):'';
     // Identificação previsível do trecho (navegação do palco) fica só no atributo; o texto visível
@@ -1559,14 +1566,14 @@ function renderDetail(){
   }).join('');
   const chordSheetHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
-    :currentSongView==='tablature'?renderTablature(m.tablature):currentSongView==='full'?renderFullChordSheet(m.fullChordSheet,totalShift):(blocosHtml?`<div class="${stageMode?'stage-harmonic-summary':''}">${blocosHtml}</div>`:`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica(${attrJs(m.id)})">Adicionar cifra</button></div>`);
+    :currentSongView==='tablature'?renderTablature(visibleTablature):currentSongView==='full'?renderFullChordSheet(separated.fullChordSheet,totalShift):(blocosHtml?`<div class="${stageMode?'stage-harmonic-summary':''}">${blocosHtml}</div>`:`<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p><button class="btn btn-primary" style="margin-top:14px;" onclick="editMusica(${attrJs(m.id)})">Adicionar cifra</button></div>`);
   // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
   const completeButton=hasFull?'':`<button class="btn btn-primary" id="complete-sheet-button" style="width:calc(100% - 24px);margin:12px 12px 0" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button>`;
   document.getElementById('detail-content').innerHTML = switchHtml+chordSheetHtml + completeButton +
     `<button class="ai-generate-action" style="width:calc(100% - 24px);margin:12px" onclick="generateAiForSong(${attrJs(m.id)})"><span aria-hidden="true">🤖</span> Gerar Letra/Cifra com IA</button>`+
     `<div class="btn-row">
       <button class="btn btn-outline" onclick="editMusica(${attrJs(m.id)})"><span aria-hidden="true">✏️</span> Editar Cifra</button>
-      <button class="btn btn-danger" onclick="deleteMusica(${attrJs(m.id)})">🗑️ Excluir da Playlist</button>
+      ${detailEventContext?'':`<button class="btn btn-danger" onclick="deleteMusica(${attrJs(m.id)})">🗑️ Excluir da Playlist</button>`}
     </div><button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>`;
   updateDetailSaveButton();
   fitFullChordSheet();
@@ -1591,6 +1598,7 @@ function updatePlaylistNavigation(){
 
 function openDetail(id,options={}){
   detailEditBaseline=null;
+  detailEventContext=null;
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
   } else if(!options.preserveNavigation){
@@ -1604,8 +1612,10 @@ function openDetail(id,options={}){
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
+  if(contextualSong&&activeEvent){const item=activeEvent.repertoire.filter(value=>eventSongSource(activeEvent,value))[activeContext.currentIndex];if(item)detailEventContext={eventId:activeEvent.id,itemId:item.id,ownerId:appCurrentUser.id};}
   document.getElementById('study-metronome').hidden=false;
-  studyMetronome.setSong(m.id,appCurrentUser.id);
+  detailEditBaseline={};
+  studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
   const context=navigationContext.get();
   document.getElementById('btn-palco').hidden=!(context&&findEvent(context.playlistId));
   // Abre na primeira aba: Letra + Cifras quando a música tem, senão o Resumo Harmônico.
@@ -1619,7 +1629,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  if(!contextualSong){const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||m.bpm||120);studyMetronome.setMeter(saved.meter||'4/4');detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -1686,7 +1696,7 @@ async function enterStageMode(){
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),contentMode:'lyrics-chords',theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
   currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
   const packData=stageContextData();
-  if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
+if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){/* A preparação offline permanece silenciosa, sem interromper o uso. */}}
   stageMode=true;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
   vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
   vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
@@ -1718,7 +1728,7 @@ function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode()
 
 function closeDetail(){
   stopSmartScroll();
-  detailEditBaseline=null;detailEditOwner=null;
+  detailEditBaseline=null;detailEditOwner=null;detailEventContext=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
@@ -1770,12 +1780,13 @@ function updateSmartScrollUI(state={active:false}){
   document.querySelectorAll('.smart-scroll-line.smart-scroll-current').forEach(line=>line.classList.remove('smart-scroll-current'));
   document.querySelectorAll('.smart-chord-token.smart-chord-current').forEach(chord=>chord.classList.remove('smart-chord-current'));
   if(state.result?.advanced&&state.result.matched?.chordElement)state.result.matched.chordElement.classList.add('smart-chord-played');
+  if(state.result?.advanced&&state.current&&state.current.blockIndex===state.result.matched.blockIndex&&state.current.repetition!==state.result.matched.repetition)state.current.element.querySelectorAll('.smart-chord-played').forEach(chord=>chord.classList.remove('smart-chord-played'));
   if(state.current?.element)state.current.element.classList.add('smart-scroll-current');
   if(state.current?.chordElement)state.current.chordElement.classList.add('smart-chord-current');
   if(!status)return;
   if(state.completed){status.textContent='Cifra concluída';return;}
   if(!state.active){status.textContent='Experimental';return;}
-  status.textContent=state.current?`Próximo: ${state.current.chord} · ${state.index+1}/${state.total}`:'Cifra concluída';
+  status.textContent=state.current?`Próximo: ${state.current.chord}${state.current.repeats>1?` · Volta ${state.current.repetition}/${state.current.repeats}`:''} · ${state.index+1}/${state.total}`:'Cifra concluída';
 }
 function stopSmartScroll(){smartScrollController.stop();document.querySelectorAll('.smart-chord-token').forEach(chord=>chord.classList.remove('smart-chord-played','smart-chord-current'));updateSmartScrollUI();}
 async function toggleSmartScroll(){
@@ -2034,6 +2045,7 @@ function renderMusicas(){
 // ── EDIT / ADD ────────────────────────────────────────────────────────
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
+  if(detailEventContext&&String(currentDetailId)===String(id)){const song=currentDetailSongOverride;if(song)openSimpleSongEditor(songFormat.fromLegacy(song),song,{eventContext:{...detailEventContext}});return;}
   const song=musicas.find(item=>String(item.id)===String(nid));
   if(song) openSimpleSongEditor(songFormat.fromLegacy(song),song);
 }
@@ -2057,10 +2069,10 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   const isAi=options.isAi===true||model.aiGenerated===true;
   const normalized=songFormat.normalize({...model,instrument:model.instrument||currentInstrument,...(isAi?{status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false}:{})});
   if(sourceSong) normalized.id=sourceSong.id;
-  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null};
+  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null,eventContext:options.eventContext||null};
   const fullSheet=normalized.fullChordSheet;
   const tab=normalized.tablature,tabInstrument=tab?.instrument||'guitar';
-  const tabOptions=[['guitar','Violão / Guitarra'],['bass','Contrabaixo'],['ukulele','Ukulele'],['violin','Violino'],['other','Outro']].map(([value,label])=>`<option value="${value}" ${tabInstrument===value?'selected':''}>${label}</option>`).join('');
+  const tabOptions=[['guitar','Violão / Guitarra'],['bass','Contrabaixo'],['ukulele','Ukulele'],['violin','Violino'],['other','Outro'],['unknown','Não identificado']].map(([value,label])=>`<option value="${value}" ${tabInstrument===value?'selected':''}>${label}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
     ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
@@ -2128,8 +2140,8 @@ function setSimpleEditorView(view){
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
 }
-function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
-function saveSimpleSongReview(){
+function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditContext;if(context&&context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra o evento.');return;}openSimpleSongEditor(model,sourceSong,{isAi:true,eventContext:context||null});}
+async function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
   const fullInput=document.getElementById('ai-review-full-text');
@@ -2139,10 +2151,13 @@ function saveSimpleSongReview(){
   const fullSource=fullChanged?(fullInput.dataset.source==='user_upload'?'user_upload':'user_text'):previousSheet?.source;
   const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...(previousSheet||{}),source:fullSource,content:fullInput.value,sections:fullChanged?[]:(previousSheet?.sections||[])}):previousSheet;
   const tabContent=document.getElementById('tablature-content')?.value||'';
-  const tablature=window.tablature.normalize({instrument:document.getElementById('tablature-instrument')?.value,tuning:document.getElementById('tablature-tuning')?.value,capo:document.getElementById('tablature-capo')?.value,sections:window.tablature.parseEditor(tabContent)});
+  const tabInstrument=document.getElementById('tablature-instrument')?.value,previousTab=simpleReviewDraft.model.tablature;
+  const tabSections=window.tablature.parseEditor(tabContent).map(section=>{const old=previousTab?.sections?.find(s=>s.title===section.title&&s.content===section.content);return old&&tabInstrument===previousTab.instrument?{...old,...section}:section;});
+  const tablature=window.tablature.normalize({instrument:tabInstrument,tuning:document.getElementById('tablature-tuning')?.value,capo:document.getElementById('tablature-capo')?.value,sections:tabSections});
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,tablature,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
+  if(simpleReviewDraft.eventContext){await saveContextEventSong(simpleReviewDraft.eventContext,eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:reviewed.capo}}));return;}
   const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
   if(!commitSongs(result.songs))return;closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+values.title+' salva!');
 }
@@ -2153,7 +2168,8 @@ function openAdvancedSongEditor(id){
 // à música. Resumo harmônico, tom e capo que o usuário já tem não mudam.
 let completingSongId=null;
 async function completeSongSheet(id){
-  const song=musicas.find(item=>String(item.id)===String(id));
+  const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
+  const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
   if(!song||completingSongId)return;
   const ownerAtStart=songRepository.getActiveOwnerId();
   const button=document.getElementById('complete-sheet-button');
@@ -2162,15 +2178,17 @@ async function completeSongSheet(id){
   try{
     const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
     if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
     const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
     if(!sheet){
       const notes=(result?.data?.observacoes||[]).map(String),limited=notes.some(note=>/Limite diário de buscas na web/i.test(note));
       if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
-    const current=musicas.find(item=>String(item.id)===String(song.id));
+    const current=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
-    if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');if(!eventContext)openDetail(current.id);return;}
+    if(eventContext){await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;}
     const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
     if(!commitSongs(updated.songs))return;
     renderMusicas();
@@ -2178,6 +2196,7 @@ async function completeSongSheet(id){
     showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
   }catch(error){
     if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
     const kind=error?.kind;
     if(kind==='not_found'){showToast('ℹ️ '+(error.message||'Não encontramos esta cifra.'));openCompleteSheetEditor(song.id);}
     else showToast('⚠️ '+(error?.message||'Não foi possível completar agora. Tente novamente.'));
@@ -2189,10 +2208,12 @@ async function completeSongSheet(id){
 }
 function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 function generateAiForSong(id){
+  if(detailEventContext&&String(currentDetailId)===String(id)){aiHarmonicSummary.open({song:{...currentDetailSongOverride,_eventEditContext:{...detailEventContext}}});return;}
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
 
 function saveMusica(){
+  if(detailEventContext){showToast('Use o editor desta música no evento.');return;}
   const t=document.getElementById('fm-title').value.trim(); if(!t) return;
   const raw=document.getElementById('fm-blocos').value;
   const blocos=parseBlocks(raw);
@@ -2204,6 +2225,7 @@ function saveMusica(){
   closeModal(); renderMusicas(); openDetail(result.song.id); showToast('✅ '+t+' salva!');
 }
 function deleteMusica(id){
+  if(detailEventContext&&String(currentDetailId)===String(id)){showToast('Para retirar esta música, edite o repertório do evento.');return;}
   const nid=isNaN(+id)?id:+id;
   if(!appConfirm('Excluir esta música?')) return;
   const song=musicas.find(item=>String(item.id)===String(nid));
@@ -2834,18 +2856,36 @@ function transposeEventChordText(value,semitones){
   return String(value||'').split(/(\r?\n)/).map(line=>songFormat.chordLine(line)?shiftText(line,semitones):line).join('');
 }
 function eventSongModel(song,edit,fallbackEdit){
-  const base=songFormat.fromLegacy(song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
+  const base=songFormat.fromLegacy(edit?.songData||fallbackEdit?.songData||song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
   const sourceKey=primary.chordSheet?primary.key:fallback.chordSheet?fallback.key:base.originalKey;
   const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
-  const sections=songFormat.sectionsFromSimpleText(chordSheet,base),fullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,eventKeyShift(base.originalKey,key))}:base.fullChordSheet;
+  const fullShift=eventKeyShift(base.originalKey,key),sections=songFormat.sectionsFromSimpleText(chordSheet,base),fullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
 function eventSongVariant(event,item,userId){
   const song=eventSongSource(event,item);if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
-  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song),personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
+  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),effective?.effective.songData||song),personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
+}
+function eventSongCopy(song,state=song.playbackSettings||{}){
+  const model=songFormat.fromLegacy(song),capo=state.capo??model.capo,shift=(Number(state.semitones)||0)+model.capo-Number(capo);
+  const sections=model.sections.map(section=>({...section,lines:section.lines.map(line=>{let cursor=-1;return {...line,chords:line.chords.map(c=>{const chord=shiftText(c.chord,shift),position=Math.max(c.position,cursor+1);cursor=position+chord.length;return {...c,chord,position};})};})}));
+  const key=shiftText(model.originalKey,Number(state.semitones)||0),full=model.fullChordSheet?{...model.fullChordSheet,content:transposeEventChordText(model.fullChordSheet.content,shift),sections:shift?[]:model.fullChordSheet.sections}:null;
+  const normalized=songFormat.normalize({...model,originalKey:key,currentKey:key,capo:Number(capo),sections,fullChordSheet:full,bpm:state.bpm||model.bpm});
+  const data=songFormat.toLegacy(normalized,song);data.playbackSettings={...state,semitones:0,capo:Number(capo)};delete data.playbackSettings.video;
+  const fields=['id','title','artist','key','capo','blocos','editorData','fullChordSheet','tablature','playbackSettings','bpm','instrumento','originalKey','currentKey','notes','coverUrl','youtubeVideoId','youtubeUrl','youtubeChannelTitle','songFormatVersion'];
+  return JSON.parse(JSON.stringify(Object.fromEntries(fields.filter(k=>data[k]!==undefined).map(k=>[k,data[k]]))));
+}
+function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),notes,songData:data};}
+async function saveContextEventSong(context,data){
+  if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return;}
+  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));if(!item)return;
+  const changes=eventEditFromSong(data,item.personalEdits[owner]?.notes||item.shared.notes||'');
+  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
+  if(owner!==appCurrentUser.id)return;
+  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){showToast('⚠️ Não foi possível salvar no evento.');return;}setlists=events;closeModal();openDetailFromEventItem(event.id,item.id);showToast('✅ Alterações salvas somente neste evento');
 }
 
 function openAddSetlist(prefill){
@@ -2855,6 +2895,7 @@ function openAddSetlist(prefill){
   let source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
   let selectedBandId=source.bandId||activeBandId||null;
   let selectedIds=[...source.musicas];
+  const selectedSongCopies=new Map();
   let eventMembers=[...source.members];
   const selectedBand=appBands.find(band=>String(band.id)===String(selectedBandId));
   if(!prefill&&selectedBand)eventMembers=selectedBand.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));
@@ -2895,7 +2936,7 @@ function openAddSetlist(prefill){
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
   const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));if(!eventMembers.some(member=>String(member.id)===String(selectedLeaderId)))eventMembers.unshift({...appCurrentUser,isCurrentUser:true});renderMembers();}});
-  window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){selectedIds.push(id);renderSelected();renderAvailable();}};
+  window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){const song=musicas.find(s=>String(s.id)===String(id));if(song)selectedSongCopies.set(String(id),eventSongCopy(song));selectedIds.push(id);renderSelected();renderAvailable();}};
   window.plRemove=id=>{selectedIds=selectedIds.filter(value=>String(value)!==String(id));renderSelected();renderAvailable();};
   let dragId=null;
   window.plDragStart=id=>{dragId=id;}; window.plDragEnd=()=>{dragId=null;}; window.plDragOver=event=>event.preventDefault();
@@ -2925,7 +2966,7 @@ function openAddSetlist(prefill){
     const title=document.getElementById('fs-title').value.trim(); if(!title)return;
     const previous=findEvent(editingId);
     const previousItems=previous?previous.repertoire:[];
-    const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
+    const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId)),song=musicas.find(s=>String(s.id)===String(songId)),copy=selectedSongCopies.get(String(songId))||(song?eventSongCopy(song):null);return existing?{...existing,order}:{songId,order,...(copy?{shared:eventEditFromSong(copy)}:{})};});
     let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
     if(options.keepOpen&&source.remoteVersion!=null&&!source.pendingShared&&editorSignature(candidate)===editorSignature(source))return source;
     candidate=eventModel.withSharedChange(candidate,permissionActor,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
@@ -3280,8 +3321,9 @@ async function migrateLegacyEventsInBackground(){
 // carrega dados salvos
 function eventSongSource(event,item){
   if(!item)return null;
+  if(item.shared?.songData)return JSON.parse(JSON.stringify({...item.shared.songData,id:item.songId}));
   const local=musicas.find(song=>String(song.id)===String(item.songId));
-  if(local)return local;
+  if(local){const model=eventSongModel(local,item.shared),state={...(local.playbackSettings||{}),semitones:item.shared.key?0:(local.playbackSettings?.semitones||0),capo:item.shared.capo!==''?songFormat.parseCapo(item.shared.capo):(local.playbackSettings?.capo??model.capo)};item.shared.songData=eventSongCopy(songFormat.toLegacy(model,local),state);if(setlists.includes(event))eventRepository.save(setlists);return JSON.parse(JSON.stringify(item.shared.songData));}
   const saved=automaticEventOffline?.song(event,item);if(saved)return saved;
   const shared=item.shared||{};if(!shared.chordSheet?.trim())return null;
   return songFormat.toLegacy(songFormat.normalize({id:item.songId,title:shared.title||'Música do evento',artist:shared.artist||'',originalKey:shared.key||'',currentKey:shared.key||'',capo:shared.capo||'',sections:songFormat.sectionsFromSimpleText(shared.chordSheet)}));
@@ -3297,7 +3339,6 @@ automaticEventOffline=eventOffline.create({
   },
   getEvents:()=>setlists,getSong:eventSongSource,canAccess:(event,userId)=>eventModel.canAccess(event,userId),
   getPreferences:userId=>stagePreferences.load(userId),
-  onError:()=>showToast('⚠️ Não foi possível guardar todo o repertório neste dispositivo. Mantenha o app aberto e tente novamente com conexão.'),
   onLoaded:()=>{renderSetlists();if(currentSdId&&document.getElementById('view-sd').style.display==='flex')openSD(currentSdId);}
 });
 applyAppSettings();
@@ -3396,14 +3437,16 @@ youtubeUI.initialize({
   openSong:openDetail
 });
 youtubePlayerUI.initialize({
-  getSongs:()=>musicas,
+  getSongs:()=>detailEventContext&&currentDetailSongOverride?[...musicas.filter(song=>String(song.id)!==String(currentDetailId)),currentDetailSongOverride]:musicas,
   setSongs:stageDetailVideoSongs,
   persistSongs:(songs)=>detailEditBaseline?true:songRepository.save(songs),
   renderSongs:renderMusicas,
   showToast
 });
 </script>
-<script src="js/app-assistant.js?v=20"></script>
+<script src="js/assistant-intent-catalog.js?v=1"></script>
+<script src="js/assistant-intent-client.js?v=1"></script>
+<script src="js/app-assistant.js?v=21"></script>
 <link rel="stylesheet" href="js/event-user-invites.css?v=2">
 <script src="js/event-user-invites.js?v=4"></script>
 <script src="js/notification-center.js?v=1"></script>

@@ -1,5 +1,15 @@
-const CACHE_NAME = "simplificando-cifras-v194-perfil-convites";
+const CACHE_NAME = "simplificando-cifras-v199-tablaturas-detectadas";
 const ASSETS = [
+  "./js/tablature.js?v=2",
+  "./js/song-model.js?v=6",
+  "./js/editor/song-format.js?v=11",
+  "./js/event-model.js?v=6",
+  "./js/event-repository.js?v=9",
+  "./js/event-collaboration-client.js?v=15",
+  "./js/smart-scroll.js?v=5",
+  "./js/assistant-intent-catalog.js?v=1",
+  "./js/assistant-intent-client.js?v=1",
+  "./js/app-assistant.js?v=21",
   "./",
   "./index.html",
   "./js/storage.js",

@@ -127,7 +127,7 @@
 
   function normalize(input, defaults) {
     const now = new Date().toISOString();
-    const value = input || {};
+    const value = global.tablature?.prepareSong(input || {}) || input || {};
     const fallback = defaults || {};
     const originalKey = cleanText(value.originalKey || value.key || fallback.originalKey || "C", 12);
     return {

@@ -106,6 +106,41 @@
   function searchPlaylist(query){const value=String(query||"").trim();if(!value)return answer("Diga o título ou artista que você deseja buscar.","error");home("musicas");const input=element("search-music");if(input){input.value=value;global.renderMusicas();input.focus();}return answer(`Buscando ${value} na playlist.`);}
   function setAccessibility(changes,label){saveSettings(changes);return answer(label);}
   function currentEventRequired(){return currentSdId!=null&&typeof global.findEvent==="function"?global.findEvent(currentSdId):null;}
+  let lastIntentResult=null;
+  function intentScope(){const state=global.appAuth?.getState?.();return JSON.stringify([state?.authenticated||false,state?.user?.id||null,typeof appCurrentUser!=='undefined'?appCurrentUser.id:null]);}
+  function intentEventSnapshot(){
+    return setlists.filter(event=>{
+      if(!global.eventModel?.canAccess)return true;
+      const actor=typeof global.eventPermissionActor==='function'?global.eventPermissionActor(event):typeof appCurrentUser!=='undefined'?appCurrentUser:null;
+      return Boolean(actor&&global.eventModel.canAccess(event,actor.id));
+    }).map(event=>{
+      const iso=localDate(event.date);if(!iso)return null;
+      const [y,m,d]=iso.split('-').map(Number),time=String(event.time||'').match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+      // Sem horário, o evento é do dia inteiro; fim do dia é limite de comparação.
+      const date=new Date(y,m-1,d,time?Number(time[1]):23,time?Number(time[2]):59,time?0:59,time?0:999);
+      if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d)return null;
+      return {event,startsAt:date.toISOString()};
+    }).filter(Boolean);
+  }
+  async function executeIntent(raw){
+    const state=global.appAuth?.getState?.();
+    if(state?.authenticated&&global.eventRepository?.getActiveOwnerId&&global.eventRepository.getActiveOwnerId()!==String(typeof appCurrentUser!=='undefined'?appCurrentUser.id:''))return answer('Aguarde o carregamento da conta e repita o pedido.','error');
+    const scope=intentScope(),snapshot=intentEventSnapshot(),signature=JSON.stringify(snapshot.map(e=>[String(e.event.id),e.startsAt]));
+    const payload=await global.roudyIntentClient.resolve(raw,snapshot.map((e,id)=>({id,startsAt:e.startsAt})));
+    if(scope!==intentScope()||signature!==JSON.stringify(intentEventSnapshot().map(e=>[String(e.event.id),e.startsAt])))return answer('Os dados ou a conta mudaram. Repita o pedido.','error');
+    lastIntentResult=payload;
+    if(payload.action==='inform'||payload.action==='clarify')return answer(payload.message,'error');
+    if(payload.action==='choose'){close();home('setlists');return answer('Encontrei mais de um evento. Abri a lista para você escolher.');}
+    if(payload.action!=='navigate')return answer('Não foi possível executar esse pedido.','error');
+    const actions={
+      detalhes_evento:()=>{const event=snapshot[payload.params.evento_id]?.event;if(!event)return answer('Evento não disponível.','error');navigateToEvent(event);return answer(`Abrindo o evento ${event.title}.`);},
+      afinador:()=>{close();global.openTuner();showModal();return answer('Abrindo o afinador.');},
+      metronomo:()=>{close();if(songMetronomeAvailable()){element('study-metronome').scrollIntoView?.({block:'nearest',behavior:'smooth'});return answer('Metrônomo da música disponível. Diga iniciar metrônomo para tocar.');}global.openToolsMetronome();showModal();return answer('Abrindo o metrônomo.');},
+      configuracoes:()=>{close();global.openAppSettings();showModal();return answer('Abrindo as configurações.');},
+      playlist:()=>{close();home('musicas');return answer('Abrindo sua playlist.');}
+    };
+    return actions[payload.screen]?.()||answer('Tela não permitida para esse comando.','error');
+  }
   async function execute(raw){
     const original=String(raw||"").trim(),spokenText=clean(original).replace(/^(e ai|eai|ei|ola) roudy\s*/,"").trim(),text=normalizeCommand(original);
     if(!text){answer("Olá! O que você deseja fazer?");setTimeout(listen,650);return;}
@@ -120,6 +155,10 @@
     if(musicas.some(song=>clean(song.title+' de '+song.artist)===namedSong))return openSongByVoice(namedSong);
     const exactSongs=songMatches(spokenText);
     if(exactSongs.some(song=>clean(song.title)===spokenText))return openSongByVoice(spokenText);
+    const intentMatch=global.roudyIntentClient?.classify(original);
+    if(intentMatch&&['ambiguous','multiple_commands'].includes(intentMatch.reason))return answer('Diga uma ação de cada vez para eu entender com segurança.','error');
+    if(/\b(nao|nunca|nem)\b/.test(spokenText))return answer('Não executei o comando negado. Diga o que deseja fazer.','error');
+    if(intentMatch?.intent&&['INTENT_PROXIMO_EVENTO','INTENT_EVENTOS_HOJE','INTENT_EVENTOS_AMANHA'].includes(intentMatch.intent)&&!eventDateFromText(text))return executeIntent(original);
     if(/^(iniciar|parar) (?:alto contraste|modo daltonico)$/.test(text)){const enabled=text.startsWith('iniciar');return setAccessibility(text.includes('contraste')?{highContrast:enabled}:{colorBlind:enabled},enabled?'Preferência ativada.':'Preferência desativada.');}
     if(/\b(?:rolagem|rolar|afinador|afinacao|microfone do afinador)\b/.test(text)&&/^(iniciar|parar)\b/.test(text)){
       const start=text.startsWith('iniciar');
@@ -213,6 +252,7 @@
     if(includesAny(text,["limpar medley","limpar todos os blocos"])){global.limparMedley();return answer("Confirme na tela para limpar o Medley.");}
     if(includesAny(text,["o que voce pode fazer","comandos de voz","ajuda do assistente","listar comandos"])){return answer("Posso abrir músicas, eventos e telas; controlar afinador, metrônomo, rolagem e modo palco; mudar idioma, tema, acessibilidade, cor das cifras, instrumento, tom e capotraste; além de criar, editar, buscar e compartilhar conteúdos.");}
     if(includesAny(text,["voltar","fechar tela"])){close();if(element("modal-overlay")?.style.display==="flex")global.closeModal();else if(element("view-detail")?.style.display==="flex")global.closeDetail();else if(element("view-sd")?.style.display==="flex")global.closeSD();return answer("Voltei para a tela anterior.");}
+    if(intentMatch?.intent)return executeIntent(original);
     if(/^(abrir|abra|mostrar|mostre|tocar|toque|ir para|va para)\s+/.test(text))return openSongByVoice(text);
     const requestedSong=songFromNaturalRequest(text)||songFromNaturalRequest(spokenText);if(requestedSong){navigateToSong(requestedSong);return answer(`Abrindo ${requestedSong.title}.`);}
     return answer("Ainda não reconheci esse pedido. Tente dizer o nome de uma tela, música, evento ou configuração.","error");
@@ -260,5 +300,5 @@
     try{current.start();}catch(_error){recognition=null;setListening(false);message("Não foi possível iniciar o microfone.","error");}
   }
   if(global.MutationObserver&&global.document.body){const visibilityObserver=new global.MutationObserver(updateLaunchVisibility);visibilityObserver.observe(global.document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style","hidden"]});}updateLaunchVisibility();
-  global.roudyAssistant=Object.freeze({open,close,listen,run,clean,updateLaunchVisibility});
+  global.roudyAssistant=Object.freeze({open,close,listen,run,clean,updateLaunchVisibility,getLastIntentResult:()=>lastIntentResult});
 })(window);

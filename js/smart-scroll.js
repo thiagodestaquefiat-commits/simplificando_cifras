@@ -15,14 +15,22 @@
     if(!Number.isFinite(frequency)||frequency<=0)return null;
     return ((Math.round(69+12*Math.log2(frequency/440))%12)+12)%12;
   }
+  function repeatCount(value,fallback=1){
+    const match=String(value||'').match(/(?:\(\s*)?(\d{1,2})\s*[x×](?:\s*\))?\s*$/i);
+    const count=match?Number(match[1]):0;
+    return count>=1&&count<=99?count:fallback;
+  }
   function buildSequence(blocks){
     const sequence=[];
     Array.from(blocks||[]).forEach((element,blockIndex)=>{
       const chordElements=Array.from(element.querySelectorAll?.('[data-smart-chord-token]')||[]);
       const chords=chordElements.length?chordElements.map(chordElement=>({chord:chordElement.dataset.smartChordToken,chordElement})):String(element.dataset.smartChords||'').split(/\s+/).map(chord=>({chord,chordElement:null}));
-      chords.forEach(({chord,chordElement})=>{
+      const explicit=Number(element.dataset.smartRepeat);
+      const count=Number.isInteger(explicit)&&explicit>=1&&explicit<=99?explicit:repeatCount(element.dataset.smartChords||element.textContent);
+      const repeats=count>=1&&count<=99?count:1;
+      for(let repetition=1;repetition<=repeats;repetition++)chords.forEach(({chord,chordElement})=>{
         const root=chordRoot(chord);
-        if(root!==null)sequence.push({root,chord,blockIndex,element,chordElement});
+        if(root!==null)sequence.push({root,chord,blockIndex,element,chordElement,repetition,repeats});
       });
     });
     return sequence;
@@ -82,6 +90,7 @@
       if(manualDisplaced&&target&&note===target.root){manualDisplaced=false;scrollToBlock(target.blockIndex,true);}
       const rms=audioFrame?.rms||0,onset=rms>.018&&previousRms>0&&rms>previousRms*1.9;previousRms=rms;
       const result=tracker.sample(note,performance.now(),onset);
+      if(result.advanced&&result.current&&result.current.blockIndex===result.matched.blockIndex&&result.current.repetition!==result.matched.repetition)scrollToBlock(result.current.blockIndex,true);
       if(result.advanced&&result.current&&result.current.blockIndex!==result.matched.blockIndex)scrollToBlock(result.current.blockIndex);
       if(result.complete){finish(result);return;}
       emit({frequency,result});
@@ -106,5 +115,5 @@
     return Object.freeze({start,stop,sync,isActive:()=>active,tracker});
   }
 
-  global.smartScroll=Object.freeze({create,createTracker,buildSequence,chordRoot,noteFromFrequency});
+  global.smartScroll=Object.freeze({create,createTracker,buildSequence,chordRoot,noteFromFrequency,repeatCount});
 })(window);
