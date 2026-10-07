@@ -90,9 +90,10 @@ def test_personal_override_is_private_and_shared_edit_requires_leader(client, ap
     assert member_view["repertoire"][0]["shared"]["title"] == "Novo título oficial"
     assert member_view["repertoire"][0]["shared"]["chordSheet"] == "Refrão\nD G A"
     assert member_view["repertoire"][0]["personal"]["key"] == "A"
-    assert member_view["notifications"][-1]["kind"] == "repertoire.key.updated"
-    assert "tom oficial" in member_view["notifications"][-1]["summary"]
-    assert "G para D" in member_view["notifications"][-1]["summary"]
+    # Cada campo musical alterado gera sua própria notificação; a do tom precisa existir.
+    key_change = next(item for item in member_view["notifications"] if item["kind"] == "repertoire.key.updated")
+    assert "tom oficial" in key_change["summary"]
+    assert "G para D" in key_change["summary"]
 
     with app.app_context():
         assert Event.query.count() == 1
