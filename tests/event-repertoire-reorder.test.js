@@ -8,8 +8,9 @@ assert.match(html, /event-section-title--repertoire\{[^}]*color:#f5f6f8[^}]*text
 assert.doesNotMatch(html, /Você é o líder: pode editar a versão oficial/);
 assert.doesNotMatch(html, /Você é integrante: pode visualizar a versão oficial/);
 assert.match(html, /class="event-repertoire-list"/);
-assert.match(html, /class="event-reorder-handle"/);
-assert.match(html, /Pressione e arraste para mudar/);
+assert.doesNotMatch(html, /const orderControl=canShared/, 'a lista normal não deve exibir puxadores de ordem');
+assert.match(html, /class="event-admin-grip"/);
+assert.match(html, /Pressione e arraste pelo ícone à direita/);
 assert.match(html, /function startEventRepertoirePress\(/);
 assert.match(html, /setTimeout\(\(\)=>\{[^]*navigator\.vibrate\?\.\(12\)\},280\)/);
 assert.match(html, /function persistEventRepertoireOrder\(/);

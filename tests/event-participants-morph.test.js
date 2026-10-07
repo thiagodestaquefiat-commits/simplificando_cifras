@@ -28,6 +28,7 @@ assert.match(morph, /compactX.*progress/);
 assert.match(html, /\.event-participants-section \.event-member-card\{[^}]*pointer-events:none;cursor:default/);
 assert.doesNotMatch(html, /\.event-participants-section \.event-member-card:hover/);
 assert.match(markup, /event-leader-orbit-label/);
-assert.match(serviceWorker, /v265-playlist-search-add-motion/);
+assert.match(morph, /rowHeight=68,topInset=8/);
+assert.match(serviceWorker, /v325-external-reply-context/);
 
 console.log('event-participants-morph.test.js: OK');

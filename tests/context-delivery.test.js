@@ -4,6 +4,7 @@ const vm = require('node:vm');
 
 const deliveryContext = {};
 vm.createContext(deliveryContext);
+vm.runInContext(fs.readFileSync('js/contextual-copy.js', 'utf8'), deliveryContext);
 vm.runInContext(fs.readFileSync('js/context-delivery.js', 'utf8'), deliveryContext);
 const delivery = deliveryContext.contextDelivery;
 const events = [{ id: 'event-1', title: 'Culto', repertoire: [{ id: 'item-1', shared: { title: 'A alegria' } }] }];
@@ -12,16 +13,16 @@ assert.equal(delivery.select({ actionType: 'NONE' }, { events }).surface, 'NONE'
 const review = { actionType: 'REVIEW_CHANGED_SONG', eventId: 'event-1', repertoireItemId: 'item-1', fingerprint: 'review-1', destination: { view: 'song' }, evidence: { evidenceIncomplete: false } };
 const reviewPresentation = delivery.select(review, { events });
 assert.equal(reviewPresentation.surface, 'HOME');
-assert.equal(reviewPresentation.copy.title, 'A alegria mudou desde a sua preparação.');
-assert.equal(reviewPresentation.copy.actionLabel, 'Revisar alteração');
+assert.match(reviewPresentation.copy.title, /A alegria/);
+assert.equal(reviewPresentation.copy.actionLabel, 'Revisar');
 const incomplete = delivery.copyFor({ ...review, evidence: { evidenceIncomplete: true } }, events);
-assert.doesNotMatch(incomplete.description, /G\s*→|→\s*A/, 'evidência incompleta não inventa before/after');
+assert.doesNotMatch(incomplete.title, /G\s*→|→\s*A|mudou de G para A/, 'evidência incompleta não inventa before/after');
 
 const start = delivery.copyFor({ actionType: 'START_PREPARATION', eventId: 'event-1', evidence: { pendingCount: 5 } }, events);
-assert.match(start.description, /5 músicas/);
+assert.match(start.title, /5 músicas/);
 const continueCopy = delivery.copyFor({ actionType: 'CONTINUE_PREPARATION', eventId: 'event-1', evidence: { pendingCount: 3 } }, events);
-assert.match(continueCopy.description, /faltam 3 músicas/);
-assert.equal(delivery.copyFor({ actionType: 'ENTER_STAGE_MODE', eventId: 'event-1', evidence: {} }, events).actionLabel, 'Modo Palco');
+assert.match(continueCopy.title, /3 músicas/);
+assert.equal(delivery.copyFor({ actionType: 'ENTER_STAGE_MODE', eventId: 'event-1', evidence: { eventPhase: 'TODAY', state: 'READY' } }, events).actionLabel, 'Modo Palco');
 
 const values = new Map();
 const ackContext = {

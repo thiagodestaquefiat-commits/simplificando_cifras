@@ -20,5 +20,9 @@ assert.match(source, /“\$\{name\}” adicionada à playlist/);
 assert.match(source, /classList\.add\("is-pending"\)/);
 assert.match(source, /notify: false/);
 assert.match(youtubeSource, /element\("button", "youtube-add-btn", "Adicionar"\)/);
+assert.match(html, /function schedulePlaylistOnlineSearch/);
+assert.match(html, /harmonicSummaryClient\.searchSources\(query,''\)/);
+assert.match(html, /harmonicSummaryClient\.generate\('pesquisa'/);
+assert.match(html, /data-playlist-online-results/);
 
 console.log("youtube-add-microinteraction.test.js: OK");

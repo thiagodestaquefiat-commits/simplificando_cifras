@@ -67,6 +67,28 @@ assert.equal(aggregated.nextBestAction.actionType, 'START_PREPARATION');
 assert.equal(aggregated.nextBestAction.evidence.pendingCount, 3);
 assert.equal(aggregated.candidates.filter(candidate => candidate.actionType === 'START_PREPARATION').length, 1);
 
+const addedPending = evaluate(event({
+  repertoire: [item('1', 'READY'), item('2', 'NOT_STARTED')],
+  notifications: [{ id: 'add-2', changeType: 'SONG_ADDED', songId: 'song-2', after: { repertoireItemId: 'item-2', songId: 'song-2' }, createdAt: '2026-10-05T15:00:00Z' }]
+}));
+assert.equal(addedPending.nextBestAction.actionType, 'CONTINUE_PREPARATION');
+assert.deepEqual(JSON.parse(JSON.stringify(addedPending.nextBestAction.evidence.relevantChanges[0])), {
+  type: 'SONG_ADDED', changeId: 'add-2', eventId: 'event-1', songId: 'song-2', repertoireItemId: 'item-2',
+  changedAt: '2026-10-05T15:00:00.000Z', hoursBeforeEvent: 24, before: null, after: { repertoireItemId: 'item-2', songId: 'song-2' }
+});
+assert.equal(addedPending.nextBestAction.evidence.evidenceIncomplete, false);
+
+const unrelatedAddition = evaluate(event({
+  repertoire: [item('1', 'READY'), item('2', 'NOT_STARTED')],
+  notifications: [{ id: 'add-old', changeType: 'SONG_ADDED', songId: 'song-old', after: { repertoireItemId: 'item-old' }, createdAt: '2026-10-05T15:00:00Z' }]
+}));
+assert.equal(unrelatedAddition.nextBestAction.evidence.relevantChanges.length, 0, 'adição só compete enquanto a própria música está pendente');
+
+for (const differentType of ['KEY_CHANGED', 'SONG_REMOVED', 'STRUCTURE_CHANGED', 'METADATA_CHANGED']) {
+  const result = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')], notifications: [{ id: differentType, changeType: differentType, songId: 'song-1', createdAt: '2026-10-05T15:00:00Z' }] }));
+  assert.equal(result.nextBestAction.evidence.relevantChanges.length, 0, `${differentType} não vira SONG_ADDED`);
+}
+
 const competition = evaluate(event({ repertoire: [
   item('1', 'CHANGED_AFTER_REVIEW', { relevantChanges: [keyChange] }), item('2', 'NOT_STARTED'), item('3', 'NOT_STARTED')
 ] }));

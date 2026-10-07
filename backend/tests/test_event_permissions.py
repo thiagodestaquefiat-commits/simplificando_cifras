@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.database import db
-from app.models import Event, EventMember, EventRepertoireItem, PersonalRepertoireOverride
+from app.models import Event, EventChange, EventMember, EventRepertoireItem, PersonalRepertoireOverride, SongReviewReceipt
 
 
 def register(client, user_id: str, name: str) -> str:
@@ -179,6 +179,30 @@ def test_leader_can_transfer_leadership_and_new_leader_receives_permissions(clie
     assert old_leader_denied.status_code == 403
     assert client.delete("/api/collaboration/events/event-sunday", headers=auth(leader)).status_code == 403
     assert client.delete("/api/collaboration/events/event-sunday", headers=auth(member)).status_code == 204
+
+
+def test_song_addition_creates_structured_change_without_preparation_receipt(client, app):
+    leader = register(client, "leader-user", "Líder")
+    register(client, "member-user", "Integrante")
+    created = client.post("/api/collaboration/events", headers=auth(leader), json=event_payload()).get_json()
+    update = {**created, "repertoire": [*created["repertoire"], {
+        "id": "item-three", "songId": "song-3", "order": 2,
+        "shared": {"title": "Música nova", "artist": "Equipe", "key": "D", "capo": "0", "chordSheet": "D G", "notes": ""},
+    }]}
+
+    response = client.put("/api/collaboration/events/event-sunday", headers=auth(leader), json=update)
+    assert response.status_code == 200, response.get_json()
+    body = response.get_json()
+    additions = [change for change in body["notifications"] if change["changeType"] == "SONG_ADDED" and change["songId"] == "song-3"]
+    assert len(additions) == 1
+    assert additions[0]["after"] == {"repertoireItemId": "item-three", "songId": "song-3"}
+    assert additions[0]["createdAt"]
+    assert next(item for item in body["repertoire"] if item["id"] == "item-three")["preparation"]["state"] == "NOT_STARTED"
+    with app.app_context():
+        change = EventChange.query.filter_by(event_id="event-sunday", song_id="song-3", change_type="SONG_ADDED").one()
+        assert change.after_value["repertoireItemId"] == "item-three"
+        assert change.created_at is not None
+        assert SongReviewReceipt.query.filter_by(event_id="event-sunday").count() == 0
 
 
 def test_version_conflict_does_not_overwrite_shared_repertoire(client):

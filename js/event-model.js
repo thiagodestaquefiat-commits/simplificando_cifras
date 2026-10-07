@@ -25,6 +25,7 @@
       artist: text(value.artist),
       key: text(value.key),
       capo: text(value.capo),
+      view: ["summary", "chords", "combined", "lyrics"].includes(value.view) ? value.view : "summary",
       chordSheet: String(value.chordSheet == null ? "" : value.chordSheet),
       notes: text(value.notes),
       updatedAt: value.updatedAt || new Date().toISOString()
@@ -115,9 +116,10 @@
 
   function normalizeCollection(values) { return (Array.isArray(values) ? values : []).map(create); }
 
-  function withSharedChange(event, actor, kind, summary) {
+  function withSharedChange(event, actor, kind, summary, evidence) {
     const normalized = create(event);
-    const notice = notification({ actorId: actor && actor.id, actorName: actor && actor.name, kind, summary });
+    const details = evidence && typeof evidence === "object" ? evidence : {};
+    const notice = notification({ actorId: actor && actor.id, actorName: actor && actor.name, kind, summary, ...details });
     return create({ ...normalized, notifications: [...normalized.notifications, notice], updatedAt: notice.createdAt });
   }
 
@@ -169,6 +171,7 @@
         artist: personal ? personal.artist : item.shared.artist,
         key: personal ? personal.key : item.shared.key,
         capo: personal ? personal.capo : item.shared.capo,
+        view: personal ? personal.view : item.shared.view,
         chordSheet: personal ? personal.chordSheet : item.shared.chordSheet,
         notes: personal ? personal.notes : item.shared.notes,
         scope: personal ? "personal" : "shared"

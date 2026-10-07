@@ -6,6 +6,7 @@
     PREPARATION: 'PREPARATION', FAR: 'FAR',
     IMMINENT: 'APPROACHING', SOON: 'PREPARATION', PLANNING: 'FAR'
   });
+  const APPROACHING_HOURS = 24;
   const PREPARATION_STATES = Object.freeze({
     UNKNOWN: 'UNKNOWN', NOT_STARTED: 'NOT_STARTED', IN_PROGRESS: 'IN_PROGRESS',
     READY: 'READY', NEEDS_REVIEW: 'NEEDS_REVIEW', CHANGED_AFTER_REVIEW: 'CHANGED_AFTER_REVIEW'
@@ -34,7 +35,7 @@
     let phase;
     if (sameLocalDay(startsAt, now)) phase = EVENT_PHASES.TODAY;
     else if (hoursUntil < 0) phase = EVENT_PHASES.PAST;
-    else if (hoursUntil <= 24) phase = EVENT_PHASES.APPROACHING;
+    else if (hoursUntil <= APPROACHING_HOURS) phase = EVENT_PHASES.APPROACHING;
     else if (hoursUntil <= 168) phase = EVENT_PHASES.PREPARATION;
     else phase = EVENT_PHASES.FAR;
     return { phase, startsAt: startsAt.toISOString(), hoursUntil: Math.round(hoursUntil * 10) / 10 };
@@ -62,14 +63,16 @@
     }).sort((left, right) => left.order - right.order);
   }
   function normalizeChange(change, eventId) {
+    const after = change && Object.prototype.hasOwnProperty.call(change, 'after') ? change.after : null;
     return {
       id: text(change && change.id), eventId: text(change && (change.eventId || eventId)),
       songId: text(change && change.songId) || null, actorId: text(change && change.actorId) || null,
+      repertoireItemId: text(change && change.repertoireItemId) || text(after && after.repertoireItemId) || null,
       type: text(change && (change.changeType || change.type || change.kind)) || 'event.updated',
       timestamp: iso(change && (change.timestamp || change.createdAt)) || null,
       reason: text(change && (change.reason || change.summary)) || 'O evento foi atualizado.',
       before: change && Object.prototype.hasOwnProperty.call(change, 'before') ? change.before : null,
-      after: change && Object.prototype.hasOwnProperty.call(change, 'after') ? change.after : null,
+      after,
       affectedUsers: array(change && change.affectedUsers).map(String)
     };
   }
@@ -263,6 +266,27 @@
     if (event.phase !== EVENT_PHASES.TODAY) return event.startsAt;
     const day = new Date(event.startsAt); day.setHours(24, 0, 0, 0); return day.toISOString();
   }
+  function pendingSongAdditions(event) {
+    const pending = array(event && event.preparation && event.preparation.songs).filter(song => song.state === PREPARATION_STATES.NOT_STARTED);
+    if (!pending.length) return [];
+    const byItem = new Set(pending.map(song => text(song.repertoireItemId)).filter(Boolean));
+    const bySong = new Set(pending.map(song => text(song.songId)).filter(Boolean));
+    const startsAt = timestamp(event.startsAt);
+    const unique = new Map();
+    for (const change of array(event.changes)) {
+      if (text(change.type) !== 'SONG_ADDED') continue;
+      if (!(change.repertoireItemId && byItem.has(text(change.repertoireItemId))) && !(change.songId && bySong.has(text(change.songId)))) continue;
+      const changedAt = timestamp(change.timestamp), hoursBeforeEvent = startsAt && changedAt ? (startsAt - changedAt) / 36e5 : null;
+      const evidence = {
+        type: 'SONG_ADDED', changeId: change.id || null, eventId: event.id,
+        songId: change.songId || null, repertoireItemId: change.repertoireItemId || null,
+        changedAt: change.timestamp || null, hoursBeforeEvent: Number.isFinite(hoursBeforeEvent) ? hoursBeforeEvent : null,
+        before: change.before, after: change.after
+      };
+      unique.set(change.id || [change.songId, change.repertoireItemId, change.timestamp].join(':'), evidence);
+    }
+    return [...unique.values()].sort((left, right) => (timestamp(right.changedAt) || 0) - (timestamp(left.changedAt) || 0));
+  }
   function buildCandidates(snapshot, rankedSignals, options) {
     const acknowledged = new Set(array(options && options.acknowledgedFingerprints).map(String));
     const candidates = [];
@@ -286,10 +310,11 @@
       if (counts.pending > 0) {
         const actionType = counts.ready > 0 || counts.changed > 0 ? 'CONTINUE_PREPARATION' : 'START_PREPARATION';
         const revisions = array(event.preparation.songs).filter(song => song.state === PREPARATION_STATES.NOT_STARTED).map(song => song.currentRevision || song.repertoireItemId).sort();
+        const relevantChanges = pendingSongAdditions(event);
         const candidate = {
           actionType, priority: contextualPriority(event, 'pending'), titleKey: actionType === 'START_PREPARATION' ? 'nba.startPreparation' : 'nba.continuePreparation', reasonCode: 'PREPARATION_PENDING',
           destination: { view: 'event', eventId: event.id }, eventId: event.id, songId: null, repertoireItemId: null,
-          evidence: { pendingCount: counts.pending, readyCount: counts.ready, changedCount: counts.changed, totalCount: counts.total, eventPhase: event.phase, hoursUntil: event.hoursUntil },
+          evidence: { pendingCount: counts.pending, readyCount: counts.ready, changedCount: counts.changed, totalCount: counts.total, eventPhase: event.phase, hoursUntil: event.hoursUntil, relevantChanges, evidenceIncomplete: relevantChanges.some(change => !change.changedAt || !(change.songId || change.repertoireItemId)) },
           expiresAt: recommendationExpiration(event), fingerprint: fingerprint([snapshot.user.id, event.id, actionType, revisions.join(',')]),
           because: ['explicit-receipts-missing', 'pending-songs-aggregated', `event-phase-${event.phase.toLowerCase()}`, 'action-has-valid-event-destination']
         };
@@ -353,6 +378,6 @@
   }
 
   global.roudyContextIntelligence = Object.freeze({
-    EVENT_PHASES, PREPARATION_STATES, PRIORITIES, eventPhase, createSnapshot, generateSignals, rankSignals, buildCandidates, nextBestAction, evaluate
+    EVENT_PHASES, PREPARATION_STATES, PRIORITIES, APPROACHING_HOURS, eventPhase, createSnapshot, generateSignals, rankSignals, buildCandidates, nextBestAction, evaluate
   });
 })(typeof window !== 'undefined' ? window : globalThis);

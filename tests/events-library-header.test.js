@@ -4,6 +4,7 @@ const path = require('node:path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+const eventCss = fs.readFileSync(path.join(__dirname, '..', 'js', 'event-detail-refactor.css'), 'utf8');
 
 assert.match(html, /mainTitle\.textContent=tab==='setlists'\?'Eventos':'ROUDY'/);
 assert.match(html, /event-month-heading/);
@@ -14,12 +15,16 @@ assert.doesNotMatch(html, /class="event-detail-back-label"/, 'o retorno do event
 assert.match(html, /function setupEventDetailHeaderMotion\(\)/);
 assert.match(html, /view\.scrollTop\/78/);
 assert.match(html, /--event-spotlight-opacity/);
+assert.match(html, /id="sd-title-condensed"/);
+assert.match(html, /--event-condensed-title-opacity/);
 assert.match(html, /event-more-button/);
 assert.match(html, /event-meta-icon/);
 assert.match(html, /--event-icon-scale/);
 assert.match(html, /linear-gradient\(105deg,#f0f2f5/);
 assert.match(html, /requestAnimationFrame\(renderHeader\)/);
 assert.match(html, /prefers-reduced-motion:reduce/);
-assert.match(sw, /v265-playlist-search-add-motion/);
+assert.match(eventCss, /\.event-reference-admin\{position:sticky/);
+assert.match(eventCss, /top:var\(--event-header-height,60px\)/);
+assert.match(sw, /v325-external-reply-context/);
 
 console.log('events-library-header.test.js: OK');
