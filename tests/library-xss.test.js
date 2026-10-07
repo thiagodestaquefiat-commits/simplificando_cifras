@@ -114,7 +114,7 @@ const SINKS_CORRIGIDOS = [
   { nome: "abrirAddMedley / option", regex: /<option value="\$\{eventEsc\(m\.id\)\}">\$\{eventEsc\(m\.title\)\}/ },
   { nome: "diagramas / nome do acorde", regex: /class="chord-card-name">\$\{eventEsc\(name\)\}/ },
   { nome: "medley / titulo do bloco", regex: /\$\{eventEsc\(b\.musicTitle\)\}/ },
-  { nome: "medley / cifra", regex: /\$\{eventEsc\(b\.chords\)\.replace\(\/\\n\/g,'<br>'\)\}/ },
+  { nome: "medley / cifra", regex: /\$\{eventEsc\((?:b\.chords|medleyChordText\(b\))\)\.replace\(\/\\n\/g,'<br>'\)\}/ },
   { nome: "editor simples / capo", regex: /id="ai-review-capo" value="\$\{safe\(model\.capo\|\|''\)\}"/ }
 ];
 
