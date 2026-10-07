@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v328-busca-catalogo-preview";
+const CACHE_NAME = "simplificando-cifras-v329-busca-catalogo-hero";
 const ASSETS = [
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=6",
@@ -140,7 +140,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=15",
+  "./js/ai/ai-harmonic-summary.js?v=16",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",

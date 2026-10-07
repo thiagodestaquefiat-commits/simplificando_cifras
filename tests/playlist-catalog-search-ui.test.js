@@ -29,6 +29,16 @@ const B={calls:calls.splice(0),status:await page.evaluate(()=>document.querySele
 await page.getByText('Enviar PDF ou arquivo').click();await page.waitForTimeout(700);
 
 const C=await page.evaluate(()=>({modal:!!document.getElementById('ai-summary-overlay'),titulo:document.querySelector('[data-ai-form=arquivo] input[name=titulo]')?.value,visivel:!document.querySelector('[data-ai-form=arquivo]')?.hidden}));
+// D: busca do cartão "O que vamos tocar hoje?" (Pesquisar)
+await page.evaluate(()=>{try{aiHarmonicSummary.close()}catch(e){}});await page.evaluate(()=>{const o=document.getElementById('ai-summary-overlay');if(o)o.remove()});
+mode='hit';await page.evaluate(()=>{musicas=musicas.filter(m=>!/Ruja/.test(m.title))});
+await page.evaluate(()=>aiHarmonicSummary.openSearch());await page.fill('[name="ai-search-title"]','Ruja o Leão - Fernandinho');
+await page.evaluate(()=>document.querySelector('#playlist-ai-search-mode form').requestSubmit());await page.waitForTimeout(1500);
+const D={calls:calls.splice(0),status:await page.evaluate(()=>document.querySelector('[data-ai-search-status]')?.innerText),has:await page.evaluate(()=>musicas.some(m=>/Ruja/.test(m.title)))};
+mode='miss';await page.fill('[name="ai-search-title"]','Musica Inexistente');await page.evaluate(()=>document.querySelector('#playlist-ai-search-mode form').requestSubmit());await page.waitForTimeout(1500);
+const E={status:await page.evaluate(()=>document.querySelector('[data-ai-search-status]')?.innerText)};
+assert.ok(D.calls.some(c=>/"modoGeracao":"conhecimento_modelo"/.test(c)),'Pesquisar do cartão procura no catálogo/web');assert.equal(D.has,true);assert.match(D.status,/adicionada/);
+assert.match(E.status,/Enviar foto/);assert.match(E.status,/Enviar PDF ou arquivo/);
 assert.deepEqual(A.callsTyping,['search'],'digitar não pode disparar busca na web');
 assert.equal(A.callsAdd.length,1);assert.match(A.callsAdd[0],/"modoGeracao":"conhecimento_modelo"/);assert.match(A.callsAdd[0],/"artista":"Fernandinho"/);
 assert.equal(A.added,1);assert.deepEqual(A.last,{t:'Ruja o Leão',a:'Fernandinho',k:'D'});
