@@ -14,6 +14,7 @@ from .. import limiter
 from ..errors import ApiError
 from ..models import (
     CollaborationUser,
+    UserHandle,
     ContextAcknowledgement,
     Band,
     BandMember,
