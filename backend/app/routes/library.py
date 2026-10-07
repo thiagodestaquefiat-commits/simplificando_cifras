@@ -68,7 +68,7 @@ def _upsert(client_id, song_data, expected_version=None):
         return song, "existing"
     song.song_data, song.deleted_at, song.version = song_data, None, song.version + 1
     song.updated_at = datetime.now(timezone.utc)
-    SharedSongService.contribute(song_data, g.current_user.id)
+    # Edições posteriores são pessoais, mesmo que a origem inicial seja IA/upload.
     return song, "updated"
 
 

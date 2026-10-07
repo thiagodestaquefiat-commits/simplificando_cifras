@@ -10,25 +10,43 @@ from pydantic import ValidationError
 from sqlalchemy import text
 
 from ..database import db
-from ..models import PersonalSong, SharedSong
+from ..models import PersonalSong, SharedSong, SharedSongReport
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
 
 MAX_CANDIDATES = 10
-# Qualquer música gerada por IA entra no catálogo — o resumo compartilhado
-# contém apenas acordes (sem letra nem cifra completa), então não há problema
-# de privacidade independentemente da fonte (upload, texto, online ou manual).
 # Só vai para o catálogo compartilhado o que veio de fonte real: Busca por IA (Cifra Club/catálogo) ou arquivo/foto.
 # Músicas digitadas (aba Texto) ou criadas à mão são versões pessoais: ficam só na biblioteca do usuário.
 SHAREABLE_SOURCE_TYPES = {"online", "upload"}
 # Letra + Cifras que o catálogo aceita receber (digitada pelo usuário = versão pessoal, não entra).
 CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
+# Fontes que podem ser LIDAS na busca (inclusive da biblioteca pessoal).
+# Isso não autoriza publicar conteúdo de Texto no catálogo.
+CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
 # Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
 # (web_source, ex.: Cifra Club). Decisão de produto do MVP (29/09/2026), ciente do risco de direitos
 # autorais; SCRAPER_ENABLED=false desliga a busca na web se houver reclamação. Conteúdo gerado pela IA
 # (model_knowledge) continua fora.
-CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+
+
+# Artistas com nome parecido ("Luiz Gonzaga" x "Luiz Gonzaga e Banda") são a mesma música no catálogo.
+SAME_ARTIST_MIN_RATIO = 0.8
+# Diferença de pontuação em que duas entradas do catálogo contam como a mesma música na busca.
+SAME_SONG_SCORE_MARGIN = 0.1
+
+
+def open_contribution() -> bool:
+    """Compatibilidade legada: contribuição aberta foi encerrada por privacidade."""
+    return False
+
+
+def same_artist(first: str | None, second: str | None) -> bool:
+    if not first or not second:
+        return True
+    if first == second or first in second or second in first:
+        return True
+    return SequenceMatcher(None, first, second).ratio() >= SAME_ARTIST_MIN_RATIO
 
 
 def parse_capo(value) -> int | None:
@@ -101,19 +119,35 @@ class SharedSongService:
 
     @staticmethod
     def _candidates(title: str, artist: str) -> list[SharedSong]:
+        # Título exatamente igual entra sempre: o FULLTEXT do MySQL ignora palavras curtas e às vezes
+        # não traz a versão com letra entre os primeiros resultados.
+        found = {song.id: song for song in SharedSong.query.filter_by(normalized_title=title).limit(50).all()}
         if db.engine.dialect.name == "mysql":
-            ids = db.session.execute(
-                text(
-                    "SELECT id FROM shared_songs "
-                    "WHERE MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) "
-                    "ORDER BY MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) DESC "
-                    "LIMIT :limit"
-                ),
-                {"query": f"{title} {artist}".strip(), "limit": MAX_CANDIDATES},
-            ).scalars().all()
-            return SharedSong.query.filter(SharedSong.id.in_(ids)).all() if ids else []
-        # Fallback LIKE para PostgreSQL e SQLite (sem índice FULLTEXT).
-        return SharedSong.query.filter(SharedSong.normalized_title.contains(title)).limit(MAX_CANDIDATES).all()
+            try:
+                ids = db.session.execute(
+                    text(
+                        "SELECT id FROM shared_songs "
+                        "WHERE MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) "
+                        "ORDER BY MATCH(normalized_title, normalized_artist) AGAINST (:query IN NATURAL LANGUAGE MODE) DESC "
+                        "LIMIT :limit"
+                    ),
+                    {"query": f"{title} {artist}".strip(), "limit": MAX_CANDIDATES},
+                ).scalars().all()
+            except Exception:  # noqa: BLE001 - sem índice FULLTEXT, fica a busca por título igual
+                db.session.rollback()
+                ids = []
+            missing = [song_id for song_id in ids if song_id not in found]
+            if missing:
+                found.update({song.id: song for song in SharedSong.query.filter(SharedSong.id.in_(missing)).all()})
+        else:
+            # Fallback LIKE para PostgreSQL e SQLite (sem índice FULLTEXT).
+            found.update({song.id: song for song in SharedSong.query.filter(SharedSong.normalized_title.contains(title)).limit(MAX_CANDIDATES).all()})
+        return list(found.values())
+
+    @staticmethod
+    def _has_full_sheet(song: SharedSong) -> bool:
+        sheet = (song.song_data or {}).get("fullChordSheet")
+        return isinstance(sheet, dict) and bool(str(sheet.get("content") or "").strip())
 
     @classmethod
     def search(cls, title, artist=None) -> SharedSongMatch | None:
@@ -124,7 +158,10 @@ class SharedSongService:
                   for song in cls._candidates(normalized_title, normalized_artist)]
         if not scored:
             return None
-        best = max(scored, key=lambda match: match.score)
+        # Entre versões praticamente iguais da mesma música (ex.: uma só com resumo e outra completada),
+        # entrega a que tem Letra + Cifras.
+        top = max(match.score for match in scored)
+        best = max(scored, key=lambda match: (match.score >= top - SAME_SONG_SCORE_MARGIN and cls._has_full_sheet(match.song), match.score))
         best.song.times_searched = (best.song.times_searched or 0) + 1
         db.session.commit()
         return best
@@ -247,7 +284,8 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            if content and source in CONTRIBUTABLE_FULL_SHEET_SOURCES:
+            accepted = CONTRIBUTABLE_FULL_SHEET_SOURCES
+            if content and source in accepted:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],
@@ -270,6 +308,18 @@ class SharedSongService:
             return None
         return response.model_dump(mode="json")
 
+    @staticmethod
+    def _existing(normalized_title: str, normalized_artist: str | None) -> SharedSong | None:
+        """Mesma música no catálogo: título igual e artista igual ou parecido (evita duplicar ao completar)."""
+        exact = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
+        if exact is not None:
+            return exact
+        same_title = SharedSong.query.filter_by(normalized_title=normalized_title).all()
+        similar = [song for song in same_title if same_artist(song.normalized_artist, normalized_artist)]
+        # Prefere a versão que ainda não tem letra: é ela que precisa ser completada.
+        similar.sort(key=lambda song: (song.song_data or {}).get("fullChordSheet") is not None)
+        return similar[0] if similar else None
+
     @classmethod
     def contribute(cls, song_data, user_id) -> SharedSong | None:
         if not isinstance(song_data, dict):
@@ -279,10 +329,11 @@ class SharedSongService:
         has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
         # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
         # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
-        if source_type not in SHAREABLE_SOURCE_TYPES and not has_real_lyrics:
+        if source_type not in SHAREABLE_SOURCE_TYPES:
             return None
-        if AI_ONLY_MARKER in str(song_data.get("notes") or ""):
+        if AI_ONLY_MARKER in str(song_data.get("notes") or "") and not has_real_lyrics:
             # Rascunho do fluxo antigo "somente IA": acordes inventados não vão para o catálogo público.
+            # Com letra de fonte real (PDF/arquivo ou Cifra Club) a música já foi corrigida e entra.
             return None
         normalized_title = normalize_text(song_data.get("title"))
         normalized_artist = normalize_text(song_data.get("artist")) or None
@@ -292,7 +343,7 @@ class SharedSongService:
         if summary is None:
             return None
         new_has_full = summary.get("fullChordSheet") is not None
-        existing = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
+        existing = cls._existing(normalized_title, normalized_artist)
         if existing is not None:
             # Atualiza o catálogo apenas se a nova versão é mais completa:
             # tem cifra completa e a versão existente não tem.
@@ -317,3 +368,60 @@ class SharedSongService:
         )
         db.session.add(song)
         return song
+
+
+def _keeper_rank(song: SharedSong):
+    """Qual entrada fica: a que tem Letra + Cifras, depois a mais buscada, depois a mais antiga."""
+    created = song.created_at.timestamp() if song.created_at else 0
+    return (not SharedSongService._has_full_sheet(song), -(song.times_searched or 0), created, song.id)
+
+
+def duplicate_groups() -> list[list[SharedSong]]:
+    """Entradas repetidas do catálogo: mesmo título e artista igual/parecido (ou sem artista).
+
+    A primeira entrada de cada grupo é a que fica. Entrada sem artista só entra num grupo quando o
+    título tem um único artista; com artistas diferentes ela é ambígua e fica de fora.
+    """
+    by_title: dict[str, list[SharedSong]] = {}
+    for song in SharedSong.query.order_by(SharedSong.created_at, SharedSong.id).all():
+        by_title.setdefault(song.normalized_title, []).append(song)
+    groups = []
+    for songs in by_title.values():
+        if len(songs) < 2:
+            continue
+        clusters: list[list[SharedSong]] = []
+        for song in (item for item in songs if item.normalized_artist):
+            target = next((cluster for cluster in clusters
+                           if any(same_artist(song.normalized_artist, other.normalized_artist) for other in cluster)), None)
+            if target is None:
+                clusters.append([song])
+            else:
+                target.append(song)
+        no_artist = [song for song in songs if not song.normalized_artist]
+        if len(clusters) == 1:
+            clusters[0].extend(no_artist)
+        elif not clusters:
+            clusters.append(no_artist)
+        groups.extend(sorted(cluster, key=_keeper_rank) for cluster in clusters if len(cluster) > 1)
+    return groups
+
+
+def merge_duplicates(group: list[SharedSong]) -> SharedSong:
+    """Junta o grupo na primeira entrada: soma as buscas, completa o artista e move os relatos.
+
+    Apaga do catálogo as entradas repetidas. Não toca em nenhuma biblioteca pessoal.
+    """
+    keeper, extras = group[0], group[1:]
+    for extra in extras:
+        keeper.times_searched = (keeper.times_searched or 0) + (extra.times_searched or 0)
+        if not keeper.normalized_artist and extra.normalized_artist:
+            keeper.artist, keeper.normalized_artist = extra.artist, extra.normalized_artist
+        for report in SharedSongReport.query.filter_by(song_id=extra.id).all():
+            if SharedSongReport.query.filter_by(song_id=keeper.id, reporter_id=report.reporter_id).first():
+                db.session.delete(report)  # a mesma pessoa já relatou a entrada que fica
+            else:
+                report.song_id = keeper.id
+        db.session.flush()
+        db.session.delete(extra)
+    db.session.flush()
+    return keeper

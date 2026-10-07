@@ -180,19 +180,32 @@
     return remove(events, eventId);
   }
 
+  function preserveSongCopies(local,remote){
+    if(!local)return remote;
+    const operations=global.eventCollaboration?.readPersonalQueue?.()||[];
+    const auth=global.appAuth?.getState?.(),userId=auth?.authenticated?auth.user?.id:global.eventCollaboration?.readIdentity?.()?.user?.id;
+    return global.eventModel.create({...remote,repertoire:remote.repertoire.map(item=>{
+      const old=local.repertoire.find(value=>String(value.id)===String(item.id)&&String(value.songId)===String(item.songId));
+      if(!old)return item;
+      const next={...item,shared:{...item.shared,...(!item.shared.songData&&old.shared.songData?{songData:old.shared.songData}:{})}};
+      const queued=operations.find(op=>String(op.eventId)===String(remote.id)&&String(op.itemId)===String(item.id));
+      if(queued&&userId){next.personalEdits={...next.personalEdits};if(queued.action==='delete')delete next.personalEdits[String(userId)];else next.personalEdits[String(userId)]=queued.changes;}
+      return next;
+    })});
+  }
   function mergeRemote(events, remoteEvents) {
     const values = global.eventModel.normalizeCollection(events);
     for (const remote of global.eventModel.normalizeCollection(remoteEvents)) {
       const index = values.findIndex((item) => String(item.id) === String(remote.id));
       if (index < 0) values.push(remote);
-      else if (values[index].syncState !== "pending" || remote.remoteVersion >= (values[index].remoteVersion || 0)) values[index] = remote;
+      else if (values[index].syncState !== "pending" || remote.remoteVersion >= (values[index].remoteVersion || 0)) values[index] = preserveSongCopies(values[index],remote);
     }
     return values;
   }
 
   function reconcileRemote(events, remoteEvents) {
     const local = global.eventModel.normalizeCollection(events);
-    const remote = global.eventModel.normalizeCollection(remoteEvents);
+    const remote = global.eventModel.normalizeCollection(remoteEvents).map(value=>preserveSongCopies(events.find(e=>String(e.id)===String(value.id)),value));
     // Uma resposta vazia pode representar indisponibilidade ou sessão ainda em
     // restauração. Nunca esconda o único cache conhecido do usuário nesse caso.
     if (!remote.length && local.length) return local;

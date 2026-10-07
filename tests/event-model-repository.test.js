@@ -85,4 +85,10 @@ assert.deepEqual(signedOutEvents, [], "logout deve retirar eventos privados da i
 const restoredA = window.eventRepository.activateOwner(accountA.id, [], accountA, []);
 assert.equal(restoredA.events.length, 1, "novo login deve restaurar os eventos da conta");
 
+const copied=window.eventModel.create({...collaborative,repertoire:[{id:'copy-item',songId:'copy-song',shared:{title:'Cópia',songData:{title:'Cópia',blocos:[{l:'Verso',c:'G C D'}]}}}]});
+const separate=window.eventModel.create(copied);separate.repertoire[0].shared.songData.blocos[0].c='A D E';
+assert.equal(copied.repertoire[0].shared.songData.blocos[0].c,'G C D','normalização não compartilha objetos da música');
+const legacyRemote=window.eventModel.create({...copied,repertoire:[{id:'copy-item',songId:'copy-song',shared:{title:'Cópia'}}],syncState:'synced',remoteVersion:3});
+const preserved=window.eventRepository.reconcileRemote([copied],[legacyRemote]);
+assert.equal(preserved[0].repertoire[0].shared.songData.title,'Cópia','servidor antigo não apaga cópia local');
 console.log("event-model-repository.test.js: OK");

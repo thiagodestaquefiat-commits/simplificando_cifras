@@ -38,7 +38,8 @@
       changes: action === "delete" ? null : {
         title: String(changes && changes.title || ""), artist: String(changes && changes.artist || ""),
         key: String(changes && changes.key || ""), capo: String(changes && changes.capo || ""),
-        chordSheet: String(changes && changes.chordSheet || ""), notes: String(changes && changes.notes || "")
+        chordSheet: String(changes && changes.chordSheet || ""), notes: String(changes && changes.notes || ""),
+        ...(changes?.songData?{songData:JSON.parse(JSON.stringify(changes.songData))}:{})
       },
       queuedAt: new Date().toISOString()
     };
@@ -229,8 +230,15 @@
     return fromRemote(await request("/events/" + encodeURIComponent(eventId), { method: "GET" }));
   }
 
+  async function requireEventSongData(){
+    const body=await request('/capabilities');
+    if(body?.eventSongData!==1)throw new CollaborationError('A cópia da música foi preservada localmente. A atualização do servidor é necessária para sincronizar.',404,'event_song_data_pending');
+  }
   async function saveSharedEvent(event, fallback, options) {
+    const owner=personalQueueOwner();
+    if(event.repertoire?.some(item=>item.shared?.songData))await requireEventSongData();
     await ensureRegistered(fallback);
+    if(owner!==personalQueueOwner())throw new CollaborationError('A conta mudou. Reabra o evento.',409,'conta_alterada');
     const normalized = global.eventModel.create(event);
     const body = await request("/events" + (normalized.remoteVersion == null ? "" : "/" + encodeURIComponent(normalized.id)), {
       method: normalized.remoteVersion == null ? "POST" : "PUT",
@@ -288,7 +296,10 @@
   }
 
   async function saveSharedItem(event, itemId, changes, fallback) {
+    const owner=personalQueueOwner();
+    if(changes.songData)await requireEventSongData();
     await ensureRegistered(fallback);
+    if(owner!==personalQueueOwner())throw new CollaborationError('A conta mudou. Reabra o evento.',409,'conta_alterada');
     const body = await request("/events/" + encodeURIComponent(event.id) + "/repertoire/" + encodeURIComponent(itemId) + "/shared", {
       method: "PATCH",
       body: JSON.stringify({ ...changes, remoteVersion: event.remoteVersion })
@@ -298,7 +309,10 @@
   }
 
   async function savePersonalItem(event, itemId, changes, fallback) {
+    const owner=personalQueueOwner();
+    if(changes.songData)await requireEventSongData();
     await ensureRegistered(fallback);
+    if(owner!==personalQueueOwner())throw new CollaborationError('A conta mudou. Reabra o evento.',409,'conta_alterada');
     const body = await request("/events/" + encodeURIComponent(event.id) + "/repertoire/" + encodeURIComponent(itemId) + "/personal", {
       method: "PUT",
       body: JSON.stringify(changes)
@@ -341,6 +355,8 @@
     if (ownerId !== personalQueueOwner()) return [];
     const synchronized = [];
     for (const operation of readPersonalQueue()) {
+      if (ownerId !== personalQueueOwner()) break;
+      if(operation.changes?.songData)await requireEventSongData();
       if (ownerId !== personalQueueOwner()) break;
       const path = "/events/" + encodeURIComponent(operation.eventId) + "/repertoire/" + encodeURIComponent(operation.itemId) + "/personal";
       const body = await request(path, operation.action === "delete" ? { method: "DELETE" } : { method: "PUT", body: JSON.stringify(operation.changes) });

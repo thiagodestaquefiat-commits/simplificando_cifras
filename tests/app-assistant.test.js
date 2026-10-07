@@ -21,7 +21,7 @@ const context = {
   abrirAddMedley(){},abrirSalvarMedley(){},limparMedley(){}
 };
 context.findEvent=id=>context.setlists.find(event=>event.id===id);context.window=context;
-vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,"..","js","app-assistant.js"),"utf8"),context);
+for(const script of ['assistant-intent-catalog.js','assistant-intent-client.js','app-assistant.js'])vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,"..","js",script),"utf8"),context);
 
 (async()=>{
   let smartActive=false,tunerActive=false,smartStarts=0,tunerStarts=0;

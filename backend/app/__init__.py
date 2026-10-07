@@ -82,6 +82,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
                         "appVersion": "v167-aviso-limite"})
 
     from .routes.events import blueprint as events_blueprint
+    from .routes.assistant import blueprint as assistant_blueprint
     from .routes.locations import blueprint as locations_blueprint
     from .routes.auth import blueprint as auth_blueprint
     from .routes.bands import blueprint as bands_blueprint
@@ -93,6 +94,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
 
     app.register_blueprint(blueprint)
     app.register_blueprint(events_blueprint)
+    app.register_blueprint(assistant_blueprint)
     app.register_blueprint(locations_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(bands_blueprint)

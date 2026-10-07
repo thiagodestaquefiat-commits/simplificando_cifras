@@ -8,6 +8,14 @@ assert.equal(smart.chordRoot('Cmaj7'),0);assert.equal(smart.chordRoot('C#m7'),1)
 const blocks=[{dataset:{smartChords:'A D A G D A B7 E'}},{dataset:{smartChords:'E A B'}}];
 const sequence=smart.buildSequence(blocks);assert.equal(sequence.length,11);assert.deepEqual(Array.from(sequence.slice(0,8),item=>item.chord),['A','D','A','G','D','A','B7','E']);assert.equal(sequence[8].blockIndex,1);
 const tracker=smart.createTracker({stableMs:250,cooldownMs:180});tracker.reset(sequence);
+const repeated=smart.buildSequence([{dataset:{smartChords:'G Em C G D',smartRepeat:'4'}},{dataset:{smartChords:'C D Em (2x)'}},{dataset:{smartChords:'C D Em D'}}]);
+assert.equal(repeated.length,30);assert.equal(repeated[5].repetition,2);assert.equal(repeated[19].repetition,4);assert.equal(repeated[20].blockIndex,1);assert.equal(repeated[26].blockIndex,2);
+const repeatTracker=smart.createTracker({stableMs:250,cooldownMs:180});repeatTracker.reset(repeated);
+let repeatTime=10000,lastResult;
+for(let i=0;i<20;i++){repeatTracker.sample(null,repeatTime);repeatTime+=300;repeatTracker.sample(repeatTracker.current().root,repeatTime);repeatTime+=250;lastResult=repeatTracker.sample(repeatTracker.current().root,repeatTime);assert.equal(lastResult.advanced,true);repeatTime+=300;if(i<19)assert.equal(repeatTracker.current().blockIndex,0,'não sai da linha antes das quatro voltas');}
+assert.equal(repeatTracker.current().blockIndex,1,'avança somente depois da quarta volta');
+repeatTracker.sample(null,repeatTime+10000);assert.equal(repeatTracker.getIndex(),20,'silêncio preserva a contagem');
+assert.equal(smart.repeatCount('Solo 2x'),2);assert.equal(smart.repeatCount('G D (3×)'),3);assert.equal(smart.repeatCount('G D (0x)'),1);
 assert.equal(tracker.sample(9,0).advanced,false);assert.equal(tracker.sample(9,249).advanced,false);let result=tracker.sample(9,250);assert.equal(result.advanced,true);assert.equal(result.current.chord,'D');assert.equal(tracker.sample(2,400).advanced,false);assert.equal(tracker.sample(2,650).advanced,true);tracker.sample(null,700);tracker.sample(9,800);assert.equal(tracker.sample(9,1050).advanced,true,'silêncio rearma acordes repetidos');tracker.align(1);assert.equal(tracker.current().blockIndex,1,'rolagem manual realinha no primeiro acorde do bloco');
 const intermittent=smart.createTracker({stableMs:250,cooldownMs:180,dropoutMs:220});intermittent.reset(sequence);assert.equal(intermittent.sample(9,0).advanced,false);assert.equal(intermittent.sample(null,120).advanced,false);assert.equal(intermittent.sample(9,270).advanced,true,'uma pequena falha do microfone não deve cancelar uma nota correta');
 tracker.reset(sequence);tracker.seek(5);assert.equal(tracker.getIndex(),5,'atualização visual preserva o progresso exato');tracker.sample(null,5000);assert.equal(tracker.getIndex(),5,'silêncio não reinicia o acompanhamento');
