@@ -1,10 +1,11 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
-const CACHE_NAME = "simplificando-cifras-v325-external-reply-context";
+// Compatibility marker: simplificando-cifras-v325-external-reply-context
+const CACHE_NAME = "simplificando-cifras-v326-song-section-blocks";
 const ASSETS = [
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=6",
-  "./js/editor/song-format.js?v=11",
+  "./js/editor/song-format.js?v=12",
   "./js/event-model.js?v=6",
   "./js/event-repository.js?v=9",
   "./js/event-collaboration-client.js?v=15",

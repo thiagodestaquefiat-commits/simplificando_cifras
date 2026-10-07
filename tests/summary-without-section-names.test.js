@@ -31,4 +31,24 @@ assert.ok(shown.some((value) => /Deus me chamou/.test(value)), "frase-gancho da 
 assert.ok(!baseSummary.sections.some((section) => section.showLabel && /Refrão/.test(section.label)), "Refrão escondido");
 ["Intro", "Primeira Parte", "Segunda Parte", "Pré-Refrão", "Refrão 2", "[Ponte]", "Solo", "Final", "Chorus"].forEach((name) => assert.ok(format.isSectionName(name), name));
 ["Deus me chamou", "A alegria", "Ao Rei", "Santo, Santo"].forEach((hook) => assert.ok(!format.isSectionName(hook), hook));
+
+const divided = format.sectionsFromSimpleText(`Intro
+C G Am F
+Primeira parte
+C G
+Uma letra aqui
+Pré-refrão
+Am F
+Preparando o refrão
+Refrão
+F G C
+Cantando o refrão`, saved.editorData);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(divided.map((section) => section.label))),
+  ["Intro", "Primeira parte", "Pré-refrão", "Refrão"],
+  "cabeçalhos contínuos criam blocos separados"
+);
+assert.equal(divided[1].lines[0].lyrics, "Uma letra aqui", "cifra seguida de letra permanece no mesmo bloco");
+assert.equal(divided[2].type, "pre-chorus");
+assert.equal(divided[3].type, "chorus");
 console.log("summary-without-section-names.test.js: OK (sem nomes de seção no resumo, editor e músicas salvas; ganchos mantidos)");
