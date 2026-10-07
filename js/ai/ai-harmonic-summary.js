@@ -309,7 +309,9 @@
     setBusy(true);
     setStatus("loading", "Buscando fontes autorizadas…");
     try {
-      const result = await global.harmonicSummaryClient.searchSources(values());
+      const searchValues = values();
+      const payload = global.harmonicSummaryClient.validatePayload("pesquisa", { titulo: searchValues.titulo, artista: searchValues.artista });
+      const result = { payload, candidates: await global.harmonicSummaryClient.searchSources(payload.titulo, payload.artista || "") };
       if (!result.candidates.length) {
         setBusy(false);
         await generateFromModelKnowledge(result.payload);
@@ -547,5 +549,13 @@
     }
   }
 
-  global.aiHarmonicSummary = Object.freeze({ open, close, openSearch, generateFiles, get busy() { return busy; } });
+  // Abre a janela já na aba de arquivo (PDF, foto ou TXT), com título e artista preenchidos.
+  function openFile(values) {
+    if (panel) close();
+    open();
+    if (!panel) return;
+    askForFile({ titulo: values?.titulo || "", artista: values?.artista || "" }, values?.message || "Envie um PDF, foto ou TXT da cifra para adicionar esta música.");
+  }
+
+  global.aiHarmonicSummary = Object.freeze({ open, openFile, close, openSearch, generateFiles, resultSourceInfo, get busy() { return busy; } });
 })(window);
