@@ -1,0 +1,90 @@
+/* ROUDY — formulários no padrão visual atual.
+   Leva o padrão já aprovado de "Meu Perfil" (fundo #080808, linhas com rótulo e campo,
+   separadores finos, botão principal azul translúcido) para as telas que ainda usavam o
+   visual antigo: Confira a música / Editar música, Nova música, Gerar com IA,
+   Adicionar ao Medley, Novo evento e demais janelas com .form-group.
+   Só aparência: nenhuma função, campo ou ação muda. */
+
+:root{
+  --rf-bg:#080808;
+  --rf-surface:#141416;
+  --rf-control:#1c1c1e;
+  --rf-control-active:#2c2c2e;
+  --rf-line:rgba(255,255,255,.08);
+  --rf-text:#f5f5f7;
+  --rf-muted:#8e8e93;
+  --rf-placeholder:#68686f;
+  --rf-blue:rgba(47,128,237,.86);
+}
+
+/* ---------- Janela ---------- */
+.modal-overlay:has(.modal .form-group),.modal-overlay:has(.modal .simple-editor-fields){background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.modal:has(.form-group){border:0!important;background:var(--rf-bg)!important;color:var(--rf-text);box-shadow:0 -18px 54px rgba(0,0,0,.62)!important}
+.modal:has(.form-group) .modal-title{margin:2px 0 6px;color:#fff;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.modal:has(.form-group) .modal-title + div[style*="font-size:11px"]{margin-bottom:16px!important;color:var(--rf-muted)!important;font-size:12px!important;line-height:1.45!important}
+
+/* ---------- Linhas: rótulo à esquerda, campo à direita (como em Meu Perfil) ---------- */
+.modal .form-group{display:block;margin:0!important;padding:12px 2px;border-bottom:1px solid var(--rf-line)}
+.modal .form-group>.form-label{display:block;margin:0 0 8px}
+/* Só campos simples (rótulo + um campo) viram linha lado a lado */
+.modal .form-group:has(> .form-label + :is(input.form-input,select)):not(:has(> :nth-child(3))){display:grid;grid-template-columns:118px minmax(0,1fr);align-items:center;gap:12px;min-height:56px;padding:8px 2px}
+.modal .form-group:has(> .form-label + :is(input.form-input,select)):not(:has(> :nth-child(3)))>.form-label{margin:0}
+.modal .form-group>.form-label{margin:0;color:var(--rf-text);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
+.modal .form-group>.form-input,.modal .form-group>select.form-input,.modal .form-group>select{width:100%;min-height:40px;padding:0;border:0!important;border-radius:0;background:transparent!important;color:var(--rf-text);box-shadow:none!important;font-size:15px}
+.modal .form-group>.form-input::placeholder{color:var(--rf-placeholder)}
+.modal .form-group>.form-input:focus{outline:0;box-shadow:none}
+.modal .form-group>select{appearance:auto;color-scheme:dark}
+.modal .form-group>.form-input[type="date"],.modal .form-group>.form-input[type="time"]{color-scheme:dark}
+
+/* Campos grandes (cifra, letra, observações) ficam empilhados num cartão escuro */
+.modal .form-group:has(> textarea),.modal .form-group:has(> .form-textarea),.modal .form-group#simple-editor-full,.modal .form-group:has(> div > textarea){display:block;padding:14px 2px 16px}
+.modal .form-group:has(> textarea)>.form-label,.modal .form-group#simple-editor-full>.form-label{display:block;margin:0 0 10px;color:var(--rf-text);font-size:13px;font-weight:600}
+.modal .form-textarea,.modal textarea.form-input{width:100%;min-height:220px;padding:14px;border:0!important;border-radius:14px;background:var(--rf-surface)!important;color:var(--rf-text);box-shadow:none!important;font:500 13px/1.6 'JetBrains Mono',ui-monospace,monospace}
+.modal .form-textarea:focus,.modal textarea.form-input:focus{outline:1px solid rgba(47,128,237,.55)}
+.modal .form-group div[style*="font-size:10px"],.modal .form-group div[style*="font-size:11px"]{color:var(--rf-muted)!important}
+
+/* Grupos lado a lado (Data | Horário) mantêm o layout, só com o novo visual */
+.modal .form-row,.modal [style*="display:grid"][style*="grid-template-columns"]>.form-group{border-bottom:1px solid var(--rf-line)}
+
+/* ---------- Seletor Resumo Harmônico / Letra + Cifras ---------- */
+.modal .song-view-switch{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin:6px 0 10px;padding:3px;border:0;border-radius:12px;background:var(--rf-control);box-shadow:none}
+.modal .song-view-switch>button{min-height:36px;margin:0;border:0;border-radius:9px;background:transparent;color:var(--rf-muted);box-shadow:none;font-size:13px;font-weight:650}
+.modal .song-view-switch>button.active,.modal .song-view-switch>button[aria-selected="true"]{background:var(--rf-control-active);color:#fff}
+
+/* ---------- Botões ---------- */
+.modal:has(.form-group) .btn{width:100%;min-height:50px;margin-top:10px;border-radius:14px;font:700 14px/1 Inter,system-ui,sans-serif;box-shadow:none;transform:none}
+.modal:has(.form-group) .btn-primary{border:0;background:var(--rf-blue);color:#fff}
+.modal:has(.form-group) .btn-primary:active{background:rgba(47,128,237,.7)}
+.modal:has(.form-group) .btn-outline{border:0;background:rgba(255,255,255,.07);color:var(--rf-text)}
+.modal:has(.form-group) .btn-danger{border:0;background:rgba(240,100,100,.14);color:#f06464}
+.modal:has(.form-group) .btn-primary:first-of-type{margin-top:22px}
+.modal #full-sheet-attach{min-height:44px;margin:0 0 12px!important;background:rgba(255,255,255,.07)}
+
+/* Lista de músicas do Novo evento */
+.modal:has(.form-group) .event-song-picker,.modal:has(.form-group) [class*="repertoire-picker"]{border-radius:14px;background:var(--rf-surface)}
+
+@media(max-width:380px){.modal .form-group:has(> .form-label + :is(input.form-input,select)):not(:has(> :nth-child(3))){grid-template-columns:96px minmax(0,1fr)}}
+
+/* ---------- Gerar com IA (janela própria) ---------- */
+.ai-summary-overlay{background:rgba(0,0,0,.82)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.ai-summary-dialog{border:0!important;background:var(--rf-bg)!important;color:var(--rf-text);box-shadow:0 -18px 54px rgba(0,0,0,.62)!important}
+.ai-summary-header h2{color:#fff;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.ai-summary-close{border:0!important;background:transparent!important;color:var(--rf-muted)!important;box-shadow:none!important}
+.ai-summary-intro,.ai-summary-help,.ai-summary-drop-hint{color:var(--rf-muted)!important}
+.ai-summary-tabs{gap:0!important;padding:3px!important;border:0!important;border-radius:12px!important;background:var(--rf-control)!important}
+.ai-summary-tab{min-height:36px;border:0!important;border-radius:9px!important;background:transparent!important;color:var(--rf-muted)!important;box-shadow:none!important;font-size:13px!important;font-weight:650!important}
+.ai-summary-tab.active,.ai-summary-tab[aria-selected="true"]{background:var(--rf-control-active)!important;color:#fff!important}
+.ai-summary-form{border:0!important;border-radius:0!important;background:transparent!important;padding:0!important}
+.ai-summary-field{display:block;margin:0!important;padding:12px 2px;border-bottom:1px solid var(--rf-line)}
+.ai-summary-label{color:var(--rf-text)!important;font-size:13px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important}
+.ai-summary-field input:not([type=hidden]):not([type=file]),.ai-summary-field select{width:100%;min-height:40px;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--rf-text)!important;box-shadow:none!important;font-size:15px!important}
+.ai-summary-field textarea{min-height:200px;padding:14px!important;border:0!important;border-radius:14px!important;background:var(--rf-surface)!important;color:var(--rf-text)!important}
+.ai-summary-field input[type=file]{width:100%;padding:12px;border-radius:14px;background:var(--rf-surface);color:var(--rf-muted);color-scheme:dark}
+.ai-summary-capo-option{border:0!important;background:var(--rf-control)!important;color:var(--rf-text)!important;box-shadow:none!important}
+.ai-summary-capo-option.active{background:var(--rf-blue)!important;color:#fff!important}
+.ai-summary-status{border:0!important;border-radius:12px!important;background:var(--rf-surface)!important;color:var(--rf-text)!important}
+.ai-summary-submit{min-height:50px!important;border:0!important;border-radius:14px!important;background:var(--rf-blue)!important;color:#fff!important;box-shadow:none!important;font:700 14px/1 Inter,system-ui,sans-serif!important}
+.ai-summary-candidate{border:0!important;border-bottom:1px solid var(--rf-line)!important;border-radius:0!important;background:transparent!important}
+
+/* Abas do editor: a seção escondida continua escondida */
+.modal .form-group[hidden],.modal [hidden].form-group{display:none!important}

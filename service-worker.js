@@ -1,8 +1,9 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v336-revisar-antes-de-salvar";
+const CACHE_NAME = "simplificando-cifras-v337-formularios-visual-novo";
 const ASSETS = [
+  "./css/roudy-forms.css?v=1",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
