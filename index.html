@@ -1175,13 +1175,13 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/tablature.js?v=1"></script>
 <script src="js/song-model.js?v=5"></script>
 <script src="js/demo-library.js?v=4"></script>
-<script src="js/medley-repository.js?v=1"></script>
-<script src="js/song-repository.js?v=15"></script>
+<script src="js/medley-repository.js?v=2"></script>
+<script src="js/song-repository.js?v=16"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=19"></script>
 <script src="js/event-model.js?v=5"></script>
 <script src="js/context-intelligence.js?v=2"></script>
-<script src="js/event-repository.js?v=8"></script>
+<script src="js/event-repository.js?v=9"></script>
 <script src="js/event-chat.js?v=3"></script>
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -1330,6 +1330,7 @@ function toggleStudyPanel(){
   button.setAttribute('aria-label',collapsed?'Expandir painel de acordes':'Recolher painel de acordes');
 }
 function appConfirm(message){return window.confirm(uiI18n.translate(message));}
+function appAlert(message){window.alert(uiI18n.translate(message));}
 function appPrompt(message,value){return window.prompt(uiI18n.translate(message),value);}
 const SONG_TEXT_SCALE_MIN=.8,SONG_TEXT_SCALE_MAX=1.55;
 let songTextScale=1,songScaleFeedbackTimer=null;
@@ -3968,7 +3969,31 @@ async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;t
 function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if(state.authenticated||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
 function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
-async function logoutAppAccount(){try{await appAuth.signOut();closeModal();showToast('Conta desconectada. Seus dados locais foram preservados.');}catch(error){showToast('⚠️ '+error.message);}}
+// Sair da conta: confirma que tudo está na nuvem e só então apaga do aparelho os dados DESTA conta.
+function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
+function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
+async function logoutAppAccount(){
+  if(!currentAuthState.authenticated){try{await appAuth.signOut();}catch(_){}closeModal();return;}
+  if(navigator.onLine===false){appAlert('Você está sem internet.\n\nConecte-se antes de sair, para que suas músicas e eventos fiquem salvos na sua conta.');return;}
+  showToast('Salvando tudo na sua conta antes de sair…');
+  try{await librarySync.syncNow();}catch(_){/* a verificação abaixo decide */}
+  try{await syncEventsNow(true);}catch(_){/* a verificação abaixo decide */}
+  const pendingSongs=songsPendingUpload(),pendingEvents=eventsPendingUpload();
+  if(pendingSongs||pendingEvents){
+    const parts=[pendingSongs?`${pendingSongs} música${pendingSongs===1?'':'s'}`:'',pendingEvents?`${pendingEvents} evento${pendingEvents===1?'':'s'}`:''].filter(Boolean).join(' e ');
+    appAlert(`Ainda não foi possível salvar ${parts} na sua conta.\n\nPara não perder nada, você continua conectado. Verifique a internet e tente sair de novo.`);return;
+  }
+  const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:String(appCurrentUser.id||'')};
+  try{await appAuth.signOut();}catch(error){showToast('⚠️ '+error.message);return;}
+  const purge=()=>{
+    if(owners.songs)songRepository.purgeOwner(owners.songs);
+    if(owners.events)eventRepository.purgeOwner(owners.events);
+    if(owners.medley)medleyRepository.purgeOwner(owners.medley);
+    if(owners.profile){const profiles=accountProfiles();if(Object.prototype.hasOwnProperty.call(profiles,owners.profile)){delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
+  };
+  purge();setTimeout(purge,0);setTimeout(purge,600); // depois que a troca de conta termina de gravar
+  closeModal();showToast('Você saiu. Os dados da sua conta foram removidos deste aparelho.');
+}
 async function openBandManager(){
   await refreshBands(true);
   const cards=appBands.map(band=>`<section class="band-card"><header><strong>${eventEsc(band.name)}</strong><span>${eventEsc(bandRoleLabel(band.currentUserRole))}</span></header>${band.members.map(member=>`<div class="band-member-row">${musicalRoleIcon(member.musicalRole)}<span>${eventEsc(member.name)}</span><small>${eventEsc(member.musicalRole)} · ${eventEsc(bandRoleLabel(member.accessRole))}</small></div>`).join('')}${band.permissions.canManageMembers?`<div class="band-inline-actions"><button type="button" onclick="inviteBandMember('${eventEsc(band.id)}')">Adicionar por ID</button></div>`:''}</section>`).join('');
