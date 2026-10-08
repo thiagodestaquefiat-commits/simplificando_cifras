@@ -19,7 +19,7 @@ const server = http.createServer((request, response) => {
 async function assertSimpleEditor(page, id, expectedTitle) {
   await page.evaluate((songId) => openDetail(songId), id);
   await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
-  await page.getByText(/Editar música|Revisar resumo harmônico/, { exact: true }).waitFor({ state: "visible" });
+  await page.getByText(/Editar música|Confira a música/, { exact: true }).waitFor({ state: "visible" });
   assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), expectedTitle);
   for (const label of ["Artista", "Tom original", "Capotraste", "Cifra / Resumo"]) assert.equal(await page.getByLabel(label, { exact: true }).count(), 1, label);
   assert.equal(await page.locator("#song-editor").count(), 0);

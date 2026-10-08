@@ -19,7 +19,7 @@
 <link rel="icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/roudy-icon-v4-192.png?v=15" sizes="192x192">
 <link rel="stylesheet" href="js/editor/song-editor.css">
-<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=5">
+<link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=9">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
 <link rel="stylesheet" href="js/event-people-search.css?v=1">
 <link rel="stylesheet" href="js/account-drawer.css?v=1">
@@ -39,7 +39,7 @@
   --border:rgba(255,255,255,0.08);
   --danger:#e05c6a;
 }
-html,body{width:100%;min-height:100%;overflow-x:hidden;}
+html,body{width:100%;min-height:100%}html{overflow-x:hidden}body{overflow-x:clip}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;justify-content:center;min-height:100vh;}
 .app{width:100%;max-width:720px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:visible;box-shadow:0 0 32px rgba(0,0,0,.18);}
 /* TOPBAR */
@@ -80,7 +80,7 @@ body[data-account-menu-open] .app-assistant-launch{display:none!important}
 .search-input{width:100%;background:var(--bg3);border:none;border-radius:9px;padding:8px 72px 8px 34px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
 .search-input::placeholder{color:var(--text2);}
 .settings-color-select{min-width:145px;font-size:11px}
-.stage-mode{--chord-color:var(--app-chord-color,#E8896B)!important}
+.stage-mode{--chord-color:var(--app-chord-color,#FF8822)!important}
 .playlist-voice-search{position:absolute;right:36px;top:50%;width:30px;height:30px;transform:translateY(-50%);display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:var(--text2);font-size:16px;cursor:pointer;transition:color .15s,background .15s,transform .15s}.playlist-voice-search:hover,.playlist-voice-search:focus-visible{background:rgba(255,255,255,.08);color:var(--text)}.playlist-voice-search.listening{background:rgba(239,68,68,.16);color:#fb7185;animation:voice-search-pulse 1.1s ease-in-out infinite}.playlist-voice-search:disabled{opacity:.4;cursor:not-allowed}@keyframes voice-search-pulse{50%{transform:translateY(-50%) scale(1.13)}}
 /* LIST */
 .content{flex:none;overflow-y:visible;padding-bottom:72px;}
@@ -609,8 +609,8 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 #view-detail:not(.stage-mode) .chord-transpose-controls{gap:5px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-label{color:var(--detail-muted);font-size:10px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-semitone{color:#9ca5b1;font-size:11px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-key{color:var(--detail-accent);font-weight:800}
 #view-detail:not(.stage-mode) .chord-transpose-controls .t-btn{width:34px;height:34px;border:1px solid rgba(194,205,220,.14);border-radius:50%;background:rgba(255,255,255,.055);color:#f5f7fa;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}#view-detail:not(.stage-mode) .chord-transpose-controls .t-reset{min-height:32px;padding:0 10px;border-color:rgba(194,205,220,.14);border-radius:9px;background:transparent;color:#aeb6c2}
 #view-detail:not(.stage-mode) .chord-instrument-button{min-height:34px;padding:5px 10px;border-color:rgba(194,205,220,.14);background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
-#view-detail:not(.stage-mode) .chord-strip-wrap{padding:10px 14px 12px;gap:13px;border-bottom:1px solid var(--detail-line);scrollbar-color:rgba(205,214,226,.42) transparent}#view-detail:not(.stage-mode) .chord-card{min-width:100px;min-height:116px;padding:4px 5px;border:0;background:transparent;opacity:.94}#view-detail:not(.stage-mode) .chord-card-name{margin-bottom:4px;color:#d8c278;font-size:11px}
-#view-detail:not(.stage-mode) #capo-row{padding:0 14px 9px!important;gap:0!important;background:transparent!important}#view-detail:not(.stage-mode) .capo-selector-line{min-height:53px;gap:10px;border-bottom:1px solid var(--detail-line)}#view-detail:not(.stage-mode) .capo-selector-label{color:var(--detail-muted);font-size:10px}#view-detail:not(.stage-mode) .capo-symbol{color:#d8c278}
+#view-detail:not(.stage-mode) .chord-strip-wrap{padding:10px 14px 12px;gap:13px;border-bottom:1px solid var(--detail-line);scrollbar-color:rgba(205,214,226,.42) transparent}#view-detail:not(.stage-mode) .chord-card{min-width:100px;min-height:116px;padding:4px 5px;border:0;background:transparent;opacity:.94}#view-detail:not(.stage-mode) .chord-card-name{margin-bottom:4px;color:var(--chord-color);font-size:11px}
+#view-detail:not(.stage-mode) #capo-row{padding:0 14px 9px!important;gap:0!important;background:transparent!important}#view-detail:not(.stage-mode) .capo-selector-line{min-height:53px;gap:10px;border-bottom:1px solid var(--detail-line)}#view-detail:not(.stage-mode) .capo-selector-label{color:var(--detail-muted);font-size:10px}#view-detail:not(.stage-mode) .capo-symbol{color:var(--chord-color)}
 #view-detail:not(.stage-mode) .capo-options{gap:5px;padding:7px 0;scrollbar-width:none}#view-detail:not(.stage-mode) .capo-options::-webkit-scrollbar{display:none}#view-detail:not(.stage-mode) .capo-opt{min-width:43px;min-height:34px;padding:5px 10px;border-color:rgba(195,207,222,.14);border-radius:10px;background:rgba(255,255,255,.04);color:#aeb6c1;font-size:11px}#view-detail:not(.stage-mode) .capo-opt.active{border-color:rgba(244,163,139,.55);background:linear-gradient(180deg,#f29a80,#df765c);color:#17100e;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 12px rgba(207,99,73,.14)}
 #view-detail:not(.stage-mode) .stage-toolbar{margin:0;padding:10px 14px;border-color:var(--detail-line);background:#050608}#view-detail:not(.stage-mode) #study-scroll-toolbar{gap:8px}#view-detail:not(.stage-mode) .stage-btn{min-height:44px;border-color:rgba(194,205,220,.14);border-radius:11px;background:rgba(255,255,255,.045);color:#e8ebef;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}#view-detail:not(.stage-mode) .stage-btn-scroll{border-color:rgba(64,199,111,.36);background:rgba(38,141,73,.1);color:#75e39b}
 #view-detail:not(.stage-mode) .scroll-speed-controls button{border-color:rgba(194,205,220,.14);border-radius:11px;background:rgba(255,255,255,.045)}#view-detail:not(.stage-mode) .scroll-speed-value{color:#f4f6f8}
@@ -638,7 +638,7 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 .inline-block-label{display:block;margin:2px 0 6px;color:#929ba8;font-size:9px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
 .inline-block-label:not(:first-child){margin-top:12px}
 .inline-block-textarea{display:block;width:100%;min-height:72px;padding:10px 11px;resize:vertical;border:1px solid rgba(194,205,220,.17);border-radius:10px;outline:0;background:rgba(2,4,7,.62);color:#f2f4f7;font:600 15px/1.55 Arial,sans-serif;box-shadow:inset 0 1px 3px rgba(0,0,0,.22)}
-.inline-block-chords{color:#d8c278}.inline-block-lyrics{min-height:54px}.inline-block-full{min-height:240px}
+.inline-block-chords{color:var(--chord-color)}.inline-block-lyrics{min-height:54px}.inline-block-full{min-height:240px}
 .inline-block-textarea:focus{border-color:rgba(111,166,238,.5);box-shadow:0 0 0 3px rgba(76,142,229,.1),inset 0 1px 3px rgba(0,0,0,.2)}
 .inline-block-actions{display:flex;margin-top:12px;justify-content:flex-end;gap:7px}
 .inline-block-actions button{min-width:78px;min-height:38px;padding:0 13px;border:1px solid rgba(194,205,220,.16);border-radius:10px;background:rgba(255,255,255,.05);color:#c4cbd4;font:700 11px/1 system-ui;cursor:pointer}
@@ -751,7 +751,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #view-detail:not(.stage-mode) .wa-block[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:active,#view-detail:not(.stage-mode) .wa-block.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-sheet.is-long-pressing{transform:scale(.992);border-color:rgba(197,208,222,.14);background:linear-gradient(145deg,rgba(37,42,50,.48),rgba(13,17,22,.34));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 22px rgba(0,0,0,.18);backdrop-filter:saturate(112%) blur(12px);-webkit-backdrop-filter:saturate(112%) blur(12px)}
 #view-detail:not(.stage-mode) .wa-block[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:focus-visible{border-color:rgba(112,164,233,.46);background:rgba(32,41,53,.34);box-shadow:0 0 0 3px rgba(74,143,232,.1)}
 #view-detail:not(.stage-mode) [data-inline-editing="true"]{margin:0 0 18px;padding:15px;border:1px solid rgba(197,208,222,.15);border-radius:15px;background:linear-gradient(145deg,rgba(35,41,50,.74),rgba(10,14,19,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 12px 30px rgba(0,0,0,.26);backdrop-filter:saturate(116%) blur(16px);-webkit-backdrop-filter:saturate(116%) blur(16px)}
-#view-detail:not(.stage-mode) #detail-content .chord-line,#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-chord{color:#d8c278;font-weight:600}
+#view-detail:not(.stage-mode) #detail-content .chord-line,#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-chord{color:var(--chord-color);font-weight:600}
 #view-detail:not(.stage-mode) #detail-content .letra-linha,#view-detail:not(.stage-mode) #detail-content .full-chord-line:not(.is-chord):not(.is-section){color:#eef0f3;font-weight:500}
 @keyframes block-long-press{0%{border-color:transparent;background:transparent;box-shadow:none;backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}100%{border-color:rgba(237,139,112,.34);background:linear-gradient(145deg,rgba(39,43,50,.52),rgba(14,17,22,.4));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 2px rgba(237,139,112,.055),0 9px 25px rgba(0,0,0,.22);backdrop-filter:saturate(115%) blur(14px);-webkit-backdrop-filter:saturate(115%) blur(14px)}}
 @media(prefers-reduced-transparency:reduce){#view-detail:not(.stage-mode) .wa-block[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:active,#view-detail:not(.stage-mode) [data-inline-editing="true"]{background:#11151b;backdrop-filter:none;-webkit-backdrop-filter:none}}
@@ -876,7 +876,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 .topbar-search-back:focus,.topbar-search-back:focus-visible,.topbar-search-clear:focus,.topbar-search-clear:focus-visible,.topbar-search-input:focus,.topbar-search-input:focus-visible{outline:none!important;box-shadow:none!important}
 .playlist-search-recents{position:absolute;z-index:20;top:100%;right:0;left:0;min-height:calc(100dvh - 70px);padding:6px 14px 14px;border:0;background:#000;color:#fff}.playlist-search-recents[hidden]{display:none}.playlist-search-recents-title{display:flex;min-height:30px;align-items:center;justify-content:space-between;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-recents-clear{border:0;background:transparent;color:#0a84ff;font:600 11px/1 inherit;cursor:pointer}.playlist-search-recent{display:grid;width:100%;min-height:48px;padding:0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:30px minmax(0,1fr) 22px;align-items:center;gap:10px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-recent svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-recent>svg{color:#d8d8dc}.playlist-search-recent span{overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}.playlist-search-recent .playlist-search-recent-arrow{width:18px;height:18px;color:#b5b5ba}
 .playlist-search-results-label{min-height:34px;padding-top:7px;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-result{display:grid;width:100%;min-height:58px;padding:5px 0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:42px minmax(0,1fr) 24px;align-items:center;gap:11px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-result-art{display:grid;width:42px;height:42px;place-items:center;border-radius:5px;background:#1c1c1e;color:#d8d8dc}.playlist-search-result-art svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-result-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-result-copy strong,.playlist-search-result-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-search-result-copy strong{font-size:14px;font-weight:650}.playlist-search-result-copy small{color:#9b9ba1;font-size:12px}.playlist-search-result-arrow{color:#b5b5ba;font-size:25px;font-weight:300}.playlist-search-no-results{padding:28px 0;color:#8e8e93;text-align:center;font-size:13px}
-.playlist-search-online{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}.playlist-search-online-status{min-height:48px;padding:15px 0;color:#8e8e93;font-size:12px}.playlist-search-online-row{display:grid;min-height:62px;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-online-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-online-copy strong,.playlist-search-online-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-search-online-copy strong{font-size:14px;font-weight:650}.playlist-search-online-copy small{color:#9b9ba1;font-size:12px}.playlist-search-online-source{max-width:82px;color:#7eb8ff;font-size:10px;text-align:right}
+.playlist-search-online{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}@media(min-width:900px){.detail-view.detail-view{box-shadow:0 0 0 100vmax rgba(0,0,0,.78)!important}}.complete-sheet-notice{display:grid;gap:10px;margin:4px 0 18px;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03)}.complete-sheet-notice p{margin:0;color:var(--text-secondary,#a1a1a6);font-size:13px}.complete-sheet-notice .btn{width:100%;min-height:44px}.playlist-search-fallback-actions{display:flex;gap:8px;margin-top:10px}.playlist-search-fallback-actions .btn{flex:1;min-height:40px;font-size:13px}.playlist-search-online-status{min-height:48px;padding:15px 0;color:#8e8e93;font-size:12px}.playlist-search-online-row{display:grid;min-height:62px;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-online-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-online-copy strong,.playlist-search-online-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-search-online-copy strong{font-size:14px;font-weight:650}.playlist-search-online-copy small{color:#9b9ba1;font-size:12px}.playlist-search-online-source{max-width:82px;color:#7eb8ff;font-size:10px;text-align:right}
 .topbar-cover-action{display:grid;width:40px;height:40px;flex:0 0 40px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#d9dfe7;cursor:pointer}.topbar-cover-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.topbar-cover-input{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)}
 .tab-bar,html[data-ui-scale] .tab-bar{position:fixed;z-index:15;right:0;bottom:0;left:0;width:100%;height:calc(49px + env(safe-area-inset-bottom));min-height:0;margin:0;padding:0 0 env(safe-area-inset-bottom);grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;overflow:visible;border:0;border-radius:0;background-color:rgba(18,18,18,.75);box-shadow:none;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transform:none;isolation:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif}
 .tab-bar .tab-indicator{display:none}.tab-bar .tab,html[data-ui-scale] .tab-bar .tab{display:flex;width:100%;height:49px;min-height:49px;padding:4px 0 2px;align-items:center;justify-content:flex-start;flex-direction:column;gap:1px;border:0;border-radius:0;background:transparent;color:#8e8e93;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;font-size:10px;font-weight:500;letter-spacing:0;line-height:12px;text-shadow:none;transition:none;-webkit-tap-highlight-color:transparent}.tab-bar .tab::before{display:none}.tab-bar .tab:hover{color:#8e8e93}.tab-bar .tab.active,.tab-bar .tab.active:hover,html[data-ui-scale] .tab-bar .tab.active{color:#0a84ff!important;background:transparent;text-shadow:none}.tab-bar .tab:focus,.tab-bar .tab:focus-visible{outline:none!important;box-shadow:none!important}.tab-icon{display:block;width:25px;height:25px;flex:0 0 25px;margin:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.tab-icon .tab-icon-filled{display:none;fill:currentColor;stroke:none}.tab-bar .tab.active .tab-icon{stroke-width:1.8}.tab-bar .tab.active .tab-icon .tab-icon-outline{display:none}.tab-bar .tab.active .tab-icon .tab-icon-filled{display:block}
@@ -912,7 +912,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 @media(max-width:430px){#view-main[data-active-tab="musicas"]>.topbar{padding:15px 16px 12px}.playlist-hero-content{min-height:160px;padding:0 9px 14px}.playlist-ai-card{min-height:140px;padding:17px 18px 15px;border-radius:10px;grid-template-columns:minmax(0,1fr);align-content:center;gap:14px}.playlist-ai-actions{justify-content:flex-start;flex-wrap:wrap;gap:8px}.playlist-ai-title{font-size:21px}.playlist-ai-description{font-size:12px}}
 @media(max-width:350px){.playlist-ai-action{padding-inline:13px}.playlist-hero-content{min-height:190px}}
 @media(prefers-reduced-motion:reduce){.playlist-hero-backdrop::before{transform:none}.playlist-ai-action{transition:none}.playlist-ai-normal.is-refreshing{animation:none}}
-html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-adjust:100%}body{overscroll-behavior-x:none;overscroll-behavior-y:none}#detail-content{touch-action:pan-y} @media(max-width:900px){input,select,textarea{font-size:16px!important}}
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll-behavior:none}body{overscroll-behavior-x:none;overscroll-behavior-y:none}#detail-content{touch-action:pan-y} @media(max-width:900px){input,select,textarea{font-size:16px!important}}
 .roudy-camera [hidden]{display:none!important}
 .ai-song-search-overlay{position:fixed;z-index:215;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}.ai-song-search-sheet{display:flex;width:min(620px,100%);max-height:min(82dvh,720px);padding:8px 14px max(20px,env(safe-area-inset-bottom));overflow:hidden;flex-direction:column;border:1px solid rgba(255,255,255,.14);border-radius:24px 24px 0 0;background:#0b0d11;color:#f5f6f8;box-shadow:0 -18px 60px rgba(0,0,0,.5)}.ai-song-search-header{display:grid;min-height:52px;grid-template-columns:42px 1fr 42px;align-items:center}.ai-song-search-header strong{grid-column:2;text-align:center;font-size:17px}.ai-song-search-back{display:grid;width:40px;height:40px;padding:0;place-items:center;border:0;background:transparent;color:#fff;font-size:34px;cursor:pointer}.ai-song-search-form{display:grid;gap:10px;margin-top:6px}.ai-song-search-form label{display:block}.ai-song-search-form label>span{display:block;margin:0 4px 6px;color:#9aa3af;font-size:11px;font-weight:700}.ai-song-search-form input{width:100%;height:48px;padding:0 15px;border:1px solid rgba(255,255,255,.14);border-radius:14px;outline:none;background:#15181e;color:#fff;font:500 16px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif}.ai-song-search-form input:focus{border-color:#4b9dff;box-shadow:0 0 0 3px rgba(32,132,255,.14)}.ai-song-search-form input::placeholder{color:#737b87}.ai-song-search-submit{height:48px;margin-top:2px;border:0;border-radius:14px;background:#1677e8;color:#fff;font:700 15px/1 inherit;cursor:pointer}.ai-song-search-status{min-height:20px;margin:14px 4px 8px;color:#aeb6c2;font-size:12px}.ai-song-search-results{min-height:0;overflow-y:auto}.ai-song-search-result{display:grid;width:100%;min-height:66px;padding:11px 0 11px 6px;border:0;border-top:1px solid rgba(255,255,255,.1);grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:8px;background:transparent;color:#fff;text-align:left}.ai-song-search-result-copy{min-width:0}.ai-song-search-result-copy strong,.ai-song-search-result-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ai-song-search-result-copy strong{font-size:15px}.ai-song-search-result-copy small{margin-top:4px;color:#9ba4b0;font-size:12px}.ai-song-search-source{max-width:88px;color:#7eb8ff;font-size:10px;text-align:right}@media(min-width:700px){.ai-song-search-overlay{align-items:center}.ai-song-search-sheet{border-radius:24px}}
 .roudy-camera{position:fixed;z-index:220;inset:0;display:flex;overflow:hidden;flex-direction:column;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;isolation:isolate}.roudy-camera[hidden]{display:none}.roudy-camera-viewfinder{position:absolute;inset:0;background:#000}.roudy-camera-video,.roudy-camera-review{width:100%;height:100%;display:block;object-fit:cover}.roudy-camera-video.is-front{transform:scaleX(-1)}.roudy-camera-review[hidden],.roudy-camera-video[hidden]{display:none}.roudy-camera-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.42),transparent 23%,transparent 68%,rgba(0,0,0,.62))}.roudy-camera-top{position:relative;z-index:2;display:flex;padding:max(12px,env(safe-area-inset-top)) 14px 8px;align-items:center;justify-content:space-between}.roudy-camera-icon{display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;border-radius:50%;background:rgba(18,18,18,.38);color:#fff;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);cursor:pointer}.roudy-camera-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.roudy-camera-flash.is-on{background:#fff;color:#111}.roudy-camera-status{position:relative;z-index:2;max-width:min(86vw,420px);margin:auto;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.58);font-size:13px;text-align:center;backdrop-filter:blur(10px)}.roudy-camera-status:empty{display:none}.roudy-camera-bottom{position:relative;z-index:2;display:grid;margin-top:auto;padding:18px 22px max(24px,calc(env(safe-area-inset-bottom) + 14px));grid-template-columns:1fr 96px 1fr;align-items:center}.roudy-camera-gallery,.roudy-camera-flip{justify-self:center}.roudy-camera-gallery{position:relative;display:grid;width:48px;height:48px;place-items:center;overflow:hidden;border:2px solid rgba(255,255,255,.92);border-radius:9px;background:rgba(255,255,255,.12);color:#fff;cursor:pointer}.roudy-camera-gallery input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.roudy-camera-gallery svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8}.roudy-camera-shutter{display:grid;width:78px;height:78px;padding:0;place-items:center;justify-self:center;border:4px solid #fff;border-radius:50%;background:transparent;cursor:pointer}.roudy-camera-shutter::after{width:62px;height:62px;content:"";border-radius:50%;background:#fff;transition:transform .1s}.roudy-camera-shutter:active::after{transform:scale(.88)}.roudy-camera-review-actions{position:relative;z-index:2;display:flex;margin-top:auto;padding:18px 18px max(24px,calc(env(safe-area-inset-bottom) + 14px));gap:12px}.roudy-camera-review-actions[hidden]{display:none}.roudy-camera-review-actions button{min-height:48px;flex:1;border:0;border-radius:999px;font:700 15px/1 inherit;cursor:pointer}.roudy-camera-retake{background:rgba(34,34,34,.78);color:#fff;backdrop-filter:blur(12px)}.roudy-camera-use{background:#fff;color:#0a0a0a}@media(min-width:700px){.roudy-camera{left:50%;width:min(500px,100%);transform:translateX(-50%);box-shadow:0 0 0 100vmax rgba(0,0,0,.9)}}
@@ -921,6 +921,8 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
+<link rel="stylesheet" href="css/roudy-forms.css?v=3">
+<link rel="stylesheet" href="css/light-theme.css?v=1">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -933,7 +935,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
     <div class="topbar" id="app-topbar">
       <div class="topbar-normal" id="topbar-normal">
         <div class="topbar-info">
-          <div class="topbar-title">ROUDY</div>
+          <div class="topbar-title-row"><div class="topbar-title">ROUDY</div><button class="app-assistant-launch" id="app-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button></div>
           <div class="topbar-sub" id="count-label"></div>
         </div>
         <button class="topbar-search-action" type="button" onclick="openPlaylistSearch()" aria-label="Buscar música"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg></button>
@@ -1019,6 +1021,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
         <div class="detail-title" id="detail-title"></div>
         <div class="detail-capo" id="detail-artist-label"></div>
       </div>
+      <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
     </div>
     <header class="stage-performance-header" id="stage-performance-header" aria-label="Informações da apresentação">
@@ -1064,7 +1067,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
     <section class="song-controls" id="song-controls" aria-label="Controles da música">
       <div class="song-control-strip">
         <div class="song-control-cell"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></div>
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capo</span></div>
+        <div class="song-control-cell"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste/Casa</span></div>
         <button type="button" class="song-control-cell song-control-scroll" id="btn-scroll" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem automática"><span class="song-control-value" aria-hidden="true"><svg class="song-play-icon" viewBox="0 0 24 24"><path d="M7.6 4.8Q6 3.9 6 5.8v12.4q0 1.9 1.6 1l10.9-6.1q1.7-1.1 0-2.2L7.6 4.8Z"/></svg><svg class="song-pause-icon" viewBox="0 0 24 24"><rect x="6.5" y="4" width="4.5" height="16" rx="1.35"/><rect x="14.5" y="4" width="4.5" height="16" rx="1.35"/></svg></span><span class="song-control-label">Rolagem</span></button>
         <div class="song-control-cell song-control-bpm"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></div>
         <div class="song-control-cell song-control-meter"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></div>
@@ -1074,7 +1077,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
       <div class="song-control-panel" id="song-control-panel" hidden>
         <span class="song-control-panel-handle" aria-hidden="true"></span>
         <div class="song-control-row"><span class="song-control-row-label">Tom</span><div class="song-control-segment"><button type="button" onclick="transpose(-1)" aria-label="Descer o tom">−</button><output id="transposed-key">—</output><span class="is-visually-hidden" id="semitone-label">+0</span><button type="button" onclick="transpose(1)" aria-label="Subir o tom">+</button></div></div>
-        <div class="song-control-row" id="capo-selector-group"><span class="song-control-row-label">Capo</span><div class="song-control-segment"><button type="button" id="song-capo-minus" onclick="selectCapo(selectedCapo-1)" aria-label="Diminuir capotraste">−</button><output id="song-control-capo-expanded">—</output><output id="detail-capo-value" class="is-visually-hidden" aria-live="polite">Sem</output><button type="button" id="song-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button></div></div>
+        <div class="song-control-row" id="capo-selector-group"><span class="song-control-row-label">Capotraste/Casa</span><div class="song-control-segment"><button type="button" id="song-capo-minus" onclick="selectCapo(selectedCapo-1)" aria-label="Diminuir capotraste">−</button><output id="song-control-capo-expanded">—</output><output id="detail-capo-value" class="is-visually-hidden" aria-live="polite">Sem</output><button type="button" id="song-capo-plus" onclick="selectCapo(selectedCapo+1)" aria-label="Aumentar capotraste">+</button></div></div>
         <div class="song-control-row"><span class="song-control-row-label">Rolagem</span><div class="song-scroll-slider-wrap"><input id="song-scroll-speed" class="song-scroll-slider" type="range" min="6" max="120" step="3" value="30" oninput="setSongScrollSpeed(this.value)" aria-label="Velocidade da rolagem"><output class="scroll-speed-value" aria-live="polite">0,50x</output></div></div>
         <div class="song-control-row song-control-row--bpm"><span class="song-control-row-label">Metrônomo</span><div class="song-bpm-picker"><span class="song-bpm-tempo" id="song-bpm-tempo">Adagio</span><div class="song-bpm-ruler"><button type="button" class="song-bpm-step" id="metronome-minus" aria-label="Diminuir BPM">−</button><label class="song-bpm-range-shell"><output class="song-bpm-bubble" id="metronome-bpm" aria-live="polite">72</output><input id="song-bpm-range" class="song-bpm-range" type="range" min="30" max="240" step="1" value="72" aria-label="BPM do metrônomo"></label><button type="button" class="song-bpm-step" id="metronome-plus" aria-label="Aumentar BPM">+</button></div><div class="metronome-bar capo-metronome-row song-bpm-engine" id="study-metronome" role="group" aria-label="BPM do metrônomo"><select id="metronome-meter" class="song-control-meter-select" aria-label="Compasso"><option value="">Desativado</option><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4">4/4</option><option value="5/4">5/4</option><option value="6/8">6/8</option><option value="12/8">12/8</option></select><span class="metronome-beats" aria-label="Metrônomo desativado"><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span></span></div><button type="button" class="song-metronome-toggle" id="song-metronome-toggle" onclick="toggleStudyMetronome()" aria-pressed="false" aria-label="Ativar metrônomo no play geral"><span></span><span></span><span></span></button></div></div>
         <div class="song-control-row song-control-row--meter"><span class="song-control-row-label">Compasso</span><div class="song-meter-wheel-shell"><div class="song-meter-wheel" id="song-meter-wheel" role="radiogroup" aria-label="Compasso do metrônomo" tabindex="0"><button type="button" role="radio" data-meter="2/4" aria-checked="false" onclick="selectStudyMeter('2/4')">2/4</button><button type="button" role="radio" data-meter="3/4" aria-checked="false" onclick="selectStudyMeter('3/4')">3/4</button><button type="button" role="radio" data-meter="4/4" aria-checked="false" onclick="selectStudyMeter('4/4')">4/4</button><button type="button" role="radio" data-meter="5/4" aria-checked="false" onclick="selectStudyMeter('5/4')">5/4</button><button type="button" role="radio" data-meter="6/8" aria-checked="false" onclick="selectStudyMeter('6/8')">6/8</button><button type="button" role="radio" data-meter="12/8" aria-checked="false" onclick="selectStudyMeter('12/8')">12/8</button></div></div></div>
@@ -1095,11 +1098,10 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
       </section>
     </div>
     <nav class="song-page-indicator" id="song-page-indicator" aria-label="Visualização da música">
-      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 4 — Resumo harmônico"></button>
-      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 4 — Letra e cifra" aria-current="page"></button>
-      <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 4 — Letra"></button>
-      <button class="song-page-dot" type="button" data-song-page="3" onclick="setSongPage(3,{source:'indicator'})" aria-label="Página 4 de 4 — Cifra"></button>
-      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 4 — Letra e cifra</span>
+      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 3 — Resumo harmônico"></button>
+      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 3 — Letra e cifra" aria-current="page"></button>
+      <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 3 — Letra"></button>
+      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 3 — Letra e cifra</span>
     </nav>
     <div class="detail-body" id="detail-content"></div>
   </div>
@@ -1111,6 +1113,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
       <div class="detail-title-wrap">
         <div class="detail-title" id="sd-title"></div>
       </div>
+      <button class="app-assistant-launch" id="event-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
       <div class="event-condensed-title" id="sd-title-condensed" aria-hidden="true"></div>
       <button type="button" class="event-notification-button event-chat-header-button" id="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button>
       <button type="button" class="event-notification-button" id="event-notification-button" onclick="openEventNotifications()" aria-label="Abrir alterações recentes" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg></button>
@@ -1172,13 +1175,13 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/tablature.js?v=1"></script>
 <script src="js/song-model.js?v=5"></script>
 <script src="js/demo-library.js?v=4"></script>
-<script src="js/medley-repository.js?v=1"></script>
-<script src="js/song-repository.js?v=15"></script>
+<script src="js/medley-repository.js?v=2"></script>
+<script src="js/song-repository.js?v=16"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=19"></script>
 <script src="js/event-model.js?v=5"></script>
 <script src="js/context-intelligence.js?v=2"></script>
-<script src="js/event-repository.js?v=8"></script>
+<script src="js/event-repository.js?v=9"></script>
 <script src="js/event-chat.js?v=3"></script>
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
@@ -1204,7 +1207,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=6"></script>
+<script src="js/ai/api-config.js?v=7"></script>
 <script src="js/song-reports.js?v=1"></script>
 <script src="js/app-auth.js?v=14"></script>
 <script src="js/ui-i18n.js?v=13"></script>
@@ -1222,15 +1225,15 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/context-delivery.js?v=1"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=15"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=14"></script>
+<script src="js/ai/harmonic-summary-client.js?v=16"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=17"></script>
 <script src="js/ai/camera-capture.js?v=2"></script>
 <script src="js/assistant-intent-catalog.js?v=1"></script>
 <script src="js/assistant-intent-client.js?v=1"></script>
-<script src="js/app-assistant.js?v=21"></script>
+<script src="js/app-assistant.js?v=22"></script>
  <script src="js/event-user-invites.js?v=6"></script>
 <script src="js/notification-center.js?v=3"></script>
-<script src="js/profile-username.js?v=3"></script>
+<script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1269,6 +1272,10 @@ function shiftText(text,s){
 }
 
 // ── SAVE / LOAD ───────────────────────────────────────────────────────
+function commitSongs(next){
+  if(!songRepository.save(next)){showToast('⚠️ Não foi possível salvar a biblioteca neste dispositivo. Suas alterações não foram confirmadas.');return false;}
+  musicas=next;librarySync.schedule();return true;
+}
 function salvar(){
   const musicasSalvas=songRepository.save(musicas);
   const setlistsSalvas=eventRepository.save(setlists);
@@ -1288,16 +1295,21 @@ function detailEditableState(){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
   return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
 }
+// Alterações na tela da música (tom, capo, BPM, instrumento, vídeo...) são salvas sozinhas.
+var detailAutoSaveTimer=0;
+function detailHasUnsavedChanges(){return Boolean(detailEditBaseline)&&JSON.stringify(detailEditableState())!==JSON.stringify(detailEditBaseline);}
 function updateDetailSaveButton(){
-  const button=document.getElementById('detail-save-changes');if(!button)return;
-  button.hidden=!detailEditBaseline||JSON.stringify(detailEditableState())===JSON.stringify(detailEditBaseline);
+  clearTimeout(detailAutoSaveTimer);
+  if(detailHasUnsavedChanges())detailAutoSaveTimer=setTimeout(()=>saveDetailChanges({quiet:true}),600);
 }
-function saveDetailChanges(){
+function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);if(detailHasUnsavedChanges())saveDetailChanges({quiet:true});}
+window.addEventListener('pagehide',flushDetailAutoSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushDetailAutoSave();});
+function saveDetailChanges(options={}){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return;
   const source=musicas.find(item=>String(item.id)===String(currentDetailId));if(!source)return;
   const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
   if(!commitSongs(result.songs))return;
-  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();renderMusicas();showToast('✅ Alterações da música salvas');
+  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));renderMusicas();if(!options.quiet)showToast('✅ Alterações da música salvas');
 }
 function stageDetailVideoSongs(songs){
   if(detailEditBaseline){
@@ -1318,6 +1330,7 @@ function toggleStudyPanel(){
   button.setAttribute('aria-label',collapsed?'Expandir painel de acordes':'Recolher painel de acordes');
 }
 function appConfirm(message){return window.confirm(uiI18n.translate(message));}
+function appAlert(message){window.alert(uiI18n.translate(message));}
 function appPrompt(message,value){return window.prompt(uiI18n.translate(message),value);}
 const SONG_TEXT_SCALE_MIN=.8,SONG_TEXT_SCALE_MAX=1.55;
 let songTextScale=1,songScaleFeedbackTimer=null;
@@ -1369,7 +1382,7 @@ function showSongScrollPressedState(){songScrollPlayButton.classList.remove('is-
 songScrollPlayButton.addEventListener('pointerdown',showSongScrollPressedState,{passive:true});
 songScrollPlayButton.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')showSongScrollPressedState()});
 songScrollPlayButton.addEventListener('animationend',event=>{if(event.animationName==='song-scroll-press')songScrollPlayButton.classList.remove('is-pressed')});
-function maybeShowSongScaleHint(){const key=`sc_song_pinch_hint_v1:${appCurrentUser?.id||'local'}`;if(storage.get(key,false))return;storage.set(key,true);setTimeout(()=>showToast('Use dois dedos sobre a cifra para ajustar o tamanho'),350)}
+function maybeShowSongScaleHint(){if(!matchMedia('(pointer: coarse)').matches)return;const key=`sc_song_pinch_hint_v1:${appCurrentUser?.id||'local'}`;if(storage.get(key,false))return;storage.set(key,true);setTimeout(()=>showToast('Use dois dedos sobre a cifra para ajustar o tamanho'),350)}
 new MutationObserver(updateSongControls).observe(document.getElementById('metronome-bpm'),{childList:true,subtree:true});
 document.getElementById('metronome-meter').addEventListener('change',updateSongControls);
 let setlists=[];
@@ -1627,7 +1640,7 @@ function drawChordSVG(data, name, strings=6){
   if(baseFret===1) g+=`<rect x="${gridX}" y="${NAME_H+MARK_H}" width="${gridW}" height="${NUT_H}" fill="#e9edef" rx="1.5"/>`;
   for(let f=1;f<=FRETS;f++) g+=`<line x1="${gridX}" y1="${gridY+f*FH}" x2="${gridX+gridW}" y2="${gridY+f*FH}" stroke="#2a2a4a" stroke-width="1"/>`;
   for(let s=0;s<S;s++) g+=`<line x1="${gridX+s*SW}" y1="${gridY}" x2="${gridX+s*SW}" y2="${gridY+GRID_H}" stroke="#3a3a5a" stroke-width="1"/>`;
-  if(bar){const by=gridY+(bar.fr-baseFret)*FH+FH/2,bx1=gridX+bar.s*SW,bx2=gridX+bar.e*SW;g+=`<rect x="${bx1}" y="${by-6}" width="${bx2-bx1}" height="12" rx="6" fill="#d97757" opacity="0.9"/>`;}
+  if(bar){const by=gridY+(bar.fr-baseFret)*FH+FH/2,bx1=gridX+bar.s*SW,bx2=gridX+bar.e*SW;g+=`<rect x="${bx1}" y="${by-6}" width="${bx2-bx1}" height="12" rx="6" fill="#F8FAFC" opacity="0.9"/>`;}
   const mY=NAME_H+MARK_H/2+2;
   frets.forEach((fr,si)=>{
     const x=gridX+si*SW;
@@ -1689,7 +1702,7 @@ function drawValidatedFrettedSVG(data,name){
   for(const barre of data.barres||[]){
     const y=gridTop+(barre.fret-baseFret)*fretHeight+fretHeight/2;
     const x1=padLeft+barre.start*spacing, x2=padLeft+barre.end*spacing;
-    svg+=`<rect x="${x1-7}" y="${y-8}" width="${x2-x1+14}" height="16" rx="8" fill="#d8c278"/>`;
+    svg+=`<rect x="${x1-7}" y="${y-8}" width="${x2-x1+14}" height="16" rx="8" fill="#F8FAFC"/>`;
     svg+=`<text x="${(x1+x2)/2}" y="${y+4}" fill="#11151b" font-size="11" text-anchor="middle" font-family="Inter,Arial" font-weight="800">${barre.finger}</text>`;
   }
   frets.forEach((fret,index)=>{
@@ -1783,6 +1796,7 @@ function openInstModal(){
   document.getElementById('inst-modal').style.display='flex';
 }
 
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('inst-modal')?.style.display==='flex')closeInstModal();});
 function closeInstModal(e){
   if(!e||e.target===document.getElementById('inst-modal'))
     document.getElementById('inst-modal').style.display='none';
@@ -2003,7 +2017,7 @@ function saveInlineFullEdit(songId,button){
     if(g.axis!=='horizontal')return;
     event.preventDefault();
     const now=performance.now(),elapsed=Math.max(1,now-g.lastTime);g.velocity=(event.clientX-g.lastX)/elapsed;g.lastX=event.clientX;g.lastTime=now;
-    const atStart=currentSongPage===0&&dx>0,atEnd=currentSongPage===3&&dx<0,offset=(atStart||atEnd)?dx*.22:dx;
+    const atStart=currentSongPage===0&&dx>0,atEnd=currentSongPage===SONG_LAST_PAGE&&dx<0,offset=(atStart||atEnd)?dx*.22:dx;
     g.track.style.transform=`translate3d(${(-currentSongPage*g.width)+offset}px,0,0)`;
   },{passive:false});
   const finish=event=>{
@@ -2013,7 +2027,7 @@ function saveInlineFullEdit(songId,button){
     const dx=event.clientX-g.startX,threshold=Math.min(72,g.width*.2),fast=Math.abs(g.velocity)>.45;
     let next=currentSongPage;
     if((Math.abs(dx)>=threshold||fast)&&Math.abs(dx)>18)next+=dx<0?1:-1;
-    gesture=null;setSongPage(Math.max(0,Math.min(3,next)),{source:'swipe',animate:true});
+    gesture=null;setSongPage(Math.max(0,Math.min(SONG_LAST_PAGE,next)),{source:'swipe',animate:true});
   };
   content.addEventListener('pointerup',finish);content.addEventListener('pointercancel',event=>{activePointers.delete(event.pointerId);cancel(true)});
   document.addEventListener('pointerup',finish,true);
@@ -2064,9 +2078,10 @@ function setSongView(view){
   else renderDetail();
 }
 
-const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra','Cifra'];
+const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra'];
+const SONG_LAST_PAGE=SONG_PAGE_LABELS.length-1;
 function songPageStorageKey(songId=currentDetailId){return `sc_song_content_view_v1:${appCurrentUser?.id||'local'}:${String(songId??'')}`}
-function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=3?saved:1}
+function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=SONG_LAST_PAGE?saved:1}
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
@@ -2074,7 +2089,7 @@ function updateSongPageIndicator(options={}){
   indicator.querySelectorAll('[data-song-page]').forEach((dot,index)=>{
     if(index===currentSongPage)dot.setAttribute('aria-current','page');else dot.removeAttribute('aria-current');
   });
-  const message=`Página ${currentSongPage+1} de 4 — ${SONG_PAGE_LABELS[currentSongPage]}`;
+  const message=`Página ${currentSongPage+1} de ${SONG_PAGE_LABELS.length} — ${SONG_PAGE_LABELS[currentSongPage]}`;
   const status=document.getElementById('song-page-status');
   if(status&&options.announce!==false)status.textContent=message;
 }
@@ -2102,7 +2117,7 @@ function restoreSongPosition(anchor,page){
   if(anchor.ratio!=null)view.scrollTop=anchor.ratio*Math.max(0,view.scrollHeight-view.clientHeight);
 }
 function setSongPage(index,options={}){
-  const next=Math.max(0,Math.min(3,Number(index)||0));
+  const next=Math.max(0,Math.min(SONG_LAST_PAGE,Number(index)||0));
   currentSongView=next===0?'summary':'full';
   const track=document.querySelector('#detail-content .song-page-track');
   if(!track){currentSongPage=next;if(options.persist!==false&&currentDetailId!=null)storage.set(songPageStorageKey(),currentSongPage);updateSongPageIndicator(options);return;}
@@ -2170,18 +2185,20 @@ function renderDetail(){
   const totalShift=currentSemitones+storedCapo-selectedCapo;
   const hasFull=Boolean(m.fullChordSheet?.content);
   const summaryHtml=renderSummaryProjection(summary,totalShift,m.id,'combined');
-  const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'combined'):summaryHtml;
+  // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
+  const completeHtml=hasFull?'':`<div class="complete-sheet-notice"><p>Esta música só tem o resumo harmônico.</p><button class="btn btn-primary" id="complete-sheet-button" type="button" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button></div>`;
+  const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'combined'):completeHtml+summaryHtml;
   const lyricsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'lyrics'):renderSummaryProjection(summary,totalShift,m.id,'lyrics');
-  const chordsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'chords'):renderSummaryProjection(summary,totalShift,m.id,'chords');
   const stageHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
     :currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
-  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,chordsHtml].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   normalizeStageLyricCase(detailContent);
   updateSongPageIndicator({announce:false});
   if(!stageMode)requestAnimationFrame(syncSongPageHeight);
   updateSongControls();
+  updateDetailSaveButton();
   if(stageMode)updateStagePresentation();
 }
 
@@ -2200,6 +2217,7 @@ function updatePlaylistNavigation(){
 }
 
 function openDetail(id,options={}){
+  flushDetailAutoSave();
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
   } else if(!options.preserveNavigation){
@@ -2359,6 +2377,7 @@ async function exitStageMode(restorePlayer=true){
 function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode();}
 
 function closeDetail(){
+  flushDetailAutoSave();
   stopSmartScroll();
   detailEditBaseline=null;detailEditOwner=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
@@ -2480,18 +2499,31 @@ window.addEventListener('online',()=>updateStagePresentation());window.addEventL
 
 // ── MEDLEY ────────────────────────────────────────────────────────────
 let medleyBlocos=[];
+let medleyActiveOwner=null;
+function saveCurrentMedley(){return medleyRepository.save(medleyActiveOwner,medleyBlocos);}
+function stashMedleyForOwner(ownerId){if(ownerId)medleyRepository.save(ownerId,medleyBlocos);medleyActiveOwner=null;medleyBlocos=medleyRepository.load(null);renderMedley();}
+function restoreMedleyForOwner(ownerId){if(!medleyActiveOwner)medleyRepository.save(null,medleyBlocos);medleyActiveOwner=String(ownerId||'')||null;medleyBlocos=medleyRepository.load(medleyActiveOwner);renderMedley();}
+function medleyReference(){return medleyBlocos[0]||null;}
+function medleyChordText(block){
+  const first=medleyReference();
+  if(!first)return String(block.chords||'');
+  const from=noteIdx(String(block.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'');
+  const to=noteIdx(String(first.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'');
+  if(from<0||to<0)return String(block.chords||'');
+  const shift=(to-from+12)%12+(songFormat.parseCapo(block.capo)-songFormat.parseCapo(first.capo));
+  return shiftText(String(block.chords||''),shift);
+}
 
 function renderMedley(){
   const el=document.getElementById('medley-content');
   if(!medleyBlocos.length){
-    el.innerHTML=`<div class="empty-state"><div class="emoji">🎛️</div><p>Nenhum bloco no medley</p><p style="font-size:12px;margin-top:6px;">Adicione partes de músicas abaixo</p></div>
-    <button class="btn btn-primary" style="margin-top:16px;" onclick="abrirAddMedley()">+ Adicionar bloco</button>`;
+    el.innerHTML=`<div class="medley-empty"><div class="empty-state"><div class="emoji">🎛️</div><p>Nenhum bloco no medley</p><p style="font-size:12px;margin-top:6px;">Adicione partes de músicas abaixo</p></div>
+    <button class="btn btn-primary" style="margin-top:16px;" onclick="abrirAddMedley()">+ Adicionar bloco</button></div>`;
     return;
   }
   el.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <span style="font-size:14px;font-weight:700;">${medleyBlocos.length} bloco(s)</span>
-      <button class="btn btn-primary" style="width:auto;padding:6px 14px;margin:0;font-size:13px;" onclick="tocarMedley()">▶ Tocar Medley</button>
+      <span style="font-size:14px;font-weight:700;">${medleyBlocos.length} bloco(s) · Tom: ${eventEsc(medleyReference().key)}${songFormat.parseCapo(medleyReference().capo)?` · Capotraste: ${songFormat.parseCapo(medleyReference().capo)}ª casa`:''}</span>
     </div>`+
     medleyBlocos.map((b,i)=>`
     <div class="medley-block">
@@ -2503,10 +2535,11 @@ function renderMedley(){
         </div>
         <button class="medley-remove" onclick="removeMedley(${i})">✕</button>
       </div>
-      <div class="chord-line" style="font-size:16px;">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
+      <div class="chord-line" style="font-size:16px;">${eventEsc(medleyChordText(b)).replace(/\n/g,'<br>')}</div>
     </div>`).join('')+
     `<button class="btn btn-outline" style="margin-top:8px;" onclick="abrirAddMedley()">+ Adicionar bloco</button>
-     <button class="btn btn-danger" style="margin-top:6px;" onclick="limparMedley()">🗑️ Limpar tudo</button>`;
+     <button class="btn btn-danger" style="margin-top:6px;" onclick="limparMedley()">🗑️ Limpar tudo</button>
+     <button class="btn btn-primary" style="margin-top:6px;" onclick="abrirSalvarMedley()">Salvar na Playlist</button>`;
 }
 
 function abrirAddMedley(){
@@ -2530,20 +2563,23 @@ function abrirAddMedley(){
 }
 
 function renderMedleyBlocoSelect(){
-  const mid=parseInt(document.getElementById('med-music').value);
-  const m=musicas.find(x=>x.id===mid);
+  const mid=document.getElementById('med-music').value;
+  const m=musicas.find(x=>String(x.id)===String(mid));
   const sel=document.getElementById('med-bloco');
   if(!m||!sel) return;
   sel.innerHTML=m.blocos.map((b,i)=>`<option value="${i}">${b.l||'Bloco '+(i+1)} — ${b.c.split('\n')[0].substring(0,30)}</option>`).join('');
 }
 
 function confirmarAddMedley(){
-  const mid=parseInt(document.getElementById('med-music').value);
+  const mid=document.getElementById('med-music').value;
   const bi=parseInt(document.getElementById('med-bloco').value);
-  const m=musicas.find(x=>x.id===mid);
+  const m=musicas.find(x=>String(x.id)===String(mid));
   if(!m) return;
   const b=m.blocos[bi];
-  medleyBlocos.push({musicTitle:m.title,musicId:mid,blocoIdx:bi,label:b.l||'Bloco '+(bi+1),chords:b.c,key:m.key});
+  if(!b)return;
+  if(noteIdx(String(m.key||'').match(/^[A-G](?:#|b)?/)?.[0]||'')<0){showToast('⚠️ Defina o tom da música antes de adicioná-la ao medley.');return;}
+  medleyBlocos.push({musicTitle:m.title,musicId:mid,blocoIdx:bi,label:b.l||'Bloco '+(bi+1),chords:b.c,key:m.key,capo:songFormat.parseCapo(m.capo)});
+  saveCurrentMedley();
   closeModal(); renderMedley();
 }
 
@@ -2551,11 +2587,48 @@ function moveMedley(i,dir){
   const ni=i+dir;
   if(ni<0||ni>=medleyBlocos.length) return;
   [medleyBlocos[i],medleyBlocos[ni]]=[medleyBlocos[ni],medleyBlocos[i]];
+  saveCurrentMedley();
   renderMedley();
 }
 
-function removeMedley(i){medleyBlocos.splice(i,1);renderMedley();}
-function limparMedley(){if(confirm('Limpar o medley?')){medleyBlocos=[];renderMedley();}}
+function removeMedley(i){medleyBlocos.splice(i,1);saveCurrentMedley();renderMedley();}
+function limparMedley(){if(appConfirm('Limpar o medley?')){medleyBlocos=[];saveCurrentMedley();renderMedley();}}
+function abrirSalvarMedley(){
+  if(!medleyBlocos.length)return;
+  const titles=[...new Set(medleyBlocos.map(block=>block.musicTitle))];
+  const suggested=`Medley: ${titles.join(' + ')}`;
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Salvar Medley na Playlist</div>
+    <div class="form-group"><label class="form-label" for="medley-save-title">Nome do Medley</label>
+    <input class="form-input" id="medley-save-title" maxlength="160" value="${eventEsc(suggested)}"></div>
+    <button class="btn btn-primary" onclick="confirmarSalvarMedley()">Salvar na Playlist</button>
+    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function confirmarSalvarMedley(){
+  const title=document.getElementById('medley-save-title')?.value.trim();
+  if(!title){showToast('⚠️ Informe um nome para o Medley.');return;}
+  const first=medleyReference();if(!first)return;
+  const capo=songFormat.parseCapo(first.capo);
+  const now=new Date().toISOString();
+  const song=songModel.create({
+    id:`medley-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    title,artist:'Medley',key:first.key,capo:capo?`Capotraste casa ${capo}`:'',
+    blocos:medleyBlocos.map(block=>({l:`${block.musicTitle} — ${block.label||'Bloco'}`,c:medleyChordText(block)})),
+    medleySources:medleyBlocos.map(block=>({musicId:block.musicId,blocoIdx:block.blocoIdx})),
+    createdAt:now,updatedAt:now
+  });
+  const nextSongs=[...musicas,song];
+  if(!songRepository.save(nextSongs)){showToast('⚠️ Não foi possível salvar o Medley. Seus blocos continuam aqui.');return;}
+  musicas=nextSongs;
+  librarySync.schedule();
+  medleyBlocos=[];
+  saveCurrentMedley();
+  closeModal();
+  renderMusicas();
+  renderMedley();
+  switchTab('musicas');
+  showToast('✅ Medley salvo na Playlist.');
+}
 
 function tocarMedley(){
   // abre view de medley em modo palco
@@ -2565,8 +2638,8 @@ function tocarMedley(){
   currentDetailId=null;
   const vd=document.getElementById('view-detail');
   document.getElementById('detail-title').textContent='🎛️ Medley';
-  document.getElementById('detail-key').textContent='';
-  document.getElementById('transposed-key').textContent='';
+  document.getElementById('detail-key').textContent=medleyReference()?`Tom: ${medleyReference().key}`:'';
+  document.getElementById('transposed-key').textContent=medleyReference()?.key||'';
   document.getElementById('semitone-label').textContent='+0';
   document.querySelectorAll('.stage-hide').forEach(el=>el.style.display='');
   document.getElementById('detail-content').innerHTML=
@@ -2574,7 +2647,7 @@ function tocarMedley(){
     <details class="chord-block" ${i===0?'open':''}>
       <summary>${eventEsc(b.musicTitle)} — ${eventEsc(b.label)}</summary>
       <div class="chord-block-body">
-        <div class="chord-line">${eventEsc(b.chords).replace(/\n/g,'<br>')}</div>
+        <div class="chord-line">${eventEsc(medleyChordText(b)).replace(/\n/g,'<br>')}</div>
       </div>
     </details>`).join('');
   vd.style.display='flex';
@@ -2665,19 +2738,53 @@ async function loadPlaylistOnlineResults(query,version){
   try{
     const candidates=await harmonicSummaryClient.searchSources(query,'');if(version!==playlistOnlineSearchVersion||!playlistSearchMode)return;
     panel.replaceChildren();const label=document.createElement('div');label.className='playlist-search-results-label';label.textContent='Adicionar à playlist';panel.appendChild(label);
-    if(!candidates.length){const empty=document.createElement('div');empty.className='playlist-search-online-status';empty.textContent='Nenhuma versão encontrada para adicionar.';panel.appendChild(empty);return}
+    if(!candidates.length){renderPlaylistCatalogSearchRow(panel,query);return}
     candidates.forEach(candidate=>{const row=document.createElement('div');row.className='playlist-search-online-row';const copy=document.createElement('span');copy.className='playlist-search-online-copy';const title=document.createElement('strong');title.textContent=candidate.title||query;const artist=document.createElement('small');artist.textContent=candidate.artist||'Artista não informado';copy.append(title,artist);const source=document.createElement('span');source.className='playlist-search-online-source';source.textContent=candidate.sourceName||'Fonte musical';const add=document.createElement('button');add.type='button';add.className='playlist-search-add-btn';add.innerHTML=playlistSearchAddIcon();setPlaylistSearchAddState(add,title.textContent,playlistContainsSong(candidate));add.addEventListener('pointerdown',()=>add.classList.add('is-pressed'));['pointerup','pointercancel','pointerleave'].forEach(type=>add.addEventListener(type,()=>add.classList.remove('is-pressed')));add.addEventListener('click',()=>addPlaylistOnlineCandidate(candidate,add,panel));row.append(copy,source,add);panel.appendChild(row)})
   }catch(error){if(version!==playlistOnlineSearchVersion)return;panel.innerHTML=`<div class="playlist-search-results-label">Adicionar à playlist</div><div class="playlist-search-online-status">${eventEsc(error?.message||'Não foi possível buscar novas músicas agora.')}</div>`}
 }
 async function addPlaylistOnlineCandidate(candidate,button,panel){
   if(button.classList.contains('is-pending')||button.classList.contains('is-added'))return;const name=candidate.title||'Música';button.classList.add('is-pending');setPlaylistSearchAddState(button,name,true,true);
-  try{const generated=await harmonicSummaryClient.generate('pesquisa',{titulo:name,artista:candidate.artist||'',sourceProvider:candidate.providerId,sourceId:candidate.sourceId});const sourceInfo={type:'online',name:candidate.sourceName||name,url:candidate.sourceUrl||null};const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',sourceInfo);saveAiGeneratedSong(model,{open:false,notify:false});button.classList.remove('is-pending');const status=panel.querySelector('.playlist-search-online-status');if(status)status.textContent=`“${name}” adicionada à playlist.`}
+  try{const generated=await harmonicSummaryClient.generate('pesquisa',{titulo:name,artista:candidate.artist||'',sourceProvider:candidate.providerId,sourceId:candidate.sourceId});const sourceInfo={type:'online',name:candidate.sourceName||name,url:candidate.sourceUrl||null};const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',sourceInfo);button.classList.remove('is-pending','is-confirming','is-added');setPlaylistSearchAddState(button,name,false);reviewSearchedSong(model)}
   catch(error){button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,name,false,true);const status=document.createElement('div');status.className='playlist-search-online-status';status.textContent=error?.message||'Não foi possível adicionar esta música.';panel.prepend(status)}
+}
+function splitPlaylistQuery(query){const parts=String(query||'').trim().split(/\s+(?:—|–|-)\s+/);return {titulo:(parts.shift()||'').trim(),artista:parts.join(' ').trim()}}
+function playlistSearchStatus(panel,text){let status=panel.querySelector('.playlist-search-online-status');if(!status){status=document.createElement('div');status.className='playlist-search-online-status';status.setAttribute('role','status');panel.appendChild(status)}status.replaceChildren();status.textContent=text;return status}
+// Busca de música nova pelo nome: 1) catálogo ROUDY, 2) web (Cifra Club). Se não achar, oferece foto ou arquivo.
+function renderPlaylistCatalogSearchRow(panel,query){
+  const {titulo,artista}=splitPlaylistQuery(query);if(!titulo)return;
+  const row=document.createElement('div');row.className='playlist-search-online-row';
+  const copy=document.createElement('span');copy.className='playlist-search-online-copy';const title=document.createElement('strong');title.textContent=titulo;const artist=document.createElement('small');artist.textContent=artista||'Toque em + para procurar a cifra';copy.append(title,artist);
+  const source=document.createElement('span');source.className='playlist-search-online-source';source.textContent='ROUDY + web';
+  const add=document.createElement('button');add.type='button';add.className='playlist-search-add-btn';add.dataset.playlistCatalogSearch='';add.innerHTML=playlistSearchAddIcon();setPlaylistSearchAddState(add,titulo,false);
+  add.addEventListener('pointerdown',()=>add.classList.add('is-pressed'));['pointerup','pointercancel','pointerleave'].forEach(type=>add.addEventListener(type,()=>add.classList.remove('is-pressed')));
+  add.addEventListener('click',()=>addPlaylistCatalogSong(query,add,panel));
+  row.append(copy,source,add);panel.appendChild(row);
+  if(playlistCatalogAutoSearch&&playlistCatalogAutoSearch===String(query).trim()){playlistCatalogAutoSearch='';addPlaylistCatalogSong(query,add,panel)}
+}
+async function addPlaylistCatalogSong(query,button,panel){
+  if(button.classList.contains('is-pending')||button.classList.contains('is-added'))return;
+  const {titulo,artista}=splitPlaylistQuery(query);button.classList.add('is-pending');setPlaylistSearchAddState(button,titulo,true,true);playlistSearchStatus(panel,'Procurando a cifra no ROUDY e na web…');
+  try{
+    const generated=await harmonicSummaryClient.generate('pesquisa',{titulo,artista,modoGeracao:'conhecimento_modelo'});
+    const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',aiHarmonicSummary.resultSourceInfo(generated.data));
+    button.classList.remove('is-pending','is-confirming','is-added');setPlaylistSearchAddState(button,titulo,false);
+    reviewSearchedSong(model);
+  }catch(error){
+    button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,titulo,false,true);
+    const status=playlistSearchStatus(panel,error?.message||'Não foi possível buscar esta música agora.');
+    if(error?.kind==='not_found'){
+      const actions=document.createElement('div');actions.className='playlist-search-fallback-actions';
+      const photo=document.createElement('button');photo.type='button';photo.className='btn btn-outline';photo.textContent='Enviar foto';photo.addEventListener('click',()=>{closePlaylistSearch();roudyCamera.open()});
+      const file=document.createElement('button');file.type='button';file.className='btn btn-outline';file.textContent='Enviar PDF ou arquivo';file.addEventListener('click',()=>{closePlaylistSearch();aiHarmonicSummary.openFile({titulo,artista})});
+      actions.append(photo,file);status.appendChild(actions);
+    }
+  }
 }
 function clearPlaylistSearchHistory(){storage.set(PLAYLIST_SEARCH_HISTORY_KEY,[]);renderPlaylistSearchRecents()}
 function usePlaylistSearch(value){const input=document.getElementById('search-music');if(!input)return;input.value=value;savePlaylistSearch(value);handlePlaylistSearchInput();input.focus({preventScroll:true})}
 function openPlaylistSearchResult(id,query){savePlaylistSearch(query);closePlaylistSearch();openDetail(id)}
-function handlePlaylistSearchKeydown(event){if(event.key!=='Enter')return;savePlaylistSearch(event.currentTarget.value);event.currentTarget.blur()}
+let playlistCatalogAutoSearch='';
+function handlePlaylistSearchKeydown(event){if(event.key!=='Enter')return;const query=event.currentTarget.value.trim();playlistCatalogAutoSearch=query.length>=3?query:'';savePlaylistSearch(query);event.currentTarget.blur();if(playlistCatalogAutoSearch){clearTimeout(playlistOnlineSearchTimer);loadPlaylistOnlineResults(query,playlistOnlineSearchVersion)}}
 function updatePlaylistSearchClear(){
   const input=document.getElementById('search-music');
   const clear=document.getElementById('playlist-search-clear');
@@ -2731,6 +2838,11 @@ function updatePlaylistHero(){
   const y=Math.max(0,window.scrollY||document.documentElement.scrollTop||0);
   const progress=Math.min(1,y/72);
   const reduced=playlistHeroMotion.matches;
+  // O efeito do cabeçalho só muda nos primeiros ~90px. Depois disso, não recalcula nada:
+  // mudar estas variáveis a cada quadro forçava o navegador a refazer a lista inteira (rolagem travando).
+  const heroKey=`${progress.toFixed(3)}|${reduced?0:Math.round(Math.min(y,90)*.2)}`;
+  if(heroKey===updatePlaylistHero.lastKey)return;
+  updatePlaylistHero.lastKey=heroKey;
   const channel=(from,to)=>Math.round(from+((to-from)*progress));
   view.style.setProperty('--playlist-collapse',progress.toFixed(4));
   view.style.setProperty('--playlist-header-height',`${100-(progress*40)}px`);
@@ -2797,6 +2909,41 @@ function finishSongSwipe(event){const gesture=songSwipeGesture;if(!gesture||even
 musicList.addEventListener('pointerup',finishSongSwipe);musicList.addEventListener('pointercancel',finishSongSwipe);
 
 // ── EDIT / ADD ────────────────────────────────────────────────────────
+let completingSongId=null;
+function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
+async function completeSongSheet(id){
+  const song=musicas.find(item=>String(item.id)===String(id));
+  if(!song||completingSongId)return;
+  const ownerAtStart=songRepository.getActiveOwnerId();
+  const button=document.getElementById('complete-sheet-button');
+  completingSongId=song.id;
+  if(button){button.disabled=true;button.innerHTML='<span aria-hidden="true">⏳</span> Procurando a cifra…';}
+  try{
+    const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
+    if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
+    if(!sheet){
+      const notes=(result?.data?.observacoes||[]).map(String),limited=notes.some(note=>/Limite diário de buscas na web/i.test(note));
+      if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
+      showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
+    }
+    const current=musicas.find(item=>String(item.id)===String(song.id));
+    if(!current)return;
+    if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
+    if(!commitSongs(updated.songs))return;
+    renderMusicas();openDetail(updated.song.id);
+    showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
+  }catch(error){
+    if(ownerAtStart!==songRepository.getActiveOwnerId())return;
+    if(error?.kind==='not_found'){showToast('ℹ️ '+(error.message||'Não encontramos esta cifra.'));openCompleteSheetEditor(song.id);}
+    else showToast('⚠️ '+(error?.message||'Não foi possível completar agora. Tente novamente.'));
+  }finally{
+    completingSongId=null;
+    const again=document.getElementById('complete-sheet-button');
+    if(again){again.disabled=false;again.innerHTML='<span aria-hidden="true">📄</span> Completar cifra';}
+  }
+}
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
   const song=musicas.find(item=>String(item.id)===String(nid));
@@ -2825,15 +2972,59 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   simpleReviewDraft={model:normalized,sourceSong:sourceSong||null};
   const fullSheet=normalized.fullChordSheet;
   document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
-    ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
+    <div class="modal-title">${isAi?'Confira a música':'Editar música'}</div>
+    ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Confira título, artista, tom e cifra. A música só entra na sua playlist quando você tocar em Salvar.</div>':''}
     ${normalized.sourceInfo?.type==='online'&&normalized.sourceInfo?.name?`<div style="font-size:11px;color:var(--text2);margin:-7px 0 14px;line-height:1.5;">Fonte: ${eventEsc(normalized.sourceInfo.name)}</div>`:''}
-    ${fullSheet?`<div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>`:''}
+    <div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>
     ${simpleSongEditorFields(normalized)}
-    ${fullSheet?`<div class="form-group" id="simple-editor-full" hidden><label class="form-label" for="ai-review-full-text">Letra + Cifras</label><textarea class="form-textarea" id="ai-review-full-text" style="min-height:360px;">${eventEsc(fullSheet.content)}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;">Conteúdo privado fornecido por você. Revise antes de salvar.</div></div>`:''}
+    ${simpleEditorFullSheetPanel(fullSheet)}
     <button class="btn btn-primary" onclick="saveSimpleSongReview()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
+}
+function simpleEditorFullSheetPanel(fullSheet){
+  const empty=!fullSheet;
+  return `<div class="form-group" id="simple-editor-full" hidden>
+    <label class="form-label" for="ai-review-full-text">Letra + Cifras</label>
+    ${empty?'<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Complete a música com a letra e a cifra: digite ou cole abaixo, ou anexe um arquivo. O resumo harmônico continua como está.</div>':''}
+    <input type="file" id="full-sheet-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,application/pdf,image/png,image/jpeg,image/webp,text/plain" multiple hidden onchange="attachFullSheetFiles(this)">
+    <button class="btn btn-outline" type="button" id="full-sheet-attach" style="margin:0 0 10px" onclick="document.getElementById('full-sheet-file').click()">📎 ${empty?'Anexar arquivo ou foto':'Substituir por arquivo ou foto'}</button>
+    <div id="full-sheet-status" role="status" style="font-size:11px;color:var(--text2);margin:-4px 0 10px;line-height:1.5;" hidden></div>
+    <textarea class="form-textarea" id="ai-review-full-text" data-source="${eventEsc(fullSheet?.source||'')}" style="min-height:360px;white-space:pre;overflow-x:auto" spellcheck="false" placeholder="[Intro]&#10;C  G  Am  F&#10;&#10;[Verso]&#10;C          G&#10;Primeira linha da letra&#10;Am         F&#10;Segunda linha da letra">${fullSheet?eventEsc(fullSheet.content):''}</textarea>
+    <div style="font-size:10px;color:var(--text2);margin-top:6px;">Acordes na linha de cima e letra na linha de baixo. Revise antes de salvar.</div>
+  </div>`;
+}
+function setFullSheetStatus(message,isError){
+  const status=document.getElementById('full-sheet-status');if(!status)return;
+  status.hidden=!message;status.textContent=message||'';status.style.color=isError?'#fbbf24':'var(--text2)';
+}
+async function attachFullSheetFiles(input){
+  const files=[...(input?.files||[])];if(!files.length)return;
+  const textarea=document.getElementById('ai-review-full-text'),button=document.getElementById('full-sheet-attach');
+  if(!textarea)return;
+  if(textarea.value.trim()&&!appConfirm('Substituir o texto atual de Letra + Cifras pelo conteúdo do arquivo?')){input.value='';return;}
+  const isText=file=>/\.txt$/i.test(file.name)||file.type==='text/plain';
+  if(button)button.disabled=true;
+  try{
+    if(files.every(isText)){
+      const parts=await Promise.all(files.map(file=>file.text()));
+      textarea.value=parts.join('\n\n').replace(/\r\n?/g,'\n').trim();
+      textarea.dataset.source='user_upload';
+      setFullSheetStatus('Arquivo carregado. Revise e toque em Salvar.');
+      return;
+    }
+    setFullSheetStatus('Lendo o arquivo… isso pode levar alguns segundos.');
+    const title=document.getElementById('ai-review-title')?.value||'',artist=document.getElementById('ai-review-artist')?.value||'';
+    const result=await harmonicSummaryClient.generate('arquivo',{arquivos:files,titulo:title,artista:artist});
+    const content=result?.data?.fullChordSheet?.content||'';
+    if(!content.trim()){setFullSheetStatus('Não consegui ler a letra e a cifra deste arquivo. Tente outro arquivo ou cole o texto.',true);return;}
+    textarea.value=content;textarea.dataset.source='user_upload';
+    setFullSheetStatus('Letra e cifra lidas do arquivo. Revise e toque em Salvar. O resumo harmônico não foi alterado.');
+  }catch(error){
+    setFullSheetStatus(error?.message||'Não foi possível ler o arquivo. Tente novamente.',true);
+  }finally{
+    if(button)button.disabled=false;input.value='';
+  }
 }
 function setSimpleEditorView(view){
   const full=view==='full',summary=document.getElementById('simple-editor-summary'),fullPanel=document.getElementById('simple-editor-full');
@@ -2843,6 +3034,8 @@ function setSimpleEditorView(view){
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
 }
+// Música encontrada pela busca: abre para o usuário ver e confirmar. Nada entra na playlist até Salvar.
+function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
 function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
 function playlistContainsSong(input){try{return Boolean(songModel.findDuplicate(musicas,songModel.create(input)))}catch(_){return false}}
 function saveAiGeneratedSong(model,options={}){
@@ -2856,13 +3049,16 @@ function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
   const fullInput=document.getElementById('ai-review-full-text');
-  const fullChanged=Boolean(fullInput&&fullInput.value.replace(/\r\n?/g,'\n').trim()!==simpleReviewDraft.model.fullChordSheet?.content);
-  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...simpleReviewDraft.model.fullChordSheet,content:fullInput.value,sections:fullChanged?[]:simpleReviewDraft.model.fullChordSheet.sections}):simpleReviewDraft.model.fullChordSheet;
+  const previousSheet=simpleReviewDraft.model.fullChordSheet;
+  const fullChanged=Boolean(fullInput&&fullInput.value.replace(/\r\n?/g,'\n').trim()!==previousSheet?.content);
+  // Letra + Cifras vazia mantém a música só com o resumo; texto novo vira cifra completa do usuário.
+  const fullSource=fullChanged?(fullInput.dataset.source==='user_upload'?'user_upload':'user_text'):previousSheet?.source;
+  const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...(previousSheet||{}),source:fullSource,content:fullInput.value,sections:fullChanged?[]:(previousSheet?.sections||[])}):previousSheet;
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
   const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
-  musicas=result.songs;salvar();closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+values.title+' salva!');
+  if(!commitSongs(result.songs))return;closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+values.title+' salva!');
 }
 function openAdvancedSongEditor(id){
   editMusica(id);
@@ -2879,8 +3075,8 @@ function saveMusica(){
   const idx=musicas.findIndex(m=>m.id===editingId);
   if(idx===-1) return;
   const result=songRepository.update(musicas,musicas[idx].id,{title:t,artist:document.getElementById('fm-artist').value.trim(),key:document.getElementById('fm-key').value.trim(),capo:document.getElementById('fm-capo').value.trim(),blocos});
-  musicas=result.songs;
-  salvar(); closeModal(); renderMusicas(); openDetail(result.song.id); showToast('✅ '+t+' salva!');
+  if(!commitSongs(result.songs))return;
+  closeModal(); renderMusicas(); openDetail(result.song.id); showToast('✅ '+t+' salva!');
 }
 let songOptionsTrigger=null,songOptionsId=null,songOptionsCloseTimer=0,songOptionsDrag=null;
 function ensureSongOptions(){
@@ -2987,9 +3183,10 @@ function deleteMusica(id,row,options={}){
   const nid=isNaN(+id)?id:+id;
   const target=row||document.querySelector(`.music-swipe[data-song-id="${CSS.escape(String(id))}"]`);
   const song=musicas.find(item=>String(item.id)===String(nid));
-  if(song)librarySync.deleteSong(song);
-  musicas=songRepository.remove(musicas,nid);
-  salvar(); closeDetail();
+  const previous=musicas;
+  if(!commitSongs(songRepository.remove(musicas,nid)))return;
+  if(song&&currentAuthState.authenticated&&!librarySync.deleteSong(song)){commitSongs(previous);renderMusicas();showToast('⚠️ Não foi possível registrar a exclusão. A música foi mantida.');return;}
+  closeDetail();
   if(!target||matchMedia('(prefers-reduced-motion: reduce)').matches){renderMusicas();return}
   target.classList.remove('is-revealed');
   if(options.swipe){
@@ -3047,8 +3244,8 @@ function addMusica(){
   const t=document.getElementById('fm-title').value.trim(); if(!t) return;
   const blocos=parseBlocks(document.getElementById('fm-blocos').value);
   const result=songRepository.addOrReuse(musicas,{id:Date.now(),title:t,artist:document.getElementById('fm-artist').value.trim(),key:document.getElementById('fm-key').value.trim(),capo:document.getElementById('fm-capo').value.trim(),blocos});
-  musicas=result.songs;
-  salvar(); closeModal(); renderMusicas();
+  if(!commitSongs(result.songs))return;
+  closeModal(); renderMusicas();
   showToast(result.created?'✅ Música adicionada!':'ℹ️ Esta música já estava cadastrada.');
 }
 
@@ -3140,8 +3337,8 @@ let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
 let appCurrentUser=Object.freeze({...appIdentity.user,role:appIdentity.user.role||'Liderança'});
 let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false,loginGatePassed=false,loginGateAuthReady=false,promptedGuestLibraryOwner=null;
 const ACCOUNT_PROFILES_KEY='sc_account_profiles_v1',APP_SETTINGS_KEY='sc_settings_v3';
-const CHORD_COLOR_OPTIONS=Object.freeze({coral:'#E8896B',red:'#EF4444',orange:'#F59E0B',yellow:'#FACC15',green:'#22C55E',blue:'#3B82F6',purple:'#A78BFA',pink:'#F472B6',white:'#F8FAFC'});
-const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',highContrast:false,colorBlind:false,scale:100,chordColor:'coral'};
+const CHORD_COLOR_OPTIONS=Object.freeze({gold:'#D8C278',coral:'#E8896B',red:'#EF4444',orange:'#FF8822',yellow:'#FACC15',green:'#22C55E',blue:'#3B82F6',purple:'#A78BFA',pink:'#F472B6',white:'#F8FAFC'});
+const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',highContrast:false,colorBlind:false,scale:100,chordColor:'orange'};
 const APP_TRANSLATIONS={
   'pt-BR':{tabPlaylist:'Playlist',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encontre um vídeo para adicionar à sua playlist',youtubePlaceholder:'Pesquisar música, artista ou link no YouTube',playlistPlaceholder:'Buscar música na playlist',search:'Pesquisar',account:'Minha conta',myProfile:'Meu Perfil',profileHelp:'Edite sua foto e seus dados pessoais',settings:'Configurações',settingsHelp:'Idioma, acessibilidade e preferências',backup:'Backup e dados',backupHelp:'Restauração e estado da sincronização automática',logout:'Sair da conta',login:'Entrar com Google'},
   'en':{tabPlaylist:'Playlist',tabEvents:'Events',tabMedley:'Medley',youtubeHelp:'Find a video to add to your playlist',youtubePlaceholder:'Search music, artist or YouTube link',playlistPlaceholder:'Search music in playlist',search:'Search',account:'My account',myProfile:'My Profile',profileHelp:'Edit your photo and personal information',settings:'Settings',settingsHelp:'Language, accessibility and preferences',backup:'Backup and data',backupHelp:'Restore and automatic sync status',logout:'Log out',login:'Sign in with Google'},
@@ -3179,8 +3376,11 @@ APP_TRANSLATIONS.en.tunerHelp='Tune your instrument with the microphone';
 APP_TRANSLATIONS.es.tunerHelp='Afina tu instrumento con el micrófono';
 let pendingProfileAvatar=null,profileImageEditorState=null;
 function accountProfiles(){const value=storage.get(ACCOUNT_PROFILES_KEY,{});return value&&typeof value==='object'?value:{};}
-const PROFILE_MUSICAL_ROLES=['Vocalista','Backing vocal','Guitarrista','Violonista','Baixista','Baterista','Tecladista','Pianista','Percussionista','Ukulele','Violinista','Viola','Saxofonista','Flautista','Trompetista','Outro'];
-function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:(Array.isArray(saved.instruments)?saved.instruments:Array.isArray(remote.instruments)?remote.instruments:[]).filter(value=>PROFILE_MUSICAL_ROLES.includes(value)),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
+const PROFILE_MUSICAL_ROLES=['Vocal','Backing Vocal','Guitarra','Violão','Baixo','Bateria','Teclado','Percussão','Outros'];
+// Nomes antigos (salvos antes) passam para os novos, sem o usuário perder o que já marcou.
+const PROFILE_ROLE_ALIASES={'Vocalista':'Vocal','Backing vocal':'Backing Vocal','Guitarrista':'Guitarra','Violonista':'Violão','Baixista':'Baixo','Baterista':'Bateria','Tecladista':'Teclado','Pianista':'Teclado','Percussionista':'Percussão','Ukulele':'Outros','Violinista':'Outros','Viola':'Outros','Saxofonista':'Outros','Flautista':'Outros','Trompetista':'Outros','Outro':'Outros'};
+function normalizeProfileRoles(values){const chosen=new Set((Array.isArray(values)?values:[]).map(value=>PROFILE_ROLE_ALIASES[value]||value));return PROFILE_MUSICAL_ROLES.filter(role=>chosen.has(role));}
+function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:normalizeProfileRoles(Array.isArray(saved.instruments)?saved.instruments:remote.instruments),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
 function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
 function accountAvatar(profile,className='account-avatar'){return `<span class="${className}${profile.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(profile.id||profile.email||profile.name)}" id="account-profile-avatar">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
 function accountSyncPresentation(state=librarySync.getStatus()){
@@ -3192,14 +3392,15 @@ function accountSyncPresentation(state=librarySync.getStatus()){
 function updateAccountSyncBadge(state){const badge=document.getElementById('account-sync-badge');if(!badge)return;const value=accountSyncPresentation(state);badge.dataset.state=value.state;badge.querySelector('span:last-child').textContent=value.text;}
 let shownRecoveryCount=0;
 function updateLibrarySyncHint(state){const hint=document.getElementById('library-sync-hint');if(hint){const copy=librarySyncCopy(state);hint.hidden=state.phase==='needs-consent';hint.textContent=uiI18n.translate(copy.title);hint.dataset.state=state.phase;}if(Number(state.recovered)>shownRecoveryCount){shownRecoveryCount=Number(state.recovered);showToast(uiI18n.translate('Encontramos outra edição desta música e preservamos uma cópia para você.'));}if(!state.authenticated)shownRecoveryCount=0;}
-function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),theme:['light','dark','system'].includes(saved?.theme)?saved.theme:'dark',chordColor:Object.hasOwn(CHORD_COLOR_OPTIONS,saved?.chordColor)?saved.chordColor:'coral',scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
+function loadAppSettings(){const saved=storage.get(APP_SETTINGS_KEY,{});return {...APP_SETTINGS_DEFAULT,...(saved&&typeof saved==='object'?saved:{}),theme:['light','dark','system'].includes(saved?.theme)?saved.theme:'dark',chordColor:Object.hasOwn(CHORD_COLOR_OPTIONS,saved?.chordColor)?saved.chordColor:'orange',scale:Math.max(100,Math.min(140,Number(saved&&saved.scale)||100))};}
 function appText(key){const language=document.documentElement.lang||loadAppSettings().language;return (APP_TRANSLATIONS[language]||APP_TRANSLATIONS['pt-BR'])[key]||APP_TRANSLATIONS['pt-BR'][key]||key;}
 function applyAppSettings(settings=loadAppSettings()){
   const root=document.documentElement,scale=Math.max(100,Math.min(140,Number(settings.scale)||100));
   const theme=['light','dark','system'].includes(settings.theme)?settings.theme:'dark';
   const resolvedTheme=theme==='system'&&window.matchMedia?.('(prefers-color-scheme: light)').matches?'light':theme==='system'?'dark':theme;
   root.dataset.themeChoice=theme;root.dataset.theme=resolvedTheme;
-  const chordColor=CHORD_COLOR_OPTIONS[settings.chordColor]||CHORD_COLOR_OPTIONS.coral;
+  if(!applyAppSettings.systemListener&&window.matchMedia){applyAppSettings.systemListener=true;window.matchMedia('(prefers-color-scheme: light)').addEventListener?.('change',()=>{if(document.documentElement.dataset.themeChoice==='system')applyAppSettings(loadAppSettings());});}
+  const chordColor=CHORD_COLOR_OPTIONS[settings.chordColor]||CHORD_COLOR_OPTIONS.orange;
   root.style.setProperty('--app-chord-color',chordColor);root.style.setProperty('--chord-color',chordColor);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',resolvedTheme==='light'?'#f5f7fb':'#050505');
   root.lang=settings.language||'pt-BR';root.classList.toggle('a11y-high-contrast',Boolean(settings.highContrast));root.classList.toggle('a11y-colorblind',Boolean(settings.colorBlind));
@@ -3375,7 +3576,9 @@ function accountSubpageHeader(title,backAction='openAccountModal'){
   return `<div class="profile-modal-header"><button class="profile-back-button" type="button" onclick="${action}()" aria-label="Voltar para ${destination}">←</button><div class="modal-title">${eventEsc(title)}</div></div>`;
 }
 function setAccountBackChevron(){const button=document.querySelector('#modal-body .profile-back-button');if(!button)return;button.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';}
-async function openLibrarySync(){
+let librarySyncBackAction='openAccountModal';
+async function openLibrarySync(backAction=librarySyncBackAction){
+  librarySyncBackAction=['openAccountModal','openHelpSupport'].includes(backAction)?backAction:'openAccountModal';
   document.getElementById('modal-overlay').style.display='flex';
   renderLibrarySyncPanel(librarySync.getStatus());
   try{const state=await librarySync.review();await refreshEventSyncDiagnostics();renderLibrarySyncPanel(state);}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
@@ -3466,7 +3669,7 @@ function importProfileBackup(text,ownerId=requireBackupIdentity()){
   if((!current.name||(!currentAuthState.authenticated&&current.name==='Você'))&&typeof session.perfil?.name==='string')profile.name=session.perfil.name.trim().slice(0,120);
   if(!current.avatarUrl&&typeof session.perfil?.avatarUrl==='string'&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/.test(session.perfil.avatarUrl))profile.avatarUrl=session.perfil.avatarUrl;
   if(!current.location&&typeof session.perfil?.location==='string')profile.location=session.perfil.location.trim().slice(0,120);
-  if(!current.instruments.length&&Array.isArray(session.perfil?.instruments))profile.instruments=PROFILE_MUSICAL_ROLES.filter(role=>session.perfil.instruments.includes(role));
+  if(!current.instruments.length&&Array.isArray(session.perfil?.instruments))profile.instruments=normalizeProfileRoles(session.perfil.instruments);
   const preferences=storage.get(APP_SETTINGS_KEY,{})||{},nextPreferences={...preferences};
   const validators={language:v=>['pt-BR','en','es','it','fr','de'].includes(v),theme:v=>['light','dark','system'].includes(v),chordColor:v=>Object.hasOwn(CHORD_COLOR_OPTIONS,v),scale:v=>[100,110,120,130,140].includes(v),highContrast:v=>typeof v==='boolean',colorBlind:v=>typeof v==='boolean'};
   for(const [key,validate] of Object.entries(validators))if(!Object.hasOwn(preferences,key)&&validate(session.configuracoes?.[key]))nextPreferences[key]=session.configuracoes[key];
@@ -3749,7 +3952,7 @@ openAppearanceSettings=function(){
   openAppearanceSettingsWithChordColor();
   const group=document.querySelector('#modal-body .settings-group');
   Array.from(group?.querySelectorAll('.settings-row')||[]).find(row=>row.querySelector('strong')?.textContent==='Foto de capa')?.remove();
-  if(group&&!document.getElementById('setting-chord-color'))group.insertAdjacentHTML('afterbegin',`<div class="settings-row"><div class="settings-row-copy"><strong>Cor da cifra</strong></div><select class="settings-select" id="setting-chord-color" onchange="previewAppSettings()"><option value="coral">Coral</option><option value="blue">Azul</option><option value="green">Verde</option><option value="white">Branco</option></select></div>`);
+  if(group&&!document.getElementById('setting-chord-color'))group.insertAdjacentHTML('afterbegin',`<div class="settings-row"><div class="settings-row-copy"><strong>Cor da cifra</strong></div><select class="settings-select" id="setting-chord-color" onchange="previewAppSettings()"><option value="orange">Laranja (padrão)</option><option value="white">Branco</option><option value="gold">Dourado</option><option value="red">Vermelho</option><option value="pink">Rosa</option><option value="yellow">Amarelo</option><option value="coral">Coral</option><option value="green">Verde</option><option value="blue">Azul</option><option value="purple">Roxo</option></select></div>`);
 };
 function openHelpSupport(){document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Ajuda e Suporte','openAppSettings')}<div class="account-menu"><button class="account-menu-button" type="button" onclick="openLibrarySync('openHelpSupport')"><span class="account-menu-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-menu-arrow">›</span></button></div>`;}
 function cancelSettingsSubpage(){applyAppSettings(loadAppSettings());openAppSettings();}
@@ -3766,7 +3969,31 @@ async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;t
 function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if(state.authenticated||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
 function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
-async function logoutAppAccount(){try{await appAuth.signOut();closeModal();showToast('Conta desconectada. Seus dados locais foram preservados.');}catch(error){showToast('⚠️ '+error.message);}}
+// Sair da conta: confirma que tudo está na nuvem e só então apaga do aparelho os dados DESTA conta.
+function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
+function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
+async function logoutAppAccount(){
+  if(!currentAuthState.authenticated){try{await appAuth.signOut();}catch(_){}closeModal();return;}
+  if(navigator.onLine===false){appAlert('Você está sem internet.\n\nConecte-se antes de sair, para que suas músicas e eventos fiquem salvos na sua conta.');return;}
+  showToast('Salvando tudo na sua conta antes de sair…');
+  try{await librarySync.syncNow();}catch(_){/* a verificação abaixo decide */}
+  try{await syncEventsNow(true);}catch(_){/* a verificação abaixo decide */}
+  const pendingSongs=songsPendingUpload(),pendingEvents=eventsPendingUpload();
+  if(pendingSongs||pendingEvents){
+    const parts=[pendingSongs?`${pendingSongs} música${pendingSongs===1?'':'s'}`:'',pendingEvents?`${pendingEvents} evento${pendingEvents===1?'':'s'}`:''].filter(Boolean).join(' e ');
+    appAlert(`Ainda não foi possível salvar ${parts} na sua conta.\n\nPara não perder nada, você continua conectado. Verifique a internet e tente sair de novo.`);return;
+  }
+  const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:String(appCurrentUser.id||'')};
+  try{await appAuth.signOut();}catch(error){showToast('⚠️ '+error.message);return;}
+  const purge=()=>{
+    if(owners.songs)songRepository.purgeOwner(owners.songs);
+    if(owners.events)eventRepository.purgeOwner(owners.events);
+    if(owners.medley)medleyRepository.purgeOwner(owners.medley);
+    if(owners.profile){const profiles=accountProfiles();if(Object.prototype.hasOwnProperty.call(profiles,owners.profile)){delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
+  };
+  purge();setTimeout(purge,0);setTimeout(purge,600); // depois que a troca de conta termina de gravar
+  closeModal();showToast('Você saiu. Os dados da sua conta foram removidos deste aparelho.');
+}
 async function openBandManager(){
   await refreshBands(true);
   const cards=appBands.map(band=>`<section class="band-card"><header><strong>${eventEsc(band.name)}</strong><span>${eventEsc(bandRoleLabel(band.currentUserRole))}</span></header>${band.members.map(member=>`<div class="band-member-row">${musicalRoleIcon(member.musicalRole)}<span>${eventEsc(member.name)}</span><small>${eventEsc(member.musicalRole)} · ${eventEsc(bandRoleLabel(member.accessRole))}</small></div>`).join('')}${band.permissions.canManageMembers?`<div class="band-inline-actions"><button type="button" onclick="inviteBandMember('${eventEsc(band.id)}')">Adicionar por ID</button></div>`:''}</section>`).join('');
@@ -4709,5 +4936,7 @@ if ('serviceWorker' in navigator) {
     }).catch(function(){});
   });
 }
-</script></body>
+</script>  <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
+  <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
+</body>
 </html>

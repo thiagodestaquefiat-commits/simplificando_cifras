@@ -1,8 +1,17 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v326-song-section-blocks";
+const CACHE_NAME = "simplificando-cifras-v341-assistente-comandos";
 const ASSETS = [
+  "./js/medley-repository.js?v=2",
+  "./js/song-repository.js?v=16",
+  "./css/roudy-forms.css?v=3",
+  "./css/light-theme.css?v=1",
+  "./js/ai/ai-harmonic-summary.css?v=9",
+  "./js/study-metronome.js?v=7",
+  "./js/youtube-api.js?v=6",
+  "./js/youtube-player-ui.js?v=18",
+  "./js/youtube-player.js?v=7",
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=6",
   "./js/editor/song-format.js?v=12",
@@ -12,7 +21,7 @@ const ASSETS = [
   "./js/smart-scroll.js?v=5",
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
-  "./js/app-assistant.js?v=21",
+  "./js/app-assistant.js?v=22",
   "./",
   "./index.html",
   "./js/storage.js",
@@ -68,7 +77,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=6",
   "./js/profile-username.js?v=1",
   "./js/profile-username.js?v=2",
-  "./js/profile-username.js?v=3",
+  "./js/profile-username.js?v=4",
   "./js/event-user-invites.css?v=2",
   "./js/event-user-invites.css?v=3",
   "./js/event-people-search.css?v=1",
@@ -137,10 +146,10 @@ const ASSETS = [
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
   "./js/editor/song-editor.css",
-  "./js/ai/api-config.js?v=6",
+  "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
-  "./js/ai/harmonic-summary-client.js?v=15",
-  "./js/ai/ai-harmonic-summary.js?v=14",
+  "./js/ai/harmonic-summary-client.js?v=16",
+  "./js/ai/ai-harmonic-summary.js?v=17",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",

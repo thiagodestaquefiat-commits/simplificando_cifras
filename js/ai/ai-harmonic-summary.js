@@ -309,7 +309,9 @@
     setBusy(true);
     setStatus("loading", "Buscando fontes autorizadas…");
     try {
-      const result = await global.harmonicSummaryClient.searchSources(values());
+      const searchValues = values();
+      const payload = global.harmonicSummaryClient.validatePayload("pesquisa", { titulo: searchValues.titulo, artista: searchValues.artista });
+      const result = { payload, candidates: await global.harmonicSummaryClient.searchSources(payload.titulo, payload.artista || "") };
       if (!result.candidates.length) {
         setBusy(false);
         await generateFromModelKnowledge(result.payload);
@@ -366,8 +368,9 @@
     const result = await global.harmonicSummaryClient.generate("arquivo", { titulo: "", artista: "", arquivos: selected });
     const sourceInfo = { type: "upload", name: result.payload.arquivos.map(file => file.name).join(" + ").slice(0, 255), url: null };
     const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
-    if (typeof global.saveAiGeneratedSong !== "function") throw new Error("Não foi possível adicionar a música gerada.");
-    return global.saveAiGeneratedSong(model);
+    // Foto/arquivo: abre para revisão; só entra na playlist ao tocar em Salvar.
+    global.openAiDraft(model, null);
+    return model;
   }
 
   function closeSearch() {
@@ -409,12 +412,19 @@
     searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = true);
     status.textContent = "Analisando esta versão e criando a música…";
     try {
-      const result = await global.harmonicSummaryClient.generate("pesquisa", { titulo: candidate.title || title, artista: candidate.artist || artist, sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
-      const sourceInfo = { type: "online", name: candidate.sourceName || candidate.title || title, url: candidate.sourceUrl || null };
+      const result = candidate.catalog
+        ? await global.harmonicSummaryClient.generate("pesquisa", { titulo: title, artista: artist, modoGeracao: "conhecimento_modelo" })
+        : await global.harmonicSummaryClient.generate("pesquisa", { titulo: candidate.title || title, artista: candidate.artist || artist, sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
+      const sourceInfo = candidate.catalog ? resultSourceInfo(result.data) : { type: "online", name: candidate.sourceName || candidate.title || title, url: candidate.sourceUrl || null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
-      global.saveAiGeneratedSong(model, { open: false, notify: false });
-      addButton.classList.remove("is-pending");
-      status.textContent = `“${name}” adicionada à playlist.`;
+      addButton.classList.remove("is-pending", "is-confirming", "is-added");
+      setSearchAddState(addButton, name, false, false);
+      status.textContent = "Confira a música e toque em Salvar.";
+      busy = false;
+      if (searchPanel) searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
+      if (typeof global.reviewSearchedSong === "function") global.reviewSearchedSong(model);
+      else global.openAiDraft(model, null);
+      return;
     } catch (error) {
       busy = false;
       if (!searchPanel) return;
@@ -423,6 +433,14 @@
       setSearchAddState(addButton, name, false, true);
       searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
       status.textContent = error?.message || "Não foi possível gerar esta música.";
+      if (candidate.catalog && error?.kind === "not_found") {
+        const actions = element("div", "playlist-search-fallback-actions");
+        const photo = element("button", "btn btn-outline", "Enviar foto"); photo.type = "button";
+        photo.addEventListener("click", () => { closeSearch(); global.roudyCamera?.open(); });
+        const file = element("button", "btn btn-outline", "Enviar PDF ou arquivo"); file.type = "button";
+        file.addEventListener("click", () => { closeSearch(); openFile({ titulo: title, artista: artist }); });
+        actions.append(photo, file); status.appendChild(actions);
+      }
       return;
     }
     busy = false;
@@ -435,11 +453,15 @@
     const parts=query.split(/\s+(?:—|–|-)\s+/),title=(parts.shift()||"").trim(),artist=parts.join(" ").trim();
     const status = searchPanel.querySelector("[data-ai-search-status]"),results = searchPanel.querySelector("[data-ai-search-results]");
     if (!title) { status.textContent = "Digite o nome da música."; return; }
+    let autoAdd = null;
     busy = true; results.replaceChildren(); status.textContent = "Buscando versões…";
     searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = true);
     try {
       const candidates = await global.harmonicSummaryClient.searchSources(title, artist);
-      status.textContent = candidates.length ? "Escolha a versão correta:" : "Nenhuma versão encontrada. Confira o nome e o cantor.";
+      // Sem fontes licenciadas: procura direto no catálogo ROUDY e depois na web (a IA nunca inventa a música).
+      const catalogSearch = !candidates.length;
+      if (catalogSearch) candidates.push({ catalog: true, title, artist, sourceName: "ROUDY + web" });
+      status.textContent = catalogSearch ? "Procurando a cifra no ROUDY e na web…" : "Escolha a versão correta:";
       candidates.forEach(candidate => {
         const row = element("div", "ai-song-search-result");
         const copy = element("span", "ai-song-search-result-copy"); copy.append(element("strong", "", candidate.title || title), element("small", "", candidate.artist || artist || "Artista não informado"));
@@ -450,9 +472,11 @@
         ["pointerup","pointercancel","pointerleave"].forEach(type=>addButton.addEventListener(type,()=>addButton.classList.remove("is-pressed")));
         addButton.addEventListener("click",()=>generateSearchResult(candidate,title,artist,addButton));
         row.append(copy,source,addButton);results.appendChild(row);
+        if (candidate.catalog && !addButton.classList.contains("is-added")) autoAdd = () => generateSearchResult(candidate, title, artist, addButton);
       });
     } catch (error) { status.textContent = error?.message || "Não foi possível realizar a busca."; }
     finally { busy = false; if (searchPanel) searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false); }
+    if (autoAdd) await autoAdd();
   }
 
   function openSearch() {
@@ -547,5 +571,13 @@
     }
   }
 
-  global.aiHarmonicSummary = Object.freeze({ open, close, openSearch, generateFiles, get busy() { return busy; } });
+  // Abre a janela já na aba de arquivo (PDF, foto ou TXT), com título e artista preenchidos.
+  function openFile(values) {
+    if (panel) close();
+    open();
+    if (!panel) return;
+    askForFile({ titulo: values?.titulo || "", artista: values?.artista || "" }, values?.message || "Envie um PDF, foto ou TXT da cifra para adicionar esta música.");
+  }
+
+  global.aiHarmonicSummary = Object.freeze({ open, openFile, close, openSearch, generateFiles, resultSourceInfo, get busy() { return busy; } });
 })(window);
