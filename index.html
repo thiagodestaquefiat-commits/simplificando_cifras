@@ -4831,7 +4831,7 @@ automaticEventOffline=eventOffline.create({
   },
   getEvents:()=>setlists,getSong:eventSongSource,canAccess:(event,userId)=>eventModel.canAccess(event,userId),
   getPreferences:userId=>stagePreferences.load(userId),
-  onError:()=>showToast('⚠️ Não foi possível guardar todo o repertório neste dispositivo. Mantenha o app aberto e tente novamente com conexão.'),
+  onError:error=>console.warn('[ROUDY] Repertório offline não gravado:',error?.message||error),
   onLoaded:()=>{renderSetlists();if(currentSdId&&document.getElementById('view-sd').style.display==='flex')openSD(currentSdId);}
 });
 applyAppSettings();
