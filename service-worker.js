@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v343-contagem-playlist";
+const CACHE_NAME = "simplificando-cifras-v344-aviso-repertorio";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./js/medley-repository.js?v=2",
@@ -128,7 +128,7 @@ const ASSETS = [
   "./js/stage-preferences.js?v=3",
   "./js/stage-offline.js?v=1",
   "./js/stage-offline.js?v=2",
-  "./js/event-offline.js?v=1",
+  "./js/event-offline.js?v=2",
   "./js/context-intelligence.js?v=2",
   "./js/preparation-receipts.js?v=1",
   "./js/contextual-copy.js?v=1",
