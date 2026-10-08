@@ -1096,11 +1096,10 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
       </section>
     </div>
     <nav class="song-page-indicator" id="song-page-indicator" aria-label="Visualização da música">
-      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 4 — Resumo harmônico"></button>
-      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 4 — Letra e cifra" aria-current="page"></button>
-      <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 4 — Letra"></button>
-      <button class="song-page-dot" type="button" data-song-page="3" onclick="setSongPage(3,{source:'indicator'})" aria-label="Página 4 de 4 — Cifra"></button>
-      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 4 — Letra e cifra</span>
+      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 3 — Resumo harmônico"></button>
+      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 3 — Letra e cifra" aria-current="page"></button>
+      <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 3 — Letra"></button>
+      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 3 — Letra e cifra</span>
     </nav>
     <div class="detail-body" id="detail-content"></div>
   </div>
@@ -2014,7 +2013,7 @@ function saveInlineFullEdit(songId,button){
     if(g.axis!=='horizontal')return;
     event.preventDefault();
     const now=performance.now(),elapsed=Math.max(1,now-g.lastTime);g.velocity=(event.clientX-g.lastX)/elapsed;g.lastX=event.clientX;g.lastTime=now;
-    const atStart=currentSongPage===0&&dx>0,atEnd=currentSongPage===3&&dx<0,offset=(atStart||atEnd)?dx*.22:dx;
+    const atStart=currentSongPage===0&&dx>0,atEnd=currentSongPage===SONG_LAST_PAGE&&dx<0,offset=(atStart||atEnd)?dx*.22:dx;
     g.track.style.transform=`translate3d(${(-currentSongPage*g.width)+offset}px,0,0)`;
   },{passive:false});
   const finish=event=>{
@@ -2024,7 +2023,7 @@ function saveInlineFullEdit(songId,button){
     const dx=event.clientX-g.startX,threshold=Math.min(72,g.width*.2),fast=Math.abs(g.velocity)>.45;
     let next=currentSongPage;
     if((Math.abs(dx)>=threshold||fast)&&Math.abs(dx)>18)next+=dx<0?1:-1;
-    gesture=null;setSongPage(Math.max(0,Math.min(3,next)),{source:'swipe',animate:true});
+    gesture=null;setSongPage(Math.max(0,Math.min(SONG_LAST_PAGE,next)),{source:'swipe',animate:true});
   };
   content.addEventListener('pointerup',finish);content.addEventListener('pointercancel',event=>{activePointers.delete(event.pointerId);cancel(true)});
   document.addEventListener('pointerup',finish,true);
@@ -2075,9 +2074,10 @@ function setSongView(view){
   else renderDetail();
 }
 
-const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra','Cifra'];
+const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra'];
+const SONG_LAST_PAGE=SONG_PAGE_LABELS.length-1;
 function songPageStorageKey(songId=currentDetailId){return `sc_song_content_view_v1:${appCurrentUser?.id||'local'}:${String(songId??'')}`}
-function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=3?saved:1}
+function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=SONG_LAST_PAGE?saved:1}
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
@@ -2085,7 +2085,7 @@ function updateSongPageIndicator(options={}){
   indicator.querySelectorAll('[data-song-page]').forEach((dot,index)=>{
     if(index===currentSongPage)dot.setAttribute('aria-current','page');else dot.removeAttribute('aria-current');
   });
-  const message=`Página ${currentSongPage+1} de 4 — ${SONG_PAGE_LABELS[currentSongPage]}`;
+  const message=`Página ${currentSongPage+1} de ${SONG_PAGE_LABELS.length} — ${SONG_PAGE_LABELS[currentSongPage]}`;
   const status=document.getElementById('song-page-status');
   if(status&&options.announce!==false)status.textContent=message;
 }
@@ -2113,7 +2113,7 @@ function restoreSongPosition(anchor,page){
   if(anchor.ratio!=null)view.scrollTop=anchor.ratio*Math.max(0,view.scrollHeight-view.clientHeight);
 }
 function setSongPage(index,options={}){
-  const next=Math.max(0,Math.min(3,Number(index)||0));
+  const next=Math.max(0,Math.min(SONG_LAST_PAGE,Number(index)||0));
   currentSongView=next===0?'summary':'full';
   const track=document.querySelector('#detail-content .song-page-track');
   if(!track){currentSongPage=next;if(options.persist!==false&&currentDetailId!=null)storage.set(songPageStorageKey(),currentSongPage);updateSongPageIndicator(options);return;}
@@ -2185,12 +2185,11 @@ function renderDetail(){
   const completeHtml=hasFull?'':`<div class="complete-sheet-notice"><p>Esta música só tem o resumo harmônico.</p><button class="btn btn-primary" id="complete-sheet-button" type="button" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button></div>`;
   const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'combined'):completeHtml+summaryHtml;
   const lyricsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'lyrics'):renderSummaryProjection(summary,totalShift,m.id,'lyrics');
-  const chordsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'chords'):renderSummaryProjection(summary,totalShift,m.id,'chords');
   const stageHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
     :currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
-  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,chordsHtml].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   normalizeStageLyricCase(detailContent);
   updateSongPageIndicator({announce:false});
   if(!stageMode)requestAnimationFrame(syncSongPageHeight);

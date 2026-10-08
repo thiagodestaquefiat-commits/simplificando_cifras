@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v333-cor-laranja-pestana-branca";
+const CACHE_NAME = "simplificando-cifras-v334-sem-pagina-cifra";
 const ASSETS = [
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
