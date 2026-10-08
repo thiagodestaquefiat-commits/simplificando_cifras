@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v331-tema-claro-cor-cifra";
+const CACHE_NAME = "simplificando-cifras-v332-autosave-cores";
 const ASSETS = [
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
