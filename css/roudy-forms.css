@@ -88,3 +88,27 @@
 
 /* Abas do editor: a seção escondida continua escondida */
 .modal .form-group[hidden],.modal [hidden].form-group{display:none!important}
+
+/* ---------- Novo evento: convidar integrante ---------- */
+.event-add-member{gap:8px!important;align-items:center}
+.event-add-member .form-input,.event-add-member select{min-height:46px!important;padding:0 14px!important;border:0!important;border-radius:12px!important;background:var(--rf-control)!important;color:var(--rf-text)!important;box-shadow:none!important;font-size:14px!important;color-scheme:dark}
+.event-add-member .btn,.event-add-member button{min-height:46px!important;margin:0!important;border:0!important;border-radius:12px!important;background:rgba(255,255,255,.07)!important;color:var(--rf-text)!important;box-shadow:none!important;font:650 13px/1.2 Inter,system-ui,sans-serif!important}
+.user-invite-panel{display:grid;gap:10px;margin:12px 0 4px;padding:16px;border:0;border-radius:16px;background:var(--rf-surface);color:var(--rf-text)}
+.user-invite-panel h3{margin:0;color:#fff;font-size:17px;font-weight:800;letter-spacing:-.2px}
+.user-invite-panel>p,.user-invite-panel #event-user-search-status,.user-invite-panel #event-user-send-status{margin:0;color:var(--rf-muted);font-size:12px;line-height:1.45}
+.user-invite-panel label{color:var(--rf-text);font-size:13px;font-weight:600}
+.user-invite-panel #event-user-search{min-height:46px;padding:0 14px;border:0;border-radius:12px;background:var(--rf-control);color:var(--rf-text);box-shadow:none;font-size:15px;color-scheme:dark}
+.user-invite-panel #event-user-results{display:grid;border-radius:12px;overflow:hidden}
+.user-invite-result{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;min-height:60px;margin:0;padding:8px 4px;border:0;border-bottom:1px solid var(--rf-line);border-radius:0;background:transparent;color:var(--rf-text);text-align:left;font:600 14px/1.25 Inter,system-ui,sans-serif;cursor:pointer}
+.user-invite-result:last-child{border-bottom:0}
+.user-invite-result:active{background:rgba(255,255,255,.04)}
+.user-invite-result small{display:block;margin-top:2px;color:var(--rf-muted);font-size:12px;font-weight:500}
+.user-invite-result>span[aria-hidden]{color:var(--rf-muted);font-size:20px}
+.user-invite-avatar{display:grid;width:40px;height:40px;overflow:hidden;place-items:center;border-radius:50%;background:#2c2c2e;color:#fff;font-size:16px;font-weight:700}
+.user-invite-avatar img{width:100%;height:100%;object-fit:cover}
+#event-user-profile{display:grid;gap:10px;padding-top:4px}
+#event-user-profile:not([hidden]) .user-invite-result{grid-template-columns:40px minmax(0,1fr);border-bottom:0;cursor:default}
+#event-user-profile>p{margin:0;color:var(--rf-muted);font-size:12px;line-height:1.45}
+.user-invite-panel .btn{width:100%;min-height:48px;margin:0;border:0;border-radius:14px;box-shadow:none;font:700 14px/1 Inter,system-ui,sans-serif}
+.user-invite-panel .btn-primary{background:var(--rf-blue);color:#fff}
+.user-invite-panel .btn-outline{background:rgba(255,255,255,.07);color:var(--rf-text)}
