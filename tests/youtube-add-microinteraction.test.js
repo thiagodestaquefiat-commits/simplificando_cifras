@@ -18,7 +18,9 @@ assert.match(source, /aria-pressed/);
 assert.match(source, /Adicionar “\$\{name\}” à playlist/);
 assert.match(source, /“\$\{name\}” adicionada à playlist/);
 assert.match(source, /classList\.add\("is-pending"\)/);
-assert.match(source, /notify: false/);
+// A busca não salva sozinha: abre a música para o usuário conferir antes de entrar na playlist.
+assert.match(source, /reviewSearchedSong\(model\)/);
+assert.doesNotMatch(source, /saveAiGeneratedSong\(model, \{ open: false/);
 assert.match(youtubeSource, /element\("button", "youtube-add-btn", "Adicionar"\)/);
 assert.match(html, /function schedulePlaylistOnlineSearch/);
 assert.match(html, /harmonicSummaryClient\.searchSources\(query,''\)/);
