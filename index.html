@@ -1230,7 +1230,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/app-assistant.js?v=21"></script>
  <script src="js/event-user-invites.js?v=6"></script>
 <script src="js/notification-center.js?v=3"></script>
-<script src="js/profile-username.js?v=3"></script>
+<script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
 const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -3365,8 +3365,11 @@ APP_TRANSLATIONS.en.tunerHelp='Tune your instrument with the microphone';
 APP_TRANSLATIONS.es.tunerHelp='Afina tu instrumento con el micrófono';
 let pendingProfileAvatar=null,profileImageEditorState=null;
 function accountProfiles(){const value=storage.get(ACCOUNT_PROFILES_KEY,{});return value&&typeof value==='object'?value:{};}
-const PROFILE_MUSICAL_ROLES=['Vocalista','Backing vocal','Guitarrista','Violonista','Baixista','Baterista','Tecladista','Pianista','Percussionista','Ukulele','Violinista','Viola','Saxofonista','Flautista','Trompetista','Outro'];
-function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:(Array.isArray(saved.instruments)?saved.instruments:Array.isArray(remote.instruments)?remote.instruments:[]).filter(value=>PROFILE_MUSICAL_ROLES.includes(value)),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
+const PROFILE_MUSICAL_ROLES=['Vocal','Backing Vocal','Guitarra','Violão','Baixo','Bateria','Teclado','Percussão','Outros'];
+// Nomes antigos (salvos antes) passam para os novos, sem o usuário perder o que já marcou.
+const PROFILE_ROLE_ALIASES={'Vocalista':'Vocal','Backing vocal':'Backing Vocal','Guitarrista':'Guitarra','Violonista':'Violão','Baixista':'Baixo','Baterista':'Bateria','Tecladista':'Teclado','Pianista':'Teclado','Percussionista':'Percussão','Ukulele':'Outros','Violinista':'Outros','Viola':'Outros','Saxofonista':'Outros','Flautista':'Outros','Trompetista':'Outros','Outro':'Outros'};
+function normalizeProfileRoles(values){const chosen=new Set((Array.isArray(values)?values:[]).map(value=>PROFILE_ROLE_ALIASES[value]||value));return PROFILE_MUSICAL_ROLES.filter(role=>chosen.has(role));}
+function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:normalizeProfileRoles(Array.isArray(saved.instruments)?saved.instruments:remote.instruments),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
 function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
 function accountAvatar(profile,className='account-avatar'){return `<span class="${className}${profile.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(profile.id||profile.email||profile.name)}" id="account-profile-avatar">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
 function accountSyncPresentation(state=librarySync.getStatus()){
@@ -3655,7 +3658,7 @@ function importProfileBackup(text,ownerId=requireBackupIdentity()){
   if((!current.name||(!currentAuthState.authenticated&&current.name==='Você'))&&typeof session.perfil?.name==='string')profile.name=session.perfil.name.trim().slice(0,120);
   if(!current.avatarUrl&&typeof session.perfil?.avatarUrl==='string'&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/.test(session.perfil.avatarUrl))profile.avatarUrl=session.perfil.avatarUrl;
   if(!current.location&&typeof session.perfil?.location==='string')profile.location=session.perfil.location.trim().slice(0,120);
-  if(!current.instruments.length&&Array.isArray(session.perfil?.instruments))profile.instruments=PROFILE_MUSICAL_ROLES.filter(role=>session.perfil.instruments.includes(role));
+  if(!current.instruments.length&&Array.isArray(session.perfil?.instruments))profile.instruments=normalizeProfileRoles(session.perfil.instruments);
   const preferences=storage.get(APP_SETTINGS_KEY,{})||{},nextPreferences={...preferences};
   const validators={language:v=>['pt-BR','en','es','it','fr','de'].includes(v),theme:v=>['light','dark','system'].includes(v),chordColor:v=>Object.hasOwn(CHORD_COLOR_OPTIONS,v),scale:v=>[100,110,120,130,140].includes(v),highContrast:v=>typeof v==='boolean',colorBlind:v=>typeof v==='boolean'};
   for(const [key,validate] of Object.entries(validators))if(!Object.hasOwn(preferences,key)&&validate(session.configuracoes?.[key]))nextPreferences[key]=session.configuracoes[key];

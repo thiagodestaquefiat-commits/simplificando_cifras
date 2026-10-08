@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v334-sem-pagina-cifra";
+const CACHE_NAME = "simplificando-cifras-v335-perfil-usuario-funcoes";
 const ASSETS = [
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
@@ -74,7 +74,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=6",
   "./js/profile-username.js?v=1",
   "./js/profile-username.js?v=2",
-  "./js/profile-username.js?v=3",
+  "./js/profile-username.js?v=4",
   "./js/event-user-invites.css?v=2",
   "./js/event-user-invites.css?v=3",
   "./js/event-people-search.css?v=1",
