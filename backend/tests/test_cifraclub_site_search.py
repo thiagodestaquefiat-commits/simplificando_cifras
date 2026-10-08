@@ -66,3 +66,11 @@ def test_find_falls_back_to_old_flow_when_site_search_fails():
     hit, _ = _find("Na Sua Estante", "Pitty", client, search_fn=lambda q: [],
                    site_search=lambda t, a, c: SiteSearchResult(ok=False))
     assert hit and hit.url == url
+
+
+def test_hit_carries_artist_and_title_from_site_search():
+    url = "https://www.cifraclub.com.br/legiao-urbana/tempo-perdido/"
+    client = PageClient({url: SHEET_HTML})
+    hit, _ = _find("tempo perdido", None, client, search_fn=lambda q: [],
+                   site_search=lambda t, a, c: SiteSearchResult(ok=True, url=url, artist="Legião Urbana", title="Tempo Perdido"))
+    assert hit.artist == "Legião Urbana" and hit.title == "Tempo Perdido"

@@ -110,6 +110,8 @@ class ChordSheetHit:
     key: str | None = None        # tom real da música (ex.: D)
     shape_key: str | None = None  # tom da forma dos acordes escritos (ex.: C em "D com forma de C")
     capo: int | None = None       # casa do capotraste
+    artist: str | None = None     # artista informado pela busca do site (quando o usuário não disse)
+    title: str | None = None      # título oficial no site
 
 
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -398,6 +400,8 @@ class SiteSearchResult:
     respondeu e a música não existe lá; ok=False quando a busca em si falhou (rede/bloqueio)."""
     ok: bool
     url: str | None = None
+    artist: str | None = None
+    title: str | None = None
 
 
 def _pick_cifraclub_doc(docs: list, titulo: str, artista: str | None) -> dict | None:
@@ -473,7 +477,9 @@ def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=N
                 f"{doc['dns']}/{doc['url']}" if doc else None, time.monotonic() - started)
     if not doc:
         return SiteSearchResult(ok=True)
-    return SiteSearchResult(ok=True, url=f"https://www.cifraclub.com.br/{doc['dns']}/{doc['url']}/")
+    return SiteSearchResult(ok=True, url=f"https://www.cifraclub.com.br/{doc['dns']}/{doc['url']}/",
+                            artist=str(doc.get("art") or "").strip()[:160] or None,
+                            title=str(doc.get("txt") or "").strip()[:160] or None)
 
 
 def _find(titulo: str, artista: str | None, http_client, search_fn=None,
@@ -497,7 +503,7 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         if found.ok and found.url:
             sheet, meta = _fetch_page(found.url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline)
             if sheet:
-                return ChordSheetHit(sheet, found.url, "cifraclub", **meta), []
+                return ChordSheetHit(sheet, found.url, "cifraclub", artist=found.artist, title=found.title, **meta), []
         elif found.ok:
             confirmed_missing = True
             logger.info("cifraclub_search_not_found titulo=%r artista=%r", titulo, artista)
