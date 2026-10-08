@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v346-logout-limpo";
+const CACHE_NAME = "simplificando-cifras-v347-logout-local";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./js/medley-repository.js?v=2",
@@ -91,6 +91,7 @@ const ASSETS = [
   "./js/app-auth.js?v=12",
   "./js/app-auth.js?v=13",
   "./js/app-auth.js?v=14",
+  "./js/app-auth.js?v=15",
   "./js/ui-i18n.js?v=10",
   "./js/ui-i18n.js?v=12",
   "./js/ui-i18n.js?v=13",
