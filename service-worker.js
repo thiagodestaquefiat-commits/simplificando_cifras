@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v335-perfil-usuario-funcoes";
+const CACHE_NAME = "simplificando-cifras-v336-revisar-antes-de-salvar";
 const ASSETS = [
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
@@ -146,7 +146,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=16",
+  "./js/ai/ai-harmonic-summary.js?v=17",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",

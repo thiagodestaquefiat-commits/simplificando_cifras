@@ -56,7 +56,7 @@ const success = {
     assert.match(await page.locator("[data-ai-status]").innerText(), /Analisando a estrutura harmônica/);
     assert.deepEqual(requestBody, { tipo: "texto", titulo: "Rugido do Leão", artista: "Artista teste", conteudo: "Dm Bb C G" });
     await pendingRoute.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) });
-    await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
+    await page.getByText("Confira a música", { exact: true }).waitFor({ state: "visible" });
     assert.equal(await page.locator("#song-editor").count(), 0);
     assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), "img src=x onerror=alert(1)Rugido do Leão");
     assert.equal(await page.getByLabel("Artista", { exact: true }).inputValue(), "Artista teste");
@@ -81,7 +81,7 @@ const success = {
     await secondText.getByLabel("Cifra, letra com acordes, anotações ou estrutura musical").fill("Dm Bb C G");
     await page.route(apiEndpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(success) }), { times: 1 });
     await page.getByRole("button", { name: "Analisar texto", exact: true }).click();
-    await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
+    await page.getByText("Confira a música", { exact: true }).waitFor({ state: "visible" });
     await page.getByLabel("Título", { exact: true }).fill("Resumo revisado");
     await page.getByLabel("Artista", { exact: true }).fill("Artista revisado");
     await page.getByLabel("Tom original", { exact: true }).fill("E");
@@ -102,7 +102,7 @@ const success = {
     await page.locator(".transpose-bar .t-btn").last().click();
     assert.equal(await page.locator("#transposed-key").innerText(), "F");
     await page.getByRole("button", { name: "Editar Cifra", exact: true }).click();
-    await page.getByText("Revisar resumo harmônico", { exact: true }).waitFor({ state: "visible" });
+    await page.getByText("Confira a música", { exact: true }).waitFor({ state: "visible" });
     assert.equal(await page.locator("#song-editor").count(), 0);
     assert.equal(await page.getByLabel("Título", { exact: true }).inputValue(), "Resumo revisado");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();

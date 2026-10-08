@@ -368,8 +368,9 @@
     const result = await global.harmonicSummaryClient.generate("arquivo", { titulo: "", artista: "", arquivos: selected });
     const sourceInfo = { type: "upload", name: result.payload.arquivos.map(file => file.name).join(" + ").slice(0, 255), url: null };
     const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
-    if (typeof global.saveAiGeneratedSong !== "function") throw new Error("Não foi possível adicionar a música gerada.");
-    return global.saveAiGeneratedSong(model);
+    // Foto/arquivo: abre para revisão; só entra na playlist ao tocar em Salvar.
+    global.openAiDraft(model, null);
+    return model;
   }
 
   function closeSearch() {
@@ -416,9 +417,14 @@
         : await global.harmonicSummaryClient.generate("pesquisa", { titulo: candidate.title || title, artista: candidate.artist || artist, sourceProvider: candidate.providerId, sourceId: candidate.sourceId });
       const sourceInfo = candidate.catalog ? resultSourceInfo(result.data) : { type: "online", name: candidate.sourceName || candidate.title || title, url: candidate.sourceUrl || null };
       const model = global.harmonicSummaryClient.responseToEditorModel(result.data, global.currentInstrument || "guitar", sourceInfo);
-      global.saveAiGeneratedSong(model, { open: false, notify: false });
-      addButton.classList.remove("is-pending");
-      status.textContent = `“${name}” adicionada à playlist.`;
+      addButton.classList.remove("is-pending", "is-confirming", "is-added");
+      setSearchAddState(addButton, name, false, false);
+      status.textContent = "Confira a música e toque em Salvar.";
+      busy = false;
+      if (searchPanel) searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
+      if (typeof global.reviewSearchedSong === "function") global.reviewSearchedSong(model);
+      else global.openAiDraft(model, null);
+      return;
     } catch (error) {
       busy = false;
       if (!searchPanel) return;

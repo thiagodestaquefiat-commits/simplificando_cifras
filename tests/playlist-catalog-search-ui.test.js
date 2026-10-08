@@ -20,8 +20,11 @@ await page.evaluate(()=>openPlaylistSearch());await page.fill('#search-music','R
 const callsTyping=calls.splice(0);
 
 await page.click('[data-playlist-catalog-search]');await page.waitForTimeout(1200);
+const review={titulo:await page.evaluate(()=>document.getElementById('ai-review-title')?.value),naoSalvou:await page.evaluate(n=>musicas.length===n,before)};
+assert.equal(review.titulo,'Ruja o Leão','abre a música para revisão');assert.equal(review.naoSalvou,true,'não entra na playlist antes de Salvar');
+await page.evaluate(()=>saveSimpleSongReview());await page.waitForTimeout(500);await page.evaluate(()=>{closeDetail();closeModal();openPlaylistSearch()});
 
-const A={callsTyping,callsAdd:calls.splice(0),added:await page.evaluate(n=>musicas.length-n,before),last:await page.evaluate(()=>{const m=musicas.find(x=>/Ruja/.test(x.title));return m&&{t:m.title,a:m.artist,k:m.key}}),status:await page.evaluate(()=>document.querySelector('.playlist-search-online-status')?.innerText)};
+const A={callsTyping,callsAdd:calls.splice(0),added:await page.evaluate(n=>musicas.length-n,before),last:await page.evaluate(()=>{const m=musicas.find(x=>/Ruja/.test(x.title));return m&&{t:m.title,a:m.artist,k:m.key}}),status:''};
 // B: nao encontrada via Enter
 mode='miss';await page.fill('#search-music','Musica Inexistente');await page.waitForTimeout(1200);await page.press('#search-music','Enter');await page.waitForTimeout(1200);
 
@@ -34,14 +37,15 @@ await page.evaluate(()=>{try{aiHarmonicSummary.close()}catch(e){}});await page.e
 mode='hit';await page.evaluate(()=>{musicas=musicas.filter(m=>!/Ruja/.test(m.title))});
 await page.evaluate(()=>aiHarmonicSummary.openSearch());await page.fill('[name="ai-search-title"]','Ruja o Leão - Fernandinho');
 await page.evaluate(()=>document.querySelector('#playlist-ai-search-mode form').requestSubmit());await page.waitForTimeout(1500);
-const D={calls:calls.splice(0),status:await page.evaluate(()=>document.querySelector('[data-ai-search-status]')?.innerText),has:await page.evaluate(()=>musicas.some(m=>/Ruja/.test(m.title)))};
+const D={calls:calls.splice(0),status:await page.evaluate(()=>document.querySelector('[data-ai-search-status]')?.innerText),review:await page.evaluate(()=>document.getElementById('ai-review-title')?.value),has:await page.evaluate(()=>musicas.some(m=>/Ruja/.test(m.title)))};
+await page.evaluate(()=>closeModal());
 mode='miss';await page.fill('[name="ai-search-title"]','Musica Inexistente');await page.evaluate(()=>document.querySelector('#playlist-ai-search-mode form').requestSubmit());await page.waitForTimeout(1500);
 const E={status:await page.evaluate(()=>document.querySelector('[data-ai-search-status]')?.innerText)};
-assert.ok(D.calls.some(c=>/"modoGeracao":"conhecimento_modelo"/.test(c)),'Pesquisar do cartão procura no catálogo/web');assert.equal(D.has,true);assert.match(D.status,/adicionada/);
+assert.ok(D.calls.some(c=>/"modoGeracao":"conhecimento_modelo"/.test(c)),'Pesquisar do cartão procura no catálogo/web');assert.equal(D.review,'Ruja o Leão','cartão também abre para revisão');assert.equal(D.has,false,'não salva sozinho');
 assert.match(E.status,/Enviar foto/);assert.match(E.status,/Enviar PDF ou arquivo/);
 assert.deepEqual(A.callsTyping,['search'],'digitar não pode disparar busca na web');
 assert.equal(A.callsAdd.length,1);assert.match(A.callsAdd[0],/"modoGeracao":"conhecimento_modelo"/);assert.match(A.callsAdd[0],/"artista":"Fernandinho"/);
-assert.equal(A.added,1);assert.deepEqual(A.last,{t:'Ruja o Leão',a:'Fernandinho',k:'D'});
+assert.equal(A.added,1,'entra na playlist depois de Salvar');assert.deepEqual(A.last,{t:'Ruja o Leão',a:'Fernandinho',k:'D'});
 assert.ok(B.calls.some(c=>c.startsWith('gerar:')),'Enter procura no catálogo/web');assert.match(B.status,/Enviar foto/);assert.match(B.status,/Enviar PDF ou arquivo/);
 assert.deepEqual(C,{modal:true,titulo:'Musica Inexistente',visivel:true});assert.deepEqual(errs,[]);
 console.log('playlist-catalog-search-ui.test.js: OK (catálogo/web pelo +, Enter e foto/arquivo quando não acha)');await b.close();}finally{server.close();}})().catch(e=>{console.error(e);process.exit(1)});

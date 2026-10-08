@@ -1223,7 +1223,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-ad
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=16"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=16"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=17"></script>
 <script src="js/ai/camera-capture.js?v=2"></script>
 <script src="js/assistant-intent-catalog.js?v=1"></script>
 <script src="js/assistant-intent-client.js?v=1"></script>
@@ -2740,7 +2740,7 @@ async function loadPlaylistOnlineResults(query,version){
 }
 async function addPlaylistOnlineCandidate(candidate,button,panel){
   if(button.classList.contains('is-pending')||button.classList.contains('is-added'))return;const name=candidate.title||'Música';button.classList.add('is-pending');setPlaylistSearchAddState(button,name,true,true);
-  try{const generated=await harmonicSummaryClient.generate('pesquisa',{titulo:name,artista:candidate.artist||'',sourceProvider:candidate.providerId,sourceId:candidate.sourceId});const sourceInfo={type:'online',name:candidate.sourceName||name,url:candidate.sourceUrl||null};const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',sourceInfo);saveAiGeneratedSong(model,{open:false,notify:false});button.classList.remove('is-pending');const status=panel.querySelector('.playlist-search-online-status');if(status)status.textContent=`“${name}” adicionada à playlist.`}
+  try{const generated=await harmonicSummaryClient.generate('pesquisa',{titulo:name,artista:candidate.artist||'',sourceProvider:candidate.providerId,sourceId:candidate.sourceId});const sourceInfo={type:'online',name:candidate.sourceName||name,url:candidate.sourceUrl||null};const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',sourceInfo);button.classList.remove('is-pending','is-confirming','is-added');setPlaylistSearchAddState(button,name,false);reviewSearchedSong(model)}
   catch(error){button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,name,false,true);const status=document.createElement('div');status.className='playlist-search-online-status';status.textContent=error?.message||'Não foi possível adicionar esta música.';panel.prepend(status)}
 }
 function splitPlaylistQuery(query){const parts=String(query||'').trim().split(/\s+(?:—|–|-)\s+/);return {titulo:(parts.shift()||'').trim(),artista:parts.join(' ').trim()}}
@@ -2763,8 +2763,8 @@ async function addPlaylistCatalogSong(query,button,panel){
   try{
     const generated=await harmonicSummaryClient.generate('pesquisa',{titulo,artista,modoGeracao:'conhecimento_modelo'});
     const model=harmonicSummaryClient.responseToEditorModel(generated.data,currentInstrument||'guitar',aiHarmonicSummary.resultSourceInfo(generated.data));
-    saveAiGeneratedSong(model,{open:false,notify:false});button.classList.remove('is-pending');
-    playlistSearchStatus(panel,`“${model.title||titulo}” adicionada à playlist.`);
+    button.classList.remove('is-pending','is-confirming','is-added');setPlaylistSearchAddState(button,titulo,false);
+    reviewSearchedSong(model);
   }catch(error){
     button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,titulo,false,true);
     const status=playlistSearchStatus(panel,error?.message||'Não foi possível buscar esta música agora.');
@@ -2963,8 +2963,8 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   simpleReviewDraft={model:normalized,sourceSong:sourceSong||null};
   const fullSheet=normalized.fullChordSheet;
   document.getElementById('modal-body').innerHTML=`
-    <div class="modal-title">${isAi?'Revisar resumo harmônico':'Editar música'}</div>
-    ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Gerado por IA — revise antes de salvar. Nada será salvo automaticamente.</div>':''}
+    <div class="modal-title">${isAi?'Confira a música':'Editar música'}</div>
+    ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Confira título, artista, tom e cifra. A música só entra na sua playlist quando você tocar em Salvar.</div>':''}
     ${normalized.sourceInfo?.type==='online'&&normalized.sourceInfo?.name?`<div style="font-size:11px;color:var(--text2);margin:-7px 0 14px;line-height:1.5;">Fonte: ${eventEsc(normalized.sourceInfo.name)}</div>`:''}
     <div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>
     ${simpleSongEditorFields(normalized)}
@@ -3025,6 +3025,8 @@ function setSimpleEditorView(view){
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
 }
+// Música encontrada pela busca: abre para o usuário ver e confirmar. Nada entra na playlist até Salvar.
+function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
 function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
 function playlistContainsSong(input){try{return Boolean(songModel.findDuplicate(musicas,songModel.create(input)))}catch(_){return false}}
 function saveAiGeneratedSong(model,options={}){
