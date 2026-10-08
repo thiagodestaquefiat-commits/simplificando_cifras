@@ -921,7 +921,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
-<link rel="stylesheet" href="css/roudy-forms.css?v=2">
+<link rel="stylesheet" href="css/roudy-forms.css?v=3">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 </head>
 <body>
@@ -935,7 +935,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     <div class="topbar" id="app-topbar">
       <div class="topbar-normal" id="topbar-normal">
         <div class="topbar-info">
-          <div class="topbar-title">ROUDY</div>
+          <div class="topbar-title-row"><div class="topbar-title">ROUDY</div><button class="app-assistant-launch" id="app-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button></div>
           <div class="topbar-sub" id="count-label"></div>
         </div>
         <button class="topbar-search-action" type="button" onclick="openPlaylistSearch()" aria-label="Buscar música"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg></button>
@@ -1021,6 +1021,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="detail-title" id="detail-title"></div>
         <div class="detail-capo" id="detail-artist-label"></div>
       </div>
+      <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
     </div>
     <header class="stage-performance-header" id="stage-performance-header" aria-label="Informações da apresentação">
@@ -1112,6 +1113,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="detail-title-wrap">
         <div class="detail-title" id="sd-title"></div>
       </div>
+      <button class="app-assistant-launch" id="event-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
       <div class="event-condensed-title" id="sd-title-condensed" aria-hidden="true"></div>
       <button type="button" class="event-notification-button event-chat-header-button" id="event-chat-fab" onclick="openEventChat()" aria-label="Abrir chat do evento" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button>
       <button type="button" class="event-notification-button" id="event-notification-button" onclick="openEventNotifications()" aria-label="Abrir alterações recentes" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg></button>
@@ -4909,5 +4911,7 @@ if ('serviceWorker' in navigator) {
     }).catch(function(){});
   });
 }
-</script></body>
+</script>  <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
+  <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
+</body>
 </html>

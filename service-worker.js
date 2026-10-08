@@ -1,9 +1,9 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v338-rolagem-convite";
+const CACHE_NAME = "simplificando-cifras-v339-assistente-roudy";
 const ASSETS = [
-  "./css/roudy-forms.css?v=2",
+  "./css/roudy-forms.css?v=3",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
