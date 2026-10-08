@@ -3986,15 +3986,23 @@ async function logoutAppAccount(){
     const parts=[pendingSongs?`${pendingSongs} música${pendingSongs===1?'':'s'}`:'',pendingEvents?`${pendingEvents} evento${pendingEvents===1?'':'s'}`:''].filter(Boolean).join(' e ');
     appAlert(`Ainda não foi possível salvar ${parts} na sua conta.\n\nPara não perder nada, você continua conectado. Verifique a internet e tente sair de novo.`);return;
   }
+  const authUserId=String(currentAuthState.user?.id||'');
   const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:String(appCurrentUser.id||'')};
   try{await appAuth.signOut();}catch(error){showToast('⚠️ '+error.message);return;}
   const purge=()=>{
+    // Volta o aparelho ao estado de visitante: só o catálogo de exemplo, sem eventos da conta.
+    try{musicas=songRepository.deactivateOwner(null,catalogoPadrao)||songModel.normalizeCollection(demoLibrary.catalog());}catch(_){}
+    try{setlists=eventRepository.deactivateOwner(null);}catch(_){}
+    try{automaticEventOffline.clear();}catch(_){}
+    currentSdId=null;
+    try{if(authUserId)Object.keys(localStorage).filter(k=>k.includes(authUserId)).forEach(k=>localStorage.removeItem(k));}catch(_){}
+    try{if(!purge.idbDone&&window.indexedDB){purge.idbDone=true;indexedDB.deleteDatabase('roudy-event-offline-v1');}}catch(_){}
     if(owners.songs)songRepository.purgeOwner(owners.songs);
     if(owners.events)eventRepository.purgeOwner(owners.events);
     if(owners.medley)medleyRepository.purgeOwner(owners.medley);
     if(owners.profile){const profiles=accountProfiles();if(Object.prototype.hasOwnProperty.call(profiles,owners.profile)){delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
   };
-  purge();setTimeout(purge,0);setTimeout(purge,600); // depois que a troca de conta termina de gravar
+  purge();setTimeout(purge,0);setTimeout(()=>{purge();try{closeDetail();switchTab('musicas');renderMusicas();renderSetlists();}catch(_){}},600); // depois que a troca de conta termina de gravar
   closeModal();showToast('Você saiu. Os dados da sua conta foram removidos deste aparelho.');
 }
 async function openBandManager(){
