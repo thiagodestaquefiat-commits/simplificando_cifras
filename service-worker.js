@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v194-perfil-convites
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v340-sair-limpa-aparelho";
+const CACHE_NAME = "simplificando-cifras-v341-assistente-comandos";
 const ASSETS = [
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
@@ -21,7 +21,7 @@ const ASSETS = [
   "./js/smart-scroll.js?v=5",
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
-  "./js/app-assistant.js?v=21",
+  "./js/app-assistant.js?v=22",
   "./",
   "./index.html",
   "./js/storage.js",
