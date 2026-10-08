@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import urlparse, quote_plus
 
+import json
+
 import httpx
 
 from .music_sources import MusicSourceError, MusicSourceTimeout, MusicSourceUnavailable, MusicSourceInvalid, SafeMusicSourceHttpClient
@@ -385,8 +387,98 @@ def _artist_song_url(titulo: str, artista: str, client, deadline: float | None =
     return f"https://www.cifraclub.com.br/{artist_slug}/{best}/"
 
 
+CIFRACLUB_SEARCH_URL = "https://solr.sscdn.co/cc/c7/"
+CIFRACLUB_SEARCH_HOSTS = ("solr.sscdn.co",)
+CIFRACLUB_SEARCH_TIMEOUT_SECONDS = 5.0
+
+
+@dataclass(frozen=True)
+class SiteSearchResult:
+    """Resultado da busca interna do Cifra Club: url quando achou; found=False quando a busca
+    respondeu e a música não existe lá; ok=False quando a busca em si falhou (rede/bloqueio)."""
+    ok: bool
+    url: str | None = None
+
+
+def _pick_cifraclub_doc(docs: list, titulo: str, artista: str | None) -> dict | None:
+    """Escolhe a música certa entre os resultados da busca do Cifra Club.
+
+    Exige o título igual (ou "<título>-..." como "a-boa-parte-part-..."). Com artista, exige o
+    artista também; sem artista, fica com o mais popular (a própria ordem da busca).
+    """
+    song_slug, artist_slug = slugify(titulo), slugify(artista)
+    if not song_slug:
+        return None
+    songs = [doc for doc in docs if isinstance(doc, dict) and doc.get("dns") and doc.get("url")
+             and str(doc.get("tipo", "2")) == "2"]
+
+    def title_ok(doc) -> bool:
+        names = {slugify(doc.get("txt")), str(doc.get("url"))}
+        return any(name == song_slug or name.startswith(song_slug + "-") for name in names)
+
+    def artist_ok(doc) -> bool:
+        if not artist_slug:
+            return True
+        names = {str(doc.get("dns")), slugify(doc.get("art"))}
+        return artist_slug in names or any(
+            SequenceMatcher(None, artist_slug, name).ratio() >= 0.85 for name in names)
+
+    matches = [doc for doc in songs if title_ok(doc) and artist_ok(doc)]
+    if not matches:
+        return None
+    exact = [doc for doc in matches if slugify(doc.get("txt")) == song_slug or doc.get("url") == song_slug]
+    main = [doc for doc in (exact or matches) if not any(word in str(doc.get("url")) for word in _VARIANT_WORDS)]
+    return (main or exact or matches)[0]
+
+
+def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=None) -> SiteSearchResult:
+    """Busca a música na pesquisa interna do Cifra Club (a mesma da caixa de busca do site).
+
+    Responde em milissegundos com o endereço exato (artista/música) e funciona só com o nome da
+    música. Tenta direto e, se a rede bloquear, pelo ScraperAPI (sem render).
+    """
+    query = " ".join(part for part in (titulo, artista) if part).strip()
+    if not query:
+        return SiteSearchResult(ok=False)
+    url = f"{CIFRACLUB_SEARCH_URL}?q={quote_plus(query)}"
+    body = None
+    started = time.monotonic()
+    try:
+        response = httpx.get(url, timeout=CIFRACLUB_SEARCH_TIMEOUT_SECONDS, headers={"Accept": "application/json"})
+        if response.status_code == 200:
+            body = response.text
+        else:
+            logger.warning("cifraclub_search_status=%d", response.status_code)
+    except httpx.HTTPError as error:
+        logger.warning("cifraclub_search_direct_failed=%s", error.__class__.__name__)
+    if body is None and getattr(http_client, "supports_render", False):
+        try:
+            body, _final = http_client.get_text(url, allowed_hosts=CIFRACLUB_SEARCH_HOSTS,
+                                                allowed_content_types=("application/json", "text/plain"),
+                                                render=False, timeout_seconds=15)
+        except Exception as error:  # noqa: BLE001 - a busca é um atalho; sem ela segue o fluxo antigo
+            logger.warning("cifraclub_search_proxy_failed=%s", error.__class__.__name__)
+    if body is None:
+        return SiteSearchResult(ok=False)
+    try:
+        text = body.strip()
+        if not text.startswith("{"):  # JSONP: callback({...})
+            text = text[text.find("{"):text.rfind("}") + 1]
+        docs = (json.loads(text).get("response") or {}).get("docs") or []
+    except (ValueError, AttributeError):
+        logger.warning("cifraclub_search_invalid_json")
+        return SiteSearchResult(ok=False)
+    doc = _pick_cifraclub_doc(docs, titulo, artista)
+    logger.info("cifraclub_search query=%r docs=%d match=%s after=%.2fs", query, len(docs),
+                f"{doc['dns']}/{doc['url']}" if doc else None, time.monotonic() - started)
+    if not doc:
+        return SiteSearchResult(ok=True)
+    return SiteSearchResult(ok=True, url=f"https://www.cifraclub.com.br/{doc['dns']}/{doc['url']}/")
+
+
 def _find(titulo: str, artista: str | None, http_client, search_fn=None,
-          budget_seconds: float | None = None, allow_search: bool = True) -> tuple[ChordSheetHit | None, list]:
+          budget_seconds: float | None = None, allow_search: bool = True,
+          site_search=None) -> tuple[ChordSheetHit | None, list]:
     client = http_client or SafeMusicSourceHttpClient(timeout_seconds=TIMEOUT_SECONDS)
     _search = search_fn or _ddg_search
     deadline = time.monotonic() + budget_seconds if budget_seconds else None
@@ -397,12 +489,27 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
             return True
         return False
 
+    # 0) Busca interna do Cifra Club: acha o endereço exato pelo nome (inclusive sem artista).
+    #    Se a busca responde que a música não existe lá, não perde tempo com render nem Google.
+    confirmed_missing = False
+    if site_search is not None and not out_of_time("site_search:cifraclub"):
+        found = site_search(titulo, artista, client)
+        if found.ok and found.url:
+            sheet, meta = _fetch_page(found.url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline)
+            if sheet:
+                return ChordSheetHit(sheet, found.url, "cifraclub", **meta), []
+        elif found.ok:
+            confirmed_missing = True
+            logger.info("cifraclub_search_not_found titulo=%r artista=%r", titulo, artista)
+
     # 1) Cifra Club direto, só no modo rápido (sem render). O modo render pode levar ~60s e, se a página
     #    não tem cifra (ex.: só existe /letra/), consumia o tempo todo antes de olhar a lista do artista.
     if out_of_time("direct:cifraclub"):
         return None, []
     cifraclub_url = direct_url("cifraclub", titulo, artista)
     cifraclub_missing = cifraclub_404 = False
+    if cifraclub_url and confirmed_missing:
+        cifraclub_url = None  # a busca do próprio site já disse que não existe
     if cifraclub_url:
         sheet, meta = _fetch_page(cifraclub_url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline, allow_render=False)
         if sheet:
@@ -444,8 +551,8 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
                 logger.warning("cifraclub_render_failed=%s url=%s", error.__class__.__name__, cifraclub_url)
 
     all_results = []
-    if not allow_search:
-        logger.info("web_search_skipped reason=search_fallback_disabled")
+    if not allow_search or confirmed_missing:
+        logger.info("web_search_skipped reason=%s", "cifraclub_confirmed_missing" if confirmed_missing else "search_fallback_disabled")
         return None, all_results
     for name, hosts, include_article in PAGE_SOURCES:
         if out_of_time(f"search:{name}"):
@@ -496,11 +603,12 @@ def search_chord_context(titulo: str, artista: str | None = None, http_client=No
 
 # Orçamento total da busca web por requisição. Somado ao DeepSeek (DEEPSEEK_TIMEOUT_SECONDS=90),
 # precisa caber no timeout do gunicorn (180s no Dockerfile/Procfile).
-WEB_SEARCH_BUDGET_SECONDS = 75
+WEB_SEARCH_BUDGET_SECONDS = 45
 
 
 def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_fn=None,
-                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS, allow_search: bool = True):
+                       budget_seconds: float | None = WEB_SEARCH_BUDGET_SECONDS, allow_search: bool = True,
+                       site_search=None):
     """Retorna (sheet_finder, chord_context_searcher) que compartilham UMA busca por música.
 
     Com SCRAPER_API_KEY, usa o ScraperAPI como proxy (contorna bloqueio de IP de datacenter no
@@ -510,6 +618,9 @@ def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_
     mesmas requisições (até 12 chamadas render=true ao ScraperAPI numa única busca). Agora o
     resultado de _find é memorizado por (título, artista) e reaproveitado pelas duas funções.
     """
+    if http_client is None:
+        # Cliente real (produção): usa a busca interna do Cifra Club. Testes injetam a sua.
+        site_search = site_search or cifraclub_site_search
     if http_client is None and scraper_api_key:
         client = ScraperApiHttpClient(scraper_api_key)
         http_client, search_fn = client, search_fn or client.google_search
@@ -519,7 +630,7 @@ def make_web_searchers(scraper_api_key: str | None, *, http_client=None, search_
         key = (titulo, artista)
         if key not in memo:
             memo[key] = _find(titulo, artista, http_client, search_fn, budget_seconds=budget_seconds,
-                              allow_search=allow_search)
+                              allow_search=allow_search, site_search=site_search)
             hit = memo[key][0]
             if hit:
                 logger.info("chord_sheet_found source=%s url=%s chars=%d", hit.source_name, hit.url, len(hit.content))
