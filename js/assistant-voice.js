@@ -7,6 +7,9 @@
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clean=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   function load(){try{const v=JSON.parse(global.localStorage.getItem(KEY)||'null');return {enabled:v?.enabled!==false,voiceURI:String(v?.voiceURI||'')};}catch(_){return {enabled:true,voiceURI:''};}}
+  const BROKEN_KEY='sc_assistant_voice_broken_v1';
+  function broken(){try{return new Set(JSON.parse(global.localStorage.getItem(BROKEN_KEY)||'[]'));}catch(_){return new Set();}}
+  function markBroken(uri,on){const set=broken();if(on)set.add(uri);else set.delete(uri);try{global.localStorage.setItem(BROKEN_KEY,JSON.stringify([...set]));}catch(_){}}
   function save(value){try{global.localStorage.setItem(KEY,JSON.stringify(value));}catch(_){}}
   function supported(){return Boolean(global.speechSynthesis&&global.SpeechSynthesisUtterance);}
   function voices(){return supported()?global.speechSynthesis.getVoices():[];}
@@ -20,7 +23,7 @@
     const utterance=new global.SpeechSynthesisUtterance(String(text||''));
     const voice=selected();
     if(voice){utterance.voice=voice;utterance.lang=voice.lang;}else utterance.lang=appLang();
-    utterance.rate=1;global.speechSynthesis.speak(utterance);
+    utterance.rate=1;global.speechSynthesis.speak(utterance);return utterance;
   }
   function groups(query){
     const q=clean(query).trim(),base=appLang().slice(0,2).toLowerCase(),map=new Map();
@@ -33,10 +36,10 @@
     const rank=g=>{const l=String(g.lang).toLowerCase();return l===appLang().toLowerCase()?0:l.startsWith(base)?1:2;};
     return [...map.values()].sort((a,b)=>rank(a)-rank(b)||a.label.localeCompare(b.label,'pt')).map(g=>({...g,items:g.items.sort((a,b)=>shortName(a).localeCompare(shortName(b),'pt'))}));
   }
-  const greeting=lang=>{const l=String(lang||'').slice(0,2).toLowerCase();return ({en:'Hi, I am Roudy.',es:'Hola, soy Roudy.',fr:'Bonjour, je suis Roudy.',it:'Ciao, sono Roudy.',de:'Hallo, ich bin Roudy.'})[l]||'Olá, eu sou o Roudy.';};
+  const greeting=lang=>{const l=String(lang||'').slice(0,2).toLowerCase();return ({en:'Hi, I am Roudy.',es:'Hola, soy Roudy.',fr:'Bonjour, je suis Roudy.',it:'Ciao, sono Roudy.',de:'Hallo, ich bin Roudy.',nl:'Hallo, ik ben Roudy.',ja:'こんにちは、ロウディです。',ko:'안녕하세요, 로디입니다.',zh:'你好，我是Roudy。',ru:'Привет, я Роуди.',pl:'Cześć, jestem Roudy.',tr:'Merhaba, ben Roudy.',ar:'مرحبا، أنا رودي.',hi:'नमस्ते, मैं रॉडी हूँ।',sv:'Hej, jag är Roudy.',id:'Halo, saya Roudy.',uk:'Привіт, я Роуді.',el:'Γεια σου, είμαι ο Roudy.',he:'שלום, אני רודי.',th:'สวัสดี ฉันคือ Roudy',vi:'Xin chào, tôi là Roudy.'})[l]||'Olá, eu sou o Roudy.';};
   function rowHtml(v,current){
     const active=current&&current.voiceURI===v.voiceURI;
-    return `<button class="voice-option${active?' is-active':''}" type="button" role="radio" aria-checked="${active}" data-voice-uri="${esc(v.voiceURI)}" onclick="assistantVoice.choose(this.dataset.voiceUri)"><span class="voice-option-copy"><strong>${esc(languageLabel(v.lang))} - ${esc(shortName(v))}</strong><small>${v.localService?'Funciona sem internet':'Precisa de internet'}</small></span>${active?'<span class="voice-option-check" aria-hidden="true">✓</span>':''}</button>`;
+    return `<button class="voice-option${active?' is-active':''}${broken().has(v.voiceURI)?' is-broken':''}" type="button" role="radio" aria-checked="${active}" data-voice-uri="${esc(v.voiceURI)}" onclick="assistantVoice.choose(this.dataset.voiceUri)"><span class="voice-option-copy"><strong>${esc(languageLabel(v.lang))} - ${esc(shortName(v))}</strong><small>${broken().has(v.voiceURI)?'Não instalada neste aparelho — toque para tentar de novo':v.localService?'Funciona sem internet':'Precisa de internet'}</small></span>${active?'<span class="voice-option-check" aria-hidden="true">✓</span>':''}</button>`;
   }
   function renderList(){
     const box=global.document.getElementById('voice-list');if(!box)return;
@@ -53,7 +56,17 @@
     global.document.getElementById('modal-overlay').style.display='flex';
     renderList();
   }
-  function choose(uri){const s=load();s.voiceURI=String(uri||'');s.enabled=true;save(s);const t=global.document.getElementById('voice-enabled');if(t)t.checked=true;global.document.getElementById('voice-picker')?.removeAttribute('data-disabled');renderList();const v=selected();speak(greeting(v?.lang||appLang()));}
+  function choose(uri){
+    const s=load(),previous=s.voiceURI;s.voiceURI=String(uri||'');s.enabled=true;save(s);
+    const t=global.document.getElementById('voice-enabled');if(t)t.checked=true;global.document.getElementById('voice-picker')?.removeAttribute('data-disabled');
+    renderList();const v=selected(),u=speak(greeting(v?.lang||appLang()));
+    if(!v||!u)return;
+    // Muitos celulares listam idiomas cujo pacote de voz não está baixado: a fala nunca começa.
+    let started=false;
+    const fail=()=>{if(started)return;started=true;global.speechSynthesis.cancel();markBroken(v.voiceURI,true);const cur=load();if(cur.voiceURI===v.voiceURI){cur.voiceURI=previous===v.voiceURI?'':previous;save(cur);}renderList();if(typeof global.showToast==='function')global.showToast('⚠️ Essa voz não está instalada no aparelho. No Android, baixe o idioma em Configurações › Saída de texto para fala.');};
+    u.onstart=()=>{if(started)return;started=true;markBroken(v.voiceURI,false);renderList();};
+    u.onerror=fail;global.setTimeout(fail,4000);
+  }
   function toggle(on){const s=load();s.enabled=Boolean(on);save(s);const p=global.document.getElementById('voice-picker');if(p){if(on)p.removeAttribute('data-disabled');else p.setAttribute('data-disabled','true');}if(!on)global.speechSynthesis?.cancel();}
   function summary(){const s=load();if(!s.enabled)return 'Desligada';const v=selected();return v?`${languageLabel(v.lang)} - ${shortName(v)}`:'Voz padrão do aparelho';}
   if(supported()&&'onvoiceschanged' in global.speechSynthesis)global.speechSynthesis.addEventListener('voiceschanged',renderList);
