@@ -1,0 +1,24 @@
+/* Barra superior: ícones maiores com o nome embaixo (Assistente, Buscar, Foto/Arquivo, Notificações, Menu). */
+#view-main .topbar-normal{flex-wrap:wrap;row-gap:10px;column-gap:0;align-items:flex-start}
+#view-main .topbar-normal>.topbar-info{flex:1 0 100%}
+#view-main .topbar-labeled{position:relative;display:flex!important;flex:1 1 0;min-width:0;width:auto!important;height:auto!important;min-height:58px;padding:4px 2px 2px!important;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;border:0!important;border-radius:14px!important;background:transparent!important;box-shadow:none!important;color:#e6ebf1;cursor:pointer;animation:none}
+#view-main .topbar-labeled::after{content:attr(data-label);max-width:100%;overflow:hidden;color:#c9d1dc;font:600 11px/1.15 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.01em;text-overflow:ellipsis;white-space:nowrap}
+#view-main .topbar-labeled:hover::after,#view-main .topbar-labeled:focus-visible::after{color:#fff}
+#view-main .topbar-labeled:focus-visible{outline:2px solid #3b8bff;outline-offset:2px}
+#view-main .topbar-labeled:active{transform:scale(.96)}
+#view-main .topbar-labeled>svg{width:27px!important;height:27px!important;flex:0 0 auto}
+#view-main .app-assistant-launch.topbar-labeled{color:#dbeafe}
+#view-main .app-assistant-launch.topbar-labeled::before{content:'';position:absolute;top:4px;left:calc(50% + 9px);width:7px;height:7px;border:2px solid #050608;border-radius:50%;background:#4ade80}
+#view-main .app-assistant-launch.topbar-labeled.listening>svg{color:#60a5fa;animation:assistant-pulse 1.15s ease-in-out infinite}
+#view-main .topbar-account-wrap .app-account-btn{width:30px!important;height:30px!important;flex:0 0 30px!important;margin:0!important;font-size:9px}
+#view-main .topbar-account-wrap .app-account-btn img{width:100%;height:100%}
+/* Selo de notificações em cima do sino */
+#view-main .topbar-events-action .event-notification-badge{position:absolute;top:0;right:auto;bottom:auto;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border:2px solid #050608;border-radius:9px;background:#2f7bff;color:#fff;font:800 10px/14px Inter,sans-serif;text-align:center;transform:none}
+/* O cartão central de busca sai: a busca (playlist + ROUDY + web) fica só na lupa de cima. */
+#view-main .playlist-hero-content{display:none!important}
+@media(max-width:360px){#view-main .topbar-labeled::after{font-size:10px}#view-main .topbar-labeled>svg{width:25px!important;height:25px!important}}
+#view-main .app-assistant-launch.topbar-labeled::after{position:static!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;background:none!important;content:attr(data-label)}
+#view-main .topbar-account-wrap .app-account-btn{width:27px!important;height:27px!important;flex-basis:27px!important}
+#view-main[data-active-tab="setlists"] .topbar-search-action,#view-main[data-active-tab="setlists"] .topbar-camera-action,#view-main[data-active-tab="setlists"] .topbar-account-wrap{display:none!important}
+#view-main[data-active-tab="setlists"] .events-more-action{align-self:center}
+#view-main .topbar-labeled{margin:0!important}#view-main .topbar-account-wrap{gap:8px}#view-main .topbar-account-wrap .app-account-btn{margin-top:1px!important}
