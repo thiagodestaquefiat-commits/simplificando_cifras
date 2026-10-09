@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v359-palco-no-evento";
+const CACHE_NAME = "simplificando-cifras-v360-palco-mesmo-tamanho";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./css/topbar-labels.css?v=2",
