@@ -153,3 +153,10 @@
 .modal .account-menu-copy strong{font-size:15px;font-weight:600;line-height:1.25;color:#f5f5f7}
 .modal .account-menu-copy small{margin-top:3px;font-size:12px;line-height:1.35;color:#8b93a1}
 .modal .account-menu-arrow{color:#6b7280;font-size:20px;line-height:1;justify-self:end}
+
+/* Novo evento: integrantes adicionados (convite enviado ao salvar) */
+.event-member-editor--pending{align-items:center}
+.event-member-editor--pending>span{display:flex;flex:1 1 auto;flex-direction:column;min-width:0}.event-member-editor--pending .event-member-pending-role{flex:0 0 112px;width:112px}
+.event-member-pending-note{color:#8b93a1;font-size:11px;font-weight:500}
+.event-member-pending-role{height:36px!important;min-height:36px!important;padding:0 8px!important;font-size:12px!important}
+.user-invite-add{display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:rgba(59,139,255,.16);color:#7db2ff;font-size:18px;font-weight:600;line-height:1}

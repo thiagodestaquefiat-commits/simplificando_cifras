@@ -922,7 +922,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
-<link rel="stylesheet" href="css/roudy-forms.css?v=6">
+<link rel="stylesheet" href="css/roudy-forms.css?v=7">
 <link rel="stylesheet" href="css/song-reading.css?v=1">
 <link rel="stylesheet" href="css/topbar-labels.css?v=2">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
@@ -1236,7 +1236,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-intent-client.js?v=1"></script>
 <script src="js/assistant-voice.js?v=3"></script>
 <script src="js/app-assistant.js?v=24"></script>
- <script src="js/event-user-invites.js?v=6"></script>
+ <script src="js/event-user-invites.js?v=7"></script>
 <script src="js/notification-center.js?v=3"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
@@ -4067,6 +4067,7 @@ function openAddSetlist(prefill){
   let selectedBandId=source.bandId||activeBandId||null;
   let selectedIds=[...source.musicas];
   let eventMembers=[...source.members];
+  let pendingInvites=[];
   const selectedBand=appBands.find(band=>String(band.id)===String(selectedBandId));
   if(!prefill&&selectedBand)eventMembers=selectedBand.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));
   if(!eventMembers.some(member=>String(member.id)===String(appCurrentUser.id))) eventMembers.unshift({...appCurrentUser,isCurrentUser:true});
@@ -4091,8 +4092,17 @@ function openAddSetlist(prefill){
   }
   function renderMembers(){
     const target=document.getElementById('event-member-editor-list'); if(!target) return;
-    target.innerHTML=eventMembers.map((member,index)=>`<div class="event-member-editor">${musicalRoleIcon(eventMemberRole(member,selectedLeaderId))}<span>${eventEsc(member.name)}${String(member.id)===String(appCurrentUser.id)?' (você)':''}<code class="event-member-id">${eventEsc(member.id)}</code></span><small>${eventEsc(eventMemberRole(member,selectedLeaderId))}</small>${String(member.id)===String(selectedLeaderId)?'<span class="event-leader-badge">Líder</span>':`<button type="button" class="event-member-remove" onclick="eventRemoveMember(${index})" aria-label="Remover membro">×</button>`}</div>`).join('');
+    target.innerHTML=eventMembers.map((member,index)=>`<div class="event-member-editor">${musicalRoleIcon(eventMemberRole(member,selectedLeaderId))}<span>${eventEsc(member.name)}${String(member.id)===String(appCurrentUser.id)?' (você)':''}<code class="event-member-id">${eventEsc(member.id)}</code></span><small>${eventEsc(eventMemberRole(member,selectedLeaderId))}</small>${String(member.id)===String(selectedLeaderId)?'<span class="event-leader-badge">Líder</span>':`<button type="button" class="event-member-remove" onclick="eventRemoveMember(${index})" aria-label="Remover membro">×</button>`}</div>`).join('')
+      +pendingInvites.map((item,index)=>`<div class="event-member-editor event-member-editor--pending">${musicalRoleIcon(item.role)}<span>${eventEsc(item.user.name)}<small class="event-member-pending-note">Convite enviado ao salvar</small></span><select class="form-input event-member-pending-role" aria-label="Função de ${eventEsc(item.user.name)}" onchange="eventSetInviteRole(${index},this.value)">${eventModel.ROLES.filter(role=>role!=='Liderança').map(role=>`<option value="${eventEsc(role)}" ${role===item.role?'selected':''}>${eventEsc(role)}</option>`).join('')}</select><button type="button" class="event-member-remove" onclick="eventUnqueueInvite(${index})" aria-label="Remover ${eventEsc(item.user.name)}">×</button></div>`).join('');
   }
+  window.eventQueueInvite=user=>{
+    if(!user?.id)return false;
+    if(eventMembers.some(member=>String(member.id)===String(user.id))||pendingInvites.some(item=>String(item.user.id)===String(user.id))){showToast(user.name+' já está na lista.');return false;}
+    pendingInvites.push({user,role:document.getElementById('event-member-role')?.value||'Outra'});renderMembers();return true;
+  };
+  window.eventUnqueueInvite=index=>{pendingInvites.splice(index,1);renderMembers();};
+  window.eventSetInviteRole=(index,role)=>{if(pendingInvites[index])pendingInvites[index].role=role;renderMembers();};
+  window.eventQueuedInviteIds=()=>pendingInvites.map(item=>String(item.user.id));
   const roleOptions=eventModel.ROLES.filter(role=>role!=='Liderança').map(role=>`<option value="${eventEsc(role)}">${eventEsc(role)}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${editingId?'Editar':'Novo'} evento</div>
@@ -4102,7 +4112,7 @@ function openAddSetlist(prefill){
     <div class="form-group"><label class="form-label">Repertório compartilhado — arraste para ordenar</label><div id="pl-selected"></div></div>
     <div class="form-group"><label class="form-label">Adicionar músicas</label><input class="form-input" id="pl-search" placeholder="Buscar música..."><div id="pl-all" style="max-height:190px;overflow-y:auto;margin-top:7px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);"></div></div>
     <div id="pl-count" style="font-size:10px;color:var(--text2);margin-bottom:12px;"></div>
-    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome para convite por link"><select class="form-input" id="event-member-role">${roleOptions}</select><button type="button" class="btn btn-outline" onclick="eventUserInvites.openEditor()">Convidar Integrante</button></div><p class="event-scope-note">Busque um usuário ou envie um link. O integrante entra no evento somente após aceitar o convite.</p></div>
+    <div class="form-group"><label class="form-label">Membros e funções</label><div id="event-member-editor-list"></div><div class="event-add-member"><input class="form-input" id="event-member-name" placeholder="Nome para convite por link"><select class="form-input" id="event-member-role">${roleOptions}</select><button type="button" class="btn btn-outline" onclick="eventUserInvites.openEditor()">Adicionar integrantes</button></div><p class="event-scope-note">Busque e adicione quantos integrantes quiser. Os convites são enviados ao salvar o evento, e cada pessoa entra depois de aceitar.</p></div>
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
   const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));if(!eventMembers.some(member=>String(member.id)===String(selectedLeaderId)))eventMembers.unshift({...appCurrentUser,isCurrentUser:true});renderMembers();}});
@@ -4145,8 +4155,17 @@ function openAddSetlist(prefill){
     setlists=result.events;eventRepository.save(setlists);
     try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+(editingId?' atualizou o evento.':' criou o evento.'));}catch(error){}
     source=candidate;editingId=candidate.id;eventMembers=[...candidate.members];renderMembers();
+    let inviteNote='';
+    if(pendingInvites.length&&!options.keepOpen){
+      if(candidate.remoteVersion==null){showToast('⚠️ O evento foi salvo neste aparelho. Conecte-se à internet e salve de novo para enviar os convites.');renderSetlists();return candidate;}
+      const failed=[];let sent=0;
+      for(const item of pendingInvites.slice()){try{await eventCollaboration.inviteUser(candidate.id,item.user.id,item.role);sent++;pendingInvites=pendingInvites.filter(value=>value!==item);}catch(error){failed.push(item.user.name+': '+(error?.message||'erro'));}}
+      renderMembers();
+      if(failed.length){renderSetlists();showToast('⚠️ Não foi possível convidar '+failed.join('; ')+'. Tente salvar de novo.');return candidate;}
+      inviteNote=' · '+sent+' convite'+(sent===1?'':'s')+' enviado'+(sent===1?'':'s');
+    }
     if(!options.keepOpen)closeModal();
-    renderSetlists();if(!options.keepOpen)showToast(syncWarning||(result.created?'📅 Evento criado':'✅ Evento atualizado'));
+    renderSetlists();if(!options.keepOpen)showToast(syncWarning||((result.created?'📅 Evento criado':'✅ Evento atualizado')+inviteNote));
     return candidate;
   };
   renderSelected();renderAvailable();renderMembers();document.getElementById('modal-overlay').style.display='flex';
