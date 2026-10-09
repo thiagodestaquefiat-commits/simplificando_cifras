@@ -1,12 +1,13 @@
-// Legacy test marker: simplificando-cifras-v194-perfil-convites
+// Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v347-logout-local";
+const CACHE_NAME = "simplificando-cifras-v364-producao-0910";
 const ASSETS = [
   "./css/song-reading.css?v=1",
+  "./css/topbar-labels.css?v=2",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
-  "./css/roudy-forms.css?v=3",
+  "./css/roudy-forms.css?v=7",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
@@ -22,7 +23,8 @@ const ASSETS = [
   "./js/smart-scroll.js?v=5",
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
-  "./js/app-assistant.js?v=22",
+  "./js/app-assistant.js?v=24",
+  "./js/assistant-voice.js?v=3",
   "./",
   "./index.html",
   "./js/storage.js",
@@ -76,6 +78,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=4",
   "./js/event-user-invites.js?v=5",
   "./js/event-user-invites.js?v=6",
+  "./js/event-user-invites.js?v=7",
   "./js/profile-username.js?v=1",
   "./js/profile-username.js?v=2",
   "./js/profile-username.js?v=4",
@@ -151,7 +154,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=17",
+  "./js/ai/ai-harmonic-summary.js?v=18",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",
