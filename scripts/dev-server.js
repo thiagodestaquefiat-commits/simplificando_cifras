@@ -1,11 +1,13 @@
 const fs = require("node:fs");
 const http = require("node:http");
+const https = require("node:https");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
-const host = "127.0.0.1";
+const host = "0.0.0.0";
 const port = 4173;
+const apiOrigin = new URL(process.env.ROUDY_API_ORIGIN || "https://simplificandocifras-production.up.railway.app");
 const pythonPath=path.join(projectRoot,'backend','.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
 const assistantProcess=spawn(fs.existsSync(pythonPath)?pythonPath:'python',['-m','voice_assistant.http_server'],{cwd:path.join(projectRoot,'backend'),windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,PYTHONIOENCODING:'utf-8'}});
 assistantProcess.stdout.on('data',chunk=>process.stdout.write(chunk));
@@ -32,16 +34,35 @@ function resolveRequestPath(requestUrl) {
 }
 
 const server = http.createServer((request, response) => {
-  if(new URL(request.url,`http://${host}:${port}`).pathname==='/api/assistant/resolve'){
+  const requestUrl = new URL(request.url, `http://${host}:${port}`);
+  if(requestUrl.pathname==='/api/assistant/resolve'){
     if(request.method!=='POST')return response.writeHead(405,{Allow:'POST'}).end();
-    if(request.headers.origin&&!['http://127.0.0.1:4173','http://localhost:4173'].includes(request.headers.origin))return response.writeHead(403).end();
     let size=0;const chunks=[];
     request.on('data',chunk=>{size+=chunk.length;if(size<=32000)chunks.push(chunk);});
     request.on('end',()=>{
       if(size>32000)return response.writeHead(413).end();
-      const body=Buffer.concat(chunks),upstream=http.request({hostname:host,port:5010,path:'/api/assistant/resolve',method:'POST',headers:{'Content-Type':'application/json','Content-Length':body.length},timeout:1800},result=>{response.writeHead(result.statusCode,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});result.pipe(response);});
+      const body=Buffer.concat(chunks),upstream=http.request({hostname:'127.0.0.1',port:5010,path:'/api/assistant/resolve',method:'POST',headers:{'Content-Type':'application/json','Content-Length':body.length},timeout:1800},result=>{response.writeHead(result.statusCode,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});result.pipe(response);});
       upstream.on('timeout',()=>upstream.destroy());upstream.on('error',()=>{if(!response.headersSent)response.writeHead(503,{'Content-Type':'application/json'});response.end('{"error":"assistant_unavailable"}');});upstream.end(body);
     });return;
+  }
+  if (requestUrl.pathname.startsWith("/api/")) {
+    const proxy = https.request({
+      protocol: apiOrigin.protocol,
+      hostname: apiOrigin.hostname,
+      port: apiOrigin.port || 443,
+      method: request.method,
+      path: requestUrl.pathname + requestUrl.search,
+      headers: { Accept: request.headers.accept || "application/json", "User-Agent": "ROUDY-Local-Preview" }
+    }, upstream => {
+      response.writeHead(upstream.statusCode || 502, {
+        "Content-Type": upstream.headers["content-type"] || "application/json; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      upstream.pipe(response);
+    });
+    proxy.on("error", () => response.writeHead(502, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }).end(JSON.stringify({ erro: { codigo: "backend_indisponivel", mensagem: "A busca do YouTube está temporariamente indisponível." } })));
+    request.pipe(proxy);
+    return;
   }
   if (request.method !== "GET" && request.method !== "HEAD") {
     response.writeHead(405, { Allow: "GET, HEAD" }).end();

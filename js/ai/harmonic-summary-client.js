@@ -19,14 +19,13 @@
     if (mode === "pesquisa") {
       const titulo = clean(data.titulo, 160).trim();
       const artista = clean(data.artista, 160).trim();
-      if (!titulo) throw new HarmonicSummaryError("invalid_input", "Informe o título da música.");
-      const payload = { tipo: "pesquisa", titulo };
-      if (artista) payload.artista = artista;
-      if (data.sourceProvider && data.sourceId) {
-        payload.sourceProvider = clean(data.sourceProvider, 80).trim();
-        payload.sourceId = clean(data.sourceId, 300).trim();
-      }
-      if (data.modoGeracao === "conhecimento_modelo") payload.modoGeracao = "conhecimento_modelo";
+      const sourceProvider = clean(data.sourceProvider, 80).trim();
+      const sourceId = clean(data.sourceId, 300).trim();
+      if (!titulo) throw new HarmonicSummaryError("invalid_input", "Informe o nome da música.");
+      const payload = { tipo: "pesquisa", titulo, ...(artista ? { artista } : {}) };
+      // Fonte escolhida é opcional: sem ela, o servidor procura no catálogo ROUDY e depois na web.
+      if (sourceProvider && sourceId) { payload.sourceProvider = sourceProvider; payload.sourceId = sourceId; }
+      else if (data.modoGeracao === "conhecimento_modelo") payload.modoGeracao = "conhecimento_modelo";
       return payload;
     }
     if (mode === "texto") {
@@ -51,38 +50,17 @@
     throw new HarmonicSummaryError("invalid_input", "Modo de análise inválido.");
   }
 
-  async function searchSources(values, options) {
-    const settings = options || {};
-    const payload = validatePayload("pesquisa", values);
-    delete payload.sourceProvider;
-    delete payload.sourceId;
-    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
-    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para usar a IA musical.", 401);
+  async function searchSources(titulo, artista, options) {
+    const settings = options || {},title=clean(titulo,160).trim(),artist=clean(artista,160).trim();
+    if(!title)throw new HarmonicSummaryError("invalid_input","Informe o nome da música.");
+    const accessToken=settings.accessToken||(global.appAuth&&global.appAuth.getAccessToken&&global.appAuth.getAccessToken());
+    if(!accessToken)throw new HarmonicSummaryError("authentication","Entre com Google para usar a IA musical.",401);
     let response;
-    try {
-      response = await (settings.fetch || global.fetch)(global.apiConfig.musicSourceEndpoint("/search"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify({ titulo: payload.titulo, ...(payload.artista ? { artista: payload.artista } : {}) }),
-        signal: settings.signal
-      });
-    } catch (error) {
-      if (error && error.name === "AbortError") throw new HarmonicSummaryError("source_timeout", "A busca demorou mais que o esperado. Tente novamente.");
-      throw new HarmonicSummaryError("network", "Não foi possível conectar ao servidor.");
-    }
-    let data;
-    try { data = await response.json(); }
-    catch (_) { throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status); }
-    if (!response.ok) {
-      const code = data?.erro?.codigo;
-      if (response.status === 401) throw new HarmonicSummaryError("authentication", "Sua sessão expirou. Entre novamente para usar a IA musical.", response.status);
-      if (code === "fonte_timeout" || response.status === 504) throw new HarmonicSummaryError("source_timeout", "A busca demorou mais que o esperado. Tente novamente.", response.status);
-      if (code === "fonte_indisponivel") throw new HarmonicSummaryError("source_unavailable", "As fontes musicais estão temporariamente indisponíveis.", response.status);
-      if (response.status === 429) throw new HarmonicSummaryError("rate_limit", "O limite de buscas foi atingido. Aguarde um pouco e tente novamente.", response.status);
-      throw new HarmonicSummaryError("server", "Não foi possível buscar fontes para esta música.", response.status);
-    }
-    if (!Array.isArray(data?.candidates)) throw new HarmonicSummaryError("invalid_data", "O servidor retornou dados inválidos.", response.status);
-    return { payload, candidates: data.candidates };
+    try{response=await (settings.fetch||global.fetch)(global.apiConfig.musicSourceEndpoint("/search"),{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json","Authorization":`Bearer ${accessToken}`},body:JSON.stringify({titulo:title,...(artist?{artista:artist}:{})}),signal:settings.signal})}
+    catch(error){throw new HarmonicSummaryError("network",error?.name==="AbortError"?"A busca demorou demais. Tente novamente.":"Não foi possível conectar ao servidor.")}
+    let data;try{data=await response.json()}catch{throw new HarmonicSummaryError("invalid_data","O servidor retornou uma resposta inválida.",response.status)}
+    if(!response.ok){const code=data?.erro?.codigo;if(response.status===401||["autenticacao_necessaria","token_invalido","usuario_invalido"].includes(code))throw new HarmonicSummaryError("authentication","Sua sessão expirou. Entre novamente para usar a IA musical.",response.status);if(code==="fonte_timeout")throw new HarmonicSummaryError("source_timeout","A busca demorou mais que o esperado. Tente novamente.",response.status);if(code==="fonte_indisponivel")throw new HarmonicSummaryError("source_unavailable","As fontes musicais estão temporariamente indisponíveis.",response.status);if(response.status===429)throw new HarmonicSummaryError("rate_limit","O limite de buscas foi atingido. Aguarde um pouco.",response.status);throw new HarmonicSummaryError("server","Não foi possível pesquisar agora.",response.status)}
+    return Array.isArray(data?.candidates)?data.candidates:[];
   }
 
   function assertResponse(data) {

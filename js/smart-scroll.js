@@ -68,7 +68,7 @@
     const tracker=createTracker(options),tuner=options.tuner||global.appTuner?.create({spectrum:true,pitch:false,fftSize:4096,intervalMs:20});
     let active=false,container=null,onUpdate=()=>{},manualTimer=0,manualIntentUntil=0,manualDisplaced=false,programmaticUntil=0;
     let previousRms=0;
-    const blocks=()=>container?.querySelectorAll('[data-smart-line]')||[];
+    const blocks=()=>Array.from(container?.querySelectorAll('[data-smart-line]')||[]).filter(line=>!line.closest?.('.song-page[aria-hidden="true"]'));
     function sync(){const previousIndex=tracker.getIndex();tracker.reset(buildSequence(blocks()));tracker.seek(previousIndex);emit();}
     function emit(extra={}){onUpdate({active,current:tracker.current(),index:tracker.getIndex(),total:tracker.getSequence().length,...extra});}
     function scrollToBlock(blockIndex,allowBackward=false){

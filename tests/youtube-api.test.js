@@ -4,7 +4,7 @@ let requestedUrl = "";
 let responseVideos = [{ videoId: "abc", title: "Canção", channelTitle: "Canal", thumbnailUrl: "https://img.test/abc.jpg", youtubeUrl: "https://www.youtube.com/watch?v=abc" }];
 let rejectOembed = false;
 global.window = {
-  location: { hostname: "127.0.0.1", origin: "http://127.0.0.1:4173" },
+  location: { hostname: "127.0.0.1", origin: "http://127.0.0.1:4173", port: "4173" },
   document: { querySelector: () => null },
   fetch: async (url) => {
     requestedUrl = url;
@@ -29,7 +29,7 @@ require("../js/youtube-api.js");
 
 (async () => {
   const videos = await window.youtubeApi.searchVideos("Canção Canal", 8);
-  assert.match(requestedUrl, /^http:\/\/127\.0\.0\.1:5000\/api\/youtube\/search\?/);
+  assert.match(requestedUrl, /^\/api\/youtube\/search\?/);
   assert.match(requestedUrl, /q=Can%C3%A7%C3%A3o\+Canal/);
   assert.deepEqual(videos[0], {
     title: "Canção",
@@ -39,6 +39,7 @@ require("../js/youtube-api.js");
     youtubeUrl: "https://www.youtube.com/watch?v=abc",
     coverUrl: "https://img.test/abc.jpg",
     publishedAt: null,
+    description: "",
     key: "",
     capo: "",
     blocos: []
@@ -71,6 +72,8 @@ require("../js/youtube-api.js");
   rejectOembed = false;
   responseVideos = [{ videoId: "abc", title: "Canção", channelTitle: "Canal" }];
   window.location.hostname = "deploy-preview-40--simplificandocifras.netlify.app";
+  window.location.origin = "https://deploy-preview-40--simplificandocifras.netlify.app";
+  window.location.port = "";
   window.document.querySelector = () => ({ content: "https://simplificandocifras-production.up.railway.app" });
   await window.youtubeApi.searchVideos("Outra canção", 5);
   assert.match(requestedUrl, /^https:\/\/simplificandocifras-production\.up\.railway\.app\/api\/youtube\/search\?/);

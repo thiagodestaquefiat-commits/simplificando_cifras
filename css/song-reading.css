@@ -1,0 +1,23 @@
+/* Tela da música — leitura no celular.
+   1) A margem interna fica dentro de cada página: antes a página seguinte "vazava"
+      na faixa de 16px à direita.
+   2) Letra e cifra em fonte monoespaçada: cada letra ocupa a mesma largura, então o
+      acorde fica exatamente em cima da sílaba certa, como no Cifra Club. */
+#view-detail:not(.stage-mode) #detail-content.detail-body{padding-left:0!important;padding-right:0!important}
+#view-detail:not(.stage-mode) #detail-content .song-page{box-sizing:border-box;padding-left:16px!important;padding-right:16px!important}
+
+#view-detail #detail-content :is(.full-chord-line,.chord-line,.wa-block,.full-chord-sheet,.inline-block-chords),
+#view-detail #detail-content .full-chord-line:not(.is-chord):not(.is-section){
+  font-family:"JetBrains Mono",ui-monospace,"SFMono-Regular","Roboto Mono",Menlo,Consolas,monospace!important;
+  font-variant-ligatures:none;letter-spacing:0!important;
+}
+#view-detail:not(.stage-mode) #detail-content .full-chord-line{white-space:pre-wrap;font-size:calc(15px * var(--song-text-scale,1))!important;line-height:1.55}
+#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-chord{font-weight:700}
+#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-section{font-family:Inter,system-ui,sans-serif!important;font-size:12px!important;letter-spacing:.6px!important}
+/* Todas as páginas da música (Resumo, Letra e cifra, Letra) em monoespaçada;
+   rótulos de seção e avisos continuam na fonte da interface. */
+#view-detail #detail-content .song-page{font-family:"JetBrains Mono",ui-monospace,"SFMono-Regular","Roboto Mono",Menlo,Consolas,monospace;font-variant-ligatures:none}
+#view-detail #detail-content .song-page *:not(.full-chord-private):not(.is-section):not(.stage-summary-label):not(.complete-sheet-notice):not(.complete-sheet-notice *){font-family:inherit}
+.smart-scroll-row{display:flex;width:100%;align-items:center;gap:8px}.smart-scroll-btn{flex:1;min-height:42px;border:1px solid rgba(245,158,11,.45);border-radius:11px;background:rgba(245,158,11,.08);color:#f7c477;font:700 12px/1.2 inherit;cursor:pointer}.smart-scroll-btn.active{border-color:#22c55e;background:rgba(34,197,94,.12);color:#86efac}.smart-scroll-beta{display:inline-block;margin-left:5px;padding:2px 5px;border-radius:5px;background:#f59e0b;color:#17110a;font-size:8px;font-weight:900;vertical-align:1px}.smart-scroll-status{min-width:105px;color:var(--text2);font-size:10px;line-height:1.25;text-align:right}.smart-scroll-line{scroll-margin-top:150px;border-radius:7px;transition:background .2s}.smart-scroll-line.smart-scroll-current{background:rgba(245,158,11,.055)}.smart-chord-token{display:inline-block;border-radius:4px;transition:color .18s,background .18s,transform .18s}.smart-chord-token.smart-chord-current{background:rgba(245,158,11,.14);text-decoration:underline;text-decoration-color:#f59e0b;text-underline-offset:4px}.smart-chord-token.smart-chord-played{background:rgba(34,197,94,.13);color:#4ade80!important;transform:translateY(-1px)}
+#smart-scroll-row{min-width:0;padding:6px 8px;flex-wrap:wrap}#smart-scroll-row .smart-scroll-btn{min-width:0;padding:8px;white-space:normal}#smart-scroll-row .smart-scroll-status{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.song-control-disclosure{min-width:0;width:100%;box-sizing:border-box}

@@ -31,10 +31,11 @@ const uploadPayload = context.harmonicSummaryClient.validatePayload("arquivo", {
 assert.equal(uploadPayload.tipo, "arquivo");
 assert.equal(uploadPayload.arquivo, upload);
 assert.equal(uploadPayload.titulo, "Música");
-assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Música ", artista: " Artista " }))), { tipo: "pesquisa", titulo: "Música", artista: "Artista" });
-assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Música", sourceProvider: "licensed", sourceId: "version-1" }))), { tipo: "pesquisa", titulo: "Música", sourceProvider: "licensed", sourceId: "version-1" });
-assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Música", modoGeracao: "conhecimento_modelo" }))), { tipo: "pesquisa", titulo: "Música", modoGeracao: "conhecimento_modelo" });
-assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /título/.test(error.message));
+assert.throws(() => context.harmonicSummaryClient.validatePayload("pesquisa", {}), (error) => error.kind === "invalid_input" && /nome da música/i.test(error.message));
+// Sem fonte escolhida, a pesquisa continua válida: o servidor procura no catálogo ROUDY e depois na web.
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Canção" }))), { tipo: "pesquisa", titulo: "Canção" });
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: "Canção", modoGeracao: "conhecimento_modelo" }))), { tipo: "pesquisa", titulo: "Canção", modoGeracao: "conhecimento_modelo" });
+assert.deepEqual(JSON.parse(JSON.stringify(context.harmonicSummaryClient.validatePayload("pesquisa", { titulo: " Canção ", artista: " Cantor ", sourceProvider: "licensed", sourceId: "version-1" }))), { tipo: "pesquisa", titulo: "Canção", artista: "Cantor", sourceProvider: "licensed", sourceId: "version-1" });
 assert.throws(() => context.harmonicSummaryClient.validatePayload("texto", {}), (error) => error.kind === "invalid_input");
 assert.throws(() => context.harmonicSummaryClient.validatePayload("arquivo", {}), (error) => error.kind === "invalid_input");
 const modalSource = fs.readFileSync(path.join(root, "js/ai/ai-harmonic-summary.js"), "utf8");
@@ -79,14 +80,14 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
 
 (async () => {
   let searchRequest;
-  const searchResult = await context.harmonicSummaryClient.searchSources({ titulo: " Música ", artista: " Artista " }, { fetch: async (url, options) => {
+  const searchResult = await context.harmonicSummaryClient.searchSources(" Música ", " Artista ", { fetch: async (url, options) => {
     searchRequest = { url, options };
     return { ok: true, status: 200, json: async () => ({ candidates: [{ providerId: "licensed", sourceId: "one" }] }) };
   } });
   assert.equal(searchRequest.url, "https://backend.example/api/music-sources/search");
   assert.deepEqual(JSON.parse(searchRequest.options.body), { titulo: "Música", artista: "Artista" });
   assert.equal(searchRequest.options.headers.Authorization, "Bearer test-access-token");
-  assert.equal(searchResult.candidates[0].sourceId, "one");
+  assert.equal(searchResult[0].sourceId, "one");
 
   const oversizedJson = {
     ok: false,

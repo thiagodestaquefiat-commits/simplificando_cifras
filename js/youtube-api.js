@@ -5,7 +5,11 @@
     const runtime = global.SIMPLIFICANDO_CIFRAS_CONFIG && global.SIMPLIFICANDO_CIFRAS_CONFIG.API_BASE_URL;
     const meta = global.document && global.document.querySelector('meta[name="sc-api-base-url"]')?.content;
     const hostname = String(global.location?.hostname || "");
+    const port = String(global.location?.port || (() => { try { return new URL(global.location?.origin || "").port; } catch (_) { return ""; } })());
     const preview = hostname.match(/^deploy-preview-(\d+)--simplificandocifras\.netlify\.app$/);
+    // The local preview server owns an /api proxy. Keeping the request on the
+    // same origin also avoids Safari's generic cross-origin "Load failed".
+    if (port === "4173") return "";
     if (runtime) return String(runtime).trim().replace(/\/$/, "");
     if (meta) return String(meta).trim().replace(/\/$/, "");
     if (preview) return `https://simplificandocifras-simplificandocifras-pr-${preview[1]}.up.railway.app`;
@@ -51,6 +55,7 @@
       youtubeUrl: String(video.youtubeUrl || "").trim(),
       coverUrl: String(video.thumbnailUrl || "").trim() || null,
       publishedAt: video.publishedAt || null,
+      description: String(video.description || "").trim(),
       key: "",
       capo: "",
       blocos: []
@@ -66,6 +71,7 @@
       youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
       coverUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
       publishedAt: null,
+      description: "",
       key: "",
       capo: "",
       blocos: []
@@ -96,6 +102,7 @@
         youtubeUrl,
         coverUrl: String(payload.thumbnail_url || "").trim() || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
         publishedAt: null,
+        description: "",
         key: "",
         capo: "",
         blocos: []

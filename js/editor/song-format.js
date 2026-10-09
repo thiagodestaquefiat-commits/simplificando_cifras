@@ -204,14 +204,30 @@
 
   function sectionsFromSimpleText(value, baseModel) {
     const base = normalize(baseModel || {});
-    const groups = String(value || "").replace(/\r\n?/g, "\n").trim().split(/\n\s*\n+/).map((group) => group.split("\n").map((line) => line.trim()).filter(Boolean)).filter((group) => group.length);
+    const groups = [];
+    let currentGroup = [];
+    const flushGroup = () => {
+      if (currentGroup.length) groups.push(currentGroup);
+      currentGroup = [];
+    };
+    String(value || "").replace(/\r\n?/g, "\n").trim().split("\n").forEach((rawLine) => {
+      const line = rawLine.trim();
+      if (!line) {
+        flushGroup();
+        return;
+      }
+      const bracketedLabel = /^\[(.+)]$/.test(line) || /^\*(.+)\*$/.test(line);
+      if ((isSectionName(line) || bracketedLabel) && currentGroup.length) flushGroup();
+      currentGroup.push(line);
+    });
+    flushGroup();
     return groups.map((sourceLines, index) => {
       const baseSection = base.sections[index];
       const lines = sourceLines.slice();
       let label = baseSection?.hideLabel ? "" : (baseSection?.label || `Trecho ${index + 1}`);
       const first = lines[0] || "";
       const bracketed = first.match(/^\[(.+)]$/) || first.match(/^\*(.+)\*$/);
-      const knownLabel = TYPES.some(([key, title]) => first.toLocaleLowerCase("pt-BR") === key || first.toLocaleLowerCase("pt-BR") === title.toLocaleLowerCase("pt-BR"));
+      const knownLabel = isSectionName(first);
       const sameLabel = baseSection && first.toLocaleLowerCase("pt-BR") === String(baseSection.label || "").toLocaleLowerCase("pt-BR");
       if (bracketed || knownLabel || sameLabel) {
         label = cleanText(bracketed ? bracketed[1] : first, 120);
@@ -219,16 +235,33 @@
       }
       const parsedLines = [];
       let pendingLyrics = "";
+      let pendingChordLine = null;
       lines.forEach((rawLine) => {
         const candidate = repeatFromText(rawLine);
         if (chordLine(candidate.text)) {
-          parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: candidate.repeticoes, chords: chordsFromText(candidate.text) });
+          if (pendingChordLine) parsedLines.push(pendingChordLine);
+          pendingChordLine = { id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: candidate.repeticoes, chords: chordsFromText(candidate.text) };
           pendingLyrics = "";
+        } else if (pendingChordLine && !pendingChordLine.lyrics) {
+          pendingChordLine.lyrics = cleanText(rawLine);
+          parsedLines.push(pendingChordLine);
+          pendingChordLine = null;
         } else if (pendingLyrics) {
+          if (pendingChordLine) {
+            parsedLines.push(pendingChordLine);
+            pendingChordLine = null;
+          }
           parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: null, chords: [] });
           pendingLyrics = rawLine;
-        } else pendingLyrics = rawLine;
+        } else {
+          if (pendingChordLine) {
+            parsedLines.push(pendingChordLine);
+            pendingChordLine = null;
+          }
+          pendingLyrics = rawLine;
+        }
       });
+      if (pendingChordLine) parsedLines.push(pendingChordLine);
       if (pendingLyrics) parsedLines.push({ id: id("line"), lyrics: cleanText(pendingLyrics), repeticoes: null, chords: [] });
       if (!parsedLines.length) parsedLines.push(normalizeLine({}));
       return { id: baseSection?.id || id("section"), type: sectionTypeFromLabel(label, baseSection?.type), label, hideLabel: !label, lines: parsedLines };

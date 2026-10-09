@@ -18,5 +18,7 @@
     if(!ownerId)return global.storage.set(GUEST_KEY,value);
     const values=caches();values[String(ownerId)]=value;return global.storage.set(OWNER_KEY,values);
   }
-  global.medleyRepository=Object.freeze({load,save});
+  // Sair da conta: apaga do aparelho o medley DESTA conta.
+  function purgeOwner(ownerId){const owner=String(ownerId||"").trim();if(!owner)return false;const values=caches();if(!Object.prototype.hasOwnProperty.call(values,owner))return true;delete values[owner];return global.storage.set(OWNER_KEY,values);}
+  global.medleyRepository=Object.freeze({load,save,purgeOwner});
 })(window);

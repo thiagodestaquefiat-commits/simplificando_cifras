@@ -17,6 +17,9 @@ assert.deepEqual(window.youtubeSongLinker.changesForVideo({ artist: "Artista loc
   coverUrl: "cover",
   youtubeVideoId: "one",
   youtubeUrl: "https://youtu.be/one",
-  youtubeChannelTitle: "Casa Worship"
+  youtubeChannelTitle: "Casa Worship",
+  youtubeTitle: "A Casa É Sua | Casa Worship (Clipe Oficial)",
+  youtubeDescription: null,
+  youtubePublishedAt: null
 });
 console.log("youtube-song-linker.test.js: OK");

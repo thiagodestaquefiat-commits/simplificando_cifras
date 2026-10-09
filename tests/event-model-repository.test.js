@@ -20,6 +20,13 @@ assert.ok(values.has("sc_events_v1"), "migração deve criar a coleção atual")
 const changed = window.eventModel.withSharedChange(events[0], { id: "local-user", name: "João" }, "event.updated", "alterou o repertório");
 assert.equal(changed.notifications.at(-1).actorName, "João");
 assert.match(changed.notifications.at(-1).summary, /repertório/);
+const added = window.eventModel.withSharedChange(events[0], { id: "local-user", name: "João" }, "repertoire.song.added", "adicionou uma música", {
+  songId: "song-new", changeType: "SONG_ADDED", after: { repertoireItemId: "item-new", songId: "song-new" }
+});
+assert.equal(added.notifications.at(-1).changeType, "SONG_ADDED");
+assert.equal(added.notifications.at(-1).songId, "song-new");
+assert.equal(added.notifications.at(-1).after.repertoireItemId, "item-new");
+assert.ok(added.notifications.at(-1).createdAt, "timestamp local preservado");
 
 const result = window.eventRepository.upsert(events, { ...changed, location: "Igreja Central", eventLocation: { formattedAddress: "Rua das Flores, 100", latitude: -26.9187, longitude: -49.066, placeId: "place-1", provider: "geoapify" }, members: [{ id: "local-user", name: "João", role: "Guitarra" }] });
 assert.equal(result.created, false);

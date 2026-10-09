@@ -10,6 +10,16 @@
   let legacyCandidateOwnerId = null;
   let legacyCandidateIds = [];
   let storedEventsExistedAtBoot = false;
+  let recoveredOwnerCacheAtBoot = false;
+
+  function recoverOwnerCaches() {
+    const caches = ownerCaches();
+    let recovered = [];
+    for (const events of Object.values(caches)) {
+      if (Array.isArray(events)) recovered = mergeRemote(recovered, events);
+    }
+    return global.eventModel.normalizeCollection(recovered);
+  }
 
   function requireDependencies() {
     if (!global.storage || !global.eventModel) throw new Error("storage e eventModel são obrigatórios.");
@@ -22,12 +32,20 @@
       storedEventsExistedAtBoot = true;
       const values = global.eventModel.normalizeCollection(current).map((event) => identity && identity.user ? global.eventModel.migrateCurrentUser(event, identity.user, identity.legacyUserIds) : event);
       global.storage.set(STORAGE_KEY, values);
+      if (!values.length) {
+        const recovered = recoverOwnerCaches();
+        if (recovered.length) { recoveredOwnerCacheAtBoot = true; return recovered; }
+      }
       return values;
     }
     const legacy = global.storage.get(LEGACY_KEY, fallback || []);
     storedEventsExistedAtBoot = Array.isArray(legacy) && legacy.length > 0;
     const migrated = global.eventModel.normalizeCollection(legacy).map((event) => identity && identity.user ? global.eventModel.migrateCurrentUser(event, identity.user, identity.legacyUserIds) : event);
     global.storage.set(STORAGE_KEY, migrated);
+    if (!migrated.length) {
+      const recovered = recoverOwnerCaches();
+      if (recovered.length) { recoveredOwnerCacheAtBoot = true; return recovered; }
+    }
     return migrated;
   }
 
@@ -72,7 +90,10 @@
       ? global.eventModel.normalizeCollection(candidate).map((event) => global.eventModel.migrateCurrentUser(event, currentUser, legacyIds)).filter((event) => !migratedIds.has(String(event.id)))
       : [];
     if (Array.isArray(caches[nextOwner])) {
-      const cached = global.eventModel.normalizeCollection(caches[nextOwner]);
+      const ownerCache = global.eventModel.normalizeCollection(caches[nextOwner]);
+      const cached = !ownerCache.length && recoveredOwnerCacheAtBoot
+        ? global.eventModel.normalizeCollection(currentEvents)
+        : ownerCache;
       if (migrated.length) {
         if (!reservedOwner) global.storage.set(LEGACY_OWNER_KEY, nextOwner);
         legacyCandidateOwnerId = nextOwner;
@@ -88,6 +109,9 @@
       legacyCandidateOwnerId = nextOwner;
       legacyCandidateIds = migrated.map((event) => String(event.id));
       return { events: migrated, migrationCandidate: true, ownerId: nextOwner };
+    }
+    if (recoveredOwnerCacheAtBoot) {
+      return { events: global.eventModel.normalizeCollection(currentEvents), migrationCandidate: false, ownerId: nextOwner };
     }
     legacyCandidateOwnerId = null;
     legacyCandidateIds = [];
@@ -116,6 +140,19 @@
     global.storage.set(STORAGE_KEY, []);
     global.storage.set(LEGACY_KEY, []);
     return [];
+  }
+
+  // Sair da conta: apaga do aparelho os eventos DESTA conta (a cópia oficial está na nuvem).
+  function purgeOwner(ownerId) {
+    const owner = String(ownerId || "").trim();
+    if (!owner || activeOwnerId === owner) return false;
+    const caches = ownerCaches();
+    if (Object.prototype.hasOwnProperty.call(caches, owner)) {
+      delete caches[owner];
+      if (!global.storage.set(OWNER_CACHES_KEY, caches)) return false;
+    }
+    if (String(global.storage.get(LEGACY_OWNER_KEY, "") || "") === owner) global.storage.set(LEGACY_OWNER_KEY, "");
+    return true;
   }
 
   function save(events) {
@@ -180,8 +217,12 @@
   }
 
   function reconcileRemote(events, remoteEvents) {
-    const localPending = global.eventModel.normalizeCollection(events).filter((event) => event.syncState === "pending" || event.remoteVersion == null);
-    const remote=global.eventModel.normalizeCollection(remoteEvents).map(value=>preserveSongCopies(events.find(e=>String(e.id)===String(value.id)),value));
+    const local = global.eventModel.normalizeCollection(events);
+    const remote = global.eventModel.normalizeCollection(remoteEvents).map(value=>preserveSongCopies(events.find(e=>String(e.id)===String(value.id)),value));
+    // Uma resposta vazia pode representar indisponibilidade ou sessão ainda em
+    // restauração. Nunca esconda o único cache conhecido do usuário nesse caso.
+    if (!remote.length && local.length) return local;
+    const localPending = local.filter((event) => event.syncState === "pending" || event.remoteVersion == null);
     return mergeRemote(localPending, remote);
   }
 
@@ -212,5 +253,5 @@
     return { uploaded, failures };
   }
 
-  global.eventRepository = Object.freeze({ getActiveOwnerId:()=>activeOwnerId, storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
+  global.eventRepository = Object.freeze({ getActiveOwnerId:()=>activeOwnerId, purgeOwner, storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
 })(window);

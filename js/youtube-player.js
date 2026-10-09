@@ -61,6 +61,38 @@
     mountedVideoId = null;
   }
 
+  function mountNativeIframe(elementId, videoId, events) {
+    const target = global.document.getElementById(elementId);
+    if (!target) throw new Error("A área do vídeo não está disponível.");
+    const iframe = global.document.createElement("iframe");
+    iframe.id = elementId;
+    iframe.className = target.className;
+    iframe.title = "YouTube video player";
+    iframe.loading = "eager";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.allowFullscreen = true;
+    const parameters = new URLSearchParams({
+      autoplay: events?.autoplay === false ? "0" : "1",
+      controls: "1",
+      playsinline: "1",
+      rel: "0",
+      origin: global.location.origin,
+      widget_referrer: global.location.href
+    });
+    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${parameters}`;
+    target.replaceWith(iframe);
+    player = {
+      destroy() { iframe.remove(); },
+      pauseVideo() {}, playVideo() {}, getDuration() { return 0; }, getCurrentTime() { return 0; }
+    };
+    mountedVideoId = videoId;
+    iframe.addEventListener("load", () => {
+      if (events && typeof events.onReady === "function") events.onReady({ target: player });
+    }, { once: true });
+    return player;
+  }
+
   async function mount(elementId, videoId, events) {
     const cleaned = String(videoId || "").trim();
     if (!cleaned) throw new Error("Este vídeo do YouTube não está disponível.");
@@ -68,12 +100,26 @@
     const YT = await loadSdk();
     return new Promise((resolve, reject) => {
       let settled = false;
+      const nativeFallbackTimer = global.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        const existing = global.document.getElementById(elementId);
+        if (existing?.tagName === "IFRAME" && existing.parentNode) {
+          const placeholder = global.document.createElement("div");
+          placeholder.id = elementId;
+          placeholder.className = existing.className;
+          existing.replaceWith(placeholder);
+        }
+        try { if (player && typeof player.destroy === "function") player.destroy(); } catch (_) {}
+        try { resolve(mountNativeIframe(elementId, cleaned, events)); }
+        catch (error) { reject(error); }
+      }, 7000);
       player = new YT.Player(elementId, {
         width: "100%",
         height: "100%",
         videoId: cleaned,
         playerVars: {
-          autoplay: 1,
+          autoplay: events?.autoplay === false ? 0 : 1,
           controls: 1,
           enablejsapi: 1,
           playsinline: 1,
@@ -82,9 +128,12 @@
         },
         events: {
           onReady(event) {
+            global.clearTimeout(nativeFallbackTimer);
             mountedVideoId = cleaned;
             settled = true;
-            try { event.target.playVideo(); } catch (_) { /* O botão nativo continua disponível. */ }
+            if (events?.autoplay !== false) {
+              try { event.target.playVideo(); } catch (_) { /* O botão nativo continua disponível. */ }
+            }
             if (events && typeof events.onReady === "function") events.onReady(event);
             resolve(event.target);
           },
@@ -92,8 +141,22 @@
             if (events && typeof events.onStateChange === "function") events.onStateChange(event);
           },
           onError(event) {
-            if (events && typeof events.onError === "function") events.onError(event);
-            if (!settled) reject(new Error("Este vídeo não pôde ser reproduzido no aplicativo."));
+            global.clearTimeout(nativeFallbackTimer);
+            if (settled) {
+              if (events && typeof events.onError === "function") events.onError(event);
+              return;
+            }
+            settled = true;
+            const existing = global.document.getElementById(elementId);
+            if (existing?.tagName === "IFRAME" && existing.parentNode) {
+              const placeholder = global.document.createElement("div");
+              placeholder.id = elementId;
+              placeholder.className = existing.className;
+              existing.replaceWith(placeholder);
+            }
+            try { if (player && typeof player.destroy === "function") player.destroy(); } catch (_) {}
+            try { resolve(mountNativeIframe(elementId, cleaned, events)); }
+            catch (error) { reject(error); }
           }
         }
       });

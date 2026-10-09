@@ -45,6 +45,13 @@ ADDITIVE_COLLABORATION_COLUMNS = {
         "personal_capo": "VARCHAR(20) NOT NULL DEFAULT ''",
         "personal_chord_sheet": "TEXT NOT NULL DEFAULT ''",
     },
+    "event_changes": {
+        "song_id": "VARCHAR(120)",
+        "change_type": "VARCHAR(80)",
+        "before_value": "JSON",
+        "after_value": "JSON",
+        "affected_users": "JSON",
+    },
 }
 
 

@@ -25,6 +25,7 @@
       artist: text(value.artist),
       key: text(value.key),
       capo: text(value.capo),
+      view: ["summary", "chords", "combined", "lyrics"].includes(value.view) ? value.view : "summary",
       chordSheet: String(value.chordSheet == null ? "" : value.chordSheet),
       notes: text(value.notes),
       ...(value.songData&&typeof value.songData==='object'?{songData:JSON.parse(JSON.stringify(value.songData))}:{}),
@@ -39,7 +40,8 @@
       songId: value.songId == null ? null : value.songId,
       order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
       shared: repertoireEdit(value.shared),
-      personalEdits: Object.fromEntries(Object.entries(value.personalEdits && typeof value.personalEdits === "object" ? value.personalEdits : {}).map(([userId, edit]) => [text(userId), repertoireEdit(edit)]).filter(([userId]) => userId))
+      personalEdits: Object.fromEntries(Object.entries(value.personalEdits && typeof value.personalEdits === "object" ? value.personalEdits : {}).map(([userId, edit]) => [text(userId), repertoireEdit(edit)]).filter(([userId]) => userId)),
+      preparation: value.preparation && typeof value.preparation === "object" ? { ...value.preparation } : null
     };
   }
 
@@ -51,6 +53,11 @@
       actorName: text(value.actorName) || "Alguém",
       kind: text(value.kind) || "event.updated",
       summary: text(value.summary) || "Atualizou o evento",
+      songId: text(value.songId) || null,
+      changeType: text(value.changeType) || null,
+      before: Object.prototype.hasOwnProperty.call(value, "before") ? value.before : null,
+      after: Object.prototype.hasOwnProperty.call(value, "after") ? value.after : null,
+      affectedUsers: Array.isArray(value.affectedUsers) ? value.affectedUsers.map(String) : [],
       createdAt: value.createdAt || new Date().toISOString()
     };
   }
@@ -110,9 +117,10 @@
 
   function normalizeCollection(values) { return (Array.isArray(values) ? values : []).map(create); }
 
-  function withSharedChange(event, actor, kind, summary) {
+  function withSharedChange(event, actor, kind, summary, evidence) {
     const normalized = create(event);
-    const notice = notification({ actorId: actor && actor.id, actorName: actor && actor.name, kind, summary });
+    const details = evidence && typeof evidence === "object" ? evidence : {};
+    const notice = notification({ actorId: actor && actor.id, actorName: actor && actor.name, kind, summary, ...details });
     return create({ ...normalized, notifications: [...normalized.notifications, notice], updatedAt: notice.createdAt });
   }
 
@@ -164,6 +172,7 @@
         artist: personal ? personal.artist : item.shared.artist,
         key: personal ? personal.key : item.shared.key,
         capo: personal ? personal.capo : item.shared.capo,
+        view: personal ? personal.view : item.shared.view,
         chordSheet: personal ? personal.chordSheet : item.shared.chordSheet,
         notes: personal ? personal.notes : item.shared.notes,
         songData: personal?.songData || item.shared.songData || null,

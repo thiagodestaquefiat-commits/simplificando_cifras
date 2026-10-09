@@ -6,11 +6,12 @@ from werkzeug.exceptions import HTTPException
 
 
 class ApiError(Exception):
-    def __init__(self, code: str, message: str, status_code: int = 400):
+    def __init__(self, code: str, message: str, status_code: int = 400, details=None):
         super().__init__(message)
         self.code = code
         self.message = message
         self.status_code = status_code
+        self.details = details
 
 
 def _payload(code: str, message: str, details=None):
@@ -29,7 +30,7 @@ def _payload(code: str, message: str, details=None):
 def register_error_handlers(app) -> None:
     @app.errorhandler(ApiError)
     def handle_api_error(error: ApiError):
-        return jsonify(_payload(error.code, error.message)), error.status_code
+        return jsonify(_payload(error.code, error.message, error.details)), error.status_code
 
     @app.errorhandler(ValidationError)
     def handle_validation_error(error: ValidationError):

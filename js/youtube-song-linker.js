@@ -24,7 +24,10 @@
       coverUrl: video && video.coverUrl || (song && song.coverUrl) || null,
       youtubeVideoId: video && video.youtubeVideoId || null,
       youtubeUrl: video && video.youtubeUrl || null,
-      youtubeChannelTitle: video && (video.youtubeChannelTitle || video.artist) || null
+      youtubeChannelTitle: video && (video.youtubeChannelTitle || video.artist) || null,
+      youtubeTitle: video && video.title || null,
+      youtubeDescription: video && video.description || null,
+      youtubePublishedAt: video && video.publishedAt || null
     };
   }
 

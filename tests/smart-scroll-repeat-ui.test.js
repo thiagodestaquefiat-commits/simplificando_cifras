@@ -10,7 +10,7 @@ const {chromium}=require('playwright');
   const result=await page.evaluate(async()=>{
     continueWithoutLogin();musicas.push({id:'repeat-fixture',title:'Teste repetição',artist:'Teste',key:'G',blocos:[{l:'Tu és bem-vindo',c:'G Em C G D (4x)\nC D Em (2x)\nC D Em D'}]});
     openDetail('repeat-fixture');setSongView('summary');
-    const lines=Array.from(document.querySelectorAll('[data-smart-line]'));
+    const lines=Array.from(document.querySelectorAll('.song-page[aria-hidden="false"] [data-smart-line]'));
     const repeats=lines.map(l=>l.dataset.smartRepeat);
     let clock=0,frame;Object.defineProperty(performance,'now',{value:()=>clock,configurable:true});
     const controller=smartScroll.create({tuner:{start(callback){frame=callback;return Promise.resolve(true);},stop(){}}});

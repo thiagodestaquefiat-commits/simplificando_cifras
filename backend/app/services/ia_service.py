@@ -284,6 +284,10 @@ class IaService:
                     404,
                 )
             logger.info("ai_search_source=web url=%s", web_hit.url)
+            if not payload.artista and getattr(web_hit, "artist", None):
+                # Busca só pelo nome: usa o artista que o Cifra Club informou (e o título oficial).
+                payload = payload.model_copy(update={"artista": web_hit.artist,
+                                                     "titulo": getattr(web_hit, "title", None) or payload.titulo})
             knowledge_only = False
             has_online_source = True
         source_text = web_hit.content if web_hit else extracted.text if extracted is not None else payload.conteudo
@@ -363,6 +367,8 @@ class IaService:
                     normalized.observacoes.append(note)
             if web_hit:
                 self._apply_page_key_and_capo(normalized, web_hit)
+                if not normalized.artista and getattr(web_hit, "artist", None):
+                    normalized.artista = web_hit.artist
                 note = f"Cifra obtida de {web_hit.url}; revise antes de salvar."
                 if note not in normalized.observacoes:
                     normalized.observacoes.append(note)

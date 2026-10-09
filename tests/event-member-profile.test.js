@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const html=fs.readFileSync('index.html','utf8');
+assert.match(html,/id="event-member-profile"/);
+assert.match(html,/function openEventMemberProfile\(memberId,fromChat=false\)/);
+assert.match(html,/event-member-avatar-button/);
+assert.match(html,/event-message-avatar-button/);
+assert.match(html,/Conteúdo compartilhado/);
+assert.match(html,/message\.type!==\'system\'&&!message\.deleted/);
+console.log('event-member-profile.test.js: OK');

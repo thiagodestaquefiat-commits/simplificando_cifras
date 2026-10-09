@@ -23,13 +23,14 @@ const server = http.createServer((request, response) => {
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      let remoteKey='C',remoteVersion=1;
-      const remoteEvent=()=>({id:'event-key',title:'Evento do teste',leaderId:'leader-test',creatorId:'leader-test',remoteVersion,members:[{id:'leader-test',name:'Líder',role:'Liderança',isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',order:0,shared:{key:remoteKey,notes:'Entrada suave',chordSheet:remoteKey==='C'?'C F G\nUma letra':'Db Gb Ab\nUma letra'}}]});
+      let remoteShared={key:'C',capo:'',notes:'Entrada suave',chordSheet:'C F G\nUma letra'},remoteVersion=1;
+      const remoteEvent=()=>({id:'event-key',title:'Evento do teste',leaderId:'leader-test',creatorId:'leader-test',remoteVersion,members:[{id:'leader-test',name:'Líder',role:'Liderança',isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',order:0,shared:{...remoteShared}}]});
       await page.route('**/api/collaboration/**', async route => {
         const request=route.request(),url=request.url();
+        if(url.endsWith('/capabilities'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({eventSongData:1})});
         if(url.endsWith('/users')&&request.method()==='POST')return route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({user:{id:'leader-test',name:'Líder'},accessToken:'test-token'})});
         if(url.endsWith('/events/event-key/repertoire/event-key-item/shared')&&request.method()==='PATCH'){
-          remoteKey=JSON.parse(request.postData()).key;remoteVersion+=1;
+          remoteShared={...remoteShared,...JSON.parse(request.postData())};remoteVersion+=1;
           return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(remoteEvent())});
         }
         if(url.endsWith('/events/event-key')&&request.method()==='GET')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(remoteEvent())});
@@ -38,28 +39,40 @@ const server = http.createServer((request, response) => {
       await page.route('**/api/auth/config', route => route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({enabled:false,provider:'local'})}));
       await page.route('https://fonts.googleapis.com/**', route => route.fulfill({status:200,contentType:'text/css',body:''}));
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
-      await page.evaluate(() => {
+      await page.waitForFunction(()=>loginGateAuthReady);
+      await page.evaluate(async () => {
+        continueWithoutLogin();
         appCurrentUser=Object.freeze({...appCurrentUser,id:'leader-test',name:'Líder'});
         musicas.push(songModel.create({id:'event-key-song',title:'Canção do teste',key:'C',blocos:[{l:'',c:'C F G\nUma letra'}],fullChordSheet:{visibility:'private',source:'user_text',content:'C F G\nUma letra'}}));
-        eventCollaboration.ensureLocalIdentity(appCurrentUser);
+        eventCollaboration.ensureLocalIdentity(appCurrentUser);await eventCollaboration.ensureRegistered(appCurrentUser);
         setlists.push(eventModel.create({id:'event-key',title:'Evento do teste',leaderId:appCurrentUser.id,remoteVersion:1,members:[{...appCurrentUser,isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',shared:{key:'C',notes:'Entrada suave',chordSheet:'C F G\nUma letra'}}]}));
         openSD('event-key');
       });
-      assert.equal(await page.locator('.event-official-key-control').count(),1);
-      assert.equal(await page.locator('.event-official-key-control output').innerText(),'C');
-      await page.getByRole('button',{name:'Subir tom oficial de Canção do teste'}).click();
+      assert.equal(await page.locator('.event-official-key-control').count(),0);
+      assert.equal(await page.locator('.event-song-edit').count(),1);
+      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
+      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
+      await page.locator('#event-song-edit-key').fill('Db');
+      await page.locator('#event-song-edit-capo').fill('2');
+      await page.locator('#event-song-edit-text').fill('Db Gb Ab\nUma letra revisada');
+      await page.locator('#event-song-edit-notes').fill('Entrada revisada');
+      await page.locator('#event-song-edit-save').click();
       await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'Db');
-      assert.equal(await page.locator('.event-official-key-control output').innerText(),'Db');
-      assert.deepEqual(await page.evaluate(() => ({notes:findEvent('event-key').repertoire[0].shared.notes,chordSheet:findEvent('event-key').repertoire[0].shared.chordSheet})),{notes:'Entrada suave',chordSheet:'Db Gb Ab\nUma letra'});
+      assert.equal(await page.locator('#event-song-edit-layer').getAttribute('aria-hidden'),'true');
+      assert.deepEqual(await page.evaluate(() => ({capo:findEvent('event-key').repertoire[0].shared.capo,notes:findEvent('event-key').repertoire[0].shared.notes,chordSheet:findEvent('event-key').repertoire[0].shared.chordSheet})),{capo:'2',notes:'Entrada revisada',chordSheet:'Db Gb Ab\nUma letra revisada'});
       const variant=await page.evaluate(() => eventSongVariant(findEvent('event-key'),findEvent('event-key').repertoire[0],appCurrentUser.id));
       assert.equal(variant.key,'Db');
       assert.match(variant.blocos[0].c,/Db\s+Gb\s+Ab/);
       assert.match(variant.fullChordSheet.content,/Db\s+Gb\s+Ab/);
       assert.equal(await page.evaluate(() => musicas.find(song => song.id === 'event-key-song').key),'C');
-      remoteKey='D';remoteVersion+=1;
+      remoteShared={...remoteShared,key:'D'};remoteVersion+=1;
       await page.evaluate(() => {currentAuthState={...currentAuthState,authenticated:true};return refreshOpenEventFromCloud();});
       await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'D');
-      assert.equal(await page.locator('.event-official-key-control output').innerText(),'D');
+      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
+      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
+      await page.waitForFunction(()=>document.getElementById('event-song-edit-key').value==='D');
+      assert.equal(await page.locator('#event-song-edit-key').inputValue(),'D');
+      await page.getByRole('button',{name:'Cancelar'}).click();
       const chatBounds=await page.locator('#event-chat-fab').boundingBox();
       const bellBounds=await page.locator('#event-notification-button').boundingBox();
       assert.ok(chatBounds.x+chatBounds.width<=bellBounds.x&&chatBounds.width===bellBounds.width&&chatBounds.height===bellBounds.height);
@@ -72,6 +85,7 @@ const server = http.createServer((request, response) => {
       });
       assert.equal(await page.locator('#event-chat-fab .event-chat-fab-badge').innerText(),'1');
       await page.locator('#event-chat-fab').click();
+      await page.waitForFunction(()=>!document.querySelector('#event-chat-fab .event-chat-fab-badge'));
       assert.equal(await page.locator('#event-chat-fab .event-chat-fab-badge').count(),0);
       await page.evaluate(() => {
         closeEventChat();
@@ -80,11 +94,13 @@ const server = http.createServer((request, response) => {
         openSD('event-key-member');
       });
       assert.equal(await page.locator('.event-official-key-control').count(),0);
-      await page.evaluate(() => changeEventOfficialKey('event-key-member','event-key-item',1));
+      assert.equal(await page.locator('.event-song-edit').count(),0);
+      await page.evaluate(() => openEventSongEdit('event-key-member','event-key-item'));
+      assert.equal(await page.locator('#event-song-edit-layer').getAttribute('aria-hidden'),'true');
       assert.equal(await page.evaluate(() => findEvent('event-key-member').repertoire[0].shared.key),'D');
       assert.deepEqual(errors,[]);
       await context.close();
     }
-    console.log('event-official-key-ui.test.js: OK (tom oficial, permissão e chat em 2 viewports)');
+    console.log('event-official-key-ui.test.js: OK (sheet oficial, permissão e chat em 2 viewports)');
   } finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode=1; });

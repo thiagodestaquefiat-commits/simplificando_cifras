@@ -32,19 +32,19 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v202-rolagem-confirmacao-curta/);
+assert.match(serviceWorker, /const CACHE_NAME = "simplificando-cifras-v347-github-integrado"/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=11/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
-assert.match(indexHtml, /js\/editor\/song-format\.js\?v=11/);
+assert.match(indexHtml, /js\/editor\/song-format\.js\?v=12/);
 assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=10/);
 assert.match(indexHtml, /js\/song-model\.js\?v=6/);
 assert.match(serviceWorker, /js\/song-model\.js\?v=5/);
-assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=15/);
-assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=15/);
+assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=16/);
+assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=16/);
 for(const match of indexHtml.matchAll(/(?:src|href)="(js\/[^"\s]+)"/g))assert.ok(serviceWorker.includes('"./'+match[1]+'"'),`Recurso da interface ausente do cache offline: ${match[1]}`);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/demo-library\.js\?v=4/);
@@ -56,9 +56,9 @@ assert.match(serviceWorker, /js\/app-assistant\.js\?v=5/);
 assert.match(serviceWorker, /js\/song-repository\.js\?v=13/);
 assert.match(serviceWorker, /js\/library-sync\.js\?v=17/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
-assert.match(indexHtml, /js\/ai\/api-config\.js\?v=6/);
-assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=6/);
-for (const [script, version] of [["youtube-api", 4], ["youtube-song-linker", 1], ["youtube-player", 3], ["youtube-player-ui", 3], ["youtube-ui", 2]]) {
+assert.match(indexHtml, /js\/ai\/api-config\.js\?v=7/);
+assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=7/);
+for (const [script, version] of [["youtube-api", 6], ["youtube-song-linker", 1], ["youtube-player", 7], ["youtube-player-ui", 18], ["youtube-ui", 3]]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }

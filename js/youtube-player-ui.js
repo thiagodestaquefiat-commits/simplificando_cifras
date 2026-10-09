@@ -9,6 +9,7 @@
   let searchTimer = null;
   let manualMode = false;
   let expanded = false;
+  let openSelectedVideoPaused = false;
   let controlsTimer = null;
   let controlsElement = null;
   let repeatPanel = null;
@@ -18,6 +19,8 @@
   let playerNextSibling = null;
   let activePlayerContainer = null;
   let iframeFocusHandler = null;
+  let detailScrollCleanup = null;
+  let excludedVideoId = null;
   const CONTROLS_DURATION = 4500;
 
   function element(id) { return global.document.getElementById(id); }
@@ -35,12 +38,16 @@
     return item;
   }
   function playerTop(container) {
-    const header = element("view-detail")?.querySelector(".detail-header");
-    container.style.top = `${Math.ceil(header?.getBoundingClientRect().height || 58)}px`;
+    // O player participa do fluxo imediatamente abaixo do cabeçalho. No estado
+    // expandido ele assume top:0 via CSS conforme o cabeçalho é consumido.
+    container.style.removeProperty("top");
   }
   function readableError(error) {
     if (error && error.name === "AbortError") return "";
     if (error?.status === 429) return "O limite temporário de buscas do YouTube foi atingido.";
+    if (error instanceof TypeError || /load failed|failed to fetch/i.test(String(error?.message || ""))) {
+      return "Não foi possível conectar à busca. Recarregue o app e tente novamente.";
+    }
     return error?.message || "Não foi possível pesquisar no YouTube agora.";
   }
   function imageFor(source, className) {
@@ -95,7 +102,50 @@
     if (iframeFocusHandler) global.removeEventListener("blur", iframeFocusHandler);
     iframeFocusHandler = null;
     activePlayerContainer = null;
+    if (detailScrollCleanup) detailScrollCleanup();
+    detailScrollCleanup = null;
+    const detail = element("view-detail");
+    if (detail) {
+      detail.style.removeProperty("--video-header-progress");
+      detail.classList.remove("video-study-expanded");
+    }
     resetFloating(container);
+  }
+
+  function recoverUnavailableVideo(song, message) {
+    excludedVideoId = String(song?.youtubeVideoId || "").trim() || null;
+    currentVideos = [];
+    manualMode = true;
+    expanded = false;
+    render(message || "Este vídeo não está disponível no player. Buscando outras gravações…");
+    global.setTimeout(search, 0);
+  }
+
+  function setupDetailScrollMotion() {
+    const detail = element("view-detail");
+    if (!detail) return;
+    detail.classList.add("video-study-expanded");
+    let frame = 0;
+    const render = () => {
+      frame = 0;
+      const player = element("youtube-song-player");
+      const media = player?.querySelector(".youtube-player-frame") || player;
+      const playerBottom = (player?.offsetTop || 0) + (media?.offsetHeight || 0);
+      const revealStart = Math.max(1, playerBottom - 58);
+      const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
+      detail.style.setProperty("--video-header-progress", progress.toFixed(4));
+    };
+    const onScroll = () => {
+      if (!frame) frame = global.requestAnimationFrame(render);
+    };
+    detail.addEventListener("scroll", onScroll, { passive: true });
+    global.addEventListener("resize", onScroll, { passive: true });
+    render();
+    detailScrollCleanup = () => {
+      detail.removeEventListener("scroll", onScroll);
+      global.removeEventListener("resize", onScroll);
+      if (frame) global.cancelAnimationFrame(frame);
+    };
   }
 
   function watchIframeInteraction(container) {
@@ -219,8 +269,10 @@
       }
       showControls();
     }, saved ? "Desativar repetição do trecho" : "Ativar repetição do trecho");
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 8.2A6.5 6.5 0 1 1 5.7 14"/><path d="M7.2 4.8v3.4H3.8"/></svg>';
     if (saved) toggle.classList.add("is-active");
     const closePanel = button("×", "youtube-repeat-icon-btn", () => { closeRepeatPanel(); showControls(); }, "Fechar seleção");
+    closePanel.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 7.5 9 9m0-9-9 9"/></svg>';
     header.append(toggle, Object.assign(global.document.createElement("strong"), { textContent: "Selecione o trecho" }), closePanel);
     const timeline = global.document.createElement("div");
     timeline.className = "youtube-repeat-timeline";
@@ -264,17 +316,25 @@
     const results = global.document.createElement("div");
     results.className = "youtube-song-results";
     videos.forEach((video, index) => {
-      const row = global.document.createElement("div");
+      const row = global.document.createElement("button");
+      row.type = "button";
       row.className = "youtube-song-result";
+      row.setAttribute("aria-label", `Selecionar e abrir ${video.title}`);
+      row.addEventListener("click", () => selectVideo(index));
       row.appendChild(imageFor(video, "youtube-song-result-cover"));
       const info = global.document.createElement("div");
       info.className = "youtube-song-result-info";
       const title = global.document.createElement("strong");
       title.textContent = video.title;
       const channel = global.document.createElement("span");
-      channel.textContent = video.youtubeChannelTitle || video.artist || "YouTube";
+      const published = video.publishedAt ? new Date(video.publishedAt).getFullYear() : "";
+      channel.textContent = [video.youtubeChannelTitle || video.artist || "YouTube", published].filter(Boolean).join(" · ");
       info.append(title, channel);
-      row.append(info, button("Usar", "youtube-song-link-btn", () => selectVideo(index)));
+      const more = global.document.createElement("span");
+      more.className = "youtube-song-result-more";
+      more.setAttribute("aria-hidden", "true");
+      more.textContent = "⋮";
+      row.append(info, more);
       results.appendChild(row);
     });
     container.appendChild(results);
@@ -305,6 +365,8 @@
   }
 
   function renderExpanded(container, song) {
+    const shouldStartPaused = openSelectedVideoPaused;
+    openSelectedVideoPaused = false;
     container.className = "youtube-player-shell is-linked is-expanded";
     playerTop(container);
     const status = global.document.createElement("small");
@@ -319,10 +381,8 @@
     actions.setAttribute("aria-label", "Opções do vídeo");
     const repeat = createAction("↻", "Repetir trecho", "repeat", () => handleRepeatAction(status, repeat));
     const mini = createAction("▱", "Miniplayer", "floating", toggleFloating, "Ativar miniplayer flutuante");
-    const change = createAction("▶", "Trocar vídeo", "change", showManualSearch, "Escolher outro vídeo");
-    change.querySelector(".youtube-player-action-icon").classList.add("is-youtube");
-    const close = createAction("×", "Fechar", "close", closeExpanded, "Fechar player");
-    actions.append(repeat, mini, change, close);
+    const close = createAction("×", "Fechar", "close", closeExpanded, "Fechar vídeo");
+    actions.append(repeat, mini, close);
     const grip = global.document.createElement("div");
     grip.className = "youtube-player-floating-grip";
     grip.setAttribute("aria-label", "Arrastar miniplayer");
@@ -331,41 +391,74 @@
     container.append(frame, actions, grip, status);
     attachFloatingDrag(container, grip);
     watchIframeInteraction(container);
+    setupDetailScrollMotion();
     showControls();
     global.requestAnimationFrame(() => {
       global.youtubePlayer.mount("youtube-iframe-player", song.youtubeVideoId, {
+        autoplay: !shouldStartPaused,
         onReady() { status.textContent = "Player pronto"; showControls(); },
         onStateChange(event) {
           const labels = { "-1": "Player pronto", 0: "Vídeo finalizado", 1: "Reproduzindo", 2: "Pausado", 3: "Carregando…", 5: "Player pronto" };
           if (!global.youtubePlayer.getSegmentLoop()) status.textContent = labels[event.data] || status.textContent;
           showControls();
         },
-        onError() { status.textContent = "Este vídeo não permite reprodução incorporada. Escolha outro vídeo."; showControls(); }
-      }).catch((error) => { status.textContent = readableError(error); });
+        onError() {
+          global.setTimeout(() => recoverUnavailableVideo(song), 0);
+        }
+      }).catch((error) => recoverUnavailableVideo(song, readableError(error)));
     });
   }
 
   function renderSearch(container, message) {
     container.className = "youtube-player-shell is-search";
     container.style.removeProperty("top");
-    const heading = global.document.createElement("div");
-    heading.className = "youtube-player-heading";
-    heading.textContent = "Vídeo para estudo";
-    const description = global.document.createElement("p");
-    description.className = "youtube-player-help";
-    description.textContent = message || "Encontre a gravação correta desta música no YouTube.";
     const row = global.document.createElement("div");
     row.className = "youtube-player-search";
+    const brand = global.document.createElement("span");
+    brand.className = "youtube-search-brand";
+    brand.innerHTML = '<svg viewBox="0 0 28 20" aria-hidden="true"><rect x="0" y="1" width="28" height="18" rx="5"/><path d="m11 6 7 4-7 4Z"/></svg><strong>YouTube</strong>';
     const input = global.document.createElement("input");
     input.id = "youtube-song-search-input";
     input.type = "search";
     input.placeholder = "Música ou artista";
     input.value = global.youtubeSongLinker.searchQuery(getSong());
     input.addEventListener("input", scheduleSearch);
-    input.addEventListener("keydown", (event) => { if (event.key === "Enter") search(); });
-    row.append(input, button("Buscar", "youtube-song-search-btn", search));
-    container.append(heading, description, row);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      search();
+    });
+    const searchButton = button("", "youtube-song-search-btn", search, "Pesquisar vídeo no YouTube");
+    searchButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>';
+    row.append(brand, input, searchButton);
+    container.append(row);
+    if (message) {
+      const status = global.document.createElement("div");
+      status.className = "youtube-song-search-status";
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      status.textContent = message;
+      container.append(status);
+    }
     if (currentVideos.length) renderResults(container, currentVideos);
+  }
+
+  function setSearchBusy(message, busy) {
+    const container = element("youtube-song-player");
+    if (!container) return;
+    let status = container.querySelector(".youtube-song-search-status");
+    if (!status) {
+      status = global.document.createElement("div");
+      status.className = "youtube-song-search-status";
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      container.append(status);
+    }
+    status.textContent = message || "";
+    status.hidden = !message;
+    container.setAttribute("aria-busy", busy ? "true" : "false");
+    const searchButton = container.querySelector(".youtube-song-search-btn");
+    if (searchButton) searchButton.disabled = Boolean(busy);
   }
 
   function render(message) {
@@ -395,7 +488,8 @@
     currentSongId = song && song.id;
     currentVideos = [];
     manualMode = false;
-    expanded = false;
+    expanded = Boolean(song?.youtubeVideoId);
+    openSelectedVideoPaused = expanded;
     requestVersion += 1;
     render();
   }
@@ -405,6 +499,7 @@
     currentVideos = [];
     manualMode = false;
     expanded = false;
+    openSelectedVideoPaused = false;
     requestVersion += 1;
     clearTimeout(searchTimer);
     if (requestController) requestController.abort();
@@ -416,7 +511,13 @@
   }
 
   function openExpanded() { expanded = true; render(); }
-  function closeExpanded() { global.youtubePlayer.pause(); expanded = false; render(); }
+  function closeExpanded() {
+    global.youtubePlayer.pause();
+    currentVideos = [];
+    manualMode = true;
+    expanded = false;
+    render("Pesquise outra gravação para estudar.");
+  }
   function showManualSearch() {
     global.youtubePlayer.pause();
     currentVideos = [];
@@ -429,14 +530,21 @@
     searchTimer = setTimeout(search, 700);
   }
   async function search() {
+    clearTimeout(searchTimer);
+    searchTimer = null;
     const input = element("youtube-song-search-input");
     const query = input ? input.value.trim() : "";
-    if (query.length < 3) return;
+    if (query.length < 3) {
+      setSearchBusy("Digite pelo menos 3 caracteres.", false);
+      return;
+    }
     const version = ++requestVersion;
     if (requestController) requestController.abort();
     requestController = new AbortController();
+    setSearchBusy("Pesquisando no YouTube…", true);
     try {
       currentVideos = await global.youtubeApi.searchVideos(query, 8, { signal: requestController.signal });
+      if (excludedVideoId) currentVideos = currentVideos.filter((video) => String(video.youtubeVideoId || "") !== excludedVideoId);
       if (version === requestVersion && getSong()) render(currentVideos.length ? "Selecione a gravação correta." : "Nenhum vídeo encontrado.");
     } catch (error) {
       if (version === requestVersion && error?.name !== "AbortError") render(readableError(error));
@@ -446,9 +554,11 @@
     const video = currentVideos[index];
     if (!video) return;
     persistLink(video);
+    excludedVideoId = null;
     currentVideos = [];
     manualMode = false;
-    expanded = false;
+    expanded = true;
+    openSelectedVideoPaused = true;
     context.showToast("Música vinculada ao YouTube");
     render();
   }

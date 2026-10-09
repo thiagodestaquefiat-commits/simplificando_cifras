@@ -22,3 +22,15 @@
 @media (max-width:600px){.metronome-title{display:none}}
 @media (max-width:430px){.metronome-beats{gap:3px}.metronome-beat{width:5px;height:5px;flex:0 0 5px}}
 @media (max-width:360px){.capo-metronome-row{gap:4px;padding-inline:0}.capo-metronome-row .metronome-symbol{font-size:17px}.metronome-bpm{min-width:52px;font-size:13px}.metronome-button{width:30px;height:30px;flex-basis:30px}.metronome-play{width:34px;height:34px;flex-basis:34px}.metronome-meter{width:44px;min-width:44px;font-size:10px}.metronome-beats{min-width:30px;gap:2px}}
+
+/* Metrônomo integrado ao painel de estudo */
+#view-detail:not(.stage-mode) .capo-metronome-row{min-height:53px;padding:8px 0 0;border-top:0;background:transparent}
+#view-detail:not(.stage-mode) .capo-metronome-row .metronome-symbol{color:#929ba8;font-size:17px}
+#view-detail:not(.stage-mode) .metronome-title{font-size:10px}
+#view-detail:not(.stage-mode) .metronome-button,#view-detail:not(.stage-mode) .metronome-meter{border-color:rgba(194,205,220,.14);border-radius:10px;background:rgba(255,255,255,.045);color:#eef1f5;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+#view-detail:not(.stage-mode) .metronome-button{width:36px;height:36px;flex-basis:36px}
+#view-detail:not(.stage-mode) .metronome-bpm{color:#f5f6f8;font-size:16px}
+#view-detail:not(.stage-mode) .metronome-bpm small{color:#87909d}
+#view-detail:not(.stage-mode) .metronome-beat{background:#46505d}
+#view-detail:not(.stage-mode) .metronome-beat.is-active{background:#ed8b70;box-shadow:0 0 0 3px rgba(237,139,112,.12)}
+#view-detail:not(.stage-mode) .metronome-play{width:42px;height:42px;flex-basis:42px;border:0;background:linear-gradient(180deg,#f39b80,#e27b61);color:#17100e;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 5px 12px rgba(207,99,73,.13)}

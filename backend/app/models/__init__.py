@@ -15,6 +15,8 @@ from .collaboration import (
     PersonalSong,
     SharedSong,
     SharedSongReport,
+    SongReviewReceipt,
+    ContextAcknowledgement,
     UserAccessToken,
 )
 
@@ -35,5 +37,7 @@ __all__ = [
     "PersonalSong",
     "SharedSong",
     "SharedSongReport",
+    "SongReviewReceipt",
+    "ContextAcknowledgement",
     "UserAccessToken",
 ]
