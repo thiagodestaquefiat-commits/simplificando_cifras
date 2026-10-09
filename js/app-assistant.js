@@ -275,6 +275,9 @@
     [element("song-assistant-launch"),element("event-assistant-launch")].forEach(button=>{if(button&&button.hidden!==profileOpen)button.hidden=profileOpen;});
   }
   function setListening(value){listening=Boolean(value);global.document.querySelectorAll("[data-assistant-launch]").forEach(button=>{button.classList.toggle("listening",listening);button.setAttribute("aria-pressed",String(listening));button.setAttribute("aria-label",listening?"Parar de ouvir":"Falar com o assistente Roudy");});}
+  // Variações comuns de como o reconhecimento de voz escreve "Roudy".
+  const WAKE=/^(?:(?:e ai|eai|ei|ola|oi|ok|hey)\s+)?(?:roudy|roudi|roudie|rowdy|rowdie|raudi|raudy|rudy|rudi|rody|rodi|roldi|roldy|holdy|hold|roud|routy|rout)\b\s*/;
+  function wakeCommand(value){const text=clean(value);return WAKE.test(text)?text.replace(WAKE,"").trim():null;}
   function stopListening(){try{recognition?.stop();}catch(_error){}recognition=null;setListening(false);}
   function listen(){
     if(listening){stopListening();return;}
@@ -286,12 +289,17 @@
     current.continuous=false;
     current.interimResults=false;
     current.maxAlternatives=5;
-    current.onstart=()=>{if(recognition!==current)return;setListening(true);message("Estou ouvindo… Pode falar.");};
+    current.onstart=()=>{if(recognition!==current)return;setListening(true);message("Estou ouvindo… Diga: Roudy, e o comando.");};
     current.onresult=event=>{
       if(recognition!==current)return;
       const alternatives=Array.from(event.results?.[0]||[]).map(item=>item?.transcript?.trim()).filter(Boolean);
-      const spoken=alternatives.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0]||"";
-      if(spoken){stopListening();run(spoken);}
+      if(!alternatives.length)return;
+      stopListening();
+      // Todo comando de voz começa com o nome: "Roudy, abrir afinador".
+      const called=alternatives.map(wakeCommand).filter(value=>value!==null);
+      if(!called.length){answer("Diga Roudy antes do comando. Por exemplo: Roudy, abrir afinador.","error");return;}
+      const spoken=called.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0];
+      run(spoken?"roudy "+spoken:"roudy");
     };
     current.onerror=event=>{
       if(recognition!==current)return;
