@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v361-palco-so-texto";
+const CACHE_NAME = "simplificando-cifras-v362-arquivo-texto";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./css/topbar-labels.css?v=2",
@@ -153,7 +153,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=17",
+  "./js/ai/ai-harmonic-summary.js?v=18",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",
