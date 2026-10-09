@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v350-vozes-instaladas";
+const CACHE_NAME = "simplificando-cifras-v351-pronuncia-roudy";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./js/medley-repository.js?v=2",
@@ -23,7 +23,7 @@ const ASSETS = [
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
   "./js/app-assistant.js?v=24",
-  "./js/assistant-voice.js?v=2",
+  "./js/assistant-voice.js?v=3",
   "./",
   "./index.html",
   "./js/storage.js",

@@ -20,8 +20,10 @@
   function speak(text){
     if(!supported()||!load().enabled)return;
     global.speechSynthesis.cancel();
-    const utterance=new global.SpeechSynthesisUtterance(String(text||''));
-    const voice=selected();
+    const voice=selected(),lang=String(voice?.lang||appLang()).slice(0,2).toLowerCase();
+    // Pronúncia do nome: "Rôu-di" (não "Ráu-di"). Só muda o que é falado, não o texto na tela.
+    const spoken=String(text||'').replace(/\bRoudy\b/gi,lang==='en'?'Roady':'Rôudi');
+    const utterance=new global.SpeechSynthesisUtterance(spoken);
     if(voice){utterance.voice=voice;utterance.lang=voice.lang;}else utterance.lang=appLang();
     utterance.rate=1;global.speechSynthesis.speak(utterance);return utterance;
   }
