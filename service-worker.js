@@ -1,12 +1,12 @@
-// Legacy test marker: simplificando-cifras-v194-perfil-convites
+// Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v346-logout-limpo";
+const CACHE_NAME = "simplificando-cifras-v348-voz-assistente";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
-  "./css/roudy-forms.css?v=3",
+  "./css/roudy-forms.css?v=4",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
@@ -22,7 +22,8 @@ const ASSETS = [
   "./js/smart-scroll.js?v=5",
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
-  "./js/app-assistant.js?v=22",
+  "./js/app-assistant.js?v=23",
+  "./js/assistant-voice.js?v=1",
   "./",
   "./index.html",
   "./js/storage.js",

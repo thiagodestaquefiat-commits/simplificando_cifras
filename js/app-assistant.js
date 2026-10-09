@@ -27,7 +27,7 @@
   }
   function transcriptionScore(value){const text=clean(value);let score=0;const vocabulary=["playlist","evento","medley","afinador","metronomo","configuracao","idioma","perfil","ferramenta","musica","tablatura","cifra","capotraste","rolagem","palco","tema","contraste","sincronizar","youtube"];vocabulary.forEach(word=>{if(text.includes(word))score+=3;});if(musicas.some(song=>clean(song.title)===text))score+=20;if(setlists.some(event=>clean(event.title)===text))score+=18;return score;}
   function message(text,kind=""){const output=element("assistant-message");if(output){output.textContent=text;output.dataset.kind=kind;}if(typeof global.showToast==="function")global.showToast((kind==="error"?"⚠️ ":"")+text);}
-  function speak(text){if(!global.speechSynthesis||!global.SpeechSynthesisUtterance)return;global.speechSynthesis.cancel();const utterance=new global.SpeechSynthesisUtterance(text);utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;global.speechSynthesis.speak(utterance);}
+  function speak(text){if(global.assistantVoice){global.assistantVoice.speak(text);return;}if(!global.speechSynthesis||!global.SpeechSynthesisUtterance)return;global.speechSynthesis.cancel();const utterance=new global.SpeechSynthesisUtterance(text);utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;global.speechSynthesis.speak(utterance);}
   function answer(text,kind="success",spoken=text){message(text,kind);speak(spoken);return {ok:kind!=="error",message:text};}
   function open(){listen();}
   function close(){stopListening();global.speechSynthesis?.cancel();}
@@ -87,7 +87,7 @@
   }
   function saveSettings(changes){const next={...global.loadAppSettings(),...changes};storage.set("sc_settings_v3",next);global.applyAppSettings(next);return next;}
   function setChordColor(color){const key=COLORS[color];if(!key)return answer("Não reconheci essa cor. Tente coral, vermelho, laranja, amarelo, verde, azul, roxo, rosa ou branco.","error");saveSettings({chordColor:key});return answer(`A cor das cifras foi alterada para ${color}.`);}
-  function openSongByVoice(raw){const query=raw.replace(/^(?:abrir|abra|mostrar|mostre|tocar|toque|ir para|va para)\s+/,"").replace(/^(?:a\s+)?musica\s+/,"").trim();const matches=songMatches(query);if(matches.length>1)return answer(`Encontrei ${matches.length} músicas. Diga o título seguido de “de” e o nome do artista.`,"error");const song=matches[0];if(!song)return answer(`Não encontrei uma música chamada ${query||"assim"}.`,"error");navigateToSong(song);return answer(`Abrindo ${song.title}.`);}
+  function openSongByVoice(raw){const query=raw.replace(/^(?:abrir|abra|mostrar|mostre|tocar|toque|ir para|va para)\s+/,"").replace(/^(?:a\s+)?musica\s+/,"").trim();const matches=songMatches(query);if(matches.length>1)return answer(`Encontrei ${matches.length} músicas. Diga o título seguido de “de” e o nome do artista.`,"error");const song=matches[0];if(!song)return answer(`Não encontrei uma música chamada ${query||"assim"}.`,"error");navigateToSong(song);return answer(`Abrindo música ${song.title}.`);}
   function showModal(){if(element("modal-overlay"))element("modal-overlay").style.display="flex";}
   function songMetronomeAvailable(){return element("view-detail")?.style.display==="flex"&&currentDetailId!=null&&!element("study-metronome")?.hidden;}
   function showToolsMetronome(){if(!element('tools-metronome')||element('modal-overlay')?.style.display!=='flex')global.openToolsMetronome();showModal();}
