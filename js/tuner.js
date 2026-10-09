@@ -124,20 +124,22 @@
         if (ownGeneration !== generation) { stop(); return false; }
         source = audioContext.createMediaStreamSource(stream);
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 8192;
+        analyser.fftSize = options.fftSize === 4096 ? 4096 : 8192;
         analyser.smoothingTimeConstant = 0;
         source.connect(analyser); // Sem conexão à saída: o microfone não produz eco.
         const samples = new Float32Array(analyser.fftSize);
         const spectrum = options.spectrum ? new Float32Array(analyser.frequencyBinCount) : null;
+        const intervalMs=options.intervalMs===20?20:80;
+        lastAnalysis=-Infinity;
         const tick = timestamp => {
           if (ownGeneration !== generation || !analyser) return;
           frameId = global.requestAnimationFrame(tick);
-          if (timestamp - lastAnalysis < 80) return;
+          if (timestamp - lastAnalysis < intervalMs) return;
           lastAnalysis = timestamp;
           analyser.getFloatTimeDomainData(samples);
           let audioFrame;
           if(spectrum){analyser.getFloatFrequencyData(spectrum);let energy=0;for(const value of samples)energy+=value*value;audioFrame={spectrum,sampleRate:audioContext.sampleRate,fftSize:analyser.fftSize,rms:Math.sqrt(energy/samples.length)};}
-          const measured = analyzePitch(samples, audioContext.sampleRate);
+          const measured = options.pitch===false ? null : analyzePitch(samples, audioContext.sampleRate);
           if (!measured) { previousFrequency = null; onSample(null,audioFrame); return; }
           // Suaviza a oscilação visual sem ocultar mudanças de nota.
           const frequency = previousFrequency && Math.abs(1200 * Math.log2(measured / previousFrequency)) < 65

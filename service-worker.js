@@ -1,5 +1,9 @@
-const CACHE_NAME = "simplificando-cifras-v199-tablaturas-detectadas";
+const CACHE_NAME = "simplificando-cifras-v202-rolagem-confirmacao-curta";
 const ASSETS = [
+  "./js/smart-scroll.js?v=7",
+  "./js/tuner.js?v=4",
+  "./js/smart-scroll.js?v=6",
+  "./js/chord-audio.js?v=2",
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=6",
   "./js/editor/song-format.js?v=11",

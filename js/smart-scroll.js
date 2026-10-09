@@ -37,23 +37,25 @@
   }
 
   function createTracker(options={}){
-    const stableMs=options.stableMs||250,cooldownMs=options.cooldownMs||180,dropoutMs=options.dropoutMs||220;
+    const stableMs=options.stableMs??250,cooldownMs=options.cooldownMs??180,dropoutMs=options.dropoutMs??220,rearmSilenceMs=options.rearmSilenceMs??0;
     let sequence=[],index=0,candidate=null,candidateSince=0,candidateLastSeen=0,lastAdvance=-Infinity,lastMatchedRoot=null,armed=true;
-    function reset(next=[]){sequence=next;index=0;candidate=null;candidateSince=0;candidateLastSeen=0;lastAdvance=-Infinity;lastMatchedRoot=null;armed=true;return current();}
+    let lastSignalAt=-Infinity;
+    function reset(next=[]){sequence=next;index=0;candidate=null;candidateSince=0;candidateLastSeen=0;lastAdvance=-Infinity;lastMatchedRoot=null;lastSignalAt=-Infinity;armed=true;return current();}
     function current(){return sequence[index]||null;}
     function align(blockIndex){const found=sequence.findIndex(item=>item.blockIndex>=blockIndex);index=found<0?sequence.length:found;candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
     function seek(nextIndex){index=Math.max(0,Math.min(sequence.length,Number(nextIndex)||0));candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return current();}
     function sample(note,time,onset=false){
       const target=current();
       if(note===null){
-        if(candidate!==null&&time-candidateLastSeen<=dropoutMs)return {advanced:false,current:target,index};
-        candidate=null;candidateSince=0;candidateLastSeen=0;armed=true;return {advanced:false,current:target,index};
+        if(stableMs>0&&candidate!==null&&time-candidateLastSeen<=dropoutMs)return {advanced:false,current:target,index};
+        candidate=null;candidateSince=0;candidateLastSeen=0;if(time-lastSignalAt>=rearmSilenceMs)armed=true;return {advanced:false,current:target,index};
       }
+      lastSignalAt=time;
       if(!target)return {advanced:false,complete:true,current:null,index};
-      if(onset&&time-lastAdvance>=cooldownMs)armed=true;
+      if(onset&&time-lastAdvance>=cooldownMs){if(!armed){candidate=null;candidateSince=0;candidateLastSeen=0;}armed=true;}
       if(note!==lastMatchedRoot)armed=true;
       if(note!==target.root){candidate=note;candidateSince=time;candidateLastSeen=time;armed=true;return {advanced:false,current:target,index};}
-      if(candidate!==note){candidate=note;candidateSince=time;candidateLastSeen=time;return {advanced:false,current:target,index};}
+      if(candidate!==note){candidate=note;candidateSince=time;candidateLastSeen=time;if(stableMs>0)return {advanced:false,current:target,index};}
       candidateLastSeen=time;
       if(!armed||time-lastAdvance<cooldownMs||time-candidateSince<stableMs)return {advanced:false,current:target,index};
       const matched=target;index++;lastAdvance=time;lastMatchedRoot=note;armed=false;candidate=null;candidateSince=0;candidateLastSeen=0;
@@ -63,7 +65,7 @@
   }
 
   function create(options={}){
-    const tracker=createTracker(options),tuner=options.tuner||global.appTuner?.create({spectrum:true});
+    const tracker=createTracker(options),tuner=options.tuner||global.appTuner?.create({spectrum:true,pitch:false,fftSize:4096,intervalMs:20});
     let active=false,container=null,onUpdate=()=>{},manualTimer=0,manualIntentUntil=0,manualDisplaced=false,programmaticUntil=0;
     let previousRms=0;
     const blocks=()=>container?.querySelectorAll('[data-smart-line]')||[];
