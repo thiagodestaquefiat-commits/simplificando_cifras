@@ -3490,7 +3490,7 @@ function resolveHomeCardContext(now=new Date()){
     }
   }catch(error){console.warn('Contextual delivery indisponível; mantendo a Home atual.',error)}
   const contextFirstName=homeCardUserName(),contextGreeting=homeCardGreeting();
-  return {context:'general',artDirection:'standard',kicker:contextFirstName?`${contextGreeting}, ${contextFirstName}`:contextGreeting,title:'O que vamos tocar hoje?',description:'Adicione uma nova música ao repertório.',actions:[{label:'Adicionar música',kind:'camera',primary:true}]};
+  return {context:'general',artDirection:'standard',kicker:contextFirstName?`${contextGreeting}, ${contextFirstName}`:contextGreeting,title:'O que vamos tocar hoje?',description:'Seu repertório está pronto para tocar.',actions:[]};
   /* A lógica editorial anterior permanece abaixo apenas para previews legados locais. */
   const upcoming=setlists.map(event=>({event,days:homeCardDaysUntil(event,now)})).filter(item=>item.days!==null&&item.days>=0).sort((a,b)=>a.days-b.days||eventSortValue(a.event)-eventSortValue(b.event));
   const changed=upcoming.find(item=>item.days<=7&&eventUnreadNotices(item.event).length);
@@ -3502,7 +3502,7 @@ function resolveHomeCardContext(now=new Date()){
   const last=storage.get(HOME_CARD_LAST_SONG_KEY,null),song=last&&musicas.find(item=>String(item.id)===String(last.songId));
   if(song)return {context:'continue_song',artDirection:'editorial',typographyVariant:'graphic',kicker:'DE VOLTA AO REPERTÓRIO',title:`Você voltou para “${song.title}”.`,editorialLines:['ELA TAMBÉM','ESTAVA TE','ESPERANDO.'],description:'Continue de onde parou.',actions:[{label:'Continuar',kind:'song',id:song.id,primary:true},{label:'Ver repertório',kind:'library'}]};
   const firstName=homeCardUserName(),greeting=homeCardGreeting();
-  return {context:'general',artDirection:'standard',kicker:firstName?`${greeting}, ${firstName}`:greeting,title:'O que vamos tocar hoje?',description:'Adicione uma nova música ao repertório.',actions:[{label:'Adicionar música',kind:'camera',primary:true}]};
+  return {context:'general',artDirection:'standard',kicker:firstName?`${greeting}, ${firstName}`:greeting,title:'O que vamos tocar hoje?',description:'Seu repertório está pronto para tocar.',actions:[]};
 }
 function homeCardEventActions(event){
   const hasSongs=Array.isArray(event.repertoire)&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
@@ -3967,8 +3967,9 @@ function cancelAppSettings(){applyAppSettings(loadAppSettings());openAccountModa
 function openGuestLibraryImportPrompt({count=0,userId=null}={}){
   if(!currentAuthState.authenticated||!count||String(promptedGuestLibraryOwner||'')===String(userId||''))return;
   promptedGuestLibraryOwner=String(userId||'');
-  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Músicas encontradas neste dispositivo</div><div class="event-permission-note">Encontramos <strong>${Number(count)} música${Number(count)===1?'':'s'}</strong> criadas enquanto o aplicativo estava sem login. Elas continuam preservadas localmente.</div><p style="margin:16px 2px;color:var(--text2);font-size:11px;line-height:1.55">Deseja adicionar essas músicas à sua conta? Depois disso, elas também serão sincronizadas nos outros dispositivos em que você entrar.</p><button class="btn btn-primary" style="width:100%" type="button" onclick="confirmGuestLibraryImport(this)">Adicionar à minha conta</button><button class="btn btn-outline" style="width:100%;margin-top:9px" type="button" onclick="keepGuestLibrarySeparate(this)">Agora não</button>`;
-  document.getElementById('modal-overlay').style.display='flex';
+  // Sem pergunta ao entrar: a conta vem da nuvem e as músicas de visitante continuam guardadas
+  // neste aparelho, sem mistura automática (nada é apagado nem enviado).
+  librarySync.declineMigration().then(()=>renderMusicas()).catch(error=>console.warn('[ROUDY] Biblioteca da conta:',error?.message||error));
 }
 async function confirmGuestLibraryImport(button){if(button)button.disabled=true;try{showToast('Sincronizando músicas locais…');await librarySync.migrateLegacy();closeModal();showToast('✅ Músicas adicionadas à sua conta.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível adicionar as músicas agora.'));}}
 async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;try{await librarySync.declineMigration();closeModal();showToast('As músicas locais continuam salvas neste dispositivo.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível carregar sua conta.'));}}
