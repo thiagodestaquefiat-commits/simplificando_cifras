@@ -30,7 +30,8 @@ assert.match(editorialCss, /Barlow\+Condensed/, "a voz condensada deve usar uma 
 assert.match(editorialCss, /family=Bungee/, "a voz geométrica deve usar uma família display dedicada");
 assert.match(editorialCss, /\.editorial-dimensional/, "o sistema deve incluir tratamento celebratório dimensional");
 assert.match(editorialCss, /prefers-reduced-motion:reduce[\s\S]{0,500}playlist-ai-editorial-line/, "movimento editorial deve respeitar redução de movimento");
-assert.match(html, /kind:'ai_search'/, "a pesquisa por IA deve permanecer acessível no contexto geral");
+assert.match(topbar, /onclick="openPlaylistSearch\(\)"/, "a pesquisa (playlist + ROUDY + web) fica na lupa do cabeçalho");
+assert.doesNotMatch(html, /label:'Pesquisar',kind:'ai_search'/, "o cartão central não repete a busca");
 assert.match(html, /js\/ai\/camera-capture\.js/, "o módulo de captura por câmera deve ser carregado");
 assert.match(musicPane, /aria-label="Limpar busca do YouTube"/);
 assert.match(topbar, /aria-label="Limpar busca"[^>]*hidden/);

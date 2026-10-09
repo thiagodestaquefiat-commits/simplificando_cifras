@@ -924,7 +924,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
 <link rel="stylesheet" href="css/roudy-forms.css?v=5">
 <link rel="stylesheet" href="css/song-reading.css?v=1">
-<link rel="stylesheet" href="css/topbar-labels.css?v=1">
+<link rel="stylesheet" href="css/topbar-labels.css?v=2">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 </head>
 <body>
@@ -3490,7 +3490,7 @@ function resolveHomeCardContext(now=new Date()){
     }
   }catch(error){console.warn('Contextual delivery indisponível; mantendo a Home atual.',error)}
   const contextFirstName=homeCardUserName(),contextGreeting=homeCardGreeting();
-  return {context:'general',artDirection:'standard',kicker:contextFirstName?`${contextGreeting}, ${contextFirstName}`:contextGreeting,title:'O que vamos tocar hoje?',description:'Encontre uma música ou adicione uma nova ao repertório.',actions:[{label:'Pesquisar',kind:'ai_search',primary:true},{label:'Adicionar música',kind:'camera'}]};
+  return {context:'general',artDirection:'standard',kicker:contextFirstName?`${contextGreeting}, ${contextFirstName}`:contextGreeting,title:'O que vamos tocar hoje?',description:'Adicione uma nova música ao repertório.',actions:[{label:'Adicionar música',kind:'camera',primary:true}]};
   /* A lógica editorial anterior permanece abaixo apenas para previews legados locais. */
   const upcoming=setlists.map(event=>({event,days:homeCardDaysUntil(event,now)})).filter(item=>item.days!==null&&item.days>=0).sort((a,b)=>a.days-b.days||eventSortValue(a.event)-eventSortValue(b.event));
   const changed=upcoming.find(item=>item.days<=7&&eventUnreadNotices(item.event).length);
@@ -3502,7 +3502,7 @@ function resolveHomeCardContext(now=new Date()){
   const last=storage.get(HOME_CARD_LAST_SONG_KEY,null),song=last&&musicas.find(item=>String(item.id)===String(last.songId));
   if(song)return {context:'continue_song',artDirection:'editorial',typographyVariant:'graphic',kicker:'DE VOLTA AO REPERTÓRIO',title:`Você voltou para “${song.title}”.`,editorialLines:['ELA TAMBÉM','ESTAVA TE','ESPERANDO.'],description:'Continue de onde parou.',actions:[{label:'Continuar',kind:'song',id:song.id,primary:true},{label:'Ver repertório',kind:'library'}]};
   const firstName=homeCardUserName(),greeting=homeCardGreeting();
-  return {context:'general',artDirection:'standard',kicker:firstName?`${greeting}, ${firstName}`:greeting,title:'O que vamos tocar hoje?',description:'Encontre uma música ou adicione uma nova ao repertório.',actions:[{label:'Pesquisar',kind:'ai_search',primary:true},{label:'Adicionar música',kind:'camera'}]};
+  return {context:'general',artDirection:'standard',kicker:firstName?`${greeting}, ${firstName}`:greeting,title:'O que vamos tocar hoje?',description:'Adicione uma nova música ao repertório.',actions:[{label:'Adicionar música',kind:'camera',primary:true}]};
 }
 function homeCardEventActions(event){
   const hasSongs=Array.isArray(event.repertoire)&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
@@ -3521,8 +3521,8 @@ function activateHomeCardAction(action){
   if(action.kind==='train_event'){const event=findEvent(action.id),index=event?.repertoire.findIndex(item=>musicas.some(song=>String(song.id)===String(item.songId)));if(index>=0)openDetailFromPlaylist(event.id,index);else{switchTab('setlists');openSD(action.id)}return;}
   if(action.kind==='song'){openDetail(action.id);return;}
   if(action.kind==='library'){switchTab('musicas');document.getElementById('playlist-library-title')?.scrollIntoView({behavior:playlistHeroMotion.matches?'auto':'smooth'});return;}
-  if(action.kind==='ai_search'){aiHarmonicSummary.openSearch();return;}
-  if(action.kind==='camera')roudyCamera.open();
+  if(action.kind==='ai_search'){openPlaylistSearch();return;}
+  if(action.kind==='camera')openPhotoFileMenu();
 }
 function dispatchContextEvent(type,action){document.dispatchEvent(new CustomEvent(type,{detail:{fingerprint:action?.fingerprint||null,actionType:action?.actionType||null,eventId:action?.eventId||null}}))}
 function markContextActionPresented(action){
