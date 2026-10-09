@@ -155,7 +155,7 @@
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
-    const result = await client.auth.signOut();
+    const result = await client.auth.signOut({ scope: "local" });
     if (result.error) throw result.error;
     session = null;
     emit();

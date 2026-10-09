@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v363-afinador-mic-auto";
+const CACHE_NAME = "simplificando-cifras-v364-producao-0910";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./css/topbar-labels.css?v=2",
@@ -94,6 +94,7 @@ const ASSETS = [
   "./js/app-auth.js?v=12",
   "./js/app-auth.js?v=13",
   "./js/app-auth.js?v=14",
+  "./js/app-auth.js?v=15",
   "./js/ui-i18n.js?v=10",
   "./js/ui-i18n.js?v=12",
   "./js/ui-i18n.js?v=13",
