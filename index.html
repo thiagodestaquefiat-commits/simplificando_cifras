@@ -3854,6 +3854,8 @@ function openTuner(){
   const tunerBack=document.querySelector('#modal-body .profile-back-button');if(tunerBack){tunerBack.setAttribute('onclick','openAccountModal()');setAccountBackChevron();}
   renderTunerStrings();
   document.getElementById('modal-overlay').style.display='flex';
+  // Microfone liga sozinho ao abrir o afinador (o botão continua servindo para pausar).
+  toggleTunerMicrophone();
 }
 function selectTunerString(index){
   tunerSelectedIndex=Number.isInteger(index)&&index>=0&&index<tunerStrings().length?index:null;
@@ -3893,7 +3895,8 @@ async function toggleTunerMicrophone(){
     if(status)status.textContent=appText(error?.name==='NotAllowedError'||error?.name==='SecurityError'?'tunerPermission':error?.name==='NotFoundError'?'tunerNoMic':error?.message==='microphone_unavailable'?'tunerUnavailable':'tunerError');
   }finally{if(action?.isConnected)action.disabled=false;}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&tunerController.isRunning())stopTuner();});
+let tunerPausedByBackground=false;
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&tunerController.isRunning()){stopTuner();tunerPausedByBackground=true;}else if(!document.hidden&&tunerPausedByBackground){tunerPausedByBackground=false;if(document.getElementById('tuner-panel')?.isConnected&&!tunerController.isRunning())toggleTunerMicrophone();}});
 window.addEventListener('pagehide',()=>tunerController.stop());
 let profileCoverDrag=null;
 function profileCoverEditorMarkup(){
