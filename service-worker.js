@@ -1,13 +1,13 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v356-perfil-funcoes";
+const CACHE_NAME = "simplificando-cifras-v357-config-lista";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./css/topbar-labels.css?v=2",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
-  "./css/roudy-forms.css?v=5",
+  "./css/roudy-forms.css?v=6",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",

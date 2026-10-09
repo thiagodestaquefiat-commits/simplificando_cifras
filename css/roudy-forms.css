@@ -139,3 +139,17 @@
 .voice-note{color:#8b93a1;font-size:12px;line-height:1.4;padding:4px}
 #modal-overlay[style*="flex"]~#app-assistant-floating,body:has(#modal-overlay[style*="flex"]) #app-assistant-floating{display:none!important}
 .voice-option.is-broken strong{color:#8b93a1}.voice-option.is-broken small{color:#d98a3a}
+
+/* Listas de menu (Configurações, Ajuda, Foto/Arquivo) no mesmo estilo do menu lateral */
+.modal .account-menu{display:flex;flex-direction:column;gap:0;margin-top:6px}
+.modal .account-menu-button{grid-template-columns:40px minmax(0,1fr) 16px;min-height:64px;padding:10px 4px;gap:12px;border:0;border-bottom:1px solid rgba(255,255,255,.07);border-radius:0;background:transparent;color:#f5f5f7}
+.modal .account-menu-button:last-child{border-bottom:0}
+.modal .account-menu-button:hover{background:rgba(255,255,255,.035)}
+.modal .account-menu-button:active{background:rgba(255,255,255,.06)}
+.modal .account-menu-button:focus-visible{outline:2px solid #3b8bff;outline-offset:-2px;border-radius:10px}
+.modal .account-menu-button:not(:has(.account-drawer-icon,.account-menu-icon)){grid-template-columns:minmax(0,1fr) 16px}
+.modal .account-menu-button .account-drawer-icon{display:grid;width:40px;height:40px;place-items:center;border-radius:12px;background:rgba(255,255,255,.055);color:#e6ebf1}
+.modal .account-menu-button .account-drawer-icon svg{width:21px;height:21px}
+.modal .account-menu-copy strong{font-size:15px;font-weight:600;line-height:1.25;color:#f5f5f7}
+.modal .account-menu-copy small{margin-top:3px;font-size:12px;line-height:1.35;color:#8b93a1}
+.modal .account-menu-arrow{color:#6b7280;font-size:20px;line-height:1;justify-self:end}
