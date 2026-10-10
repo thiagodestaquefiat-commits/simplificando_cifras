@@ -1,12 +1,13 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v364-producao-0910";
+const CACHE_NAME = "simplificando-cifras-v365-desempenho-1010";
 const ASSETS = [
   "./css/song-reading.css?v=1",
   "./css/topbar-labels.css?v=2",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
+  "./js/song-repository.js?v=17",
   "./css/roudy-forms.css?v=7",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
@@ -60,6 +61,7 @@ const ASSETS = [
   "./js/library-sync-policy.js?v=1",
   "./js/library-sync.js?v=18",
   "./js/library-sync.js?v=19",
+  "./js/library-sync.js?v=20",
   "./js/song-repository.js?v=15",
   "./js/library-recovery.js?v=2",
   "./js/event-model.js?v=5",
