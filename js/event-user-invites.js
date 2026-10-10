@@ -5,6 +5,7 @@
   const owner=()=>global.appAuth?.getState?.().authenticated?global.appAuth.getState().user?.id:null;
   let searchSequence=0,debounce=null,selection=null,query='',nextOffset=null,results=[],invitations=[],inboxOwner=null,refreshSequence=0;
   let sheetSequence=0,sheetDebounce=null,sheetQuery='',sheetNextOffset=null,sheetResults=[],sheetEventId=null;
+  let sheetOpenGeneration=0;
   function message(error){return error?.status===404?'Esta função ainda precisa ser disponibilizada no servidor.':error?.message||'Não foi possível carregar agora.';}
   function avatar(user){const url=String(user.avatarUrl||'');return url.startsWith('https://')?`<img src="${esc(url)}" alt="" referrerpolicy="no-referrer">`:`<span aria-hidden="true">${esc(user.name?.trim().slice(0,1)||'?')}</span>`;}
   function openEditor(){
@@ -70,9 +71,11 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
   }
   function openSearchSheet(eventId){
     if(!owner()){global.showToast('Entre com sua conta para buscar integrantes.');return;}
-    const layer=ensureSearchSheet(),input=byId('event-people-search-input');sheetEventId=String(eventId);sheetResults=[];sheetNextOffset=null;sheetQuery='';input.value='';input.closest('.event-people-search-box').classList.remove('has-value');renderSheetResults();byId('event-people-search-status').textContent='Busque por nome ou @nome_de_usuario.';requestAnimationFrame(()=>{layer.classList.add('is-open');setTimeout(()=>input.focus({preventScroll:true}),220);});
+    const generation=++sheetOpenGeneration,account=owner();
+    const layer=ensureSearchSheet(),input=byId('event-people-search-input');sheetEventId=String(eventId);sheetResults=[];sheetNextOffset=null;sheetQuery='';input.value='';input.closest('.event-people-search-box').classList.remove('has-value');renderSheetResults();byId('event-people-search-status').textContent='Busque por nome ou @nome_de_usuario.';requestAnimationFrame(()=>{if(generation!==sheetOpenGeneration||account!==owner())return;layer.classList.add('is-open');setTimeout(()=>{if(generation===sheetOpenGeneration&&account===owner())input.focus({preventScroll:true});},220);});
   }
   function closeSearchSheet(){
+    ++sheetOpenGeneration;
     const layer=byId('event-people-search-layer');if(layer)layer.classList.remove('is-open');clearTimeout(sheetDebounce);++sheetSequence;sheetEventId=null;sheetResults=[];sheetNextOffset=null;
   }
   function handleSheetInput(event){
@@ -88,10 +91,17 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
   function renderSheetResults(){
     const host=byId('event-people-search-results');if(!host)return;host.innerHTML=sheetResults.map((user,index)=>`<button type="button" class="event-people-search-result" data-sheet-user="${index}" aria-label="Convidar ${esc(user.name)}"><span class="event-people-search-avatar">${avatar(user)}</span><span class="event-people-search-copy"><strong>${esc(user.name)}</strong><small>${user.username?'@'+esc(user.username):'Perfil '+esc(String(user.id).slice(-8))}</small></span><span class="event-people-search-more" aria-hidden="true">•••</span></button>`).join('');host.querySelectorAll('[data-sheet-user]').forEach(button=>button.addEventListener('click',()=>inviteFromSheet(sheetResults[Number(button.dataset.sheetUser)],button)));const more=byId('event-people-search-more');if(more)more.hidden=sheetNextOffset===null;
   }
-  async function inviteFromSheet(user,button){
-    const account=owner(),eventId=sheetEventId,status=byId('event-people-search-status');if(!account||!eventId||!user||button.disabled)return;if(global.appConfirm&&!global.appConfirm(`Adicionar ${user.name} ao evento?`))return;button.disabled=true;status.textContent=`Enviando convite para ${user.name}…`;
-    try{await global.eventCollaboration.inviteUser(eventId,user.id,'Outra');if(account!==owner()||eventId!==sheetEventId)return;button.querySelector('.event-people-search-more').textContent='✓';button.setAttribute('aria-label',`${user.name}: convite enviado`);status.textContent='Convite enviado. A pessoa entrará no evento após aceitar.';}
-    catch(error){if(account===owner()&&eventId===sheetEventId){button.disabled=false;status.textContent=message(error);}}
+  async function inviteFromSheet(user,button,guard){
+    const account=owner(),eventId=sheetEventId,status=byId('event-people-search-status');if(!account||!eventId||!user||button.disabled)return {ok:false};
+    if(guard)guard();if(global.appConfirm&&!global.appConfirm(`Adicionar ${user.name} ao evento?`))return {ok:false,cancelled:true};if(guard)guard();button.disabled=true;status.textContent=`Enviando convite para ${user.name}…`;
+    try{await global.eventCollaboration.inviteUser(eventId,user.id,'Outra');if(guard)guard();if(account!==owner()||eventId!==sheetEventId)return {ok:false};button.querySelector('.event-people-search-more').textContent='✓';button.setAttribute('aria-label',`${user.name}: convite enviado`);status.textContent='Convite enviado. A pessoa entrará no evento após aceitar.';return {ok:true};}
+    catch(error){if(account===owner()&&eventId===sheetEventId){button.disabled=false;status.textContent=message(error);}return {ok:false,message:message(error)};}
+  }
+  async function inviteFromVoice(eventId,user,guard){
+    if(!owner()||!user||typeof guard!=='function'||typeof global.appConfirm!=='function')return {ok:false};
+    guard();openSearchSheet(eventId);sheetResults=[user];sheetQuery=user.name||'';renderSheetResults();
+    const button=byId('event-people-search-results')?.querySelector('[data-sheet-user="0"]');
+    return button?inviteFromSheet(user,button,guard):{ok:false};
   }
   function updateBadge(){if(global.notificationCenter){global.notificationCenter.update();return;}const button=byId('user-invitations-button');if(!button)return;button.hidden=!owner();button.querySelector('.event-notification-badge')?.remove();if(invitations.length){const badge=document.createElement('span');badge.className='event-notification-badge';badge.textContent=invitations.length>99?'99+':String(invitations.length);button.appendChild(badge);}button.setAttribute('aria-label',`Convites para eventos${invitations.length?': '+invitations.length+' pendentes':''}`);}
   async function refresh(showError=false){
@@ -125,7 +135,7 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
       global.showToast(action==='accept'?'Convite aceito. O evento está na sua lista.':'Convite rejeitado.');
     }catch(error){if(account===owner()&&list===byId('user-invitations-list')){status.textContent=message(error);card.querySelectorAll('button').forEach(b=>b.disabled=false);}}
   }
-  global.eventUserInvites=Object.freeze({openEditor,openSearchSheet,closeSearchSheet,openInbox,refresh,renderInbox,getPending:()=>inboxOwner===owner()?invitations.slice():[]});
+  global.eventUserInvites=Object.freeze({openEditor,openSearchSheet,closeSearchSheet,inviteFromVoice,openInbox,refresh,renderInbox,getPending:()=>inboxOwner===owner()?invitations.slice():[]});
   global.appAuth?.subscribe(()=>{++searchSequence;clearTimeout(debounce);selection=null;refresh();});
   global.addEventListener('focus',()=>refresh());global.addEventListener('online',()=>refresh());
   setInterval(()=>{if(!document.hidden)refresh();},45000);

@@ -1,6 +1,7 @@
 (function(global){
   "use strict";
-  let recognition=null,listening=false;
+  let recognition=null,listening=false,recognitionSession=0;
+  let dialogue=null,conversationTimer=null,followUpTimer=null,speechWatchdog=null,speechVersion=0,captureQuestionId=null,questionSpeechId=null;
   const COLORS={coral:"coral",vermelho:"red",laranja:"orange",amarelo:"yellow",verde:"green",azul:"blue",roxo:"purple",rosa:"pink",branco:"white"};
   const LANGUAGES={portugues:"pt-BR",brasileiro:"pt-BR",espanhol:"es",ingles:"en",italiano:"it",frances:"fr",alemao:"de",english:"en",espanol:"es",deutsch:"de"};
   const TUNER_INSTRUMENTS={violao:"guitar",guitarra:"guitar",ukulele:"ukulele",baixo:"bass",contrabaixo:"bass",violino:"violin"};
@@ -22,15 +23,27 @@
     text=text.replace(/^(?:aumente|aumenta|acelere|acelera)\s+/,"aumentar ").replace(/^(?:diminua|diminui|reduza|reduz|desacelere|desacelera)\s+/,"diminuir ").replace(/^(?:baixe|baixa)\s+/,"baixar ").replace(/^(?:salve|salva)\s+/,"salvar ");
     text=text.replace(/^(?:edite|edita)\s+/,"editar ").replace(/^(?:exclua|exclui|apague|apaga|remova|remove)\s+/,"excluir ").replace(/^(?:compartilhe|compartilha)\s+/,"compartilhar ").replace(/^(?:sincronize|sincroniza)\s+/,"sincronizar ").replace(/^(?:busque|busca|procure|procura|pesquise|pesquisa)\s+/,"buscar ");
     text=text.replace(/^(?:toca|toque|ouca|escute)\s+/,"tocar ");
+    text=text.replace(/^(?:coloque|coloca|ponha|poe)\s+/,"colocar ");
     text=text.replace(/^(?:ativar|ligar|acionar|comecar|retomar|continuar|habilitar|habilite|retome|continue)\s+/,"iniciar ").replace(/^(?:desativar|desligar|pausar|interromper|cancelar|silenciar|cessar|desabilitar|desabilite)\s+/,"parar ").replace(/\s+por favor$/,"").replace(/\bukelele\b/g,"ukulele").replace(/\brolar automaticamente\b/g,'rolagem automatica').replace(/\brolagem por audio\b/g,'rolagem inteligente').replace(/\brolagem por som\b/g,'rolagem inteligente').replace(/\bbatidas por minuto\b/g,'bpm').replace(/\bconfiguracao\b/g,'configuracoes').replace(/\bdefina\b/g,'definir').replace(/\bajuste\b/g,'ajustar');
-    return text.replace(/^(abrir|mudar|iniciar|parar|aumentar|diminuir|baixar|salvar|editar|excluir|compartilhar|sincronizar|buscar)\s+(?:o|a|os|as)\s+/,"$1 ").replace(/^(?:o|a|os|as)\s+(?=afinador|metronomo|playlist|evento|eventos|medley|configurac|idioma|perfil|ferramentas)/,"");
+    text=text.replace(/^(abrir|mudar|iniciar|parar|aumentar|diminuir|baixar|salvar|editar|excluir|compartilhar|sincronizar|buscar)\s+(?:o|a|os|as)\s+/,"$1 ").replace(/^(?:o|a|os|as)\s+(?=afinador|metronomo|playlist|evento|eventos|medley|configurac|idioma|perfil|ferramentas)/,"");
+    const aliases={'proximo louvor':'proxima musica','proxima cancao':'proxima musica','avancar para a proxima musica':'proxima musica','cancao anterior':'musica anterior','louvor anterior':'musica anterior','voltar para a musica anterior':'musica anterior','gerar com i a':'gerar com ia','criar musica com i a':'gerar com ia','abrir inteligencia artificial':'gerar com ia','sincronizar tema':'tema do sistema','dar inicio ao metronomo':'iniciar metronomo'};
+    return aliases[text]||text;
   }
   function transcriptionScore(value){const text=clean(value);let score=0;const vocabulary=["playlist","evento","medley","afinador","metronomo","configuracao","idioma","perfil","ferramenta","musica","tablatura","cifra","capotraste","rolagem","palco","tema","contraste","sincronizar","youtube"];vocabulary.forEach(word=>{if(text.includes(word))score+=3;});if(musicas.some(song=>clean(song.title)===text))score+=20;if(setlists.some(event=>clean(event.title)===text))score+=18;return score;}
   function message(text,kind=""){const output=element("assistant-message");if(output){output.textContent=text;output.dataset.kind=kind;}if(typeof global.showToast==="function")global.showToast((kind==="error"?"⚠️ ":"")+text);}
-  function speak(text){if(!global.speechSynthesis||!global.SpeechSynthesisUtterance)return;global.speechSynthesis.cancel();const utterance=new global.SpeechSynthesisUtterance(text);utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;global.speechSynthesis.speak(utterance);}
+  function cancelSpeech(){speechVersion++;clearTimeout(followUpTimer);clearTimeout(speechWatchdog);followUpTimer=null;speechWatchdog=null;questionSpeechId=null;global.speechSynthesis?.cancel();}
+  function speak(text,onDone,questionId){
+    cancelSpeech();questionSpeechId=questionId??null;const version=speechVersion;let finished=false;
+    const finish=ok=>{if(finished||version!==speechVersion)return;finished=true;questionSpeechId=null;clearTimeout(speechWatchdog);if(ok)onDone?.();else if(onDone)message('Toque no assistente para responder à pergunta.');};
+    if(!global.speechSynthesis||!global.SpeechSynthesisUtterance){finish(true);return;}
+    const utterance=new global.SpeechSynthesisUtterance(text);utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;
+    utterance.onend=()=>finish(true);utterance.onerror=()=>finish(false);
+    if(onDone)speechWatchdog=setTimeout(()=>{if(version!==speechVersion)return;finish(false);global.speechSynthesis.cancel();},25000);
+    try{global.speechSynthesis.speak(utterance);}catch(_error){finish(false);}
+  }
   function answer(text,kind="success",spoken=text){message(text,kind);speak(spoken);return {ok:kind!=="error",message:text};}
   function open(){listen();}
-  function close(){stopListening();global.speechSynthesis?.cancel();}
+  function close(){stopListening();cancelSpeech();dialogue?.cancel();dialogue?.clearMemory();clearTimeout(conversationTimer);conversationTimer=null;}
   function closeAppLayers(){if(element("modal-overlay")?.style.display==="flex")global.closeModal?.();}
   function home(tab){global.closeEventChat?.();if(element("view-sd"))element("view-sd").style.display="none";global.closeDetail?.();closeAppLayers();global.switchTab(tab);}
   function prepareDirectNavigation(destination){
@@ -46,7 +59,7 @@
   }
   function navigateToEvent(event){close();prepareDirectNavigation("event");global.openSD(event.id);}
   function navigateToSong(song){close();prepareDirectNavigation("song");global.openDetail(song.id);}
-  function songMatches(query){const target=clean(query);if(!target)return [];const exact=musicas.filter(song=>clean(song.title)===target||clean(song.title+' de '+song.artist)===target);if(exact.length)return exact;return musicas.filter(song=>clean(song.title).includes(target));}
+  function songMatches(query){const key=value=>clean(value).replace(/^(?:a|o|as|os)\s+/,'');const target=key(query);if(!target)return [];const exact=musicas.filter(song=>key(song.title)===target||key(song.title+' de '+song.artist)===target);if(exact.length)return exact;return musicas.filter(song=>key(song.title).includes(target));}
   function findSong(query){const matches=songMatches(query);return matches.length===1?matches[0]:null;}
   function songFromNaturalRequest(text){
     const candidates=[text,text.replace(/^(?:a |a musica |musica )/,""),text.replace(/^(?:quero |gostaria de )?(?:ouvir|tocar|abrir|ver)\s+(?:a\s+)?(?:musica\s+)?/,"")].map(clean).filter(Boolean);
@@ -141,16 +154,16 @@
     };
     return actions[payload.screen]?.()||answer('Tela não permitida para esse comando.','error');
   }
-  async function execute(raw){
+  async function executeLegacy(raw){
     const original=String(raw||"").trim(),spokenText=clean(original).replace(/^(e ai|eai|ei|ola) roudy\s*/,"").trim(),text=normalizeCommand(original);
-    if(!text){answer("Olá! O que você deseja fazer?");setTimeout(listen,650);return;}
+    if(!text){const response=answer("Olá! O que você deseja fazer?");setTimeout(listen,650);return response;}
     message(`Entendi: “${original}”. Executando…`);
     const numbered=spokenNumbers(text);
     if(text==='parar modo palco'||text==='parar palco'){if(currentDetailId==null)return answer('Abra uma música antes de controlar o Modo Palco.','error');await global.exitStageMode();return answer('Modo Palco encerrado.');}
-    if(['retirar capotraste','tirar capotraste','remover capotraste','sem capotraste'].includes(text))return execute('capotraste zero');
-    if(['proximo louvor','proxima cancao','avancar para a proxima musica'].includes(text))return execute('proxima musica');
-    if(['cancao anterior','louvor anterior','voltar para a musica anterior'].includes(text))return execute('musica anterior');
-    if(['gerar com i a','criar musica com i a','abrir inteligencia artificial'].includes(text))return execute('gerar com ia');
+    if(['retirar capotraste','tirar capotraste','remover capotraste','sem capotraste'].includes(text))return executeLegacy('capotraste zero');
+    if(['proximo louvor','proxima cancao','avancar para a proxima musica'].includes(text))return executeLegacy('proxima musica');
+    if(['cancao anterior','louvor anterior','voltar para a musica anterior'].includes(text))return executeLegacy('musica anterior');
+    if(['gerar com i a','criar musica com i a','abrir inteligencia artificial'].includes(text))return executeLegacy('gerar com ia');
     const namedSong=spokenText.replace(/^roudy\s+/, '').replace(/^(?:abrir|abre|abra|mostrar|mostre|tocar|toca|toque)\s+/, '').replace(/^(?:a\s+)?musica\s+/, '');
     if(musicas.some(song=>clean(song.title+' de '+song.artist)===namedSong))return openSongByVoice(namedSong);
     const exactSongs=songMatches(spokenText);
@@ -235,7 +248,7 @@
     if(includesAny(text,["descer o tom","descer tom","diminuir tom","baixar tom","diminuir o tom","baixar o tom"])){if(currentDetailId==null)return answer("Abra uma música antes de mudar o tom.","error");global.transpose(-1);return answer("Desci o tom em um semitom.");}
     if(includesAny(text,["tom original","restaurar tom"])){global.resetTranspose();return answer("Tom original restaurado.");}
     if(text.includes("rolagem inteligente"))return answer('Diga ativar rolagem inteligente ou desativar rolagem inteligente.','error');
-    if(text==='rolagem automatica')return execute('iniciar rolagem automatica');
+    if(text==='rolagem automatica')return executeLegacy('iniciar rolagem automatica');
     if(includesAny(text,["parar rolagem","pausar rolagem"])){global.stopAutoScroll();global.stopSmartScroll();return answer("Rolagem pausada.");}
     if(includesAny(text,["modo palco","iniciar palco"])){const event=currentEventRequired();if(event&&element("view-sd")?.style.display==="flex"){close();global.openStageFromEvent(event.id);return answer("Modo Palco do evento preparado.");}if(currentDetailId==null)return answer("Abra uma música ou evento antes de iniciar o Modo Palco.","error");close();await global.enterStageMode();return answer("Modo Palco preparado.");}
     if(includesAny(text,["sair do palco","fechar palco"])){await global.exitStageMode();return answer("Modo Palco encerrado.");}
@@ -261,9 +274,229 @@
     const requestedSong=songFromNaturalRequest(text)||songFromNaturalRequest(spokenText);if(requestedSong){navigateToSong(requestedSong);return answer(`Abrindo ${requestedSong.title}.`);}
     return answer("Ainda não reconheci esse pedido. Tente dizer o nome de uma tela, música, evento ou configuração.","error");
   }
+  function actionContext(){
+    const auth=global.appAuth?.getState?.()||{},actor=typeof appCurrentUser!=='undefined'?appCurrentUser.id:'local';
+    const songOpen=element('view-detail')?.style.display==='flex'&&currentDetailId!=null;
+    const eventContext=songOpen&&typeof detailEventContext!=='undefined'?detailEventContext:null;
+    const eventId=songOpen?(eventContext?.eventId||null):(element('view-sd')?.style.display==='flex'?currentSdId:null);
+    const event=eventId!=null?global.findEvent?.(eventId):null;
+    const access=event?Boolean(global.eventModel?.canAccess?.(event,actor)):!eventContext;
+    const itemAvailable=!eventContext||Boolean(event?.repertoire?.some(item=>String(item.id)===String(eventContext.itemId)));
+    const libraryOwner=global.songRepository?.getActiveOwnerId?.()??null;
+    const ready=(typeof loginGateAuthReady==='undefined'||loginGateAuthReady)&&(typeof authLinking==='undefined'||!authLinking)&&(!auth.authenticated||String(libraryOwner)===String(actor));
+    const metronome=songOpen?studyMetronome:toolsMetronome;
+    const editorOpen=element('modal-overlay')?.style.display==='flex'&&((typeof simpleReviewDraft!=='undefined'&&Boolean(simpleReviewDraft))||(typeof eventSongEditDraft!=='undefined'&&Boolean(eventSongEditDraft))||Boolean(global.document.querySelector('#fs-title, #med-music, #medley-save-title')))||element('event-song-edit-layer')?.getAttribute?.('aria-hidden')==='false'||element('event-admin-sheet-layer')?.getAttribute?.('aria-hidden')==='false'||Boolean(global.document.querySelector('#ai-summary-overlay, .roudy-camera, [data-inline-editing="true"]'));
+    const eventsAll=setlists.filter(value=>!global.eventModel?.canAccess||global.eventModel.canAccess(value,typeof global.eventPermissionActor==='function'?global.eventPermissionActor(value).id:actor));
+    const settingsDraft=element('modal-overlay')?.style.display==='flex'&&Boolean(global.document.querySelector('#setting-language, #setting-theme'))&&typeof settingsFromForm==='function'&&JSON.stringify(settingsFromForm())!==JSON.stringify(global.loadAppSettings());
+    return {ownerId:String(actor),authSubject:auth.user?.id||null,libraryOwner,ready,
+      dialogueScope:dialogueLayerKey(),medleyCount:typeof medleyBlocos==='undefined'?0:medleyBlocos.length,
+      screen:songOpen?'song':element('view-sd')?.style.display==='flex'?'event':typeof currentTab!=='undefined'?currentTab:'musicas',stageActive:typeof stageMode!=='undefined'&&stageMode,
+      songOpen,editorOpen:editorOpen||settingsDraft||element('playlist-ai-search-mode')?.hidden===false,songId:songOpen?currentDetailId:null,eventId,itemId:eventContext?.itemId||null,
+      canEditSong:songOpen&&ready&&typeof detailEditBaseline!=='undefined'&&Boolean(detailEditBaseline)&&typeof detailEditOwner!=='undefined'&&String(detailEditOwner)===String(actor)&&access&&itemAvailable&&(!eventContext||String(eventContext.ownerId)===String(actor)),
+      smartActive:typeof smartScrollController!=='undefined'&&smartScrollController.isActive(),autoActive:typeof scrollTimer!=='undefined'&&scrollTimer!==null,
+      authenticated:Boolean(auth.authenticated),canAccessEvent:Boolean(event&&access),canManageEvent:Boolean(event&&global.eventModel?.canEditShared?.(event,global.eventPermissionActor?.(event)?.id||actor)),
+      tunerVisible:element('modal-overlay')?.style.display==='flex'&&Boolean(element('tuner-panel')),tunerStringCount:typeof tunerStrings==='function'?tunerStrings().length:0,
+      metronomeActive:metronome.isPlaying(),tunerActive:typeof tunerController!=='undefined'&&tunerController.isRunning(),events:intentEventSnapshot(),eventsAll};
+  }
+  const dialogueNodes=new WeakMap();let dialogueNodeSerial=0;
+  function dialogueLayerKey(){
+    const overlay=element('modal-overlay'),root=overlay?.style.display==='flex'?element('modal-body')?.firstElementChild:null;
+    if(root&&!dialogueNodes.has(root))dialogueNodes.set(root,++dialogueNodeSerial);
+    const layers=['inst-modal','account-drawer-layer','event-action-layer','event-admin-sheet-layer','event-people-search-layer','event-share-layer'].map(id=>{const node=element(id);return Boolean(node&&(node.style.display==='flex'||node.classList.contains('is-open')||node.getAttribute?.('aria-hidden')==='false'));});
+    return JSON.stringify([overlay?.style.display==='flex',root?dialogueNodes.get(root):null,...layers,Boolean(global.document.body?.hasAttribute?.('data-account-menu-open')),element('event-chat-view')?.hidden===false,typeof currentSongPage==='undefined'?null:currentSongPage,typeof stageMode==='undefined'?false:stageMode,typeof tunerInstrument==='undefined'?null:tunerInstrument]);
+  }
+  // Bridge to approved, native screens. Voice never invents a second data path.
+  function phaseTwoHost(){
+    const modalVisible=()=>element('modal-overlay')?.style.display==='flex';
+    const present=selector=>Boolean(global.document.querySelector(selector));
+    const frame=()=>new Promise(resolve=>global.requestAnimationFrame(resolve));
+    const panelRoutes={
+      settings:[()=>global.openAppSettings(),'button[onclick="openLanguageSettings()"]','Abrindo configurações.'],
+      appearance:[()=>global.openAppearanceSettings(),'#setting-theme','Abrindo Aparência e Acessibilidade.'],
+      language:[()=>global.openLanguageSettings(),'#setting-language','Abrindo idiomas.'],
+      tools:[()=>global.openToolsMenu(),'.tuner-menu-icon','Abrindo ferramentas.'],
+      support:[()=>global.openHelpSupport(),'button[onclick*="openLibrarySync"]','Abrindo Ajuda e Suporte.'],
+      account:[()=>global.openAccountModal(),'.account-summary, #account-drawer-layer.is-open','Abrindo sua conta.'],
+      profile:[()=>global.openProfileSettings(),'#profile-name','Abrindo seu perfil.'],
+      bands:[()=>global.openBandManager(),'.band-card, #new-band-name','Abrindo suas bandas.'],
+      backup:[()=>global.openLibrarySync(),'[data-library-sync-status]','Abrindo Backup e dados.'],
+      notifications:[()=>global.notificationCenter.open(),'#roudy-notification-items','Abrindo notificações e convites.']
+    };
+    return {
+      settings:()=>global.loadAppSettings(),
+      updateSettings:changes=>{
+        const next={...global.loadAppSettings(),...changes};if(storage.set('sc_settings_v3',next)!==true)return {ok:false};global.applyAppSettings(next);
+        const fields={language:'setting-language',theme:'setting-theme',chordColor:'setting-chord-color',scale:'setting-scale',highContrast:'setting-high-contrast',colorBlind:'setting-color-blind'};
+        for(const [key,value] of Object.entries(changes)){const input=element(fields[key]);if(input){if(typeof value==='boolean')input.checked=value;else input.value=String(value);}}
+        global.document.querySelectorAll('.language-card').forEach(card=>{const selected=card.dataset.language===next.language;card.classList.toggle('is-selected',selected);card.setAttribute('aria-checked',String(selected));});
+        return {ok:true};
+      },
+      settingsApplied:(key,value)=>{const root=global.document.documentElement;return key==='language'?root.lang===value:key==='theme'?root.dataset.themeChoice===value:key==='scale'?root.dataset.uiScale===String(value):key==='highContrast'?root.classList.contains('a11y-high-contrast')===value:key==='colorBlind'?root.classList.contains('a11y-colorblind')===value:root.style.getPropertyValue('--app-chord-color')===CHORD_COLOR_OPTIONS[value];},
+      openPanel:async destination=>{const route=panelRoutes[destination];if(!route)return {ok:false};close();closeAppLayers();await route[0]();if(destination!=='account')showModal();await frame();const ok=present(route[1])&&(destination==='account'||modalVisible());return {ok,message:ok?route[2]:'Não consegui abrir essa tela.'};},
+      back:async()=>{
+        close();
+        if(element('inst-modal')?.style.display==='flex'){global.closeInstModal();return true;}
+        if(element('event-people-search-layer')?.classList.contains('is-open')){global.eventUserInvites.closeSearchSheet();return true;}
+        if(element('event-share-layer')?.classList.contains('is-open')){global.closeEventSharePreview();return true;}
+        if(element('event-action-layer')?.classList.contains('is-open')){global.closeEventActionLayer();return true;}
+        if(element('account-drawer-layer')?.classList.contains('is-open')){global.closeAccountDrawer();return true;}
+        if(modalVisible()){global.closeModal();return true;}
+        if(element('event-chat-view')?.hidden===false){global.closeEventChat();return true;}
+        if(element('view-detail')?.style.display==='flex'){if(stageMode)await global.exitStageMode();else global.closeDetail();return true;}
+        if(element('view-sd')?.style.display==='flex'){global.closeSD();return true;}
+        return false;
+      },
+      showTuner:()=>{close();global.openTuner();showModal();},tunerVisible:()=>modalVisible()&&Boolean(element('tuner-panel')),
+      tunerInstrument:()=>tunerInstrument,selectTunerInstrument:value=>global.selectTunerInstrument(value),
+      startTuner:()=>global.toggleTunerMicrophone(),selectTunerString:index=>global.selectTunerString(index),tunerString:()=>tunerSelectedIndex,
+      instrument:()=>currentInstrument,setInstrument:value=>{global.setInstrument(value);global.updateDetailSaveButton();},
+      songViewAvailable:value=>value==='tablature'?SONG_LAST_PAGE===3&&!stageMode:value==='lyrics'?!stageMode:true,
+      songView:()=>stageMode?currentSongView:currentSongPage===0?'summary':currentSongPage===1?'full':currentSongPage===2?'lyrics':'tablature',
+      setSongView:value=>{if(value==='lyrics')global.setSongPage(2);else global.setSongView(value);global.updateDetailSaveButton();},
+      nextSong:delta=>navigationContext.peek(delta),stepSong:delta=>global.navigateSong(delta),
+      songFont:()=>detailStageFont,setSongFont:value=>{detailStageFont=value;global.applyStageFont(value);global.updateDetailSaveButton();},
+      scrollSpeed:()=>scrollSpeed,adjustScrollSpeed:delta=>global.adjustStageScrollSpeed(delta),stageActive:()=>stageMode,
+      setStage:async(start,context)=>{close();if(!start){await global.exitStageMode();return;}if(!context.songOpen){const event=global.findEvent(context.eventId),first=event?.repertoire.find(item=>global.eventSongSource(event,item));if(!first)return;global.closeDetail();global.openDetailFromEventItem(event.id,first.id);}await global.enterStageMode();},
+      openGenerator:mode=>{
+        close();closeAppLayers();
+        if(mode==='camera'){global.roudyCamera.open();return present('.roudy-camera');}
+        if(mode==='pesquisa'){home('musicas');global.aiHarmonicSummary.openSearch();return element('playlist-ai-search-mode')?.hidden===false;}
+        global.aiHarmonicSummary.open(mode==='arquivo'?{mode:'arquivo'}:undefined);return Boolean(element('ai-summary-overlay'));
+      },
+      editSong:id=>{close();global.editMusica(id);return modalVisible()&&Boolean(element('ai-review-title'));},
+      confirm:text=>global.appConfirm(text),deleteSong:id=>global.deleteMusica(id),songExists:id=>musicas.some(song=>String(song.id)===String(id)),
+      medleyCount:()=>medleyBlocos.length,
+      medleyWorkflow:operation=>{
+        close();home('medley');
+        if(operation==='clear'){const before=medleyBlocos.length;global.limparMedley();return {ok:medleyBlocos.length===0||medleyBlocos.length===before,status:medleyBlocos.length===before?'noop':'executed',message:medleyBlocos.length===before?'Limpeza cancelada.':'Medley limpo.'};}
+        if(operation==='add')global.abrirAddMedley();else global.abrirSalvarMedley();
+        return {ok:modalVisible()&&Boolean(element(operation==='add'?'med-music':'medley-save-title')),message:operation==='add'?'Escolha a música e o bloco para o Medley.':'Escolha o nome e confirme o salvamento do Medley.'};
+      },
+      createEvent:()=>{close();home('setlists');global.openAddSetlist();return modalVisible()&&Boolean(element('fs-title'));},
+      eventWorkflow:async(operation,context,guard)=>{
+        const event=global.findEvent(context.eventId);if(!event)return {ok:false};
+        if(operation==='leadership'&&event.members.filter(member=>String(member.id)!==String(event.leaderId)).length===0)return {ok:false,status:'blocked',message:'Não há outro integrante para assumir a liderança.'};
+        close();guard();if(context.songOpen)global.closeDetail();global.openSD(event.id);
+        const flows={
+          chat:[()=>global.openEventChat(),()=>element('event-chat-view')?.hidden===false,'Conversa do evento aberta.'],
+          notices:[()=>global.openEventNotifications(),()=>modalVisible()&&present('.notification-center-page'),'Notificações do evento abertas.'],
+          edit:[()=>global.editSetlistById(event.id),()=>present('#event-admin-date'),'Editor do evento aberto. Revise e confirme na tela.'],
+          share:[()=>global.sharePlaylist(event.id),()=>element('event-share-layer')?.classList.contains('is-open'),'Prévia de compartilhamento aberta. Confirme na tela.'],
+          leadership:[()=>global.openEventLeadershipTransfer(event.id),()=>modalVisible()&&Boolean(element('event-next-leader')),'Selecione o novo líder e confirme a transferência na tela.'],
+          invite:[()=>global.eventUserInvites.openSearchSheet(event.id),()=>element('event-people-search-layer')?.classList.contains('is-open'),'Busca de integrantes aberta. Selecione a pessoa e confirme o convite.'],
+          addSongs:[()=>global.openEventAddSongs(event.id),()=>present('#event-admin-song-list'),'Selecione as músicas para o repertório do evento.'],
+          order:[()=>global.openEventOrderSheet(event.id),()=>present('#event-admin-order-list'),'Organização do repertório aberta. Confirme a ordem na tela.'],
+          members:[()=>global.scrollEventMembers(),()=>present('.event-participants-section'),'Participantes do evento exibidos.'],
+          delete:[()=>global.openEventMoreActions(),()=>element('event-action-layer')?.classList.contains('is-open'),'Ações do evento abertas. Escolha Excluir e confirme na tela para concluir.']
+        };
+        const flow=flows[operation];if(!flow)return {ok:false};await flow[0]();await frame();return {ok:Boolean(flow[1]()),message:flow[2]};
+      },
+      authenticated:()=>Boolean(global.appAuth?.getState?.().authenticated),login:()=>global.loginAppAccount(),logout:()=>global.logoutAppAccount(),
+      inviteCandidates:async(query,context)=>{
+        const body=await global.eventCollaboration.searchUsers(query,0),event=global.findEvent(context.eventId),members=new Set((event?.members||[]).map(member=>String(member.id)));
+        return {users:(body.users||[]).filter(user=>String(user.id)!==String(context.ownerId)&&!members.has(String(user.id))),hasMore:body.nextOffset!=null};
+      },
+      invitePerson:(eventId,user,guard)=>global.eventUserInvites.inviteFromVoice(eventId,user,guard),
+      sync:()=>librarySync.syncNow(),syncPhase:()=>librarySync.getStatus().phase,
+      backupWorkflow:async operation=>{
+        if(operation==='export'){const file=global.exportarBiblioteca({quiet:true});return {ok:Boolean(file),message:'Backup do perfil gerado. Guarde o arquivo em um local seguro.'};}
+        if(operation==='import'){await global.openLibrarySync();return {ok:modalVisible()&&present('button[onclick="selectLibraryBackup()"]'),status:'opened',message:'Backup e dados aberto. Em Opções avançadas, toque em Importar Backup para escolher o arquivo; a recuperação preservará suas músicas atuais.'};}
+        const file=await global.downloadSyncDiagnostics();return {ok:Boolean(file?.ok),message:'Diagnóstico para suporte gerado.'};
+      },copyPix:()=>global.copyRoudyPixCode()
+    };
+  }
+  let actionManager=null;
+  function getActionManager(){
+    if(actionManager)return actionManager;
+    if(!global.roudyAssistantActions||!global.roudyActionManager||!global.roudyAssistantRuntime)return null;
+    const runtime=global.roudyAssistantRuntime.create({
+      ...phaseTwoHost(),
+      context:actionContext,clean,localDate,songMatches,legacy:executeLegacy,
+      home:tab=>{close();home(tab);},isHome:tab=>element('view-detail')?.style.display!=='flex'&&element('view-sd')?.style.display!=='flex'&&(typeof currentTab==='undefined'||currentTab===tab),
+      openSong:navigateToSong,isSongOpen:id=>element('view-detail')?.style.display==='flex'&&String(currentDetailId)===String(id),
+      openEvent:navigateToEvent,isEventOpen:id=>element('view-sd')?.style.display==='flex'&&String(currentSdId)===String(id),
+      eventById:id=>global.findEvent(id),eventItemAvailable:(event,item)=>Boolean(global.eventSongSource(event,item)),
+      openEventSong:(eventId,itemId)=>{close();prepareDirectNavigation('song');global.openDetailFromEventItem(eventId,itemId);},
+      isEventSongOpen:(eventId,itemId)=>element('view-detail')?.style.display==='flex'&&String(detailEventContext?.eventId)===String(eventId)&&String(detailEventContext?.itemId)===String(itemId),
+      resolveEvent:async(raw,events)=>{
+        const signature=JSON.stringify(events.map(entry=>[String(entry.event.id),entry.startsAt]));
+        const payload=await global.roudyIntentClient.resolve(raw,events.map((entry,id)=>({id,startsAt:entry.startsAt})));
+        if(signature!==JSON.stringify(intentEventSnapshot().map(entry=>[String(entry.event.id),entry.startsAt])))return {action:'clarify',message:'Os eventos mudaram. Repita o pedido.'};
+        lastIntentResult=payload;return payload;
+      },
+      capo:()=>selectedCapo,semitones:()=>currentSemitones,selectCapo:value=>global.selectCapo(value),transpose:value=>global.transpose(value),resetTranspose:()=>global.resetTranspose(),
+      isDirty:()=>global.detailHasUnsavedChanges(),saveSong:()=>global.saveDetailChanges({silent:true}),
+      metronome:inSong=>inSong?studyMetronome:toolsMetronome,
+      stopTuner:()=>global.stopTuner(),tunerActive:()=>tunerController.isRunning(),
+      showMetronome:inSong=>{if(inSong)element('study-metronome')?.scrollIntoView?.({block:'nearest',behavior:'smooth'});else showToolsMetronome();},
+      metronomeVisible:inSong=>inSong?songMetronomeAvailable():Boolean(element('tools-metronome'))&&element('modal-overlay')?.style.display==='flex',
+      startMetronome:inSong=>inSong?studyMetronome.start():toolsMetronome.toggle(),
+      scrollActive:mode=>mode==='smart'?smartScrollController.isActive():scrollTimer!==null,
+      setScrolling:async(mode,start)=>{if(mode==='smart'){if(start)await global.toggleSmartScroll();else global.stopSmartScroll();}else if(start)global.startAutoScroll();else global.stopAutoScroll();},
+      searchPlaylist:query=>{close();home('musicas');global.openPlaylistSearch();const input=element('search-music');if(input){input.value=query;global.handlePlaylistSearchInput?.();}},
+      playlistQuery:()=>element('search-music')?.value,
+      searchYoutube:async(query,guard)=>{
+        if(!actionContext().songOpen){const matches=songMatches(query);if(matches.length!==1)return {ok:false,reason:'needs-song',message:'Abra a música para buscar uma gravação no YouTube.'};guard();navigateToSong(matches[0]);}
+        if(!global.youtubePlayerUI?.searchFromVoice)return {ok:false,message:'A busca de vídeo não está disponível agora.'};
+        const signature=JSON.stringify([intentScope(),currentDetailId,typeof detailEventContext!=='undefined'?detailEventContext:null]);
+        const valid=()=>signature===JSON.stringify([intentScope(),currentDetailId,typeof detailEventContext!=='undefined'?detailEventContext:null])&&element('view-detail')?.style.display==='flex';
+        const found=await global.youtubePlayerUI.searchFromVoice(query,valid);
+        if(found?.ok)element('youtube-song-player')?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
+        return found;
+      }
+    });
+    const catalog=global.roudyAssistantActions.create({songMatches,eventDate:eventDateFromText,classify:raw=>global.roudyIntentClient?.classify(raw)});
+    actionManager=global.roudyActionManager.create({catalog,runtime,normalize:normalizeCommand,numbers:spokenNumbers});
+    if(global.roudyAssistantSequences)actionManager=global.roudyAssistantSequences.create({
+      manager:actionManager,context:actionContext,normalize:normalizeCommand,
+      snapshot:()=>({...global.loadAppSettings(),capo:selectedCapo,semitones:currentSemitones,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter()}),
+      restore:async(key,value,guard)=>{
+        guard();
+        if(key==='capo')global.selectCapo(value);
+        else if(key==='semitones')global.transpose(value-currentSemitones);
+        else if(key==='bpm')await studyMetronome.setBpm(value);
+        else if(key==='meter')await studyMetronome.setMeter(value);
+        else{const saved=await phaseTwoHost().updateSettings({[key]:value});if(!saved?.ok)throw new Error('Preference not restored');}
+        guard();global.updateDetailSaveButton?.();
+      }
+    });
+    return actionManager;
+  }
+  async function execute(raw,options={}){
+    const manager=getActionManager();if(!manager)return answer('O assistente não terminou de carregar. Atualize a página e tente novamente.','error');
+    if(!ensureDialogue())return answer('O acompanhamento do assistente não terminou de carregar. Atualize a página.','error');
+    const result=await dialogue.run(raw,options);
+    if(result.silent||result.feedbackAlreadyHandled)return result;
+    if(result.awaitingResponse){
+      message(result.message,'question');scheduleConversationCheck();
+      speak(result.message,options.source==='voice'?()=>{
+        if(!dialogue.refreshDeadline(result.questionId))return;
+        const version=speechVersion;followUpTimer=setTimeout(()=>{if(version===speechVersion&&dialogue?.getPending()?.id===result.questionId)listen({automatic:true,questionId:result.questionId});},180);
+      }:undefined,result.questionId);
+    }else{clearTimeout(conversationTimer);conversationTimer=null;answer(result.message,result.ok?'success':'error');}
+    return result;
+  }
+  function ensureDialogue(){
+    const manager=getActionManager();
+    if(!dialogue&&manager&&global.roudyAssistantDialogue){
+      const memory=global.roudyAssistantMemory?.create({context:actionContext,normalize:normalizeCommand,numbers:spokenNumbers,
+        snapshot:()=>({...global.loadAppSettings(),capo:selectedCapo,semitones:currentSemitones,bpm:(actionContext().songOpen?studyMetronome:toolsMetronome).getBpm(),scrollSpeed:typeof scrollSpeed==='undefined'?undefined:scrollSpeed,fontSize:typeof detailStageFont==='undefined'?undefined:detailStageFont})});
+      dialogue=global.roudyAssistantDialogue.create({manager,context:actionContext,normalize:normalizeCommand,numbers:spokenNumbers,memory});
+    }
+    return dialogue;
+  }
+  function scheduleConversationCheck(){
+    clearTimeout(conversationTimer);
+    conversationTimer=setTimeout(()=>{
+      const pending=dialogue?.getPending();
+      if(pending)scheduleConversationCheck();else{conversationTimer=null;clearTimeout(followUpTimer);if(questionSpeechId!==null)cancelSpeech();if(captureQuestionId!==null)stopListening();}
+    },500);
+  }
   let executing=false;
-  async function run(raw){if(executing)return {ok:false,message:'Um comando já está sendo executado.'};executing=true;try{return await execute(raw);}catch(error){return answer(error?.name==='NotAllowedError'?'Permita o microfone ou áudio para executar este comando.':error?.message||'Não foi possível executar o comando. Tente novamente.','error');}finally{executing=false;}}
+  async function run(raw,options={}){if(executing)return {ok:false,status:'blocked',message:'Um comando já está sendo executado.'};executing=true;try{return await execute(raw,options);}catch(error){return answer(error?.name==='NotAllowedError'?'Permita o microfone ou áudio para executar este comando.':'Não foi possível executar o comando. Tente novamente.','error');}finally{executing=false;}}
   function updateLaunchVisibility(){
+    actionManager?.sync?.();
+    dialogue?.sync();
     const overlayOpen=element("modal-overlay")?.style.display==="flex",profileOpen=Boolean(global.document.body?.hasAttribute?.('data-account-menu-open'))||overlayOpen&&Boolean(element("profile-name")||global.document.querySelector('#modal-body .account-summary'));
     const songOpen=element("view-detail")?.style.display==="flex",eventOpen=element("view-sd")?.style.display==="flex";
     const stageOpen=songOpen&&element("view-detail")?.classList.contains("stage-mode");
@@ -273,15 +506,24 @@
     if(header&&header.hidden!==profileOpen)header.hidden=profileOpen;
     if(floating&&floating.hidden!==floatingHidden)floating.hidden=floatingHidden;
     [element("song-assistant-launch"),element("event-assistant-launch")].forEach(button=>{if(button&&button.hidden!==profileOpen)button.hidden=profileOpen;});
+    if(dialogue){const pending=dialogue.getPending();if(!pending){clearTimeout(followUpTimer);if(questionSpeechId!==null)cancelSpeech();if(captureQuestionId!==null)stopListening();}if(profileOpen&&listening)stopListening();}
   }
   function setListening(value){listening=Boolean(value);global.document.querySelectorAll("[data-assistant-launch]").forEach(button=>{button.classList.toggle("listening",listening);button.setAttribute("aria-pressed",String(listening));button.setAttribute("aria-label",listening?"Parar de ouvir":"Falar com o assistente Roudy");});}
-  function stopListening(){try{recognition?.stop();}catch(_error){}recognition=null;setListening(false);}
-  function listen(){
-    if(listening){stopListening();return;}
+  function stopListening(){const current=recognition;recognition=null;captureQuestionId=null;try{current?.stop();}catch(_error){}setListening(false);}
+  function listen({automatic=false,questionId}={}){
+    ensureDialogue();
+    if(automatic&&dialogue?.getPending()?.id!==questionId)return;
+    if(listening||recognition){if(!automatic)close();return;}
+    if(!automatic)cancelSpeech();
     const Recognition=global.SpeechRecognition||global.webkitSpeechRecognition;
     if(!Recognition){message("O reconhecimento de voz não está disponível neste navegador.","error");return;}
     const current=new Recognition();
+    const requestId='speech-'+(++recognitionSession);
+    const scope=dialogue?.getScope();
+    const pendingId=dialogue?.getPending()?.id||null;
+    if(pendingId!==null&&!automatic)dialogue.refreshDeadline(pendingId);
     recognition=current;
+    captureQuestionId=pendingId;
     current.lang=global.document.documentElement.lang||"pt-BR";
     current.continuous=false;
     current.interimResults=false;
@@ -290,19 +532,24 @@
     current.onresult=event=>{
       if(recognition!==current)return;
       const alternatives=Array.from(event.results?.[0]||[]).map(item=>item?.transcript?.trim()).filter(Boolean);
-      const spoken=alternatives.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0]||"";
-      if(spoken){stopListening();run(spoken);}
+      // A lower-ranked alternative must not erase a negation in the main transcript.
+      const primary=alternatives[0]||'';
+      const spoken=/\b(?:nao|nem|nunca)\b/.test(clean(primary))?primary:alternatives.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0]||"";
+      if(spoken){
+        if(scope!==undefined&&scope!==dialogue?.getScope()||pendingId!==null&&pendingId!==dialogue?.getPending()?.id){stopListening();message('A pergunta, a tela ou a conta mudou. Faça o pedido novamente.','error');return;}
+        stopListening();run(spoken,{requestId,source:'voice'});
+      }
     };
     current.onerror=event=>{
       if(recognition!==current)return;
       if(event.error==="not-allowed"||event.error==="service-not-allowed")message("Permita o uso do microfone para falar com o assistente.","error");
-      else if(event.error==="no-speech")message("Não ouvi nenhuma frase. Toque no agente e tente novamente.","error");
+      else if(event.error==="no-speech")message(pendingId!==null?'Não ouvi a resposta. Toque no assistente e responda à pergunta.':"Não ouvi nenhuma frase. Toque no agente e tente novamente.","error");
       else if(event.error==="audio-capture")message("O navegador não conseguiu acessar um microfone. Confira a permissão e o dispositivo de entrada.","error");
       else message(`Falha no reconhecimento de voz (${event.error||"erro desconhecido"}).`,"error");
     };
-    current.onend=()=>{if(recognition!==current)return;recognition=null;setListening(false);};
-    try{current.start();}catch(_error){recognition=null;setListening(false);message("Não foi possível iniciar o microfone.","error");}
+    current.onend=()=>{if(recognition!==current)return;recognition=null;captureQuestionId=null;setListening(false);};
+    try{current.start();}catch(_error){recognition=null;captureQuestionId=null;setListening(false);message(pendingId!==null?'Toque no assistente novamente para responder à pergunta.':"Não foi possível iniciar o microfone.","error");}
   }
   if(global.MutationObserver&&global.document.body){const visibilityObserver=new global.MutationObserver(updateLaunchVisibility);visibilityObserver.observe(global.document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style","hidden"]});}updateLaunchVisibility();
-  global.roudyAssistant=Object.freeze({open,close,listen,run,clean,updateLaunchVisibility,getLastIntentResult:()=>lastIntentResult});
+  global.roudyAssistant=Object.freeze({open,close,listen,run,clean,updateLaunchVisibility,getConversationState:()=>dialogue?.getPending()||null,cancelConversation:close,getLastIntentResult:()=>lastIntentResult,getLastActionResult:()=>getActionManager()?.getLastResult(),getActions:()=>getActionManager()?.getCatalog()||[]});
 })(window);

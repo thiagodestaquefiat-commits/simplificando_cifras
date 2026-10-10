@@ -529,25 +529,29 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(search, 700);
   }
-  async function search() {
+  async function search({ isCurrent = () => true } = {}) {
     clearTimeout(searchTimer);
     searchTimer = null;
     const input = element("youtube-song-search-input");
     const query = input ? input.value.trim() : "";
     if (query.length < 3) {
       setSearchBusy("Digite pelo menos 3 caracteres.", false);
-      return;
+      return { ok: false, reason: 'query-too-short' };
     }
     const version = ++requestVersion;
     if (requestController) requestController.abort();
     requestController = new AbortController();
     setSearchBusy("Pesquisando no YouTube…", true);
     try {
-      currentVideos = await global.youtubeApi.searchVideos(query, 8, { signal: requestController.signal });
+      const videos = await global.youtubeApi.searchVideos(query, 8, { signal: requestController.signal });
+      if (version !== requestVersion || !getSong() || !isCurrent()) return { ok: false, reason: 'context-changed' };
+      currentVideos = videos;
       if (excludedVideoId) currentVideos = currentVideos.filter((video) => String(video.youtubeVideoId || "") !== excludedVideoId);
       if (version === requestVersion && getSong()) render(currentVideos.length ? "Selecione a gravação correta." : "Nenhum vídeo encontrado.");
+      return { ok: true, count: currentVideos.length };
     } catch (error) {
       if (version === requestVersion && error?.name !== "AbortError") render(readableError(error));
+      return { ok: false, reason: error?.name === 'AbortError' ? 'cancelled' : 'search-failed' };
     }
   }
   function selectVideo(index) {
@@ -564,5 +568,13 @@
   }
   function initialize(options) { context = options; }
 
-  global.youtubePlayerUI = Object.freeze({ initialize, showSong, hide, search, scheduleSearch, selectVideo, openExpanded, closeExpanded });
+  async function searchFromVoice(query, isCurrent = () => true) {
+    if (!getSong() || !isCurrent()) return { ok: false, reason: 'context-changed' };
+    showManualSearch();
+    const input = element('youtube-song-search-input');
+    if (!input) return { ok: false, reason: 'search-unavailable' };
+    input.value = String(query || '').trim();
+    return search({ isCurrent });
+  }
+  global.youtubePlayerUI = Object.freeze({ initialize, showSong, hide, search, searchFromVoice, scheduleSearch, selectVideo, openExpanded, closeExpanded });
 })(window);
