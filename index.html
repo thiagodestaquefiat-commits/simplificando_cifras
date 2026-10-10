@@ -1180,9 +1180,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/song-model.js?v=5"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/medley-repository.js?v=2"></script>
-<script src="js/song-repository.js?v=16"></script>
+<script src="js/song-repository.js?v=17"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
-<script src="js/library-sync.js?v=19"></script>
+<script src="js/library-sync.js?v=20"></script>
 <script src="js/event-model.js?v=5"></script>
 <script src="js/context-intelligence.js?v=2"></script>
 <script src="js/event-repository.js?v=9"></script>
@@ -3540,10 +3540,15 @@ async function acknowledgeContextualAction(action){
   const value=contextAcknowledgements.acknowledgeLocal(action,appCurrentUser.id);dispatchContextEvent('context_action_acknowledged',action);renderContextualHomeCard();
   try{await contextAcknowledgements.syncOne(value)}catch(error){if(navigator.onLine)console.warn('Acknowledgement aguardando sincronização.',error)}
 }
+let homeCardRenderSignature='';
 function renderContextualHomeCard(){
   const normal=document.getElementById('playlist-ai-normal'),search=document.getElementById('playlist-ai-search-mode');
   if(!normal||!search||!search.hidden)return;
-  const model=resolveHomeCardContext(),card=document.getElementById('playlist-ai-card'),kicker=document.getElementById('playlist-context-kicker'),title=document.getElementById('playlist-ai-title'),editorial=document.getElementById('playlist-context-editorial'),description=document.getElementById('playlist-context-description'),actions=document.getElementById('playlist-context-actions');
+  const model=resolveHomeCardContext();
+  // Desempenho: se o card já mostra exatamente este conteúdo, não recria botões nem reinicia a animação.
+  let signature='';try{signature=JSON.stringify(model);}catch(_error){signature='';}
+  if(signature&&signature===homeCardRenderSignature&&normal.isConnected&&document.getElementById('playlist-context-actions')?.childElementCount){if(model.contextAction)markContextActionPresented(model.contextAction);return;}
+  const card=document.getElementById('playlist-ai-card'),kicker=document.getElementById('playlist-context-kicker'),title=document.getElementById('playlist-ai-title'),editorial=document.getElementById('playlist-context-editorial'),description=document.getElementById('playlist-context-description'),actions=document.getElementById('playlist-context-actions');
   if(!card||!kicker||!title||!editorial||!description||!actions)return;
   kicker.textContent=model.kicker;title.textContent=model.title;description.textContent=model.description||'';description.hidden=!model.description;actions.replaceChildren();
   const editorialLines=Array.isArray(model.editorialLines)?model.editorialLines.filter(Boolean):[];
@@ -3553,7 +3558,9 @@ function renderContextualHomeCard(){
   if(primaryAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--primary';button.innerHTML=homeCardActionIcon(primaryAction.kind)+'<span></span>';button.querySelector('span').textContent=primaryAction.label;button.addEventListener('click',()=>activateHomeCardAction(primaryAction));actions.appendChild(button);}
   const dismissAction=model.actions.find(action=>action.kind==='context_acknowledge');if(dismissAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--secondary';button.textContent=dismissAction.label;button.setAttribute('aria-label','Dispensar esta sugestão');button.addEventListener('click',()=>activateHomeCardAction(dismissAction));actions.appendChild(button);}
   if(model.contextAction)markContextActionPresented(model.contextAction);
-  card.dataset.artDirection=model.artDirection||'standard';normal.dataset.context=model.context;normal.dataset.typographyVariant=model.typographyVariant||'standard';normal.classList.remove('is-refreshing');void normal.offsetWidth;normal.classList.add('is-refreshing');
+  card.dataset.artDirection=model.artDirection||'standard';normal.dataset.context=model.context;normal.dataset.typographyVariant=model.typographyVariant||'standard';normal.classList.remove('is-refreshing');homeCardRenderSignature=signature;
+  // Reinicia a animação sem forçar recálculo de layout (antes: void normal.offsetWidth).
+  requestAnimationFrame(()=>requestAnimationFrame(()=>normal.classList.add('is-refreshing')));
 }
 function eventMemberAvatar(member){return member.avatarUrl?`<img src="${eventEsc(member.avatarUrl)}" alt="">`:eventEsc(eventInitials(member.name));}
 function eventMemberRole(member,leaderId){return String(member.id)!==String(leaderId)&&/^(lider|líder|liderança|lideranca)$/i.test(member.role||'')?'Integrante':member.role;}
@@ -4200,8 +4207,17 @@ function refreshStageNavigationOrder(){
 let eventListFilter='all';
 let eventFilterResizeFrame=0;
 let eventFilterDrag=null,eventFilterSuppressClick=false;
+// Desempenho: a largura do filtro vem de um ResizeObserver (sem forçar layout a cada render).
+const eventFilterWidths=new WeakMap();let eventFilterResizeObserver=null;
+function observedEventFilterWidth(control){
+  if(typeof ResizeObserver!=='function')return null;
+  if(!eventFilterResizeObserver)eventFilterResizeObserver=new ResizeObserver(entries=>{let changed=false;for(const entry of entries){const box=Array.isArray(entry.borderBoxSize)?entry.borderBoxSize[0]:entry.borderBoxSize;const width=box&&typeof box.inlineSize==='number'?box.inlineSize:entry.target.getBoundingClientRect().width;if(eventFilterWidths.get(entry.target)!==width){changed=changed||eventFilterWidths.has(entry.target);eventFilterWidths.set(entry.target,width);}}if(changed)requestAnimationFrame(()=>updateEventFilterIndicator(false));});
+  if(!eventFilterWidths.has(control)){eventFilterWidths.set(control,control.getBoundingClientRect().width);eventFilterResizeObserver.observe(control);}
+  return eventFilterWidths.get(control);
+}
 function eventFilterGeometry(control){
-  const inset=3,dpr=window.devicePixelRatio||1,width=control.getBoundingClientRect().width,segmentWidth=(width-inset*2)/3,snap=value=>Math.round(value*dpr)/dpr;
+  const observedWidth=observedEventFilterWidth(control);
+  const inset=3,dpr=window.devicePixelRatio||1,width=typeof observedWidth==='number'?observedWidth:control.getBoundingClientRect().width,segmentWidth=(width-inset*2)/3,snap=value=>Math.round(value*dpr)/dpr;
   return {inset,segmentWidth,snap,minX:snap(inset),maxX:snap(inset+segmentWidth*2)};
 }
 function updateEventFilterIndicator(animate=true){
@@ -4960,7 +4976,7 @@ appAuth.subscribe(async state=>{
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){window.__lastAccountError={at:new Date().toISOString(),status:error?.status||null,code:error?.code||null,message:String(error?.message||error).slice(0,300)};console.error('[conta] falha ao consultar a conta',error);if(accountGeneration===accountAuthGeneration)showToast(navigator.onLine===false?'⚠️ Sem internet. Seus eventos serão atualizados quando a conexão voltar.':'⚠️ Não foi possível atualizar seus eventos agora. Tentaremos de novo automaticamente.');setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true).catch?.(()=>{});},15000);}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeletedMany:(values,confirmed)=>songRepository.markDeletedMany(values,confirmed),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.getElementById('modal-overlay').style.display==='flex'&&document.querySelector('#modal-body [data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
