@@ -36,7 +36,9 @@
     cancelSpeech();questionSpeechId=questionId??null;const version=speechVersion;let finished=false;
     const finish=ok=>{if(finished||version!==speechVersion)return;finished=true;questionSpeechId=null;clearTimeout(speechWatchdog);if(ok)onDone?.();else if(onDone)message('Toque no assistente para responder à pergunta.');};
     if(!global.speechSynthesis||!global.SpeechSynthesisUtterance){finish(true);return;}
-    const utterance=new global.SpeechSynthesisUtterance(text);utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;
+    const utterance=global.assistantVoice?.createUtterance?global.assistantVoice.createUtterance(text):new global.SpeechSynthesisUtterance(text);
+    if(!utterance){finish(true);return;}
+    if(!global.assistantVoice?.createUtterance){utterance.lang=global.document.documentElement.lang||"pt-BR";utterance.rate=1;}
     utterance.onend=()=>finish(true);utterance.onerror=()=>finish(false);
     if(onDone)speechWatchdog=setTimeout(()=>{if(version!==speechVersion)return;finish(false);global.speechSynthesis.cancel();},25000);
     try{global.speechSynthesis.speak(utterance);}catch(_error){finish(false);}
@@ -100,7 +102,7 @@
   }
   function saveSettings(changes){const next={...global.loadAppSettings(),...changes};storage.set("sc_settings_v3",next);global.applyAppSettings(next);return next;}
   function setChordColor(color){const key=COLORS[color];if(!key)return answer("Não reconheci essa cor. Tente coral, vermelho, laranja, amarelo, verde, azul, roxo, rosa ou branco.","error");saveSettings({chordColor:key});return answer(`A cor das cifras foi alterada para ${color}.`);}
-  function openSongByVoice(raw){const query=raw.replace(/^(?:abrir|abra|mostrar|mostre|tocar|toque|ir para|va para)\s+/,"").replace(/^(?:a\s+)?musica\s+/,"").trim();const matches=songMatches(query);if(matches.length>1)return answer(`Encontrei ${matches.length} músicas. Diga o título seguido de “de” e o nome do artista.`,"error");const song=matches[0];if(!song)return answer(`Não encontrei uma música chamada ${query||"assim"}.`,"error");navigateToSong(song);return answer(`Abrindo ${song.title}.`);}
+  function openSongByVoice(raw){const query=raw.replace(/^(?:abrir|abra|mostrar|mostre|tocar|toque|ir para|va para)\s+/,"").replace(/^(?:a\s+)?musica\s+/,"").trim();const matches=songMatches(query);if(matches.length>1)return answer(`Encontrei ${matches.length} músicas. Diga o título seguido de “de” e o nome do artista.`,"error");const song=matches[0];if(!song)return answer(`Não encontrei uma música chamada ${query||"assim"}.`,"error");navigateToSong(song);return answer(`Abrindo música ${song.title}.`);}
   function showModal(){if(element("modal-overlay"))element("modal-overlay").style.display="flex";}
   function songMetronomeAvailable(){return element("view-detail")?.style.display==="flex"&&currentDetailId!=null&&!element("study-metronome")?.hidden;}
   function showToolsMetronome(){if(!element('tools-metronome')||element('modal-overlay')?.style.display!=='flex')global.openToolsMetronome();showModal();}
@@ -509,6 +511,7 @@
     if(dialogue){const pending=dialogue.getPending();if(!pending){clearTimeout(followUpTimer);if(questionSpeechId!==null)cancelSpeech();if(captureQuestionId!==null)stopListening();}if(profileOpen&&listening)stopListening();}
   }
   function setListening(value){listening=Boolean(value);global.document.querySelectorAll("[data-assistant-launch]").forEach(button=>{button.classList.toggle("listening",listening);button.setAttribute("aria-pressed",String(listening));button.setAttribute("aria-label",listening?"Parar de ouvir":"Falar com o assistente Roudy");});}
+  const WAKE=/^(?:(?:e ai|eai|ei|ola|oi|ok|hey)\s+)?(?:roudy|roudi|roudie|rowdy|rowdie|raudi|raudy|rudy|rudi|rody|rodi|roldi|roldy|holdy|hold|roud|routy|rout)\b\s*/;
   function stopListening(){const current=recognition;recognition=null;captureQuestionId=null;try{current?.stop();}catch(_error){}setListening(false);}
   function listen({automatic=false,questionId}={}){
     ensureDialogue();
@@ -528,10 +531,10 @@
     current.continuous=false;
     current.interimResults=false;
     current.maxAlternatives=5;
-    current.onstart=()=>{if(recognition!==current)return;setListening(true);message("Estou ouvindo… Pode falar.");};
+    current.onstart=()=>{if(recognition!==current)return;setListening(true);message("Estou ouvindo…");};
     current.onresult=event=>{
       if(recognition!==current)return;
-      const alternatives=Array.from(event.results?.[0]||[]).map(item=>item?.transcript?.trim()).filter(Boolean);
+      const alternatives=Array.from(event.results?.[0]||[]).map(item=>item?.transcript?.trim()).filter(Boolean).map(text=>WAKE.test(clean(text))?'roudy '+clean(text).replace(WAKE,''):text);
       // A lower-ranked alternative must not erase a negation in the main transcript.
       const primary=alternatives[0]||'';
       const spoken=/\b(?:nao|nem|nunca)\b/.test(clean(primary))?primary:alternatives.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0]||"";

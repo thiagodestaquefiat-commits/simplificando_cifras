@@ -32,7 +32,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /const CACHE_NAME = "simplificando-cifras-v355-assistente-natural"/);
+assert.match(serviceWorker, /const CACHE_NAME = "simplificando-cifras-v365-github-integrado"/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
 assert.match(indexHtml, /apple-mobile-web-app-title" content="ROUDY"/);
 assert.match(indexHtml, /Menos papel, menos distração, mais música/);
@@ -153,7 +153,7 @@ const server = http.createServer((request, response) => {
       favoritos: [],
       configuracoes: {}
     })));
-    await page.getByRole("button", { name: "Abrir conta", exact: true }).click();
+    await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
     await page.getByRole("button", { name: /Configurações/ }).click();
     await page.getByRole("button", { name: /Ajuda e Suporte/ }).click();
     await page.getByRole("button", { name: /Backup e dados/ }).click();

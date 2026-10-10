@@ -72,8 +72,15 @@ const {chromium}=require('playwright');
     await run('convidar João');await run('o segundo');const invitation=await run('sim',{requestId:'one-invitation'});assert.equal(invitation.ok,true,JSON.stringify(invitation));assert.equal((await run('sim',{requestId:'one-invitation'})).duplicate,true);
     assert.deepEqual(await page.evaluate(()=>window.__inviteCalls),[['dialogue-invite','user-santos','Outra']],'only selected account receives exactly one invitation');
     await page.evaluate(()=>{eventUserInvites.closeSearchSheet();window.appAuth=window.__authFacade;window.songRepository=window.__songsFacade;window.eventCollaboration=window.__collaborationFacade;window.appConfirm=window.__confirmFacade;closeSD();openDetail('dialogue-song');});
+    await page.evaluate(()=>assistantVoice.toggle(false));
+    const mutedSpeech=await page.evaluate(()=>window.__utterances.length);
+    const mutedCapture=await count();await click();await emit('mudar cor');await waitQuestion();await waitCapture(mutedCapture+2);await emit('verde');
+    await page.waitForFunction(()=>roudyAssistant.getConversationState()===null);
+    assert.equal(await page.evaluate(()=>window.__utterances.length),mutedSpeech,'voz desligada não interrompe o acompanhamento');
+    await page.evaluate(()=>assistantVoice.toggle(true));
+    await click();await emit('Rôudi, mudar a cor da cifra para azul');await page.waitForFunction(()=>loadAppSettings().chordColor==='blue');await finish();
     await run('mudar cor');await page.evaluate(()=>{appCurrentUser=Object.freeze({...appCurrentUser,id:'new-account'});});assert.equal(await page.evaluate(()=>roudyAssistant.getConversationState()),null);assert.equal((await run('branco')).status,'blocked');
-    assert.equal(await page.evaluate(()=>loadAppSettings().chordColor),'green');assert.deepEqual(errors,[]);
+    assert.equal(await page.evaluate(()=>loadAppSettings().chordColor),'blue');assert.deepEqual(errors,[]);
     console.log('assistant-dialogue-ui: OK (icon, direct commands, TTS barrier, one-shot follow-up, gesture fallback, event choice, cancel, screens/account and expiry)');
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

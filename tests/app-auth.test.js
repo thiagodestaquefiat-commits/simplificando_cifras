@@ -25,7 +25,7 @@ function createAuthHarness(options = {}) {
     onAuthStateChange(listener) { listeners.push(listener); return { data: { subscription: { unsubscribe() {} } } }; },
     async signInWithOAuth(payload) { calls.oauth.push(payload); return { error: null }; },
     async updateUser(attributes) { calls.updateUser.push(attributes);currentSession={...currentSession,user:{...currentSession.user,email:attributes.email||currentSession.user.email,user_metadata:{...currentSession.user.user_metadata,...attributes.data}}};return {data:{user:currentSession.user},error:null}; },
-    async signOut() { calls.signOut += 1; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
+    async signOut(options) { calls.signOut += 1; calls.signOutOptions=options; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
   };
   const window = {
     apiConfig: { authEndpoint: (suffix) => "http://api.test/api/auth" + suffix },
@@ -119,6 +119,7 @@ function createAuthHarness(options = {}) {
   assert.equal(concurrent.window.appAuth.getAccessToken(), "renewed", "a renovação deve atualizar a sessão em memória");
   await concurrent.window.appAuth.signOut();
   assert.equal(concurrent.calls.signOut, 1);
+  assert.equal(concurrent.calls.signOutOptions.scope, "local", "logout preserva as sessões dos outros aparelhos");
   assert.equal(concurrent.window.appAuth.getState().authenticated, false, "logout deve remover a sessão");
   await concurrent.window.appAuth.signInWithGoogle();
   assert.equal(concurrent.calls.oauth.length, 1, "um novo login deve poder iniciar após logout");

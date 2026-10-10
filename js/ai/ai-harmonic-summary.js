@@ -503,12 +503,12 @@
     panel.setAttribute("aria-labelledby", "ai-summary-title");
     const dialog = element("section", "ai-summary-dialog");
     const header = element("header", "ai-summary-header");
-    const title = element("h2", "", "Gerar com IA"); title.id = "ai-summary-title";
+    const title = element("h2", "", options?.song ? "Cifra da música" : "Adicionar música"); title.id = "ai-summary-title";
     const closeButton = element("button", "ai-summary-close", "Fechar"); closeButton.type = "button"; closeButton.addEventListener("click", close);
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou foto"], ["texto", "📝 Texto"]].forEach(([key, label]) => {
+    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou imagem"], ["texto", "📝 Texto"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
@@ -549,7 +549,7 @@
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
-    const initialMode = options?.mode === "arquivo" ? "arquivo" : "texto";
+    const initialMode = ["arquivo", "texto", "pesquisa"].includes(options?.mode) ? options.mode : "texto";
     updateMode(initialMode);
     if (initialMode === "arquivo" && options?.files?.length) addFiles(options.files);
     if (sourceSong) {

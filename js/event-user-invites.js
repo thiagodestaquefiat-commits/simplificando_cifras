@@ -14,7 +14,7 @@
     let panel=byId('event-user-invite-panel');
     if(panel){panel.hidden=!panel.hidden;return;}
     panel=document.createElement('section');panel.id='event-user-invite-panel';panel.className='user-invite-panel';
-panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou compartilhe um convite por link.</p><label for="event-user-search">Buscar por nome ou nome de usuário</label><input id="event-user-search" class="form-input" type="search" placeholder="Nome ou @nome_de_usuario" autocomplete="off"><div id="event-user-search-status" role="status" aria-live="polite"></div><div id="event-user-results"></div><button id="event-user-more" class="btn btn-outline" type="button" hidden>Mostrar mais</button><div id="event-user-profile" hidden></div><button id="event-invite-link" class="btn btn-outline" type="button">Convidar por link</button>`;
+panel.innerHTML=`<h3>Adicionar integrantes</h3><p>Busque cada pessoa da banda e toque para adicionar. Quem não tem conta pode receber um convite por link.</p><label for="event-user-search">Buscar por nome ou nome de usuário</label><input id="event-user-search" class="form-input" type="search" placeholder="Nome ou @nome_de_usuario" autocomplete="off"><div id="event-user-search-status" role="status" aria-live="polite"></div><div id="event-user-results"></div><button id="event-user-more" class="btn btn-outline" type="button" hidden>Mostrar mais</button><div id="event-user-profile" hidden></div><button id="event-invite-link" class="btn btn-outline" type="button">Convidar por link</button>`;
     host.after(panel);selection=null;results=[];
     byId('event-user-search').addEventListener('input',()=>{
       clearTimeout(debounce);++searchSequence;selection=null;byId('event-user-profile').hidden=true;query=byId('event-user-search').value.trim();results=[];nextOffset=null;renderResults();
@@ -39,11 +39,20 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
   }
   function renderResults(){
     const host=byId('event-user-results');if(!host)return;
-    host.innerHTML=results.map((user,index)=>`<button type="button" class="user-invite-result" data-user-index="${index}"><span class="user-invite-avatar">${avatar(user)}</span><span>${esc(user.name)}<small>${user.username?'@'+esc(user.username):'Perfil '+esc(String(user.id).slice(-8))}</small></span><span aria-hidden="true">›</span></button>`).join('');
+    const taken=new Set(typeof global.eventQueuedInviteIds==='function'?global.eventQueuedInviteIds():[]);
+    host.innerHTML=results.map((user,index)=>taken.has(String(user.id))?'':`<button type="button" class="user-invite-result" data-user-index="${index}"><span class="user-invite-avatar">${avatar(user)}</span><span>${esc(user.name)}<small>${user.username?'@'+esc(user.username):'Perfil '+esc(String(user.id).slice(-8))}</small></span><span class="user-invite-add" aria-hidden="true">+</span></button>`).join('');
     host.querySelectorAll('[data-user-index]').forEach(button=>button.addEventListener('click',()=>select(results[Number(button.dataset.userIndex)])));
     byId('event-user-more').hidden=nextOffset===null;
   }
   function select(user){
+    if(typeof global.eventQueueInvite==='function'){
+      if(global.eventQueueInvite(user)){
+        const input=byId('event-user-search');results=[];nextOffset=null;renderResults();
+        byId('event-user-search-status').textContent=`${user.name} adicionado. Busque o próximo integrante.`;
+        if(input){input.value='';input.focus({preventScroll:true});}
+      }
+      return;
+    }
     selection=user;const panel=byId('event-user-profile');panel.hidden=false;
     panel.innerHTML=`<div class="user-invite-result"><span class="user-invite-avatar">${avatar(user)}</span><strong>${esc(user.name)}</strong></div><p>${user.username?'@'+esc(user.username):'Perfil '+esc(String(user.id).slice(-8))}. O convite será enviado para esta conta. A função musical será a selecionada acima.</p><button id="event-user-send" class="btn btn-primary" type="button">Convidar como Integrante</button><div id="event-user-send-status" role="status" aria-live="polite"></div>`;
     byId('event-user-send').addEventListener('click',send);

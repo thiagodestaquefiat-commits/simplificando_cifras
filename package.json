@@ -4,6 +4,7 @@
   "private": true,
   "description": "PWA para organizar, estudar e apresentar repertórios musicais.",
   "scripts": {
+    "test:integration": "node tests/assistant-voice.test.js && node tests/pwa-branding.test.js && node tests/multiple-upload-ui.test.js && node tests/event-multiple-invites-ui.test.js",
     "dev": "node scripts/dev-server.js",
     "test:contextual": "node tests/context-intelligence.test.js && node tests/context-relevance-engine.test.js && node tests/contextual-copy.test.js && node tests/context-delivery.test.js && node tests/preparation-receipts.test.js",
     "test:event-share": "node tests/event-share.test.js",
