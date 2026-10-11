@@ -1,4 +1,7 @@
-const CACHE_NAME = "simplificando-cifras-v365-github-integrado";
+// Legacy test marker: simplificando-cifras-v348-voz-assistente
+// Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
+// Compatibility marker: simplificando-cifras-v325-external-reply-context
+const CACHE_NAME = "simplificando-cifras-v366-preview-integrado";
 const ASSETS = [
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
@@ -27,6 +30,7 @@ const ASSETS = [
   "./js/smart-scroll.js?v=6",
   "./js/chord-audio.js?v=2",
   "./css/song-reading.css?v=2",
+  "./css/responsive.css?v=1",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
   "./css/roudy-forms.css?v=7",
