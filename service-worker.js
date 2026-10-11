@@ -26,6 +26,7 @@ const ASSETS = [
   "./js/assistant-action-runtime.js?v=1",
   "./js/app-assistant.js?v=23",
   "./js/youtube-player-ui.js?v=19",
+  "./js/youtube-player-ui.js?v=20",
 
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",

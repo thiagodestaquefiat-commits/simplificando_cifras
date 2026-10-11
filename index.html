@@ -1193,7 +1193,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
 <script src="js/youtube-player.js?v=7"></script>
-<script src="js/youtube-player-ui.js?v=19"></script>
+<script src="js/youtube-player-ui.js?v=20"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -3656,7 +3656,9 @@ async function openLibrarySync(backAction=librarySyncBackAction){
   renderLibrarySyncPanel(librarySync.getStatus());
   try{const state=await librarySync.review();await refreshEventSyncDiagnostics();renderLibrarySyncPanel(state);}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
 }
-function eventDateBadge(value){const iso=eventDateISO(value);if(!iso)return {month:'DATA',day:'—',weekday:'',group:'Sem data'};const [year,month,day]=iso.split('-').map(Number),date=new Date(year,month-1,day);return {month:new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(date).replace('.','').toUpperCase(),day:String(day).padStart(2,'0'),weekday:new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(date).replace('.','').toUpperCase(),group:new Intl.DateTimeFormat('pt-BR',{month:'long'}).format(date)}}
+// Desempenho: formatadores de data criados uma vez só (antes, 3 por evento a cada render).
+const EVENT_BADGE_FORMAT={month:new Intl.DateTimeFormat('pt-BR',{month:'short'}),weekday:new Intl.DateTimeFormat('pt-BR',{weekday:'short'}),group:new Intl.DateTimeFormat('pt-BR',{month:'long'})};
+function eventDateBadge(value){const iso=eventDateISO(value);if(!iso)return {month:'DATA',day:'—',weekday:'',group:'Sem data'};const [year,month,day]=iso.split('-').map(Number),date=new Date(year,month-1,day);return {month:EVENT_BADGE_FORMAT.month.format(date).replace('.','').toUpperCase(),day:String(day).padStart(2,'0'),weekday:EVENT_BADGE_FORMAT.weekday.format(date).replace('.','').toUpperCase(),group:EVENT_BADGE_FORMAT.group.format(date)}}
 let eventSyncDiagnostics={device:0,cloud:null,deviceOnly:0,cloudOnly:0,rows:[],available:false};
 async function refreshEventSyncDiagnostics(){
   const local=eventModel.normalizeCollection(setlists),authenticated=Boolean(currentAuthState.authenticated);

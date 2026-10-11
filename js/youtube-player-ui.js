@@ -488,8 +488,10 @@
     currentSongId = song && song.id;
     currentVideos = [];
     manualMode = false;
-    expanded = Boolean(song?.youtubeVideoId);
-    openSelectedVideoPaused = expanded;
+    // Ao abrir a música o vídeo aparece compacto (capa + ▶). O player do YouTube
+    // só é criado quando a pessoa toca no vídeo: menos peso ao abrir a música.
+    expanded = false;
+    openSelectedVideoPaused = false;
     requestVersion += 1;
     render();
   }
