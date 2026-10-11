@@ -1311,14 +1311,16 @@ function detailEditableState(){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
   return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
 }
-// Preserva o salvamento explícito dos ajustes locais, sem alterar a cópia de origem.
+// Alterações na tela da música (tom, capo, BPM, instrumento, vídeo...) são salvas sozinhas,
+// inclusive na cópia da música dentro de um evento. Sem botão "Salvar alterações".
 var detailAutoSaveTimer=0;
 function detailHasUnsavedChanges(){return Boolean(detailEditBaseline)&&JSON.stringify(detailEditableState())!==JSON.stringify(detailEditBaseline);}
 function updateDetailSaveButton(){
   clearTimeout(detailAutoSaveTimer);
-  const button=document.getElementById('detail-save-changes');if(button)button.hidden=!detailHasUnsavedChanges();
+  const button=document.getElementById('detail-save-changes');if(button)button.hidden=true;
+  if(detailHasUnsavedChanges())detailAutoSaveTimer=setTimeout(()=>{saveDetailChanges({quiet:true}).catch?.(()=>{});},600);
 }
-function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);}
+function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);if(detailHasUnsavedChanges()){const result=saveDetailChanges({quiet:true});result?.catch?.(()=>{});}}
 window.addEventListener('pagehide',flushDetailAutoSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushDetailAutoSave();});
 async function saveDetailChanges(options={}){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return {ok:false};

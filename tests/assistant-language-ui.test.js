@@ -20,7 +20,7 @@ const {chromium}=require('playwright');
     await click();await emit('será que você pode ajustar o andamento para noventa');await page.waitForFunction(()=>studyMetronome.getBpm()===90);
     await click();await emit('está rápido demais');await page.waitForFunction(()=>studyMetronome.getBpm()===85,'complaint uses recent BPM');
     assert.equal((await run('usar capo na casa dois e ritmo cento e vinte e cinco')).completed,2);assert.equal(await page.evaluate(()=>selectedCapo),2);assert.equal(await page.evaluate(()=>studyMetronome.getBpm()),125);
-    assert.equal((await run('usar capo na casa dois e ritmo noventa e guardar meus ajustes')).completed,3);assert.equal(await page.locator('#detail-save-changes').isVisible(),false);
+    assert.equal((await run('usar capo na casa dois e ritmo noventa e guardar meus ajustes')).completed,3);assert.equal(await page.evaluate(()=>detailHasUnsavedChanges()),false);
     assert.equal((await run('deixar cifras verdes')).ok,true);assert.equal(await page.evaluate(()=>loadAppSettings().chordColor),'green');
     assert.equal((await run('subir tom dois tons')).ok,true);assert.equal(await page.evaluate(()=>currentSemitones),4);assert.equal((await run('descer tom dois semitons')).ok,true);assert.equal(await page.evaluate(()=>currentSemitones),2);
     const before=await page.evaluate(()=>({capo:selectedCapo,bpm:studyMetronome.getBpm(),semi:currentSemitones}));
