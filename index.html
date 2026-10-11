@@ -4272,7 +4272,8 @@ function openAddSetlist(prefill){
       inviteNote=' · '+sent+' convite'+(sent===1?'':'s')+' enviado'+(sent===1?'':'s');
     }
     if(!options.keepOpen)closeModal();
-    renderSetlists();if(!options.keepOpen)showToast(syncWarning||((result.created?'📅 Evento criado':'✅ Evento atualizado')+inviteNote));
+    renderSetlists();if(!syncWarning&&currentAuthState.authenticated&&candidate.remoteVersion==null)syncWarning='⚠️ Evento salvo só neste aparelho. Vamos enviar para a nuvem automaticamente quando a conexão permitir.';
+    if(!options.keepOpen)showToast(syncWarning||((result.created?'📅 Evento criado':'✅ Evento atualizado')+inviteNote));
     return candidate;
   };
   renderSelected();renderAvailable();renderMembers();document.getElementById('modal-overlay').style.display='flex';
@@ -5071,6 +5072,8 @@ appAuth.subscribe(async state=>{
     if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();
+    // Eventos criados enquanto o envio falhou ficavam só neste aparelho até um evento 'online'. Reenvia ao entrar.
+    if(!eventMigrationCandidate&&setlists.some(event=>event.syncState==='pending'&&event.pendingShared&&eventModel.isLeader(event,appCurrentUser.id)))setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true);},0);
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){window.__lastAccountError={at:new Date().toISOString(),status:error?.status||null,code:error?.code||null,message:String(error?.message||error).slice(0,300)};console.error('[conta] falha ao consultar a conta',error);if(accountGeneration===accountAuthGeneration)showToast(navigator.onLine===false?'⚠️ Sem internet. Seus eventos serão atualizados quando a conexão voltar.':'⚠️ Não foi possível atualizar seus eventos agora. Tentaremos de novo automaticamente.');setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true).catch?.(()=>{});},15000);}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
 });
