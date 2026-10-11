@@ -1,7 +1,9 @@
+// Compatibility marker: simplificando-cifras-v365-responsivo
+// Compatibility marker: simplificando-cifras-v365-desempenho-1010
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v366-preview-integrado";
+const CACHE_NAME = "simplificando-cifras-v365-github-integrado";
 const ASSETS = [
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
