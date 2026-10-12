@@ -923,7 +923,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
 <link rel="stylesheet" href="css/roudy-forms.css?v=7">
-<link rel="stylesheet" href="css/song-reading.css?v=2">
+<link rel="stylesheet" href="css/song-reading.css?v=3">
 <link rel="stylesheet" href="css/topbar-labels.css?v=2">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
@@ -1026,6 +1026,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="detail-title" id="detail-title"></div>
         <div class="detail-capo" id="detail-artist-label"></div>
       </div>
+      <button class="stage-btn stage-btn-palco detail-palco-btn" id="btn-palco" type="button" onclick="toggleStageModeBtn()" hidden>Modo Palco</button>
       <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8l1 4h2a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2h2l1-4Z"/><circle cx="9" cy="13" r="1.3" fill="currentColor"/><circle cx="15" cy="13" r="1.3" fill="currentColor"/><path d="M9 17h6M12 3V1"/></svg></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
     </div>
@@ -1052,6 +1053,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="chord-section-header">
         <button type="button" id="study-panel-toggle" class="study-panel-toggle" onclick="toggleStudyPanel()" aria-label="Recolher painel de acordes" aria-expanded="true" aria-controls="study-panel-content"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
         <span class="chord-section-title">Acordes</span>
+        <button id="inst-btn" type="button" class="chord-instrument-button chord-header-instrument" onclick="openInstModal()" aria-label="Escolher instrumento dos acordes"><span id="inst-label">Violão</span><span class="song-instrument-chevron" aria-hidden="true">›</span></button>
       </div>
       <div id="study-panel-content">
       <div id="chord-strip"></div>
@@ -1071,16 +1073,21 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     </div>
     <section class="song-controls" id="song-controls" aria-label="Controles da música">
       <div class="song-control-strip">
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></div>
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste<wbr>/Casa</span></div>
+        <button type="button" class="song-control-cell song-control-pick" data-song-picker="key" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher tom"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></button>
+        <button type="button" class="song-control-cell song-control-pick" data-song-picker="capo" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher capotraste"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste<wbr>/Casa</span></button>
         <button type="button" class="song-control-cell song-control-scroll" id="btn-scroll" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem automática"><span class="song-control-value" aria-hidden="true"><svg class="song-play-icon" viewBox="0 0 24 24"><path d="M7.6 4.8Q6 3.9 6 5.8v12.4q0 1.9 1.6 1l10.9-6.1q1.7-1.1 0-2.2L7.6 4.8Z"/></svg><svg class="song-pause-icon" viewBox="0 0 24 24"><rect x="6.5" y="4" width="4.5" height="16" rx="1.35"/><rect x="14.5" y="4" width="4.5" height="16" rx="1.35"/></svg></span><span class="song-control-label">Rolagem</span></button>
         <button type="button" class="song-control-cell song-control-smart" id="btn-smart-scroll" onclick="toggleSmartScroll()" aria-label="Iniciar rolagem inteligente (Beta)" aria-pressed="false" aria-describedby="smart-scroll-status" title="Rolagem inteligente (Beta)"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="8" rx="2"/><rect x="17" y="12" width="4" height="8" rx="2"/></svg></span><span class="song-control-label">Rolagem inteligente</span><span class="smart-scroll-beta">BETA</span></button>
-        <div class="song-control-cell song-control-bpm"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></div>
-        <div class="song-control-cell song-control-meter"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></div>
+        <button type="button" class="song-control-cell song-control-bpm song-control-pick" data-song-picker="bpm" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher BPM"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></button>
+        <button type="button" class="song-control-cell song-control-meter song-control-pick" data-song-picker="meter" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher compasso"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></button>
         <div class="song-control-live-speed" role="group" aria-label="Velocidade da rolagem"><button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button><output class="scroll-speed-value" aria-live="polite">0,50x</output><button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button></div>
         <button type="button" class="song-control-cell song-control-disclosure" id="song-controls-toggle" onclick="toggleSongControls()" aria-expanded="false" aria-controls="song-control-panel" aria-label="Mostrar controles musicais"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 9.5 5 5 5-5"/></svg></span><span class="is-visually-hidden">Controles</span></button>
       </div>
       <span class="is-visually-hidden" id="smart-scroll-status" role="status" aria-live="polite">Experimental</span>
+      <div class="song-quick-picker" id="song-quick-picker" hidden>
+        <div class="sqp-head"><span class="sqp-title" id="sqp-title"></span><button type="button" class="sqp-extra" id="sqp-extra" hidden></button><button type="button" class="sqp-close" onclick="closeSongQuickPicker()" aria-label="Fechar">✕</button></div>
+        <div class="sqp-wheel-shell"><div class="sqp-wheel" id="sqp-wheel" role="listbox" tabindex="0"></div></div>
+        <p class="sqp-hint">Arraste para cima para aumentar · para baixo para diminuir</p>
+      </div>
       <div class="song-control-panel" id="song-control-panel" hidden>
         <span class="song-control-panel-handle" aria-hidden="true"></span>
         <div class="song-control-row"><span class="song-control-row-label">Tom</span><div class="song-control-segment"><button type="button" onclick="transpose(-1)" aria-label="Descer o tom">−</button><output id="transposed-key">—</output><span class="is-visually-hidden" id="semitone-label">+0</span><button type="button" onclick="transpose(1)" aria-label="Subir o tom">+</button></div></div>
@@ -1088,8 +1095,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="song-control-row"><span class="song-control-row-label">Rolagem</span><div class="song-scroll-slider-wrap"><input id="song-scroll-speed" class="song-scroll-slider" type="range" min="6" max="120" step="3" value="30" oninput="setSongScrollSpeed(this.value)" aria-label="Velocidade da rolagem"><output class="scroll-speed-value" aria-live="polite">0,50x</output></div></div>
         <div class="song-control-row song-control-row--bpm"><span class="song-control-row-label">Metrônomo</span><div class="song-bpm-picker"><span class="song-bpm-tempo" id="song-bpm-tempo">Adagio</span><div class="song-bpm-ruler"><button type="button" class="song-bpm-step" id="metronome-minus" aria-label="Diminuir BPM">−</button><label class="song-bpm-range-shell"><output class="song-bpm-bubble" id="metronome-bpm" aria-live="polite">72</output><input id="song-bpm-range" class="song-bpm-range" type="range" min="30" max="240" step="1" value="72" aria-label="BPM do metrônomo"></label><button type="button" class="song-bpm-step" id="metronome-plus" aria-label="Aumentar BPM">+</button></div><div class="metronome-bar capo-metronome-row song-bpm-engine" id="study-metronome" role="group" aria-label="BPM do metrônomo"><select id="metronome-meter" class="song-control-meter-select" aria-label="Compasso"><option value="">Desativado</option><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4">4/4</option><option value="5/4">5/4</option><option value="6/8">6/8</option><option value="12/8">12/8</option></select><span class="metronome-beats" aria-label="Metrônomo desativado"><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span></span></div><button type="button" class="song-metronome-toggle" id="song-metronome-toggle" onclick="toggleStudyMetronome()" aria-pressed="false" aria-label="Ativar metrônomo no play geral"><span></span><span></span><span></span></button></div></div>
         <div class="song-control-row song-control-row--meter"><span class="song-control-row-label">Compasso</span><div class="song-meter-wheel-shell"><div class="song-meter-wheel" id="song-meter-wheel" role="radiogroup" aria-label="Compasso do metrônomo" tabindex="0"><button type="button" role="radio" data-meter="2/4" aria-checked="false" onclick="selectStudyMeter('2/4')">2/4</button><button type="button" role="radio" data-meter="3/4" aria-checked="false" onclick="selectStudyMeter('3/4')">3/4</button><button type="button" role="radio" data-meter="4/4" aria-checked="false" onclick="selectStudyMeter('4/4')">4/4</button><button type="button" role="radio" data-meter="5/4" aria-checked="false" onclick="selectStudyMeter('5/4')">5/4</button><button type="button" role="radio" data-meter="6/8" aria-checked="false" onclick="selectStudyMeter('6/8')">6/8</button><button type="button" role="radio" data-meter="12/8" aria-checked="false" onclick="selectStudyMeter('12/8')">12/8</button></div></div></div>
-        <div class="song-control-row song-instrument-row"><span class="song-control-row-label">Instrumento</span><button id="inst-btn" class="chord-instrument-button" onclick="openInstModal()"><span id="inst-label">Violão</span><span class="song-instrument-chevron" aria-hidden="true">›</span></button></div>
-        <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()" hidden>Modo Palco</button>
       </div>
     </section>
     <section class="song-review-control" id="song-review-control" aria-label="Estado da preparação" hidden><button type="button" class="song-review-action song-review-stage" id="song-review-stage" onclick="enterStageMode()" aria-label="Abrir Modo Palco">Modo Palco</button><button type="button" class="song-review-action" id="song-review-action" onclick="confirmCurrentSongPreparation()"></button></section>
@@ -1386,6 +1391,87 @@ function updateSongControls(){
   document.querySelectorAll('.song-meter-wheel [data-meter]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.meter===activeMeter)));
   const toggle=document.getElementById('song-metronome-toggle');toggle.classList.toggle('is-active',Boolean(activeMeter));toggle.setAttribute('aria-pressed',String(Boolean(activeMeter)));toggle.setAttribute('aria-label',activeMeter?'Desativar metrônomo no play geral':'Ativar metrônomo no play geral');
 }
+// ── SELETOR RÁPIDO NA BARRA DA MÚSICA ─────────────────────────────────
+// Tocar em Tom, Capo, BPM ou Compasso abre uma coluna rolável logo abaixo da barra.
+// Valores maiores ficam em cima: arrastar para cima aumenta, para baixo diminui.
+// Segurar "Rolagem" abre a velocidade da rolagem. Tudo salva sozinho (autosave da tela).
+const SQP_ROW=44;
+function sqpRange(from,to,step=1){const out=[];for(let v=from;from>=to?v>=to:v<=to;v+=from>=to?-step:step)out.push(v);return out;}
+function sqpBaseKey(){const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));return song?songFormat.harmonicSummary(song).currentKey:'';}
+const SONG_PICKERS={
+  key:{title:'Tom',values:()=>sqpRange(11,-11),current:()=>currentSemitones,label:v=>shiftText(sqpBaseKey(),v)||'—',sub:v=>v===0?'original':(v>0?'+':'−')+Math.abs(v),apply:v=>{if(v!==currentSemitones)transpose(v-currentSemitones);updateSongControls();}},
+  capo:{title:'Capotraste/Casa',values:()=>sqpRange(12,0),current:()=>selectedCapo,label:v=>v?String(v):'Sem',sub:v=>v?(v+'ª casa'):'sem capotraste',apply:v=>{if(v!==selectedCapo)selectCapo(v);}},
+  bpm:{title:'BPM',values:()=>sqpRange(240,30),current:()=>studyMetronome.getBpm(),label:v=>String(v),sub:v=>tempoNameForBpm(v),apply:v=>{if(v!==studyMetronome.getBpm()){studyMetronome.setBpm(v);updateSongControls();}},extra:'metronome'},
+  meter:{title:'Compasso',values:()=>['12/8','6/8','5/4','4/4','3/4','2/4'],current:()=>studyMetronome.getMeter()||preferredStudyMeter,label:v=>v,sub:()=>'',apply:v=>{if(v!==studyMetronome.getMeter())selectStudyMeter(v,false);}},
+  speed:{title:'Velocidade da rolagem',values:()=>sqpRange(120,6,3),current:()=>scrollSpeed,label:v=>stagePreferences.formatScrollSpeed(v),sub:()=>'',apply:v=>{if(v!==scrollSpeed)applySongScrollSpeedValue(v);}}
+};
+let songQuickPicker=null,sqpSettleTimer=0;
+function applySongScrollSpeedValue(value){
+  scrollSpeed=stagePreferences.normalizeScrollSpeed(Number(value));
+  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
+  updateScrollSpeedControls();updateDetailSaveButton();
+}
+function sqpTrigger(type){return type==='speed'?document.getElementById('btn-scroll'):document.querySelector(`[data-song-picker="${type}"]`);}
+function renderSqpExtra(){
+  const extra=document.getElementById('sqp-extra');if(!extra||!songQuickPicker)return;
+  const config=SONG_PICKERS[songQuickPicker.type];extra.hidden=config.extra!=='metronome';if(extra.hidden)return;
+  const on=Boolean(studyMetronome.getMeter());extra.textContent=on?'Metrônomo ligado':'Metrônomo desligado';extra.classList.toggle('is-on',on);extra.setAttribute('aria-pressed',String(on));
+}
+function openSongQuickPicker(type){
+  const config=SONG_PICKERS[type],picker=document.getElementById('song-quick-picker'),wheel=document.getElementById('sqp-wheel');if(!config||!picker||!wheel)return;
+  if(songQuickPicker?.type===type){closeSongQuickPicker();return;}
+  closeSongQuickPicker();
+  const values=config.values(),current=config.current();let index=values.findIndex(v=>v===current);if(index<0)index=type==='speed'?values.reduce((best,v,i)=>Math.abs(v-current)<Math.abs(values[best]-current)?i:best,0):0;
+  songQuickPicker={type,values,index};
+  document.getElementById('sqp-title').textContent=config.title;
+  wheel.setAttribute('aria-label',config.title);
+  const fragment=document.createDocumentFragment();
+  values.forEach((value,i)=>{const row=document.createElement('div');row.className='sqp-row';row.setAttribute('role','option');row.dataset.index=String(i);const main=document.createElement('strong');main.textContent=config.label(value);row.appendChild(main);const sub=config.sub(value);if(sub){const small=document.createElement('small');small.textContent=sub;row.appendChild(small);}fragment.appendChild(row);});
+  wheel.replaceChildren(fragment);
+  picker.hidden=false;picker.dataset.picker=type;
+  const trigger=sqpTrigger(type);trigger?.setAttribute('aria-expanded','true');trigger?.classList.add('is-picking');
+  wheel.scrollTop=index*SQP_ROW;sqpMarkSelected(index);renderSqpExtra();
+  requestAnimationFrame(()=>wheel.focus({preventScroll:true}));
+}
+function sqpMarkSelected(index){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  wheel.querySelector('.sqp-row.is-selected')?.classList.remove('is-selected');
+  const row=wheel.children[index];if(row){row.classList.add('is-selected');row.setAttribute('aria-selected','true');wheel.setAttribute('aria-activedescendant','');}
+}
+function sqpSettle(){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  const {values,type}=songQuickPicker,index=Math.max(0,Math.min(values.length-1,Math.round(wheel.scrollTop/SQP_ROW)));
+  songQuickPicker.index=index;sqpMarkSelected(index);SONG_PICKERS[type].apply(values[index]);renderSqpExtra();
+}
+function sqpGoTo(index,smooth=true){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  index=Math.max(0,Math.min(songQuickPicker.values.length-1,index));
+  wheel.scrollTo({top:index*SQP_ROW,behavior:smooth?'smooth':'auto'});
+  clearTimeout(sqpSettleTimer);sqpSettleTimer=setTimeout(sqpSettle,smooth?260:0);
+}
+function closeSongQuickPicker(){
+  const picker=document.getElementById('song-quick-picker');if(!songQuickPicker&&(!picker||picker.hidden))return;
+  clearTimeout(sqpSettleTimer);if(songQuickPicker)sqpSettle();
+  const trigger=songQuickPicker&&sqpTrigger(songQuickPicker.type);trigger?.setAttribute('aria-expanded','false');trigger?.classList.remove('is-picking');
+  songQuickPicker=null;if(picker){picker.hidden=true;delete picker.dataset.picker;}
+}
+(function initSongQuickPicker(){
+  const wheel=document.getElementById('sqp-wheel'),picker=document.getElementById('song-quick-picker');if(!wheel||!picker)return;
+  document.querySelectorAll('[data-song-picker]').forEach(button=>button.addEventListener('click',()=>openSongQuickPicker(button.dataset.songPicker)));
+  wheel.addEventListener('scroll',()=>{clearTimeout(sqpSettleTimer);sqpSettleTimer=setTimeout(sqpSettle,140);},{passive:true});
+  wheel.addEventListener('click',event=>{const row=event.target.closest('.sqp-row');if(row)sqpGoTo(Number(row.dataset.index));});
+  wheel.addEventListener('keydown',event=>{if(!songQuickPicker)return;if(event.key==='ArrowUp'){event.preventDefault();sqpGoTo(songQuickPicker.index-1);}else if(event.key==='ArrowDown'){event.preventDefault();sqpGoTo(songQuickPicker.index+1);}else if(event.key==='Escape'||event.key==='Enter'){event.preventDefault();const trigger=sqpTrigger(songQuickPicker.type);closeSongQuickPicker();trigger?.focus();}});
+  document.getElementById('sqp-extra').addEventListener('click',()=>{toggleStudyMetronome();renderSqpExtra();});
+  document.addEventListener('pointerdown',event=>{if(!songQuickPicker)return;if(picker.contains(event.target)||event.target.closest('[data-song-picker]')||event.target.closest('#btn-scroll'))return;closeSongQuickPicker();},true);
+  // Segurar "Rolagem" (meio segundo) abre a velocidade; um toque normal continua iniciando/pausando.
+  const scrollButton=document.getElementById('btn-scroll');let holdTimer=0,held=false;
+  const cancelHold=()=>clearTimeout(holdTimer);
+  scrollButton.addEventListener('pointerdown',()=>{held=false;cancelHold();holdTimer=setTimeout(()=>{held=true;openSongQuickPicker('speed');},450);});
+  ['pointerup','pointerleave','pointercancel'].forEach(name=>scrollButton.addEventListener(name,cancelHold));
+  scrollButton.addEventListener('contextmenu',event=>event.preventDefault());
+  scrollButton.addEventListener('click',event=>{if(held){held=false;event.preventDefault();event.stopImmediatePropagation();}},true);
+})();
 function tempoNameForBpm(bpm){if(bpm<40)return'Grave';if(bpm<60)return'Largo';if(bpm<76)return'Adagio';if(bpm<108)return'Andante';if(bpm<120)return'Moderato';if(bpm<168)return'Allegro';if(bpm<200)return'Presto';return'Prestissimo'}
 const songBpmRange=document.getElementById('song-bpm-range');songBpmRange.addEventListener('input',()=>{studyMetronome.setBpm(Number(songBpmRange.value));updateSongControls()});songBpmRange.addEventListener('change',updateSongControls);
 let meterWheelSettleTimer=null,meterWheelFrame=null;
@@ -1396,7 +1482,7 @@ function toggleStudyMetronome(){const meter=studyMetronome.getMeter();studyMetro
 function settleStudyMeterWheel(){const wheel=document.getElementById('song-meter-wheel');if(!wheel)return;const center=wheel.getBoundingClientRect().left+wheel.clientWidth/2,buttons=[...wheel.querySelectorAll('[data-meter]')],nearest=buttons.reduce((best,button)=>Math.abs(button.getBoundingClientRect().left+button.offsetWidth/2-center)<Math.abs(best.getBoundingClientRect().left+best.offsetWidth/2-center)?button:best,buttons[0]);selectStudyMeter(nearest.dataset.meter,false)}
 const songMeterWheel=document.getElementById('song-meter-wheel');songMeterWheel.addEventListener('scroll',()=>{if(!meterWheelFrame)meterWheelFrame=requestAnimationFrame(()=>{meterWheelFrame=null;updateStudyMeterWheelDepth()});clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,140)},{passive:true});songMeterWheel.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...songMeterWheel.querySelectorAll('[data-meter]')],current=Math.max(0,buttons.findIndex(button=>button.dataset.meter===preferredStudyMeter)),next=Math.max(0,Math.min(buttons.length-1,current+(event.key==='ArrowRight'?1:-1)));selectStudyMeter(buttons[next].dataset.meter)});
 function setSongScrolling(active){
-  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active)toggleSongControls(false);controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
+  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
 }
 const songScrollPlayButton=document.getElementById('btn-scroll');
 function showSongScrollPressedState(){songScrollPlayButton.classList.remove('is-pressed');void songScrollPlayButton.offsetWidth;songScrollPlayButton.classList.add('is-pressed')}
@@ -2319,7 +2405,7 @@ function openDetail(id,options={}){
   document.getElementById('event-chat-fab').hidden=true;
   vd.style.display='flex'; vd.style.zIndex='20';
   if(stageMode)youtubePlayerUI.hide();else youtubePlayerUI.showSong(m);
-  toggleSongControls(false);setSongScrolling(false);renderSongReviewControl();maybeShowSongScaleHint();
+  toggleSongControls(false);closeSongQuickPicker();setSongScrolling(false);renderSongReviewControl();maybeShowSongScaleHint();
 }
 
 function openDetailFromPlaylist(playlistId,index){
@@ -2429,7 +2515,7 @@ function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode()
 
 function closeDetail(){
   flushDetailAutoSave();
-  stopSmartScroll();
+  stopSmartScroll();closeSongQuickPicker();flushDetailAutoSave();
   detailEditBaseline=null;detailEditOwner=null;detailEventContext=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();

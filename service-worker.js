@@ -33,6 +33,7 @@ const ASSETS = [
   "./js/smart-scroll.js?v=6",
   "./js/chord-audio.js?v=2",
   "./css/song-reading.css?v=2",
+  "./css/song-reading.css?v=3",
   "./css/responsive.css?v=1",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",

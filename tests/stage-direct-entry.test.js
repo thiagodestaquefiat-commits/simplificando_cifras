@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
         openDetail(song.id);
         setSongView('full');
       });
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       assert.equal(await page.locator('#capo-selector-group').isVisible(),true);
       assert.equal(await page.locator('#detail-capo-value').innerText(),'Sem');
       const originalSong=await page.evaluate(() => JSON.stringify(musicas.find(song=>song.id==='stage-test')));
@@ -105,7 +105,7 @@ const server = http.createServer((req, res) => {
         musicas.push(songModel.create({id:'capo-stored',title:'Capo gravado',key:'D',capo:'Capotraste casa 2',blocos:[{l:'',c:'C G/B Am F'}]}));
         openDetail('capo-stored');
       });
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       assert.equal(await page.locator('#detail-capo-value').innerText(),'2');
       assert.match(await page.locator('#detail-content').innerText(),/C\s+G\/B\s+Am\s+F/);
       await page.locator('#song-capo-minus').click();

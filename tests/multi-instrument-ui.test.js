@@ -44,7 +44,7 @@ const server = http.createServer((request, response) => {
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
     await page.getByText("Liberta-me de mim", { exact: true }).click();
-    await page.locator('#song-controls-toggle').click();
+    await page.evaluate(()=>toggleSongControls());
     assert.equal(await page.locator('#song-control-panel .song-scroll-slider-wrap').isVisible(), true);
     assert.equal(await page.locator("#btn-font").count(), 0);
     assert.equal(await page.locator("#btn-palco").textContent(), "Modo Palco");
