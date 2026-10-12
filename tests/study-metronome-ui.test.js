@@ -49,6 +49,8 @@ const server = http.createServer((request, response) => {
       assert.equal(await page.locator('#study-metronome').isVisible(), true);
       await page.locator('#metronome-plus').click();
       assert.equal(await page.locator('#metronome-bpm').innerText(), '73');
+      await page.locator('.song-bpm-range-shell').evaluate(element=>{const rect=element.getBoundingClientRect(),y=rect.top+rect.height/2,fire=(type,x,buttons)=>element.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:31,pointerType:'touch',button:0,buttons,clientX:x,clientY:y}));fire('pointerdown',rect.left+rect.width/2,1);fire('pointermove',rect.left+rect.width/2+24,1);fire('pointerup',rect.left+rect.width/2+24,0)});
+      assert.equal(await page.locator('#metronome-bpm').innerText(), '85', 'arrastar a régua para a direita aumenta o BPM');
       await page.locator('#btn-scroll').click();
       assert.equal(await page.evaluate(() => studyMetronome.isPlaying()), false, 'play geral não inicia metrônomo sem compasso selecionado');
       await page.locator('#btn-scroll').click();
@@ -69,7 +71,7 @@ const server = http.createServer((request, response) => {
       await page.locator('#btn-scroll').click();
       assert.equal(await page.evaluate(() => studyMetronome.isPlaying()), false, 'play de estudo controla também o metrônomo');
       await page.evaluate(() => { closeDetail(); openDetail(1); });
-      assert.equal(await page.locator('#metronome-bpm').innerText(), '73');
+      assert.equal(await page.locator('#metronome-bpm').innerText(), '85');
       assert.equal(await page.locator('#metronome-meter').inputValue(), '3/4');
       await page.evaluate(() => {
         setlists.push(eventModel.create({ id: 'metronome-event', title: 'Ensaio', musicas: [1], members: [{ ...appCurrentUser, isLeader: true }], leaderId: appCurrentUser.id }));
