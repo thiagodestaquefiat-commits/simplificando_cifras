@@ -4,7 +4,7 @@
   const owner=()=>global.appAuth?.getState?.().user?.id;
   function attach(){
     clearTimeout(timer);const seq=++sequence,account=owner(),label=document.querySelector('label[for="profile-name"]');if(!label)return;
-    const box=document.getElementById('profile-username')?.closest('.profile-username');if(!box)return;
+    const box=document.getElementById('profile-username')?.closest('.profile-username,.profile-account-row--username');if(!box)return;
     const input=box.querySelector('input'),status=box.querySelector('#username-status'),indicator=box.querySelector('.username-indicator'),button=box.querySelector('button');
     const active=()=>account===owner()&&box.isConnected&&seq===sequence;
     let fixed=null,checkSequence=0,available=null;

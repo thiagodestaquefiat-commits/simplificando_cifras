@@ -69,7 +69,7 @@
       if(JSON.stringify(verified)!==JSON.stringify(next))throw new Error('Não foi possível confirmar a cópia local do repertório.');
       if(!current(s,g))return;
       record=next;failure=false;
-      if(packages.some(pack=>pack.missing.length))warn(new Error('Algumas músicas do evento ainda não foram recebidas neste dispositivo. Conecte-se para carregá-las.'));
+      const missing=packages.reduce((n,pack)=>n+pack.missing.length,0);if(missing)global.console?.info?.('[ROUDY] '+missing+' música(s) de eventos sem cópia neste dispositivo.');
     }
     function warn(error){if(!failure){failure=true;options.onError?.(error);}}
     function flush(){global.clearTimeout(timer);const requested=scope();chain=chain.catch(()=>{}).then(update).catch(error=>{const s=scope();if(s&&s.ownerId===requested?.ownerId&&s.actorId===requested.actorId)warn(error);});return chain;}

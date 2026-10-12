@@ -22,8 +22,11 @@
       const sourceProvider = clean(data.sourceProvider, 80).trim();
       const sourceId = clean(data.sourceId, 300).trim();
       if (!titulo) throw new HarmonicSummaryError("invalid_input", "Informe o nome da música.");
-      if (!sourceProvider || !sourceId) throw new HarmonicSummaryError("source_required", "Escolha uma versão da música.");
-      return { tipo: "pesquisa", titulo, ...(artista ? { artista } : {}), sourceProvider, sourceId };
+      const payload = { tipo: "pesquisa", titulo, ...(artista ? { artista } : {}) };
+      // Fonte escolhida é opcional: sem ela, o servidor procura no catálogo ROUDY e depois na web.
+      if (sourceProvider && sourceId) { payload.sourceProvider = sourceProvider; payload.sourceId = sourceId; }
+      else if (data.modoGeracao === "conhecimento_modelo") payload.modoGeracao = "conhecimento_modelo";
+      return payload;
     }
     if (mode === "texto") {
       const conteudo = clean(data.conteudo, 50000).trim();

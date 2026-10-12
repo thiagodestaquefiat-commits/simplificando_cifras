@@ -34,7 +34,7 @@ function response(body, status = 200) {
 // chaves (não regex guloso) — mesmo método já usado por
 // production-stage-navigation-order-repro.test.js.
 function extractFunction(name) {
-  const anchor = `function ${name}(){`;
+  const anchor = `function ${name}(`;
   const start = html.indexOf(anchor);
   assert.ok(start >= 0, `${name}() não encontrada em index.html — foi removida/renomeada?`);
   let depth = 0, end = start;
@@ -46,6 +46,7 @@ function extractFunction(name) {
 }
 const addMusicaSource = extractFunction("addMusica");
 const salvarSource = extractFunction("salvar");
+const commitSongsSource = extractFunction("commitSongs");
 
 function createDevice(remote, { tokenAtSaveTime = "valid-token", consent = true } = {}) {
   const memory = new Map();
@@ -130,7 +131,7 @@ function createDevice(remote, { tokenAtSaveTime = "valid-token", consent = true 
   authListener({ authenticated: true, user: { id: authUser } });
 
   vm.createContext(sandbox);
-  vm.runInContext(`${salvarSource}\n${addMusicaSource}`, sandbox);
+  vm.runInContext(`${salvarSource}\n${commitSongsSource}\n${addMusicaSource}`, sandbox);
 
   return {
     get musicas() { return sandbox.musicas; },

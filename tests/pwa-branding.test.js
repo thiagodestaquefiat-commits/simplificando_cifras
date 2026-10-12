@@ -32,7 +32,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v424-premium-rd-svg/);
+assert.match(serviceWorker, /simplificando-cifras-v425-main-integrated/);
 assert.match(serviceWorker, /assets\/empty-medley-disc\.svg/);
 assert.match(serviceWorker, /assets\/empty-events-calendar\.svg/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);

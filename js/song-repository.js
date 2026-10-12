@@ -18,7 +18,45 @@
   }
 
   function persistCurrent(songs) {
-    return global.storage.set(CURRENT_STORAGE_KEY, songs);
+    const saved = global.storage.set(CURRENT_STORAGE_KEY, songs);
+    if (saved) releaseLegacyCopy();
+    return saved;
+  }
+
+  // A gaveta antiga (cifras_musicas_v1, do tempo do Simplificando Cifras) recebia uma cópia
+  // idêntica da biblioteca a cada save, dobrando o espaço usado. Agora ela só é lida como
+  // reserva e é esvaziada SOMENTE quando a gaveta atual já tem todas as músicas dela.
+  function releaseLegacyCopy() {
+    const legacy = global.storage.get(LEGACY_STORAGE_KEY, null);
+    if (!Array.isArray(legacy)) return true;
+    const current = global.storage.get(CURRENT_STORAGE_KEY, null);
+    if (!Array.isArray(current)) return false;
+    const currentIds = new Set(current.map((song) => String(song && song.id)));
+    const safe = JSON.stringify(legacy) === JSON.stringify(current) ||
+      legacy.every((song) => currentIds.has(String(song && song.id)));
+    if (!safe || typeof global.storage.remove !== "function") return false;
+    return global.storage.remove(LEGACY_STORAGE_KEY);
+  }
+
+  // Sair da conta: apaga do aparelho as músicas DESTA conta (a cópia oficial está na nuvem).
+  // Quem chama é responsável por confirmar antes que não há alterações pendentes de envio.
+  function purgeOwner(ownerId) {
+    const owner = String(ownerId || "").trim();
+    if (!owner) return false;
+    if (activeOwnerId === owner) return false; // nunca apaga a conta ainda ativa
+    const caches = ownerCaches();
+    if (Object.prototype.hasOwnProperty.call(caches, owner)) {
+      delete caches[owner];
+      if (!global.storage.set(OWNER_CACHES_KEY, caches)) return false;
+    }
+    const deletions = global.storage.get(OWNER_DELETIONS_KEY, {});
+    if (deletions && typeof deletions === "object" && Object.prototype.hasOwnProperty.call(deletions, owner)) {
+      delete deletions[owner];
+      global.storage.set(OWNER_DELETIONS_KEY, deletions);
+    }
+    if (String(global.storage.get(LEGACY_OWNER_KEY, "") || "") === owner) global.storage.set(LEGACY_OWNER_KEY, "");
+    if (typeof global.storage.remove === "function") global.storage.remove("sc_library_recovery_v1:" + owner);
+    return true;
   }
 
   function normalized(collection) {
@@ -197,8 +235,7 @@
     if (arguments.length > 1) {
       const anonymous = migrateCollection(Array.isArray(anonymousSongs) ? anonymousSongs : []).songs;
       global.storage.set(SEED_ONLY_KEY, false);
-      global.storage.set(CURRENT_STORAGE_KEY, anonymous);
-      global.storage.set(LEGACY_STORAGE_KEY, anonymous);
+      persistCurrent(anonymous);
       return anonymous;
     }
     const defaultSongs = currentSongs;
@@ -255,11 +292,13 @@
       ? ownerCaches()[activeOwnerId] || [] : global.storage.get(CURRENT_STORAGE_KEY, []);
     if (global.libraryRecovery && !global.libraryRecovery.beforeSave(activeOwnerId || "guest", previous, songs)) return false;
     if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
-    if (global.storage.setMany) return global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs], [LEGACY_STORAGE_KEY, songs]]);
+    if (global.storage.setMany) {
+      const saved = global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs]]);
+      if (saved) releaseLegacyCopy();
+      return saved;
+    }
     global.storage.set(SEED_ONLY_KEY, false);
-    const savedCurrent = global.storage.set(CURRENT_STORAGE_KEY, songs);
-    const savedLegacy = global.storage.set(LEGACY_STORAGE_KEY, songs);
-    return savedCurrent && savedLegacy;
+    return persistCurrent(songs);
   }
 
   function addOrReuse(collection, input, options) {
@@ -319,6 +358,8 @@
     confirmDeleted,
     getDeletedClientIds: () => activeOwnerId ? [...deletedClientIds(activeOwnerId)] : [],
     getActiveOwnerId: () => activeOwnerId,
+    purgeOwner,
+    releaseLegacyCopy,
     getPendingDeletedClientIds: () => {
       if (!activeOwnerId) return [];
       const values = ownerDeletions()[activeOwnerId] || {};

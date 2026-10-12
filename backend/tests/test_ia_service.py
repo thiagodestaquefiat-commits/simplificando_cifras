@@ -257,6 +257,20 @@ def test_research_uses_web_chord_sheet_in_text_flow():
     assert "Cifra obtida de https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/; revise antes de salvar." in result.observacoes
 
 
+def test_search_by_name_only_gets_artist_from_cifraclub():
+    from app.services.web_search import ChordSheetHit
+
+    sheet = "C  G\nEstátuas e cofres e paredes pintadas"
+    service = IaService(
+        FakeProvider(), web_search=lambda *args: None,
+        sheet_finder=lambda titulo, artista: ChordSheetHit(sheet, "https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/",
+                                                           "cifraclub", artist="Legião Urbana", title="Pais e Filhos"),
+    )
+    result = service.generate(ResumoHarmonicoRequest(tipo="pesquisa", titulo="pais e filhos", modoGeracao="conhecimento_modelo"))
+    assert result.artista == "Legião Urbana"
+    assert result.titulo == "Pais e Filhos"
+
+
 def test_search_without_catalog_or_web_sheet_asks_for_file_and_never_calls_ai():
     """Fluxo: catálogo -> scraper -> arquivo/foto do usuário. A IA nunca inventa a música."""
     from app.errors import ApiError

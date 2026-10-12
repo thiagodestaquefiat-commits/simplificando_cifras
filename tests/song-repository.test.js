@@ -12,6 +12,10 @@ global.window = {
     set(key, value) {
       values.set(key, structuredClone(value));
       return true;
+    },
+    remove(key) {
+      values.delete(key);
+      return true;
     }
   }
 };
@@ -27,7 +31,9 @@ assert.equal(migrated[0].id, 7);
 assert.equal(migrated[0].title, "Legada");
 assert.ok(migrated[0].createdAt);
 assert.deepEqual(values.get("sc_songs_v1"), migrated);
-assert.deepEqual(values.get("cifras_musicas_v1"), legacySongs, "a migração inicial não deve destruir a chave legada");
+// A gaveta antiga só é esvaziada porque a atual já tem todas as músicas dela (id 7).
+assert.ok(migrated.some((song) => String(song.id) === "7"));
+assert.equal(values.has("cifras_musicas_v1"), false, "cópia antiga liberada depois que a atual já tem tudo");
 
 const added = repository.addOrReuse(migrated, {
   id: 8,
@@ -58,7 +64,7 @@ assert.equal(updated.song.createdAt, "2026-08-14T12:00:00.000Z");
 assert.equal(updated.song.updatedAt, "2026-08-16T12:00:00.000Z");
 
 assert.equal(repository.save(updated.songs), true);
-assert.deepEqual(values.get("sc_songs_v1"), values.get("cifras_musicas_v1"), "o salvamento deve manter rollback compatível");
+assert.equal(values.has("cifras_musicas_v1"), false, "o salvamento não volta a duplicar a biblioteca na gaveta antiga");
 assert.equal(repository.remove(updated.songs, "8").length, 1);
 
 const legacySnapshot = structuredClone(values.get("sc_songs_v1"));
@@ -224,3 +230,24 @@ const guestAfterDecline = guestRepository.deactivateOwner([]);
 assert.deepEqual(guestAfterDecline.map(song => song.title), ["Criada sem login"], "recusar a importação preserva e restaura a biblioteca visitante");
 
 console.log("song-repository.test.js: OK (seed 86/91/106, cache parcial, migração legada e isolamento A/B)");
+
+// A gaveta antiga NÃO é esvaziada se tiver música que falta na atual.
+{
+  values.set("sc_songs_v1", [{ id: 1, title: "Só na atual" }]);
+  values.set("cifras_musicas_v1", [{ id: 1, title: "Só na atual" }, { id: 99, title: "Só na antiga" }]);
+  assert.equal(repository.releaseLegacyCopy(), false);
+  assert.equal(values.get("cifras_musicas_v1").length, 2, "nenhuma música da gaveta antiga é perdida");
+}
+
+// Sair da conta apaga só a cópia daquela conta, nunca a conta ativa nem outras contas.
+{
+  values.set("sc_personal_song_caches_v1", { "conta-saiu": [{ id: 1, title: "A" }], "outra-conta": [{ id: 2, title: "B" }] });
+  values.set("sc_library_recovery_v1:conta-saiu", { snapshot: true });
+  assert.equal(repository.purgeOwner("conta-saiu"), true);
+  assert.deepEqual(Object.keys(values.get("sc_personal_song_caches_v1")), ["outra-conta"]);
+  assert.equal(values.has("sc_library_recovery_v1:conta-saiu"), false);
+  repository.activateOwner("outra-conta", [], []);
+  assert.equal(repository.purgeOwner("outra-conta"), false, "a conta ativa nunca é apagada");
+  assert.ok(values.get("sc_personal_song_caches_v1")["outra-conta"]);
+}
+console.log("song-repository.test.js: OK (gaveta antiga liberada com segurança e limpeza ao sair)");

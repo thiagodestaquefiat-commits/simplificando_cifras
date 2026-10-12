@@ -142,6 +142,19 @@
     return [];
   }
 
+  // Sair da conta: apaga do aparelho os eventos DESTA conta (a cópia oficial está na nuvem).
+  function purgeOwner(ownerId) {
+    const owner = String(ownerId || "").trim();
+    if (!owner || activeOwnerId === owner) return false;
+    const caches = ownerCaches();
+    if (Object.prototype.hasOwnProperty.call(caches, owner)) {
+      delete caches[owner];
+      if (!global.storage.set(OWNER_CACHES_KEY, caches)) return false;
+    }
+    if (String(global.storage.get(LEGACY_OWNER_KEY, "") || "") === owner) global.storage.set(LEGACY_OWNER_KEY, "");
+    return true;
+  }
+
   function save(events) {
     requireDependencies();
     const normalized = global.eventModel.normalizeCollection(events);
@@ -240,5 +253,5 @@
     return { uploaded, failures };
   }
 
-  global.eventRepository = Object.freeze({ getActiveOwnerId:()=>activeOwnerId, storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
+  global.eventRepository = Object.freeze({ getActiveOwnerId:()=>activeOwnerId, purgeOwner, storageKey: STORAGE_KEY, legacyKey: LEGACY_KEY, ownerCachesKey: OWNER_CACHES_KEY, legacyOwnerKey: LEGACY_OWNER_KEY, legacyMigrationsKey: LEGACY_MIGRATIONS_KEY, load, save, activateOwner, deactivateOwner, confirmActiveOwner, upsert, remove, upsertShared, removeShared, mergeRemote, reconcileRemote, uploadMigrationCandidates });
 })(window);

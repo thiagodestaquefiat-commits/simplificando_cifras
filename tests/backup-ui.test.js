@@ -48,7 +48,7 @@ const server=http.createServer((req,res)=>{
     });
     assert.equal(additions.theme,'dark','preferência atual não é substituída');assert.equal(additions.language,'es');assert.equal(additions.name,'Nome recuperado');assert.deepEqual(additions.favorites,['backup-ui-original','backup-ui-new']);assert.equal(additions.medleys,additions.first);assert.equal(additions.events,true);assert.equal(additions.exportedEvents,null);
     await page.evaluate(()=>{storage.set('sc_settings_v3',{...loadAppSettings(),language:'pt-BR'});applyAppSettings();});
-    assert.equal(additions.location,'São Paulo, SP');assert.deepEqual(additions.instruments,['Vocalista','Guitarrista']);
+    assert.equal(additions.location,'São Paulo, SP');assert.deepEqual(additions.instruments,['Vocal','Guitarra'],'nomes antigos passam para os novos');
 
     assert.equal(await page.evaluate(()=>typeof window.openLibraryRecovery),'undefined','fluxo removido do app');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'interface sem transbordamento no celular');

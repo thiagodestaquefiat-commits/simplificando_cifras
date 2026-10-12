@@ -1,0 +1,15 @@
+/* Tema claro do ROUDY.
+   O visual novo foi desenhado no escuro; o tema claro inverte a luminosidade da
+   interface inteira mantendo os tons (invert + hue-rotate) e devolve as cores
+   originais a fotos, vídeos, capas e logos. */
+html[data-theme="light"]:not(.a11y-high-contrast){
+  filter:invert(1) hue-rotate(180deg);
+  background:#fff;
+}
+html[data-theme="light"]:not(.a11y-high-contrast) :is(img,video,iframe,canvas,picture,.roudy-camera,.event-share-card,.youtube-thumb,[data-keep-colors]){
+  filter:invert(1) hue-rotate(180deg);
+}
+/* Elementos já re-invertidos não invertem de novo os filhos. */
+html[data-theme="light"]:not(.a11y-high-contrast) :is(.roudy-camera,.event-share-card,[data-keep-colors]) :is(img,video,iframe,canvas,picture){
+  filter:none;
+}
