@@ -332,3 +332,5 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 .event-action-item--danger,.danger,.btn-danger{color:var(--semantic-danger)}
 
 /* #E8896B intentionally remains owned by chords and musical content. */
+.assistant-command:focus{border-color:rgba(148,163,184,.24);box-shadow:none}
+.chat-appearance-option.chat-appearance-option--custom{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),var(--chat-custom-preview);background-position:center;background-size:cover}

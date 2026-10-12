@@ -1,14 +1,16 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v425-main-integrated";
+const CACHE_NAME = "simplificando-cifras-v470-search-keeps-tab";
 const ASSETS = [
-  "./css/song-reading.css?v=1",
-  "./css/topbar-labels.css?v=2",
+  "./css/song-reading.css?v=3",
+  "./css/topbar-labels.css?v=10",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
-  "./css/roudy-forms.css?v=7",
+  "./css/roudy-forms.css?v=9",
+  "./assets/icons/roudy-assistant-headphones.svg?v=1",
   "./css/light-theme.css?v=1",
+  "./css/dark-theme.css?v=9",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=6",
@@ -23,7 +25,7 @@ const ASSETS = [
   "./js/smart-scroll.js?v=5",
   "./js/assistant-intent-catalog.js?v=1",
   "./js/assistant-intent-client.js?v=1",
-  "./js/app-assistant.js?v=24",
+  "./js/app-assistant.js?v=25",
   "./js/assistant-voice.js?v=3",
   "./",
   "./index.html",
@@ -90,12 +92,12 @@ const ASSETS = [
   "./js/profile-username.js?v=4",
   "./js/event-user-invites.css?v=2",
   "./js/event-user-invites.css?v=3",
-  "./js/event-people-search.css?v=1",
-  "./js/account-drawer.css?v=10",
+  "./js/event-people-search.css?v=2",
+  "./js/account-drawer.css?v=12",
   "./js/account-tools.css?v=3",
   "./js/account-profile.css?v=3",
   "./js/event-member-profile.css?v=1",
-  "./js/event-detail-refactor.css?v=33",
+  "./js/event-detail-refactor.css?v=43",
   "./assets/chat-cables-background.png",
   "./js/notification-center.js?v=3",
   "./js/app-auth.js?v=12",
@@ -104,7 +106,7 @@ const ASSETS = [
   "./js/app-auth.js?v=15",
   "./js/ui-i18n.js?v=10",
   "./js/ui-i18n.js?v=12",
-  "./js/ui-i18n.js?v=13",
+  "./js/ui-i18n.js?v=14",
   "./js/tuner.js?v=2",
   "./js/tuner.js?v=3",
   "./js/chord-audio.js?v=1",
@@ -123,7 +125,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=3",
-  "./js/medley-editor.css?v=23",
+  "./js/medley-editor.css?v=27",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
   "./assets/keyboard-icon.svg",
@@ -166,7 +168,7 @@ const ASSETS = [
   "./js/editor/song-editor-state.js",
   "./js/editor/song-editor-renderer.js",
   "./js/editor/song-editor.js",
-  "./js/editor/song-editor.css",
+  "./js/editor/song-editor.css?v=1",
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
@@ -174,7 +176,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=2",
   "./css/editorial-typography.css?v=3",
-  "./css/roudy-color-system-preview.css?v=13",
+  "./css/roudy-color-system-preview.css?v=15",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
   "./assets/icons/roudy-rd-premium.svg?v=1",
@@ -187,7 +189,8 @@ const ASSETS = [
   "./assets/icons/roudy-icon-v4-maskable-192.png?v=15",
   "./assets/icons/roudy-icon-v4-maskable-512.png?v=15",
   "./assets/qr-contribuicao.png?v=1",
-  "./assets/playlist-hero-background.png"
+  "./assets/playlist-hero-background.png",
+  "./assets/roudy-dark-theme-background.svg"
 ];
 
 self.addEventListener("install", (event) => {

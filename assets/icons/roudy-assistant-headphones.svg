@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<defs>
+ <radialGradient id="face"><stop offset="0" stop-color="#101827"/><stop offset=".72" stop-color="#050b15"/><stop offset="1" stop-color="#01040a"/></radialGradient>
+ <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#00aaff"/><stop offset=".38" stop-color="#247aff"/><stop offset=".68" stop-color="#ffe29a"/><stop offset="1" stop-color="#ffae18"/></linearGradient>
+ <linearGradient id="headband" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#48baff"/><stop offset=".48" stop-color="#e7f3ff"/><stop offset=".7" stop-color="#ffd77d"/><stop offset="1" stop-color="#ffb31a"/></linearGradient>
+ <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<circle cx="128" cy="132" r="106" fill="none" stroke="url(#ring)" stroke-width="12" opacity=".5" filter="url(#glow)"/>
+<circle cx="128" cy="132" r="101" fill="url(#face)" stroke="url(#ring)" stroke-width="3"/>
+<path d="M35 154 V108 C35 49 74 12 128 12 S221 49 221 108 V154" fill="none" stroke="url(#headband)" stroke-width="17" stroke-linecap="round" filter="url(#glow)" opacity=".7"/>
+<path d="M35 154 V108 C35 49 74 12 128 12 S221 49 221 108 V154" fill="none" stroke="url(#headband)" stroke-width="11" stroke-linecap="round"/>
+<rect x="18" y="103" width="34" height="83" rx="17" fill="#087bdc" stroke="#58caff" stroke-width="2" transform="rotate(-8 35 144)"/>
+<rect x="204" y="100" width="34" height="86" rx="17" fill="#ffbe2e" stroke="#ffe49a" stroke-width="2" transform="rotate(7 221 143)"/>
+<path d="M89 151 V143 C89 122 119 122 119 143 V151" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+<path d="M151 151 V143 C151 122 181 122 181 143 V151" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>

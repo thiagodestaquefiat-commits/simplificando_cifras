@@ -38,4 +38,6 @@ assert.match(topbar, /aria-label="Limpar busca"[^>]*hidden/);
 assert.doesNotMatch(html, /focusPlaylistSearch/, "o fluxo antigo da lupa deve ser removido");
 const playlistSearchFlow = html.slice(html.indexOf('function openPlaylistSearch'), html.indexOf('function renderMusicas'));
 assert.doesNotMatch(playlistSearchFlow, /scrollIntoView\(/, "a lupa do cabeçalho não deve rolar a página");
+const openPlaylistSearchFlow = html.slice(html.indexOf('function openPlaylistSearch'), html.indexOf('function closePlaylistSearch'));
+assert.doesNotMatch(openPlaylistSearchFlow, /switchTab\(/, "a lupa deve preservar o menu atual");
 console.log(`index-syntax.test.js: OK (${scripts.length} scripts)`);

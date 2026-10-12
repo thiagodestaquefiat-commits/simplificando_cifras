@@ -98,7 +98,7 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#view-detail.stage-mode').count(),1);
       assert.equal(await page.locator('#modal-overlay').isVisible(),false);
       assert.match(await page.locator('#detail-content').innerText(),/Letra completa do teste/);
-      assert.deepEqual(await page.evaluate(() => [scrollTimer,activeStagePreferences.contentMode,document.fullscreenElement]),[null,'lyrics-chords',null]);
+      assert.deepEqual(await page.evaluate(() => [scrollTimer,activeStagePreferences.contentMode,document.fullscreenElement]),[null,'lyrics',null]);
       await page.getByRole('button',{name:'Sair do Modo Palco',exact:true}).click();
       assert.equal(await page.locator('#youtube-song-player.is-linked').isVisible(),true);
       await page.evaluate(() => {

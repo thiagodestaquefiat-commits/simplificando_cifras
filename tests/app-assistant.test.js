@@ -60,6 +60,7 @@ for(const script of ['assistant-intent-catalog.js','assistant-intent-client.js',
   await context.roudyAssistant.run("evento dia vinte de outubro de 2026");assert.ok(calls.filter(call=>call[0]==="event"&&call[1]==="evento-20").length>=2);
   await context.roudyAssistant.run("por favor me leva para as configurações");assert.ok(calls.some(call=>call[0]==="settings"));
   await context.roudyAssistant.run("Roudy, troca o idioma para espanhol");assert.equal(settings.language,"es");
+  const themeBeforeBeta=settings.theme;const lightBeta=await context.roudyAssistant.run("modo claro");assert.equal(settings.theme,themeBeforeBeta,"o modo Claro Beta não deve ser ativado pelo assistente");assert.match(lightBeta.message,/Beta/);
   await context.roudyAssistant.run("Roudy, toca A Alegria");assert.ok(calls.filter(call=>call[0]==="song"&&call[1]===1).length>=2);
   elements.get("view-sd").style.display="flex";const songStart=calls.length;await context.roudyAssistant.run("Roudy, toca A Alegria");const songCalls=calls.slice(songStart);assert.ok(songCalls.findIndex(call=>call[0]==="closeEvent")<songCalls.findIndex(call=>call[0]==="song"),"o evento deve fechar antes de a música abrir");assert.equal(elements.get("view-sd").style.display,"none");
   console.log("app-assistant.test.js: OK (linguagem natural, idioma, ferramentas, música e evento por data)");

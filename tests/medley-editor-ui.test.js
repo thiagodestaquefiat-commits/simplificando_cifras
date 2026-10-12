@@ -3,10 +3,13 @@ const fs = require("node:fs");
 
 const html = fs.readFileSync("index.html", "utf8");
 const css = fs.readFileSync("js/medley-editor.css", "utf8");
+const topbarCss = fs.readFileSync("css/topbar-labels.css", "utf8");
 const source = html.slice(html.indexOf("let medleyBlocos=[];"), html.indexOf("function tocarMedley(){"));
 
-assert.match(html, /medley-editor\.css\?v=23/);
-assert.ok(html.indexOf('css/roudy-color-system-preview.css?v=13') < html.indexOf('js/medley-editor.css?v=23'), 'o CSS específico do Medley deve prevalecer sobre a camada global de cores');
+assert.match(html, /medley-editor\.css\?v=27/);
+assert.ok(html.indexOf('css/roudy-color-system-preview.css?v=15') < html.indexOf('js/medley-editor.css?v=27'), 'o CSS específico do Medley deve prevalecer sobre a camada global de cores');
+assert.match(css, /\.medley-editor-header\{margin:-22px 0 12px\}/, 'o título do Medley deve alinhar verticalmente com o título de Eventos');
+assert.match(css, /\.medley-editor-subline\{display:flex;margin-top:22px;/, 'os metadados e o botão de tom devem ter respiro abaixo do título');
 assert.match(css, />\.topbar\{border-bottom:0;background:transparent;box-shadow:none\}/);
 assert.match(source, /Várias músicas, uma boa ideia\./);
 assert.match(source, /Escolha uma parte da sua playlist para começar o medley\./);
@@ -27,6 +30,8 @@ assert.match(source, /String\(block\.c\|\|''\)\.trim\(\)/, "partes vazias são e
 assert.match(source, /if\(medleyAdding\)return/, "duplo clique é bloqueado");
 assert.match(source, /saveCurrentMedley\(\)/, "alterações persistem no rascunho");
 assert.match(source, /ondragstart="startMedleyDrag/);
+assert.match(source, /class="medley-drag"[\s\S]*?<path d="M5 8h14M5 12h14M5 16h14"/, "o Medley usa o mesmo ícone de três traços do ordenador de repertório");
+assert.doesNotMatch(css, /\.medley-drag::before/, "o antigo ícone de seis pontos foi removido");
 assert.match(source, /medley-key-chip/);
 assert.match(source, /Editar trecho/);
 assert.match(source, /Ajustar tom/);
@@ -46,6 +51,12 @@ assert.match(css, /touch-action:none/);
 assert.match(css, /radial-gradient\(ellipse 88% 330px at 0 0/, "a luz branca nasce no canto superior esquerdo extremo");
 assert.match(css, /rgba\(255,255,255,var\(--medley-light-strong\)\)/, "a luz usa opacidade compatível com o navegador");
 assert.match(css, /#view-main\[data-active-tab="medley"\]::before\{display:none\}/, "não existe camada intermediária que forme uma faixa");
+assert.match(topbarCss, /data-active-tab="medley"[^}]*\.app-assistant-launch[^}]*\.topbar-camera-action\{display:none!important\}/, "no Medley ficam somente busca, notificações e menu");
+assert.match(topbarCss, /#view-main \.topbar-labeled::after\{display:none\}/, "todos os controles superiores aparecem somente como ícones");
+assert.match(topbarCss, /\.topbar-labeled\{[^}]*width:44px!important[^}]*height:44px!important[^}]*align-items:center[^}]*justify-content:center/, "os ícones superiores compartilham área acessível e alinhamento uniformes");
+assert.match(topbarCss, /data-active-tab="musicas"[^}]*translate:0 calc\(-20px \+ var\(--playlist-collapse,0\)\*20px\)/, "a linha de ícones acompanha o recolhimento da Playlist");
+assert.match(topbarCss, /data-active-tab="setlists"[^}]*\.events-more-action\{translate:0 -18px\}/, "os ícones de Eventos usam a mesma altura visual");
+assert.match(topbarCss, /data-active-tab="medley"[^}]*\.topbar-account-wrap\{translate:0 1px\}/, "os ícones do Medley usam a mesma altura visual");
 assert.match(css, /stroke:#0789e7/, "o progresso usa o azul ROUDY");
 assert.match(css, /stroke-dashoffset:calc\(100 - var\(--vinyl-progress\)\)/);
 assert.match(css, /\.medley-vinyl/);

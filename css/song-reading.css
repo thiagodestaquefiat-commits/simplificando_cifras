@@ -11,10 +11,18 @@
   font-family:"JetBrains Mono",ui-monospace,"SFMono-Regular","Roboto Mono",Menlo,Consolas,monospace!important;
   font-variant-ligatures:none;letter-spacing:0!important;
 }
-#view-detail:not(.stage-mode) #detail-content .full-chord-line{white-space:pre-wrap;font-size:calc(15px * var(--song-text-scale,1))!important;line-height:1.55}
+#view-detail:not(.stage-mode) #detail-content .full-chord-line{white-space:pre-wrap;font-size:calc(18px * var(--song-text-scale,1))!important;line-height:1.48}
 #view-detail:not(.stage-mode) #detail-content .full-chord-line.is-chord{font-weight:700}
-#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-section{font-family:Inter,system-ui,sans-serif!important;font-size:12px!important;letter-spacing:.6px!important}
+#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-section{font-family:Inter,system-ui,sans-serif!important;font-size:calc(15px * var(--song-text-scale,1))!important;line-height:1.5;letter-spacing:.6px!important}
 /* Todas as páginas da música (Resumo, Letra e cifra, Letra) em monoespaçada;
    rótulos de seção e avisos continuam na fonte da interface. */
 #view-detail #detail-content .song-page{font-family:"JetBrains Mono",ui-monospace,"SFMono-Regular","Roboto Mono",Menlo,Consolas,monospace;font-variant-ligatures:none}
 #view-detail #detail-content .song-page *:not(.full-chord-private):not(.is-section):not(.stage-summary-label):not(.complete-sheet-notice):not(.complete-sheet-notice *){font-family:inherit}
+
+/* Na página exclusiva de letra, usa a tipografia de leitura do app. A fonte
+   monoespaçada permanece na página combinada para alinhar acordes e sílabas. */
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics,
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics :is(.full-chord-line,.letra-linha,.wa-block,.full-chord-sheet,.inline-block-chords){
+  font-family:"Manrope","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  font-variant-ligatures:normal;letter-spacing:-.025em!important;
+}
