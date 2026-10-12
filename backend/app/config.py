@@ -27,6 +27,7 @@ def _database_uri(value: str) -> str:
 
 
 class Config:
+    PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "https://simplificandocifras.netlify.app/").rstrip("/") + "/"
     JSON_SORT_KEYS = False
     MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", str(10 * 1024 * 1024)))
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(MAX_UPLOAD_SIZE + 64 * 1024)))

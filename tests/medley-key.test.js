@@ -21,15 +21,16 @@ assert.equal(context.renderBlock({key:'D',capo:0,chords:'D A Bm'}),'G D Em','mud
 assert.match(html,/eventEsc\(medleyChordText\(b\)\)/g,'a lista e o modo de tocar exibem os acordes ajustados');
 assert.match(html,/#pane-medley\{flex-direction:column;align-items:stretch;/,'o painel do Medley ocupa toda a largura disponível');
 assert.match(html,/#medley-content\{width:100%;/);
-assert.match(html,/class="medley-empty"/,'o estado vazio centraliza a ação de adicionar bloco');
-assert.match(html,/\.medley-empty \.btn\{width:min\(100%,320px\);\}/);
+assert.match(html,/class="section-empty-state medley-empty"/,'o estado vazio mantém uma orientação compacta');
+assert.match(html,/class="medley-add"/,'a ação secundária de adicionar bloco permanece disponível');
 assert.doesNotMatch(html,/class="fab"/,'o botão flutuante foi removido da página principal');
 assert.doesNotMatch(html.slice(html.indexOf('function renderMedley(){'),html.indexOf('function abrirAddMedley(){')), /onclick="tocarMedley\(\)"/);
-assert.match(html.slice(html.indexOf('function renderMedley(){'),html.indexOf('function abrirAddMedley(){')), /onclick="limparMedley\(\)"[\s\S]*onclick="abrirSalvarMedley\(\)"/);
+assert.match(html.slice(html.indexOf('function renderMedley(){'),html.indexOf('function abrirAddMedley(){')), /onclick="abrirSalvarMedley\(\)"[\s\S]*onclick="limparMedley\(\)"/);
 
 const saveSource=html.slice(html.indexOf('function confirmarSalvarMedley(){'),html.indexOf('function tocarMedley(){'));
 const events=[];
 const saveContext={
+  medleySaveState:'idle',
   medleyBlocos:[{musicTitle:'Primeira',musicId:1,blocoIdx:0,label:'Intro',chords:'G D',key:'A',capo:2},
     {musicTitle:'Segunda',musicId:2,blocoIdx:1,label:'Refrão',chords:'G D',key:'G',capo:0}],
   musicas:[],

@@ -13,7 +13,7 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
         saveSharedEvent:async e=>({...e,remoteVersion:1,pendingShared:false}),
         inviteUser:async(id,user,role)=>{if(user==='invite-b'&&!window.__failedOnce){window.__failedOnce=true;throw new Error('falha simulada');}window.__sent.push([id,user,role]);return {id:user};}
       });
-      openAddSetlist();document.getElementById('fs-title').value='Evento de integração';
+      openAddSetlist(eventModel.create({id:'integration-invites',title:'Evento de integração',leaderId:appCurrentUser.id,members:[{...appCurrentUser,isLeader:true}]}));document.getElementById('fs-title').value='Evento de integração';
       eventQueueInvite({id:'invite-a',name:'Ana'});eventQueueInvite({id:'invite-b',name:'Bruno'});
       eventSetInviteRole(0,'Guitarra');
     });

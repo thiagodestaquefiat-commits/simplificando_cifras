@@ -19,10 +19,12 @@ assert.match(eventMenu, /event-invite-preview/);
 assert.match(eventMenu, /roudyEventShare\.cardMarkup\(shareData\)/, 'o convite reutiliza o card visual oficial do evento');
 assert.match(eventMenu, />Transferir liderança</, 'ações administrativas ficam no menu contextual');
 assert.match(eventMenu, /eventUserInvites\.openSearchSheet\(eventId\)/, 'a lupa abre a busca dedicada sem abrir o editor do evento');
+assert.match(eventMenu, /eventQrScanner\.open/, 'o fluxo de adicionar pessoa oferece leitura de QR Code');
 const inviteSource = fs.readFileSync('js/event-user-invites.js', 'utf8');
 assert.match(inviteSource, /event-people-search-title">Compartilhar com/);
 assert.match(inviteSource, /event-people-search-input/);
 assert.match(inviteSource, /eventCollaboration\.searchUsers/);
 assert.match(inviteSource, /eventCollaboration\.inviteUser\(eventId,user\.id,'Outra'\)/);
+assert.match(inviteSource, /inviteScanned/, 'o perfil lido por QR reutiliza o contrato de convite direto');
 
 console.log('event-actions-sheet.test.js: OK');

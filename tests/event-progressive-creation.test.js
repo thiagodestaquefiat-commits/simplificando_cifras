@@ -1,0 +1,43 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const html = fs.readFileSync('index.html', 'utf8');
+const css = fs.readFileSync('js/event-detail-refactor.css', 'utf8');
+const backend = fs.readFileSync('backend/app/routes/events.py', 'utf8');
+
+assert.match(backend, /title=_text\(payload\.get\("title"\), 160, "title", True\)/, 'backend exige somente o título na criação');
+assert.match(backend, /event_date=_text\(payload\.get\("date"\), 10, "date"\)/, 'data continua opcional');
+assert.match(html, /function openNewEventCreateSheet\(/);
+assert.match(html, /if\(!prefill\)\{openNewEventCreateSheet\(\);return;\}/, 'novo evento não abre o formulário legado');
+assert.match(html, /placeholder="Ex\.: Culto de Jovens"/);
+assert.match(html, /id="event-create-date" type="date"/);
+assert.match(html, /id="event-create-time" type="time"/);
+assert.match(html, /id="event-create-location"/);
+assert.match(html, /id="event-create-description"/);
+assert.match(html, /createNewEventFromSheet/);
+assert.match(html, /closeEventAdminSheet\(\);switchTab\('setlists'\);openSD\(candidate\.id\)/, 'criação entra imediatamente no evento');
+assert.match(html, /title:title\.slice\(0,160\),date,time,location,description/, 'criação persiste apenas as informações fornecidas');
+assert.match(html, /id="event-admin-title"/, 'edição permite alterar o nome do evento');
+assert.match(html, /async function saveEventInfoSheet\(\)[\s\S]*?canEditShared\(event,actor\.id\)/, 'salvamento preserva a permissão exclusiva do líder');
+assert.match(html, /async function saveEventInfoSheet\(\)[\s\S]*?eventCollaboration\.saveSharedEvent/, 'edição completa reutiliza a persistência compartilhada existente');
+assert.match(html, /function openEventFieldSheet\(eventId,field\)/);
+assert.match(html, /Adicionar data/);
+assert.match(html, /Adicionar horário/);
+assert.match(html, /Adicionar local/);
+assert.match(html, /Adicionar informações/);
+assert.match(html, /Nenhuma música adicionada/);
+assert.match(html, /openEventAddSongs/, 'estado vazio reutiliza o fluxo existente de músicas');
+assert.match(html, /event-repertoire-primary-add/, 'estado vazio usa o CTA principal da referência');
+assert.match(html, /Sugestões para este evento/);
+assert.match(html, /Com base na sua Playlist e nos seus eventos/);
+assert.match(html, /data-event-song-filter="playlist"[^>]*>Playlist</);
+assert.match(html, /data-event-song-filter="recent"[^>]*>Recentes</);
+assert.match(html, /data-event-song-filter="repertoires"[^>]*>Repertórios</);
+assert.match(html, /function eventSongUsage\(excludedEventId\)/, 'repertórios usam dados reais dos eventos');
+assert.match(html, /HOME_CARD_LAST_SONG_KEY/, 'recentes reutiliza o histórico real já existente');
+assert.match(css, /\.event-admin-sheet\.is-create-flow/);
+assert.match(css, /event-admin-add-filters/);
+assert.match(css, /var\(--roudy-electric-blue\)/, 'componentes usam tokens ROUDY');
+assert.doesNotMatch(css, /#1db954/i, 'não introduz verde Spotify');
+
+console.log('event-progressive-creation.test.js: OK');

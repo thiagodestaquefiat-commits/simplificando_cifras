@@ -287,7 +287,7 @@
     const libraryOwner=global.songRepository?.getActiveOwnerId?.()??null;
     const ready=(typeof loginGateAuthReady==='undefined'||loginGateAuthReady)&&(typeof authLinking==='undefined'||!authLinking)&&(!auth.authenticated||String(libraryOwner)===String(actor));
     const metronome=songOpen?studyMetronome:toolsMetronome;
-    const editorOpen=element('modal-overlay')?.style.display==='flex'&&((typeof simpleReviewDraft!=='undefined'&&Boolean(simpleReviewDraft))||(typeof eventSongEditDraft!=='undefined'&&Boolean(eventSongEditDraft))||Boolean(global.document.querySelector('#fs-title, #med-music, #medley-save-title')))||element('event-song-edit-layer')?.getAttribute?.('aria-hidden')==='false'||element('event-admin-sheet-layer')?.getAttribute?.('aria-hidden')==='false'||Boolean(global.document.querySelector('#ai-summary-overlay, .roudy-camera, [data-inline-editing="true"]'));
+    const editorOpen=element('modal-overlay')?.style.display==='flex'&&((typeof simpleReviewDraft!=='undefined'&&Boolean(simpleReviewDraft))||(typeof eventSongEditDraft!=='undefined'&&Boolean(eventSongEditDraft))||Boolean(global.document.querySelector('#fs-title, #med-music, #medley-save-title, .medley-sheet')))||element('event-song-edit-layer')?.getAttribute?.('aria-hidden')==='false'||element('event-admin-sheet-layer')?.getAttribute?.('aria-hidden')==='false'||Boolean(global.document.querySelector('#ai-summary-overlay, .roudy-camera, [data-inline-editing="true"]'));
     const eventsAll=setlists.filter(value=>!global.eventModel?.canAccess||global.eventModel.canAccess(value,typeof global.eventPermissionActor==='function'?global.eventPermissionActor(value).id:actor));
     const settingsDraft=element('modal-overlay')?.style.display==='flex'&&Boolean(global.document.querySelector('#setting-language, #setting-theme'))&&typeof settingsFromForm==='function'&&JSON.stringify(settingsFromForm())!==JSON.stringify(global.loadAppSettings());
     return {ownerId:String(actor),authSubject:auth.user?.id||null,libraryOwner,ready,
@@ -372,9 +372,9 @@
         close();home('medley');
         if(operation==='clear'){const before=medleyBlocos.length;global.limparMedley();return {ok:medleyBlocos.length===0||medleyBlocos.length===before,status:medleyBlocos.length===before?'noop':'executed',message:medleyBlocos.length===before?'Limpeza cancelada.':'Medley limpo.'};}
         if(operation==='add')global.abrirAddMedley();else global.abrirSalvarMedley();
-        return {ok:modalVisible()&&Boolean(element(operation==='add'?'med-music':'medley-save-title')),message:operation==='add'?'Escolha a música e o bloco para o Medley.':'Escolha o nome e confirme o salvamento do Medley.'};
+        return {ok:modalVisible()&&Boolean((operation==='add'?(element('medley-sheet-title')||element('med-music')):element('medley-save-title'))),message:operation==='add'?'Escolha a música e o bloco para o Medley.':'Escolha o nome e confirme o salvamento do Medley.'};
       },
-      createEvent:()=>{close();home('setlists');global.openAddSetlist();return modalVisible()&&Boolean(element('fs-title'));},
+      createEvent:()=>{close();home('setlists');global.openAddSetlist();return Boolean(element('event-create-title')&&element('event-admin-sheet-layer')?.getAttribute('aria-hidden')==='false')||modalVisible()&&Boolean(element('fs-title'));},
       eventWorkflow:async(operation,context,guard)=>{
         const event=global.findEvent(context.eventId);if(!event)return {ok:false};
         if(operation==='leadership'&&event.members.filter(member=>String(member.id)!==String(event.leaderId)).length===0)return {ok:false,status:'blocked',message:'Não há outro integrante para assumir a liderança.'};

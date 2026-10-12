@@ -121,6 +121,21 @@ def test_event_chat_persists_across_members_and_protects_authorship(client):
     assert [item["content"] for item in leader_messages.get_json()["messages"]] == ["Olá, equipe!"]
     assert client.get("/api/collaboration/events/event-sunday/messages", headers=auth(outsider)).status_code == 403
 
+    shared_song = client.post(
+        "/api/collaboration/events/event-sunday/messages",
+        headers=auth(member),
+        json={"clientId": "song-message-device-b", "type": "song", "song": {
+            "id": "song-1", "title": "A alegria", "artist": "MORADA", "key": "A",
+            "coverUrl": "https://example.com/cover.jpg", "blocos": [{"c": "A D", "l": "A alegria"}],
+        }},
+    )
+    assert shared_song.status_code == 201, shared_song.get_json()
+    assert shared_song.get_json()["song"]["title"] == "A alegria"
+    assert shared_song.get_json()["poll"] is None
+    refreshed = client.get("/api/collaboration/events/event-sunday/messages", headers=auth(leader)).get_json()["messages"]
+    assert refreshed[1]["type"] == "song"
+    assert refreshed[1]["song"]["blocos"][0]["c"] == "A D"
+
     denied = client.patch(
         "/api/collaboration/events/event-sunday/messages/message-device-b",
         headers=auth(leader), json={"action": "edit", "content": "Alteração indevida"},

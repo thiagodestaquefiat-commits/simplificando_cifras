@@ -111,7 +111,7 @@ const SINKS_CORRIGIDOS = [
   { nome: "renderMusicas / onclick", regex: /class="music-item" onclick="openSongFromSwipe\(event,\$\{attrJs\(m\.id\)\}\)"/ },
   { nome: "renderMusicas / titulo", regex: /class="music-title">\$\{eventEsc\(m\.title\)\}/ },
   { nome: "renderMusicas / artista", regex: /class="music-sub">\$\{eventEsc\(m\.artist\|\|m\.capo/ },
-  { nome: "abrirAddMedley / option", regex: /<option value="\$\{eventEsc\(m\.id\)\}">\$\{eventEsc\(m\.title\)\}/ },
+  { nome: "abrirAddMedley / escolha", regex: /onclick="selectMedleySong\(\$\{attrJs\(song\.id\)\}\)"[\s\S]*?\$\{eventEsc\(song\.title\)\}/ },
   { nome: "diagramas / nome do acorde", regex: /class="chord-card-name">\$\{eventEsc\(name\)\}/ },
   { nome: "medley / titulo do bloco", regex: /\$\{eventEsc\(b\.musicTitle\)\}/ },
   { nome: "medley / cifra", regex: /\$\{eventEsc\((?:b\.chords|medleyChordText\(b\))\)\.replace\(\/\\n\/g,'<br>'\)\}/ },

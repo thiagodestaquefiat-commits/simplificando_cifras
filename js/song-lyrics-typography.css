@@ -1,0 +1,12 @@
+.letra-linha,
+.full-chord-line:not(.is-chord):not(.is-section){
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace!important;
+  letter-spacing:0!important;
+}
+.song-page-lyrics .letra-linha,
+.song-page-lyrics .full-chord-line:not(.is-chord):not(.is-section),
+.stage-mode.stage-content-lyrics .letra-linha,
+.stage-mode.stage-content-lyrics .full-chord-line:not(.is-chord):not(.is-section){
+  font-family:"Manrope","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  letter-spacing:-.047em!important;
+}

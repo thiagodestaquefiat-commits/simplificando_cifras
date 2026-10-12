@@ -214,6 +214,7 @@ def _iso(value) -> str:
 
 
 def _serialize_message(message: EventMessage) -> dict:
+    song = message.poll if message.message_type == "song" else None
     return {
         "id": message.id,
         "eventId": message.event_id,
@@ -221,7 +222,8 @@ def _serialize_message(message: EventMessage) -> dict:
         "sender": {"id": message.sender_id, "name": message.sender_name, "avatarUrl": message.sender_avatar_url},
         "content": "" if message.deleted else message.content,
         "replyTo": message.reply_to,
-        "poll": message.poll,
+        "poll": message.poll if message.message_type == "poll" else None,
+        "song": song,
         "reactions": message.reactions or {},
         "deleted": message.deleted,
         "createdAt": _iso(message.created_at),
@@ -668,7 +670,7 @@ def create_event_message(event_id: str):
             raise ApiError("mensagem_existente", "Este identificador de mensagem já está em uso.", 409)
         return jsonify(_serialize_message(existing)), 200
     message_type = _text(payload.get("type"), 16, "type") or "text"
-    if message_type not in {"text", "system", "poll"}:
+    if message_type not in {"text", "system", "poll", "song"}:
         raise ApiError("tipo_invalido", "Tipo de mensagem inválido.", 400)
     content = _text(payload.get("content"), 5000 if message_type == "text" else 500, "content")
     poll = None
@@ -686,6 +688,32 @@ def create_event_message(event_id: str):
         if len(options) < 2:
             raise ApiError("enquete_invalida", "A enquete precisa de pelo menos duas opções.", 400)
         poll = {"question": question, "options": options, "multiple": bool(raw_poll.get("multiple")), "showVoters": raw_poll.get("showVoters") is not False, "votes": {}}
+    elif message_type == "song":
+        raw_song = payload.get("song") if isinstance(payload.get("song"), dict) else {}
+        title = _text(raw_song.get("title"), 240, "song.title", True)
+        artist = _text(raw_song.get("artist"), 240, "song.artist")
+        raw_blocks = raw_song.get("blocos") if isinstance(raw_song.get("blocos"), list) else []
+        blocks = []
+        for raw in raw_blocks[:160]:
+            if not isinstance(raw, dict):
+                continue
+            blocks.append({
+                "l": _text(raw.get("l"), 1200, "song.blocos.l"),
+                "c": _text(raw.get("c"), 1200, "song.blocos.c"),
+            })
+        poll = {
+            "id": _text(raw_song.get("id"), 120, "song.id") or None,
+            "title": title,
+            "artist": artist,
+            "album": _text(raw_song.get("album"), 240, "song.album") or None,
+            "key": _text(raw_song.get("key"), 24, "song.key"),
+            "capo": _text(raw_song.get("capo"), 24, "song.capo"),
+            "coverUrl": _text(raw_song.get("coverUrl"), 2000, "song.coverUrl") or None,
+            "youtubeVideoId": _text(raw_song.get("youtubeVideoId"), 80, "song.youtubeVideoId") or None,
+            "youtubeUrl": _text(raw_song.get("youtubeUrl"), 2000, "song.youtubeUrl") or None,
+            "blocos": blocks,
+        }
+        content = title
     elif not content:
         raise ApiError("mensagem_vazia", "Digite uma mensagem.", 400)
     message = EventMessage(
