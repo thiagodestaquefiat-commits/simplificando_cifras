@@ -8,6 +8,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
   "./js/assistant-actions.js?v=5",
+  "./js/assistant-actions.js?v=6",
   "./js/assistant-action-manager.js?v=5",
   "./js/assistant-action-runtime.js?v=6",
   "./js/assistant-memory.js?v=2",
@@ -30,6 +31,7 @@ const ASSETS = [
 
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
+  "./js/tuner.js?v=5",
   "./js/smart-scroll.js?v=6",
   "./js/chord-audio.js?v=2",
   "./css/song-reading.css?v=2",

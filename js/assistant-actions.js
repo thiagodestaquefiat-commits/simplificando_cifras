@@ -142,6 +142,8 @@
     add('tuner.open', 'study', request => {
       if (request.text === 'afinador automatico') return null;
       if (['afinador', 'abrir afinador', 'ir para afinador', 'quero o afinador'].includes(request.text)) return {};
+      const bass = request.text.match(/^(?:abrir )?(?:afinar|afinador)(?: de| para| do)?\s+(?:contra)?baixo(?: de)?\s+(4|5|6|quatro|cinco|seis)\s+cordas$/);
+      if (bass) { const strings = { 4: 4, 5: 5, 6: 6, quatro: 4, cinco: 5, seis: 6 }[bass[1]]; return { instrument: strings === 4 ? 'bass' : 'bass' + strings, label: 'baixo de ' + strings + ' cordas', requestedInstrument: true }; }
       const found = request.text.match(/^(?:abrir )?(?:afinar|afinador)(?: de| para| do)?\s+(\w+)$/);
       return found ? { instrument: tunerInstruments[found[1]], label: found[1], requestedInstrument: true } : null;
     }, { changesScreen: true, priority: 75, validate: slots => slots.requestedInstrument && !slots.instrument ? 'O afinador suporta violão, guitarra, ukulele, baixo e violino.' : null });

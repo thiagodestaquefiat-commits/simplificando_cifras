@@ -40,6 +40,8 @@ const clean = text => String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, 
   for(const bad of ['cor da cifra inexistente','mudar idioma para ingles espanhol','tamanho -110','tamanho 150','tema claro escuro','mudar idioma para ingles e mudar cor da cifra azul'])assert.equal((await manager.run(bad)).ok,false,bad);
   settingsOK=false;await run('cor da cifra verde','settings.color',false);assert.equal(settings.chordColor,'blue');settingsOK=true;
   for(const command of ['abrir configuracoes','abrir meu perfil','abrir ferramentas','abrir notificacoes','abrir backup'])await run(command,'navigation.panel');
+  await run('afinar baixo de 5 cordas','tuner.open');assert.equal(selectedInstrument,'bass5');
+  await run('afinador de contrabaixo de seis cordas','tuner.open');assert.equal(selectedInstrument,'bass6');
   await run('afinador para ukulele','tuner.open');assert.equal(selectedInstrument,'ukulele');
   await run('iniciar afinador','tuner.play');await run('iniciar afinador','tuner.play');assert.equal(starts,1);
   await run('corda 4','tuner.string');assert.equal(selectedString,3);

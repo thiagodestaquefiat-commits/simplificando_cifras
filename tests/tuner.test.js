@@ -23,7 +23,9 @@ for (const [instrument, strings] of Object.entries(tuner.instruments)) {
       `${instrument} ${string.note} deve ser reconhecida com margem inferior a 8 cents: ${measured}`);
   }
 }
-assert.deepEqual(Object.keys(tuner.instruments), ['guitar', 'ukulele', 'bass', 'violin']);
+assert.deepEqual(Object.keys(tuner.instruments), ['guitar', 'ukulele', 'bass', 'bass5', 'bass6', 'violin']);
+assert.deepEqual(Array.from(tuner.instruments.bass5, s => s.note), ['B0', 'E1', 'A1', 'D2', 'G2'], 'baixo de 5 cordas: Si grave');
+assert.deepEqual(Array.from(tuner.instruments.bass6, s => s.note), ['B0', 'E1', 'A1', 'D2', 'G2', 'C3'], 'baixo de 6 cordas: Si grave e Dó agudo');
 assert.equal(tuner.analyzePitch(new Float32Array(4096), 48000), null, 'silêncio não é nota');
 assert.equal(tuner.analyzePitch(wave(440, 48000, 0.001), 48000), null, 'ruído muito baixo não é nota');
 assert.equal(tuner.noteForFrequency(440).name, 'A');
@@ -47,5 +49,5 @@ startPromise.then(result => {
   assert.match(html, /onclick="openTuner\(\)"/);
   assert.match(html, /function closeModal\(\)\{stopTuner\(\)/);
   assert.match(html, /window\.addEventListener\('pagehide',\(\)=>tunerController\.stop\(\)\)/);
-  console.log('tuner.test.js: OK (4 instrumentos, silêncio, cents e ciclo do microfone)');
+  console.log('tuner.test.js: OK (6 instrumentos, baixo de 4/5/6 cordas, silêncio, cents e ciclo do microfone)');
 }).catch(error => { console.error(error); process.exitCode = 1; });
