@@ -5,14 +5,16 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v476-preview-integrado-1012";
+const CACHE_NAME = "simplificando-cifras-v477-palco-limpo-1012";
 const ASSETS = [
   "./css/song-reading.css?v=5",
+  "./css/song-reading.css?v=6",
   "./js/ai/ai-harmonic-summary.js?v=20",
   "./js/app-assistant.js?v=30",
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
+  "./css/topbar-labels.css?v=11",
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
   "./js/assistant-actions.js?v=5",
@@ -53,6 +55,7 @@ const ASSETS = [
   "./css/roudy-forms.css?v=7",
   "./css/light-theme.css?v=1",
   "./css/dark-theme.css?v=9",
+  "./css/dark-theme.css?v=10",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=6",
@@ -128,6 +131,7 @@ const ASSETS = [
   "./js/vendor/qrcode.min.js?v=1",
   "./js/vendor/jsqr.min.js?v=1",
   "./js/profile-qr.js?v=3",
+  "./js/profile-qr.js?v=4",
   "./js/profile-qr.css?v=2",
   "./js/event-user-invites.js?v=6",
   "./js/profile-username.js?v=1",
@@ -233,7 +237,7 @@ const ASSETS = [
   "./assets/icons/roudy-icon-v4-maskable-512.png?v=15",
   "./assets/qr-contribuicao.png?v=1",
   "./assets/playlist-hero-background.png",
-  "./assets/roudy-dark-theme-background.svg"
+  "./assets/roudy-dark-theme-background.jpg"
 ];
 
 self.addEventListener("install", (event) => {

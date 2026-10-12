@@ -113,7 +113,7 @@ html[data-theme="dark"] #pane-medley .medley-compact-header {
 
 html[data-theme="dark"] #view-main[data-active-tab="musicas"]
   > .playlist-hero-backdrop:not(.has-custom-cover)::before {
-  background-image: url("../assets/roudy-dark-theme-background.svg");
+  background-image: url("../assets/roudy-dark-theme-background.jpg");
   background-position: center top;
   background-size: cover;
 }

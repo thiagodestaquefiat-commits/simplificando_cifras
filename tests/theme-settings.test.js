@@ -40,5 +40,5 @@ assert.match(html,/<option value="light" disabled>Claro — Beta<\/option>/);
 assert.match(html,/\['light','Claro',true\]/);
 assert.match(html,/value==='light'\|\|button\?\.disabled/);
 assert.match(fs.readFileSync('css/light-theme.css','utf8'),/html\[data-theme="light"\]/);
-assert.match(fs.readFileSync('css/dark-theme.css','utf8'),/roudy-dark-theme-background\.svg/);
+assert.match(fs.readFileSync('css/dark-theme.css','utf8'),/roudy-dark-theme-background\.(svg|jpg)/);
 console.log('theme-settings.test.js: OK');

@@ -34,10 +34,10 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=5">
-<link rel="stylesheet" href="css/topbar-labels.css?v=10">
+<link rel="stylesheet" href="css/song-reading.css?v=6">
+<link rel="stylesheet" href="css/topbar-labels.css?v=11">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
-<link rel="stylesheet" href="css/dark-theme.css?v=9">
+<link rel="stylesheet" href="css/dark-theme.css?v=10">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -1311,9 +1311,12 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/app-assistant.js?v=30"></script>
  <script src="js/event-user-invites.js?v=8"></script>
  <script src="js/event-qr-scanner.js?v=1"></script>
- <script src="js/vendor/qrcode.min.js?v=1"></script>
- <script src="js/vendor/jsqr.min.js?v=1"></script>
- <script src="js/profile-qr.js?v=3"></script>
+<script>
+// Desempenho: bibliotecas de QR Code (≈280 KB) só carregam quando alguém abre o QR.
+window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
+window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
+</script>
+ <script src="js/profile-qr.js?v=4"></script>
 <script src="js/notification-center.js?v=3"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
@@ -2285,7 +2288,7 @@ function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(son
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
-  indicator.hidden=stageMode;
+  indicator.hidden=stageMode&&!STAGE_CLEAN;
   indicator.querySelectorAll('[data-song-page]').forEach((dot,index)=>{
     if(index===currentSongPage)dot.setAttribute('aria-current','page');else dot.removeAttribute('aria-current');
   });
@@ -2401,11 +2404,12 @@ function renderDetail(){
     ?renderStageStructure(summary,totalShift)
     :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
-  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...(visibleTablature?[renderTablature(visibleTablature)]:[])].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  // Modo Palco limpo (Thiago, 12/10): mesma cifra da tela de estudo, sem as caixas do palco antigo.
+  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...(visibleTablature?[renderTablature(visibleTablature)]:[])].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
   updateSongPageIndicator({announce:false});
-  if(!stageMode)requestAnimationFrame(syncSongPageHeight);
+  if(!stageMode||STAGE_CLEAN)requestAnimationFrame(syncSongPageHeight);
   if(smartScrollController.isActive())smartScrollController.sync();
   updateSongControls();
   updateDetailSaveButton();
@@ -2531,6 +2535,7 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
+var STAGE_CLEAN=true;
 let stageMode=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
@@ -2564,7 +2569,8 @@ async function enterStageMode(){
   const packData=stageContextData();
   if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
   stageMode=true;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
-  vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
+  // Palco limpo: sem a "pele" do palco antigo (stage-mode); a tela é a da música, enxuta via .stage-clean.
+  if(STAGE_CLEAN)vd.classList.add('stage-clean');else vd.classList.add('stage-mode',`stage-theme-${activeStagePreferences.theme}`,`stage-content-${activeStagePreferences.contentMode}`);
   vd.classList.toggle('stage-edit-locked',activeStagePreferences.editLock);
   vd.classList.toggle('stage-controls-always',activeStagePreferences.controlsMode==='always');
   vd.classList.toggle('stage-controls-hidden-permanent',activeStagePreferences.controlsMode==='hidden');
@@ -2577,7 +2583,7 @@ async function enterStageMode(){
   if(activeStagePreferences.fullscreen&&vd.requestFullscreen){try{await vd.requestFullscreen({navigationUI:'hide'});}catch(error){}}
   if(activeStagePreferences.wakeLock)await acquireStageWakeLock();
   if(activeStagePreferences.autoScroll)startAutoScroll();
-  revealStageControls();showToast('🎤 Modo Palco preparado');
+  revealStageControls();if(!STAGE_CLEAN)showToast('🎤 Modo Palco preparado');
 }
 
 async function acquireStageWakeLock(){if(!stageMode||!navigator.wakeLock?.request)return;try{stageWakeLock=await navigator.wakeLock.request('screen');stageWakeLock.addEventListener('release',()=>{stageWakeLock=null;});}catch(error){stageWakeLock=null;}}
@@ -3994,7 +4000,7 @@ const ROUDY_PIX_COPY_PASTE='00020126770014BR.GOV.BCB.PIX013622ff841b-23ce-4c8e-8
 let roudyContributionValue=10;
 function roudyPixCrc16(value){let crc=0xffff;for(const byte of new TextEncoder().encode(value)){crc^=byte<<8;for(let bit=0;bit<8;bit++)crc=crc&0x8000?(crc<<1^0x1021)&0xffff:crc<<1&0xffff;}return crc.toString(16).toUpperCase().padStart(4,'0');}
 function currentRoudyPixCode(){const base=ROUDY_PIX_COPY_PASTE.slice(0,-8),amount=Number.isFinite(roudyContributionValue)?roudyContributionValue.toFixed(2):'',amountField=amount?`54${String(amount.length).padStart(2,'0')}${amount}`:'';const body=base.replace('5802BR',`${amountField}5802BR`)+'6304';return body+roudyPixCrc16(body);}
-function renderRoudyContributionQr(){const image=document.querySelector('.account-contribution-qr');if(!image||!window.QRCode)return;const host=document.createElement('div');new QRCode(host,{text:currentRoudyPixCode(),width:512,height:512,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});const canvas=host.querySelector('canvas');if(canvas)image.src=canvas.toDataURL('image/png');}
+function renderRoudyContributionQr(){const image=document.querySelector('.account-contribution-qr');if(!image)return;if(!window.QRCode){window.roudyQrLibs?.code().then(()=>{if(window.QRCode)renderRoudyContributionQr();}).catch(()=>{});return;}const host=document.createElement('div');new QRCode(host,{text:currentRoudyPixCode(),width:512,height:512,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});const canvas=host.querySelector('canvas');if(canvas)image.src=canvas.toDataURL('image/png');}
 async function copyRoudyPixCode(){
   try{
     if(!navigator.clipboard?.writeText)throw new Error('clipboard_unavailable');

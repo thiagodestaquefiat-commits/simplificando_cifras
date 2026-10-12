@@ -75,3 +75,17 @@
 .chord-header-instrument .song-instrument-chevron{color:#6f737c;font-size:18px}
 .detail-palco-btn{min-height:34px!important;padding:0 12px!important;border-radius:11px!important;font-size:12px!important;font-weight:700;white-space:nowrap}
 @media(prefers-reduced-motion:reduce){.sqp-wheel{scroll-behavior:auto}}
+/* Cabeçalho da música: botão Modo Palco + assistente sem quebrar a linha. */
+#view-detail>.detail-header:has(#btn-palco:not([hidden])){grid-template-columns:40px minmax(0,1fr) auto 44px!important;column-gap:8px}
+/* Modo Palco limpo (Thiago, 12/10): mesma tela da música, sem vídeo nem diagramas.
+   Fica: título, Sair do Palco, ferramentas, Marcar como preparado, Anterior/Próxima e a cifra. */
+#view-detail.stage-clean .stage-performance-header,
+#view-detail.stage-clean #stage-quick-panel,
+#view-detail.stage-clean .youtube-player-shell,
+#view-detail.stage-clean #study-music-panel,
+#view-detail.stage-clean #song-scale-feedback{display:none!important}
+#view-detail.stage-clean>.detail-header{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto 44px!important;column-gap:8px;position:sticky;top:0}
+#view-detail.stage-clean .song-controls{display:block!important}
+#view-detail.stage-clean .song-controls .song-control-strip{display:grid!important}
+#view-detail.stage-clean #detail-nav-toolbar{display:flex!important}
+#view-detail.stage-clean .detail-palco-btn.active{background:#fff!important;color:#000!important;border-color:#fff!important}
