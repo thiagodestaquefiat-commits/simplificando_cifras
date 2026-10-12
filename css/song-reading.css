@@ -47,23 +47,20 @@
 .song-control-pick.is-picking .song-control-value{color:#5aa2ff}
 .song-control-pick:focus-visible{outline:2px solid #5aa2ff;outline-offset:-4px;border-radius:10px}
 #btn-scroll{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-.song-quick-picker{position:relative;z-index:3;margin:6px 8px 8px;padding:10px 0 8px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:#0b0d11;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.song-quick-picker{position:relative;z-index:3;width:max-content;min-width:84px;max-width:150px;margin:4px 0 8px;padding:4px 0;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#0b0d11;box-shadow:0 14px 32px rgba(0,0,0,.5)}
 .song-quick-picker[hidden]{display:none}
-.sqp-head{display:flex;align-items:center;gap:8px;padding:0 10px 6px 16px}
-.sqp-title{flex:1;color:#9a9da5;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.sqp-extra{min-height:32px;padding:0 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:transparent;color:#c8ccd4;font-size:12px;font-weight:600;cursor:pointer}
-.sqp-extra.is-on{border-color:rgba(90,162,255,.6);color:#9cc6ff}
-.sqp-close{width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#9a9da5;font-size:15px;cursor:pointer}
-.sqp-wheel-shell{position:relative;height:220px;overflow:hidden}
-.sqp-wheel-shell::before{position:absolute;z-index:0;top:88px;left:12px;right:12px;height:44px;content:"";border-top:1px solid rgba(90,162,255,.45);border-bottom:1px solid rgba(90,162,255,.45);background:rgba(90,162,255,.06);border-radius:10px;pointer-events:none}
-.sqp-wheel-shell::after{position:absolute;inset:0;content:"";pointer-events:none;background:linear-gradient(#0b0d11,rgba(11,13,17,0) 34%,rgba(11,13,17,0) 66%,#0b0d11)}
-.sqp-wheel{position:relative;z-index:1;height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:88px 0;box-sizing:border-box;scrollbar-width:none;outline:0}
+.sqp-wheel-shell{position:relative;height:180px;overflow:hidden}
+.sqp-wheel-shell::before{position:absolute;z-index:0;top:68px;left:6px;right:6px;height:44px;content:"";border-top:1px solid rgba(90,162,255,.45);border-bottom:1px solid rgba(90,162,255,.45);background:rgba(90,162,255,.06);border-radius:9px;pointer-events:none}
+.sqp-wheel-shell::after{position:absolute;inset:0;content:"";pointer-events:none;background:linear-gradient(#0b0d11,rgba(11,13,17,0) 32%,rgba(11,13,17,0) 68%,#0b0d11)}
+.sqp-wheel{position:relative;z-index:1;height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:68px 14px;box-sizing:border-box;scrollbar-width:none;outline:0}
 .sqp-wheel::-webkit-scrollbar{display:none}
-.sqp-row{display:flex;height:44px;align-items:baseline;justify-content:center;gap:10px;padding-top:9px;box-sizing:border-box;scroll-snap-align:center;color:#6f737c;cursor:pointer}
-.sqp-row strong{font-size:18px;font-weight:600}
-.sqp-row small{font-size:11px;color:#6f737c}
-.sqp-row.is-selected{color:#fff}.sqp-row.is-selected strong{font-size:22px;font-weight:700}.sqp-row.is-selected small{color:#9a9da5}
-.sqp-hint{margin:6px 0 0;color:#6f737c;font-size:11px;text-align:center}
+.sqp-row{display:flex;height:44px;align-items:baseline;justify-content:center;gap:7px;padding-top:10px;box-sizing:border-box;scroll-snap-align:center;color:#6f737c;cursor:pointer;white-space:nowrap}
+.sqp-row strong{font-size:17px;font-weight:600}
+.sqp-row small{font-size:10px;color:#6f737c}
+.sqp-row.is-selected{color:#fff}.sqp-row.is-selected strong{font-size:21px;font-weight:700}.sqp-row.is-selected small{color:#9a9da5}
+.sqp-extra{display:block;width:calc(100% - 12px);min-height:32px;margin:4px 6px 2px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:transparent;color:#c8ccd4;font-size:11px;font-weight:600;cursor:pointer}
+.sqp-extra[hidden]{display:none}
+.sqp-extra.is-on{border-color:rgba(90,162,255,.6);color:#9cc6ff}
 /* Instrumento ao lado de ACORDES; Modo Palco no topo. */
 .chord-section-header{grid-template-columns:auto 1fr auto!important}
 .chord-header-instrument{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 4px 0 10px;border:0;background:transparent;color:#c8ccd4;font-size:13px;font-weight:600;cursor:pointer}

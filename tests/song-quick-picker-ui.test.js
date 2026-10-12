@@ -17,7 +17,7 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   await page.evaluate(()=>{const w=document.getElementById('sqp-wheel');w.scrollTop-=88;});await page.waitForTimeout(400);
   assert.equal((await read()).semi,2,'arrastar para cima sobe o tom');assert.equal((await read()).key,'B');
   await page.locator('[data-song-picker="capo"]').click();await page.waitForTimeout(300);
-  await page.locator('#sqp-wheel .sqp-row',{hasText:'3ª casa'}).click();await page.waitForTimeout(500);
+  await page.locator('#sqp-wheel .sqp-row',{hasText:/^3$/}).click();await page.waitForTimeout(500);
   assert.equal((await read()).capo,3);
   await page.locator('[data-song-picker="bpm"]').click();await page.waitForTimeout(300);
   await page.evaluate(()=>{const w=document.getElementById('sqp-wheel');w.scrollTop+=44*5;});await page.waitForTimeout(400);

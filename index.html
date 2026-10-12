@@ -923,7 +923,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=13">
 <link rel="stylesheet" href="css/roudy-forms.css?v=7">
-<link rel="stylesheet" href="css/song-reading.css?v=3">
+<link rel="stylesheet" href="css/song-reading.css?v=4">
 <link rel="stylesheet" href="css/topbar-labels.css?v=2">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
@@ -1084,9 +1084,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       </div>
       <span class="is-visually-hidden" id="smart-scroll-status" role="status" aria-live="polite">Experimental</span>
       <div class="song-quick-picker" id="song-quick-picker" hidden>
-        <div class="sqp-head"><span class="sqp-title" id="sqp-title"></span><button type="button" class="sqp-extra" id="sqp-extra" hidden></button><button type="button" class="sqp-close" onclick="closeSongQuickPicker()" aria-label="Fechar">✕</button></div>
+        <span class="is-visually-hidden" id="sqp-title"></span>
         <div class="sqp-wheel-shell"><div class="sqp-wheel" id="sqp-wheel" role="listbox" tabindex="0"></div></div>
-        <p class="sqp-hint">Arraste para cima para aumentar · para baixo para diminuir</p>
+        <button type="button" class="sqp-extra" id="sqp-extra" hidden></button>
       </div>
       <div class="song-control-panel" id="song-control-panel" hidden>
         <span class="song-control-panel-handle" aria-hidden="true"></span>
@@ -1399,9 +1399,9 @@ const SQP_ROW=44;
 function sqpRange(from,to,step=1){const out=[];for(let v=from;from>=to?v>=to:v<=to;v+=from>=to?-step:step)out.push(v);return out;}
 function sqpBaseKey(){const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));return song?songFormat.harmonicSummary(song).currentKey:'';}
 const SONG_PICKERS={
-  key:{title:'Tom',values:()=>sqpRange(11,-11),current:()=>currentSemitones,label:v=>shiftText(sqpBaseKey(),v)||'—',sub:v=>v===0?'original':(v>0?'+':'−')+Math.abs(v),apply:v=>{if(v!==currentSemitones)transpose(v-currentSemitones);updateSongControls();}},
-  capo:{title:'Capotraste/Casa',values:()=>sqpRange(12,0),current:()=>selectedCapo,label:v=>v?String(v):'Sem',sub:v=>v?(v+'ª casa'):'sem capotraste',apply:v=>{if(v!==selectedCapo)selectCapo(v);}},
-  bpm:{title:'BPM',values:()=>sqpRange(240,30),current:()=>studyMetronome.getBpm(),label:v=>String(v),sub:v=>tempoNameForBpm(v),apply:v=>{if(v!==studyMetronome.getBpm()){studyMetronome.setBpm(v);updateSongControls();}},extra:'metronome'},
+  key:{title:'Tom',values:()=>sqpRange(11,-11),current:()=>currentSemitones,label:v=>shiftText(sqpBaseKey(),v)||'—',sub:v=>v===0?'':(v>0?'+':'−')+Math.abs(v),apply:v=>{if(v!==currentSemitones)transpose(v-currentSemitones);updateSongControls();}},
+  capo:{title:'Capotraste/Casa',values:()=>sqpRange(12,0),current:()=>selectedCapo,label:v=>v?String(v):'Sem',sub:()=>'',apply:v=>{if(v!==selectedCapo)selectCapo(v);}},
+  bpm:{title:'BPM',values:()=>sqpRange(240,30),current:()=>studyMetronome.getBpm(),label:v=>String(v),sub:()=>'',apply:v=>{if(v!==studyMetronome.getBpm()){studyMetronome.setBpm(v);updateSongControls();}},extra:'metronome'},
   meter:{title:'Compasso',values:()=>['12/8','6/8','5/4','4/4','3/4','2/4'],current:()=>studyMetronome.getMeter()||preferredStudyMeter,label:v=>v,sub:()=>'',apply:v=>{if(v!==studyMetronome.getMeter())selectStudyMeter(v,false);}},
   speed:{title:'Velocidade da rolagem',values:()=>sqpRange(120,6,3),current:()=>scrollSpeed,label:v=>stagePreferences.formatScrollSpeed(v),sub:()=>'',apply:v=>{if(v!==scrollSpeed)applySongScrollSpeedValue(v);}}
 };
@@ -1416,7 +1416,7 @@ function sqpTrigger(type){return type==='speed'?document.getElementById('btn-scr
 function renderSqpExtra(){
   const extra=document.getElementById('sqp-extra');if(!extra||!songQuickPicker)return;
   const config=SONG_PICKERS[songQuickPicker.type];extra.hidden=config.extra!=='metronome';if(extra.hidden)return;
-  const on=Boolean(studyMetronome.getMeter());extra.textContent=on?'Metrônomo ligado':'Metrônomo desligado';extra.classList.toggle('is-on',on);extra.setAttribute('aria-pressed',String(on));
+  const on=Boolean(studyMetronome.getMeter());extra.textContent=on?'♩ ligado':'♩ desligado';extra.setAttribute('aria-label',on?'Desligar metrônomo':'Ligar metrônomo');extra.classList.toggle('is-on',on);extra.setAttribute('aria-pressed',String(on));
 }
 function openSongQuickPicker(type){
   const config=SONG_PICKERS[type],picker=document.getElementById('song-quick-picker'),wheel=document.getElementById('sqp-wheel');if(!config||!picker||!wheel)return;
@@ -1432,7 +1432,14 @@ function openSongQuickPicker(type){
   picker.hidden=false;picker.dataset.picker=type;
   const trigger=sqpTrigger(type);trigger?.setAttribute('aria-expanded','true');trigger?.classList.add('is-picking');
   wheel.scrollTop=index*SQP_ROW;sqpMarkSelected(index);renderSqpExtra();
+  sqpPlaceUnder(trigger);
   requestAnimationFrame(()=>wheel.focus({preventScroll:true}));
+}
+// Coluna estreita, centralizada embaixo do botão tocado (sem passar da borda da tela).
+function sqpPlaceUnder(trigger){
+  const picker=document.getElementById('song-quick-picker'),parent=picker?.offsetParent||picker?.parentElement;if(!picker||!trigger||!parent)return;
+  picker.style.marginLeft='0px';const box=parent.getBoundingClientRect(),cell=trigger.getBoundingClientRect(),width=picker.offsetWidth;
+  const left=Math.max(8,Math.min(box.width-width-8,cell.left-box.left+cell.width/2-width/2));picker.style.marginLeft=left+'px';
 }
 function sqpMarkSelected(index){
   const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;

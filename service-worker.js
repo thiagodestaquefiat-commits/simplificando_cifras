@@ -34,6 +34,7 @@ const ASSETS = [
   "./js/chord-audio.js?v=2",
   "./css/song-reading.css?v=2",
   "./css/song-reading.css?v=3",
+  "./css/song-reading.css?v=4",
   "./css/responsive.css?v=1",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=16",
