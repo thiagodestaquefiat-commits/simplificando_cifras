@@ -43,4 +43,6 @@ const playlistSearchFlow = html.slice(html.indexOf('function openPlaylistSearch'
 assert.doesNotMatch(playlistSearchFlow, /scrollIntoView\(/, "a lupa do cabeçalho não deve rolar a página");
 const openPlaylistSearchFlow = html.slice(html.indexOf('function openPlaylistSearch'), html.indexOf('function closePlaylistSearch'));
 assert.doesNotMatch(openPlaylistSearchFlow, /switchTab\(/, "a lupa deve preservar o menu atual");
+assert.match(html, /video-study-expanded>\.detail-header\{pointer-events:auto\}/, "o cabeçalho do modo estudo deve aceitar o toque no botão voltar no Safari");
+assert.match(html, />\.detail-header \.back-btn\{position:relative;z-index:4;pointer-events:auto!important;touch-action:manipulation/, "o botão voltar deve permanecer acima do player e com toque explícito");
 console.log(`index-syntax.test.js: OK (${scripts.length} scripts)`);

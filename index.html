@@ -858,6 +858,9 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-capo{text-align:left}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;top:10px;left:3px;width:32px;height:32px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn svg{width:18px;height:18px}
+#view-detail:not(.stage-mode)>.detail-header,#view-detail:not(.stage-mode).video-study-expanded>.detail-header{pointer-events:auto}
+#view-detail:not(.stage-mode)>.detail-header .back-btn{position:relative;z-index:4;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute}
 #view-detail:not(.stage-mode).video-study-expanded>.youtube-player-shell.is-expanded{position:relative;z-index:8;top:auto;margin:0 auto;border:0;border-radius:0;background:#000;box-shadow:0 10px 28px rgba(0,0,0,.35)}
 #view-detail:not(.stage-mode) .youtube-player-shell.is-expanded{position:relative;overflow:visible}
 #view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-frame{position:relative;z-index:1;background:#000}
