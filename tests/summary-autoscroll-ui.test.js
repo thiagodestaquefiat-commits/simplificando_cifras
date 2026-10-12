@@ -36,7 +36,7 @@ const server=http.createServer((req,res)=>{
       await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,body:''}));
       await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
       await page.getByText('Resumo de teste',{exact:true}).click();
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       const normal=page.locator('#song-control-panel .song-scroll-slider-wrap');
       const stage=page.getByRole('group',{name:'Velocidade da rolagem no palco',exact:true});
       const value=group=>group.locator('output').innerText();

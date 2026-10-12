@@ -24,6 +24,23 @@
       { note: 'D2', frequency: 73.4162, label: 'Ré' },
       { note: 'G2', frequency: 97.9989, label: 'Sol' }
     ]),
+    // Contrabaixo de 5 cordas: Si grave + afinação padrão.
+    bass5: Object.freeze([
+      { note: 'B0', frequency: 30.8677, label: 'Si' },
+      { note: 'E1', frequency: 41.2034, label: 'Mi' },
+      { note: 'A1', frequency: 55, label: 'Lá' },
+      { note: 'D2', frequency: 73.4162, label: 'Ré' },
+      { note: 'G2', frequency: 97.9989, label: 'Sol' }
+    ]),
+    // Contrabaixo de 6 cordas: Si grave + afinação padrão + Dó agudo.
+    bass6: Object.freeze([
+      { note: 'B0', frequency: 30.8677, label: 'Si' },
+      { note: 'E1', frequency: 41.2034, label: 'Mi' },
+      { note: 'A1', frequency: 55, label: 'Lá' },
+      { note: 'D2', frequency: 73.4162, label: 'Ré' },
+      { note: 'G2', frequency: 97.9989, label: 'Sol' },
+      { note: 'C3', frequency: 130.8128, label: 'Dó' }
+    ]),
     violin: Object.freeze([
       { note: 'G3', frequency: 195.9977, label: 'Sol' },
       { note: 'D4', frequency: 293.6648, label: 'Ré' },
@@ -42,7 +59,7 @@
 
     const effectiveRate = sampleRate / stride;
     const minLag = Math.max(2, Math.floor(effectiveRate / 1100));
-    const maxLag = Math.min(Math.ceil(effectiveRate / 38), Math.floor(size / 2));
+    const maxLag = Math.min(Math.ceil(effectiveRate / 28), Math.floor(size / 2));
     const windowSize = size - maxLag;
     const difference = new Float64Array(maxLag + 1);
     const normalized = new Float64Array(maxLag + 1);
@@ -70,7 +87,7 @@
     const denominator = left - 2 * center + right;
     const offset = denominator ? Math.max(-1, Math.min(1, (left - right) / (2 * denominator))) : 0;
     const frequency = effectiveRate / (bestLag + offset);
-    return frequency >= 38 && frequency <= 1100 ? frequency : null;
+    return frequency >= 28 && frequency <= 1100 ? frequency : null;
   }
 
   function noteForFrequency(frequency, targetFrequency) {
@@ -124,20 +141,22 @@
         if (ownGeneration !== generation) { stop(); return false; }
         source = audioContext.createMediaStreamSource(stream);
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 8192;
+        analyser.fftSize = options.fftSize === 4096 ? 4096 : 8192;
         analyser.smoothingTimeConstant = 0;
         source.connect(analyser); // Sem conexão à saída: o microfone não produz eco.
         const samples = new Float32Array(analyser.fftSize);
         const spectrum = options.spectrum ? new Float32Array(analyser.frequencyBinCount) : null;
+        const intervalMs=options.intervalMs===20?20:80;
+        lastAnalysis=-Infinity;
         const tick = timestamp => {
           if (ownGeneration !== generation || !analyser) return;
           frameId = global.requestAnimationFrame(tick);
-          if (timestamp - lastAnalysis < 80) return;
+          if (timestamp - lastAnalysis < intervalMs) return;
           lastAnalysis = timestamp;
           analyser.getFloatTimeDomainData(samples);
           let audioFrame;
           if(spectrum){analyser.getFloatFrequencyData(spectrum);let energy=0;for(const value of samples)energy+=value*value;audioFrame={spectrum,sampleRate:audioContext.sampleRate,fftSize:analyser.fftSize,rms:Math.sqrt(energy/samples.length)};}
-          const measured = analyzePitch(samples, audioContext.sampleRate);
+          const measured = options.pitch===false ? null : analyzePitch(samples, audioContext.sampleRate);
           if (!measured) { previousFrequency = null; onSample(null,audioFrame); return; }
           // Suaviza a oscilação visual sem ocultar mudanças de nota.
           const frequency = previousFrequency && Math.abs(1200 * Math.log2(measured / previousFrequency)) < 65

@@ -26,10 +26,15 @@
     const model=tones(chord);if(!model)return false;
     const sum=Array.from(profile).reduce((a,b)=>a+b,0);if(sum<=0)return false;
     const root=(model.root+shift+120)%12,third=(model.third+shift+120)%12,notes=model.notes.map(n=>(n+shift+120)%12),coverage=notes.reduce((a,n)=>a+profile[n],0)/sum;
-    const present=notes.filter(n=>profile[n]/sum>.09).length;
+    const present=notes.filter(n=>profile[n]/sum>.035).length;
+    const thirdInterval=(model.third-model.root+12)%12;
+    const opposite=thirdInterval===4?(root+3)%12:thirdInterval===3?(root+4)%12:null;
+    // A posição aberta de A repete A/E, mas toca C# em apenas uma corda.
+    // Aceita uma terça mais fraca, sem aceitar uma terça oposta dominante.
+    if(opposite!==null&&profile[opposite]/sum>.07&&profile[opposite]>profile[third]*.9)return false;
     // Uma nota isolada pode guiar o acompanhamento, mas não uma terça/fundamental concorrente.
     if(profile[root]/sum>.80)return true;
-    return present>=3&&coverage>.73&&profile[root]/sum>.10&&profile[third]/sum>.12;
+    return present>=3&&coverage>.73&&profile[root]/sum>.08&&profile[third]/sum>.035;
   }
   global.chordAudio=Object.freeze({tones,chroma,matches});
 })(window);

@@ -103,24 +103,46 @@
     return global.storage.set(OWNER_CACHES_KEY, caches);
   }
 
-  function markDeleted(songOrClientId, confirmed) {
+  function deletionClientId(songOrClientId) {
+    return String(typeof songOrClientId === "string" ? songOrClientId : songOrClientId && songOrClientId.librarySync && songOrClientId.librarySync.clientId || "").trim();
+  }
+
+  // Registra várias exclusões com UMA leitura e UMA gravação do armazenamento.
+  // Exclusões que já estão registradas sem nenhuma mudança não gravam nada:
+  // a sincronização recebe todas as exclusões da nuvem a cada abertura e,
+  // antes, cada uma relia e regravava a biblioteca inteira (lento no celular).
+  function markDeletedMany(values, confirmed) {
     if (!activeOwnerId) return false;
-    const clientId = String(typeof songOrClientId === "string" ? songOrClientId : songOrClientId && songOrClientId.librarySync && songOrClientId.librarySync.clientId || "").trim();
-    if (!clientId) return false;
+    const list = Array.isArray(values) ? values : [];
     const deletions = ownerDeletions();
     const ownerValues = deletions[activeOwnerId] && typeof deletions[activeOwnerId] === "object" ? deletions[activeOwnerId] : {};
-    const existing = ownerValues[clientId];
-    const entry = existing && typeof existing === "object" ? existing : { deletedAt: typeof existing === "string" ? existing : new Date().toISOString(), confirmedAt: null };
-    if (typeof songOrClientId === "object" && songOrClientId?.librarySync?.serverVersion != null && entry.serverVersion == null) entry.serverVersion = songOrClientId.librarySync.serverVersion;
-    if (confirmed && !entry.confirmedAt) entry.confirmedAt = new Date().toISOString();
-    ownerValues[clientId] = entry;
+    let valid = true;
+    let changed = false;
+    for (const songOrClientId of list) {
+      const clientId = deletionClientId(songOrClientId);
+      if (!clientId) { valid = false; continue; }
+      const existing = ownerValues[clientId];
+      const isObject = Boolean(existing && typeof existing === "object");
+      const entry = isObject ? { ...existing } : { deletedAt: typeof existing === "string" ? existing : new Date().toISOString(), confirmedAt: null };
+      let entryChanged = !isObject;
+      if (typeof songOrClientId === "object" && songOrClientId?.librarySync?.serverVersion != null && entry.serverVersion == null) { entry.serverVersion = songOrClientId.librarySync.serverVersion; entryChanged = true; }
+      if (confirmed && !entry.confirmedAt) { entry.confirmedAt = new Date().toISOString(); entryChanged = true; }
+      if (entryChanged) { ownerValues[clientId] = entry; changed = true; }
+    }
+    if (!changed) return valid;
     deletions[activeOwnerId] = ownerValues;
     const saved = global.storage.set(OWNER_DELETIONS_KEY, deletions);
     if (saved) {
       const caches = ownerCaches();
       if (Array.isArray(caches[activeOwnerId])) saveOwnerCache(activeOwnerId, caches[activeOwnerId]);
     }
-    return saved;
+    return saved && valid;
+  }
+
+  function markDeleted(songOrClientId, confirmed) {
+    if (!activeOwnerId) return false;
+    if (!deletionClientId(songOrClientId)) return false;
+    return markDeletedMany([songOrClientId], confirmed);
   }
 
   function confirmDeleted(clientId) {
@@ -355,6 +377,7 @@
     update,
     remove,
     markDeleted,
+    markDeletedMany,
     confirmDeleted,
     getDeletedClientIds: () => activeOwnerId ? [...deletedClientIds(activeOwnerId)] : [],
     getActiveOwnerId: () => activeOwnerId,

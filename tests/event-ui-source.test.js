@@ -103,7 +103,7 @@ assert.match(html, /document\.body\.classList\.remove\('stage-active'\)/, 'a sa�
 assert.match(html, /#view-detail\.stage-mode\{top:0;height:100dvh;padding-top:var\(--stage-header-height,156px\)/, 'o Modo Palco deve ocupar a tela inteira no iOS e reservar internamente o cabeçalho');
 assert.match(html, /#view-detail\.stage-mode:not\(\.stage-content-lyrics\).*JetBrains Mono.*monospace!important/, 'as visualizações musicais do palco devem forçar tipografia monoespaçada');
 assert.match(html, /#view-detail\.stage-mode\.stage-content-lyrics.*Manrope.*sans-serif!important/, 'a visualização somente letra deve manter tipografia proporcional');
-assert.match(html, /return chordHtml\+lyricHtml;/, 'cada linha de acordes deve aparecer imediatamente acima da letra correspondente');
+assert.match(html, /(?:return chordHtml\+lyricHtml;|\$\{chordHtml\+lyricHtml\})/, 'cada linha de acordes deve aparecer imediatamente acima da letra correspondente');
 assert.match(html, /\.full-chord-line\.is-chord\{margin:0 0 \.12em;font-size:calc\(var\(--stage-chord-size,28px\)\*1\.1\);line-height:1\.25\}/, 'os acordes do palco devem permanecer próximos da letra correspondente');
 assert.match(html, /font-size:calc\(var\(--stage-lyric-size,var\(--stage-chord-size,28px\)\)\*1\.1\)/, 'a letra do palco deve usar a escala tipográfica ampliada das cifras');
 assert.match(html, /font-size:calc\(var\(--stage-chord-size,28px\)\*1\.1\)/, 'as cifras do palco devem acompanhar a ampliação da letra');

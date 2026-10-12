@@ -1,0 +1,27 @@
+/* ROUDY responsivo: celular (base), tablet (≥768px) e PC (≥1200px).
+   Mantém o layout de coluna única; só ajusta largura, barra inferior e tamanho de texto. */
+:root{--roudy-column:820px;--roudy-detail:720px}
+@media (min-width:768px){
+  /* Barra Playlist/Eventos/Medley alinhada à coluna do app, não espalhada pela tela. */
+  .tab-bar,html[data-ui-scale] .tab-bar{left:50%!important;right:auto!important;width:min(100%,var(--roudy-column))!important;transform:translateX(-50%);border-inline:1px solid rgba(255,255,255,.07)}
+  /* Texto um pouco maior em telas grandes */
+  #view-main .music-title{font-size:15.5px}
+  #view-main .music-sub{font-size:12px}
+  #view-main .section-label{font-size:15px}
+  #view-main .playlist-play-all{font-size:13px}
+  #view-main .playlist-ai-kicker{font-size:11px}
+  #view-main .playlist-ai-description{font-size:14px}
+  #view-main .topbar-labeled::after{font-size:10.5px}
+  #view-main .topbar-labeled>svg{width:26px!important;height:26px!important}
+  .modal .account-menu-copy strong{font-size:16px}
+  .modal .account-menu-copy small{font-size:13px}
+}
+@media (min-width:1200px){
+  :root{--roudy-column:960px;--roudy-detail:880px}
+  .app{max-width:var(--roudy-column)}
+  #pane-setlists,#pane-medley{max-width:var(--roudy-column)}
+  .detail-view,.song-player-expanded,.event-chat-view{max-width:var(--roudy-detail)}
+  .modal{max-width:680px}
+  #view-main .music-title{font-size:16px}
+  #view-main .music-sub{font-size:12.5px}
+}

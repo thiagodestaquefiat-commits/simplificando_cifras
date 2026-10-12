@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const values=new Map(),spoken=[],voice={voiceURI:'test-voice',name:'Voz de teste',lang:'pt-BR'};
+const window={document:{documentElement:{lang:'pt-BR'},getElementById:()=>null},localStorage:{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},speechSynthesis:{cancel(){},getVoices:()=>[voice],speak:u=>spoken.push(u)}};
+vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../js/assistant-voice.js'),'utf8'),{window});
+const api=window.assistantVoice;
+values.set('sc_assistant_voice_v1',JSON.stringify({enabled:true,voiceURI:voice.voiceURI}));
+const prepared=api.createUtterance('Olá, Roudy');
+assert.equal(prepared.text,'Olá, Rôudi');assert.equal(prepared.voice,voice);assert.equal(prepared.lang,'pt-BR');
+assert.equal(spoken.length,0,'preparação permite registrar callbacks antes de falar');
+api.speak('Roudy');assert.equal(spoken.length,1);
+api.toggle(false);assert.equal(api.createUtterance('pergunta'),undefined);api.speak('silêncio');assert.equal(spoken.length,1);
+api.toggle(true);assert.ok(api.createUtterance('pergunta'));
+delete window.speechSynthesis.getVoices;assert.equal(api.createUtterance('pergunta').lang,'pt-BR');
+console.log('assistant-voice: OK (voz escolhida, pronúncia, preparação, silêncio e fallback)');

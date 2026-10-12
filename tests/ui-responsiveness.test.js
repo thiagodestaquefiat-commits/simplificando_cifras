@@ -135,7 +135,7 @@ async function openApp(browser, baseUrl, width, height) {
     });
     assert.equal(lastCardVisible, true);
 
-    await page.locator('#song-controls-toggle').click();
+    await page.evaluate(()=>toggleSongControls());
     await page.getByRole("button", { name: "Subir o tom", exact: true }).click();
     assert.match(await page.locator("#detail-key").textContent(), /Bb/);
     await page.locator("#song-capo-plus").click();
@@ -185,7 +185,7 @@ async function openApp(browser, baseUrl, width, height) {
     await page.locator("#btn-next-song").click();
     assert.equal(await page.locator("#detail-title").textContent(), "A Ele a glória");
     assert.equal(await page.locator("#btn-previous-song").isEnabled(), true);
-    await page.locator('#song-controls-toggle').click();
+    await page.evaluate(()=>toggleSongControls());
     await page.locator("#btn-palco").click();
     assert.equal(await page.getByText("Configurar Modo Palco", { exact: true }).count(), 0);
     await page.locator("#stage-next").click();

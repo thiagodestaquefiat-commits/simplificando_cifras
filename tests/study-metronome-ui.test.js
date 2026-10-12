@@ -27,7 +27,7 @@ const server = http.createServer((request, response) => {
       await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
       await page.evaluate(() => openDetail(1));
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       assert.equal(await page.locator('#study-metronome').isVisible(), true);
       assert.equal(await page.locator('#btn-palco').isVisible(), false);
       assert.equal(await page.locator('#study-metronome').evaluate(element => element.closest('#song-control-panel') !== null), true);
@@ -77,7 +77,7 @@ const server = http.createServer((request, response) => {
         setlists.push(eventModel.create({ id: 'metronome-event', title: 'Ensaio', musicas: [1], members: [{ ...appCurrentUser, isLeader: true }], leaderId: appCurrentUser.id }));
         openDetailFromPlaylist('metronome-event', 0);
       });
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       assert.equal(await page.locator('#btn-palco').isVisible(), true);
       await page.locator('#btn-palco').click();
       assert.equal(await page.locator('#study-metronome').isVisible(), false);

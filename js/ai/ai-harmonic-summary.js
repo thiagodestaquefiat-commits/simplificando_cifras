@@ -514,7 +514,7 @@
     header.append(title, closeButton);
     const intro = element("p", "ai-summary-intro", "O resultado será aberto como rascunho editável e nunca será salvo automaticamente.");
     const tabs = element("div", "ai-summary-tabs"); tabs.setAttribute("role", "tablist");
-    [["arquivo", "📁 Arquivo ou imagem"], ["texto", "📝 Texto"]].forEach(([key, label]) => {
+    [["pesquisa", "🔎 Busca por IA"], ["arquivo", "📁 Arquivo ou imagem"], ["texto", "📝 Texto"]].forEach(([key, label]) => {
       const button = element("button", "ai-summary-tab", label); button.type = "button"; button.dataset.aiMode = key; button.setAttribute("role", "tab"); button.addEventListener("click", () => updateMode(key)); tabs.appendChild(button);
     });
     const searchForm = element("div", "ai-summary-form ai-summary-search-form"); searchForm.dataset.aiForm = "pesquisa";
@@ -555,7 +555,7 @@
     panel.appendChild(dialog);
     panel.addEventListener("click", (event) => { if (event.target === panel) close(); });
     document.body.appendChild(panel);
-    const initialMode = options?.mode === "arquivo" ? "arquivo" : "texto";
+    const initialMode = ["arquivo", "texto", "pesquisa"].includes(options?.mode) ? options.mode : "texto";
     updateMode(initialMode);
     if (initialMode === "arquivo" && options?.files?.length) addFiles(options.files);
     if (sourceSong) {

@@ -9,8 +9,8 @@ const document = {documentElement:{lang:"pt-BR"},getElementById(id){if(!elements
 const settings = {language:"pt-BR",theme:"dark",chordColor:"coral",highContrast:false,colorBlind:false,scale:100};
 const context = {
   console,setTimeout,clearTimeout,document,showToast(){},SpeechSynthesisUtterance:null,
-  musicas:[{id:1,title:"A Alegria",artist:"Teste"}],setlists:[{id:"evento-20",title:"Culto",date:"20/10/2026",members:[]}],currentDetailId:null,currentSdId:null,
-  storage:{set(_key,value){Object.assign(settings,value)}},loadAppSettings:()=>({...settings}),applyAppSettings(){},
+  musicas:[{id:1,title:"A Alegria",artist:"Teste"}],setlists:[{id:"evento-20",title:"Culto",date:"20/10/2026",members:[]}],currentDetailId:null,currentSdId:null,currentTab:'musicas',appCurrentUser:{id:'local'},detailEditOwner:'local',detailEditBaseline:{},selectedCapo:0,currentSemitones:0,
+  storage:{set(_key,value){Object.assign(settings,value);return true;}},loadAppSettings:()=>({...settings}),applyAppSettings(value){document.documentElement.lang=value.language;document.documentElement.classList.toggle('a11y-high-contrast',value.highContrast);},
   closeEventChat(){},closeDetail(){calls.push(["closeSong"])},closeModal(){},closeSD(){calls.push(["closeEvent"])},switchTab:tab=>calls.push(["tab",tab]),openDetail:id=>calls.push(["song",id]),openSD:id=>calls.push(["event",id]),
   openTuner:()=>calls.push(["tuner"]),selectTunerInstrument:id=>calls.push(["tunerInstrument",id]),stopTuner(){},toggleTunerMicrophone(){},openToolsMetronome:()=>calls.push(["metronome"]),
   toolsMetronome:{bpm:132,setBpm(bpm){this.bpm=bpm;calls.push(["bpm",bpm])},getBpm(){return this.bpm},setMeter:meter=>calls.push(["meter",meter]),isPlaying:()=>false,toggle(){},stop(){calls.push(["toolsMetronomeStop"])}},studyMetronome:{bpm:72,setBpm(bpm){this.bpm=bpm;calls.push(["songBpm",bpm])},getBpm(){return this.bpm},setMeter:meter=>calls.push(["songMeter",meter]),isPlaying:()=>false,start(){calls.push(["songMetronomeStart"])},stop(){calls.push(["songMetronomeStop"])}},renderMusicas(){},
@@ -21,7 +21,17 @@ const context = {
   abrirAddMedley(){},abrirSalvarMedley(){},limparMedley(){}
 };
 context.findEvent=id=>context.setlists.find(event=>event.id===id);context.window=context;
-for(const script of ['assistant-intent-catalog.js','assistant-intent-client.js','app-assistant.js'])vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,"..","js",script),"utf8"),context);
+const rootClasses=new Set();document.documentElement.classList={contains:key=>rootClasses.has(key),toggle:(key,value)=>value?rootClasses.add(key):rootClasses.delete(key)};
+context.requestAnimationFrame=callback=>callback();context.tunerInstrument='guitar';
+context.selectTunerInstrument=value=>{context.tunerInstrument=value;calls.push(['tunerInstrument',value]);};
+context.closeDetail=()=>{calls.push(['closeSong']);context.currentDetailId=null;document.getElementById('view-detail').style.display='none';};
+context.closeSD=()=>{calls.push(['closeEvent']);context.currentSdId=null;document.getElementById('view-sd').style.display='none';};
+context.openDetail=id=>{calls.push(['song',id]);context.currentDetailId=id;document.getElementById('view-detail').style.display='flex';};
+context.openSD=id=>{calls.push(['event',id]);context.currentSdId=id;document.getElementById('view-sd').style.display='flex';};
+context.switchTab=tab=>{context.currentTab=tab;calls.push(['tab',tab]);};
+for(const controller of [context.studyMetronome,context.toolsMetronome]){controller.meter=null;controller.setMeter=function(value){this.meter=value;calls.push([this===context.studyMetronome?'songMeter':'meter',value]);};controller.getMeter=function(){return this.meter;};}
+context.selectCapo=value=>{context.selectedCapo=value;};context.transpose=value=>{context.currentSemitones+=value;};context.resetTranspose=()=>{context.currentSemitones=0;};
+for(const script of ['assistant-intent-catalog.js','assistant-intent-client.js','assistant-language.js','assistant-actions.js','assistant-action-manager.js','assistant-action-runtime.js','assistant-memory.js','assistant-dialogue.js','assistant-sequences.js','app-assistant.js'])vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,"..","js",script),"utf8"),context);
 
 (async()=>{
   let smartActive=false,tunerActive=false,smartStarts=0,tunerStarts=0;

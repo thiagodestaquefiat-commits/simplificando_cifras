@@ -12,20 +12,23 @@
   function markBroken(uri,on){const set=broken();if(on)set.add(uri);else set.delete(uri);try{global.localStorage.setItem(BROKEN_KEY,JSON.stringify([...set]));}catch(_){}}
   function save(value){try{global.localStorage.setItem(KEY,JSON.stringify(value));}catch(_){}}
   function supported(){return Boolean(global.speechSynthesis&&global.SpeechSynthesisUtterance);}
-  function voices(){return supported()?global.speechSynthesis.getVoices():[];}
+  function voices(){return supported()?global.speechSynthesis.getVoices?.()||[]:[];}
   function appLang(){return global.document.documentElement.lang||'pt-BR';}
   function languageLabel(lang){const [l,r]=String(lang||'').replace('_','-').split('-');const name=LANG_NAMES[(l||'').toLowerCase()]||lang||'Outro idioma';const region=r?REGION_NAMES[r.toUpperCase()]||r.toUpperCase():'';return region?`${name} (${region})`:name;}
   function shortName(voice){if(/^Google\s/i.test(String(voice.name||'')))return 'Google';return String(voice.name||'').replace(/^(Microsoft|Google|Apple)\s+/i,'').replace(/\s+Online\s*\(Natural\)/i,'').replace(/\s*-\s*[^-]*\([^)]*\)\s*$/,'').replace(/\s*\([^)]*\)\s*$/,'').trim()||voice.name;}
   function selected(){const s=load(),list=voices();return list.find(v=>v.voiceURI===s.voiceURI)||null;}
-  function speak(text){
+  function createUtterance(text){
     if(!supported()||!load().enabled)return;
-    global.speechSynthesis.cancel();
     const voice=selected(),lang=String(voice?.lang||appLang()).slice(0,2).toLowerCase();
     // Pronúncia do nome: "Rôu-di" (não "Ráu-di"). Só muda o que é falado, não o texto na tela.
     const spoken=String(text||'').replace(/\bRoudy\b/gi,lang==='en'?'Roady':'Rôudi');
     const utterance=new global.SpeechSynthesisUtterance(spoken);
     if(voice){utterance.voice=voice;utterance.lang=voice.lang;}else utterance.lang=appLang();
-    utterance.rate=1;global.speechSynthesis.speak(utterance);return utterance;
+    utterance.rate=1;return utterance;
+  }
+  function speak(text){
+    const utterance=createUtterance(text);if(!utterance)return;
+    global.speechSynthesis.cancel();global.speechSynthesis.speak(utterance);return utterance;
   }
   function groups(query){
     const q=clean(query).trim(),base=appLang().slice(0,2).toLowerCase(),map=new Map();
@@ -72,5 +75,5 @@
   function toggle(on){const s=load();s.enabled=Boolean(on);save(s);const p=global.document.getElementById('voice-picker');if(p){if(on)p.removeAttribute('data-disabled');else p.setAttribute('data-disabled','true');}if(!on)global.speechSynthesis?.cancel();}
   function summary(){const s=load();if(!s.enabled)return 'Desligada';const v=selected();return v?`${languageLabel(v.lang)} - ${shortName(v)}`:'Voz padrão do aparelho';}
   if(supported()&&'onvoiceschanged' in global.speechSynthesis)global.speechSynthesis.addEventListener('voiceschanged',renderList);
-  global.assistantVoice=Object.freeze({load,speak,open,choose,toggle,renderList,summary,languageLabel,shortName});
+  global.assistantVoice=Object.freeze({load,createUtterance,speak,open,choose,toggle,renderList,summary,languageLabel,shortName});
 })(window);

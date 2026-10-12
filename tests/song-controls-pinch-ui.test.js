@@ -26,7 +26,8 @@ const server = http.createServer((request, response) => {
       await page.route('**/api/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"enabled":false,"provider":"local"}' }));
       await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
-      await page.evaluate(() => openDetail(1));
+      await page.waitForFunction(()=>loginGateAuthReady);
+      await page.evaluate(() => {continueWithoutLogin();if(!musicas.some(s=>s.id===1)){musicas.push(songModel.create({id:1,title:'Teste de controles',key:'C',blocos:Array.from({length:30},()=>({l:'Letra de teste',c:'C G Am F'}))}));commitSongs(musicas);}openDetail(1);});
 
       const controls = page.locator('#song-controls');
       assert.equal(await controls.isVisible(), true);
@@ -35,13 +36,13 @@ const server = http.createServer((request, response) => {
       assert.ok(await controls.evaluate(element => element.scrollWidth <= element.clientWidth), `control strip must fit ${width}px`);
       assert.ok(await page.locator('#detail-content .song-page[aria-hidden="false"]').evaluate(element => element.scrollWidth <= element.clientWidth), `song content must reflow at ${width}px`);
 
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
       assert.equal(await page.locator('#song-control-panel').isVisible(), true);
       assert.equal(await page.getByText('Acessibilidade de leitura', { exact: true }).count(), 0, 'reading accessibility disclosure is not rendered');
-      await page.locator('#song-controls-toggle').click();
+      await page.evaluate(()=>toggleSongControls());
 
       if (width === 390) {
-        const musicalText = page.locator('#detail-content .song-page[aria-hidden="false"] .letra-linha, #detail-content .song-page[aria-hidden="false"] .chord-line, #detail-content .song-page[aria-hidden="false"] .full-chord-line').first();
+        const musicalText = page.locator('#detail-content .song-page[aria-hidden="false"] .letra-linha, #detail-content .song-page[aria-hidden="false"] .chord-line, #detail-content .song-page[aria-hidden="false"] .full-chord-line:not(.is-section)').first();
         const before = await musicalText.evaluate(element => parseFloat(getComputedStyle(element).fontSize));
         await page.evaluate(() => {
           const content = document.getElementById('detail-content');

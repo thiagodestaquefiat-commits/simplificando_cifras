@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=3">
+<link rel="stylesheet" href="css/song-reading.css?v=5">
 <link rel="stylesheet" href="css/topbar-labels.css?v=10">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <link rel="stylesheet" href="css/dark-theme.css?v=9">
@@ -985,6 +985,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=15">
 <link rel="stylesheet" href="js/medley-editor.css?v=28">
+<link rel="stylesheet" href="css/responsive.css?v=1">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -1083,6 +1084,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="detail-title" id="detail-title"></div>
         <div class="detail-capo" id="detail-artist-label"></div>
       </div>
+      <button class="stage-btn stage-btn-palco detail-palco-btn" id="btn-palco" type="button" onclick="toggleStageModeBtn()" hidden>Modo Palco</button>
       <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
     </div>
@@ -1109,6 +1111,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="chord-section-header">
         <button type="button" id="study-panel-toggle" class="study-panel-toggle" onclick="toggleStudyPanel()" aria-label="Recolher painel de acordes" aria-expanded="true" aria-controls="study-panel-content"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
         <span class="chord-section-title">Acordes</span>
+        <button id="inst-btn" type="button" class="chord-instrument-button chord-header-instrument" onclick="openInstModal()" aria-label="Escolher instrumento dos acordes"><span id="inst-label">Violão</span><span class="song-instrument-chevron" aria-hidden="true">›</span></button>
       </div>
       <div id="study-panel-content">
       <div id="chord-strip"></div>
@@ -1128,14 +1131,20 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     </div>
     <section class="song-controls" id="song-controls" aria-label="Controles da música">
       <div class="song-control-strip">
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></div>
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste/Casa</span></div>
+        <button type="button" class="song-control-cell song-control-pick" data-song-picker="key" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher tom"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></button>
+        <button type="button" class="song-control-cell song-control-pick" data-song-picker="capo" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher capotraste"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste<wbr>/Casa</span></button>
         <button type="button" class="song-control-cell song-control-scroll" id="btn-scroll" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem automática"><span class="song-control-value" aria-hidden="true"><svg class="song-play-icon" viewBox="0 0 24 24"><path d="M7.6 4.8Q6 3.9 6 5.8v12.4q0 1.9 1.6 1l10.9-6.1q1.7-1.1 0-2.2L7.6 4.8Z"/></svg><svg class="song-pause-icon" viewBox="0 0 24 24"><rect x="6.5" y="4" width="4.5" height="16" rx="1.35"/><rect x="14.5" y="4" width="4.5" height="16" rx="1.35"/></svg></span><span class="song-control-label">Rolagem</span></button>
         <button type="button" class="song-control-cell song-control-smart" id="btn-smart-scroll" onclick="toggleSmartScroll()" aria-label="Iniciar rolagem inteligente" aria-pressed="false"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 13v-2a7.5 7.5 0 0 1 15 0v2"/><path d="M4.5 12.5h2.2v6H5.6a2 2 0 0 1-2-2v-2a2 2 0 0 1 .9-2ZM19.5 12.5h-2.2v6h1.1a2 2 0 0 0 2-2v-2a2 2 0 0 0-.9-2Z"/></svg></span><span class="song-control-label">Rolagem inteligente</span></button>
-        <div class="song-control-cell song-control-bpm"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></div>
-        <div class="song-control-cell song-control-meter"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></div>
+        <button type="button" class="song-control-cell song-control-bpm song-control-pick" data-song-picker="bpm" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher BPM"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></button>
+        <button type="button" class="song-control-cell song-control-meter song-control-pick" data-song-picker="meter" aria-haspopup="listbox" aria-expanded="false" aria-label="Escolher compasso"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></button>
         <div class="song-control-live-speed" role="group" aria-label="Velocidade da rolagem"><button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button><output class="scroll-speed-value" aria-live="polite">0,50x</output><button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button></div>
         <button type="button" class="song-control-cell song-control-disclosure" id="song-controls-toggle" onclick="toggleSongControls()" aria-expanded="false" aria-controls="song-control-panel" aria-label="Mostrar controles musicais"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 9.5 5 5 5-5"/></svg></span><span class="is-visually-hidden">Controles</span></button>
+      </div>
+      <span class="is-visually-hidden" id="smart-scroll-status" role="status" aria-live="polite">Experimental</span>
+      <div class="song-quick-picker" id="song-quick-picker" hidden>
+        <span class="is-visually-hidden" id="sqp-title"></span>
+        <div class="sqp-wheel-shell"><div class="sqp-wheel" id="sqp-wheel" role="listbox" tabindex="0"></div></div>
+        <button type="button" class="sqp-extra" id="sqp-extra" hidden></button>
       </div>
       <div class="song-control-panel" id="song-control-panel" hidden>
         <span class="song-control-panel-handle" aria-hidden="true"></span>
@@ -1144,8 +1153,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="song-control-row"><span class="song-control-row-label">Rolagem</span><div class="song-scroll-slider-wrap"><input id="song-scroll-speed" class="song-scroll-slider" type="range" min="6" max="120" step="3" value="30" oninput="setSongScrollSpeed(this.value)" aria-label="Velocidade da rolagem"><output class="scroll-speed-value" aria-live="polite">0,50x</output></div></div>
         <div class="song-control-row song-control-row--bpm"><span class="song-control-row-label">Metrônomo</span><div class="song-bpm-picker"><span class="song-bpm-tempo" id="song-bpm-tempo">Adagio</span><div class="song-bpm-ruler"><button type="button" class="song-bpm-step" id="metronome-minus" aria-label="Diminuir BPM">−</button><label class="song-bpm-range-shell"><output class="song-bpm-bubble" id="metronome-bpm" aria-live="polite">72</output><input id="song-bpm-range" class="song-bpm-range" type="range" min="30" max="240" step="1" value="72" aria-label="BPM do metrônomo"></label><button type="button" class="song-bpm-step" id="metronome-plus" aria-label="Aumentar BPM">+</button></div><div class="metronome-bar capo-metronome-row song-bpm-engine" id="study-metronome" role="group" aria-label="BPM do metrônomo"><select id="metronome-meter" class="song-control-meter-select" aria-label="Compasso"><option value="">Desativado</option><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4">4/4</option><option value="5/4">5/4</option><option value="6/8">6/8</option><option value="12/8">12/8</option></select><span class="metronome-beats" aria-label="Metrônomo desativado"><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span></span></div><button type="button" class="song-metronome-toggle" id="song-metronome-toggle" onclick="toggleStudyMetronome()" aria-pressed="false" aria-label="Ativar metrônomo no play geral"><span></span><span></span><span></span></button></div></div>
         <div class="song-control-row song-control-row--meter"><span class="song-control-row-label">Compasso</span><div class="song-meter-wheel-shell"><div class="song-meter-wheel" id="song-meter-wheel" role="radiogroup" aria-label="Compasso do metrônomo" tabindex="0"><button type="button" role="radio" data-meter="2/4" aria-checked="false" onclick="selectStudyMeter('2/4')">2/4</button><button type="button" role="radio" data-meter="3/4" aria-checked="false" onclick="selectStudyMeter('3/4')">3/4</button><button type="button" role="radio" data-meter="4/4" aria-checked="false" onclick="selectStudyMeter('4/4')">4/4</button><button type="button" role="radio" data-meter="5/4" aria-checked="false" onclick="selectStudyMeter('5/4')">5/4</button><button type="button" role="radio" data-meter="6/8" aria-checked="false" onclick="selectStudyMeter('6/8')">6/8</button><button type="button" role="radio" data-meter="12/8" aria-checked="false" onclick="selectStudyMeter('12/8')">12/8</button></div></div></div>
-        <div class="song-control-row song-instrument-row"><span class="song-control-row-label">Instrumento</span><button id="inst-btn" class="chord-instrument-button" onclick="openInstModal()"><span id="inst-label">Violão</span><span class="song-instrument-chevron" aria-hidden="true">›</span></button></div>
-        <button class="stage-btn stage-btn-palco" id="btn-palco" onclick="toggleStageModeBtn()" hidden>Modo Palco</button>
       </div>
     </section>
     <section class="song-review-control" id="song-review-control" aria-label="Estado da preparação" hidden><button type="button" class="song-review-action" id="song-review-action" onclick="confirmCurrentSongPreparation()"></button></section>
@@ -1235,21 +1242,21 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 </div>
 
 <script src="js/storage.js?v=2"></script>
-<script src="js/tablature.js?v=1"></script>
-<script src="js/song-model.js?v=5"></script>
+<script src="js/tablature.js?v=2"></script>
+<script src="js/song-model.js?v=6"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/medley-repository.js?v=2"></script>
-<script src="js/song-repository.js?v=16"></script>
+<script src="js/song-repository.js?v=17"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
-<script src="js/library-sync.js?v=19"></script>
-<script src="js/event-model.js?v=5"></script>
+<script src="js/library-sync.js?v=20"></script>
+<script src="js/event-model.js?v=6"></script>
 <script src="js/context-intelligence.js?v=2"></script>
 <script src="js/event-repository.js?v=9"></script>
 <script src="js/event-chat.js?v=4"></script>
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
 <script src="js/youtube-player.js?v=8"></script>
-<script src="js/youtube-player-ui.js?v=18"></script>
+<script src="js/youtube-player-ui.js?v=20"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1274,9 +1281,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/song-reports.js?v=1"></script>
 <script src="js/app-auth.js?v=15"></script>
 <script src="js/ui-i18n.js?v=14"></script>
-<script src="js/tuner.js?v=3"></script>
-<script src="js/chord-audio.js?v=1"></script>
-<script src="js/smart-scroll.js?v=4"></script>
+<script src="js/tuner.js?v=5"></script>
+<script src="js/chord-audio.js?v=2"></script>
+<script src="js/smart-scroll.js?v=7"></script>
 <script src="js/sync-realtime.js?v=2"></script>
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
@@ -1289,13 +1296,20 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=16"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=19"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=20"></script>
 <script src="js/ai/camera-capture.js?v=3"></script>
 <script src="js/assistant-intent-catalog.js?v=1"></script>
 <script src="js/assistant-intent-client.js?v=1"></script>
-<script src="js/assistant-voice.js?v=3"></script>
-<script src="js/app-assistant.js?v=25"></script>
- <script src="js/event-user-invites.js?v=7"></script>
+<script src="js/assistant-voice.js?v=4"></script>
+<script src="js/assistant-language.js?v=1"></script>
+<script src="js/assistant-actions.js?v=7"></script>
+<script src="js/assistant-action-manager.js?v=5"></script>
+<script src="js/assistant-action-runtime.js?v=6"></script>
+<script src="js/assistant-memory.js?v=2"></script>
+<script src="js/assistant-dialogue.js?v=4"></script>
+<script src="js/assistant-sequences.js?v=2"></script>
+<script src="js/app-assistant.js?v=30"></script>
+ <script src="js/event-user-invites.js?v=8"></script>
  <script src="js/event-qr-scanner.js?v=1"></script>
  <script src="js/vendor/qrcode.min.js?v=1"></script>
  <script src="js/vendor/jsqr.min.js?v=1"></script>
@@ -1340,6 +1354,11 @@ function shiftText(text,s){
 }
 
 // ── SAVE / LOAD ───────────────────────────────────────────────────────
+// Restaurado (sumiu do main em 12/10, mas ainda é usado na exclusão, no autosave e no editor).
+function commitSongs(next){
+  if(!songRepository.save(next)){showToast('⚠️ Não foi possível salvar a biblioteca neste dispositivo. Suas alterações não foram confirmadas.');return false;}
+  musicas=next;librarySync.schedule();return true;
+}
 function salvar(){
   const musicasSalvas=songRepository.save(musicas);
   const setlistsSalvas=eventRepository.save(setlists);
@@ -1354,26 +1373,32 @@ function showToast(msg){
 // ── STATE ─────────────────────────────────────────────────────────────
 let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=1, currentLocationAutocomplete=null, tablatureFontSize=13;
 let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
+let detailEventContext=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
 function detailEditableState(){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
   return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
 }
-// Alterações na tela da música (tom, capo, BPM, instrumento, vídeo...) são salvas sozinhas.
+// Alterações na tela da música (tom, capo, BPM, instrumento, vídeo...) são salvas sozinhas,
+// inclusive na cópia da música dentro de um evento. Sem botão "Salvar alterações".
 var detailAutoSaveTimer=0;
 function detailHasUnsavedChanges(){return Boolean(detailEditBaseline)&&JSON.stringify(detailEditableState())!==JSON.stringify(detailEditBaseline);}
 function updateDetailSaveButton(){
   clearTimeout(detailAutoSaveTimer);
-  if(detailHasUnsavedChanges())detailAutoSaveTimer=setTimeout(()=>saveDetailChanges({quiet:true}),600);
+  const button=document.getElementById('detail-save-changes');if(button)button.hidden=true;
+  if(detailHasUnsavedChanges())detailAutoSaveTimer=setTimeout(()=>{saveDetailChanges({quiet:true}).catch?.(()=>{});},600);
 }
-function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);if(detailHasUnsavedChanges())saveDetailChanges({quiet:true});}
+function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);if(detailHasUnsavedChanges()){const result=saveDetailChanges({quiet:true});result?.catch?.(()=>{});}}
 window.addEventListener('pagehide',flushDetailAutoSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushDetailAutoSave();});
-function saveDetailChanges(options={}){
-  if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return;
-  const source=musicas.find(item=>String(item.id)===String(currentDetailId));if(!source)return;
+async function saveDetailChanges(options={}){
+  if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return {ok:false};
+  if(detailEventContext){const context={...detailEventContext},state=detailEditableState(),song=currentDetailSongOverride;
+    return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},state),options):{ok:false};}
+  const source=musicas.find(item=>String(item.id)===String(currentDetailId));if(!source)return {ok:false};
   const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
-  if(!commitSongs(result.songs))return;
-  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));renderMusicas();if(!options.quiet)showToast('✅ Alterações da música salvas');
+  if(!commitSongs(result.songs))return {ok:false};
+  currentDetailSongOverride=null;detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();renderMusicas();if(!options.quiet&&!options.silent)showToast('✅ Alterações da música salvas');
+  return {ok:true,scope:'playlist-personal'};
 }
 function stageDetailVideoSongs(songs){
   if(detailEditBaseline){
@@ -1429,6 +1454,94 @@ function updateSongControls(){
   document.querySelectorAll('.song-meter-wheel [data-meter]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.meter===activeMeter)));
   const toggle=document.getElementById('song-metronome-toggle');toggle.classList.toggle('is-active',Boolean(activeMeter));toggle.setAttribute('aria-pressed',String(Boolean(activeMeter)));toggle.setAttribute('aria-label',activeMeter?'Desativar metrônomo no play geral':'Ativar metrônomo no play geral');
 }
+// ── SELETOR RÁPIDO NA BARRA DA MÚSICA ─────────────────────────────────
+// Tocar em Tom, Capo, BPM ou Compasso abre uma coluna rolável logo abaixo da barra.
+// Valores maiores ficam em cima: arrastar para cima aumenta, para baixo diminui.
+// Segurar "Rolagem" abre a velocidade da rolagem. Tudo salva sozinho (autosave da tela).
+const SQP_ROW=44;
+function sqpRange(from,to,step=1){const out=[];for(let v=from;from>=to?v>=to:v<=to;v+=from>=to?-step:step)out.push(v);return out;}
+function sqpBaseKey(){const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));return song?songFormat.harmonicSummary(song).currentKey:'';}
+const SONG_PICKERS={
+  key:{title:'Tom',values:()=>sqpRange(11,-11),current:()=>currentSemitones,label:v=>shiftText(sqpBaseKey(),v)||'—',sub:v=>v===0?'':(v>0?'+':'−')+Math.abs(v),apply:v=>{if(v!==currentSemitones)transpose(v-currentSemitones);updateSongControls();}},
+  capo:{title:'Capotraste/Casa',values:()=>sqpRange(12,0),current:()=>selectedCapo,label:v=>v?String(v):'Sem',sub:()=>'',apply:v=>{if(v!==selectedCapo)selectCapo(v);}},
+  bpm:{title:'BPM',values:()=>sqpRange(240,30),current:()=>studyMetronome.getBpm(),label:v=>String(v),sub:()=>'',apply:v=>{if(v!==studyMetronome.getBpm()){studyMetronome.setBpm(v);updateSongControls();}},extra:'metronome'},
+  meter:{title:'Compasso',values:()=>['12/8','6/8','5/4','4/4','3/4','2/4'],current:()=>studyMetronome.getMeter()||preferredStudyMeter,label:v=>v,sub:()=>'',apply:v=>{if(v!==studyMetronome.getMeter())selectStudyMeter(v,false);}},
+  speed:{title:'Velocidade da rolagem',values:()=>sqpRange(120,6,3),current:()=>scrollSpeed,label:v=>stagePreferences.formatScrollSpeed(v),sub:()=>'',apply:v=>{if(v!==scrollSpeed)applySongScrollSpeedValue(v);}}
+};
+let songQuickPicker=null,sqpSettleTimer=0;
+function applySongScrollSpeedValue(value){
+  scrollSpeed=stagePreferences.normalizeScrollSpeed(Number(value));
+  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
+  updateScrollSpeedControls();updateDetailSaveButton();
+}
+function sqpTrigger(type){return type==='speed'?document.getElementById('btn-scroll'):document.querySelector(`[data-song-picker="${type}"]`);}
+function renderSqpExtra(){
+  const extra=document.getElementById('sqp-extra');if(!extra||!songQuickPicker)return;
+  const config=SONG_PICKERS[songQuickPicker.type];extra.hidden=config.extra!=='metronome';if(extra.hidden)return;
+  const on=Boolean(studyMetronome.getMeter());extra.textContent=on?'♩ ligado':'♩ desligado';extra.setAttribute('aria-label',on?'Desligar metrônomo':'Ligar metrônomo');extra.classList.toggle('is-on',on);extra.setAttribute('aria-pressed',String(on));
+}
+function openSongQuickPicker(type){
+  const config=SONG_PICKERS[type],picker=document.getElementById('song-quick-picker'),wheel=document.getElementById('sqp-wheel');if(!config||!picker||!wheel)return;
+  if(songQuickPicker?.type===type){closeSongQuickPicker();return;}
+  closeSongQuickPicker();
+  const values=config.values(),current=config.current();let index=values.findIndex(v=>v===current);if(index<0)index=type==='speed'?values.reduce((best,v,i)=>Math.abs(v-current)<Math.abs(values[best]-current)?i:best,0):0;
+  songQuickPicker={type,values,index};
+  document.getElementById('sqp-title').textContent=config.title;
+  wheel.setAttribute('aria-label',config.title);
+  const fragment=document.createDocumentFragment();
+  values.forEach((value,i)=>{const row=document.createElement('div');row.className='sqp-row';row.setAttribute('role','option');row.dataset.index=String(i);const main=document.createElement('strong');main.textContent=config.label(value);row.appendChild(main);const sub=config.sub(value);if(sub){const small=document.createElement('small');small.textContent=sub;row.appendChild(small);}fragment.appendChild(row);});
+  wheel.replaceChildren(fragment);
+  picker.hidden=false;picker.dataset.picker=type;
+  const trigger=sqpTrigger(type);trigger?.setAttribute('aria-expanded','true');trigger?.classList.add('is-picking');
+  wheel.scrollTop=index*SQP_ROW;sqpMarkSelected(index);renderSqpExtra();
+  sqpPlaceUnder(trigger);
+  requestAnimationFrame(()=>wheel.focus({preventScroll:true}));
+}
+// Coluna estreita, centralizada embaixo do botão tocado (sem passar da borda da tela).
+function sqpPlaceUnder(trigger){
+  const picker=document.getElementById('song-quick-picker'),parent=picker?.offsetParent||picker?.parentElement;if(!picker||!trigger||!parent)return;
+  picker.style.marginLeft='0px';const box=parent.getBoundingClientRect(),cell=trigger.getBoundingClientRect(),width=picker.offsetWidth;
+  const left=Math.max(8,Math.min(box.width-width-8,cell.left-box.left+cell.width/2-width/2));picker.style.marginLeft=left+'px';
+}
+function sqpMarkSelected(index){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  wheel.querySelector('.sqp-row.is-selected')?.classList.remove('is-selected');
+  const row=wheel.children[index];if(row){row.classList.add('is-selected');row.setAttribute('aria-selected','true');wheel.setAttribute('aria-activedescendant','');}
+}
+function sqpSettle(){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  const {values,type}=songQuickPicker,index=Math.max(0,Math.min(values.length-1,Math.round(wheel.scrollTop/SQP_ROW)));
+  songQuickPicker.index=index;sqpMarkSelected(index);SONG_PICKERS[type].apply(values[index]);renderSqpExtra();
+}
+function sqpGoTo(index,smooth=true){
+  const wheel=document.getElementById('sqp-wheel');if(!wheel||!songQuickPicker)return;
+  index=Math.max(0,Math.min(songQuickPicker.values.length-1,index));
+  wheel.scrollTo({top:index*SQP_ROW,behavior:smooth?'smooth':'auto'});
+  clearTimeout(sqpSettleTimer);sqpSettleTimer=setTimeout(sqpSettle,smooth?260:0);
+}
+function closeSongQuickPicker(){
+  const picker=document.getElementById('song-quick-picker');if(!songQuickPicker&&(!picker||picker.hidden))return;
+  clearTimeout(sqpSettleTimer);if(songQuickPicker)sqpSettle();
+  const trigger=songQuickPicker&&sqpTrigger(songQuickPicker.type);trigger?.setAttribute('aria-expanded','false');trigger?.classList.remove('is-picking');
+  songQuickPicker=null;if(picker){picker.hidden=true;delete picker.dataset.picker;}
+}
+(function initSongQuickPicker(){
+  const wheel=document.getElementById('sqp-wheel'),picker=document.getElementById('song-quick-picker');if(!wheel||!picker)return;
+  document.querySelectorAll('[data-song-picker]').forEach(button=>button.addEventListener('click',()=>openSongQuickPicker(button.dataset.songPicker)));
+  wheel.addEventListener('scroll',()=>{clearTimeout(sqpSettleTimer);sqpSettleTimer=setTimeout(sqpSettle,140);},{passive:true});
+  wheel.addEventListener('click',event=>{const row=event.target.closest('.sqp-row');if(row)sqpGoTo(Number(row.dataset.index));});
+  wheel.addEventListener('keydown',event=>{if(!songQuickPicker)return;if(event.key==='ArrowUp'){event.preventDefault();sqpGoTo(songQuickPicker.index-1);}else if(event.key==='ArrowDown'){event.preventDefault();sqpGoTo(songQuickPicker.index+1);}else if(event.key==='Escape'||event.key==='Enter'){event.preventDefault();const trigger=sqpTrigger(songQuickPicker.type);closeSongQuickPicker();trigger?.focus();}});
+  document.getElementById('sqp-extra').addEventListener('click',()=>{toggleStudyMetronome();renderSqpExtra();});
+  document.addEventListener('pointerdown',event=>{if(!songQuickPicker)return;if(picker.contains(event.target)||event.target.closest('[data-song-picker]')||event.target.closest('#btn-scroll'))return;closeSongQuickPicker();},true);
+  // Segurar "Rolagem" (meio segundo) abre a velocidade; um toque normal continua iniciando/pausando.
+  const scrollButton=document.getElementById('btn-scroll');let holdTimer=0,held=false;
+  const cancelHold=()=>clearTimeout(holdTimer);
+  scrollButton.addEventListener('pointerdown',()=>{held=false;cancelHold();holdTimer=setTimeout(()=>{held=true;openSongQuickPicker('speed');},450);});
+  ['pointerup','pointerleave','pointercancel'].forEach(name=>scrollButton.addEventListener(name,cancelHold));
+  scrollButton.addEventListener('contextmenu',event=>event.preventDefault());
+  scrollButton.addEventListener('click',event=>{if(held){held=false;event.preventDefault();event.stopImmediatePropagation();}},true);
+})();
 function tempoNameForBpm(bpm){if(bpm<40)return'Grave';if(bpm<60)return'Largo';if(bpm<76)return'Adagio';if(bpm<108)return'Andante';if(bpm<120)return'Moderato';if(bpm<168)return'Allegro';if(bpm<200)return'Presto';return'Prestissimo'}
 const songBpmRange=document.getElementById('song-bpm-range');songBpmRange.addEventListener('input',()=>{studyMetronome.setBpm(Number(songBpmRange.value));updateSongControls()});songBpmRange.addEventListener('change',updateSongControls);
 const songBpmRangeShell=songBpmRange.closest('.song-bpm-range-shell');let songBpmDrag=null;
@@ -1445,7 +1558,7 @@ function settleStudyMeterWheel(){const wheel=document.getElementById('song-meter
 const songMeterWheel=document.getElementById('song-meter-wheel');songMeterWheel.addEventListener('scroll',()=>{if(!meterWheelFrame)meterWheelFrame=requestAnimationFrame(()=>{meterWheelFrame=null;updateStudyMeterWheelDepth()});clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,140)},{passive:true});songMeterWheel.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...songMeterWheel.querySelectorAll('[data-meter]')],current=Math.max(0,buttons.findIndex(button=>button.dataset.meter===preferredStudyMeter)),next=Math.max(0,Math.min(buttons.length-1,current+(event.key==='ArrowRight'?1:-1)));selectStudyMeter(buttons[next].dataset.meter)});
 let songMeterDrag=null,suppressSongMeterClick=false;songMeterWheel.addEventListener('pointerdown',event=>{if(event.button!==0)return;songMeterDrag={id:event.pointerId,x:event.clientX,left:songMeterWheel.scrollLeft,moved:false};songMeterWheel.setPointerCapture?.(event.pointerId);songMeterWheel.classList.add('is-dragging')});songMeterWheel.addEventListener('pointermove',event=>{if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const delta=event.clientX-songMeterDrag.x;if(Math.abs(delta)>3)songMeterDrag.moved=true;songMeterWheel.scrollLeft=songMeterDrag.left-delta;if(songMeterDrag.moved)event.preventDefault()});function finishSongMeterDrag(event){if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const moved=songMeterDrag.moved;songMeterDrag=null;songMeterWheel.classList.remove('is-dragging');songMeterWheel.releasePointerCapture?.(event.pointerId);if(moved){suppressSongMeterClick=true;setTimeout(()=>{suppressSongMeterClick=false},0);event.preventDefault();clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,80)}}songMeterWheel.addEventListener('pointerup',finishSongMeterDrag);songMeterWheel.addEventListener('pointercancel',finishSongMeterDrag);songMeterWheel.addEventListener('click',event=>{if(!suppressSongMeterClick)return;event.preventDefault();event.stopPropagation()},true);
 function setSongScrolling(active){
-  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active)toggleSongControls(false);controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
+  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
 }
 const songScrollPlayButton=document.getElementById('btn-scroll');
 function showSongScrollPressedState(){songScrollPlayButton.classList.remove('is-pressed');void songScrollPlayButton.offsetWidth;songScrollPlayButton.classList.add('is-pressed')}
@@ -1882,7 +1995,7 @@ function setInstrument(inst){
   const capoSelector=document.getElementById('capo-selector-group');
   if(capoSelector) capoSelector.style.display='grid';
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
-  if(m) renderChordStrip(m);
+  if(m){stopSmartScroll();renderChordStrip(m);renderDetail();}
   updateSongControls();
 }
 
@@ -2110,6 +2223,16 @@ function saveInlineFullEdit(songId,button){
   window.addEventListener('resize',()=>requestAnimationFrame(syncSongPageHeight),{passive:true});
 })();
 
+function renderSmartChordTokens(chordLine){
+  return String(chordLine||'').split(/(\s+)/).map(token=>/^\s+$/.test(token)?token:`<span class="smart-chord-token" data-smart-chord-token="${eventEsc(token)}">${eventEsc(token)}</span>`).join('');
+}
+
+function renderSmartFullChordLine(chordLine){
+  const normalized=String(chordLine||'').split(/\s+/).filter(Boolean).join(' ');
+  const repeat=smartScroll.repeatCount(chordLine);
+  return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${repeat}" data-smart-chords="${eventEsc(normalized)}"><div class="full-chord-line is-chord">${renderSmartChordTokens(chordLine)}</div></div>`;
+}
+
 function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
   if(!sheet?.content) return '';
   if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
@@ -2123,7 +2246,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
           const position=Math.max(chordLine.length,Number(item.posicao)||0);
           chordLine+=' '.repeat(position-chordLine.length)+chord;
         });
-        const chords=chordLine&&contentMode!=='lyrics'?`<div class="full-chord-line is-chord">${eventEsc(chordLine)}</div>`:'';
+        const chords=chordLine&&contentMode!=='lyrics'?renderSmartFullChordLine(chordLine):'';
         const lyric=line.letra&&contentMode!=='chords'?renderMusicalText(line.letra,totalShift,true):'';
         return chords+lyric;
       }).join('');
@@ -2134,7 +2257,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
   const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
     const text=raw.trimEnd();
     if(!text) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
-    if(isChordLine(text)) return contentMode==='lyrics'?'':`<div class="full-chord-line is-chord">${eventEsc(shiftText(text,totalShift))}</div>`;
+    if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
     const section=/^\s*(?:\[.*\]|intro|introdução|verso(?:\s+\d+)?|pré-refrão|refrão|ponte|solo|interlúdio|final|outro)\s*:?\s*$/i.test(text);
     if(contentMode==='chords'&&!section)return '';
     return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(text)}</div>`;
@@ -2142,14 +2265,21 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
   return `<div class="full-chord-private">Privada · conteúdo fornecido por você</div><article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
 }
 
+function renderTablature(value){
+  const tab=window.tablature.normalize(value);if(!tab)return '';
+  const instrumentLabels={guitar:'Violão / Guitarra',bass:'Contrabaixo',ukulele:'Ukulele',violin:'Violino',other:'Outro'};
+  const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3>${section.tuning?`<p class="tablature-note">Afinação: ${eventEsc(section.tuning)}</p>`:''}<div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
+  return `<div class="tablature-view" style="--tablature-font-size:${tablatureFontSize}px"><div class="tablature-toolbar"><strong>${eventEsc(instrumentLabels[tab.instrument]||instrumentLabels.other)}</strong><span>Afinação: ${eventEsc(tab.tuning)}</span><span>Capotraste: ${tab.capo||'Sem'}</span><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(-1)" aria-label="Diminuir tablatura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(1)" aria-label="Aumentar tablatura">A+</button></div><p class="tablature-note">A tablatura é exibida exatamente como foi cadastrada e não é alterada ao transpor o tom.</p>${sections}</div>`;
+}
+function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
 function setSongView(view){
-  currentSongView=view==='full'?'full':'summary';
-  if(!stageMode)setSongPage(view==='full'?1:0,{source:'legacy'});
+  currentSongView=view==='tablature'&&SONG_LAST_PAGE===3?'tablature':view==='full'?'full':'summary';
+  if(!stageMode)setSongPage(currentSongView==='tablature'?3:view==='full'?1:0,{source:'legacy'});
   else renderDetail();
 }
 
 const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra'];
-const SONG_LAST_PAGE=SONG_PAGE_LABELS.length-1;
+let SONG_LAST_PAGE=SONG_PAGE_LABELS.length-1;
 function songPageStorageKey(songId=currentDetailId){return `sc_song_content_view_v1:${appCurrentUser?.id||'local'}:${String(songId??'')}`}
 function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=SONG_LAST_PAGE?saved:1}
 function updateSongPageIndicator(options={}){
@@ -2188,7 +2318,8 @@ function restoreSongPosition(anchor,page){
 }
 function setSongPage(index,options={}){
   const next=Math.max(0,Math.min(SONG_LAST_PAGE,Number(index)||0));
-  currentSongView=next===0?'summary':'full';
+  if(next!==currentSongPage)stopSmartScroll();
+  currentSongView=next===3?'tablature':next===0?'summary':'full';
   const track=document.querySelector('#detail-content .song-page-track');
   if(!track){currentSongPage=next;if(options.persist!==false&&currentDetailId!=null)storage.set(songPageStorageKey(),currentSongPage);updateSongPageIndicator(options);return;}
   const anchor=songPositionAnchor(currentSongPageElement());
@@ -2208,10 +2339,12 @@ function renderSummaryProjection(summary,totalShift,songId,contentMode='combined
     const corpo=section.lines.map(line=>{
       const chords=line.chords.length?songFormat.renderChordLine(line.chords):'';
       const repeat=line.repeticoes?` (${line.repeticoes}x)`:'';
-      const chordHtml=chords&&contentMode!=='lyrics'?`<div class="chord-line">${eventEsc(shiftText(chords,totalShift))}${repeat}</div>`:'';
+      const chordHtml=chords&&contentMode!=='lyrics'?`<div class="chord-line">${renderSmartChordTokens(shiftText(chords,totalShift))}${repeat}</div>`:'';
       const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
       const lyricHtml=lyricText&&contentMode!=='chords'?renderMusicalText(lyricText,totalShift):'';
-      return chordHtml+lyricHtml;
+      if(contentMode==='lyrics')return lyricHtml;
+      const smartRepeat=line.repeticoes||smartScroll.repeatCount(line.lyrics,0)||(section.lines.length===1?smartScroll.repeatCount(section.label,0):0)||1;
+      return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${smartRepeat}" data-smart-chords="${eventEsc(shiftText(chords,totalShift))}">${chordHtml+lyricHtml}</div>`;
     }).join('');
     const labelHtml=section.showLabel&&section.label?`<div class="full-chord-line is-section">${eventEsc(section.label)}</div>`:'';
     const stageLabel=section.label||`Trecho ${sectionIndex+1}`;
@@ -2230,7 +2363,12 @@ function renderStageStructure(summary,totalShift){
 }
 
 function renderDetail(){
-  const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId); if(!m) return;
+  const source=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);if(!source)return;
+  const m=tablature.prepareSong(source),visibleTablature=tablature.compatible(m.tablature,currentInstrument);
+  SONG_LAST_PAGE=visibleTablature?3:2;SONG_PAGE_LABELS.splice(3,1,...(visibleTablature?['Tablaturas']:[]));
+  if(currentSongPage>SONG_LAST_PAGE){currentSongPage=1;currentSongView='full';}
+  const indicator=document.getElementById('song-page-indicator');indicator.querySelector('[data-song-page="3"]')?.remove();
+  if(visibleTablature)indicator.insertAdjacentHTML('beforeend',`<button class="song-page-dot" type="button" data-song-page="3" onclick="setSongView('tablature')" aria-label="Tablaturas"></button>`);
   updateScrollSpeedControls();
   document.getElementById('stage-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
@@ -2257,16 +2395,18 @@ function renderDetail(){
   const summaryHtml=renderSummaryProjection(summary,totalShift,m.id,'combined');
   // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
   const completeHtml=hasFull?'':`<div class="complete-sheet-notice"><p>Esta música só tem o resumo harmônico.</p><button class="btn btn-primary" id="complete-sheet-button" type="button" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button></div>`;
-  const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'combined'):completeHtml+summaryHtml;
+  const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,m.view==='chords'?'chords':'combined'):completeHtml+summaryHtml;
   const lyricsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'lyrics'):renderSummaryProjection(summary,totalShift,m.id,'lyrics');
   const stageHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
-    :currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
+    :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
-  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...(visibleTablature?[renderTablature(visibleTablature)]:[])].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
   updateSongPageIndicator({announce:false});
   if(!stageMode)requestAnimationFrame(syncSongPageHeight);
+  if(smartScrollController.isActive())smartScrollController.sync();
   updateSongControls();
   updateDetailSaveButton();
   if(stageMode)updateStagePresentation();
@@ -2287,7 +2427,7 @@ function updatePlaylistNavigation(){
 }
 
 function openDetail(id,options={}){
-  flushDetailAutoSave();
+  flushDetailAutoSave();detailEventContext=null;
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
   } else if(!options.preserveNavigation){
@@ -2295,21 +2435,24 @@ function openDetail(id,options={}){
   }
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0;
-  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!baseSong) return;
+  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride; if(!baseSong) return;
   storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,openedAt:new Date().toISOString()});
   renderContextualHomeCard();
   let contextualSong=options.songOverride||null;
-  if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
+  if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
+  const activeContext=navigationContext.get(),activeEvent=activeContext&&findEvent(activeContext.playlistId);
+  if(contextualSong&&activeEvent){const item=activeEvent.repertoire.filter(value=>eventSongSource(activeEvent,value))[activeContext.currentIndex];if(item)detailEventContext={eventId:activeEvent.id,itemId:item.id,ownerId:appCurrentUser.id};}
+  detailEditBaseline={};
   document.getElementById('study-metronome').hidden=false;
-  studyMetronome.setSong(m.id,appCurrentUser.id);
+  studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
   loadSongTextScale();
   const context=navigationContext.get();
   document.getElementById('btn-palco').hidden=!(context&&findEvent(context.playlistId));
   if(!stageMode){
     currentSongPage=loadSongPage(nid);
-    const eventViewPage={summary:0,combined:1,lyrics:2,chords:3}[contextualSong?.view];
+    const eventViewPage={summary:0,combined:1,lyrics:2,chords:1}[contextualSong?.view];
     if(Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
     currentSongView=currentSongPage===0?'summary':'full';
   }
@@ -2322,7 +2465,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  if(!contextualSong){const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -2338,13 +2481,13 @@ function openDetail(id,options={}){
   document.getElementById('event-chat-fab').hidden=true;
   vd.style.display='flex'; vd.style.zIndex='20';
   if(stageMode)youtubePlayerUI.hide();else youtubePlayerUI.showSong(m);
-  toggleSongControls(false);setSongScrolling(false);renderSongReviewControl();maybeShowSongScaleHint();
+  toggleSongControls(false);closeSongQuickPicker();setSongScrolling(false);renderSongReviewControl();maybeShowSongScaleHint();
 }
 
 function openDetailFromPlaylist(playlistId,index){
   const playlist=setlists.find(item=>String(item.id)===String(playlistId));
   if(!playlist) return;
-  const availableItems=playlist.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=playlist.repertoire.filter(item=>eventSongSource(playlist,item));
   const orderedIds=availableItems.map(item=>item.songId),item=availableItems[index];
   const songId=item&&item.songId;
   if(songId===undefined) return;
@@ -2352,7 +2495,7 @@ function openDetailFromPlaylist(playlistId,index){
 }
 function currentSongReviewContext(){
   const context=navigationContext.get(),event=context&&findEvent(context.playlistId);if(!context||!event)return null;
-  const items=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId))),item=items[context.currentIndex];
+  const items=event.repertoire.filter(item=>eventSongSource(event,item)),item=items[context.currentIndex];
   return item?{event,item}:null;
 }
 function renderSongReviewControl(){
@@ -2383,7 +2526,7 @@ function openDetailFromEventItem(eventId,itemId){
   openDetailFromPlaylist(event.id,index);
 }
 function openStageFromEvent(eventId){
-  const event=findEvent(eventId),hasSongs=event&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const event=findEvent(eventId),hasSongs=event&&event.repertoire.some(item=>eventSongSource(event,item));
   if(!event||!hasSongs){showToast('Adicione uma música ao repertório antes de abrir o Modo Palco');return;}
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
@@ -2453,12 +2596,13 @@ function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode()
 
 function closeDetail(){
   flushDetailAutoSave();
-  stopSmartScroll();
-  detailEditBaseline=null;detailEditOwner=null;
+  stopSmartScroll();closeSongQuickPicker();flushDetailAutoSave();
+  detailEditBaseline=null;detailEditOwner=null;detailEventContext=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');vd.style.display='none';vd.style.zIndex='10';
+  window.roudyAssistant?.updateLaunchVisibility();
   document.getElementById('event-chat-fab').hidden=document.getElementById('view-sd').style.display!=='flex';
 }
 
@@ -2504,19 +2648,20 @@ function closeStageQuickPanel(event){if(event&&event.target!==event.currentTarge
 function navigateStageTo(index){const target=navigationContext.select(index);if(!target)return;closeStageQuickPanel();openDetail(target.songId,{preserveNavigation:true});}
 
 // ── AUTO-SCROLL ───────────────────────────────────────────────────────
-const smartScrollController=window.smartScroll.create({stableMs:250,cooldownMs:180,getPitchShift:()=>selectedCapo});
+const smartScrollController=window.smartScroll.create({stableMs:120,cooldownMs:80,dropoutMs:40,rearmSilenceMs:100,getPitchShift:()=>selectedCapo});
 function updateSmartScrollUI(state={active:false}){
   const button=document.getElementById('btn-smart-scroll'),status=document.getElementById('smart-scroll-status');
   if(button){button.classList.toggle('active',Boolean(state.active));button.setAttribute('aria-pressed',String(Boolean(state.active)));button.setAttribute('aria-label',state.active?'Parar rolagem inteligente':'Iniciar rolagem inteligente');}
   document.querySelectorAll('.smart-scroll-line.smart-scroll-current').forEach(line=>line.classList.remove('smart-scroll-current'));
   document.querySelectorAll('.smart-chord-token.smart-chord-current').forEach(chord=>chord.classList.remove('smart-chord-current'));
   if(state.result?.advanced&&state.result.matched?.chordElement)state.result.matched.chordElement.classList.add('smart-chord-played');
+  if(state.result?.advanced&&state.current&&state.result.matched?.blockIndex===state.current.blockIndex&&state.result.matched?.repetition!==state.current.repetition)state.current.element?.querySelectorAll('.smart-chord-token').forEach(chord=>chord.classList.remove('smart-chord-played','smart-chord-current'));
   if(state.current?.element)state.current.element.classList.add('smart-scroll-current');
   if(state.current?.chordElement)state.current.chordElement.classList.add('smart-chord-current');
   if(!status)return;
   if(state.completed){status.textContent='Cifra concluída';return;}
   if(!state.active){status.textContent='Experimental';return;}
-  status.textContent=state.current?`Próximo: ${state.current.chord} · ${state.index+1}/${state.total}`:'Cifra concluída';
+  status.textContent=state.current?`Próximo: ${state.current.chord} · ${state.current.repeats>1?'Volta '+state.current.repetition+'/'+state.current.repeats+' · ':''}${state.index+1}/${state.total}`:'Cifra concluída';
 }
 function stopSmartScroll(){smartScrollController.stop();document.querySelectorAll('.smart-chord-token').forEach(chord=>chord.classList.remove('smart-chord-played','smart-chord-current'));updateSmartScrollUI();}
 async function toggleSmartScroll(){
@@ -2925,7 +3070,8 @@ musicList.addEventListener('pointerup',finishSongSwipe);musicList.addEventListen
 let completingSongId=null;
 function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 async function completeSongSheet(id){
-  const song=musicas.find(item=>String(item.id)===String(id));
+  const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
+  const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
   if(!song||completingSongId)return;
   const ownerAtStart=songRepository.getActiveOwnerId();
   const button=document.getElementById('complete-sheet-button');
@@ -2940,9 +3086,11 @@ async function completeSongSheet(id){
       if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
-    const current=musicas.find(item=>String(item.id)===String(song.id));
+    if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
+    const current=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    if(eventContext){await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;}
     const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
     if(!commitSongs(updated.songs))return;
     renderMusicas();openDetail(updated.song.id);
@@ -2959,6 +3107,7 @@ async function completeSongSheet(id){
 }
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
+  if(detailEventContext&&String(currentDetailId)===String(id)){const song=currentDetailSongOverride;if(song)openSimpleSongEditor(songFormat.fromLegacy(song),song,{eventContext:{...detailEventContext}});return;}
   const song=musicas.find(item=>String(item.id)===String(nid));
   if(song) openSimpleSongEditor(songFormat.fromLegacy(song),song);
 }
@@ -2982,15 +3131,19 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   const isAi=options.isAi===true||model.aiGenerated===true;
   const normalized=songFormat.normalize({...model,instrument:model.instrument||currentInstrument,...(isAi?{status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false}:{})});
   if(sourceSong) normalized.id=sourceSong.id;
-  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null};
+  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null,eventContext:options.eventContext||sourceSong?._eventEditContext||null};
   const fullSheet=normalized.fullChordSheet;
+  const tab=normalized.tablature,tabInstrument=tab?.instrument||'guitar';
+  const tabOptions=[['guitar','Violão / Guitarra'],['bass','Contrabaixo'],['ukulele','Ukulele'],['violin','Violino'],['other','Outro'],['unknown','Não identificado']].map(([value,label])=>`<option value="${value}" ${tabInstrument===value?'selected':''}>${label}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`
     <div class="modal-title">${isAi?'Confira a música':'Editar música'}</div>
     ${isAi?'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Confira título, artista, tom e cifra. A música só entra na sua playlist quando você tocar em Salvar.</div>':''}
     ${normalized.sourceInfo?.type==='online'&&normalized.sourceInfo?.name?`<div style="font-size:11px;color:var(--text2);margin:-7px 0 14px;line-height:1.5;">Fonte: ${eventEsc(normalized.sourceInfo.name)}</div>`:''}
     <div class="song-view-switch" role="tablist" aria-label="Conteúdo em edição"><button type="button" role="tab" aria-selected="true" class="active" data-simple-editor-view="summary" onclick="setSimpleEditorView('summary')">Resumo Harmônico</button><button type="button" role="tab" aria-selected="false" data-simple-editor-view="full" onclick="setSimpleEditorView('full')">Letra + Cifras</button></div>
+    <button type="button" class="btn btn-outline" data-simple-editor-view="tablature" onclick="setSimpleEditorView('tablature')">Tablaturas</button>
     ${simpleSongEditorFields(normalized)}
     ${simpleEditorFullSheetPanel(fullSheet)}
+    <div id="simple-editor-tablature" hidden><div class="form-group"><label class="form-label" for="tablature-instrument">Instrumento</label><select class="form-input" id="tablature-instrument">${tabOptions}</select></div><div class="form-group"><label class="form-label" for="tablature-tuning">Afinação</label><input class="form-input" id="tablature-tuning" value="${eventEsc(tab?.tuning||'E A D G B E')}" placeholder="E A D G B E"></div><div class="form-group"><label class="form-label" for="tablature-capo">Capotraste</label><input class="form-input" id="tablature-capo" type="number" min="0" max="12" value="${tab?.capo||0}"></div><div class="form-group"><label class="form-label" for="tablature-content">Seções da tablatura</label><textarea class="form-textarea" id="tablature-content" style="min-height:330px;white-space:pre;overflow-x:auto" spellcheck="false" placeholder="[Intro]&#10;e|----------------0---|&#10;B|----------1---------|&#10;G|------0-------------|&#10;D|--2-----------------|&#10;A|--------------------|&#10;E|--------------------|">${eventEsc(window.tablature.serializeEditor(tab))}</textarea><div style="font-size:10px;color:var(--text2);margin-top:6px;line-height:1.5;">Use títulos entre colchetes, como [Intro], [Riff] e [Solo]. Os espaços e símbolos serão preservados.</div></div><button class="btn btn-outline" type="button" onclick="previewTablatureEditor()">Pré-visualizar tablatura</button><div id="tablature-editor-preview" style="margin-top:12px;"></div></div>
     <button class="btn btn-primary" onclick="saveSimpleSongReview()">Salvar</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('modal-overlay').style.display='flex';
@@ -3040,25 +3193,19 @@ async function attachFullSheetFiles(input){
   }
 }
 function setSimpleEditorView(view){
-  const full=view==='full',summary=document.getElementById('simple-editor-summary'),fullPanel=document.getElementById('simple-editor-full');
-  if(summary)summary.hidden=full;if(fullPanel)fullPanel.hidden=!full;
+  const summary=document.getElementById('simple-editor-summary'),fullPanel=document.getElementById('simple-editor-full'),tabPanel=document.getElementById('simple-editor-tablature');
+  if(summary)summary.hidden=view!=='summary';if(fullPanel)fullPanel.hidden=view!=='full';if(tabPanel)tabPanel.hidden=view!=='tablature';
   document.querySelectorAll('[data-simple-editor-view]').forEach(button=>{
-    const active=button.dataset.simpleEditorView===(full?'full':'summary');
+    const active=button.dataset.simpleEditorView===view;
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
 }
-// Música encontrada pela busca: abre para o usuário ver e confirmar. Nada entra na playlist até Salvar.
+function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditContext;if(context&&context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra o evento.');return;}openSimpleSongEditor(model,sourceSong,{isAi:true,eventContext:context||null});}
+// Restaurado do main (perdido na integração): música encontrada pela busca abre para o usuário
+// ver e confirmar. Nada entra na playlist até Salvar.
 function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
-function openAiDraft(model,sourceSong){openSimpleSongEditor(model,sourceSong,{isAi:true});}
 function playlistContainsSong(input){try{return Boolean(songModel.findDuplicate(musicas,songModel.create(input)))}catch(_){return false}}
-function saveAiGeneratedSong(model,options={}){
-  const published=songFormat.normalize({...model,status:'published',aiGenerated:true,reviewedByUser:false,updatedAt:new Date().toISOString()});
-  const candidate=songFormat.toLegacy(published,null),result=songRepository.addOrReuse(musicas,candidate);
-  musicas=result.songs;
-  salvar();renderMusicas();if(options.open!==false)openDetail(result.song.id);if(options.notify!==false)showToast('✅ '+published.title+' adicionada!');
-  return result.song;
-}
-function saveSimpleSongReview(){
+async function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
   const fullInput=document.getElementById('ai-review-full-text');
@@ -3067,9 +3214,14 @@ function saveSimpleSongReview(){
   // Letra + Cifras vazia mantém a música só com o resumo; texto novo vira cifra completa do usuário.
   const fullSource=fullChanged?(fullInput.dataset.source==='user_upload'?'user_upload':'user_text'):previousSheet?.source;
   const fullChordSheet=fullInput?songFormat.normalizeFullChordSheet({...(previousSheet||{}),source:fullSource,content:fullInput.value,sections:fullChanged?[]:(previousSheet?.sections||[])}):previousSheet;
-  const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
+  const tabContent=document.getElementById('tablature-content')?.value||'';
+  const tabInstrument=document.getElementById('tablature-instrument')?.value,previousTab=simpleReviewDraft.model.tablature;
+  const tabSections=window.tablature.parseEditor(tabContent).map(section=>{const old=previousTab?.sections?.find(s=>s.title===section.title&&s.content===section.content);return old&&tabInstrument===previousTab.instrument?{...old,...section}:section;});
+  const tablature=window.tablature.normalize({instrument:tabInstrument,tuning:document.getElementById('tablature-tuning')?.value,capo:document.getElementById('tablature-capo')?.value,sections:tabSections});
+  const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,tablature,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
+  if(simpleReviewDraft.eventContext){await saveContextEventSong(simpleReviewDraft.eventContext,eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:reviewed.capo}}));return;}
   const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
   if(!commitSongs(result.songs))return;closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+values.title+' salva!');
 }
@@ -3077,10 +3229,18 @@ function openAdvancedSongEditor(id){
   editMusica(id);
 }
 function generateAiForSong(id){
+  if(detailEventContext&&String(currentDetailId)===String(id)){aiHarmonicSummary.open({song:{...currentDetailSongOverride,_eventEditContext:{...detailEventContext}}});return;}
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
 
+function previewTablatureEditor(){
+  const target=document.getElementById('tablature-editor-preview');if(!target)return;
+  const value=window.tablature.normalize({instrument:document.getElementById('tablature-instrument')?.value,tuning:document.getElementById('tablature-tuning')?.value,capo:document.getElementById('tablature-capo')?.value,sections:window.tablature.parseEditor(document.getElementById('tablature-content')?.value||'')});
+  target.innerHTML=value?renderTablature(value):'<div class="empty">Digite uma tablatura para visualizar.</div>';
+}
+
 function saveMusica(){
+  if(detailEventContext){showToast('Use o editor desta música no evento.');return;}
   const t=document.getElementById('fm-title').value.trim(); if(!t) return;
   const raw=document.getElementById('fm-blocos').value;
   const blocos=parseBlocks(raw);
@@ -3192,7 +3352,7 @@ function openAddSongToRepertoire(){
 function addSongToEvent(eventId,songId){
   const event=findEvent(eventId),song=[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(songId));if(!event||!song)return;
   if(event.repertoire.some(item=>String(item.songId)===String(song.id))){showToast('A música já está neste repertório.');return}
-  const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventSongModel(song),personalEdits:{}};
+  const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   const repertoire=[...event.repertoire,repertoireItem];
   let updated=eventModel.create({...event,repertoire,syncState:'pending',pendingShared:true});
   updated=eventModel.withSharedChange(updated,eventPermissionActor(event),'repertoire.song.added',`adicionou ${song.title} ao repertório oficial`,{songId:song.id,changeType:'SONG_ADDED',after:{repertoireItemId:repertoireItem.id,songId:song.id}});
@@ -3212,6 +3372,7 @@ function showEventSaveNotice(event,song){
 }
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(document.getElementById('add-song-event-sheet')?.classList.contains('is-open')){closeAddSongEventSheet();return}if(document.getElementById('song-options-sheet')?.classList.contains('is-open'))closeSongOptions()});
 function deleteMusica(id,row,options={}){
+  if(detailEventContext&&String(currentDetailId)===String(id)){showToast('Para retirar esta música, edite o repertório do evento.');return;}
   const nid=isNaN(+id)?id:+id;
   const target=row||document.querySelector(`.music-swipe[data-song-id="${CSS.escape(String(id))}"]`);
   const song=musicas.find(item=>String(item.id)===String(nid));
@@ -3392,9 +3553,9 @@ Object.assign(APP_TRANSLATIONS.it,{voiceSearch:'Cerca con la voce',voiceListenin
 Object.assign(APP_TRANSLATIONS.fr,{voiceSearch:'Recherche vocale',voiceListening:'Écoute… touchez pour annuler',voiceUnsupported:'La recherche vocale n’est pas disponible dans ce navigateur.',voiceDenied:'Autorisez l’accès au microphone pour utiliser la recherche vocale.',voiceNoSpeech:'Je n’ai rien entendu. Touchez le microphone et réessayez.'});
 Object.assign(APP_TRANSLATIONS.de,{voiceSearch:'Sprachsuche',voiceListening:'Höre zu… zum Abbrechen tippen',voiceUnsupported:'Die Sprachsuche ist in diesem Browser nicht verfügbar.',voiceDenied:'Erlaube den Mikrofonzugriff, um die Sprachsuche zu verwenden.',voiceNoSpeech:'Ich habe nichts gehört. Tippe auf das Mikrofon und versuche es erneut.'});
 Object.assign(APP_TRANSLATIONS['pt-BR'],{tuner:'Afinador',tunerHelp:'Afine violão ou guitarra pelo microfone',tunerInstrument:'Violão e guitarra',tunerAuto:'Automático',tunerChooseString:'Escolha uma corda ou use o modo automático',tunerString:'Cordas · afinação padrão',tunerTarget:'Alvo',tunerStart:'Ativar microfone',tunerStop:'Desativar microfone',tunerListening:'Toque uma corda para começar',tunerInTune:'Afinado!',tunerFlat:'Aperte um pouco a corda',tunerSharp:'Afrouxe um pouco a corda',tunerWrongString:'Toque a corda selecionada',tunerMicOff:'Microfone desligado',tunerPermission:'Permita o acesso ao microfone nas configurações do navegador.',tunerNoMic:'Nenhum microfone encontrado neste dispositivo.',tunerUnavailable:'O microfone exige HTTPS ou acesso local.',tunerError:'Não foi possível iniciar o afinador.',tunerPrivacy:'O áudio é processado no dispositivo e não é gravado nem enviado.'});
-Object.assign(APP_TRANSLATIONS['pt-BR'],{tunerUkulele:'Ukulele',tunerBass:'Contrabaixo',tunerViolin:'Violino'});
-Object.assign(APP_TRANSLATIONS.en,{tunerUkulele:'Ukulele',tunerBass:'Bass',tunerViolin:'Violin'});
-Object.assign(APP_TRANSLATIONS.es,{tunerUkulele:'Ukelele',tunerBass:'Bajo',tunerViolin:'Violín'});
+Object.assign(APP_TRANSLATIONS['pt-BR'],{tunerUkulele:'Ukulele',tunerBass:'Contrabaixo 4 cordas',tunerBass5:'Contrabaixo 5 cordas',tunerBass6:'Contrabaixo 6 cordas',tunerViolin:'Violino'});
+Object.assign(APP_TRANSLATIONS.en,{tunerUkulele:'Ukulele',tunerBass:'4-string bass',tunerBass5:'5-string bass',tunerBass6:'6-string bass',tunerViolin:'Violin'});
+Object.assign(APP_TRANSLATIONS.es,{tunerUkulele:'Ukelele',tunerBass:'Bajo de 4 cuerdas',tunerBass5:'Bajo de 5 cuerdas',tunerBass6:'Bajo de 6 cuerdas',tunerViolin:'Violín'});
 Object.assign(APP_TRANSLATIONS.en,{tuner:'Tuner',tunerHelp:'Tune your acoustic or electric guitar with the microphone',tunerInstrument:'Acoustic and electric guitar',tunerAuto:'Automatic',tunerChooseString:'Choose a string or use automatic mode',tunerString:'Strings · standard tuning',tunerTarget:'Target',tunerStart:'Turn on microphone',tunerStop:'Turn off microphone',tunerListening:'Play a string to begin',tunerInTune:'In tune!',tunerFlat:'Tighten the string a little',tunerSharp:'Loosen the string a little',tunerWrongString:'Play the selected string',tunerMicOff:'Microphone off',tunerPermission:'Allow microphone access in your browser settings.',tunerNoMic:'No microphone found on this device.',tunerUnavailable:'The microphone requires HTTPS or a local connection.',tunerError:'Could not start the tuner.',tunerPrivacy:'Audio is processed on your device. It is not recorded or uploaded.'});
 Object.assign(APP_TRANSLATIONS.es,{tuner:'Afinador',tunerHelp:'Afina tu guitarra acústica o eléctrica con el micrófono',tunerInstrument:'Guitarra acústica y eléctrica',tunerAuto:'Automático',tunerChooseString:'Elige una cuerda o usa el modo automático',tunerString:'Cuerdas · afinación estándar',tunerTarget:'Objetivo',tunerStart:'Activar micrófono',tunerStop:'Desactivar micrófono',tunerListening:'Toca una cuerda para empezar',tunerInTune:'¡Afinado!',tunerFlat:'Tensa un poco la cuerda',tunerSharp:'Afloja un poco la cuerda',tunerWrongString:'Toca la cuerda seleccionada',tunerMicOff:'Micrófono apagado',tunerPermission:'Permite el acceso al micrófono en la configuración del navegador.',tunerNoMic:'No se encontró ningún micrófono en este dispositivo.',tunerUnavailable:'El micrófono requiere HTTPS o una conexión local.',tunerError:'No se pudo iniciar el afinador.',tunerPrivacy:'El audio se procesa en tu dispositivo. No se graba ni se envía.'});
 Object.assign(APP_TRANSLATIONS['pt-BR'],{tools:'Ferramentas',toolsHelp:'Afinador e metrônomo para seus estudos',metronome:'Metrônomo',metronomeHelp:'Pratique com andamento e compasso precisos',metronomeEdit:'Editar',metronomeStart:'Iniciar',metronomeStop:'Parar'});
@@ -3534,7 +3695,7 @@ function resolveHomeCardContext(now=new Date()){
   return {context:'general',artDirection:'standard',kicker:firstName?`${greeting}, ${firstName}`:greeting,title:'O que vamos tocar hoje?',description:'Seu repertório está pronto para tocar.',actions:[]};
 }
 function homeCardEventActions(event){
-  const hasSongs=Array.isArray(event.repertoire)&&event.repertoire.some(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const hasSongs=Array.isArray(event.repertoire)&&event.repertoire.some(item=>eventSongSource(event,item));
   return hasSongs?[{label:'Treinar',kind:'train_event',id:event.id,primary:true},{label:'Ver evento',kind:'event',id:event.id}]:[{label:'Ver evento',kind:'event',id:event.id,primary:true}];
 }
 function homeCardActionIcon(kind){
@@ -3547,7 +3708,7 @@ function activateHomeCardAction(action){
   if(action.kind==='context_action'){openContextualAction(action.contextAction);return;}
   if(action.kind==='event'){switchTab('setlists');openSD(action.id);return;}
   if(action.kind==='event_changes'){switchTab('setlists');openSD(action.id);setTimeout(openEventNotifications,0);return;}
-  if(action.kind==='train_event'){const event=findEvent(action.id),index=event?.repertoire.findIndex(item=>musicas.some(song=>String(song.id)===String(item.songId)));if(index>=0)openDetailFromPlaylist(event.id,index);else{switchTab('setlists');openSD(action.id)}return;}
+  if(action.kind==='train_event'){const event=findEvent(action.id),index=event?.repertoire.findIndex(item=>eventSongSource(event,item));if(index>=0)openDetailFromPlaylist(event.id,index);else{switchTab('setlists');openSD(action.id)}return;}
   if(action.kind==='song'){openDetail(action.id);return;}
   if(action.kind==='library'){switchTab('musicas');document.getElementById('playlist-library-title')?.scrollIntoView({behavior:playlistHeroMotion.matches?'auto':'smooth'});return;}
   if(action.kind==='ai_search'){openPlaylistSearch();return;}
@@ -3560,8 +3721,8 @@ function markContextActionPresented(action){
 }
 function openContextualAction(action){
   if(!action)return;dispatchContextEvent('context_action_opened',action);
-  if(action.actionType==='REVIEW_CHANGED_SONG'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
-  if(['START_PREPARATION','CONTINUE_PREPARATION'].includes(action.actionType)){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)))||[],index=Math.max(0,items.findIndex(item=>item.preparation?.state!=='READY'));if(event&&items[index])openDetailFromPlaylist(event.id,index);else if(event){switchTab('setlists');openSD(event.id)}return;}
+  if(action.actionType==='REVIEW_CHANGED_SONG'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
+  if(['START_PREPARATION','CONTINUE_PREPARATION'].includes(action.actionType)){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=Math.max(0,items.findIndex(item=>item.preparation?.state!=='READY'));if(event&&items[index])openDetailFromPlaylist(event.id,index);else if(event){switchTab('setlists');openSD(event.id)}return;}
   if(action.actionType==='ENTER_STAGE_MODE'){openStageFromEvent(action.eventId);}
 }
 async function acknowledgeContextualAction(action){
@@ -3569,10 +3730,15 @@ async function acknowledgeContextualAction(action){
   const value=contextAcknowledgements.acknowledgeLocal(action,appCurrentUser.id);dispatchContextEvent('context_action_acknowledged',action);renderContextualHomeCard();
   try{await contextAcknowledgements.syncOne(value)}catch(error){if(navigator.onLine)console.warn('Acknowledgement aguardando sincronização.',error)}
 }
+let homeCardRenderSignature='';
 function renderContextualHomeCard(){
   const normal=document.getElementById('playlist-ai-normal'),search=document.getElementById('playlist-ai-search-mode');
   if(!normal||!search||!search.hidden)return;
-  const model=resolveHomeCardContext(),card=document.getElementById('playlist-ai-card'),kicker=document.getElementById('playlist-context-kicker'),title=document.getElementById('playlist-ai-title'),editorial=document.getElementById('playlist-context-editorial'),description=document.getElementById('playlist-context-description'),actions=document.getElementById('playlist-context-actions');
+  const model=resolveHomeCardContext();
+  // Desempenho: se o card já mostra exatamente este conteúdo, não recria botões nem reinicia a animação.
+  let signature='';try{signature=JSON.stringify(model);}catch(_error){signature='';}
+  if(signature&&signature===homeCardRenderSignature&&normal.isConnected&&document.getElementById('playlist-context-actions')?.childElementCount){if(model.contextAction)markContextActionPresented(model.contextAction);return;}
+  const card=document.getElementById('playlist-ai-card'),kicker=document.getElementById('playlist-context-kicker'),title=document.getElementById('playlist-ai-title'),editorial=document.getElementById('playlist-context-editorial'),description=document.getElementById('playlist-context-description'),actions=document.getElementById('playlist-context-actions');
   if(!card||!kicker||!title||!editorial||!description||!actions)return;
   kicker.textContent=model.kicker;title.textContent=model.title;description.textContent=model.description||'';description.hidden=!model.description;actions.replaceChildren();
   const editorialLines=Array.isArray(model.editorialLines)?model.editorialLines.filter(Boolean):[];
@@ -3582,7 +3748,9 @@ function renderContextualHomeCard(){
   if(primaryAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--primary';button.innerHTML=homeCardActionIcon(primaryAction.kind)+'<span></span>';button.querySelector('span').textContent=primaryAction.label;button.addEventListener('click',()=>activateHomeCardAction(primaryAction));actions.appendChild(button);}
   const dismissAction=model.actions.find(action=>action.kind==='context_acknowledge');if(dismissAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--secondary';button.textContent=dismissAction.label;button.setAttribute('aria-label','Dispensar esta sugestão');button.addEventListener('click',()=>activateHomeCardAction(dismissAction));actions.appendChild(button);}
   if(model.contextAction)markContextActionPresented(model.contextAction);
-  card.dataset.artDirection=model.artDirection||'standard';normal.dataset.context=model.context;normal.dataset.typographyVariant=model.typographyVariant||'standard';normal.classList.remove('is-refreshing');void normal.offsetWidth;normal.classList.add('is-refreshing');
+  card.dataset.artDirection=model.artDirection||'standard';normal.dataset.context=model.context;normal.dataset.typographyVariant=model.typographyVariant||'standard';normal.classList.remove('is-refreshing');homeCardRenderSignature=signature;
+  // Reinicia a animação sem forçar recálculo de layout (antes: void normal.offsetWidth).
+  requestAnimationFrame(()=>requestAnimationFrame(()=>normal.classList.add('is-refreshing')));
 }
 function eventMemberAvatar(member){return member.avatarUrl?`<img src="${eventEsc(member.avatarUrl)}" alt="">`:eventEsc(eventInitials(member.name));}
 function eventMemberRole(member,leaderId){return String(member.id)!==String(leaderId)&&/^(lider|líder|liderança|lideranca)$/i.test(member.role||'')?'Integrante':member.role;}
@@ -3622,7 +3790,9 @@ async function openLibrarySync(backAction='openHelpSupport'){
   renderLibrarySyncPanel(librarySync.getStatus());
   try{const state=await librarySync.review();await refreshEventSyncDiagnostics();renderLibrarySyncPanel(state);}catch(_error){renderLibrarySyncPanel(librarySync.getStatus());}
 }
-function eventDateBadge(value){const iso=eventDateISO(value);if(!iso)return {month:'DATA',day:'—',weekday:'',group:'Sem data'};const [year,month,day]=iso.split('-').map(Number),date=new Date(year,month-1,day);return {month:new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(date).replace('.','').toUpperCase(),day:String(day).padStart(2,'0'),weekday:new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(date).replace('.','').toUpperCase(),group:new Intl.DateTimeFormat('pt-BR',{month:'long'}).format(date)}}
+// Desempenho: formatadores de data criados uma vez só (antes, 3 por evento a cada render).
+const EVENT_BADGE_FORMAT={month:new Intl.DateTimeFormat('pt-BR',{month:'short'}),weekday:new Intl.DateTimeFormat('pt-BR',{weekday:'short'}),group:new Intl.DateTimeFormat('pt-BR',{month:'long'})};
+function eventDateBadge(value){const iso=eventDateISO(value);if(!iso)return {month:'DATA',day:'—',weekday:'',group:'Sem data'};const [year,month,day]=iso.split('-').map(Number),date=new Date(year,month-1,day);return {month:EVENT_BADGE_FORMAT.month.format(date).replace('.','').toUpperCase(),day:String(day).padStart(2,'0'),weekday:EVENT_BADGE_FORMAT.weekday.format(date).replace('.','').toUpperCase(),group:EVENT_BADGE_FORMAT.group.format(date)}}
 let eventSyncDiagnostics={device:0,cloud:null,deviceOnly:0,cloudOnly:0,rows:[],available:false};
 async function refreshEventSyncDiagnostics(){
   const local=eventModel.normalizeCollection(setlists),authenticated=Boolean(currentAuthState.authenticated);
@@ -3685,7 +3855,8 @@ function downloadMigrationBackup(){try{exportarBiblioteca();if(!librarySync.mark
 async function downloadSyncDiagnostics(){
   const button=document.querySelector('#modal-body button[onclick="downloadSyncDiagnostics()"]');if(button)button.disabled=true;
 try{await librarySync.review().catch(()=>null);await librarySync.refreshServerAudit();await refreshEventSyncDiagnostics();const authState=appAuth.getState(),user=authState.user||{},report={format:'roudy-sync-diagnostics',version:5,generatedAt:new Date().toISOString(),runtime:{frontendOrigin:location.origin,backendBaseUrl:apiConfig.API_BASE_URL,serviceWorkerCache:'simplificando-cifras-v126-sync-button',librarySyncVersion:12,frontendBuild:'auto-sync-account-v2'},auth:{authenticated:Boolean(authState.authenticated),supabaseUserHash:await syncDiagnosticHash(user.id),emailMasked:syncDiagnosticMaskEmail(user.email)},library:safeLibraryDiagnostics(),events:{device:Number(eventSyncDiagnostics.device)||0,cloud:Number(eventSyncDiagnostics.cloud)||0,deviceOnly:Number(eventSyncDiagnostics.deviceOnly)||0,cloudOnly:Number(eventSyncDiagnostics.cloudOnly)||0},storage:{sc_songs_v1:Array.isArray(storage.get('sc_songs_v1',null)),cifras_musicas_v1:Array.isArray(storage.get('cifras_musicas_v1',null)),sc_musicas_v2:Array.isArray(storage.get('sc_musicas_v2',null)),sc_song_editor_drafts_v1:Array.isArray(storage.get('sc_song_editor_drafts_v1',null)),sc_events_v1:Array.isArray(storage.get('sc_events_v1',null)),cifras_setlists_v1:Array.isArray(storage.get('cifras_setlists_v1',null))}};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`roudy-diagnostico-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),0);showToast('✅ Diagnóstico gerado sem alterar seus dados.');}
-  catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);}finally{if(button)button.disabled=false;}
+  catch(error){showToast('⚠️ Não foi possível gerar o diagnóstico: '+error.message);return {ok:false};}finally{if(button)button.disabled=false;}
+  return {ok:true};
 }
 async function syncDiagnosticHash(value){if(!value)return null;const bytes=new TextEncoder().encode(String(value)),digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).slice(0,8).map(byte=>byte.toString(16).padStart(2,'0')).join('');}
 function safeLibraryDiagnostics(){const report=librarySync.diagnostics();return {generatedAt:report.generatedAt,phase:report.syncState.phase,identityBlocked:Boolean(report.syncState.identityBlocked),summary:report.summary,remoteContract:report.remoteContract?{valid:report.remoteContract.valid,rawCount:report.remoteContract.rawCount,normalizedCount:report.remoteContract.normalizedCount,rejectedCount:report.remoteContract.rejectedCount}:null};}
@@ -3829,7 +4000,8 @@ async function copyRoudyPixCode(){
     if(!navigator.clipboard?.writeText)throw new Error('clipboard_unavailable');
     await navigator.clipboard.writeText(currentRoudyPixCode());
     showToast('✅ Código Pix copiado. Abra seu banco e escolha Pix Copia e Cola.');
-  }catch(_error){appPrompt('Copie o código Pix:',currentRoudyPixCode());}
+    return {ok:true};
+  }catch(_error){appPrompt('Copie o código Pix:',currentRoudyPixCode());return {ok:false};}
 }
 function openToolsMenu(){
   stopTuner();toolsMetronome.stop();
@@ -3902,7 +4074,7 @@ function stopTuner(){
 }
 function openTuner(){
   stopTuner();tunerSelectedIndex=null;
-  const instrumentOptions=[['guitar','tunerInstrument'],['ukulele','tunerUkulele'],['bass','tunerBass'],['violin','tunerViolin']].map(([value,key])=>`<option value="${value}" ${tunerInstrument===value?'selected':''}>${eventEsc(appText(key))}</option>`).join('');
+  const instrumentOptions=[['guitar','tunerInstrument'],['ukulele','tunerUkulele'],['bass','tunerBass'],['bass5','tunerBass5'],['bass6','tunerBass6'],['violin','tunerViolin']].map(([value,key])=>`<option value="${value}" ${tunerInstrument===value?'selected':''}>${eventEsc(appText(key))}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('tuner'))}<section class="tuner-panel" id="tuner-panel"><div class="tuner-topline"><select class="tuner-instrument-select" id="tuner-instrument" aria-label="${eventEsc(appText('tuner'))}" onchange="selectTunerInstrument(this.value)">${instrumentOptions}</select><button class="tuner-auto is-selected" type="button" id="tuner-auto" onclick="selectTunerString(null)">${eventEsc(appText('tunerAuto'))}</button></div><div class="tuner-note" id="tuner-note" aria-live="off">—</div><div class="tuner-frequency" id="tuner-frequency">— Hz</div><div class="tuner-target" id="tuner-target"></div><div class="tuner-gauge" role="img" aria-label="${eventEsc(appText('tuner'))}"><span class="tuner-gauge-label tuner-gauge-label--flat">♭</span><span class="tuner-tick tuner-tick--left" style="--tuner-tick-angle:-20deg"></span><span class="tuner-tick tuner-tick--middle-left" style="--tuner-tick-angle:-10deg"></span><span class="tuner-tick tuner-tick--center" style="--tuner-tick-angle:0deg"></span><span class="tuner-tick tuner-tick--middle-right" style="--tuner-tick-angle:10deg"></span><span class="tuner-tick tuner-tick--right" style="--tuner-tick-angle:20deg"></span><span class="tuner-gauge-label tuner-gauge-label--sharp">♯</span><span class="tuner-needle" id="tuner-needle"></span></div><div class="tuner-status" id="tuner-status" role="status">${eventEsc(appText('tunerChooseString'))}</div><div class="tuner-strings-title">${eventEsc(appText('tunerString'))}</div><div class="tuner-strings" id="tuner-strings"></div><div class="tuner-actions"><button type="button" id="tuner-microphone" onclick="toggleTunerMicrophone()">${eventEsc(appText('tunerStart'))}</button></div><p class="tuner-footnote">${eventEsc(appText('tunerPrivacy'))}</p></section>`;
   const tunerBack=document.querySelector('#modal-body .profile-back-button');if(tunerBack){tunerBack.setAttribute('onclick','openAccountModal()');setAccountBackChevron();}
   renderTunerStrings();
@@ -3962,6 +4134,9 @@ function moveProfileCoverDrag(event){if(!profileCoverDrag||event.pointerId!==pro
 function endProfileCoverDrag(event){if(!profileCoverDrag||event.pointerId!==profileCoverDrag.pointerId)return;event.currentTarget.classList.remove('is-dragging');profileCoverDrag=null;}
 function handleProfileCoverPositionKey(event){const steps={ArrowLeft:['x',-2],ArrowRight:['x',2],ArrowUp:['y',-2],ArrowDown:['y',2]},step=steps[event.key];if(!step||!event.currentTarget.classList.contains('has-custom-cover'))return;updatePlaylistCoverPosition(step[0],playlistCoverPosition()[step[0]]+step[1]);event.preventDefault();}
 function openProfileSettings(){
+  document.getElementById('account-drawer-layer')?.classList.remove('is-open');
+  requestAnimationFrame(()=>document.getElementById('account-drawer-layer')?.classList.remove('is-open'));
+  document.getElementById('modal-overlay').style.display='flex';document.body.setAttribute('data-account-menu-open','true');window.roudyAssistant?.updateLaunchVisibility();
   const profile=accountProfile();pendingProfileAvatar=profile.avatarUrl;
   document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('myProfile'))}<main class="profile-account-page">
     <section class="profile-account-photo">${accountAvatar(profile)}<div class="profile-account-photo-actions"><label for="profile-photo-input">Editar foto</label><input class="profile-photo-input" id="profile-photo-input" type="file" accept="image/*" onchange="profilePhotoSelected(this)"><button type="button" onclick="removeProfilePhoto()">Remover</button></div></section>
@@ -4034,7 +4209,7 @@ async function confirmGuestLibraryImport(button){if(button)button.disabled=true;
 async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;try{await librarySync.declineMigration();closeModal();showToast('As músicas locais continuam salvas neste dispositivo.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível carregar sua conta.'));}}
 function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if(state.authenticated||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
 function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
-async function loginAppAccount(){try{await appAuth.signInWithGoogle();}catch(error){showToast('⚠️ '+error.message);}}
+async function loginAppAccount(){try{await appAuth.signInWithGoogle();return {ok:true};}catch(error){showToast('⚠️ '+error.message);return {ok:false,message:error.message};}}
 // Sair da conta: confirma que tudo está na nuvem e só então apaga do aparelho os dados DESTA conta.
 function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
 function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
@@ -4086,18 +4261,50 @@ function transposeEventChordText(value,semitones){
   return String(value||'').split(/(\r?\n)/).map(line=>songFormat.chordLine(line)?shiftText(line,semitones):line).join('');
 }
 function eventSongModel(song,edit,fallbackEdit){
-  const base=songFormat.fromLegacy(song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
+  const base=songFormat.fromLegacy(edit?.songData||fallbackEdit?.songData||song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
   const sourceKey=primary.chordSheet?primary.key:fallback.chordSheet?fallback.key:base.originalKey;
   const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
-  const sections=songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,eventKeyShift(base.originalKey,key))}:base.fullChordSheet,fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
+  const fullShift=eventKeyShift(base.originalKey,key),sections=songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
+  const fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
 function eventSongVariant(event,item,userId){
   const song=eventSongSource(event,item);if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
-  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),song),view:effective?.effective?.view||'summary',personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
+  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),effective?.effective.songData||song),view:effective?.effective?.view||'summary',personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
+}
+function eventSongCopy(song,state=song.playbackSettings||{}){
+  const model=songFormat.fromLegacy(song),capo=state.capo??model.capo,shift=(Number(state.semitones)||0)+model.capo-Number(capo);
+  const sections=model.sections.map(section=>({...section,lines:section.lines.map(line=>{let cursor=-1;return {...line,chords:line.chords.map(c=>{const chord=shiftText(c.chord,shift),position=Math.max(c.position,cursor+1);cursor=position+chord.length;return {...c,chord,position};})};})}));
+  const key=shiftText(model.originalKey,Number(state.semitones)||0),full=model.fullChordSheet?{...model.fullChordSheet,content:transposeEventChordText(model.fullChordSheet.content,shift),sections:shift?[]:model.fullChordSheet.sections}:null;
+  const normalized=songFormat.normalize({...model,originalKey:key,currentKey:key,capo:Number(capo),sections,fullChordSheet:full,bpm:state.bpm||model.bpm});
+  const data=songFormat.toLegacy(normalized,song);data.playbackSettings={...state,semitones:0,capo:Number(capo)};delete data.playbackSettings.video;
+  const fields=['id','title','artist','key','capo','blocos','editorData','fullChordSheet','tablature','playbackSettings','bpm','instrumento','originalKey','currentKey','notes','coverUrl','youtubeVideoId','youtubeUrl','youtubeChannelTitle','songFormatVersion'];
+  return JSON.parse(JSON.stringify(Object.fromEntries(fields.filter(k=>data[k]!==undefined).map(k=>[k,data[k]]))));
+}
+function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),notes,songData:data};}
+async function saveContextEventSong(context,data,options={}){
+  if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return {ok:false};}
+  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));if(!item||!eventModel.canAccess(event,owner))return {ok:false};
+  const originalDraft=detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId?JSON.stringify(detailEditableState()):null;
+  const originalSimpleEditor=simpleReviewDraft,originalEventEditor=eventSongEditDraft,originalModalOpen=document.getElementById('modal-overlay').style.display==='flex';
+  const modalValues=()=>JSON.stringify([...document.querySelectorAll('#modal-body input,#modal-body textarea,#modal-body select')].map(input=>[input.id,input.value]));
+  const originalModalChild=originalModalOpen?document.getElementById('modal-body').firstElementChild:null,originalModalValues=originalModalOpen?modalValues():null;
+  let pendingSync=event.remoteVersion==null;
+  const changes=eventEditFromSong(data,item.personalEdits[owner]?.notes||item.shared.notes||'');
+  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return {ok:false};}pendingSync=true;updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
+  if(owner!==appCurrentUser.id)return {ok:false};
+  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){showToast('⚠️ Não foi possível salvar no evento.');return {ok:false};}setlists=events;
+  const editorUnchanged=originalSimpleEditor===simpleReviewDraft&&originalEventEditor===eventSongEditDraft&&originalModalOpen===(document.getElementById('modal-overlay').style.display==='flex')&&(!originalModalOpen||(originalModalChild===document.getElementById('modal-body').firstElementChild&&originalModalValues===modalValues()));
+  if(detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId&&editorUnchanged&&originalDraft===JSON.stringify(detailEditableState())){
+    currentDetailSongOverride=eventSongVariant(updated,updated.repertoire.find(i=>String(i.id)===String(item.id)),owner);
+    detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));
+    if(!options.quiet){closeModal();openDetailFromEventItem(event.id,item.id);}
+  }
+  if(!options.quiet&&!options.silent)showToast('✅ Alterações salvas somente neste evento');
+  updateDetailSaveButton();return {ok:true,scope:'event-personal',pendingSync};
 }
 
 function openNewEventCreateSheet(){
@@ -4130,6 +4337,7 @@ function openAddSetlist(prefill){
   let source=eventModel.create(prefill||{title:'',date:new Date().toISOString().slice(0,10),time:'',location:'',description:'',musicas:[],members:[]});
   let selectedBandId=source.bandId||activeBandId||null;
   let selectedIds=[...source.musicas];
+  const selectedSongCopies=new Map();
   let eventMembers=[...source.members];
   let pendingInvites=[];
   const selectedBand=appBands.find(band=>String(band.id)===String(selectedBandId));
@@ -4180,7 +4388,7 @@ function openAddSetlist(prefill){
     <button class="btn btn-primary" onclick="saveSetlist()">Salvar evento</button><button class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
   document.getElementById('pl-search').addEventListener('input',renderAvailable);
   const bandSelect=document.getElementById('fs-band');if(bandSelect)bandSelect.addEventListener('change',()=>{selectedBandId=bandSelect.value||null;const band=appBands.find(value=>String(value.id)===String(selectedBandId));if(band){eventMembers=band.members.map(member=>({id:member.id,name:member.name,role:member.musicalRole,avatarUrl:member.avatarUrl,isCurrentUser:String(member.id)===String(appCurrentUser.id)}));if(!eventMembers.some(member=>String(member.id)===String(selectedLeaderId)))eventMembers.unshift({...appCurrentUser,isCurrentUser:true});renderMembers();}});
-  window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){selectedIds.push(id);renderSelected();renderAvailable();}};
+  window.plAdd=id=>{if(!selectedIds.some(value=>String(value)===String(id))){const song=musicas.find(s=>String(s.id)===String(id));if(song)selectedSongCopies.set(String(id),eventSongCopy(song));selectedIds.push(id);renderSelected();renderAvailable();}};
   window.plRemove=id=>{selectedIds=selectedIds.filter(value=>String(value)!==String(id));renderSelected();renderAvailable();};
   let dragId=null;
   window.plDragStart=id=>{dragId=id;}; window.plDragEnd=()=>{dragId=null;}; window.plDragOver=event=>event.preventDefault();
@@ -4210,7 +4418,7 @@ function openAddSetlist(prefill){
     const title=document.getElementById('fs-title').value.trim(); if(!title)return;
     const previous=findEvent(editingId);
     const previousItems=previous?previous.repertoire:[];
-    const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId));return existing?{...existing,order}:{songId,order};});
+    const repertoire=selectedIds.map((songId,order)=>{const existing=previousItems.find(item=>String(item.songId)===String(songId)),song=musicas.find(s=>String(s.id)===String(songId)),copy=selectedSongCopies.get(String(songId))||(song?eventSongCopy(song):null);return existing?{...existing,order}:{songId,order,...(copy?{shared:eventEditFromSong(copy)}:{})};});
     let candidate=eventModel.create({...source,id:editingId||('event_'+Date.now()),title,date:document.getElementById('fs-date').value.trim(),time:document.getElementById('fs-time').value,bandId:selectedBandId,repertoire,members:eventMembers,leaderId:selectedLeaderId,syncState:'pending',pendingShared:true});
     if(options.keepOpen&&source.remoteVersion!=null&&!source.pendingShared&&editorSignature(candidate)===editorSignature(source))return source;
     candidate=eventModel.withSharedChange(candidate,permissionActor,editingId?'event.updated':'event.created',editingId?'Atualizou o evento e o repertório':'Criou o evento');
@@ -4229,7 +4437,8 @@ function openAddSetlist(prefill){
       inviteNote=' · '+sent+' convite'+(sent===1?'':'s')+' enviado'+(sent===1?'':'s');
     }
     if(!options.keepOpen)closeModal();
-    renderSetlists();if(!options.keepOpen)showToast(syncWarning||((result.created?'📅 Evento criado':'✅ Evento atualizado')+inviteNote));
+    renderSetlists();if(!syncWarning&&currentAuthState.authenticated&&candidate.remoteVersion==null)syncWarning='⚠️ Evento salvo só neste aparelho. Vamos enviar para a nuvem automaticamente quando a conexão permitir.';
+    if(!options.keepOpen)showToast(syncWarning||((result.created?'📅 Evento criado':'✅ Evento atualizado')+inviteNote));
     return candidate;
   };
   renderSelected();renderAvailable();renderMembers();document.getElementById('modal-overlay').style.display='flex';
@@ -4248,7 +4457,7 @@ function refreshStageNavigationOrder(){
   if(!context)return;
   const event=findEvent(context.playlistId);
   if(!event)return;
-  const availableItems=event.repertoire.filter(item=>musicas.some(song=>String(song.id)===String(item.songId)));
+  const availableItems=event.repertoire.filter(item=>eventSongSource(event,item));
   const orderedIds=availableItems.map(item=>item.songId);
   if(!orderedIds.length)return;
   const currentSongId=context.songIds[context.currentIndex];
@@ -4261,8 +4470,17 @@ function refreshStageNavigationOrder(){
 let eventListFilter='all';
 let eventFilterResizeFrame=0;
 let eventFilterDrag=null,eventFilterSuppressClick=false;
+// Desempenho: a largura do filtro vem de um ResizeObserver (sem forçar layout a cada render).
+const eventFilterWidths=new WeakMap();let eventFilterResizeObserver=null;
+function observedEventFilterWidth(control){
+  if(typeof ResizeObserver!=='function')return null;
+  if(!eventFilterResizeObserver)eventFilterResizeObserver=new ResizeObserver(entries=>{let changed=false;for(const entry of entries){const box=Array.isArray(entry.borderBoxSize)?entry.borderBoxSize[0]:entry.borderBoxSize;const width=box&&typeof box.inlineSize==='number'?box.inlineSize:entry.target.getBoundingClientRect().width;if(eventFilterWidths.get(entry.target)!==width){changed=changed||eventFilterWidths.has(entry.target);eventFilterWidths.set(entry.target,width);}}if(changed)requestAnimationFrame(()=>updateEventFilterIndicator(false));});
+  if(!eventFilterWidths.has(control)){eventFilterWidths.set(control,control.getBoundingClientRect().width);eventFilterResizeObserver.observe(control);}
+  return eventFilterWidths.get(control);
+}
 function eventFilterGeometry(control){
-  const inset=3,dpr=window.devicePixelRatio||1,width=control.getBoundingClientRect().width,segmentWidth=(width-inset*2)/3,snap=value=>Math.round(value*dpr)/dpr;
+  const observedWidth=observedEventFilterWidth(control);
+  const inset=3,dpr=window.devicePixelRatio||1,width=typeof observedWidth==='number'?observedWidth:control.getBoundingClientRect().width,segmentWidth=(width-inset*2)/3,snap=value=>Math.round(value*dpr)/dpr;
   return {inset,segmentWidth,snap,minX:snap(inset),maxX:snap(inset+segmentWidth*2)};
 }
 function updateEventFilterIndicator(animate=true){
@@ -4609,7 +4827,7 @@ function renderEventAddSongs(){
 function addSongFromEventSheet(songId,button){
   const state=eventAdminSheetState;let event=state&&findEvent(state.eventId);const song=musicas.find(item=>String(item.id)===String(songId));if(!event||!song||event.repertoire.some(item=>String(item.songId)===String(song.id)))return;
   button.disabled=true;button.classList.add('is-added');button.setAttribute('aria-label',`${song.title} adicionada ao repertório`);
-  const repertoireItem={id:'rep_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),songId:song.id,order:event.repertoire.length,shared:eventSongModel(song),personalEdits:{}};
+  const repertoireItem={id:'rep_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   event=eventModel.create({...event,repertoire:[...event.repertoire,repertoireItem],syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,eventPermissionActor(event),'repertoire.song.added',`adicionou ${song.title} ao repertório oficial`,{songId:song.id,changeType:'SONG_ADDED',after:{repertoireItemId:repertoireItem.id,songId:song.id}});
   setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();openSD(event.id);state.added.add(String(song.id));setTimeout(()=>{if(eventAdminSheetState===state)renderEventAddSongs()},360);
 }
@@ -4898,7 +5116,7 @@ function selectEventChatBackground(value){if(!EVENT_CHAT_BACKGROUNDS.includes(va
 async function setEventChatCustomBackground(file){if(!file||!file.type.startsWith('image/')||!currentSdId)return;try{const bitmap=await createImageBitmap(file),scale=Math.min(1,1440/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const context=canvas.getContext('2d');context.fillStyle='#000';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();const image=canvas.toDataURL('image/jpeg',.78),values=storage.get(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{});storage.set(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{...(values&&typeof values==='object'?values:{}),[String(currentSdId)]:image});selectEventChatBackground('custom');showToast('Foto de fundo aplicada.');openChatAppearance();}catch(error){showToast('Não foi possível usar esta foto. Tente uma imagem menor.')}}
 function clearEventChatCustomBackground(){if(!currentSdId)return;if(eventChatBackground()==='custom')selectEventChatBackground('pattern');const values=storage.get(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{});delete values[String(currentSdId)];storage.set(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,values);showToast('Foto de fundo removida.');openChatAppearance();}
 function openChatAppearance(){const selected=eventChatBackground(),customImage=eventChatCustomBackground(),themes=[['pattern','Cabos ROUDY'],['black','Preto'],['blue','Azul profundo'],['warm','Quente'],['graphite','Grafite']];document.getElementById('modal-body').innerHTML=`<div class="modal-title">Fundo do chat</div><p class="event-scope-note">Escolha o fundo deste evento. O padrão do ROUDY é Cabos ROUDY.</p><div class="chat-appearance-options" role="radiogroup" aria-label="Fundo do chat">${themes.map(([value,label])=>`<button type="button" class="chat-appearance-option${selected===value?' is-selected':''}" data-theme="${value}" role="radio" aria-checked="${selected===value}" onclick="selectEventChatBackground('${value}')">${label}</button>`).join('')}${customImage?`<button type="button" class="chat-appearance-option chat-appearance-option--custom${selected==='custom'?' is-selected':''}" data-theme="custom" role="radio" aria-checked="${selected==='custom'}" style="--chat-custom-preview:url(${customImage})" onclick="selectEventChatBackground('custom')">Minha foto</button>`:''}<label class="chat-appearance-upload"><input type="file" accept="image/*" onchange="setEventChatCustomBackground(this.files[0])"><span>${customImage?'Trocar foto':'Adicionar foto'}</span><small>JPG, PNG ou imagem da galeria</small></label></div>${customImage?'<button class="chat-appearance-remove" type="button" onclick="clearEventChatCustomBackground()">Remover minha foto</button>':''}<button class="btn btn-outline" style="width:100%;margin-top:14px" type="button" onclick="closeModal()">Concluir</button>`;document.getElementById('modal-overlay').style.display='flex';}
-async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);eventChat.markRead(event.id);}catch(error){showToast('⚠️ '+error.message);}renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';const avatar=document.getElementById('event-chat-avatar');avatar.textContent=eventInitials(event.title);avatar.className='event-chat-avatar '+eventAvatarPaletteClass(event.id||event.title);applyEventChatBackground();document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
+async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);}catch(error){showToast('⚠️ '+error.message);}eventChat.markRead(event.id);renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';const avatar=document.getElementById('event-chat-avatar');avatar.textContent=eventInitials(event.title);avatar.className='event-chat-avatar '+eventAvatarPaletteClass(event.id||event.title);applyEventChatBackground();document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
 function closeEventChat(){closeEventChatContext();document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
 let eventMemberProfileFromChat=false;
 function eventMemberProfileMonth(value){return new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(value));}
@@ -5045,8 +5263,9 @@ async function migrateLegacyEventsInBackground(){
 // carrega dados salvos
 function eventSongSource(event,item){
   if(!item)return null;
+  if(item.shared?.songData)return JSON.parse(JSON.stringify({...item.shared.songData,id:item.songId}));
   const local=musicas.find(song=>String(song.id)===String(item.songId));
-  if(local)return local;
+  if(local){const model=eventSongModel(local,item.shared),state={...(local.playbackSettings||{}),semitones:item.shared.key?0:(local.playbackSettings?.semitones||0),capo:item.shared.capo!==''?songFormat.parseCapo(item.shared.capo):(local.playbackSettings?.capo??model.capo)};item.shared.songData=eventSongCopy(songFormat.toLegacy(model,local),state);if(setlists.includes(event))eventRepository.save(setlists);return JSON.parse(JSON.stringify(item.shared.songData));}
   const saved=automaticEventOffline?.song(event,item);if(saved)return saved;
   const shared=item.shared||{};if(!shared.chordSheet?.trim())return null;
   return songFormat.toLegacy(songFormat.normalize({id:item.songId,title:shared.title||'Música do evento',artist:shared.artist||'',originalKey:shared.key||'',currentKey:shared.key||'',capo:shared.capo||'',sections:songFormat.sectionsFromSimpleText(shared.chordSheet)}));
@@ -5136,10 +5355,12 @@ appAuth.subscribe(async state=>{
     if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
     renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();
+    // Eventos criados enquanto o envio falhou ficavam só neste aparelho até um evento 'online'. Reenvia ao entrar.
+    if(!eventMigrationCandidate&&setlists.some(event=>event.syncState==='pending'&&event.pendingShared&&eventModel.isLeader(event,appCurrentUser.id)))setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true);},0);
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
   }catch(error){window.__lastAccountError={at:new Date().toISOString(),status:error?.status||null,code:error?.code||null,message:String(error?.message||error).slice(0,300)};console.error('[conta] falha ao consultar a conta',error);if(accountGeneration===accountAuthGeneration)showToast(navigator.onLine===false?'⚠️ Sem internet. Seus eventos serão atualizados quando a conexão voltar.':'⚠️ Não foi possível atualizar seus eventos agora. Tentaremos de novo automaticamente.');setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true).catch?.(()=>{});},15000);}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
 });
-librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
+librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeletedMany:(values,confirmed)=>songRepository.markDeletedMany(values,confirmed),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.querySelector('[data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});

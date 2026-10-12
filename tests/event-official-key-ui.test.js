@@ -27,6 +27,7 @@ const server = http.createServer((request, response) => {
       const remoteEvent=()=>({id:'event-key',title:'Evento do teste',leaderId:'leader-test',creatorId:'leader-test',remoteVersion,members:[{id:'leader-test',name:'Líder',role:'Liderança',isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',order:0,shared:{...remoteShared}}]});
       await page.route('**/api/collaboration/**', async route => {
         const request=route.request(),url=request.url();
+        if(url.endsWith('/capabilities'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({eventSongData:1})});
         if(url.endsWith('/users')&&request.method()==='POST')return route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({user:{id:'leader-test',name:'Líder'},accessToken:'test-token'})});
         if(url.endsWith('/events/event-key/repertoire/event-key-item/shared')&&request.method()==='PATCH'){
           remoteShared={...remoteShared,...JSON.parse(request.postData())};remoteVersion+=1;
@@ -38,16 +39,19 @@ const server = http.createServer((request, response) => {
       await page.route('**/api/auth/config', route => route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({enabled:false,provider:'local'})}));
       await page.route('https://fonts.googleapis.com/**', route => route.fulfill({status:200,contentType:'text/css',body:''}));
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
-      await page.evaluate(() => {
+      await page.waitForFunction(()=>loginGateAuthReady);
+      await page.evaluate(async () => {
+        continueWithoutLogin();
         appCurrentUser=Object.freeze({...appCurrentUser,id:'leader-test',name:'Líder'});
         musicas.push(songModel.create({id:'event-key-song',title:'Canção do teste',key:'C',blocos:[{l:'',c:'C F G\nUma letra'}],fullChordSheet:{visibility:'private',source:'user_text',content:'C F G\nUma letra'}}));
-        eventCollaboration.ensureLocalIdentity(appCurrentUser);
+        eventCollaboration.ensureLocalIdentity(appCurrentUser);await eventCollaboration.ensureRegistered(appCurrentUser);
         setlists.push(eventModel.create({id:'event-key',title:'Evento do teste',leaderId:appCurrentUser.id,remoteVersion:1,members:[{...appCurrentUser,isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',shared:{key:'C',notes:'Entrada suave',chordSheet:'C F G\nUma letra'}}]}));
         openSD('event-key');
       });
       assert.equal(await page.locator('.event-official-key-control').count(),0);
       assert.equal(await page.locator('.event-song-edit').count(),1);
-      await page.getByRole('button',{name:'Editar Canção do teste no repertório oficial'}).click();
+      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
+      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
       await page.locator('#event-song-edit-key').fill('Db');
       await page.locator('#event-song-edit-capo').fill('2');
       await page.locator('#event-song-edit-text').fill('Db Gb Ab\nUma letra revisada');
@@ -64,7 +68,9 @@ const server = http.createServer((request, response) => {
       remoteShared={...remoteShared,key:'D'};remoteVersion+=1;
       await page.evaluate(() => {currentAuthState={...currentAuthState,authenticated:true};return refreshOpenEventFromCloud();});
       await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'D');
-      await page.getByRole('button',{name:'Editar Canção do teste no repertório oficial'}).click();
+      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
+      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
+      await page.waitForFunction(()=>document.getElementById('event-song-edit-key').value==='D');
       assert.equal(await page.locator('#event-song-edit-key').inputValue(),'D');
       await page.getByRole('button',{name:'Cancelar'}).click();
       const chatBounds=await page.locator('#event-chat-fab').boundingBox();
@@ -79,6 +85,7 @@ const server = http.createServer((request, response) => {
       });
       assert.equal(await page.locator('#event-chat-fab .event-chat-fab-badge').innerText(),'1');
       await page.locator('#event-chat-fab').click();
+      await page.waitForFunction(()=>!document.querySelector('#event-chat-fab .event-chat-fab-badge'));
       assert.equal(await page.locator('#event-chat-fab .event-chat-fab-badge').count(),0);
       await page.evaluate(() => {
         closeEventChat();
