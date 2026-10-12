@@ -3097,6 +3097,10 @@ function setSimpleEditorView(view){
   });
 }
 function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditContext;if(context&&context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra o evento.');return;}openSimpleSongEditor(model,sourceSong,{isAi:true,eventContext:context||null});}
+// Restaurado do main (perdido na integração): música encontrada pela busca abre para o usuário
+// ver e confirmar. Nada entra na playlist até Salvar.
+function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
+function playlistContainsSong(input){try{return Boolean(songModel.findDuplicate(musicas,songModel.create(input)))}catch(_){return false}}
 async function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
   const values=readSimpleSongEditor(simpleReviewDraft.model);if(!values)return;
