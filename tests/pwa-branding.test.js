@@ -32,7 +32,7 @@ assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
-assert.match(serviceWorker, /simplificando-cifras-v473-responsive-stage/);
+assert.match(serviceWorker, /simplificando-cifras-v474-study-youtube/);
 assert.match(serviceWorker, /assets\/icons\/roudy-assistant-headphones\.svg\?v=1/);
 assert.equal((indexHtml.match(/roudy-assistant-headphones\.svg\?v=1/g) || []).length, 4);
 assert.match(serviceWorker, /assets\/empty-medley-disc\.svg/);

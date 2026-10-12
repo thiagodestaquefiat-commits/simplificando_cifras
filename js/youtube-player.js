@@ -36,11 +36,19 @@
     if (global.YT && global.YT.Player) return Promise.resolve(global.YT);
     if (sdkPromise) return sdkPromise;
     sdkPromise = new Promise((resolve, reject) => {
+      let settled = false;
+      let timeout = null;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        global.clearTimeout(timeout);
+        callback(value);
+      };
       const previousReady = global.onYouTubeIframeAPIReady;
       global.onYouTubeIframeAPIReady = () => {
         if (typeof previousReady === "function") previousReady();
-        if (global.YT && global.YT.Player) resolve(global.YT);
-        else reject(new Error("O player do YouTube não ficou disponível."));
+        if (global.YT && global.YT.Player) finish(resolve, global.YT);
+        else finish(reject, new Error("O player do YouTube não ficou disponível."));
       };
       const existing = global.document.querySelector(`script[src="${SDK_URL}"]`);
       const script = existing || global.document.createElement("script");
@@ -49,8 +57,9 @@
         script.async = true;
         global.document.head.appendChild(script);
       }
-      script.addEventListener("error", () => reject(new Error("Não foi possível carregar o player do YouTube.")), { once: true });
-    });
+      script.addEventListener("error", () => finish(reject, new Error("Não foi possível carregar o player do YouTube.")), { once: true });
+      timeout = global.setTimeout(() => finish(reject, new Error("O player do YouTube demorou demais para carregar.")), 8000);
+    }).catch((error) => { sdkPromise = null; throw error; });
     return sdkPromise;
   }
 
@@ -97,7 +106,9 @@
     const cleaned = String(videoId || "").trim();
     if (!cleaned) throw new Error("Este vídeo do YouTube não está disponível.");
     destroy();
-    const YT = await loadSdk();
+    let YT;
+    try { YT = await loadSdk(); }
+    catch (_error) { return mountNativeIframe(elementId, cleaned, events); }
     return new Promise((resolve, reject) => {
       let settled = false;
       const nativeFallbackTimer = global.setTimeout(() => {

@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v473-responsive-stage";
+const CACHE_NAME = "simplificando-cifras-v474-study-youtube";
 const ASSETS = [
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
@@ -15,7 +15,7 @@ const ASSETS = [
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=6",
   "./js/youtube-player-ui.js?v=18",
-  "./js/youtube-player.js?v=7",
+  "./js/youtube-player.js?v=8",
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=6",
   "./js/editor/song-format.js?v=12",

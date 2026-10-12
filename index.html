@@ -876,11 +876,11 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 /* YOUTUBE STUDY — scroll-scrubbed header and media-native controls */
 #view-detail:not(.stage-mode){--video-header-progress:0;--video-header-height:58px}
 #view-detail:not(.stage-mode).video-study-expanded{--video-header-height:58px}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header{position:sticky;z-index:9;top:0;min-height:58px;height:58px;margin-bottom:-58px;padding-block:8px;overflow:hidden;border-bottom-color:rgba(255,255,255,calc(var(--video-header-progress)*.09));background:rgba(5,5,6,var(--video-header-progress));box-shadow:0 6px 20px rgba(0,0,0,calc(var(--video-header-progress)*.3));backdrop-filter:blur(calc(var(--video-header-progress)*14px));-webkit-backdrop-filter:blur(calc(var(--video-header-progress)*14px));transform:none;transition:none;pointer-events:none;will-change:background-color,backdrop-filter}
+#view-detail:not(.stage-mode).video-study-expanded>.detail-header{position:sticky;z-index:30;top:0;min-height:58px;height:58px;margin-bottom:-58px;padding-block:8px;overflow:hidden;border-bottom-color:rgba(255,255,255,calc(var(--video-header-progress)*.09));background:rgba(5,5,6,var(--video-header-progress));box-shadow:0 6px 20px rgba(0,0,0,calc(var(--video-header-progress)*.3));backdrop-filter:blur(calc(var(--video-header-progress)*14px));-webkit-backdrop-filter:blur(calc(var(--video-header-progress)*14px));transform:none;transition:none;pointer-events:auto;will-change:background-color,backdrop-filter}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap,#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-key-badge{opacity:var(--video-header-progress);transform:translate3d(0,calc((1 - var(--video-header-progress))*5px),0);pointer-events:none;will-change:opacity,transform}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap{grid-column:2/4;padding-right:6px;text-align:left}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-capo{text-align:left}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;top:10px;left:3px;width:32px;height:32px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;z-index:31;top:7px;left:6px;width:44px;height:44px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn svg{width:18px;height:18px}
 #view-detail:not(.stage-mode)>.detail-header,#view-detail:not(.stage-mode).video-study-expanded>.detail-header{pointer-events:auto}
 #view-detail:not(.stage-mode)>.detail-header .back-btn{position:relative;z-index:4;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -1077,7 +1077,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
   <!-- DETAIL VIEW -->
   <div class="detail-view" id="view-detail">
     <div class="detail-header">
-      <button class="back-btn" type="button" onclick="closeDetail()" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button>
+      <button class="back-btn" id="study-back-button" type="button" onclick="closeStudyView(event)" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button>
       <div class="detail-title-wrap">
         <div class="detail-title" id="detail-title"></div>
         <div class="detail-capo" id="detail-artist-label"></div>
@@ -1247,7 +1247,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-chat.js?v=4"></script>
 <script src="js/youtube-api.js?v=6"></script>
 <script src="js/youtube-song-linker.js?v=1"></script>
-<script src="js/youtube-player.js?v=7"></script>
+<script src="js/youtube-player.js?v=8"></script>
 <script src="js/youtube-player-ui.js?v=18"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
@@ -2454,6 +2454,11 @@ function closeDetail(){
   youtubePlayerUI.hide();navigationContext.clear();currentDetailSongOverride=null;updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');vd.style.display='none';vd.style.zIndex='10';
   document.getElementById('event-chat-fab').hidden=document.getElementById('view-sd').style.display!=='flex';
+}
+
+function closeStudyView(event){
+  event?.preventDefault?.();event?.stopPropagation?.();
+  closeDetail();
 }
 
 function revealStageControls(){
