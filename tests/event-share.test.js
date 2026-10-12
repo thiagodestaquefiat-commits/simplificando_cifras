@@ -28,15 +28,16 @@ const event={id:'event-42',title:'Ensaio de interface',date:'2026-10-10',time:'1
   const serialized=JSON.stringify(data);
   ['Privado','privado@example.com','segredo','não compartilhar','personalEdits','preparation','READY'].forEach(secret=>assert(!serialized.includes(secret),`dado privado vazou: ${secret}`));
   assert(eventShare.cardMarkup(data).includes('+ 1 música'),'markup deve exibir contagem singular correta');
+  assert(eventShare.cardMarkup(data).includes('aspect-ratio:1 / 1'),'prévia deve ser compacta para não cortar informações no mensageiro');
   assert(!eventShare.cardMarkup(data).includes('undefined'),'markup não deve imprimir placeholders inválidos');
 
   const OriginalFile=global.File;
   global.File=class File {constructor(parts,name,options){this.parts=parts;this.name=name;this.type=options.type;}};
   let sharedPayload;
   const fileResult=await eventShare.share(data,{type:'image/png'},{canShare:payload=>payload.files?.length===1,share:async payload=>{sharedPayload=payload;}});
-  assert.strictEqual(fileResult.kind,'file');assert.strictEqual(sharedPayload.files[0].type,'image/png');
+  assert.strictEqual(fileResult.kind,'link');assert.strictEqual(sharedPayload.url,data.link);assert(!sharedPayload.files,'o mensageiro deve montar a prévia Open Graph do link');
   const textResult=await eventShare.share(data,{type:'image/png'},{canShare:()=>false,share:async payload=>{sharedPayload=payload;}});
-  assert.strictEqual(textResult.kind,'text');assert.strictEqual(sharedPayload.url,data.link);
+  assert.strictEqual(textResult.kind,'link');assert.strictEqual(sharedPayload.url,data.link);
   const fallback=await eventShare.share(data,null,{});
   assert.strictEqual(fallback.kind,'fallback');assert(fallback.text.includes(data.link),'fallback deve preservar o link');
   global.File=OriginalFile;

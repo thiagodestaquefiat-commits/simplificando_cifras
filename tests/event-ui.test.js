@@ -233,7 +233,8 @@ const server = http.createServer((request, response) => {
 
     await page.locator(".event-chat-poll-open").click();
     await page.locator("#poll-question").fill("Qual música abre o evento?");
-    await page.locator("#poll-options").fill("Música A\nMúsica B");
+    await page.locator(".event-poll-option-input").nth(0).fill("Música A");
+    await page.locator(".event-poll-option-input").nth(1).fill("Música B");
     await page.getByRole("button", { name: "Publicar enquete" }).click();
     assert.equal(await page.getByText(/Qual música abre o evento/).count(), 1);
     await page.locator(".event-poll-option").first().click();

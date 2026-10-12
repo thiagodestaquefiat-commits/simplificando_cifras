@@ -59,7 +59,7 @@
     return allMessages()[String(eventId)] || [];
   }
   async function createRemote(message) {
-    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll }) });
+    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll, song: message.song }) });
     write(message.eventId, (values) => values.map((value) => String(value.id) === String(message.id) ? saved : value));
     if (global.syncRealtime) global.syncRealtime.publishChat(message.eventId);
     return saved;
@@ -108,6 +108,27 @@
     const options = (poll.options || []).map((label) => String(label || "").trim()).filter(Boolean).map((label) => ({ id: uid("option"), label }));
     if (!String(poll.question || "").trim() || options.length < 2) throw new Error("Informe uma pergunta e pelo menos duas opções.");
     const message = { ...baseMessage(eventId, "poll"), poll: { question: String(poll.question).trim(), options, multiple: Boolean(poll.multiple), showVoters: poll.showVoters !== false, votes: {} } };
+    write(eventId, (values) => [...values, message]);
+    createRemote(message).catch(() => {});
+    return message;
+  }
+  function sendSong(eventId, song, replyTo) {
+    const source = song && typeof song === "object" ? song : {};
+    const title = String(source.title || "").trim();
+    if (!title) throw new Error("A música precisa de um título.");
+    const sharedSong = {
+      id: source.id === undefined || source.id === null ? null : String(source.id),
+      title: title.slice(0, 240),
+      artist: String(source.artist || "").trim().slice(0, 240),
+      album: String(source.album || "").trim().slice(0, 240) || null,
+      key: String(source.key || "").trim().slice(0, 24),
+      capo: String(source.capo || "").trim().slice(0, 24),
+      coverUrl: String(source.coverUrl || "").trim().slice(0, 2000) || null,
+      youtubeVideoId: String(source.youtubeVideoId || "").trim().slice(0, 80) || null,
+      youtubeUrl: String(source.youtubeUrl || "").trim().slice(0, 2000) || null,
+      blocos: Array.isArray(source.blocos) ? source.blocos.slice(0, 160).map((block) => ({ l: String(block && block.l || "").slice(0, 1200), c: String(block && block.c || "").slice(0, 1200) })) : []
+    };
+    const message = { ...baseMessage(eventId, "song"), content: title, song: sharedSong, replyTo: replyTo || null };
     write(eventId, (values) => [...values, message]);
     createRemote(message).catch(() => {});
     return message;
@@ -168,5 +189,5 @@
     global.addEventListener("online", () => Object.keys(allMessages()).forEach((eventId) => flush(eventId)));
   }
 
-  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
+  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
 })(window);

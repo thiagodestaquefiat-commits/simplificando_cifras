@@ -23,6 +23,11 @@ const poll = window.eventChat.createPoll("e1", { question: "Qual tom?", options:
 window.eventChat.vote("e1", poll.id, poll.poll.options[0].id);
 assert.deepEqual(window.eventChat.list("e1", 40)[1].poll.votes[poll.poll.options[0].id], ["u1"]);
 
+const sharedSong = window.eventChat.sendSong("e1", { id: "song-1", title: "A alegria", artist: "MORADA", key: "A", blocos: [{ c: "A D", l: "A alegria" }] });
+assert.equal(sharedSong.type, "song");
+assert.equal(sharedSong.song.title, "A alegria");
+assert.equal(window.eventChat.list("e1", 40)[2].song.blocos[0].c, "A D");
+
 user = { id: "u2", name: "Maria" };
 window.eventChat.sendText("e1", "Confirmado", first.id);
 user = { id: "u1", name: "João" };

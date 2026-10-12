@@ -93,6 +93,15 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
     try{await global.eventCollaboration.inviteUser(eventId,user.id,'Outra');if(account!==owner()||eventId!==sheetEventId)return;button.querySelector('.event-people-search-more').textContent='✓';button.setAttribute('aria-label',`${user.name}: convite enviado`);status.textContent='Convite enviado. A pessoa entrará no evento após aceitar.';}
     catch(error){if(account===owner()&&eventId===sheetEventId){button.disabled=false;status.textContent=message(error);}}
   }
+  async function inviteScanned(eventId,rawIdentity){
+    const account=owner(),identity=String(rawIdentity||'').trim(),term=identity.replace(/^@+/,'');if(!account)throw new Error('Entre com sua conta para convidar integrantes.');if(!eventId||term.length<2)throw new Error('Este QR Code não contém um perfil válido.');
+    const event=global.findEvent?.(eventId);if(!event||event.remoteVersion==null)throw new Error('Salve o evento na nuvem antes de convidar.');
+    const data=await global.eventCollaboration.searchUsers(term,0),normalized=term.toLocaleLowerCase('pt-BR'),users=data.users||[],user=users.find(item=>String(item.id)===identity||String(item.username||'').toLocaleLowerCase('pt-BR')===normalized)||(users.length===1?users[0]:null);
+    if(!user)throw new Error('Não encontramos um perfil ROUDY correspondente a este QR Code.');
+    if((event.members||[]).some(member=>String(member.id)===String(user.id)))throw new Error(`${user.name} já participa deste evento.`);
+    if(global.appConfirm&&!global.appConfirm(`Adicionar ${user.name} ao evento?`))throw new Error('Convite cancelado.');
+    await global.eventCollaboration.inviteUser(eventId,user.id,'Outra');return user;
+  }
   function updateBadge(){if(global.notificationCenter){global.notificationCenter.update();return;}const button=byId('user-invitations-button');if(!button)return;button.hidden=!owner();button.querySelector('.event-notification-badge')?.remove();if(invitations.length){const badge=document.createElement('span');badge.className='event-notification-badge';badge.textContent=invitations.length>99?'99+':String(invitations.length);button.appendChild(badge);}button.setAttribute('aria-label',`Convites para eventos${invitations.length?': '+invitations.length+' pendentes':''}`);}
   async function refresh(showError=false){
     const account=owner(),seq=++refreshSequence;if(!account){invitations=[];inboxOwner=null;updateBadge();return;}
@@ -125,7 +134,7 @@ panel.innerHTML=`<h3>Convidar integrante</h3><p>Busque uma pessoa cadastrada ou 
       global.showToast(action==='accept'?'Convite aceito. O evento está na sua lista.':'Convite rejeitado.');
     }catch(error){if(account===owner()&&list===byId('user-invitations-list')){status.textContent=message(error);card.querySelectorAll('button').forEach(b=>b.disabled=false);}}
   }
-  global.eventUserInvites=Object.freeze({openEditor,openSearchSheet,closeSearchSheet,openInbox,refresh,renderInbox,getPending:()=>inboxOwner===owner()?invitations.slice():[]});
+  global.eventUserInvites=Object.freeze({openEditor,openSearchSheet,closeSearchSheet,inviteScanned,openInbox,refresh,renderInbox,getPending:()=>inboxOwner===owner()?invitations.slice():[]});
   global.appAuth?.subscribe(()=>{++searchSequence;clearTimeout(debounce);selection=null;refresh();});
   global.addEventListener('focus',()=>refresh());global.addEventListener('online',()=>refresh());
   setInterval(()=>{if(!document.hidden)refresh();},45000);

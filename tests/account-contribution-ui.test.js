@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const html=fs.readFileSync('index.html','utf8');
+const css=fs.readFileSync('js/account-contribution.css','utf8');
+assert.match(html,/account-contribution\.css\?v=13/);
+assert.match(html,/class="account-contribution-page"/);
+assert.match(html,/class="account-contribution-card"/);
+assert.match(html,/class="account-contribution-copy"[^>]*onclick="copyRoudyPixCode\(\)"/);
+assert.match(html,/class="account-contribution-values"/);
+assert.match(html,/\[5,10,25\]/);
+assert.match(html,/data-value="other"/);
+assert.match(html,/function currentRoudyPixCode\(\)/);
+assert.match(html,/renderRoudyContributionQr\(\)/);
+assert.match(css,/chat-cables-background\.png/);
+assert.match(css,/\.account-contribution-qr-frame/);
+assert.match(css,/\.account-contribution-copy/);
+assert.match(css,/safe-area-inset-bottom/);
+console.log('account-contribution-ui.test.js: OK (estampa, QR, Pix e responsividade)');

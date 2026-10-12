@@ -22,7 +22,7 @@ function device(user) {
     async fetch(url, options) {
       if ((options && options.method) === "POST") {
         const body = JSON.parse(options.body);
-        const message = { id: body.clientId, eventId: "event-1", type: body.type, content: body.content, replyTo: body.replyTo || null, poll: body.poll || null, reactions: {}, deleted: false, sender: { id: user.id, name: user.name, avatarUrl: null }, createdAt: new Date().toISOString(), editedAt: null };
+        const message = { id: body.clientId, eventId: "event-1", type: body.type, content: body.content, replyTo: body.replyTo || null, poll: body.poll || null, song: body.song || null, reactions: {}, deleted: false, sender: { id: user.id, name: user.name, avatarUrl: null }, createdAt: new Date().toISOString(), editedAt: null };
         const existing = remote.find((item) => item.id === message.id);
         if (!existing) remote.push(message);
         return { ok: true, status: existing ? 200 : 201, json: async () => structuredClone(existing || message) };
@@ -44,6 +44,10 @@ function device(user) {
   assert.equal(a.eventChat.list("event-1", 40)[0].pending, undefined, "a confirmação remove o estado pendente");
   await b.eventChat.refresh("event-1");
   assert.equal(b.eventChat.list("event-1", 40)[0].content, "Mensagem entre aparelhos");
-  assert.equal(b.eventChat.unreadCount("event-1"), 1);
+  a.eventChat.sendSong("event-1", { id: "song-1", title: "A alegria", artist: "MORADA", key: "A" });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  await b.eventChat.refresh("event-1");
+  assert.equal(b.eventChat.list("event-1", 40)[1].song.title, "A alegria");
+  assert.equal(b.eventChat.unreadCount("event-1"), 2);
   console.log("event-chat-remote.test.js: OK (persistência, confirmação e segundo dispositivo)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

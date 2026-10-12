@@ -1,7 +1,7 @@
 (function(global){
   'use strict';
 
-  const FORMATS=Object.freeze({portrait:Object.freeze({width:1080,height:1350,ratio:'4 / 5'})});
+  const FORMATS=Object.freeze({compact:Object.freeze({width:1080,height:1080,ratio:'1 / 1'})});
   const GRADIENTS=Object.freeze([
     Object.freeze({blue:[.08,.10],warm:[.88,.12]}),
     Object.freeze({blue:[.88,.22],warm:[.10,.82]}),
@@ -25,7 +25,7 @@
 
   function cardMarkup(data){
     const songs=data.visibleSongs.map(song=>`<li><strong>${escapeHtml(song.title)}</strong>${song.artist?`<span>${escapeHtml(song.artist)}</span>`:''}</li>`).join('');
-    return `<article class="event-share-card event-share-card--v${data.variant}" style="aspect-ratio:${FORMATS.portrait.ratio}" aria-label="Arte para compartilhar o evento ${escapeHtml(data.title)}"><span class="event-share-brand">ROUDY</span><header><h2>${escapeHtml(data.title)}</h2><p>${[data.date,data.time].filter(Boolean).map(escapeHtml).join(' · ')}</p>${data.location?`<p>${escapeHtml(data.location)}</p>`:''}</header><section><h3>REPERTÓRIO</h3>${songs?`<ol>${songs}</ol>`:'<p class="event-share-empty">Repertório ainda vazio</p>'}${data.remainingCount?`<strong class="event-share-remaining">+ ${data.remainingCount} ${data.remainingCount===1?'música':'músicas'}</strong>`:''}</section><footer>ROUDY</footer></article>`;
+    return `<article class="event-share-card event-share-card--compact event-share-card--v${data.variant}" style="aspect-ratio:${FORMATS.compact.ratio}" aria-label="Prévia completa do evento ${escapeHtml(data.title)}"><span class="event-share-brand">ROUDY</span><header><h2>${escapeHtml(data.title)}</h2><p>${[data.date,data.time].filter(Boolean).map(escapeHtml).join(' · ')}</p>${data.location?`<p>${escapeHtml(data.location)}</p>`:''}</header><section><h3>REPERTÓRIO</h3>${songs?`<ol>${songs}</ol>`:'<p class="event-share-empty">Repertório ainda vazio</p>'}${data.remainingCount?`<strong class="event-share-remaining">+ ${data.remainingCount} ${data.remainingCount===1?'música':'músicas'}</strong>`:''}</section><footer>ROUDY</footer></article>`;
   }
 
   function drawWrapped(context,text,x,y,maxWidth,lineHeight,maxLines){
@@ -35,8 +35,9 @@
     lines.forEach((value,index)=>context.fillText(value,x,y+index*lineHeight));return y+lines.length*lineHeight;
   }
 
-  function renderToCanvas(data,documentRef=global.document,format='portrait'){
-    const size=FORMATS[format]||FORMATS.portrait,canvas=documentRef.createElement('canvas');canvas.width=size.width;canvas.height=size.height;const ctx=canvas.getContext('2d'),variant=GRADIENTS[data.variant];
+  function renderToCanvas(data,documentRef=global.document,format='compact'){
+    const size=FORMATS[format]||FORMATS.compact,canvas=documentRef.createElement('canvas');canvas.width=size.width;canvas.height=size.height;const ctx=canvas.getContext('2d'),variant=GRADIENTS[data.variant];
+    const radius=56;ctx.clearRect(0,0,size.width,size.height);ctx.beginPath();ctx.moveTo(radius,0);ctx.lineTo(size.width-radius,0);ctx.quadraticCurveTo(size.width,0,size.width,radius);ctx.lineTo(size.width,size.height-radius);ctx.quadraticCurveTo(size.width,size.height,size.width-radius,size.height);ctx.lineTo(radius,size.height);ctx.quadraticCurveTo(0,size.height,0,size.height-radius);ctx.lineTo(0,radius);ctx.quadraticCurveTo(0,0,radius,0);ctx.closePath();ctx.clip();
     const base=ctx.createLinearGradient(0,0,size.width,size.height);base.addColorStop(0,'#071a36');base.addColorStop(.48,'#06101f');base.addColorStop(1,'#020406');ctx.fillStyle=base;ctx.fillRect(0,0,size.width,size.height);
     const glow=(point,color,radius)=>{const g=ctx.createRadialGradient(point[0]*size.width,point[1]*size.height,0,point[0]*size.width,point[1]*size.height,radius);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,size.width,size.height)};
     glow(variant.blue,'rgba(20,112,255,.52)',760);glow(variant.warm,'rgba(232,176,64,.18)',430);
@@ -46,14 +47,14 @@
     if(!data.visibleSongs.length){ctx.fillStyle='rgba(255,255,255,.66)';ctx.font='500 30px system-ui,sans-serif';ctx.fillText('Repertório ainda vazio',left,y)}
     data.visibleSongs.forEach(song=>{ctx.fillStyle='#fff';ctx.font='700 34px system-ui,sans-serif';y=drawWrapped(ctx,song.title,left,y,max,40,1);if(song.artist){ctx.fillStyle='rgba(255,255,255,.62)';ctx.font='500 25px system-ui,sans-serif';ctx.fillText(song.artist.slice(0,58),left,y+3);y+=34}y+=36});
     if(data.remainingCount){ctx.fillStyle='#9fc2ff';ctx.font='700 27px system-ui,sans-serif';ctx.fillText(`+ ${data.remainingCount} ${data.remainingCount===1?'música':'músicas'}`,left,y+4)}
-    ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='700 25px system-ui,sans-serif';ctx.textAlign='right';ctx.fillText('ROUDY',right,size.height-70);ctx.textAlign='left';return canvas;
+    ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='700 25px system-ui,sans-serif';ctx.textAlign='right';ctx.fillText('ROUDY',right,size.height-48);ctx.textAlign='left';return canvas;
   }
   const canvasBlob=canvas=>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Não foi possível gerar a imagem.')),'image/png',1));
   async function renderImage(data,documentRef){return canvasBlob(renderToCanvas(data,documentRef))}
   function shareText(data){return [data.title,[data.date,data.time].filter(Boolean).join(' · '),data.location,data.link].filter(Boolean).join('\n')}
   async function share(data,imageBlob,navigatorRef=global.navigator){
-    const text=shareText(data),file=imageBlob&&typeof File!=='undefined'?new File([imageBlob],`roudy-${data.id||'evento'}.png`,{type:'image/png'}):null;
-    if(navigatorRef?.share){if(file&&navigatorRef.canShare?.({files:[file]})){await navigatorRef.share({title:data.title,text,url:data.link||undefined,files:[file]});return {kind:'file'}}await navigatorRef.share({title:data.title,text,url:data.link||undefined});return {kind:'text'}}
+    const text=shareText(data);
+    if(navigatorRef?.share){await navigatorRef.share({title:data.title,text:data.link?shareText({...data,link:''}):text,url:data.link||undefined});return {kind:'link'}}
     return {kind:'fallback',text};
   }
   global.roudyEventShare=Object.freeze({FORMATS,gradientVariant,createData,cardMarkup,renderToCanvas,renderImage,shareText,share});
