@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v470-search-keeps-tab";
+const CACHE_NAME = "simplificando-cifras-v471-camera-search-stage";
 const ASSETS = [
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
@@ -125,7 +125,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=3",
-  "./js/medley-editor.css?v=27",
+  "./js/medley-editor.css?v=28",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
   "./assets/keyboard-icon.svg",
@@ -172,9 +172,9 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=18",
+  "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/ai/ai-harmonic-summary.css?v=8",
-  "./js/ai/camera-capture.js?v=2",
+  "./js/ai/camera-capture.js?v=3",
   "./css/editorial-typography.css?v=3",
   "./css/roudy-color-system-preview.css?v=15",
   "./manifest.webmanifest?v=15",

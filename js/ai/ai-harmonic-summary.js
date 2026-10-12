@@ -14,6 +14,13 @@
     return node;
   }
 
+  function candidateMetadata(candidate, fallbackArtist) {
+    const currentYear = new Date().getFullYear() + 1;
+    const direct = [candidate?.year, candidate?.releaseYear, candidate?.ano].map(Number).find(value => Number.isInteger(value) && value >= 1900 && value <= currentYear);
+    const dated = [candidate?.releaseDate, candidate?.releasedAt, candidate?.publishedAt].map(value => String(value || "").match(/^(19|20)\d{2}/)?.[0]).find(Boolean);
+    return [String(candidate?.artist || fallbackArtist || "").trim(), direct ? String(direct) : dated].filter(Boolean).join(" · ") || "Artista não informado";
+  }
+
   function field(labelText, name, type, required) {
     const wrap = element("label", "ai-summary-field");
     wrap.appendChild(element("span", "ai-summary-label", labelText));
@@ -460,18 +467,17 @@
       const candidates = await global.harmonicSummaryClient.searchSources(title, artist);
       // Sem fontes licenciadas: procura direto no catálogo ROUDY e depois na web (a IA nunca inventa a música).
       const catalogSearch = !candidates.length;
-      if (catalogSearch) candidates.push({ catalog: true, title, artist, sourceName: "ROUDY + web" });
+      if (catalogSearch) candidates.push({ catalog: true, title, artist });
       status.textContent = catalogSearch ? "Procurando a cifra no ROUDY e na web…" : "Escolha a versão correta:";
       candidates.forEach(candidate => {
         const row = element("div", "ai-song-search-result");
-        const copy = element("span", "ai-song-search-result-copy"); copy.append(element("strong", "", candidate.title || title), element("small", "", candidate.artist || artist || "Artista não informado"));
-        const source = element("span", "ai-song-search-source", candidate.sourceName || "Fonte musical");
+        const copy = element("span", "ai-song-search-result-copy"); copy.append(element("strong", "", candidate.title || title), element("small", "", candidateMetadata(candidate, artist)));
         const addButton=element("button","playlist-search-add-btn");addButton.type="button";addButton.innerHTML=addStateIcon();
         const name=candidate.title||title;setSearchAddState(addButton,name,searchCandidateAdded(candidate,title,artist),false);
         addButton.addEventListener("pointerdown",()=>addButton.classList.add("is-pressed"));
         ["pointerup","pointercancel","pointerleave"].forEach(type=>addButton.addEventListener(type,()=>addButton.classList.remove("is-pressed")));
         addButton.addEventListener("click",()=>generateSearchResult(candidate,title,artist,addButton));
-        row.append(copy,source,addButton);results.appendChild(row);
+        row.append(copy,addButton);results.appendChild(row);
         if (candidate.catalog && !addButton.classList.contains("is-added")) autoAdd = () => generateSearchResult(candidate, title, artist, addButton);
       });
     } catch (error) { status.textContent = error?.message || "Não foi possível realizar a busca."; }

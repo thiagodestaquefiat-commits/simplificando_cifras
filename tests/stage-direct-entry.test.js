@@ -58,7 +58,7 @@ const server = http.createServer((req, res) => {
       const startBounds=await page.locator('#stage-scroll-toggle').boundingBox();
       const speedBounds=await page.locator('.stage-scroll-speed').boundingBox();
       assert.ok(startBounds.y>=speedBounds.y+speedBounds.height&&Math.abs(startBounds.x+startBounds.width/2-viewport.width/2)<2);
-      assert.ok(startBounds.width<=200);
+      assert.ok(startBounds.width>=200&&startBounds.width<=540&&startBounds.height>=48);
       assert.equal(await page.locator('#stage-online-status').count(),0);
       await page.evaluate(() => { document.getElementById('detail-content').style.minHeight='2500px'; });
       const expandedHeight=await page.locator('#stage-performance-header').evaluate(element=>element.getBoundingClientRect().height);
@@ -142,9 +142,11 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#stage-prev').isVisible(),true);
       assert.equal(await page.locator('#stage-next').isVisible(),true);
       assert.equal(await page.locator('#stage-upcoming-preview').isVisible(),true);
+      assert.equal(await page.locator('.stage-heading').isVisible(),true);
+      assert.equal(await page.getByRole('button',{name:'Sair do Modo Palco',exact:true}).isVisible(),true);
       const compactStart=await page.locator('#stage-scroll-toggle').boundingBox();
       const compactUpcoming=await page.locator('#stage-upcoming-preview').boundingBox();
-      assert.ok(compactUpcoming.x>=compactStart.x+compactStart.width);
+      assert.ok(compactStart.y>=compactUpcoming.y+compactUpcoming.height);
       await page.locator('#stage-next').click();
       assert.equal(await page.evaluate(() => String(currentDetailId)),'1');
       assert.equal(await page.locator('#view-detail.stage-scroll-compact').count(),1);
