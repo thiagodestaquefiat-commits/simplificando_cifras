@@ -1,7 +1,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v472-study-back";
+const CACHE_NAME = "simplificando-cifras-v473-responsive-stage";
 const ASSETS = [
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",

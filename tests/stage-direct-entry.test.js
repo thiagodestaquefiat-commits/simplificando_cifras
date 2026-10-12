@@ -136,7 +136,8 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#stage-next-preview').count(),0);
       const headingInEvent=await page.locator('.stage-heading').boundingBox();
       const upcomingBounds=await page.locator('#stage-upcoming-preview').boundingBox();
-      assert.ok(upcomingBounds.x>=headingInEvent.x+headingInEvent.width);
+      if(viewport.width<=560) assert.ok(upcomingBounds.y>=headingInEvent.y+headingInEvent.height);
+      else assert.ok(upcomingBounds.x>=headingInEvent.x+headingInEvent.width);
       await page.locator('#stage-scroll-toggle').click();
       assert.equal(await page.locator('#view-detail.stage-scroll-compact').count(),1);
       assert.equal(await page.locator('#stage-prev').isVisible(),true);
@@ -155,7 +156,8 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#stage-prev-preview').isVisible(),true);
       assert.equal(await page.locator('#stage-prev-title').innerText(),'Teste de palco');
       const previousBounds=await page.locator('#stage-prev-preview').boundingBox();
-      assert.ok(previousBounds.x+previousBounds.width<=headingInEvent.x);
+      if(viewport.width<=560) assert.ok(previousBounds.y>=headingInEvent.y+headingInEvent.height);
+      else assert.ok(previousBounds.x+previousBounds.width<=headingInEvent.x);
       await page.locator('#stage-prev').click();
       assert.equal(await page.evaluate(() => currentDetailId),'stage-test');
       assert.equal(await page.locator('#view-detail.stage-mode').count(),1);
