@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Cliente HTTP das operações de eventos, integrantes e ajustes pessoais.
+// MANUTENÇÃO: Identidades e filas offline pertencem à conta ativa; não reutilize uma fila entre usuários.
+// MANUTENÇÃO: A confirmação do servidor e a gravação local são etapas diferentes.
 (function (global) {
   "use strict";
 

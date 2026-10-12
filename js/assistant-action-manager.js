@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Roteador central: resolve intenção, verifica contexto/permissões e encaminha ao runtime.
+// MANUTENÇÃO: Protege contra pedidos duplicados, concorrência e respostas assíncronas de outra identidade.
+// MANUTENÇÃO: Registre novas ações no catálogo e no runtime, evitando decisões dispersas na interface.
 (function (global) {
   'use strict';
   const result = (status, message, extra = {}) => ({ ok: ['executed', 'opened', 'noop'].includes(status), action: null, status, message, ...extra });

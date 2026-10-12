@@ -3,7 +3,7 @@ const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('service-work
 for(const source of [html,sw,assistant,invites])assert.doesNotMatch(source,/^(?:<<<<<<<|=======|>>>>>>>)/m,'nenhum conflito pendente');
 const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
 assert.equal(new Set(scripts).size,scripts.length,'scripts não carregados em duplicidade');
-for(const path of ['js/app-assistant.js?v=30','js/tuner.js?v=4','js/chord-audio.js?v=2','js/smart-scroll.js?v=7','js/tablature.js?v=2','js/assistant-language.js?v=1','js/assistant-dialogue.js?v=4','js/event-qr-scanner.js?v=1','js/profile-qr.js?v=3','js/event-user-invites.js?v=8']){
+for(const path of ['js/app-assistant.js?v=31','js/tuner.js?v=4','js/chord-audio.js?v=2','js/smart-scroll.js?v=7','js/tablature.js?v=2','js/assistant-language.js?v=1','js/assistant-dialogue.js?v=4','js/event-qr-scanner.js?v=1','js/profile-qr.js?v=3','js/event-user-invites.js?v=8']){
   assert.ok(scripts.includes(path),path+' preservado');assert.ok(sw.includes('./'+path),path+' no cache offline');
 }
 assert.match(html,/function commitSongs\(next\)/);

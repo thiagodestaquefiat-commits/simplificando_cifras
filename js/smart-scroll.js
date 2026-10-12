@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Acompanhamento por sequência de acordes, incluindo repetições e posição visual.
+// MANUTENÇÃO: Estabilidade, intervalo de avanço e rearme são proteções distintas contra falsos avanços.
+// MANUTENÇÃO: O controlador combina o áudio com o acorde esperado e o deslocamento do capotraste.
 (function(global){
   'use strict';
 
@@ -21,6 +24,7 @@
     return count>=1&&count<=99?count:fallback;
   }
   function buildSequence(blocks){
+    // MANUTENÇÃO: Expanda repetições musicais na sequência, mas preserve a referência ao bloco exibido na tela.
     const sequence=[];
     Array.from(blocks||[]).forEach((element,blockIndex)=>{
       const chordElements=Array.from(element.querySelectorAll?.('[data-smart-chord-token]')||[]);
@@ -37,6 +41,7 @@
   }
 
   function createTracker(options={}){
+    // MANUTENÇÃO: Os padrões abaixo podem ser sobrescritos pela configuração do controlador em index.html.
     const stableMs=options.stableMs??250,cooldownMs=options.cooldownMs??180,dropoutMs=options.dropoutMs??220,rearmSilenceMs=options.rearmSilenceMs??0;
     let sequence=[],index=0,candidate=null,candidateSince=0,candidateLastSeen=0,lastAdvance=-Infinity,lastMatchedRoot=null,armed=true;
     let lastSignalAt=-Infinity;

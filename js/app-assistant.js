@@ -1,3 +1,7 @@
+// MANUTENÇÃO: Integra reconhecimento de fala do navegador, contexto da interface e módulos de ações.
+// MANUTENÇÃO: Fluxo: clique -> transcrição final -> diálogo/intenções -> ação verificada -> resposta.
+// MANUTENÇÃO: Não exigir o nome Roudy; manter negações e invalidar respostas quando conta/tela mudam.
+// MANUTENÇÃO: Reconhecimento de fala não é o motor de IA generativa e pode depender da rede do navegador.
 (function(global){
   "use strict";
   let recognition=null,listening=false,recognitionSession=0;
@@ -33,6 +37,7 @@
   function message(text,kind=""){const output=element("assistant-message");if(output){output.textContent=text;output.dataset.kind=kind;}if(typeof global.showToast==="function")global.showToast((kind==="error"?"⚠️ ":"")+text);}
   function cancelSpeech(){speechVersion++;clearTimeout(followUpTimer);clearTimeout(speechWatchdog);followUpTimer=null;speechWatchdog=null;questionSpeechId=null;global.speechSynthesis?.cancel();}
   function speak(text,onDone,questionId){
+    // MANUTENÇÃO: Conecte o término da fala antes de reproduzir áudio; a pergunta não pode ouvir a própria resposta.
     cancelSpeech();questionSpeechId=questionId??null;const version=speechVersion;let finished=false;
     const finish=ok=>{if(finished||version!==speechVersion)return;finished=true;questionSpeechId=null;clearTimeout(speechWatchdog);if(ok)onDone?.();else if(onDone)message('Toque no assistente para responder à pergunta.');};
     if(!global.speechSynthesis||!global.SpeechSynthesisUtterance){finish(true);return;}
@@ -277,6 +282,7 @@
     return answer("Ainda não reconheci esse pedido. Tente dizer o nome de uma tela, música, evento ou configuração.","error");
   }
   function actionContext(){
+    // MANUTENÇÃO: Esta leitura identifica o alvo real; um evento aberto atrás da música não é o contexto ativo dela.
     const auth=global.appAuth?.getState?.()||{},actor=typeof appCurrentUser!=='undefined'?appCurrentUser.id:'local';
     const songOpen=element('view-detail')?.style.display==='flex'&&currentDetailId!=null;
     const eventContext=songOpen&&typeof detailEventContext!=='undefined'?detailEventContext:null;
@@ -309,6 +315,7 @@
   }
   // Bridge to approved, native screens. Voice never invents a second data path.
   function phaseTwoHost(){
+    // MANUTENÇÃO: Ponte para os controles nativos: novos comandos devem reutilizar seus efeitos e verificações.
     const modalVisible=()=>element('modal-overlay')?.style.display==='flex';
     const present=selector=>Boolean(global.document.querySelector(selector));
     const frame=()=>new Promise(resolve=>global.requestAnimationFrame(resolve));
@@ -465,6 +472,7 @@
     return actionManager;
   }
   async function execute(raw,options={}){
+    // MANUTENÇÃO: Pedido completo executa diretamente; só falta de parâmetro/ambiguidade mantém pergunta pendente.
     const manager=getActionManager();if(!manager)return answer('O assistente não terminou de carregar. Atualize a página e tente novamente.','error');
     if(!ensureDialogue())return answer('O acompanhamento do assistente não terminou de carregar. Atualize a página.','error');
     const result=await dialogue.run(raw,options);
@@ -511,7 +519,12 @@
     if(dialogue){const pending=dialogue.getPending();if(!pending){clearTimeout(followUpTimer);if(questionSpeechId!==null)cancelSpeech();if(captureQuestionId!==null)stopListening();}if(profileOpen&&listening)stopListening();}
   }
   function setListening(value){listening=Boolean(value);global.document.querySelectorAll("[data-assistant-launch]").forEach(button=>{button.classList.toggle("listening",listening);button.setAttribute("aria-pressed",String(listening));button.setAttribute("aria-label",listening?"Parar de ouvir":"Falar com o assistente Roudy");});}
-  const WAKE=/^(?:(?:e ai|eai|ei|ola|oi|ok|hey)\s+)?(?:roudy|roudi|roudie|rowdy|rowdie|raudi|raudy|rudy|rudi|rody|rodi|roldi|roldy|holdy|hold|roud|routy|rout)\b\s*/;
+  // O clique já ativa a escuta: nenhum comando exige chamar o nome do assistente.
+  const OPTIONAL_ASSISTANT_NAME=/^(?:(?:e ai|eai|ei|ola|oi|ok|hey)\s+)?(?:roudy|roudi|roudie|rowdy|rowdie|raudi|raudy|rudy|rudi|rody|rodi|roldi|roldy|holdy|hold|roud|routy|rout)\b\s*/;
+  function voiceCommand(value){
+    const raw=String(value||'').trim(),text=clean(raw);
+    return OPTIONAL_ASSISTANT_NAME.test(text)?text.replace(OPTIONAL_ASSISTANT_NAME,'').trim()||raw:raw;
+  }
   function stopListening(){const current=recognition;recognition=null;captureQuestionId=null;try{current?.stop();}catch(_error){}setListening(false);}
   function listen({automatic=false,questionId}={}){
     ensureDialogue();
@@ -530,11 +543,12 @@
     current.lang=global.document.documentElement.lang||"pt-BR";
     current.continuous=false;
     current.interimResults=false;
+    // MANUTENÇÃO: O navegador entrega apenas a transcrição final; a latência dessa etapa não é um timer do roteador.
     current.maxAlternatives=5;
     current.onstart=()=>{if(recognition!==current)return;setListening(true);message("Estou ouvindo…");};
     current.onresult=event=>{
       if(recognition!==current)return;
-      const alternatives=Array.from(event.results?.[0]||[]).map(item=>item?.transcript?.trim()).filter(Boolean).map(text=>WAKE.test(clean(text))?'roudy '+clean(text).replace(WAKE,''):text);
+      const alternatives=Array.from(event.results?.[0]||[]).map(item=>voiceCommand(item?.transcript)).filter(Boolean);
       // A lower-ranked alternative must not erase a negation in the main transcript.
       const primary=alternatives[0]||'';
       const spoken=/\b(?:nao|nem|nunca)\b/.test(clean(primary))?primary:alternatives.sort((left,right)=>transcriptionScore(right)-transcriptionScore(left))[0]||"";

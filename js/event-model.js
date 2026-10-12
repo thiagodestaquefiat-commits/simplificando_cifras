@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Modelo dos eventos, permissões de membros e variantes de cada item do repertório.
+// MANUTENÇÃO: O item do evento possui dados compartilhados e ajustes pessoais, distintos da música da playlist.
+// MANUTENÇÃO: As verificações no cliente orientam a interface; o servidor também precisa autorizar a operação.
 (function (global) {
   "use strict";
 

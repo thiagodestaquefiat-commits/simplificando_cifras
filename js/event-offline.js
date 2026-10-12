@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Prepara cópias de eventos/repertórios por conta para reabertura sem conexão.
+// MANUTENÇÃO: Usa IndexedDB com alternativa de armazenamento local; disponibilidade depende de cache prévio e espaço.
+// MANUTENÇÃO: O cache não cria permissões nem torna serviços externos disponíveis offline.
 (function(global){
   'use strict';
   const DB='roudy-event-offline-v1',TABLE='accounts',PREFIX='sc_event_offline_v1:';

@@ -1,3 +1,5 @@
+# MANUTENÇÃO: Integração SQLAlchemy e extensões aditivas conhecidas do esquema.
+# MANUTENÇÃO: Alterações de tabelas exigem compatibilidade e migração; não remover colunas para corrigir o frontend.
 from __future__ import annotations
 
 from flask_sqlalchemy import SQLAlchemy

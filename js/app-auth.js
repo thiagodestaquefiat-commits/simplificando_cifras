@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Sessão Google via Supabase Auth: inicialização, renovação e notificações de identidade.
+// MANUTENÇÃO: O aplicativo recebe tokens de sessão, nunca a senha do Google.
+// MANUTENÇÃO: Logout com escopo local encerra esta sessão sem desconectar os outros aparelhos.
 (function (global) {
   "use strict";
 

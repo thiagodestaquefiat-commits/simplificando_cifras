@@ -1,4 +1,7 @@
-const CACHE_NAME = "simplificando-cifras-v426-github-local";
+// MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
+// MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
+// MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
+const CACHE_NAME = "simplificando-cifras-v427-voz-direta";
 const ASSETS = [
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
@@ -8,7 +11,7 @@ const ASSETS = [
   "./js/assistant-memory.js?v=2",
   "./js/assistant-dialogue.js?v=4",
   "./js/assistant-sequences.js?v=2",
-  "./js/app-assistant.js?v=30",
+  "./js/app-assistant.js?v=31",
   "./js/assistant-voice.js?v=4",
   "./css/topbar-labels.css?v=2",
   "./js/event-user-invites.js?v=8",

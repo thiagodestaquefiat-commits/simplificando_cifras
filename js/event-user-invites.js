@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Busca e convite por usuário, voz e QR, mais consulta/resposta de convites pendentes.
+// MANUTENÇÃO: Sequências de busca e verificações de conta descartam respostas tardias de outra consulta.
+// MANUTENÇÃO: Enviar um convite não adiciona automaticamente o integrante: a entrada depende do aceite.
 (function(global){
   'use strict';
   const byId=id=>document.getElementById(id);

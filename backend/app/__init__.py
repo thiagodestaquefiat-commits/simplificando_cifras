@@ -1,3 +1,6 @@
+# MANUTENÇÃO: Application Factory do Flask: configura extensões e registra os Blueprints por domínio.
+# MANUTENÇÃO: Rotas, serviços e modelos ficam separados; segredos vêm da configuração, não da interface.
+# MANUTENÇÃO: Migrações de esquema devem preservar os dados existentes.
 from __future__ import annotations
 
 import uuid

@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Normaliza, identifica e separa tablaturas por instrumento, seções e afinação.
+// MANUTENÇÃO: Não classifique baixo/ukulele apenas pela quantidade de linhas: afinação e contexto importam.
+// MANUTENÇÃO: Preserve o texto original e os títulos dos trechos ao apresentar a aba separada.
 (function(global){
   'use strict';
   const INSTRUMENTS=new Set(['guitar','bass','ukulele','violin','other','unknown']);

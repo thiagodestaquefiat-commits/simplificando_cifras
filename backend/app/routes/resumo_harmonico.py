@@ -1,3 +1,5 @@
+# MANUTENÇÃO: Entrada autenticada de geração por texto, pesquisa ou multipart de arquivos.
+# MANUTENÇÃO: Valida formato/limites, extrai conteúdo e encaminha ao serviço; não confiar apenas no frontend.
 from __future__ import annotations
 
 from flask import Blueprint, current_app, g, jsonify, request

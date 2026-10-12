@@ -1,3 +1,5 @@
+# MANUTENÇÃO: API dos eventos e repertórios compartilhados; valida dados e aplica permissões no servidor.
+# MANUTENÇÃO: Preservar a distinção entre ações do líder, acesso dos integrantes e variantes pessoais.
 from __future__ import annotations
 
 import re

@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!-- MANUTENÇÃO: Entrada do ROUDY: estrutura das telas e coordenação das funções globais de interface. -->
+<!-- MANUTENÇÃO: Os módulos em js/ possuem dependências; preserve a ordem dos scripts ao reorganizar este arquivo. -->
+<!-- MANUTENÇÃO: Estados de música, evento e conta têm escopos diferentes; não reutilize uma gravação entre eles. -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1253,7 +1256,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-memory.js?v=2"></script>
 <script src="js/assistant-dialogue.js?v=4"></script>
 <script src="js/assistant-sequences.js?v=2"></script>
-<script src="js/app-assistant.js?v=30"></script>
+<script src="js/app-assistant.js?v=31"></script>
  <script src="js/event-user-invites.js?v=8"></script>
 <script src="js/notification-center.js?v=3"></script>
  <script src="js/event-qr-scanner.js?v=1"></script>
@@ -1299,6 +1302,7 @@ function shiftText(text,s){
 }
 
 // ── SAVE / LOAD ───────────────────────────────────────────────────────
+// MANUTENÇÃO: Atualize o estado em memória só depois da persistência local; não anuncie sucesso se faltar espaço.
 function commitSongs(next){
   if(!songRepository.save(next)){showToast('⚠️ Não foi possível salvar a biblioteca neste dispositivo. Suas alterações não foram confirmadas.');return false;}
   musicas=next;librarySync.schedule();return true;
@@ -1319,6 +1323,7 @@ let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, cu
 let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
 let detailEventContext=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
+// MANUTENÇÃO: Este snapshot define os ajustes salvos da música e a comparação com o estado de entrada.
 function detailEditableState(){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));
   return {semitones:currentSemitones,capo:selectedCapo,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),scrollSpeed,instrument:currentInstrument,sheetView:currentSongView,tablatureFontSize,fontSize:detailStageFont,video:{artist:song?.artist||'',coverUrl:song?.coverUrl||null,youtubeVideoId:song?.youtubeVideoId||null,youtubeUrl:song?.youtubeUrl||null,youtubeChannelTitle:song?.youtubeChannelTitle||null}};
@@ -1332,6 +1337,7 @@ function updateDetailSaveButton(){
 }
 function flushDetailAutoSave(){clearTimeout(detailAutoSaveTimer);}
 window.addEventListener('pagehide',flushDetailAutoSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushDetailAutoSave();});
+// MANUTENÇÃO: Salvar dentro de evento deve atualizar sua variante, nunca a música original da playlist.
 async function saveDetailChanges(options={}){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return {ok:false};
   if(detailEventContext){const context={...detailEventContext},state=detailEditableState(),song=currentDetailSongOverride;
@@ -4116,6 +4122,7 @@ function eventSongVariant(event,item,userId){
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
   return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),effective?.effective.songData||song),view:effective?.effective?.view||'summary',personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
 }
+// MANUTENÇÃO: Materialize tom/capo atuais numa cópia independente; evite referências mutáveis à biblioteca pessoal.
 function eventSongCopy(song,state=song.playbackSettings||{}){
   const model=songFormat.fromLegacy(song),capo=state.capo??model.capo,shift=(Number(state.semitones)||0)+model.capo-Number(capo);
   const sections=model.sections.map(section=>({...section,lines:section.lines.map(line=>{let cursor=-1;return {...line,chords:line.chords.map(c=>{const chord=shiftText(c.chord,shift),position=Math.max(c.position,cursor+1);cursor=position+chord.length;return {...c,chord,position};})};})}));
@@ -4126,6 +4133,7 @@ function eventSongCopy(song,state=song.playbackSettings||{}){
   return JSON.parse(JSON.stringify(Object.fromEntries(fields.filter(k=>data[k]!==undefined).map(k=>[k,data[k]]))));
 }
 function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),notes,songData:data};}
+// MANUTENÇÃO: O contexto captura proprietário/evento/item; revalidá-lo evita aplicar resposta tardia em outra conta.
 async function saveContextEventSong(context,data,options={}){
   if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return {ok:false};}
   const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));if(!item||!eventModel.canAccess(event,owner))return {ok:false};
@@ -4170,6 +4178,7 @@ async function createNewEventFromSheet(){
   }catch(error){if(errorTarget)errorTarget.textContent=error.message||'Não foi possível criar o evento.';if(button)button.disabled=false;return;}
 }
 
+// MANUTENÇÃO: Sem prefill, use a criação progressiva; com prefill, preserve edição e convites do evento existente.
 function openAddSetlist(prefill){
   if(!prefill){openNewEventCreateSheet();return;}
   const permissionActor=prefill?eventPermissionActor(prefill):appCurrentUser;
@@ -5053,6 +5062,7 @@ function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:docume
 
 function receiveInvitedEvent(event){setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();automaticEventOffline.schedule();}
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
+// MANUTENÇÃO: Fechar uma tela também libera áudio e invalida rascunhos/contextos; não remova a limpeza de recursos.
 function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}const modalOverlay=document.getElementById('modal-overlay');modalOverlay.style.display='none';modalOverlay.classList.remove('notification-center-overlay','event-poll-compose-overlay','event-poll-results-overlay');document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
 
 function exportarBiblioteca(options={}){

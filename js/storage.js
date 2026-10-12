@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Camada de armazenamento JSON no navegador; não autentica nem sincroniza dados.
+// MANUTENÇÃO: As gravações retornam sucesso/falha: quem chama só deve confirmar a alteração após sucesso.
+// MANUTENÇÃO: setMany tenta reverter uma gravação parcial, mas não é uma transação real de banco.
 (function (global) {
   "use strict";
   let failureCount = 0;

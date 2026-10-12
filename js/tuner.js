@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Captura de microfone e análise local com Web Audio API para afinador/acompanhamento.
+// MANUTENÇÃO: Parar a ferramenta deve liberar os recursos de captura; respeite falhas de permissão.
+// MANUTENÇÃO: O tamanho da janela de análise influencia a resolução musical e a latência.
 (function (global) {
   'use strict';
 

@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Referência temporária ao último controle para pedidos como aumentar ou corrigir um valor.
+// MANUTENÇÃO: Não é histórico permanente de conversas; expira e considera mudanças manuais e de identidade.
 (function (global) {
   'use strict';
   // A single short-lived control reference, never a transcript or a user profile.

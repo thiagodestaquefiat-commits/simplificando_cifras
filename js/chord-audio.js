@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Processamento de espectro em perfil chroma: energia distribuída entre 12 classes de notas.
+// MANUTENÇÃO: Compara esse perfil com o acorde esperado; não realiza transcrição irrestrita de uma música.
+// MANUTENÇÃO: Limiares rejeitam silêncio/ruído e ambiguidades: alterar exige testes com acordes e inversões.
 (function(global){
   'use strict';
   function tones(chord){

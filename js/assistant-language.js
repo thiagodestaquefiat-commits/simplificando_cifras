@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Normalização, sinônimos e interpretação local de frases; não chama uma IA generativa.
+// MANUTENÇÃO: Preserve nomes de músicas, negações e unidades ao ampliar exemplos ou regras.
 (function (global) {
   'use strict';
   const clean = value => String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();

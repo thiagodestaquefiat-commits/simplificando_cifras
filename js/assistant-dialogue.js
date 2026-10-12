@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Uma pergunta pendente de curta duração, mantida em memória e vinculada à tela/conta.
+// MANUTENÇÃO: Respostas completam o pedido e voltam ao gerenciador; não devem contornar suas permissões.
+// MANUTENÇÃO: TTL e mudança de contexto impedem que um sim tardio confirme outra operação.
 (function (global) {
   'use strict';
   // One short-lived question in RAM. Answers always return to the action manager.

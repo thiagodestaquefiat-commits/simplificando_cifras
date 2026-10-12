@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Interface das entradas Busca por IA, Arquivo/imagem e Texto.
+// MANUTENÇÃO: Encaminha a entrada ao cliente da API e abre o resultado como rascunho editável.
+// MANUTENÇÃO: Não confundir geração do rascunho com confirmação da gravação na playlist.
 (function (global) {
   "use strict";
   let panel = null;
