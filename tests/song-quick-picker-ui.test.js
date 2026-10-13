@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   await page.keyboard.press('ArrowUp');await page.waitForTimeout(500);assert.equal((await read()).speed,33);
   await page.keyboard.press('Escape');await page.waitForTimeout(200);
   await page.waitForTimeout(900);const saved=await page.evaluate(()=>musicas.find(s=>s.id==='t1').playbackSettings);assert.deepEqual([saved.semitones,saved.capo,saved.bpm,saved.meter,saved.scrollSpeed],[2,3,67,'6/8',33],'tudo salvo sozinho');
-  assert.equal(await page.locator('#song-controls-toggle').isVisible(),false,'sem menu ⌄');assert.equal(await page.locator('#inst-btn').isVisible(),true,'instrumento ao lado de ACORDES');
+  assert.equal(await page.locator('#song-controls-toggle').isVisible(),true,'painel ⌄ de volta (Thiago, 12/10)');assert.equal(await page.locator('#inst-btn').isVisible(),true,'instrumento ao lado de ACORDES');
   assert.deepEqual(errors,[]);console.log('song-quick-picker-ui.test.js: OK (Tom, Capo, BPM+metrônomo, Compasso, segurar Rolagem, autosave)');
   await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1);});
