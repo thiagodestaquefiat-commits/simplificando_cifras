@@ -79,13 +79,33 @@
 #view-detail>.detail-header:has(#btn-palco:not([hidden])){grid-template-columns:40px minmax(0,1fr) auto 44px!important;column-gap:8px}
 /* Modo Palco limpo (Thiago, 12/10): mesma tela da música, sem vídeo nem diagramas.
    Fica: título, Sair do Palco, ferramentas, Marcar como preparado, Anterior/Próxima e a cifra. */
-#view-detail.stage-clean .stage-performance-header,
 #view-detail.stage-clean #stage-quick-panel,
+#view-detail.stage-clean #song-review-control,
+#view-detail.stage-clean #detail-nav-toolbar,
 #view-detail.stage-clean .youtube-player-shell,
 #view-detail.stage-clean #study-music-panel,
 #view-detail.stage-clean #song-scale-feedback{display:none!important}
 #view-detail.stage-clean>.detail-header{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto 44px!important;column-gap:8px;position:sticky;top:0}
 #view-detail.stage-clean .song-controls{display:block!important}
 #view-detail.stage-clean .song-controls .song-control-strip{display:grid!important}
-#view-detail.stage-clean #detail-nav-toolbar{display:flex!important}
 #view-detail.stage-clean .detail-palco-btn.active{background:#fff!important;color:#000!important;border-color:#fff!important}
+/* Palco limpo: só a navegação discreta do palco antigo (‹ e "Próxima: música ›" no cantinho). */
+#view-detail.stage-clean .stage-performance-header{display:flex!important;position:static;align-items:center;justify-content:space-between;min-height:0;padding:4px 10px 2px;margin:0;background:transparent;border:0;box-shadow:none}
+#view-detail.stage-clean .stage-performance-header .stage-heading,
+#view-detail.stage-clean .stage-performance-header .stage-capo-controls,
+#view-detail.stage-clean .stage-performance-header .stage-scroll-speed,
+#view-detail.stage-clean .stage-performance-header .stage-start-row,
+#view-detail.stage-clean .stage-performance-header .stage-close,
+#view-detail.stage-clean .stage-performance-header #stage-prev-preview{display:none!important}
+#view-detail.stage-clean .stage-nav-side{display:flex;align-items:center;gap:6px;min-width:0}
+#view-detail.stage-clean .stage-nav-side--next{margin-left:auto;text-align:right}
+#view-detail.stage-clean .stage-nav-icon{width:32px;height:32px;min-width:32px;padding:0;border:0;border-radius:50%;background:transparent;color:#9a9da5;font-size:22px;line-height:1}
+#view-detail.stage-clean .stage-nav-icon:disabled{opacity:.3}
+#view-detail.stage-clean .stage-song-preview{display:grid;gap:0;color:#9a9da5;font-size:11px;line-height:1.2}
+#view-detail.stage-clean .stage-song-preview small{color:#6f737c;font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+#view-detail.stage-clean .stage-song-preview span{max-width:160px;overflow:hidden;color:#c8ccd4;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+#view-detail.stage-clean .stage-song-preview{position:static!important;transform:none!important;inset:auto!important;width:auto!important;text-align:right;justify-items:end}
+#view-detail.stage-clean .stage-nav-side--next:has(#stage-next-title:empty) .stage-song-preview{display:none!important}
+#view-detail.stage-clean .stage-performance-header #stage-upcoming-preview{margin-left:auto}
+#view-detail.stage-clean .stage-performance-header .stage-song-preview[hidden]{display:none!important}
+#view-detail.stage-clean .stage-performance-header:has(#stage-upcoming-preview[hidden]) #stage-next{margin-left:auto}

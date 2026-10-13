@@ -196,7 +196,7 @@
       saveSettings({language:LANGUAGES[requestedLanguage]});return answer(`Idioma da interface alterado para ${requestedLanguage}.`);
     }
     if(includesAny(text,["tema claro","modo claro"]))return answer("O modo Claro está em Beta e ainda não pode ser selecionado.");
-    if(includesAny(text,["tema escuro","modo escuro"])){saveSettings({theme:"dark",themeVersion:2});return answer("Tema escuro ativado.");}
+    if(includesAny(text,["tema escuro","modo escuro"])){saveSettings({theme:"default",themeVersion:2});return answer("O ROUDY já usa o tema Padrão, escuro.");}
     if(includesAny(text,["tema padrao","modo padrao","visual padrao","tema do sistema","sincronizar tema","tema automatico"])){saveSettings({theme:"default",themeVersion:2});return answer("Tema padrão do ROUDY ativado.");}
     if(includesAny(text,["ativar alto contraste","ligar alto contraste"])){return setAccessibility({highContrast:true},"Alto contraste ativado.");}
     if(includesAny(text,["desativar alto contraste","desligar alto contraste"])){return setAccessibility({highContrast:false},"Alto contraste desativado.");}
