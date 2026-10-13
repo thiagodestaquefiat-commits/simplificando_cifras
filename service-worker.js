@@ -5,7 +5,7 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v477-palco-limpo-1012";
+const CACHE_NAME = "simplificando-cifras-v478-sem-qr-1012";
 const ASSETS = [
   "./css/song-reading.css?v=5",
   "./css/song-reading.css?v=6",
@@ -126,13 +126,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=4",
   "./js/event-user-invites.js?v=5",
   "./js/event-user-invites.js?v=7",
-  "./js/event-qr-scanner.js?v=1",
-  "./js/event-qr-scanner.css?v=1",
   "./js/vendor/qrcode.min.js?v=1",
-  "./js/vendor/jsqr.min.js?v=1",
-  "./js/profile-qr.js?v=3",
-  "./js/profile-qr.js?v=4",
-  "./js/profile-qr.css?v=2",
   "./js/event-user-invites.js?v=6",
   "./js/profile-username.js?v=1",
   "./js/profile-username.js?v=2",

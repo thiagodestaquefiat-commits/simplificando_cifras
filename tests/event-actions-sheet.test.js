@@ -19,7 +19,7 @@ assert.match(eventMenu, /event-invite-preview/);
 assert.match(eventMenu, /roudyEventShare\.cardMarkup\(shareData\)/, 'o convite reutiliza o card visual oficial do evento');
 assert.match(eventMenu, />Transferir liderança</, 'ações administrativas ficam no menu contextual');
 assert.match(eventMenu, /eventUserInvites\.openSearchSheet\(eventId\)/, 'a lupa abre a busca dedicada sem abrir o editor do evento');
-assert.match(eventMenu, /eventQrScanner\.open/, 'o fluxo de adicionar pessoa oferece leitura de QR Code');
+assert.doesNotMatch(eventMenu, /eventQrScanner\.open/, 'leitura de QR Code removida (decisão do Thiago, 12/10)');
 const inviteSource = fs.readFileSync('js/event-user-invites.js', 'utf8');
 assert.match(inviteSource, /event-people-search-title">Compartilhar com/);
 assert.match(inviteSource, /event-people-search-input/);
