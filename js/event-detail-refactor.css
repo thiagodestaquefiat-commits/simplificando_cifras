@@ -15,6 +15,11 @@
 #view-sd .event-song-note{display:none}
 #view-sd .event-song-edit{color:#c7c9ce}
 #view-sd .event-song-edit svg{width:22px;height:22px;fill:currentColor;stroke:none}
+#view-sd .event-official-key-control{display:flex;flex:0 0 auto;align-items:center;gap:0;margin:0 2px 0 8px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.05)}
+#view-sd .event-official-key-control button{display:grid;width:40px;height:40px;place-items:center;padding:0;border:0;background:transparent;color:#dbe7ff;font:700 20px/1 Inter,sans-serif;cursor:pointer;touch-action:manipulation}
+#view-sd .event-official-key-control button:active{color:#3b8bff}
+#view-sd .event-official-key-control button:disabled{opacity:.4;cursor:wait}
+#view-sd .event-official-key-control output{min-width:30px;color:#fff;font:800 14px/1 Inter,sans-serif;text-align:center;white-space:nowrap}
 #view-sd .event-section-title--repertoire{margin:22px 0 11px;color:#fff;font-size:16px;font-weight:720;letter-spacing:-.02em}
 #view-sd .event-stage-action{margin:22px 0 30px}
 #view-sd .event-reference-actions{display:flex;margin:2px 0 10px;align-items:center;justify-content:space-between;gap:10px}

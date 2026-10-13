@@ -56,7 +56,7 @@ assert.match(css, /#view-main\[data-active-tab="medley"\]::before\{display:none\
 assert.match(css, /topbar:has\(\.topbar-search-mode:not\(\[hidden\]\)\)\{background:#0b0b0c/, "o cabeçalho da busca usa o mesmo grafite claro dos resultados");
 assert.match(css, /playlist-search-recents\{background:#0b0b0c\}/, "a busca do Medley usa uma única superfície contínua");
 assert.match(topbarCss, /data-active-tab="medley"[^}]*\.app-assistant-launch[^}]*\.topbar-camera-action\{display:none!important\}/, "no Medley ficam somente busca, notificações e menu");
-assert.match(topbarCss, /#view-main \.topbar-labeled::after\{display:none\}/, "os ícones superiores não exibem legendas visuais");
+assert.match(topbarCss, /#view-main \.topbar-labeled::after\{content:attr\(data-label\)/, "nomes embaixo dos ícones superiores (decisão do Thiago, 12/10)");
 assert.match(css, /stroke:#0789e7/, "o progresso usa o azul ROUDY");
 assert.match(css, /stroke-dashoffset:calc\(100 - var\(--vinyl-progress\)\)/);
 assert.match(css, /\.medley-vinyl/);
