@@ -116,5 +116,3 @@
 #view-detail.stage-clean .song-controls.is-scrolling .song-control-strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(112px,1.6fr)!important}
 
 /* Modo palco: Resumo / Letra e cifra / Letra com as mesmas bolinhas e o mesmo arrastar do estudo (Thiago, 13/10). */
-/* Palco: letra branca para ler de longe (ideia da Gisele, 13/10). */
-#view-detail.stage-clean #detail-content .letra-linha,#view-detail.stage-clean #detail-content .full-chord-line:not(.is-chord):not(.is-section){color:#fff!important}
