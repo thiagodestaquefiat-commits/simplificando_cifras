@@ -112,7 +112,7 @@
       return languages[value] ? { value: languages[value], label: value } : null;
     }, { risk: 'preference-write', priority: 75 });
     add('settings.color', 'settings', match(/^(?:(?:mudar|trocar|definir|colocar|deixar)\s+)?(?:cor (?:da |das )?cifras?|cifras?)(?: para| em)?\s+(\w+)$/, found => ({ value: colors[found[1]], label: found[1] })), { risk: 'preference-write', priority: 75, validate: slots => slots.value ? null : 'Escolha dourado, coral, vermelho, laranja, amarelo, verde, azul, roxo, rosa ou branco.' });
-    add('settings.theme', 'settings', match(/^(?:(?:mudar|trocar|definir|colocar)\s+)?(?:tema|modo)(?: para| em)?\s+(claro|escuro|padrao|do sistema|sistema|automatico)$/, found => ({ value: found[1] === 'claro' ? 'light' : 'default' })), { risk: 'preference-write', priority: 75, validate: slots => slots.value === 'light' ? 'O modo Claro está em Beta e ainda não pode ser selecionado.' : null });
+    add('settings.theme', 'settings', match(/^(?:(?:mudar|trocar|definir|colocar)\s+)?(?:tema|modo)(?: para| em)?\s+(claro|escuro|padrao|do sistema|sistema|automatico)$/, found => ({ value: found[1] === 'claro' ? 'light' : found[1] === 'escuro' || found[1] === 'padrao' ? 'dark' : 'system' })), { risk: 'preference-write', priority: 75 });
     add('settings.accessibility', 'settings', request => {
       if (request.text === 'modo para daltonicos') return { key: 'colorBlind', value: true };
       const found = request.text.match(/^(iniciar|parar) (alto contraste|modo daltonico|modo para daltonicos)$/);

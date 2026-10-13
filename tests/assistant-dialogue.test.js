@@ -31,7 +31,7 @@ const clean=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'
   assert.equal((await dialogue.run('mudar cor da cifra',{requestId:'question'})).silent,true,'duplicate transcript cannot restart the question');
   assert.equal((await dialogue.run('verde por favor')).ok,true);assert.equal(settings.chordColor,'green');assert.equal(dialogue.getPending(),null);
   await dialogue.run('mudar idioma');assert.equal((await dialogue.run('ingles')).ok,true);assert.equal(settings.language,'en');
-  await dialogue.run('mudar tema');await dialogue.run('sistema');assert.equal(settings.theme,'default');
+  await dialogue.run('mudar tema');await dialogue.run('sistema');assert.equal(settings.theme,'system');
   await dialogue.run('mudar bpm');assert.equal((await dialogue.run('400')).awaitingResponse,true);assert.equal(bpm,72);await dialogue.run('90');assert.equal(bpm,90);
   await dialogue.run('mudar capotraste');await dialogue.run('casa 2');assert.equal(capo,2);
   await dialogue.run('mudar compasso');await dialogue.run('6/8');assert.equal(meter,'6/8');

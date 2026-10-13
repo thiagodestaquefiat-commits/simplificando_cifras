@@ -5,16 +5,19 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v479-sem-escuro-1012";
+const CACHE_NAME = "simplificando-cifras-v480-temas-cores-1012";
 const ASSETS = [
   "./css/song-reading.css?v=5",
   "./css/song-reading.css?v=6",
   "./css/song-reading.css?v=7",
   "./css/song-reading.css?v=8",
   "./css/song-reading.css?v=9",
+  "./css/song-reading.css?v=10",
+  "./css/song-reading.css?v=11",
   "./js/ai/ai-harmonic-summary.js?v=20",
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
+  "./js/app-assistant.js?v=32",
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
@@ -25,6 +28,7 @@ const ASSETS = [
   "./js/assistant-actions.js?v=6",
   "./js/assistant-actions.js?v=7",
   "./js/assistant-actions.js?v=8",
+  "./js/assistant-actions.js?v=9",
   "./js/assistant-action-manager.js?v=5",
   "./js/assistant-action-runtime.js?v=6",
   "./js/assistant-memory.js?v=2",

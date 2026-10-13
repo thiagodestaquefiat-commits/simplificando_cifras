@@ -32,7 +32,7 @@ const clean = text => String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, 
   for (const [name,value] of Object.entries({portugues:'pt-BR',espanhol:'es',ingles:'en',italiano:'it',frances:'fr',alemao:'de'})) {await run(`mudar idioma para ${name}`,'settings.language');assert.equal(settings.language,value);}
   await run('cor da cifra dourado','settings.color');assert.equal(settings.chordColor,'gold');
   await run('cor da cifra azul','settings.color');assert.equal(settings.chordColor,'blue');
-  await run('tema claro','settings.theme',false);await run('tema padrao','settings.theme');assert.equal(settings.theme,'default');
+  await run('tema claro','settings.theme');assert.equal(settings.theme,'light');
   await run('iniciar alto contraste','settings.accessibility');assert.equal(settings.highContrast,true);
   await run('parar alto contraste','settings.accessibility');assert.equal(settings.highContrast,false);
   await run('iniciar modo daltonico','settings.accessibility');assert.equal(settings.colorBlind,true);

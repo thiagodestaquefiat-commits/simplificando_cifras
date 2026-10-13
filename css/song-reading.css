@@ -46,10 +46,7 @@
   .song-control-live-speed output{min-width:40px;font-size:11px}
 }
 .song-control-disclosure{min-width:0;width:100%;box-sizing:border-box}
-/* Barra da música sem o menu ⌄: Tom, Capo, BPM e Compasso abrem um seletor direto. */
-.song-controls .song-control-disclosure{display:none!important}
-.song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr))!important}
-.song-controls.is-scrolling .song-control-strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(112px,1.6fr)!important}
+/* Barra da música: Tom, Capo, BPM e Compasso abrem um seletor direto; o painel ⌄ continua (Thiago, 12/10). */
 .song-controls{position:relative}
 .song-control-pick{appearance:none;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .song-control-pick.is-picking .song-control-value{color:#5aa2ff}
@@ -109,3 +106,11 @@
 #view-detail.stage-clean .stage-performance-header #stage-upcoming-preview{margin-left:auto}
 #view-detail.stage-clean .stage-performance-header .stage-song-preview[hidden]{display:none!important}
 #view-detail.stage-clean .stage-performance-header:has(#stage-upcoming-preview[hidden]) #stage-next{margin-left:auto}
+/* "Marcar como preparado" retirado do estudo e do palco (Thiago, 12/10). */
+/* A faixa inteira sai: o Modo Palco já está no topo da música. */
+#song-review-control{display:none!important}
+#view-detail.stage-clean #song-control-panel{display:none!important}
+.theme-sample--system{background:linear-gradient(90deg,#f2f2f2 50%,#181818 50%)!important}
+#view-detail.stage-clean .song-control-disclosure{display:none!important}
+#view-detail.stage-clean .song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+#view-detail.stage-clean .song-controls.is-scrolling .song-control-strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(112px,1.6fr)!important}

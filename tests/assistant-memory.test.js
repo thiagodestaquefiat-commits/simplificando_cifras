@@ -25,7 +25,7 @@ const numbers=text=>text.replace(/\bnoventa\b/g,'90').replace(/\bdois\b/g,'2');
   await run('cor da cifra azul');assert.equal((await run('prefiro verde')).ok,true);assert.equal(values.chordColor,'green');assert.deepEqual(opened,[],'a correction is not a song search');
   await run('desfazer');assert.equal(values.chordColor,'blue','contextual edits reuse undo');
   await run('mudar cor');await run('verde');await run('prefiro branco');assert.equal(values.chordColor,'white','parameter answers become context');
-  await run('cor da cifra azul');await run('prefiro verde');assert.equal(values.chordColor,'green');
+  await run('tema claro');await run('prefiro escuro');assert.equal(values.theme,'dark');
   await run('cor da cifra azul');assert.equal((await run('excluir musica')).awaitingResponse,true);await run('prefiro verde');assert.equal(values.chordColor,'blue','pending confirmation is not bypassed by a correction');await run('nao');assert.deepEqual(opened,[]);
   await run('idioma ingles');await run('prefiro italiano');assert.equal(values.language,'it');
   await run('capotraste 2');await run('aumentar um pouco');assert.equal(values.capo,3);await run('prefiro casa dois');assert.equal(values.capo,2);

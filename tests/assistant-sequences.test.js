@@ -33,8 +33,8 @@ const numbers = text => text.replace('cento e vinte e cinco','125').replace(/\bd
   let release;holdBpm=new Promise(resolve=>release=resolve);calls=[];const pending=run('capotraste 3 e bpm 105 e salvar');await new Promise(resolve=>setImmediate(resolve));assert.equal((await sequence.run('capotraste 8')).ok,false,'whole batch locked');context.songId='other';release();assert.equal((await pending).ok,false);assert.ok(!calls.includes('save'));holdBpm=null;
   context.songId='1';context.editorOpen=true;calls=[];assert.equal((await run('capotraste 2 e bpm 90')).ok,false);assert.deepEqual(calls,[]);context.editorOpen=false;
   context.canEditSong=false;assert.equal((await run('capotraste 2 e bpm 90')).ok,false);context.canEditSong=true;
-  assert.equal((await run('cor da cifra verde e tema padrao')).completed,2);values.scale=110;await run('desfazer');assert.equal(values.chordColor,'coral');assert.equal(values.theme,'dark');assert.equal(values.scale,110,'unrelated change preserved');
-  await run('tema padrao');await run('mudar cor');assert.equal((await run('desfazer')).ok,true,'undo cancels pending slot question');assert.equal(dialogue.getPending(),null);
+  assert.equal((await run('cor da cifra verde e tema claro')).completed,2);values.scale=110;await run('desfazer');assert.equal(values.chordColor,'coral');assert.equal(values.theme,'dark');assert.equal(values.scale,110,'unrelated change preserved');
+  await run('tema claro');await run('mudar cor');assert.equal((await run('desfazer')).ok,true,'undo cancels pending slot question');assert.equal(dialogue.getPending(),null);
   calls=[];let manualRelease;holdBpm=new Promise(resolve=>manualRelease=resolve);
   const manualPending=run('capotraste 4 e bpm 95 e salvar');await new Promise(resolve=>setImmediate(resolve));values.capo=7;manualRelease();
   const interrupted=await manualPending;assert.equal(interrupted.ok,false);assert.equal(interrupted.completed,2);assert.ok(!calls.includes('save'),'intervening manual edit stops final save');assert.equal((await run('desfazer')).ok,false);assert.equal(values.capo,7);holdBpm=null;

@@ -28,7 +28,7 @@ const { chromium } = require('playwright');
     }
     await succeeds('ligar alto contraste','settings.accessibility');assert.equal(await page.evaluate(()=>loadAppSettings().highContrast),true);
     await succeeds('desligar alto contraste');await succeeds('ativar modo para daltônicos');await succeeds('desativar modo daltônico');
-    await succeeds('escala da interface 120 por cento','settings.scale');await succeeds('tema escuro','settings.theme');await succeeds('tema do sistema');await succeeds('tema escuro');
+    await succeeds('escala da interface 120 por cento','settings.scale');await succeeds('tema claro','settings.theme');await succeeds('tema do sistema');await succeeds('tema escuro');
     await page.evaluate(()=>{window.__originalStorage=storage;window.storage=Object.freeze({...storage,set:()=>false});});
     await blocked('cor da cifra azul');assert.equal(await page.evaluate(()=>loadAppSettings().chordColor),'coral');
     await page.evaluate(()=>{window.storage=window.__originalStorage;});
@@ -48,13 +48,13 @@ const { chromium } = require('playwright');
     await blocked('corda cinco');await succeeds('afinador automático');assert.equal(await page.evaluate(()=>tunerSelectedIndex),null);await page.evaluate(()=>closeModal());
     await succeeds('abrir meu perfil','navigation.panel');assert.equal(await page.locator('#profile-name').isVisible(),true);assert.equal(await page.locator('#song-assistant-launch').isVisible(),false,'profile keeps the assistant hidden');await page.evaluate(()=>closeModal());
     for(const [text,selector,close] of [['gerar com IA','#ai-summary-overlay',()=>aiHarmonicSummary.close()],['adicionar por arquivo','[data-ai-form=arquivo]',()=>aiHarmonicSummary.close()],['adicionar por texto','[data-ai-form=texto]',()=>aiHarmonicSummary.close()],['busca por IA','#playlist-ai-search-mode',()=>document.querySelector('.playlist-ai-search-back').click()]]){
-      await succeeds(text,'music.generate');assert.equal(await page.locator(selector).isVisible(),true,text);assert.equal((await run('tema escuro')).status,'blocked',text==='busca por IA'?'search form is an editor too':'preserve generation form');await page.evaluate(close);
+      await succeeds(text,'music.generate');assert.equal(await page.locator(selector).isVisible(),true,text);assert.equal((await run('tema claro')).status,'blocked',text==='busca por IA'?'search form is an editor too':'preserve generation form');await page.evaluate(close);
     }
     await page.evaluate(()=>openDetail('phase2'));await succeeds('editar esta música','song.edit');assert.equal(await page.locator('#ai-review-title').isVisible(),true);
     await blocked('abrir playlist');await page.evaluate(()=>closeModal());
     let confirmations=0;page.on('dialog',async dialog=>{confirmations++;await dialog.dismiss();});
     assert.equal((await run('excluir música')).awaitingResponse,true);await succeeds('sim','song.delete');assert.equal(confirmations,1);assert.equal(await page.evaluate(()=>musicas.some(song=>song.id==='phase2')),true,'cancelled native confirmation preserves music');
-    await succeeds('novo evento','event.create');assert.equal(await page.locator('#fs-title').isVisible(),true);await blocked('tema escuro');await page.evaluate(()=>closeModal());
+    await succeeds('novo evento','event.create');assert.equal(await page.locator('#fs-title').isVisible(),true);await blocked('tema claro');await page.evaluate(()=>closeModal());
     await page.evaluate(()=>{
       closeDetail();const source=musicas.find(song=>song.id==='phase2');
       setlists.push(eventModel.create({id:'phase2-event',title:'Ensaio de teste',date:'2030-10-10',leaderId:appCurrentUser.id,members:[{...appCurrentUser,isLeader:true},{id:'other',name:'Outro',role:'Guitarra'}],repertoire:[{id:'p2-item',songId:source.id,shared:eventEditFromSong(eventSongCopy(source))}]}));
