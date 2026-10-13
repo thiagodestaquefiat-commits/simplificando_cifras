@@ -13,12 +13,16 @@ const topbar = html.slice(html.indexOf('id="app-topbar"'), html.indexOf('id="pri
 assert.doesNotMatch(musicPane, /class="search-bar"/, "a playlist não deve reservar espaço para uma busca permanente");
 assert.match(topbar, /placeholder="Buscar músicas, artistas\.\.\."/);
 assert.match(topbar, /id="topbar-search-mode"[^>]*hidden/);
+assert.match(fs.readFileSync(require("node:path").resolve(__dirname, "..", "js", "medley-editor.css"), "utf8"), /data-active-tab="medley"[^\n]*topbar:has\(\.topbar-search-mode:not\(\[hidden\]\)\)[^\n]*background:#0b0b0c/, 'a busca do Medley cobre o fundo iluminado do cabeçalho com a mesma superfície dos resultados');
 assert.match(topbar, /onclick="openPlaylistSearch\(\)"/);
 assert.match(topbar, /onclick="closePlaylistSearch\(\)"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);
 assert.match(musicPane, /playlist-ai-card/, "a integração de IA deve permanecer disponível no hero da playlist");
 assert.match(topbar, /onclick="roudyCamera\.open\(\)"/, "a câmera deve abrir diretamente pelo cabeçalho");
 assert.match(cameraSource, /data-camera-file/, "a câmera deve manter acesso direto ao seletor de arquivos");
+assert.match(cameraSource, /capture="environment" data-camera-native/, "em HTTP local o disparador deve abrir a câmera nativa do celular");
+assert.match(cameraSource, /querySelector\('\[data-camera-native\]'\)\?\.click\(\)/, "a ação central deve acionar o capturador nativo quando getUserMedia não existe");
+assert.match(cameraSource, /accept="application\/pdf,text\/plain,\.pdf,\.txt,\.text" data-camera-file/, "Arquivos deve abrir o fluxo documental sem repetir as fontes de imagem do iOS");
 assert.match(html, /id="btn-smart-scroll"[\s\S]{0,500}Rolagem inteligente/, "a rolagem inteligente deve aparecer ao lado da rolagem comum");
 assert.doesNotMatch(html.slice(html.indexOf('function renderPlaylistCatalogSearchRow'),html.indexOf('async function addPlaylistCatalogSong')),/ROUDY \+ web/, "a busca externa não deve exibir o rótulo técnico");
 assert.match(html, /function resolveHomeCardContext\(/, "o hero deve usar o motor contextual determinístico");

@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v481-vinicius-1013";
+const CACHE_NAME = "simplificando-cifras-v494-camera-source-separation";
 // Compatibility marker: simplificando-cifras-v475-metronome-drag
 // Compatibility marker: simplificando-cifras-v365-github-integrado
 // Compatibility marker: simplificando-cifras-v365-responsivo
@@ -27,7 +27,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
-  "./css/topbar-labels.css?v=11",
+  "./css/topbar-labels.css?v=12",
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
   "./js/assistant-actions.js?v=5",
@@ -69,7 +69,7 @@ const ASSETS = [
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=9",
   "./js/study-metronome.js?v=7",
-  "./js/youtube-api.js?v=6",
+  "./js/youtube-api.js?v=7",
   "./js/youtube-player-ui.js?v=18",
   "./js/youtube-player.js?v=8",
   "./js/tablature.js?v=2",
@@ -149,7 +149,7 @@ const ASSETS = [
   "./js/account-tools.css?v=3",
   "./js/account-profile.css?v=3",
   "./js/event-member-profile.css?v=1",
-  "./js/event-detail-refactor.css?v=43",
+  "./js/event-detail-refactor.css?v=50",
   "./assets/chat-cables-background.png",
   "./js/notification-center.js?v=3",
   "./js/app-auth.js?v=12",
@@ -177,7 +177,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=3",
-  "./js/medley-editor.css?v=28",
+  "./js/medley-editor.css?v=30",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
   "./assets/keyboard-icon.svg",
@@ -225,7 +225,7 @@ const ASSETS = [
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
   "./js/ai/ai-harmonic-summary.css?v=8",
-  "./js/ai/camera-capture.js?v=3",
+  "./js/ai/camera-capture.js?v=5",
   "./css/editorial-typography.css?v=3",
   "./css/roudy-color-system-preview.css?v=15",
   "./manifest.webmanifest?v=15",

@@ -77,6 +77,10 @@ require("../js/youtube-api.js");
   window.document.querySelector = () => ({ content: "https://simplificandocifras-production.up.railway.app" });
   await window.youtubeApi.searchVideos("Outra canção", 5);
   assert.match(requestedUrl, /^https:\/\/simplificandocifras-production\.up\.railway\.app\/api\/youtube\/search\?/);
+
+  window.apiConfig = { API_BASE_URL: "https://api-configurada.example" };
+  await window.youtubeApi.searchVideos("Busca configurada", 5);
+  assert.match(requestedUrl, /^https:\/\/api-configurada\.example\/api\/youtube\/search\?/);
   console.log("youtube-api.test.js: OK");
 })().catch((error) => {
   console.error(error);

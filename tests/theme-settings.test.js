@@ -34,11 +34,11 @@ assert.match(html,/id="setting-theme"/);
 assert.match(html,/id="setting-chord-color"/);
 assert.match(html,/Cor da cifra/);
 assert.match(html,/\['purple','Roxo'\]/);assert.match(html,/\['orange','Laranja \(padrão\)'\]/);
-assert.match(html,/>Claro<\/option>/);
+assert.match(html,/Claro — Beta/);
 assert.match(html,/>Escuro<\/option>/);
 assert.match(html,/>Sistema<\/option>/);
-assert.doesNotMatch(html,/Claro — Beta/);
-assert.match(html,/\['light','Claro',false\]/);
+assert.match(html,/\['light','Claro',true\]/);
+assert.match(html,/value==='light'\|\|button\?\.disabled/);
 
 assert.match(fs.readFileSync('css/light-theme.css','utf8'),/html\[data-theme="light"\]/);
 assert.equal(fs.existsSync('css/dark-theme.css'),false,'tema escuro pesado removido');

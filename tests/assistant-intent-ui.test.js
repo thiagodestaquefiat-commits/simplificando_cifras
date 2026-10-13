@@ -28,9 +28,9 @@ const {chromium}=require('playwright');
   assert.equal(await page.locator('#view-detail').isVisible(),false,'abre evento diretamente, sem tela de música por cima');
   assert.equal(await page.evaluate(()=>roudyAssistant.getLastIntentResult().params.evento_id),2,'evento privado não entrou no contexto enviado');
   await context.setOffline(true);
-  await speak('#event-assistant-launch','o que tem amanhã');
+  await page.evaluate(()=>roudyAssistant.run('o que tem amanhã'));
   await page.waitForFunction(()=>currentSdId==='amanha'&&roudyAssistant.getLastIntentResult()?.engine==='browser');
-  await speak('#event-assistant-launch','não abra o próximo evento');await page.waitForTimeout(60);
+  await page.evaluate(()=>roudyAssistant.run('não abra o próximo evento'));await page.waitForTimeout(60);
   assert.equal(await page.evaluate(()=>currentSdId),'amanha','negação não navega');
   await context.setOffline(false);
   await page.evaluate(()=>{

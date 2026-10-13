@@ -2,6 +2,8 @@
   "use strict";
 
   function baseUrl() {
+    const configured = global.apiConfig && global.apiConfig.API_BASE_URL;
+    if (configured) return String(configured).trim().replace(/\/$/, "");
     const runtime = global.SIMPLIFICANDO_CIFRAS_CONFIG && global.SIMPLIFICANDO_CIFRAS_CONFIG.API_BASE_URL;
     const meta = global.document && global.document.querySelector('meta[name="sc-api-base-url"]')?.content;
     const hostname = String(global.location?.hostname || "");
