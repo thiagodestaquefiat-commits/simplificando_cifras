@@ -4925,10 +4925,10 @@ function openSD(id){
     const editControl=canShared?`<button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongMenu('${eventEsc(event.id)}','${eventEsc(item.id)}',this)" aria-label="Abrir opções de ${eventEsc(variant.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>`:'';
     const officialKey=effective.effective.key||variant.originalKey||variant.key||'—',officialCapo=effective.effective.capo||variant.capo||'—';
     // Tom oficial: só o líder sobe/desce; a mudança vai para a nuvem e aparece para toda a equipe (Thiago, 13/10).
-    const sharedKey=item.shared.key||song.key||'';
+    const sharedKey=eventSharedKey(item,song);
     const keyControl=canShared?`<div class="event-official-key-control" data-item-id="${eventEsc(item.id)}" role="group" aria-label="Tom oficial de ${eventEsc(variant.title)}" onclick="event.stopPropagation()"><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',-1)" aria-label="Descer tom oficial de ${eventEsc(variant.title)}" ${sharedKey?'':'disabled'}>−</button><output aria-live="polite" title="Tom oficial">${eventEsc(sharedKey||'—')}</output><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',1)" aria-label="Subir tom oficial de ${eventEsc(variant.title)}" ${sharedKey?'':'disabled'}>+</button></div>`:'';
     const meta=canShared?(officialCapo&&officialCapo!=='—'&&officialCapo!=='0'?`Capo ${eventEsc(officialCapo)}`:''):`Tom ${eventEsc(officialKey)} · Capo ${eventEsc(officialCapo)}`;
-    return `<div class="sd-row event-repertoire-row" data-repertoire-item-id="${eventEsc(item.id)}" style="cursor:pointer;" onclick="openDetailFromEventItem(${attrJs(event.id)},${attrJs(item.id)})"><div class="event-repertoire-copy"><div class="event-repertoire-title">${eventEsc(variant.title)}</div>${meta?`<div class="event-repertoire-meta">${meta}</div>`:''}${notes?`<div class="event-song-note">${eventEsc(notes)}</div>`:''}</div>${keyControl}${editControl}</div>`;
+    return `<div class="sd-row event-repertoire-row" data-repertoire-item-id="${eventEsc(item.id)}" style="cursor:pointer;" onclick="openDetailFromEventItem(${attrJs(event.id)},${attrJs(item.id)})"><div class="event-repertoire-copy"><div class="event-repertoire-title">${eventEsc(variant.title)}</div>${meta?`<div class="event-repertoire-meta">${meta}</div>`:''}${notes?`<div class="event-song-note">${eventEsc(notes)}</div>`:''}</div>${keyControl}</div>`;
   }).join('');
   const eventIso=eventDateISO(event.date),eventWeekday=eventIso?new Intl.DateTimeFormat('pt-BR',{weekday:'long'}).format(new Date(`${eventIso}T12:00:00`)):'';
   const metaIcons={date:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M7 3v4M17 3v4M3 10h18"></path></svg>',time:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>',place:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>',info:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5"></path><path d="M9 13h6M9 17h6"></path></svg>'};
@@ -4960,13 +4960,15 @@ async function confirmEventLeadershipTransfer(eventId){
   try{event=await eventCollaboration.transferLeadership(event,nextLeaderId,appCurrentUser);setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('Liderança transferida.');}catch(error){showToast('⚠️ '+error.message);}
 }
 
+// Tom oficial que a equipe vê: o tom salvo na versão da banda ou, sem ele, o da cifra guardada no evento.
+function eventSharedKey(item,song){try{return item.shared.key||eventSongModel(song,item.shared).originalKey||song.key||'';}catch(error){return item.shared.key||song.key||'';}}
 const eventOfficialKeyBusy=new Set();
 async function changeEventOfficialKey(eventId,itemId,direction){
   const event=findEvent(eventId),item=event?.repertoire.find(value=>String(value.id)===String(itemId)),song=item&&musicas.find(value=>String(value.id)===String(item.songId));
   if(!event||!item||!song)return;
   const actor=eventPermissionActor(event);
   if(!eventModel.canEditShared(event,actor.id)){showToast('🔒 Somente o líder pode alterar o tom oficial.');return;}
-  const baseKey=item.shared.key||song.key||'',nextKey=shiftText(baseKey,direction<0?-1:1),busyKey=String(eventId)+':'+String(itemId);
+  const baseKey=eventSharedKey(item,song),nextKey=shiftText(baseKey,direction<0?-1:1),busyKey=String(eventId)+':'+String(itemId);
   if(!baseKey||nextKey===baseKey){showToast('⚠️ Defina um tom original válido na edição da música.');return;}
   if(eventOfficialKeyBusy.has(busyKey))return;
   eventOfficialKeyBusy.add(busyKey);
@@ -4987,6 +4989,14 @@ async function changeEventOfficialKey(eventId,itemId,direction){
       const retryChanges={...latestItem.shared,key:nextKey,updatedAt:new Date().toISOString()};
       if(retryChanges.chordSheet)retryChanges.chordSheet=transposeEventChordText(retryChanges.chordSheet,direction<0?-1:1);
       updated=await eventCollaboration.saveSharedItem(latest,itemId,retryChanges,appCurrentUser);
+    }
+    // Se o líder tem uma versão pessoal com outro tom, ela escondia a mudança dele mesmo: acompanha o tom oficial.
+    const leaderPersonal=updated.repertoire.find(value=>String(value.id)===String(itemId))?.personalEdits?.[String(actor.id)];
+    if(leaderPersonal&&(leaderPersonal.key||leaderPersonal.chordSheet)&&leaderPersonal.key!==nextKey){
+      const personalChanges={...leaderPersonal,key:nextKey,updatedAt:new Date().toISOString()};
+      if(leaderPersonal.chordSheet)personalChanges.chordSheet=transposeEventChordText(leaderPersonal.chordSheet,eventKeyShift(leaderPersonal.key||baseKey,nextKey));
+      updated=eventModel.applyPersonalEdit(updated,itemId,actor.id,personalChanges);
+      try{updated=await eventCollaboration.savePersonalItem(updated,itemId,personalChanges,appCurrentUser);}catch(error){eventCollaboration.queuePersonalOperation(updated.id,itemId,'upsert',personalChanges);}
     }
     setlists=eventRepository.upsert(setlists,updated).events;eventRepository.save(setlists);
     try{eventChat.sendSystem(updated.id,(actor.name||'O líder')+' alterou o tom oficial para '+nextKey+'.');}catch(error){}

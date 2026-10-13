@@ -55,9 +55,8 @@ const server = http.createServer((request, response) => {
       await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'Db');
       assert.equal(remoteShared.key,'Db','tom oficial enviado para a nuvem (equipe recebe)');
       await page.waitForFunction(() => document.querySelector('.event-official-key-control output')?.textContent === 'Db');
-      assert.equal(await page.locator('.event-song-edit').count(),1);
-      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
-      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
+      assert.equal(await page.locator('.event-song-edit').count(),0,'sem ··· nas músicas do evento (Thiago, 13/10)');
+      await page.evaluate(() => openEventSongEdit('event-key','event-key-item'));
       await page.locator('#event-song-edit-key').fill('Db');
       await page.locator('#event-song-edit-capo').fill('2');
       await page.locator('#event-song-edit-text').fill('Db Gb Ab\nUma letra revisada');
@@ -74,8 +73,7 @@ const server = http.createServer((request, response) => {
       remoteShared={...remoteShared,key:'D'};remoteVersion+=1;
       await page.evaluate(() => {currentAuthState={...currentAuthState,authenticated:true};return refreshOpenEventFromCloud();});
       await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'D');
-      await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
-      await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();
+      await page.evaluate(() => openEventSongEdit('event-key','event-key-item'));
       await page.waitForFunction(()=>document.getElementById('event-song-edit-key').value==='D');
       assert.equal(await page.locator('#event-song-edit-key').inputValue(),'D');
       await page.getByRole('button',{name:'Cancelar'}).click();
