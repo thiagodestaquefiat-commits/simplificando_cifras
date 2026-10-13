@@ -1,3 +1,5 @@
+# MANUTENÇÃO: Autenticação das rotas: token próprio legado ou identidade externa validada.
+# MANUTENÇÃO: g.current_user é definido pelo servidor; nunca aceitar identidade sem validação do token.
 from __future__ import annotations
 
 import hashlib

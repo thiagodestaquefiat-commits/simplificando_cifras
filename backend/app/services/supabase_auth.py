@@ -1,3 +1,5 @@
+# MANUTENÇÃO: Valida tokens consultando Supabase Auth; não armazena senha nem exige service_role do navegador.
+# MANUTENÇÃO: Cache de validação tem duração limitada e não substitui autorização nas rotas.
 from __future__ import annotations
 
 import json

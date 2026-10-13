@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Repositório local de músicas: normalização, migração legada e caches separados por proprietário.
+// MANUTENÇÃO: Não misture a biblioteca do visitante com a de uma conta apenas porque houve login.
+// MANUTENÇÃO: A remoção de cópias legadas depende de verificações de segurança para não perder músicas.
 (function (global) {
   "use strict";
 

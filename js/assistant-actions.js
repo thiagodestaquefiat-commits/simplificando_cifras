@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Catálogo de intenções: descreve parâmetros, riscos e requisitos das ações.
+// MANUTENÇÃO: Os parsers não devem gravar dados nem manipular a interface; efeitos pertencem ao runtime.
 (function (global) {
   'use strict';
 

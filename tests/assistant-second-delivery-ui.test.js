@@ -54,7 +54,7 @@ const { chromium } = require('playwright');
     await blocked('abrir playlist');await page.evaluate(()=>closeModal());
     let confirmations=0;page.on('dialog',async dialog=>{confirmations++;await dialog.dismiss();});
     assert.equal((await run('excluir música')).awaitingResponse,true);await succeeds('sim','song.delete');assert.equal(confirmations,1);assert.equal(await page.evaluate(()=>musicas.some(song=>song.id==='phase2')),true,'cancelled native confirmation preserves music');
-    await succeeds('novo evento','event.create');assert.equal(await page.locator('#fs-title').isVisible(),true);await blocked('tema claro');await page.evaluate(()=>closeModal());
+    await succeeds('novo evento','event.create');assert.equal(await page.locator('#event-create-title').isVisible(),true);await blocked('tema claro');await page.evaluate(()=>closeEventAdminSheet());
     await page.evaluate(()=>{
       closeDetail();const source=musicas.find(song=>song.id==='phase2');
       setlists.push(eventModel.create({id:'phase2-event',title:'Ensaio de teste',date:'2030-10-10',leaderId:appCurrentUser.id,members:[{...appCurrentUser,isLeader:true},{id:'other',name:'Outro',role:'Guitarra'}],repertoire:[{id:'p2-item',songId:source.id,shared:eventEditFromSong(eventSongCopy(source))}]}));
@@ -80,7 +80,7 @@ const { chromium } = require('playwright');
     await blocked('editar evento');await blocked('excluir música e mudar idioma para inglês');await blocked('não mudar a cor da cifra');
     await page.evaluate(()=>{closeDetail();openDetailFromEventItem('phase2-event','p2-item');});
     await blocked('excluir música');await succeeds('editar evento');assert.equal(await page.locator('#view-detail').isVisible(),false,'event workflow must not remain behind an opened song');await page.evaluate(()=>closeEventAdminSheet());
-    await succeeds('adicionar bloco','medley.workflow');assert.equal(await page.locator('#med-music').isVisible(),true);await blocked('mudar idioma para inglês');await page.evaluate(()=>closeModal());
+    await succeeds('adicionar bloco','medley.workflow');assert.equal(await page.locator('#medley-sheet-title').isVisible(),true);await blocked('mudar idioma para inglês');await page.evaluate(()=>closeModal());
     await blocked('sincronizar agora');
     const downloadPromise=page.waitForEvent('download');await succeeds('exportar backup do perfil','backup.workflow');assert.ok((await downloadPromise).suggestedFilename().endsWith('.json'));
     await succeeds('importar backup de perfil','backup.workflow');await page.locator('#modal-body details').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));const pickerPromise=page.waitForEvent('filechooser');await page.locator('button[onclick="selectLibraryBackup()"]').click();await pickerPromise;

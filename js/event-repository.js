@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Persistência e migração de eventos locais com separação por identidade.
+// MANUTENÇÃO: Recebe modelos normalizados; não substitui a autorização do servidor nas operações compartilhadas.
 (function (global) {
   "use strict";
 

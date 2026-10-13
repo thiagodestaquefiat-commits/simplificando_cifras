@@ -1,3 +1,7 @@
+// MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
+// MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
+// MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
+const CACHE_NAME = "simplificando-cifras-v481-vinicius-1013";
 // Compatibility marker: simplificando-cifras-v475-metronome-drag
 // Compatibility marker: simplificando-cifras-v365-github-integrado
 // Compatibility marker: simplificando-cifras-v365-responsivo
@@ -5,7 +9,8 @@
 // Legacy test marker: simplificando-cifras-v348-voz-assistente
 // Compatibility marker: simplificando-cifras-v199-tablaturas-detectadas
 // Compatibility marker: simplificando-cifras-v325-external-reply-context
-const CACHE_NAME = "simplificando-cifras-v480-temas-cores-1012";
+// Compatibility marker: simplificando-cifras-v427-voz-direta
+// Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/song-reading.css?v=5",
   "./css/song-reading.css?v=6",
@@ -18,6 +23,7 @@ const ASSETS = [
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
   "./js/app-assistant.js?v=32",
+  "./js/app-assistant.js?v=33",
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
@@ -34,10 +40,8 @@ const ASSETS = [
   "./js/assistant-memory.js?v=2",
   "./js/assistant-dialogue.js?v=4",
   "./js/assistant-sequences.js?v=2",
-  "./js/app-assistant.js?v=29",
   "./js/assistant-voice.js?v=4",
   "./css/topbar-labels.css?v=2",
-  "./js/event-user-invites.js?v=7",
   "./js/assistant-actions.js?v=2",
   "./js/assistant-action-manager.js?v=2",
   "./js/assistant-action-runtime.js?v=2",
@@ -220,7 +224,6 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=16",
-  "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=3",
   "./css/editorial-typography.css?v=3",

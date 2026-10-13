@@ -1,3 +1,6 @@
+# MANUTENÇÃO: API da biblioteca pessoal: a identidade vem da autenticação, não de um proprietário enviado pelo cliente.
+# MANUTENÇÃO: expected_version implementa concorrência otimista; HTTP 409 indica versão remota diferente.
+# MANUTENÇÃO: Contribuição comunitária ocorre na criação elegível; edições posteriores permanecem pessoais.
 from __future__ import annotations
 
 import hashlib
@@ -50,6 +53,7 @@ def _serialize(song):
 
 
 def _upsert(client_id, song_data, expected_version=None):
+    # MANUTENÇÃO: O filtro por proprietário é obrigatório mesmo quando o client_id existe em outra conta.
     song = PersonalSong.query.filter_by(owner_user_id=g.current_user.id, client_id=client_id).first()
     if song and expected_version is not None:
         try:
@@ -63,6 +67,7 @@ def _upsert(client_id, song_data, expected_version=None):
                             song_data=song_data, version=1)
         db.session.add(song)
         SharedSongService.contribute(song_data, g.current_user.id)
+        # MANUTENÇÃO: A elegibilidade por origem é responsabilidade do serviço; não repita esta contribuição nas edições.
         return song, "created"
     if song.song_data == song_data and song.deleted_at is None:
         return song, "existing"

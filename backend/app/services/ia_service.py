@@ -1,3 +1,6 @@
+# MANUTENÇÃO: Orquestra catálogo, fontes, análise local e provedor generativo conforme o tipo de entrada.
+# MANUTENÇÃO: O resultado precisa cumprir os schemas e as regras musicais; resposta do modelo não é dado confiável por si só.
+# MANUTENÇÃO: O prompt é parte do comportamento do produto: mudanças podem afetar ordem, acordes e conteúdo gerado.
 from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone

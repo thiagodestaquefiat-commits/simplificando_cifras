@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Modelo e normalização de músicas, compartilhados por interface, persistência e importação.
+// MANUTENÇÃO: Preserve a compatibilidade com formatos antigos ao acrescentar campos; uma música reúne suas visualizações.
 (function (global) {
   "use strict";
 

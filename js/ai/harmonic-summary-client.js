@@ -1,3 +1,5 @@
+// MANUTENÇÃO: Contrato HTTP de geração: valida entrada, monta JSON/multipart e traduz erros da API.
+// MANUTENÇÃO: As credenciais do provedor generativo permanecem no backend, não neste cliente.
 (function (global) {
   "use strict";
 

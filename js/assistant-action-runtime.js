@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Adaptadores executáveis das intenções, usando as funções nativas recebidas por host.
+// MANUTENÇÃO: Só informar sucesso após verificar o efeito esperado; abrir uma tela não significa salvar dados.
+// MANUTENÇÃO: guard deve continuar sendo chamado nos pontos assíncronos/sensíveis para validar o contexto.
 (function (global) {
   'use strict';
   function create(host) {

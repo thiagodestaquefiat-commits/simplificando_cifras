@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Configuração das respostas faladas com as vozes oferecidas pelo próprio aparelho.
+// MANUTENÇÃO: createUtterance prepara a fala sem executá-la, permitindo conectar callbacks antes do áudio.
+// MANUTENÇÃO: Voz desligada não deve bloquear a execução nem o acompanhamento das perguntas.
 (function(global){
   'use strict';
   // Voz do assistente: usa as vozes gratuitas que o próprio aparelho oferece (Web Speech API).

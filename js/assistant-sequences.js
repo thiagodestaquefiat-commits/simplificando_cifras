@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Execução limitada de pedidos compostos, com validação e histórico temporário de ajustes.
+// MANUTENÇÃO: Desfazer cobre os ajustes locais permitidos; não é rollback de convites ou de operações remotas.
+// MANUTENÇÃO: Preserve a ordem dos comandos e pare quando uma etapa falhar ou o contexto mudar.
 (function (global) {
   'use strict';
   // Deliberately limited to verified scalar adjustments. No remote rollback.

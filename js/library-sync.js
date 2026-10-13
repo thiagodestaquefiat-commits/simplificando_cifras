@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Coordenador da biblioteca pessoal local/remota, incluindo conflitos, lotes e novas tentativas.
+// MANUTENÇÃO: identityGeneration invalida operações assíncronas após troca de conta; não remova essa proteção.
+// MANUTENÇÃO: Este módulo não deve transformar edições pessoais em atualizações do catálogo comunitário.
 (function(global){
   "use strict";
   const CONSENT_KEY="sc_library_sync_consent_v1",OWNER_CONSENT_KEY="sc_library_sync_consent_by_owner_v1",BACKUP_KEY="sc_library_migration_backup_v1",META_KEY="librarySync",BATCH_SIZE=100;

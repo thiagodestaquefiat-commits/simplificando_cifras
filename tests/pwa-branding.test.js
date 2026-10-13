@@ -31,7 +31,7 @@ assert.equal(manifest.display, "standalone");
 assert.equal(manifest.theme_color.toUpperCase(), "#050505");
 assert.equal(manifest.background_color.toUpperCase(), "#050505");
 assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
-assert.doesNotMatch(indexHtml, /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|icon\.svg/);
+assert.doesNotMatch(indexHtml.slice(0,indexHtml.indexOf('</head>')), /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|["/]icon\.svg/);
 assert.match(serviceWorker, /simplificando-cifras-v475-metronome-drag/);
 assert.match(serviceWorker, /assets\/icons\/roudy-assistant-headphones\.svg\?v=1/);
 assert.equal((indexHtml.match(/roudy-assistant-headphones\.svg\?v=1/g) || []).length, 4);

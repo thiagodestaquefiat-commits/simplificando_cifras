@@ -1,3 +1,6 @@
+// MANUTENÇÃO: Motor complementar de intenções: resposta local e consulta opcional ao endpoint Python.
+// MANUTENÇÃO: Valida o contrato retornado pelo servidor e usa fallback local em falha/timeout.
+// MANUTENÇÃO: Recebe texto e dados do contexto; não é responsável por transcrever o microfone.
 (function(global){
   'use strict';
   const catalog=global.roudyIntentCatalog,fillers=new Set(catalog.fillers);

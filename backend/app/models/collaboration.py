@@ -1,3 +1,6 @@
+# MANUTENÇÃO: Entidades relacionais de usuários, bibliotecas, equipes, eventos, convites, variantes e chat.
+# MANUTENÇÃO: Chaves e relações sustentam o isolamento por proprietário e por evento.
+# MANUTENÇÃO: Mudanças de modelo precisam de migração de esquema e revisão dos contratos da API.
 from __future__ import annotations
 
 from datetime import datetime, timezone
