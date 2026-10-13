@@ -115,15 +115,4 @@
 #view-detail.stage-clean .song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr))!important}
 #view-detail.stage-clean .song-controls.is-scrolling .song-control-strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(112px,1.6fr)!important}
 
-/* Modo palco: mesmas páginas do estudo (Resumo, Letra + Cifras, Letra), com nome visível
-   para trocar com um toque durante a apresentação (Thiago, 13/10). Usa os mesmos botões do estudo. */
-#view-detail.stage-clean #song-page-indicator{gap:4px;min-height:40px;margin:4px 12px 2px;padding:3px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:#0d0f12}
-#view-detail.stage-clean .song-page-dot{flex:1 1 0;width:auto;min-width:0;height:34px;padding:0 6px;border-radius:999px;color:#9a9fa8;font:600 12px/1 Inter,-apple-system,BlinkMacSystemFont,sans-serif;white-space:nowrap}
-#view-detail.stage-clean .song-page-dot::after{display:none}
-#view-detail.stage-clean .song-page-dot::before{content:"";overflow:hidden;text-overflow:ellipsis}
-#view-detail.stage-clean .song-page-dot[data-song-page="0"]::before{content:"Resumo"}
-#view-detail.stage-clean .song-page-dot[data-song-page="1"]::before{content:"Letra + Cifras"}
-#view-detail.stage-clean .song-page-dot[data-song-page="2"]::before{content:"Letra"}
-#view-detail.stage-clean .song-page-dot[data-song-page="3"]::before{content:"Tablatura"}
-#view-detail.stage-clean .song-page-dot[aria-current="page"]{background:rgba(59,139,255,.16);color:#fff}
-#view-detail.stage-clean .song-page-dot:focus-visible{border-radius:999px}
+/* Modo palco: Resumo / Letra e cifra / Letra com as mesmas bolinhas e o mesmo arrastar do estudo (Thiago, 13/10). */

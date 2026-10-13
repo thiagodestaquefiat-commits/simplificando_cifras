@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=12">
+<link rel="stylesheet" href="css/song-reading.css?v=13">
 <link rel="stylesheet" href="css/topbar-labels.css?v=13">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -2181,7 +2181,7 @@ function saveInlineFullEdit(songId,button){
     gesture=null;
   };
   content.addEventListener('pointerdown',event=>{
-    if(event.pointerType!=='touch'||stageMode||content.classList.contains('is-pinching')||event.target.closest('textarea,input,select,button,[data-inline-editing="true"]'))return;
+    if(event.pointerType!=='touch'||(stageMode&&!STAGE_CLEAN)||content.classList.contains('is-pinching')||event.target.closest('textarea,input,select,button,[data-inline-editing="true"]'))return;
     activePointers.add(event.pointerId);
     if(activePointers.size>1){cancel(false);return;}
     const track=content.querySelector('.song-page-track');if(!track)return;
