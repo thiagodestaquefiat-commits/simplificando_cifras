@@ -91,6 +91,10 @@ const server = http.createServer((request, response) => {
     const topAfter = await player.evaluate((node) => node.getBoundingClientRect().top);
     assert.ok(topAfter < topBefore - 500, `${topBefore} != ${topAfter}`);
 
+    await page.evaluate(() => { closeDetail(); openDetail('youtube-song'); });
+    await page.locator('#youtube-iframe-player').waitFor({ state: 'visible' });
+    assert.equal(await page.getByRole('button', { name: 'Abrir vídeo de Bondade de Deus' }).count(), 0, 'ao voltar à música, o vídeo já deve reaparecer expandido');
+
     await page.getByRole("button", { name: "Repetir trecho" }).click();
     const repeatPanel = page.getByRole("dialog", { name: "Selecionar trecho para repetir" });
     await repeatPanel.waitFor({ state: "visible" });

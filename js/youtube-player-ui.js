@@ -21,6 +21,7 @@
   let iframeFocusHandler = null;
   let detailScrollCleanup = null;
   let excludedVideoId = null;
+  const expandedSongs = new Set();
   const CONTROLS_DURATION = 4500;
 
   function element(id) { return global.document.getElementById(id); }
@@ -488,9 +489,9 @@
     currentSongId = song && song.id;
     currentVideos = [];
     manualMode = false;
-    // Ao abrir a música o vídeo aparece compacto (capa + ▶). O player do YouTube
-    // só é criado quando a pessoa toca no vídeo: menos peso ao abrir a música.
-    expanded = false;
+    // Depois que o usuário abriu o vídeo desta música, preserve o player completo
+    // ao sair e voltar durante a mesma sessão. Evita o estado intermediário da capa.
+    expanded = expandedSongs.has(String(currentSongId));
     openSelectedVideoPaused = false;
     requestVersion += 1;
     render();
@@ -512,12 +513,17 @@
     if (container) { clear(container); container.className = "youtube-player-shell"; container.style.removeProperty("top"); }
   }
 
-  function openExpanded() { expanded = true; render(); }
+  function openExpanded() {
+    expanded = true;
+    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.add(String(currentSongId));
+    render();
+  }
   function closeExpanded() {
     global.youtubePlayer.pause();
     currentVideos = [];
     manualMode = true;
     expanded = false;
+    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.delete(String(currentSongId));
     render("Pesquise outra gravação para estudar.");
   }
   function showManualSearch() {
@@ -564,6 +570,7 @@
     currentVideos = [];
     manualMode = false;
     expanded = true;
+    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.add(String(currentSongId));
     openSelectedVideoPaused = true;
     context.showToast("Música vinculada ao YouTube");
     render();

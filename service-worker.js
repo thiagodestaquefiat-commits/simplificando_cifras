@@ -1,7 +1,10 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v503-palco-bolinhas";
+const CACHE_NAME = "simplificando-cifras-v506-palco-letra-branca";
+// Compatibility marker: simplificando-cifras-v505-palco-sem-bordas
+// Compatibility marker: simplificando-cifras-v504-restauracao-estudo-evento-palco
+// Compatibility marker: simplificando-cifras-v503-palco-bolinhas
 // Compatibility marker: simplificando-cifras-v502-tom-lider-corrigido
 // Compatibility marker: simplificando-cifras-v501-aba-home
 // Compatibility marker: simplificando-cifras-v500-pestana-branca
@@ -39,6 +42,7 @@ const ASSETS = [
   "./css/topbar-labels.css?v=10",
   "./css/topbar-labels.css?v=12",
   "./css/topbar-labels.css?v=13",
+  "./css/topbar-labels.css?v=14",
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
   "./js/assistant-actions.js?v=5",
@@ -63,6 +67,7 @@ const ASSETS = [
   "./js/app-assistant.js?v=23",
   "./js/youtube-player-ui.js?v=19",
   "./js/youtube-player-ui.js?v=20",
+  "./js/youtube-player-ui.js?v=21",
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
   "./js/tuner.js?v=5",
@@ -162,6 +167,7 @@ const ASSETS = [
   "./js/event-member-profile.css?v=1",
   "./js/event-detail-refactor.css?v=50",
   "./js/event-detail-refactor.css?v=51",
+  "./js/event-detail-refactor.css?v=52",
   "./assets/chat-cables-background.png",
   "./js/notification-center.js?v=3",
   "./js/app-auth.js?v=12",
