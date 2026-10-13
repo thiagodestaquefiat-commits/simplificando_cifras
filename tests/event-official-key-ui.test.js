@@ -48,7 +48,13 @@ const server = http.createServer((request, response) => {
         setlists.push(eventModel.create({id:'event-key',title:'Evento do teste',leaderId:appCurrentUser.id,remoteVersion:1,members:[{...appCurrentUser,isLeader:true},{id:'other-member',name:'Outra pessoa',role:'Vocal'}],repertoire:[{id:'event-key-item',songId:'event-key-song',shared:{key:'C',notes:'Entrada suave',chordSheet:'C F G\nUma letra'}}]}));
         openSD('event-key');
       });
-      assert.equal(await page.locator('.event-official-key-control').count(),0);
+      assert.equal(await page.locator('.event-official-key-control').count(),1,'líder vê − Tom + na música (Thiago, 13/10)');
+      assert.equal(await page.locator('.event-official-key-control output').innerText(),'C');
+      assert.equal(await page.getByRole('button',{name:'Editar',exact:true}).count(),0,'sem botão Editar solto: editar fica no menu ··· do topo');
+      await page.getByRole('button',{name:'Subir tom oficial de Canção do teste'}).click();
+      await page.waitForFunction(() => findEvent('event-key').repertoire[0].shared.key === 'Db');
+      assert.equal(remoteShared.key,'Db','tom oficial enviado para a nuvem (equipe recebe)');
+      await page.waitForFunction(() => document.querySelector('.event-official-key-control output')?.textContent === 'Db');
       assert.equal(await page.locator('.event-song-edit').count(),1);
       await page.getByRole('button',{name:'Abrir opções de Canção do teste'}).click();
       await page.getByRole('button',{name:'Editar na versão da banda',exact:true}).click();

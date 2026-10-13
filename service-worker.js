@@ -1,7 +1,10 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v497-busca-sem-youtube";
+const CACHE_NAME = "simplificando-cifras-v500-pestana-branca";
+// Compatibility marker: simplificando-cifras-v499-palco-visualizacao
+// Compatibility marker: simplificando-cifras-v498-evento-tom-lider
+// Compatibility marker: simplificando-cifras-v497-busca-sem-youtube
 // Compatibility marker: simplificando-cifras-v496-gisele-thiago-1013
 // Compatibility marker: simplificando-cifras-v495-search-metadata-fallback
 // Compatibility marker: simplificando-cifras-v475-metronome-drag
@@ -21,6 +24,7 @@ const ASSETS = [
   "./css/song-reading.css?v=9",
   "./css/song-reading.css?v=10",
   "./css/song-reading.css?v=11",
+  "./css/song-reading.css?v=12",
   "./js/ai/ai-harmonic-summary.js?v=20",
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
@@ -153,6 +157,7 @@ const ASSETS = [
   "./js/account-profile.css?v=3",
   "./js/event-member-profile.css?v=1",
   "./js/event-detail-refactor.css?v=50",
+  "./js/event-detail-refactor.css?v=51",
   "./assets/chat-cables-background.png",
   "./js/notification-center.js?v=3",
   "./js/app-auth.js?v=12",
