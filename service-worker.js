@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v494-camera-source-separation";
+const CACHE_NAME = "simplificando-cifras-v495-search-metadata-fallback";
 // Compatibility marker: simplificando-cifras-v475-metronome-drag
 // Compatibility marker: simplificando-cifras-v365-github-integrado
 // Compatibility marker: simplificando-cifras-v365-responsivo

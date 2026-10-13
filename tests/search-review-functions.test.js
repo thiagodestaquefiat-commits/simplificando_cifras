@@ -6,4 +6,6 @@ const html = fs.readFileSync("index.html", "utf8");
 for (const name of ["reviewSearchedSong", "playlistContainsSong", "openAiDraft", "closePlaylistSearch", "commitSongs", "saveDetailChanges"]) {
   assert.match(html, new RegExp(`function ${name}\\s*\\(`), `index.html precisa definir ${name}()`);
 }
+assert.match(html, /youtubeApi\.searchVideos\(query,6\)/, "a busca externa usa resultados reais para obter artista e data");
+assert.match(html, /videos\.map\(video=>\(\{\.\.\.video,catalog:true/, "resultados de vídeo seguem pelo fluxo seguro do catálogo");
 console.log("search-review-functions.test.js: OK (funções usadas pela busca existem)");
