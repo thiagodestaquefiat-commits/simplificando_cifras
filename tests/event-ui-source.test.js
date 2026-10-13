@@ -29,7 +29,7 @@ assert.match(colorPreviewCss, /--semantic-danger:#F06464/);
 assert.doesNotMatch(colorPreviewCss, /#(?:2f80ed|2563eb|3b82f6|60a5fa|65a3ff|69a8ff|58a6ff|1d4ed8|0a84ff|f4c430|f6c945|ffd400|f4d45d|d89d00)\b/i);
 assert.match(html, /id="primary-tabs" role="tablist"/);
 assert.match(html, /class="tab-indicator" aria-hidden="true"/);
-assert.match(html, /id="tab-musicas"[\s\S]*?aria-selected="true"[\s\S]*?>Playlist<\/span>/);
+assert.match(html, /id="tab-musicas"[\s\S]*?aria-selected="true"[\s\S]*?>Home<\/span>/);
 assert.match(html, /id="tab-setlists"[\s\S]*?aria-selected="false"[\s\S]*?>Eventos<\/span>/);
 assert.match(html, /id="tab-medley"[\s\S]*?aria-selected="false"[\s\S]*?>Medley<\/span>/);
 assert.match(html, /--active-segment[\s\S]*?transition:transform 220ms/);
