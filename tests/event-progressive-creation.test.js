@@ -30,7 +30,7 @@ assert.match(html, /openEventAddSongs/, 'estado vazio reutiliza o fluxo existent
 assert.match(html, /event-repertoire-primary-add/, 'estado vazio usa o CTA principal da referência');
 assert.match(html, /Sugestões para este evento/);
 assert.match(html, /Com base na sua Playlist e nos seus eventos/);
-assert.match(html, /data-event-song-filter="playlist"[^>]*>Playlist</);
+assert.match(html, /data-event-song-filter="playlist"[^>]*>Todas</);
 assert.match(html, /data-event-song-filter="recent"[^>]*>Recentes</);
 assert.match(html, /data-event-song-filter="repertoires"[^>]*>Repertórios</);
 assert.match(html, /function eventSongUsage\(excludedEventId\)/, 'repertórios usam dados reais dos eventos');

@@ -982,6 +982,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=15">
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
+<link rel="stylesheet" href="css/home-playlists.css?v=1">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -1025,7 +1026,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <button class="tab" id="tab-setlists" type="button" role="tab" aria-selected="false" aria-controls="pane-setlists" tabindex="-1" onclick="switchTab('setlists')" onkeydown="handleTabKeydown(event,'setlists')"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="tab-icon-outline"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M7 3v4M17 3v4M3 10h18"></path></g><path class="tab-icon-filled" fill-rule="evenodd" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h.5A3.5 3.5 0 0 1 22 7.5v11a3.5 3.5 0 0 1-3.5 3.5h-13A3.5 3.5 0 0 1 2 18.5v-11A3.5 3.5 0 0 1 5.5 4H6V3a1 1 0 0 1 1-1Zm-3 8v8.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V10H4Z" clip-rule="evenodd"></path></svg><span data-i18n="tabEvents">Eventos</span></button>
       <button class="tab" id="tab-medley" type="button" role="tab" aria-selected="false" aria-controls="pane-medley" tabindex="-1" onclick="switchTab('medley')" onkeydown="handleTabKeydown(event,'medley')"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="tab-icon-outline"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 12 9 5 9-5M3 16l9 5 9-5"></path></g><path class="tab-icon-filled" d="m12 2 10 5.5L12 13 2 7.5 12 2Zm-8.9 9.3L12 16l8.9-4.7L22 13l-10 5.4L2 13l1.1-1.7Zm0 4.7 8.9 4.7 8.9-4.7 1.1 1.7L12 23 2 17.7 3.1 16Z"></path></svg><span data-i18n="tabMedley">Medley</span></button>
     </div>
-    <div id="pane-musicas" style="display:flex;flex-direction:column;">
+    <div id="pane-musicas" data-home-view="home" style="display:flex;flex-direction:column;">
       <section class="playlist-hero-content" aria-labelledby="playlist-ai-title">
         <div class="playlist-ai-card" id="playlist-ai-card">
           <div class="playlist-ai-normal" id="playlist-ai-normal">
@@ -1058,8 +1059,13 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         </div>
       </div>
       <div class="youtube-results" id="youtube-results" style="display:none;"></div>
+      <section class="home-playlists" id="home-playlists" aria-labelledby="home-playlists-title">
+        <header class="home-playlists-header"><h2 id="home-playlists-title">Playlists</h2><button type="button" class="home-playlists-new" onclick="homePlaylists.create()"><span aria-hidden="true">＋</span> Nova</button></header>
+        <div class="home-playlists-list" id="home-playlists-list"></div>
+      </section>
+      <section class="home-playlist-view" id="home-playlist-view" aria-label="Playlist"></section>
       <section class="playlist-library" aria-labelledby="playlist-library-title">
-        <header class="playlist-library-header"><h2 class="playlist-library-title" id="playlist-library-title">Músicas da playlist <span class="playlist-count" id="playlist-count"></span></h2><button class="playlist-play-all" id="playlist-play-all" type="button" onclick="playAllPlaylist()">Reproduzir tudo</button></header>
+        <header class="playlist-library-header"><button type="button" class="home-playlist-back playlist-library-back" onclick="homePlaylists.back()" aria-label="Voltar para as playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h2 class="playlist-library-title" id="playlist-library-title">Todas as músicas <span class="playlist-count" id="playlist-count"></span></h2><button class="playlist-play-all" id="playlist-play-all" type="button" onclick="playAllPlaylist()">Reproduzir tudo</button></header>
         <div class="content" id="lista-musicas"></div>
       </section>
     </div>
@@ -1305,6 +1311,8 @@ window.roudyLoadScript=(function(){const pending={};return function(src){if(!pen
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1")};
 </script>
  <script src="js/notification-center.js?v=3"></script>
+<script src="js/user-playlists.js?v=1"></script>
+<script src="js/home-playlists.js?v=2"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -1387,6 +1395,9 @@ async function saveDetailChanges(options={}){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return {ok:false};
   if(detailEventContext){const context={...detailEventContext},state=detailEditableState(),song=currentDetailSongOverride;
     return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},state),options):{ok:false};}
+  if(detailPlaylistContext&&window.homePlaylists){const state=detailEditableState();if(!homePlaylists.saveItemPlayback(detailPlaylistContext,state))return {ok:false};
+    if(currentDetailSongOverride)currentDetailSongOverride={...currentDetailSongOverride,playbackSettings:{...(currentDetailSongOverride.playbackSettings||{}),...state,video:undefined}};
+    detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();if(!options.quiet&&!options.silent)showToast('✅ Tom salvo nesta playlist');return {ok:true,scope:'user-playlist'};}
   const source=musicas.find(item=>String(item.id)===String(currentDetailId));if(!source)return {ok:false};
   const state=detailEditableState(),result=songRepository.update(musicas,source.id,{...state.video,playbackSettings:{...state,video:undefined}});
   if(!commitSongs(result.songs))return {ok:false};
@@ -2420,8 +2431,9 @@ function updatePlaylistNavigation(){
   if(stageNext){stageNext.disabled=!availability.canNext;stageNext.style.visibility=activeStagePreferences?.showNext===false?'hidden':'visible';}
 }
 
+var detailPlaylistContext=null;
 function openDetail(id,options={}){
-  flushDetailAutoSave();detailEventContext=null;
+  flushDetailAutoSave();detailEventContext=null;detailPlaylistContext=options.userPlaylistItem||null;
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
   } else if(!options.preserveNavigation){
@@ -2433,6 +2445,7 @@ function openDetail(id,options={}){
   storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,openedAt:new Date().toISOString()});
   renderContextualHomeCard();
   let contextualSong=options.songOverride||null;
+  if(!contextualSong&&options.preserveNavigation&&window.homePlaylists){const variant=homePlaylists.variantForContext(navigationContext.get());if(variant){contextualSong=variant.song;detailPlaylistContext=variant.item;}}
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
@@ -2443,7 +2456,7 @@ function openDetail(id,options={}){
   studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
   loadSongTextScale();
   const context=navigationContext.get();
-  document.getElementById('btn-palco').hidden=!(context&&findEvent(context.playlistId));
+  document.getElementById('btn-palco').hidden=!(context&&(findEvent(context.playlistId)||String(context.playlistId).startsWith('upl:')));
   if(!stageMode){
     currentSongPage=loadSongPage(nid);
     const eventViewPage={summary:0,combined:1,lyrics:2,chords:1}[contextualSong?.view];
@@ -3036,6 +3049,8 @@ function renderMusicas(){
   {const pc=document.getElementById('playlist-count');if(pc)pc.textContent='· '+musicas.length;}
   const playAll=document.getElementById('playlist-play-all');
   if(playAll)playAll.disabled=!musicas.length;
+  // Home mostra as playlists; a lista completa só é montada quando "Todas as músicas" ou a busca estão abertas.
+  if(window.homePlaylists){homePlaylists.renderHome();if(!homePlaylists.libraryVisible()){homePlaylists.markLibraryDirty();return;}homePlaylists.libraryRendered();}
   const el=document.getElementById('lista-musicas');
   if(!sorted.length){el.innerHTML=q?'<div class="playlist-search-empty"><strong>Nenhuma música encontrada</strong><span>Tente outro termo.</span></div>':'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma encontrada na biblioteca</p></div>';return;}
   const grouped={};
@@ -3282,7 +3297,7 @@ function openSongOptions(id,trigger){
 }
 function renderSongOptionsRoot(){
   const actions=document.querySelector('#song-options-sheet .song-options-actions');if(!actions)return;
-  actions.innerHTML=`<button type="button" role="menuitem" class="song-options-action song-options-save" onclick="openAddSongToRepertoire()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 11h10M4 16h7M18 13v8M14 17h8"/></svg><span>Adicionar ao repertório</span></button><button type="button" role="menuitem" class="song-options-action" onclick="openSongShareChoices()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg><span>Compartilhar</span></button><button type="button" role="menuitem" class="song-options-action song-options-action--danger" onclick="removeSongFromOptions()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/></svg><span>Remover da playlist</span></button>`;
+  actions.innerHTML=`<button type="button" role="menuitem" class="song-options-action song-options-save" onclick="openAddSongToRepertoire()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 11h10M4 16h7M18 13v8M14 17h8"/></svg><span>Adicionar ao repertório</span></button><button type="button" role="menuitem" class="song-options-action" onclick="openAddSongToUserPlaylist()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 11h12M4 16h8M19 14v6M16 17h6"/></svg><span>Adicionar a uma playlist</span></button><button type="button" role="menuitem" class="song-options-action" onclick="openSongShareChoices()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg><span>Compartilhar</span></button><button type="button" role="menuitem" class="song-options-action song-options-action--danger" onclick="removeSongFromOptions()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/></svg><span>Remover da playlist</span></button>`;
 }
 function openSongShareChoices(){
   const actions=document.querySelector('#song-options-sheet .song-options-actions');if(!actions)return;
@@ -3340,6 +3355,10 @@ function showAddSongEventSheet(song,returnFocus,mode='repertoire'){
 function closeAddSongEventSheet({restoreFocus=true,onClosed=null}={}){
   const sheet=document.getElementById('add-song-event-sheet'),backdrop=document.getElementById('add-song-event-backdrop'),returnFocus=addSongEventReturnFocus;if(!sheet)return;
   backdrop?.classList.remove('is-open');sheet.classList.remove('is-open','is-dragging');sheet.style.removeProperty('--add-event-sheet-y');addSongEventDrag=null;clearTimeout(addSongEventCloseTimer);const delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:190;addSongEventCloseTimer=setTimeout(()=>{addSongEventSheetSongId=null;addSongEventReturnFocus=null;addSongEventSheetMode='repertoire';if(restoreFocus)returnFocus?.focus({preventScroll:true});if(typeof onClosed==='function')onClosed()},delay);
+}
+function openAddSongToUserPlaylist(){
+  const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
+  closeSongOptions({restoreFocus:false,onClosed:()=>homePlaylists.chooseForSong(song.id)});
 }
 function openAddSongToRepertoire(){
   const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
@@ -4806,17 +4825,19 @@ function eventSuggestionMarkup(event){
 function openEventAddSongs(eventId){
   const event=findEvent(eventId),actor=event&&eventPermissionActor(event);if(!event||!eventModel.canEditShared(event,actor.id)){showToast('Somente o líder pode editar o repertório oficial.');return;}
   eventAdminSheetState={type:'add',eventId:String(event.id),query:'',filter:'playlist',added:new Set()};
-  showEventAdminSheet(`${eventAdminHeader('Adicionar músicas')}<div class="event-admin-add-filters" role="group" aria-label="Origem das músicas"><button type="button" data-event-song-filter="playlist" aria-pressed="true" onclick="setEventAddSongsFilter('playlist')">Playlist</button><button type="button" data-event-song-filter="recent" aria-pressed="false" onclick="setEventAddSongsFilter('recent')">Recentes</button><button type="button" data-event-song-filter="repertoires" aria-pressed="false" onclick="setEventAddSongsFilter('repertoires')">Repertórios</button></div><div class="event-admin-song-list" id="event-admin-song-list"></div><label class="event-admin-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><input id="event-admin-search-input" type="search" placeholder="O que você quer adicionar?" aria-label="Buscar música para adicionar" oninput="filterEventAddSongs(this.value)"></label>`,'Adicionar músicas ao repertório');
+  showEventAdminSheet(`${eventAdminHeader('Adicionar músicas')}<div class="event-admin-add-filters" role="group" aria-label="Origem das músicas"><button type="button" data-event-song-filter="playlist" aria-pressed="true" onclick="setEventAddSongsFilter('playlist')">Todas</button><button type="button" data-event-song-filter="recent" aria-pressed="false" onclick="setEventAddSongsFilter('recent')">Recentes</button><button type="button" data-event-song-filter="repertoires" aria-pressed="false" onclick="setEventAddSongsFilter('repertoires')">Repertórios</button><button type="button" data-event-song-filter="playlists" aria-pressed="false" onclick="setEventAddSongsFilter('playlists')">Playlists</button></div><div class="event-admin-song-list" id="event-admin-song-list"></div><label class="event-admin-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><input id="event-admin-search-input" type="search" placeholder="O que você quer adicionar?" aria-label="Buscar música para adicionar" oninput="filterEventAddSongs(this.value)"></label>`,'Adicionar músicas ao repertório');
   renderEventAddSongs();
 }
 function filterEventAddSongs(value){if(eventAdminSheetState?.type!=='add')return;eventAdminSheetState.query=String(value||'').trim().toLocaleLowerCase('pt-BR');renderEventAddSongs();}
 function setEventAddSongsFilter(filter){
-  const state=eventAdminSheetState;if(state?.type!=='add'||!['playlist','recent','repertoires'].includes(filter))return;state.filter=filter;
+  const state=eventAdminSheetState;if(state?.type!=='add'||!['playlist','recent','repertoires','playlists'].includes(filter))return;state.filter=filter;
   document.querySelectorAll('[data-event-song-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.eventSongFilter===filter)));renderEventAddSongs();
 }
 function renderEventAddSongs(){
   const state=eventAdminSheetState,event=state&&findEvent(state.eventId),target=document.getElementById('event-admin-song-list');if(!event||!target)return;
   const present=new Set(event.repertoire.map(item=>String(item.songId))),query=state.query||'';
+  if(state.filter==='playlists'){const lists=(window.userPlaylists?userPlaylists.list(appCurrentUser.id):[]).filter(list=>!query||list.name.toLocaleLowerCase('pt-BR').includes(query));
+    target.innerHTML=lists.map(list=>{const missing=homePlaylists.eventItemsFromPlaylist(list,event).length;return `<div class="event-admin-song-row"><span class="home-playlist-art home-playlist-art--2" aria-hidden="true">${eventEsc(list.name.trim().split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toUpperCase())}</span><span class="event-admin-song-copy"><strong>${eventEsc(list.name)}</strong><small>${missing?`${missing} ${missing===1?'música entra':'músicas entram'} no tom da playlist`:'Todas já estão no repertório'}</small></span><button type="button" class="event-admin-add-button${missing?'':' is-added'}" ${missing?'':'disabled'} onclick="addUserPlaylistToEventSheet(${attrJs(list.id)})" aria-label="Adicionar a playlist ${eventEsc(list.name)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`;}).join('')||'<div class="event-admin-empty">Você ainda não tem playlists. Crie na aba Home.</div>';return;}
   const usage=eventSongUsage(event.id),lastOpened=storage.get(HOME_CARD_LAST_SONG_KEY,null)?.songId;
   let available=[...musicas].filter(song=>!present.has(String(song.id)));
   if(state.filter==='recent')available.sort((a,b)=>(String(b.id)===String(lastOpened)?1:0)-(String(a.id)===String(lastOpened)?1:0)||(Date.parse(b.updatedAt||b.createdAt||0)||0)-(Date.parse(a.updatedAt||a.createdAt||0)||0));
@@ -4832,6 +4853,10 @@ function addSongFromEventSheet(songId,button){
   const repertoireItem={id:'rep_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   event=eventModel.create({...event,repertoire:[...event.repertoire,repertoireItem],syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,eventPermissionActor(event),'repertoire.song.added',`adicionou ${song.title} ao repertório oficial`,{songId:song.id,changeType:'SONG_ADDED',after:{repertoireItemId:repertoireItem.id,songId:song.id}});
   setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();openSD(event.id);state.added.add(String(song.id));setTimeout(()=>{if(eventAdminSheetState===state)renderEventAddSongs()},360);
+}
+function addUserPlaylistToEventSheet(playlistId){
+  const state=eventAdminSheetState,eventId=state&&state.eventId;if(!eventId)return;
+  const event=homePlaylists.addPlaylistToEvent(playlistId,eventId);if(event)openSD(event.id);
 }
 function addSuggestedSongToEvent(eventId,songId,button){
   let event=findEvent(eventId);const song=musicas.find(item=>String(item.id)===String(songId)),actor=event&&eventPermissionActor(event);if(!event||!song||!eventModel.canEditShared(event,actor.id)||event.repertoire.some(item=>String(item.songId)===String(song.id)))return;
@@ -5420,7 +5445,9 @@ if ('serviceWorker' in navigator) {
     document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') reloadForUpdate(); });
   });
 }
-</script>  <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
+</script>
+<script>try{homePlaylists.setView('home',{keepScroll:true});homePlaylists.checkSharedLink();userPlaylists.subscribe(()=>{if(homePlaylists.view==='home')homePlaylists.renderHome();});}catch(error){console.error(error);}</script>
+  <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
 </body>
 </html>
