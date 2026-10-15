@@ -81,7 +81,7 @@
       const available = playlist.items.filter((item) => songById(item.songId)).length;
       return `<button type="button" class="home-playlist-row" onclick="homePlaylists.open(${js(playlist.id)})">${artwork(playlist.name)}<span class="home-playlist-copy"><strong>${esc(playlist.name)}</strong><small>${esc(countLabel(available))}${playlist.sharedFrom ? " · recebida" : ""}</small></span><span class="home-playlist-chevron" aria-hidden="true">›</span></button>`;
     }).join("");
-    const empty = playlists.length ? "" : `<p class="home-playlists-hint">Crie uma playlist para cada ministro, culto ou ensaio. Cada música guarda o tom daquela playlist.</p>`;
+    const empty = playlists.length ? "" : `<p class="home-playlists-hint">Monte playlists do seu jeito: por estilo (rock, blues, samba…), por ministro ou por evento. Cada música guarda o tom daquela playlist.</p>`;
     target.innerHTML = library + rows + empty;
   }
 
@@ -173,7 +173,7 @@
   // ── Criar, renomear, apagar ─────────────────────────────────────────
   function nameSheet(title, value, action) {
     eventAdminSheetState = { type: "field" };
-    global.showEventAdminSheet(`${global.eventAdminHeader(title, action)}<label class="home-playlist-name-field"><span>Nome da playlist</span><input id="home-playlist-name" class="form-input" maxlength="120" value="${esc(value)}" placeholder="Ex.: Ministro João" onkeydown="if(event.key==='Enter'){event.preventDefault();${action}}"></label>`, title);
+    global.showEventAdminSheet(`${global.eventAdminHeader(title, action)}<label class="home-playlist-name-field"><span>Nome da playlist</span><input id="home-playlist-name" class="form-input" maxlength="120" value="${esc(value)}" placeholder="Ex.: Rock, Blues, Ministro João" onkeydown="if(event.key==='Enter'){event.preventDefault();${action}}"></label>`, title);
     setTimeout(() => document.getElementById("home-playlist-name")?.select(), 80);
   }
 
