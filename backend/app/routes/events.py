@@ -79,6 +79,19 @@ def _text(value, maximum: int, field: str, required: bool = False) -> str:
     return result
 
 
+def _avatar_url(value) -> str | None:
+    """Foto de perfil é opcional: aceita só link https de até 500 caracteres.
+
+    Fotos enviadas pelo aparelho ficam salvas como `data:image/...;base64`,
+    que passam de 500 caracteres. Em vez de recusar o evento inteiro,
+    descartamos a foto e o app mostra as iniciais do membro.
+    """
+    result = str(value or "").strip()
+    if not result.startswith("https://") or len(result) > 500:
+        return None
+    return result
+
+
 def _identifier(value, field: str, fallback: str | None = None) -> str:
     result = str(value or fallback or "").strip()
     if not IDENTIFIER.fullmatch(result):
@@ -376,7 +389,7 @@ def _members_payload(payload: dict, actor) -> tuple[list[dict], str]:
             "id": user_id,
             "name": _text(raw.get("name"), 120, "members.name", True),
             "role": _text(raw.get("role"), 80, "members.role") or "Outra",
-            "avatarUrl": _text(raw.get("avatarUrl"), 500, "members.avatarUrl") or None,
+            "avatarUrl": _avatar_url(raw.get("avatarUrl")),
         })
     if actor.id not in seen:
         members.insert(0, {"id": actor.id, "name": actor.name, "role": "Liderança", "avatarUrl": actor.avatar_url})
@@ -517,7 +530,7 @@ def register_user():
     user = CollaborationUser(
         id=user_id,
         name=_text(payload.get("name"), 120, "name", True),
-        avatar_url=_text(payload.get("avatarUrl"), 500, "avatarUrl") or None,
+        avatar_url=_avatar_url(payload.get("avatarUrl")),
     )
     db.session.add(user)
     token = issue_access_token(user)
