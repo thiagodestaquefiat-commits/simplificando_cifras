@@ -5390,7 +5390,9 @@ youtubeUI.initialize({
   openSong:openDetail
 });
 youtubePlayerUI.initialize({
-  getSongs:()=>[...musicas,...eventChatPreviewSongs],
+  // A cópia aberta na tela (variante do evento ou edição em andamento) vem primeiro,
+  // senão o vídeo recém-vinculado some e o player volta para a busca.
+  getSongs:()=>{const list=[...musicas,...eventChatPreviewSongs];const open=currentDetailSongOverride;return open?[open,...list.filter(song=>String(song.id)!==String(open.id))]:list;},
   setSongs:stageDetailVideoSongs,
   persistSongs:(songs)=>detailEditBaseline?true:songRepository.save(songs),
   renderSongs:renderMusicas,
