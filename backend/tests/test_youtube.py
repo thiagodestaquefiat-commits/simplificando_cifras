@@ -34,10 +34,24 @@ def test_provider_searches_only_embeddable_videos_and_caches(monkeypatch):
     query = parse_qs(urlparse(calls[0][0]).query)
     assert query["type"] == ["video"]
     assert query["videoEmbeddable"] == ["true"]
-    assert query["videoSyndicated"] == ["true"]
+    assert "videoSyndicated" not in query
     assert query["key"] == ["secret"]
     assert first[0]["videoId"] == "abc123"
     assert first[0]["youtubeUrl"] == "https://www.youtube.com/watch?v=abc123"
+
+
+def test_provider_does_not_cache_empty_results(monkeypatch):
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append(request.full_url)
+        return FakeResponse(b'{"items":[]}')
+
+    monkeypatch.setattr("app.services.youtube_provider.urlopen", fake_urlopen)
+    provider = YouTubeProvider("secret", timeout_seconds=3, cache_ttl_seconds=60)
+    assert provider.search("Te Adorar Aline Barros", 8) == []
+    assert provider.search("Te Adorar Aline Barros", 8) == []
+    assert len(calls) == 2
 
 
 def test_provider_requires_server_key():

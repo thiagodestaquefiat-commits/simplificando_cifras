@@ -84,8 +84,9 @@ class YouTubeProvider:
             "q": cleaned,
             "type": "video",
             "maxResults": maximum,
+            # Só videoEmbeddable: o filtro videoSyndicated escondia gravações de
+            # gravadoras (ex.: Aline Barros) que tocam normalmente no player.
             "videoEmbeddable": "true",
-            "videoSyndicated": "true",
             "relevanceLanguage": "pt",
             "regionCode": "BR",
             "safeSearch": "moderate",
@@ -116,5 +117,7 @@ class YouTubeProvider:
                 "youtubeUrl": f"https://www.youtube.com/watch?v={video_id}",
                 "publishedAt": str(snippet.get("publishedAt") or "").strip() or None,
             })
-        self.search_cache.set(cache_key, results)
+        # Resultado vazio não fica em cache: senão a música passa 24h "sem vídeo".
+        if results:
+            self.search_cache.set(cache_key, results)
         return results
