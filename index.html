@@ -3086,7 +3086,13 @@ async function completeSongSheet(id){
     const current=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
-    if(eventContext){await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;}
+    if(eventContext){
+      // Completar dentro do evento também completa a música da biblioteca (se ela ainda não tem),
+      // senão a mesma música continua "só com resumo" fora do evento.
+      const library=musicas.find(item=>String(item.id)===String(current.id));
+      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheet});commitSongs(lib.songs);}
+      await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;
+    }
     const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
     if(!commitSongs(updated.songs))return;
     renderMusicas();openDetail(updated.song.id);
@@ -3217,6 +3223,16 @@ async function saveSimpleSongReview(){
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,tablature,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
+  if(simpleReviewDraft.eventContext&&candidate.fullChordSheet?.content){
+    // Cifra completada dentro do evento também completa a música da biblioteca, se ela só tinha o resumo.
+    const library=musicas.find(item=>String(item.id)===String(candidate.id));
+    if(library&&!library.fullChordSheet?.content){
+      const capoDiff=(Number(songFormat.parseCapo(library.capo))||0)-(Number(songFormat.parseCapo(candidate.capo))||0);
+      const shift=((eventKeyShift(candidate.key,library.key)-capoDiff)%12+12)%12;
+      const sheet={...candidate.fullChordSheet,content:transposeEventChordText(candidate.fullChordSheet.content,shift),sections:[]};
+      const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheet});commitSongs(lib.songs);
+    }
+  }
   if(simpleReviewDraft.eventContext){await saveContextEventSong(simpleReviewDraft.eventContext,eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:reviewed.capo}}));return;}
   const result=sourceSong?songRepository.update(musicas,sourceSong.id,{...candidate,id:sourceSong.id}):songRepository.addOrReuse(musicas,candidate);
   if(!commitSongs(result.songs))return;closeModal();renderMusicas();openDetail(result.song.id);showToast('✅ '+values.title+' salva!');
@@ -4269,10 +4285,24 @@ function eventSongModel(song,edit,fallbackEdit){
   const fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
+// A cópia da música no evento é uma foto do momento em que entrou no repertório.
+// Se a música foi completada depois (Letra + Cifras) na biblioteca, a cópia do evento
+// ainda só tinha o resumo. Só preenche quando falta: nunca sobrescreve o que o evento já tem.
+function eventFillFullSheetFromLibrary(variant,item){
+  if(!variant||variant.fullChordSheet?.content||!item)return variant;
+  const library=musicas.find(song=>String(song.id)===String(item.songId));
+  if(!library?.fullChordSheet?.content)return variant;
+  const capoDiff=(Number(songFormat.parseCapo(variant.capo))||0)-(Number(songFormat.parseCapo(library.capo))||0);
+  const shift=((eventKeyShift(library.key,variant.key)-capoDiff)%12+12)%12;
+  variant.fullChordSheet={...library.fullChordSheet,content:transposeEventChordText(library.fullChordSheet.content,shift),sections:shift?[]:(library.fullChordSheet.sections||[])};
+  return variant;
+}
 function eventSongVariant(event,item,userId){
   const song=eventSongSource(event,item);if(!song)return null;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,userId),personal=effective&&effective.effective.scope==='personal';
-  return {...songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),effective?.effective.songData||song),view:effective?.effective?.view||'summary',personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
+  const variant=songFormat.toLegacy(eventSongModel(song,effective&&effective.effective,personal?item.shared:null),effective?.effective.songData||song);
+  eventFillFullSheetFromLibrary(variant,item);
+  return {...variant,view:effective?.effective?.view||'summary',personalNotes:personal?(effective.effective.notes||''):'',sharedNotes:item.shared?.notes||''};
 }
 // MANUTENÇÃO: Materialize tom/capo atuais numa cópia independente; evite referências mutáveis à biblioteca pessoal.
 function eventSongCopy(song,state=song.playbackSettings||{}){
