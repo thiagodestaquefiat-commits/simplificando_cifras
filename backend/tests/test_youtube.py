@@ -82,3 +82,20 @@ def test_youtube_routes_expose_status_and_normalized_results(client, app):
     assert response.status_code == 200
     assert response.get_json()["videos"][0]["videoId"] == "video-1"
     assert client.get("/api/youtube/search?q=ab").status_code == 400
+
+
+def test_provider_retries_simplified_query_when_empty(monkeypatch):
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        query = parse_qs(urlparse(request.full_url).query)["q"][0]
+        calls.append(query)
+        if query == "Te Adorar Meu Prazer Aline Barros":
+            return FakeResponse(b'{"items":[{"id":{"videoId":"ef-ADl6_PsY"},"snippet":{"title":"Te Adorar","channelTitle":"Aline Barros"}}]}')
+        return FakeResponse(b'{"items":[]}')
+
+    monkeypatch.setattr("app.services.youtube_provider.urlopen", fake_urlopen)
+    provider = YouTubeProvider("secret", timeout_seconds=3, cache_ttl_seconds=60)
+    result = provider.search("Te Adorar É o Meu Prazer Aline Barros", 8)
+    assert calls == ["Te Adorar É o Meu Prazer Aline Barros", "Te Adorar Meu Prazer Aline Barros"]
+    assert result[0]["videoId"] == "ef-ADl6_PsY"
