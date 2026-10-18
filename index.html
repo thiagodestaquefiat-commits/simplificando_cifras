@@ -3065,6 +3065,14 @@ musicList.addEventListener('pointerup',finishSongSwipe);musicList.addEventListen
 // ── EDIT / ADD ────────────────────────────────────────────────────────
 let completingSongId=null;
 function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
+// Semitons para levar a cifra encontrada (tom + capo da fonte) à mesma forma de acordes da música
+// (tom + capo do resumo). Padrão do ROUDY: tom real + capo à parte, acordes escritos na forma.
+// Ex.: resumo em D sem capo, Cifra Club em G sem capo -> 7 (= 5 abaixo). Sem tom em algum lado -> 0.
+function completeSheetKeyShift(song,data){
+  const shape=(key,capo)=>{const i=noteIdx(String(key||'').trim().match(/^[A-G](?:#|b)?/)?.[0]||'');return i<0?-1:((i-(parseInt(capo,10)||0))%12+12)%12;};
+  const target=shape(song?.key||song?.originalKey,song?.capo),source=shape(data?.tom,data?.capotraste);
+  return target<0||source<0?0:(target-source+12)%12;
+}
 async function completeSongSheet(id){
   const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
   const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
@@ -3076,7 +3084,7 @@ async function completeSongSheet(id){
   try{
     const result=await harmonicSummaryClient.generate('pesquisa',{titulo:song.title,artista:song.artist||'',modoGeracao:'conhecimento_modelo'});
     if(ownerAtStart!==songRepository.getActiveOwnerId())return;
-    const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
+    let sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
     if(!sheet){
       const notes=(result?.data?.observacoes||[]).map(String),limited=notes.some(note=>/Limite diário de buscas na web/i.test(note));
       if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
@@ -3086,11 +3094,14 @@ async function completeSongSheet(id){
     const current=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
+    // A cifra do Cifra Club vem no tom do site; deixa a Letra + Cifras no mesmo tom/forma do resumo da música.
+    const rawSheet=sheet,sheetFor=target=>{const shift=completeSheetKeyShift(target,result?.data);return shift?{...rawSheet,content:transposeEventChordText(rawSheet.content,shift),sections:[]}:rawSheet;};
+    sheet=sheetFor(current);
     if(eventContext){
       // Completar dentro do evento também completa a música da biblioteca (se ela ainda não tem),
       // senão a mesma música continua "só com resumo" fora do evento.
       const library=musicas.find(item=>String(item.id)===String(current.id));
-      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheet});commitSongs(lib.songs);}
+      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheetFor(library)});commitSongs(lib.songs);}
       await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;
     }
     const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
