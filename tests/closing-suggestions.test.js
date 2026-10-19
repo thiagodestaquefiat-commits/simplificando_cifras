@@ -42,3 +42,8 @@ assert.match(html, /<script src="js\/closing-suggestions\.js\?v=\d+"><\/script>/
 assert.match(html, /eventClosingSuggestionsMarkup\(event,availableItems/, 'o repertório mostra as sugestões após a última música');
 assert.match(html, /function addClosingSuggestionToEvent\(/);
 console.log('closing-suggestions ok');
+const markupSource = html.slice(html.indexOf('function eventClosingSuggestionsMarkup('), html.indexOf('function addClosingSuggestionToEvent('));
+assert.doesNotMatch(markupSource, /if\(!canShared/, 'todos os membros veem as sugestões');
+assert.match(markupSource, /\$\{canShared\?`<button type="button" onclick="addClosingSuggestionToEvent/, 'só o líder vê o botão de adicionar');
+assert.match(html.slice(html.indexOf('function addClosingSuggestionToEvent('), html.indexOf('function openEventOrderSheet(')), /eventModel\.canEditShared\(event,actor\.id\)/, 'adicionar continua exigindo o líder');
+console.log('closing-suggestions permissões ok');

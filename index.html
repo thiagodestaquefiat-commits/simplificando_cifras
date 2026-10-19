@@ -4912,14 +4912,15 @@ function eventClosingSuggestions(event,items){
   return {reference,targetKey,suggestions};
 }
 function eventClosingSuggestionsMarkup(event,items,canShared){
-  if(!canShared||!items.length)return'';
+  // Todos os membros veem as sugestões; só o líder (quem edita o repertório oficial) pode adicionar.
+  if(!items.length)return'';
   const {reference,targetKey,suggestions}=eventClosingSuggestions(event,items);if(!reference)return'';
   const intro=`Mesmo tema de “${eventEsc(reference.title)}”, no tom ${eventEsc(targetKey)}`;
   if(!suggestions.length)return `<section class="event-repertoire-suggestions event-closing-suggestions"><h3>Para encerrar</h3><p>Nenhuma música da sua Playlist com o mesmo tema de “${eventEsc(reference.title)}”.</p></section>`;
-  return `<section class="event-repertoire-suggestions event-closing-suggestions"><h3>Para encerrar</h3><p>${intro}</p><div>${suggestions.map(({song,semitones,sharedThemes})=>{
+  return `<section class="event-repertoire-suggestions event-closing-suggestions"><h3>Para encerrar</h3><p>${intro}${canShared?'':'. Só o líder adiciona ao repertório.'}</p><div>${suggestions.map(({song,semitones,sharedThemes})=>{
     const key=eventClosingKeyLabel(song.key,semitones,targetKey),original=semitones&&song.key?` · original ${eventEsc(song.key)}`:'';
     const themes=sharedThemes.slice(0,2).map(theme=>closingSuggestions.themeLabel(theme)).join(', ');
-    return `<article class="event-suggestion-row">${eventSongArtwork(song,'event-suggestion-artwork')}<span class="event-suggestion-copy"><strong>${eventEsc(song.title)}</strong><small>Tom ${eventEsc(key||'—')}${original}${themes?` · ${eventEsc(themes)}`:''}</small></span><button type="button" onclick="addClosingSuggestionToEvent(${attrJs(event.id)},${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} no tom ${eventEsc(key)} ao final do repertório"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg></button></article>`;
+    return `<article class="event-suggestion-row">${eventSongArtwork(song,'event-suggestion-artwork')}<span class="event-suggestion-copy"><strong>${eventEsc(song.title)}</strong><small>Tom ${eventEsc(key||'—')}${original}${themes?` · ${eventEsc(themes)}`:''}</small></span>${canShared?`<button type="button" onclick="addClosingSuggestionToEvent(${attrJs(event.id)},${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} no tom ${eventEsc(key)} ao final do repertório"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg></button>`:''}</article>`;
   }).join('')}</div></section>`;
 }
 function addClosingSuggestionToEvent(eventId,songId,button){
