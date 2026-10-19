@@ -309,3 +309,17 @@ def test_explicit_legacy_migration_preserves_event_repertoire_and_unregistered_m
     assert body["createdAt"].startswith("2026-07-24T10:00:00")
     assert body["updatedAt"].startswith("2026-08-01T12:30:00")
     assert body["notifications"][0]["id"] == "legacy-change-1"
+
+
+def test_event_with_base64_member_avatar_is_created_without_the_photo(client):
+    leader = register(client, "leader-user", "Líder")
+    register(client, "member-user", "Integrante")
+    payload = event_payload()
+    payload["members"][0]["avatarUrl"] = "data:image/jpeg;base64," + "A" * 5000
+    payload["members"][1]["avatarUrl"] = "https://lh3.googleusercontent.com/a/foto"
+
+    created = client.post("/api/collaboration/events", headers=auth(leader), json=payload)
+    assert created.status_code == 201, created.get_json()
+    avatars = {member["id"]: member["avatarUrl"] for member in created.get_json()["members"]}
+    assert avatars["leader-user"] is None
+    assert avatars["member-user"] == "https://lh3.googleusercontent.com/a/foto"

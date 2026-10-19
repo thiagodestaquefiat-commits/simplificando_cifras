@@ -38,6 +38,18 @@ class _TtlCache:
                 self.values.popitem(last=False)
 
 
+_SHORT_WORDS = {"a", "o", "e", "é", "as", "os", "de", "da", "do", "das", "dos", "um", "uma", "no", "na", "em", "me", "te", "se", "eu", "tu"}
+
+
+def _query_variants(query: str) -> list[str]:
+    words = query.split()
+    simplified = " ".join(word for word in words if word.casefold() not in _SHORT_WORDS or word is words[0])
+    variants = [query]
+    if simplified and simplified.casefold() != query.casefold():
+        variants.append(simplified)
+    return variants
+
+
 class YouTubeProvider:
     SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 
@@ -71,6 +83,22 @@ class YouTubeProvider:
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise YouTubeProviderError("O YouTube retornou uma resposta inválida.") from error
 
+    def _search_url(self, query: str, maximum: int) -> str:
+        parameters = urlencode({
+            "part": "snippet",
+            "q": query,
+            "type": "video",
+            "maxResults": maximum,
+            # Só videoEmbeddable: o filtro videoSyndicated escondia gravações de
+            # gravadoras (ex.: Aline Barros) que tocam normalmente no player.
+            "videoEmbeddable": "true",
+            "relevanceLanguage": "pt",
+            "regionCode": "BR",
+            "safeSearch": "moderate",
+            "key": self.api_key,
+        })
+        return f"{self.SEARCH_URL}?{parameters}"
+
     def search(self, query: str, limit: int = 8) -> list[dict]:
         cleaned = " ".join(str(query or "").split())
         maximum = min(max(int(limit), 1), 10)
@@ -79,19 +107,14 @@ class YouTubeProvider:
         if cached is not None:
             return cached
 
-        parameters = urlencode({
-            "part": "snippet",
-            "q": cleaned,
-            "type": "video",
-            "maxResults": maximum,
-            "videoEmbeddable": "true",
-            "videoSyndicated": "true",
-            "relevanceLanguage": "pt",
-            "regionCode": "BR",
-            "safeSearch": "moderate",
-            "key": self.api_key,
-        })
-        payload = self._download(f"{self.SEARCH_URL}?{parameters}")
+        # A API do YouTube às vezes devolve zero vídeos para o título completo com
+        # palavrinhas soltas ("Te Adorar É o Meu Prazer"), mas acha tudo sem elas.
+        # Tenta o texto original e, se vier vazio, uma versão simplificada.
+        payload = {"items": []}
+        for attempt in _query_variants(cleaned):
+            payload = self._download(self._search_url(attempt, maximum))
+            if payload.get("items"):
+                break
         results: list[dict] = []
         seen: set[str] = set()
         for item in payload.get("items", []):
@@ -116,5 +139,7 @@ class YouTubeProvider:
                 "youtubeUrl": f"https://www.youtube.com/watch?v={video_id}",
                 "publishedAt": str(snippet.get("publishedAt") or "").strip() or None,
             })
-        self.search_cache.set(cache_key, results)
+        # Resultado vazio não fica em cache: senão a música passa 24h "sem vídeo".
+        if results:
+            self.search_cache.set(cache_key, results)
         return results
