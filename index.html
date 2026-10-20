@@ -2326,7 +2326,7 @@ function renderTablature(value){
 // ── Partitura (PDF ou MusicXML) ─────────────────────────────────────────
 // A partitura fica na música da biblioteca. Aberta por evento/playlist, a tela mostra a cópia
 // (currentDetailSongOverride), então buscamos a partitura também na música da biblioteca.
-let sheetMusicZoom=1,sheetMusicRemoveArmed=false,sheetMusicRemoveTimer=0,sheetMusicBusy=false;
+let sheetMusicZoom=window.innerWidth<600?.7:1,sheetMusicRemoveArmed=false,sheetMusicRemoveTimer=0,sheetMusicBusy=false;
 function sheetMusicLibrarySong(songId=currentDetailId){return musicas.find(item=>String(item.id)===String(songId))||null;}
 function currentSheetMusic(source){return window.sheetMusic?.normalize(source?.sheetMusic||sheetMusicLibrarySong(source?.id)?.sheetMusic)||null;}
 function renderSheetMusicPage(sheet){

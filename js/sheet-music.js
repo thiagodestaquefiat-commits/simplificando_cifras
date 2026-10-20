@@ -151,7 +151,7 @@
   async function renderMusicXml(target, sheet, options) {
     const lib = await loadScript(OSMD_URL, "opensheetmusicdisplay");
     const xml = await xmlOf(sheet);
-    const osmd = new lib.OpenSheetMusicDisplay(target, { autoResize: false, backend: "svg", drawTitle: true, drawSubtitle: false, drawComposer: true, drawLyricist: false, drawCredits: false, drawPartNames: false });
+    const osmd = new lib.OpenSheetMusicDisplay(target, { autoResize: false, backend: "svg", drawTitle: false, drawSubtitle: false, drawComposer: false, drawLyricist: false, drawCredits: false, drawPartNames: false });
     await osmd.load(xml);
     const semitones = Number(options.semitones) || 0;
     if (semitones && lib.TransposeCalculator) {
