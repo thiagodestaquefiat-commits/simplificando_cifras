@@ -2071,37 +2071,82 @@ function renderLinha(linha, totalShift){
 function editableBlockAttrs(songId,label,sectionIndex=null){
   if(stageMode) return '';
   const section=sectionIndex===null?'full':String(sectionIndex);
-  return `role="button" tabindex="0" aria-label="Manter pressionado para ${eventEsc(label.toLowerCase())}" data-long-press-edit="${eventEsc(String(songId))}" data-edit-section="${section}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();beginInlineBlockEdit(this)}"`;
+  // Só abre a edição quando a tecla foi no próprio bloco. Sem o "event.target===this", o Espaço e o
+  // Enter digitados dentro do editor (textarea) subiam até aqui e eram cancelados.
+  return `role="button" tabindex="0" aria-label="Manter pressionado para ${eventEsc(label.toLowerCase())}" data-long-press-edit="${eventEsc(String(songId))}" data-edit-section="${section}" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();beginInlineBlockEdit(this)}"`;
+}
+
+// A edição rápida usa a mesma música que está na tela: a da biblioteca ou a cópia aberta pela
+// playlist/evento (currentDetailSongOverride). Antes ela lia e salvava só na biblioteca, e a tela
+// redesenhava a cópia antiga — parecia que não tinha salvado.
+function inlineEditSong(songId){
+  const open=currentDetailSongOverride;
+  if(open&&String(open.id)===String(songId))return open;
+  return musicas.find(item=>String(item.id)===String(songId))||null;
+}
+// Seção no formato atual (editorData ou blocos antigos), na mesma ordem do resumo exibido.
+function inlineEditSection(song,index){return songFormat.fromLegacy(song).sections[index]||null;}
+function inlineSectionToBlock(section){
+  const rows=[];
+  section.lines.forEach(line=>{
+    if(line.chords.length)rows.push(songFormat.renderChordLine(line.chords)+(line.repeticoes?`  (${line.repeticoes}x)`:''));
+    if(line.lyrics)rows.push(line.lyrics);
+  });
+  return {l:section.label||'',c:rows.join('\n')};
 }
 
 function beginInlineBlockEdit(target){
   if(!target||target.dataset.inlineEditing==='true'||stageMode)return;
   const songId=target.dataset.longPressEdit,section=target.dataset.editSection;
-  const song=musicas.find(item=>String(item.id)===String(songId));
+  const song=inlineEditSong(songId);
   if(!song)return;
-  target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
   if(section==='full'){
+    target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
     const content=song.fullChordSheet?.content||'';
     target.innerHTML=`<label class="inline-block-label" for="inline-full-${eventEsc(String(songId))}">Letra e cifra</label><textarea class="inline-block-textarea inline-block-full" id="inline-full-${eventEsc(String(songId))}">${eventEsc(content)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullEdit('${eventEsc(String(songId))}',this)">Salvar</button></div>`;
   }else{
-    const index=Number(section),block=song.blocos?.[index];if(!block){renderDetail();return;}
-    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c||'')}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l||'')}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)">Salvar</button></div>`;
+    const index=Number(section),current=inlineEditSection(song,index);if(!current){renderDetail();return;}
+    const block=inlineSectionToBlock(current);
+    target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
+    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)">Salvar</button></div>`;
   }
   target.querySelector('textarea')?.focus();
 }
 function cancelInlineBlockEdit(){renderDetail()}
+// Grava a música editada no lugar certo: na variante do evento (como o editor completo faz) ou na
+// biblioteca — e, se a música veio de uma playlist, atualiza também a cópia aberta na tela.
+async function commitInlineSongEdit(song,candidate,message){
+  if(detailEventContext&&currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id)){
+    const result=await saveContextEventSong({...detailEventContext},eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:songFormat.parseCapo(candidate.capo)}}));
+    if(result?.ok===false){showToast('⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
+    renderDetail();showToast(message);return true;
+  }
+  const library=musicas.find(item=>String(item.id)===String(song.id));
+  if(!library){showToast('⚠️ Esta música não está na sua biblioteca. Reabra a música e tente de novo.');return false;}
+  const {playbackSettings:_ignored,...content}=candidate;
+  const result=songRepository.update(musicas,library.id,{...content,id:library.id,playbackSettings:library.playbackSettings});
+  if(!commitSongs(result.songs)){renderDetail();return false;}
+  if(currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id))currentDetailSongOverride={...result.song,playbackSettings:currentDetailSongOverride.playbackSettings};
+  renderMusicas();renderDetail();showToast(message);return true;
+}
 function saveInlineBlockEdit(songId,index,button){
-  const card=button.closest('[data-inline-editing]'),song=musicas.find(item=>String(item.id)===String(songId));if(!card||!song)return;
-  const chords=card.querySelector('.inline-block-chords').value.trim(),lyrics=card.querySelector('.inline-block-lyrics').value.trim();
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const chords=card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),lyrics=card.querySelector('.inline-block-lyrics').value.trim();
   if(!chords){showToast('⚠️ Adicione pelo menos um acorde');return;}
-  const blocos=(song.blocos||[]).map((block,blockIndex)=>blockIndex===index?{...block,c:chords,l:lyrics}:block);
-  const result=songRepository.update(musicas,song.id,{...song,blocos});musicas=result.songs;salvar();renderMusicas();renderDetail();showToast('✅ Bloco salvo');
+  const model=songFormat.fromLegacy(song),old=model.sections[index];if(!old){showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');renderDetail();return;}
+  const parsed=songFormat.fromLegacy({blocos:[{l:lyrics,c:chords}]}).sections[0];
+  if(!parsed){showToast('⚠️ Não foi possível entender esse bloco.');return;}
+  const sections=model.sections.map((section,i)=>i===index?{...section,label:parsed.label,lines:parsed.lines}:section);
+  const candidate=songFormat.toLegacy(songFormat.normalize({...model,sections}),song);
+  button.disabled=true;
+  return commitInlineSongEdit(song,candidate,'✅ Bloco salvo');
 }
 function saveInlineFullEdit(songId,button){
-  const card=button.closest('[data-inline-editing]'),song=musicas.find(item=>String(item.id)===String(songId));if(!card||!song)return;
-  const content=card.querySelector('.inline-block-full').value.trim();if(!content){showToast('⚠️ A cifra não pode ficar vazia');return;}
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const content=card.querySelector('.inline-block-full').value.replace(/\r\n?/g,'\n').trim();if(!content){showToast('⚠️ A cifra não pode ficar vazia');return;}
   const fullChordSheet={...(song.fullChordSheet||{}),content,sections:[]};
-  const result=songRepository.update(musicas,song.id,{...song,fullChordSheet});musicas=result.songs;salvar();renderMusicas();renderDetail();showToast('✅ Letra e cifra salvas');
+  button.disabled=true;
+  return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Letra e cifra salvas');
 }
 
 (()=>{
@@ -2353,7 +2398,7 @@ function renderSummaryProjection(summary,totalShift,songId,contentMode='combined
     }).join('');
     const labelHtml=section.showLabel&&section.label?`<div class="full-chord-line is-section">${eventEsc(section.label)}</div>`:'';
     const stageLabel=section.label||`Trecho ${sectionIndex+1}`;
-    return corpo||labelHtml?`<section class="wa-block" data-song-section-id="${sectionIndex}" ${editableBlockAttrs(songId,`editar bloco ${sectionIndex+1} da cifra`,sectionIndex)}><span class="stage-summary-label">${eventEsc(stageLabel)}</span>${labelHtml}${corpo}</section>`:'';
+    return corpo||labelHtml?`<section class="wa-block" data-song-section-id="${sectionIndex}" ${editableBlockAttrs(songId,`editar bloco ${sectionIndex+1} da cifra`,section.sourceIndex??sectionIndex)}><span class="stage-summary-label">${eventEsc(stageLabel)}</span>${labelHtml}${corpo}</section>`:'';
   }).join('');
   return html||'<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p></div>';
 }
