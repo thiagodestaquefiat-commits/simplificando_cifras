@@ -427,7 +427,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .profile-image-editor{position:fixed;inset:0;z-index:160;display:flex;background:#000;color:#fff}.profile-image-editor[hidden]{display:none}.profile-image-editor-card{display:flex;width:100%;height:100dvh;min-height:0;overflow:hidden;flex-direction:column;background:#000}.profile-image-editor-header{display:grid;min-height:calc(58px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 12px 8px;grid-template-columns:minmax(76px,1fr) minmax(0,2fr) minmax(76px,1fr);align-items:center;border-bottom:1px solid rgba(255,255,255,.1);background:#090909}.profile-image-editor-header strong{overflow:hidden;font-size:14px;text-align:center;text-overflow:ellipsis;white-space:nowrap}.profile-image-editor-action{min-height:42px;padding:0 8px;border:0;background:transparent;color:#f5f5f5;font:700 12px/1 inherit;cursor:pointer}.profile-image-editor-action:first-child{text-align:left}.profile-image-editor-action:last-child{color:#0789e7;text-align:right}.profile-image-editor-action:focus-visible{outline:2px solid #0789e7;outline-offset:2px}.profile-image-editor-body{display:flex;min-height:0;flex:1}.profile-crop-stage{display:flex;width:100%;min-height:0;padding:24px 18px calc(24px + env(safe-area-inset-bottom));align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#050505}.profile-crop-canvas-wrap{position:relative;width:min(82vw,560px,calc(100dvh - 190px));max-width:100%;aspect-ratio:1;overflow:hidden;border-radius:50%;background:#111;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}.profile-crop-canvas-wrap.is-interacting{cursor:grabbing}.profile-crop-canvas{display:block;width:100%;height:100%}.profile-crop-ring{position:absolute;inset:1px;border:2px solid rgba(255,255,255,.92);border-radius:50%;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.16)}.profile-crop-grid{position:absolute;inset:0;opacity:0;border-radius:50%;background:linear-gradient(90deg,transparent 33.1%,rgba(255,255,255,.34) 33.3% 33.6%,transparent 33.8% 66.2%,rgba(255,255,255,.34) 66.4% 66.7%,transparent 66.9%),linear-gradient(transparent 33.1%,rgba(255,255,255,.34) 33.3% 33.6%,transparent 33.8% 66.2%,rgba(255,255,255,.34) 66.4% 66.7%,transparent 66.9%);pointer-events:none;transition:opacity .16s ease}.profile-crop-canvas-wrap.is-interacting .profile-crop-grid{opacity:1}.profile-crop-hint{margin:0;color:#a3a3a3;font-size:11px;line-height:1.4;text-align:center}.profile-crop-hint strong{display:block;margin-bottom:4px;color:#f5f5f5;font-size:13px}@media(max-width:620px){.profile-image-editor-header{grid-template-columns:82px minmax(0,1fr) 82px}.profile-crop-stage{padding-inline:12px}.profile-crop-canvas-wrap{width:min(92vw,calc(100dvh - 200px));min-width:230px}}@media(prefers-reduced-motion:reduce){.profile-crop-grid{transition:none}}
 html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009e73;--danger:#d55e00}html.a11y-high-contrast{--bg:#000;--bg2:#050505;--bg3:#111;--surface:#050505;--surface-hover:#171717;--accent:#ffd400;--accent2:rgba(255,212,0,.18);--text:#fff;--text2:#eee;--border:rgba(255,255,255,.42);--music-accent:#ffd400;--chord-color:#ffd400;--success:#00ff85;--danger:#ff6b6b}html.a11y-high-contrast button:focus-visible,html.a11y-high-contrast input:focus-visible,html.a11y-high-contrast select:focus-visible{outline:3px solid #ffd400!important;outline-offset:2px}
 .song-view-switch{display:grid;grid-template-columns:repeat(var(--song-view-count,2),minmax(0,1fr));gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 15.3px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:11.7px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
-.tablature-view{display:grid;gap:12px}.tablature-toolbar{display:flex;padding:10px 12px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:10px}.tablature-toolbar strong{color:var(--text);font-size:11px}.tablature-toolbar span:nth-child(3){margin-left:auto}.tablature-size-btn{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);font-weight:900;cursor:pointer}.tablature-section{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.tablature-section h3{padding:10px 14px;border-bottom:1px solid var(--border);color:#93c5fd;font-size:11px;letter-spacing:.6px;text-transform:uppercase}.tablature-scroll{overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}.tablature-content{min-width:max-content;color:#f8fafc;font:600 var(--tablature-font-size,13px)/1.55 'JetBrains Mono',Consolas,monospace;white-space:pre}.tablature-note{padding:11px 13px;border:1px solid rgba(245,158,11,.25);border-radius:11px;background:rgba(245,158,11,.06);color:var(--text2);font-size:10px;line-height:1.45}
+.sheet-music-view{display:grid;gap:12px}.sheet-music-toolbar{flex-wrap:wrap}.sheet-music-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 120px}.sheet-music-paper{background:#fff;color:#111;border-radius:12px;padding:8px 4px;overflow-x:auto;min-height:160px}.sheet-music-paper svg{max-width:none}.sheet-music-status{margin:0;padding:28px 16px;text-align:center;color:#4b5160;font-size:14px;line-height:1.5}.sheet-music-pdf-page{display:block;margin:0 auto 8px;background:#fff;max-width:none}.sheet-music-actions{display:flex;flex-wrap:wrap;gap:8px}.sheet-music-actions .btn{flex:1 1 140px;width:auto;margin:0}.sheet-music-remove.is-armed{border-color:#e5484d;color:#e5484d}.tablature-view{display:grid;gap:12px}.tablature-toolbar{display:flex;padding:10px 12px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:10px}.tablature-toolbar strong{color:var(--text);font-size:11px}.tablature-toolbar span:nth-child(3){margin-left:auto}.tablature-size-btn{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);font-weight:900;cursor:pointer}.tablature-section{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.tablature-section h3{padding:10px 14px;border-bottom:1px solid var(--border);color:#93c5fd;font-size:11px;letter-spacing:.6px;text-transform:uppercase}.tablature-scroll{overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}.tablature-content{min-width:max-content;color:#f8fafc;font:600 var(--tablature-font-size,13px)/1.55 'JetBrains Mono',Consolas,monospace;white-space:pre}.tablature-note{padding:11px 13px;border:1px solid rgba(245,158,11,.25);border-radius:11px;background:rgba(245,158,11,.06);color:var(--text2);font-size:10px;line-height:1.45}
 
 .event-section-title--center{text-align:center}
 .event-repertoire-list{display:block}
@@ -1149,6 +1149,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <div class="song-control-row"><span class="song-control-row-label">Rolagem</span><div class="song-scroll-slider-wrap"><input id="song-scroll-speed" class="song-scroll-slider" type="range" min="6" max="120" step="3" value="30" oninput="setSongScrollSpeed(this.value)" aria-label="Velocidade da rolagem"><output class="scroll-speed-value" aria-live="polite">0,50x</output></div></div>
         <div class="song-control-row song-control-row--bpm"><span class="song-control-row-label">Metrônomo</span><div class="song-bpm-picker"><span class="song-bpm-tempo" id="song-bpm-tempo">Adagio</span><div class="song-bpm-ruler"><button type="button" class="song-bpm-step" id="metronome-minus" aria-label="Diminuir BPM">−</button><label class="song-bpm-range-shell"><output class="song-bpm-bubble" id="metronome-bpm" aria-live="polite">72</output><input id="song-bpm-range" class="song-bpm-range" type="range" min="30" max="240" step="1" value="72" aria-label="BPM do metrônomo"></label><button type="button" class="song-bpm-step" id="metronome-plus" aria-label="Aumentar BPM">+</button></div><div class="metronome-bar capo-metronome-row song-bpm-engine" id="study-metronome" role="group" aria-label="BPM do metrônomo"><select id="metronome-meter" class="song-control-meter-select" aria-label="Compasso"><option value="">Desativado</option><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4">4/4</option><option value="5/4">5/4</option><option value="6/8">6/8</option><option value="12/8">12/8</option></select><span class="metronome-beats" aria-label="Metrônomo desativado"><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span><span class="metronome-beat" hidden></span></span></div><button type="button" class="song-metronome-toggle" id="song-metronome-toggle" onclick="toggleStudyMetronome()" aria-pressed="false" aria-label="Ativar metrônomo no play geral"><span></span><span></span><span></span></button></div></div>
         <div class="song-control-row song-control-row--meter"><span class="song-control-row-label">Compasso</span><div class="song-meter-wheel-shell"><div class="song-meter-wheel" id="song-meter-wheel" role="radiogroup" aria-label="Compasso do metrônomo" tabindex="0"><button type="button" role="radio" data-meter="2/4" aria-checked="false" onclick="selectStudyMeter('2/4')">2/4</button><button type="button" role="radio" data-meter="3/4" aria-checked="false" onclick="selectStudyMeter('3/4')">3/4</button><button type="button" role="radio" data-meter="4/4" aria-checked="false" onclick="selectStudyMeter('4/4')">4/4</button><button type="button" role="radio" data-meter="5/4" aria-checked="false" onclick="selectStudyMeter('5/4')">5/4</button><button type="button" role="radio" data-meter="6/8" aria-checked="false" onclick="selectStudyMeter('6/8')">6/8</button><button type="button" role="radio" data-meter="12/8" aria-checked="false" onclick="selectStudyMeter('12/8')">12/8</button></div></div></div>
+        <div class="song-control-row song-sheet-music-row"><span class="song-control-row-label">Partitura</span><button type="button" class="chord-instrument-button" onclick="openSheetMusicPicker()" aria-label="Adicionar partitura em PDF ou MusicXML"><span>PDF ou MusicXML</span></button><input type="file" id="sheet-music-input" hidden onchange="handleSheetMusicFile(this)"></div>
         <div class="song-control-row song-instrument-row"><span class="song-control-row-label">Instrumento</span><button id="inst-btn" type="button" class="chord-instrument-button" onclick="openInstModal()" aria-label="Escolher instrumento dos acordes"><span id="inst-label">Violão</span><span class="song-instrument-chevron" aria-hidden="true">›</span></button></div>
       </div>
     </section>
@@ -1238,6 +1239,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
 <script src="js/storage.js?v=2"></script>
 <script src="js/tablature.js?v=2"></script>
+<script src="js/sheet-music.js?v=1"></script>
 <script src="js/song-model.js?v=6"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/medley-repository.js?v=2"></script>
@@ -2321,10 +2323,67 @@ function renderTablature(value){
   const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3>${section.tuning?`<p class="tablature-note">Afinação: ${eventEsc(section.tuning)}</p>`:''}<div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
   return `<div class="tablature-view" style="--tablature-font-size:${tablatureFontSize}px"><div class="tablature-toolbar"><strong>${eventEsc(instrumentLabels[tab.instrument]||instrumentLabels.other)}</strong><span>Afinação: ${eventEsc(tab.tuning)}</span><span>Capotraste: ${tab.capo||'Sem'}</span><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(-1)" aria-label="Diminuir tablatura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(1)" aria-label="Aumentar tablatura">A+</button></div><p class="tablature-note">A tablatura é exibida exatamente como foi cadastrada e não é alterada ao transpor o tom.</p>${sections}</div>`;
 }
+// ── Partitura (PDF ou MusicXML) ─────────────────────────────────────────
+// A partitura fica na música da biblioteca. Aberta por evento/playlist, a tela mostra a cópia
+// (currentDetailSongOverride), então buscamos a partitura também na música da biblioteca.
+let sheetMusicZoom=1,sheetMusicRemoveArmed=false,sheetMusicRemoveTimer=0,sheetMusicBusy=false;
+function sheetMusicLibrarySong(songId=currentDetailId){return musicas.find(item=>String(item.id)===String(songId))||null;}
+function currentSheetMusic(source){return window.sheetMusic?.normalize(source?.sheetMusic||sheetMusicLibrarySong(source?.id)?.sheetMusic)||null;}
+function renderSheetMusicPage(sheet){
+  const transposes=sheet.format==='musicxml';
+  const note=transposes?(currentSemitones?`Partitura transposta ${currentSemitones>0?'+':'−'}${Math.abs(currentSemitones)} semitom${Math.abs(currentSemitones)>1?'s':''}, acompanhando o Tom.`:'A partitura acompanha o Tom da música.'):'PDF exibido como foi enviado. Ele não muda ao transpor o tom.';
+  return `<div class="sheet-music-view"><div class="tablature-toolbar sheet-music-toolbar"><strong>${eventEsc(sheetMusic.formatLabel(sheet))}</strong><span class="sheet-music-name">${eventEsc(sheet.name)}</span><button class="tablature-size-btn" type="button" onclick="adjustSheetMusicZoom(-1)" aria-label="Diminuir partitura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustSheetMusicZoom(1)" aria-label="Aumentar partitura">A+</button></div><p class="tablature-note">${note}</p><div class="sheet-music-paper" id="sheet-music-paper"><p class="sheet-music-status">Abrindo a partitura…</p></div><div class="sheet-music-actions"><button type="button" class="btn btn-outline" onclick="openSheetMusicPicker()">Trocar arquivo</button><button type="button" class="btn btn-outline sheet-music-remove" id="sheet-music-remove" onclick="removeSheetMusic()">Remover partitura</button></div></div>`;
+}
+function paintSheetMusic(sheet){
+  const paper=document.getElementById('sheet-music-paper');if(!paper||!window.sheetMusic)return;
+  sheetMusic.render(paper,sheet,{semitones:currentSemitones,zoom:sheetMusicZoom,onRendered:()=>requestAnimationFrame(syncSongPageHeight)});
+}
+function adjustSheetMusicZoom(delta){
+  sheetMusicZoom=Math.max(.6,Math.min(1.8,Math.round((sheetMusicZoom+(delta<0?-.1:.1))*10)/10));
+  const source=currentDetailSongOverride||sheetMusicLibrarySong(),sheet=currentSheetMusic(source);if(sheet)paintSheetMusic(sheet);
+  showToast(`Partitura em ${Math.round(sheetMusicZoom*100)}%`);
+}
+function openSheetMusicPicker(){
+  if(sheetMusicBusy)return;
+  if(!sheetMusicLibrarySong()){showToast('⚠️ Adicione esta música à sua biblioteca para anexar uma partitura.');return;}
+  const input=document.getElementById('sheet-music-input');input.accept=sheetMusic.accept;input.value='';input.click();
+}
+async function commitSongSheetMusic(value){
+  const library=sheetMusicLibrarySong();if(!library)return false;
+  const result=songRepository.update(musicas,library.id,{sheetMusic:value||null});
+  if(!commitSongs(result.songs))return false;
+  if(currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(library.id))currentDetailSongOverride={...currentDetailSongOverride,sheetMusic:value||null};
+  renderMusicas();return true;
+}
+async function handleSheetMusicFile(input){
+  const file=input.files&&input.files[0];input.value='';if(!file||sheetMusicBusy)return;
+  const previous=currentSheetMusic(sheetMusicLibrarySong());
+  sheetMusicBusy=true;showToast('⏳ Preparando a partitura…');
+  try{
+    const sheet=await sheetMusic.importFile(file);
+    if(!await commitSongSheetMusic(sheet)){await sheetMusic.discard(sheet);return;}
+    if(previous&&previous.fileKey!==sheet.fileKey)sheetMusic.discard(previous);
+    renderDetail();setSongView('sheet');
+    showToast(sheet.format==='pdf'?'✅ Partitura em PDF adicionada neste aparelho':'✅ Partitura adicionada. Ela acompanha o Tom.');
+  }catch(error){showToast('⚠️ '+(error?.message||'Não foi possível abrir este arquivo.'));}
+  finally{sheetMusicBusy=false;}
+}
+async function removeSheetMusic(){
+  const button=document.getElementById('sheet-music-remove'),previous=currentSheetMusic(sheetMusicLibrarySong());if(!previous)return;
+  // Confirmação dentro da própria tela: o primeiro toque arma, o segundo remove.
+  if(!sheetMusicRemoveArmed){sheetMusicRemoveArmed=true;if(button){button.textContent='Toque de novo para remover';button.classList.add('is-armed');}clearTimeout(sheetMusicRemoveTimer);sheetMusicRemoveTimer=setTimeout(()=>{sheetMusicRemoveArmed=false;const again=document.getElementById('sheet-music-remove');if(again){again.textContent='Remover partitura';again.classList.remove('is-armed');}},4000);return;}
+  sheetMusicRemoveArmed=false;clearTimeout(sheetMusicRemoveTimer);
+  if(!await commitSongSheetMusic(null))return;
+  sheetMusic.discard(previous);setSongPage(1,{source:'legacy'});renderDetail();showToast('Partitura removida');
+}
 function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
+// Páginas extras depois de Resumo / Letra e cifra / Letra, na ordem: Tablaturas e Partitura.
+let SONG_EXTRA_VIEWS=[];
+function songViewForPage(index){return index===0?'summary':index<=2?'full':SONG_EXTRA_VIEWS[index-3]||'full';}
 function setSongView(view){
-  currentSongView=view==='tablature'&&SONG_LAST_PAGE===3?'tablature':view==='full'?'full':'summary';
-  if(!stageMode)setSongPage(currentSongView==='tablature'?3:view==='full'?1:0,{source:'legacy'});
+  const extra=SONG_EXTRA_VIEWS.indexOf(view);
+  currentSongView=extra>=0?view:view==='full'?'full':'summary';
+  if(!stageMode)setSongPage(extra>=0?3+extra:view==='full'?1:0,{source:'legacy'});
   else renderDetail();
 }
 
@@ -2369,7 +2428,7 @@ function restoreSongPosition(anchor,page){
 function setSongPage(index,options={}){
   const next=Math.max(0,Math.min(SONG_LAST_PAGE,Number(index)||0));
   if(next!==currentSongPage)stopSmartScroll();
-  currentSongView=next===3?'tablature':next===0?'summary':'full';
+  currentSongView=songViewForPage(next);
   const track=document.querySelector('#detail-content .song-page-track');
   if(!track){currentSongPage=next;if(options.persist!==false&&currentDetailId!=null)storage.set(songPageStorageKey(),currentSongPage);updateSongPageIndicator(options);return;}
   const anchor=songPositionAnchor(currentSongPageElement());
@@ -2415,10 +2474,14 @@ function renderStageStructure(summary,totalShift){
 function renderDetail(){
   const source=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);if(!source)return;
   const m=tablature.prepareSong(source),visibleTablature=tablature.compatible(m.tablature,currentInstrument);
-  SONG_LAST_PAGE=visibleTablature?3:2;SONG_PAGE_LABELS.splice(3,1,...(visibleTablature?['Tablaturas']:[]));
+  const sheet=currentSheetMusic(source);
+  SONG_EXTRA_VIEWS=[...(visibleTablature?['tablature']:[]),...(sheet?['sheet']:[])];
+  SONG_LAST_PAGE=2+SONG_EXTRA_VIEWS.length;SONG_PAGE_LABELS.splice(3,Infinity,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?'Partitura':'Tablaturas'));
   if(currentSongPage>SONG_LAST_PAGE){currentSongPage=1;currentSongView='full';}
-  const indicator=document.getElementById('song-page-indicator');indicator.querySelector('[data-song-page="3"]')?.remove();
-  if(visibleTablature)indicator.insertAdjacentHTML('beforeend',`<button class="song-page-dot" type="button" data-song-page="3" onclick="setSongView('tablature')" aria-label="Tablaturas"></button>`);
+  const indicator=document.getElementById('song-page-indicator');indicator.querySelectorAll('[data-song-page]').forEach(dot=>{if(Number(dot.dataset.songPage)>=3)dot.remove();});
+  SONG_EXTRA_VIEWS.forEach((view,offset)=>indicator.querySelector('.song-page-status').insertAdjacentHTML('beforebegin',view==='sheet'
+    ?`<button class="song-page-dot" type="button" data-song-page="${3+offset}" onclick="setSongView('sheet')" aria-label="Partitura"></button>`
+    :`<button class="song-page-dot" type="button" data-song-page="${3+offset}" onclick="setSongView('tablature')" aria-label="Tablaturas"></button>`));
   updateScrollSpeedControls();
   document.getElementById('stage-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
@@ -2452,9 +2515,10 @@ function renderDetail(){
     :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
   // Modo Palco limpo (Thiago, 12/10): mesma cifra da tela de estudo, sem as caixas do palco antigo.
-  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...(visibleTablature?[renderTablature(visibleTablature)]:[])].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
+  if(sheet)paintSheetMusic(sheet);
   updateSongPageIndicator({announce:false});
   if(!stageMode||STAGE_CLEAN)requestAnimationFrame(syncSongPageHeight);
   if(smartScrollController.isActive())smartScrollController.sync();
