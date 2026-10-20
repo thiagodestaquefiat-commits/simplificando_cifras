@@ -30,6 +30,7 @@
       capo: text(value.capo),
       view: ["summary", "chords", "combined", "lyrics"].includes(value.view) ? value.view : "summary",
       chordSheet: String(value.chordSheet == null ? "" : value.chordSheet),
+      ...(text(value.chordSheetKey)?{chordSheetKey:text(value.chordSheetKey)}:{}),
       notes: text(value.notes),
       ...(value.songData&&typeof value.songData==='object'?{songData:JSON.parse(JSON.stringify(value.songData))}:{}),
       updatedAt: value.updatedAt || new Date().toISOString()
@@ -177,6 +178,7 @@
         capo: personal ? personal.capo : item.shared.capo,
         view: personal ? personal.view : item.shared.view,
         chordSheet: personal ? personal.chordSheet : item.shared.chordSheet,
+        ...(personal?{chordSheetKey:personal.chordSheetKey||personal.key}:item.shared.chordSheetKey?{chordSheetKey:item.shared.chordSheetKey}:{}),
         notes: personal ? personal.notes : item.shared.notes,
         songData: personal?.songData || item.shared.songData || null,
         scope: personal ? "personal" : "shared"

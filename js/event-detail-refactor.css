@@ -288,3 +288,12 @@
 .event-poll-compose-question:focus,.event-poll-option-input:focus{outline:0;box-shadow:none}
 .chat-appearance-option--custom{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),var(--chat-custom-preview);background-position:center;background-size:cover}
 .chat-appearance-upload{display:flex;min-height:92px;padding:12px;border:1px dashed rgba(255,255,255,.24);border-radius:14px;align-items:center;justify-content:center;background:#171719;color:#f5f5f7;text-align:center;cursor:pointer;flex-direction:column}.chat-appearance-upload input{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0}.chat-appearance-upload span{font-size:13px;font-weight:750}.chat-appearance-upload small{margin-top:5px;color:#929299;font-size:10px;font-weight:500}.chat-appearance-upload:active{background:#222225}.chat-appearance-remove{display:block;min-height:44px;margin:10px auto 0;padding:0 12px;border:0;background:transparent;color:#ff6961;font:650 13px/1 inherit;cursor:pointer}
+.event-invite-role{width:100%;min-width:0;cursor:pointer}
+.event-invite-role .event-invite-check{flex:0 0 31px}
+.event-invite-role select{flex:1;min-width:0;width:100%;min-height:56px;padding:0 8px 0 0;border:0;border-radius:0;appearance:none;-webkit-appearance:none;background:transparent;color:inherit;font:inherit;cursor:pointer;text-overflow:ellipsis}
+.event-invite-role select option{background:#191919;color:#f5f5f7}
+.event-invite-role select:focus-visible{outline:2px solid #2f80ed;outline-offset:2px;border-radius:5px}
+.event-invite-role-chevron{flex:0 0 auto;color:#9b9ba2;font-size:21px}
+.event-invite-status{margin:15px 0 0;color:#a7abb2;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.event-invite-status:empty{display:none}
+.event-invite-actions button:disabled,.event-invite-role select:disabled{opacity:.55;cursor:wait}

@@ -78,7 +78,7 @@ assert.match(eventDetailCss, /notification-center-overlay/);
 assert.match(html, /function eventNoticePeriod/);
 assert.match(html, /notification-row notification-row-static/);
 assert.match(html, /function eventAvatarPaletteClass/);
-assert.match(html, /event-detail-refactor\.css\?v=52/);
+assert.match(html, /event-detail-refactor\.css\?v=53/);
 assert.match(eventDetailCss, /\.notification-copy strong\{display:inline;margin-right:\.28em/);
 assert.doesNotMatch(html, /id="event-chat-avatar"/, 'o cabeçalho do chat não exibe foto ou avatar');
 assert.match(eventDetailCss, /event-chat-header\{[^}]*grid-template-columns:34px minmax\(0,1fr\) auto/, 'o título ocupa o espaço liberado pelo avatar');

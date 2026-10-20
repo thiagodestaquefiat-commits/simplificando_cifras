@@ -170,7 +170,7 @@
       }
       // Authentication is not consent to transfer legacy ownership. Keep the
       // device identity untouched; use the authenticated identity only in memory.
-      return { user, accessToken: null, status: "supabase", legacyUserIds: [] };
+      return { user, authSubject: subject, accessToken: null, status: "supabase", legacyUserIds: [] };
     }
     if (identity.accessToken) return identity;
     const response = await request("/users", {
@@ -267,7 +267,7 @@
     if (global.appAuth?.getState?.().user?.id !== owner) throw new CollaborationError("A conta foi alterada. Tente novamente.",409,"conta_alterada");
     return result;
   }
-  const searchUsers = (query, offset=0) => invitationRequest('/directory/users?q='+encodeURIComponent(query)+'&offset='+encodeURIComponent(offset));
+  const searchUsers = (query, offset=0, role='') => invitationRequest('/directory/users?q='+encodeURIComponent(query)+'&offset='+encodeURIComponent(offset)+(role?'&role='+encodeURIComponent(role):''));
   const inviteUser = (eventId,userId,role) => invitationRequest('/events/'+encodeURIComponent(eventId)+'/direct-invitations',{method:'POST',body:JSON.stringify({userId,role})});
   const listInvitations = () => invitationRequest('/direct-invitations');
   const getUsername = () => invitationRequest('/me/username');

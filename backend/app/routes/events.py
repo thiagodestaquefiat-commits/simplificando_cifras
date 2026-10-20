@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, g, jsonify, request
-from sqlalchemy import or_
+from sqlalchemy import case, or_
 from sqlalchemy.exc import IntegrityError
 
 from ..database import db
@@ -17,6 +17,7 @@ from ..errors import ApiError
 from ..models import (
     CollaborationUser,
     UserHandle,
+    ProfileInstrument,
     ContextAcknowledgement,
     Band,
     BandMember,
@@ -228,6 +229,14 @@ def _iso(value) -> str:
     return value.isoformat()
 
 
+def _adapt_vocal_keys(event, item_ids=None):
+    from ..services.vocal_key_history import adapt_event
+    for item, before, after in adapt_event(event, item_ids):
+        _change(event, "repertoire.key.vocal_adapted",
+                f"adequou automaticamente o tom oficial de {item.shared_title or 'uma música'} de {before or '—'} para {after} pelo histórico vocal",
+                song_id=item.song_id, change_type="KEY_CHANGED", before=before, after=after)
+
+
 def _serialize_message(message: EventMessage) -> dict:
     song = message.poll if message.message_type == "song" else None
     return {
@@ -300,6 +309,7 @@ def _serialize_event(event: Event, user_id: str) -> dict:
             "shared": {
                 "title": item.shared_title, "artist": item.shared_artist,
                 "key": item.shared_key, "capo": item.shared_capo,
+                **({"chordSheetKey": item.vocal_key_state["sheetKey"]} if item.vocal_key_state and item.vocal_key_state.get("sheetKey") else {}),
                 **({"songData": item.shared_song_data} if item.shared_song_data else {}),
                 "chordSheet": item.shared_chord_sheet, "notes": item.shared_notes,
             },
@@ -440,6 +450,7 @@ def _repertoire_payload(payload: dict) -> list[dict]:
             "key": _text(shared.get("key"), 32, "shared.key"),
             "capo": _text(shared.get("capo"), 20, "shared.capo"),
             "chordSheet": _text(shared.get("chordSheet"), 100000, "shared.chordSheet"),
+            "chordSheetKey": _text(shared.get("chordSheetKey"), 32, "shared.chordSheetKey"),
             "notes": _text(shared.get("notes"), 10000, "shared.notes"),
             "songData": _event_song_data(shared.get("songData")),
         })
@@ -482,11 +493,17 @@ def _replace_repertoire(event: Event, items: list[dict]) -> None:
                 shared_title=value["title"], shared_artist=value["artist"], shared_key=value["key"],
                 shared_capo=value["capo"], shared_chord_sheet=value["chordSheet"], shared_notes=value["notes"],
                 shared_song_data=value["songData"],
+                vocal_key_state={"sheetKey": value["chordSheetKey"]} if value["chordSheetKey"] else None,
             ))
             _change(event, "repertoire.song.added", f"adicionou {value['title'] or 'uma música'} ao repertório",
                     song_id=value["songId"], change_type="SONG_ADDED", before=None,
                     after={"repertoireItemId": value["id"], "songId": value["songId"]})
         else:
+            from ..services.vocal_key_history import mark_manual_edit
+            if existing.song_id != value["songId"]:
+                existing.vocal_key_state = {"sheetKey": value["chordSheetKey"]} if value["chordSheetKey"] else None
+            else:
+                mark_manual_edit(existing, value["key"], value["chordSheet"], value["chordSheetKey"])
             before = {
                 "key": existing.shared_key, "capo": existing.shared_capo,
                 "chordSheet": content_identity(existing.shared_chord_sheet),
@@ -541,8 +558,33 @@ def register_user():
 @blueprint.get("/me")
 @authenticated
 def me():
+    from ..models import ProfileAvatar
+    avatar = db.session.get(ProfileAvatar, g.current_user.id)
     db.session.commit()
-    return jsonify({"id": g.current_user.id, "name": g.current_user.name, "avatarUrl": g.current_user.avatar_url}), 200
+    return jsonify({"id": g.current_user.id, "name": g.current_user.name,
+                    "avatarUrl": avatar.data_url if avatar else g.current_user.avatar_url,
+                    "avatarSet": avatar is not None}), 200
+
+
+@blueprint.patch("/me/avatar")
+@limiter.limit("30 per minute")
+@authenticated
+def update_profile_avatar():
+    from ..models import ProfileAvatar
+    from ..services.profile_avatar import normalize_avatar
+    from datetime import datetime, timezone
+    payload = _json()
+    if "avatarUrl" not in payload:
+        raise ApiError("foto_invalida", "Informe a foto ou null para removê-la.", 400)
+    value = normalize_avatar(payload["avatarUrl"])
+    avatar = db.session.get(ProfileAvatar, g.current_user.id)
+    if avatar is None:
+        avatar = ProfileAvatar(user_id=g.current_user.id)
+        db.session.add(avatar)
+    avatar.data_url = value
+    avatar.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return jsonify({"avatarUrl": value, "avatarSet": True}), 200
 
 
 @blueprint.post("/identity/claim")
@@ -639,6 +681,7 @@ def create_event():
     db.session.flush()
     _replace_members(event, members)
     _replace_repertoire(event, _repertoire_payload(payload))
+    _adapt_vocal_keys(event)
     if not _restore_legacy_changes(event, payload):
         _change(event, "event.created", "criou o evento e o repertório")
     db.session.commit()
@@ -805,7 +848,11 @@ def update_event(event_id: str):
     event = _event_or_404(event_id)
     _leader(event, g.current_user.id)
     payload = _json()
+    from ..services.vocal_key_history import vocalist_ids, refresh_history
     _expected_version(payload, event.version)
+    previous_vocalists = vocalist_ids(event)
+    refresh_history(previous_vocalists)
+    previous_items = {item.id: item.song_id for item in event.repertoire}
     members, leader_id = _members_payload(payload, g.current_user)
     if leader_id != event.leader_id:
         raise ApiError("transferencia_exclusiva", "Use a opção de transferência de liderança para trocar o líder.", 403)
@@ -822,6 +869,10 @@ def update_event(event_id: str):
     event.updated_at = datetime.now(timezone.utc)
     _replace_members(event, members)
     _replace_repertoire(event, _repertoire_payload(payload))
+    current_vocalists = vocalist_ids(event)
+    current_items = EventRepertoireItem.query.filter_by(event_id=event.id).all()
+    added_items = {item.id for item in current_items if previous_items.get(item.id) != item.song_id}
+    _adapt_vocal_keys(event, None if current_vocalists != previous_vocalists else added_items)
     _change(event, "event.updated", "atualizou o evento e o repertório compartilhado")
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
@@ -936,13 +987,23 @@ def search_registered_users():
         raise ApiError("entrada_invalida", "Página inválida.", 400)
     if len(query.lstrip('@')) < 2:
         return jsonify({"users": [], "nextOffset": None})
+    from ..services.profile_instruments import normalize_instrument
+    preferred = normalize_instrument(_text(request.args.get("role"), 80, "role"))
+    # Ordena no banco ANTES de paginar; não filtra quem não toca o instrumento.
+    ordering = []
+    if preferred:
+        matches = db.session.query(ProfileInstrument.user_id).filter(
+            ProfileInstrument.user_id == CollaborationUser.id,
+            ProfileInstrument.instrument == preferred,
+        ).exists()
+        ordering.append(case((matches, 0), else_=1))
     rows = (CollaborationUser.query.filter(
         CollaborationUser.id.in_(db.session.query(ExternalIdentity.user_id).filter_by(provider="supabase")),
         CollaborationUser.id != g.current_user.id,
         ~CollaborationUser.name.contains("@"),
         or_(CollaborationUser.name.ilike("%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", escape="\\"),
             CollaborationUser.id.in_(db.session.query(UserHandle.user_id).filter(UserHandle.username.contains(query.lstrip('@').lower(), autoescape=True)))),
-    ).order_by(CollaborationUser.name, CollaborationUser.id).offset(offset).limit(21).all())
+    ).order_by(*ordering, CollaborationUser.name, CollaborationUser.id).offset(offset).limit(21).all())
     db.session.commit()
     return jsonify({"users": [_public_profile(user) for user in rows[:20]],
                     "nextOffset": offset + 20 if len(rows) > 20 else None})
@@ -1043,6 +1104,9 @@ def respond_direct_invitation(invitation_id):
             event.version += 1
             event.updated_at = datetime.now(timezone.utc)
             _change(event, "event.member.joined", "aceitou o convite para participar")
+            from ..services.vocal_key_history import is_vocalist
+            if is_vocalist(invitation.musical_role):
+                _adapt_vocal_keys(event)
         if event.band_id and not BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first():
             db.session.add(BandMember(band_id=event.band_id, user_id=g.current_user.id,
                                       access_role="member", musical_role=invitation.musical_role))
@@ -1064,7 +1128,8 @@ def create_event_invitation(event_id: str):
     if g.auth_provider != "supabase":
         raise ApiError("login_necessario", "Entre com sua conta para enviar convites.", 403)
     payload = _json()
-    name = _text(payload.get("name"), 120, "name", True)
+    # Convite compartilhado não conhece o destinatário; use o nome da conta no aceite.
+    name = _text(payload.get("name"), 120, "name")
     role = _text(payload.get("role"), 80, "role") or "Outra"
     if role.casefold() in {"líder", "lider", "liderança", "lideranca"}:
         raise ApiError("funcao_invalida", "A liderança é exclusiva do criador do evento.", 400)
@@ -1101,7 +1166,7 @@ def accept_event_invitation(token: str):
     member = EventMember.query.filter_by(event_id=event.id, user_id=g.current_user.id).first()
     if member is None:
         db.session.add(EventMember(event_id=event.id, user_id=g.current_user.id,
-                                   name=invitation.invited_name, role=invitation.musical_role,
+                                   name=invitation.invited_name or g.current_user.name, role=invitation.musical_role,
                                    avatar_url=g.current_user.avatar_url))
     if event.band_id:
         band_member = BandMember.query.filter_by(band_id=event.band_id, user_id=g.current_user.id).first()
@@ -1115,6 +1180,9 @@ def accept_event_invitation(token: str):
     event.version += 1
     event.updated_at = datetime.now(timezone.utc)
     _change(event, "event.member.joined", "entrou no evento pelo convite")
+    from ..services.vocal_key_history import is_vocalist
+    if member is None and is_vocalist(invitation.musical_role):
+        _adapt_vocal_keys(event)
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 
@@ -1135,7 +1203,11 @@ def update_shared_item(event_id: str, item_id: str):
         "chordSheet": content_identity(item.shared_chord_sheet),
         "notes": content_identity(item.shared_notes),
     }
-    item.shared_key = _text(payload.get("key"), 32, "key")
+    from ..services.vocal_key_history import mark_manual_edit, refresh_history, vocalist_ids
+    refresh_history(vocalist_ids(event))
+    next_key = _text(payload.get("key"), 32, "key")
+    mark_manual_edit(item, next_key, _text(payload.get("chordSheet"), 100000, "chordSheet"), _text(payload.get("chordSheetKey"), 32, "chordSheetKey"))
+    item.shared_key = next_key
     item.shared_title = _text(payload.get("title"), 160, "title")
     item.shared_artist = _text(payload.get("artist"), 160, "artist")
     item.shared_capo = _text(payload.get("capo"), 20, "capo")
@@ -1170,6 +1242,8 @@ def update_shared_item(event_id: str, item_id: str):
     if not recorded:
         _change(event, "repertoire.metadata.updated", "alterou metadados de uma música do repertório compartilhado",
                 song_id=item.song_id, change_type="METADATA_CHANGED")
+    db.session.flush()
+    refresh_history(vocalist_ids(event))
     db.session.commit()
     return jsonify(_serialize_event(event, g.current_user.id)), 200
 
@@ -1291,6 +1365,8 @@ def delete_personal_item(event_id: str, item_id: str):
 def delete_event(event_id: str):
     event = _event_or_404(event_id)
     _leader(event, g.current_user.id)
+    from ..services.vocal_key_history import refresh_history, vocalist_ids
+    refresh_history(vocalist_ids(event))
     db.session.delete(event)
     db.session.commit()
     return "", 204

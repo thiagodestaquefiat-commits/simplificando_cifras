@@ -1,3 +1,6 @@
+from .profile_avatar import ProfileAvatar
+from .profile_instrument import ProfileInstrument
+from .vocal_key_memory import VocalKeyMemory
 from .collaboration import (
     CollaborationUser,
     UserHandle,
@@ -21,6 +24,9 @@ from .collaboration import (
 )
 
 __all__ = [
+    "ProfileAvatar",
+    "ProfileInstrument",
+    "VocalKeyMemory",
     "CollaborationUser",
     "UserHandle",
     "Band",

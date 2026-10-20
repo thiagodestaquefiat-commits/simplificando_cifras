@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=3">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=52">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=53">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
 <link rel="stylesheet" href="js/account-contribution.css?v=13">
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
@@ -1238,7 +1238,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/song-repository.js?v=17"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=20"></script>
-<script src="js/event-model.js?v=6"></script>
+<script src="js/event-model.js?v=7"></script>
 <script src="js/context-intelligence.js?v=2"></script>
 <script src="js/event-repository.js?v=9"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
@@ -1269,7 +1269,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/editor/song-editor.js"></script>
 <script src="js/ai/api-config.js?v=7"></script>
 <script src="js/song-reports.js?v=1"></script>
-<script src="js/app-auth.js?v=15"></script>
+<script src="js/app-auth.js?v=16"></script>
 <script src="js/ui-i18n.js?v=14"></script>
 <script src="js/tuner.js?v=5"></script>
 <script src="js/chord-audio.js?v=2"></script>
@@ -1278,7 +1278,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=14"></script>
+<script src="js/event-collaboration-client.js?v=17"></script>
 <script src="js/event-share.js?v=3"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
 <script src="js/contextual-copy.js?v=1"></script>
@@ -1299,7 +1299,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-dialogue.js?v=4"></script>
 <script src="js/assistant-sequences.js?v=2"></script>
 <script src="js/app-assistant.js?v=33"></script>
- <script src="js/event-user-invites.js?v=8"></script>
+ <script src="js/event-user-invites.js?v=10"></script>
 <script>
 // QR Code do Pix (contribuição) carrega só quando a tela de contribuição abre.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
@@ -3586,9 +3586,19 @@ const PROFILE_MUSICAL_ROLES=['Vocal','Backing Vocal','Guitarra','Violão','Baixo
 // Nomes antigos (salvos antes) passam para os novos, sem o usuário perder o que já marcou.
 const PROFILE_ROLE_ALIASES={'Vocalista':'Vocal','Backing vocal':'Backing Vocal','Guitarrista':'Guitarra','Violonista':'Violão','Baixista':'Baixo','Baterista':'Bateria','Tecladista':'Teclado','Pianista':'Teclado','Percussionista':'Percussão','Ukulele':'Outros','Violinista':'Outros','Viola':'Outros','Saxofonista':'Outros','Flautista':'Outros','Trompetista':'Outros','Outro':'Outros'};
 function normalizeProfileRoles(values){const chosen=new Set((Array.isArray(values)?values:[]).map(value=>PROFILE_ROLE_ALIASES[value]||value));return PROFILE_MUSICAL_ROLES.filter(role=>chosen.has(role));}
-function accountProfile(){const remote=currentAuthState.user||{},saved=accountProfiles()[String(appCurrentUser.id)]||{};return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:normalizeProfileRoles(Array.isArray(saved.instruments)?saved.instruments:remote.instruments),avatarUrl:saved.avatarUrl||remote.avatarUrl||appCurrentUser.avatarUrl||null};}
-function saveAccountProfile(profile){const profiles=accountProfiles();profiles[String(appCurrentUser.id)]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
-function accountAvatar(profile,className='account-avatar'){return `<span class="${className}${profile.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(profile.id||profile.email||profile.name)}" id="account-profile-avatar">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
+// MANUTENÇÃO: O cache usa o ID estável do login; o ID interno pode mudar durante a restauração da conta.
+function profileStorageOwner(){return String(currentAuthState.authenticated&&currentAuthState.user?.id||appCurrentUser.id);}
+function accountProfile(){
+  const remote=currentAuthState.user||{},profiles=accountProfiles();
+  const registered=currentAuthState.authenticated&&appIdentity?.status==='supabase'&&appIdentity.authSubject===remote.id?appIdentity.user:null;
+  const saved=profiles[profileStorageOwner()]||(registered?profiles[String(registered.id)]:null)||{};
+  // MANUTENÇÃO: null salvo é remoção explícita, não autorização para recuperar a foto antiga do Google.
+  const hasSavedAvatar=Object.prototype.hasOwnProperty.call(saved,'avatarUrl');
+  const avatar=hasSavedAvatar&&saved.avatarPending?saved.avatarUrl:remote.avatarSet?remote.avatarUrl:registered?.avatarSet?registered.avatarUrl:hasSavedAvatar?saved.avatarUrl:remote.avatarUrl||(!currentAuthState.authenticated?appCurrentUser.avatarUrl:null);
+  return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:normalizeProfileRoles(Array.isArray(saved.instruments)?saved.instruments:remote.instruments),avatarUrl:avatar||null};
+}
+function saveAccountProfile(profile){const profiles=accountProfiles();profiles[profileStorageOwner()]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
+function accountAvatar(profile,className='account-avatar',avatarId='account-profile-avatar'){return `<span class="${className}${profile.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(profile.id||profile.email||profile.name)}" id="${eventEsc(avatarId)}">${profile.avatarUrl?`<img src="${eventEsc(profile.avatarUrl)}" alt="Foto de perfil">`:eventEsc(eventInitials(profile.name))}</span>`;}
 function accountSyncPresentation(state=librarySync.getStatus()){
   if(!navigator.onLine||state.phase==='offline')return {state:'offline',text:appText('offline')};
   if(state.phase==='syncing')return {state:'syncing',text:appText('syncing')};
@@ -3926,7 +3936,7 @@ async function openAccountModal(){
   document.getElementById('modal-overlay').style.display='none';
   const layer=ensureAccountDrawer();
   layer.querySelector('.account-drawer').innerHTML=`
-    <button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile)}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button>
+    <button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile,'account-avatar','account-drawer-avatar')}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button>
     <nav class="account-drawer-menu" aria-label="Conta e configurações">
       <button class="account-drawer-item" type="button" onclick="showAccountPremiumInfo()"><span class="account-drawer-icon account-drawer-icon--brand"><img class="roudy-rd-mark" src="assets/icons/roudy-rd-premium.svg?v=1" alt="" aria-hidden="true"></span><span class="account-drawer-label"><strong>Meu Premium</strong><small>Recursos Premium do ROUDY</small></span><span class="account-drawer-badge">Em breve</span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('profile')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-4.2 3.1-6.3 7-6.3s6.3 2.1 7 6.3"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span></button>
@@ -4185,7 +4195,7 @@ function closeProfilePhotoEditor(){document.getElementById('profile-image-editor
 function removeProfilePhoto(){pendingProfileAvatar=null;const target=document.getElementById('account-profile-avatar');if(target){const name=document.getElementById('profile-name')?.value||appCurrentUser.name;target.textContent=eventInitials(name);target.classList.add('roudy-avatar-fallback',eventAvatarPaletteClass(appCurrentUser.id||name));}}
 function updateProfileRolesSummary(){const target=document.getElementById('profile-roles-summary');if(!target)return;const chosen=PROFILE_MUSICAL_ROLES.filter(role=>Array.from(document.querySelectorAll('input[name="profile-instruments"]:checked')).some(input=>input.value===role));target.textContent=chosen.length?chosen.join(', '):'Selecionar instrumentos e funções';target.classList.toggle('has-value',chosen.length>0);}
 async function saveProfileSettings(){const button=document.querySelector('.profile-account-save');if(button?.disabled)return;const restore=()=>{if(button){button.disabled=false;button.textContent='Salvar perfil';}};if(button){button.disabled=true;button.textContent='Salvando…';}try{await saveProfileSettingsNow();}finally{restore();}}
-async function saveProfileSettingsNow(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const previous=accountProfile(),profile={name,phone,email,location:document.getElementById('profile-location')?.value.trim().slice(0,120)||'',instruments:PROFILE_MUSICAL_ROLES.filter(role=>Array.from(document.querySelectorAll('input[name="profile-instruments"]:checked')).some(input=>input.value===role)),avatarUrl:pendingProfileAvatar};if(!saveAccountProfile(profile)){showToast('⚠️ Não foi possível salvar o perfil neste dispositivo.');return;}applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{currentAuthState=await Promise.race([appAuth.updateProfile(profile),new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000))]);remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
+async function saveProfileSettingsNow(){const name=document.getElementById('profile-name')?.value.trim(),phone=document.getElementById('profile-phone')?.value.trim()||'',email=document.getElementById('profile-email')?.value.trim()||'';if(!name){showToast('⚠️ Informe seu nome.');return;}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Informe um e-mail válido.');return;}const owner=profileStorageOwner(),previous=accountProfile(),profile={name,phone,email,location:document.getElementById('profile-location')?.value.trim().slice(0,120)||'',instruments:PROFILE_MUSICAL_ROLES.filter(role=>Array.from(document.querySelectorAll('input[name="profile-instruments"]:checked')).some(input=>input.value===role)),avatarUrl:pendingProfileAvatar,avatarPending:Boolean(currentAuthState.authenticated)};if(!saveAccountProfile(profile)){showToast('⚠️ Não foi possível salvar o perfil neste dispositivo.');return;}applyProfileRuntime(profile);let remoteMessage='';if(currentAuthState.authenticated){try{const updated=await Promise.race([appAuth.updateProfile(profile),new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000))]);if(profileStorageOwner()!==owner)return;currentAuthState=updated;saveAccountProfile({...profile,avatarUrl:updated.user?.avatarUrl??profile.avatarUrl,avatarPending:false});remoteMessage=email&&email!==previous.email?' Confira seu e-mail para confirmar a alteração.':'';}catch(error){if(profileStorageOwner()!==owner)return;showToast('Perfil salvo neste aparelho; atualização da conta pendente.');openAccountModal();return;}}showToast('✅ Perfil atualizado.'+remoteMessage);openAccountModal();}
 function settingsFromForm(){const saved=loadAppSettings(),language=document.getElementById('setting-language'),theme=document.getElementById('setting-theme'),chordColor=document.getElementById('setting-chord-color'),highContrast=document.getElementById('setting-high-contrast'),colorBlind=document.getElementById('setting-color-blind'),scale=document.getElementById('setting-scale');return {...saved,language:language?.value||saved.language,theme:theme?.value||saved.theme,chordColor:chordColor?.value||saved.chordColor,highContrast:highContrast?Boolean(highContrast.checked):saved.highContrast,colorBlind:colorBlind?Boolean(colorBlind.checked):saved.colorBlind,scale:scale?Number(scale.value)||saved.scale:saved.scale};}
 function previewAppSettings(){applyAppSettings(settingsFromForm());}
 function openAppSettings(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`<div class="modal-title">‹ ${eventEsc(appText('settings'))}</div><section class="settings-group"><div class="settings-group-title">Idioma</div><div class="settings-row"><div class="settings-row-copy"><strong>Linguagem do app</strong><small>Altera os principais textos da interface</small></div><select class="settings-select" id="setting-language" onchange="previewAppSettings()"><option value="pt-BR" ${value.language==='pt-BR'?'selected':''}>Português Brasileiro</option><option value="en" ${value.language==='en'?'selected':''}>English</option><option value="es" ${value.language==='es'?'selected':''}>Español</option></select></div></section><section class="settings-group"><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong><small>Aumenta a separação entre textos e fundos</small></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong><small>Usa azul, laranja e verde acessíveis</small></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong><small>Aumenta textos e áreas de toque sem ampliar o layout</small></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button><button class="btn btn-outline" style="width:100%;margin-top:8px" type="button" onclick="cancelAppSettings()">Voltar</button>`;}
@@ -4241,7 +4251,7 @@ async function logoutAppAccount(){
     appAlert(`Ainda não foi possível salvar ${parts} na sua conta.\n\nPara não perder nada, você continua conectado. Verifique a internet e tente sair de novo.`);return;
   }
   const authUserId=String(currentAuthState.user?.id||'');
-  const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:String(appCurrentUser.id||'')};
+  const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:profileStorageOwner()};
   try{await appAuth.signOut();}catch(error){showToast('⚠️ '+error.message);return;}
   const purge=()=>{
     // Volta o aparelho ao estado de visitante: só o catálogo de exemplo, sem eventos da conta.
@@ -4254,7 +4264,8 @@ async function logoutAppAccount(){
     if(owners.songs)songRepository.purgeOwner(owners.songs);
     if(owners.events)eventRepository.purgeOwner(owners.events);
     if(owners.medley)medleyRepository.purgeOwner(owners.medley);
-    if(owners.profile){const profiles=accountProfiles();if(Object.prototype.hasOwnProperty.call(profiles,owners.profile)){delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
+    // MANUTENÇÃO: Preserve somente a foto por conta; logout não é uma solicitação de removê-la.
+    if(owners.profile){const profiles=accountProfiles(),saved=profiles[owners.profile];if(saved){if(Object.prototype.hasOwnProperty.call(saved,'avatarUrl'))profiles[owners.profile]={avatarUrl:saved.avatarUrl,avatarPending:Boolean(saved.avatarPending)};else delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
   };
   purge();setTimeout(purge,0);setTimeout(()=>{purge();try{closeDetail();switchTab('musicas');renderMusicas();renderSetlists();}catch(_){}},600); // depois que a troca de conta termina de gravar
   closeModal();showToast('Você saiu. Os dados da sua conta foram removidos deste aparelho.');
@@ -4276,11 +4287,13 @@ function transposeEventChordText(value,semitones){
   if(!semitones)return String(value||'');
   return String(value||'').split(/(\r?\n)/).map(line=>songFormat.chordLine(line)?shiftText(line,semitones):line).join('');
 }
+// O tom-alvo pode mudar automaticamente; este campo descreve o tom REAL do texto salvo.
+function eventChordSheetAtKey(edit,key){return transposeEventChordText(edit?.chordSheet,eventKeyShift(edit?.chordSheetKey||edit?.key,key));}
 function eventSongModel(song,edit,fallbackEdit){
   const base=songFormat.fromLegacy(edit?.songData||fallbackEdit?.songData||song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
-  const sourceKey=primary.chordSheet?primary.key:fallback.chordSheet?fallback.key:base.originalKey;
+  const sourceKey=primary.chordSheet?(primary.chordSheetKey||primary.key):fallback.chordSheet?(fallback.chordSheetKey||fallback.key):base.originalKey;
   const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
   const fullShift=eventKeyShift(base.originalKey,key),sections=songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
   const fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
@@ -4315,7 +4328,7 @@ function eventSongCopy(song,state=song.playbackSettings||{}){
   const fields=['id','title','artist','key','capo','blocos','editorData','fullChordSheet','tablature','playbackSettings','bpm','instrumento','originalKey','currentKey','notes','coverUrl','youtubeVideoId','youtubeUrl','youtubeChannelTitle','songFormatVersion'];
   return JSON.parse(JSON.stringify(Object.fromEntries(fields.filter(k=>data[k]!==undefined).map(k=>[k,data[k]]))));
 }
-function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),notes,songData:data};}
+function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),chordSheetKey:model.originalKey,notes,songData:data};}
 // MANUTENÇÃO: O contexto captura proprietário/evento/item; revalidá-lo evita aplicar resposta tardia em outra conta.
 async function saveContextEventSong(context,data,options={}){
   if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return {ok:false};}
@@ -4679,12 +4692,62 @@ function ensureEventActionLayer(){
   return document.getElementById('event-action-layer');
 }
 function closeEventActionLayer(){document.getElementById('event-action-layer')?.classList.remove('is-open')}
+// MANUTENÇÃO: A função do convite é temporária e pertence à conta + evento, não ao perfil do líder.
+let eventInviteSelection=null;
+function eventInviteOwner(){return String(currentAuthState.user?.id||appCurrentUser.id);}
+function eventInviteRoles(){
+  const tools=(window.instrumentDefinitions?.all||[]).filter(item=>item.id!=='guitar').map(item=>item.name);
+  if(window.appTuner?.instruments?.violin)tools.push('Violino');
+  // Restringe apenas as opções de novos convites; mantém funções históricas no modelo.
+  const excluded=new Set(['Liderança','Outra','Percussão','Outros','Áudio','Viola Caipira','Cavaco']);
+  return [...new Set([...PROFILE_MUSICAL_ROLES,...eventModel.ROLES,...tools])].filter(role=>!excluded.has(role));
+}
+function eventInviteRoleLabel(role){
+  const names={'Outra':'participante','Vocal':'vocalista','Backing Vocal':'backing vocal','Guitarra':'guitarrista','Violão':'violonista','Baixo':'baixista','Bateria':'baterista','Teclado':'tecladista','Percussão':'percussionista','Áudio':'áudio','Outros':'outros instrumentos','Cavaco':'cavaquinista','Viola Caipira':'violeiro(a)','Violino':'violinista','Ukulele':'ukulele'};
+  return names[role]||String(role).toLocaleLowerCase('pt-BR');
+}
+function getEventInviteRole(eventId){
+  const selection=eventInviteSelection;
+  return selection&&selection.owner===eventInviteOwner()&&selection.eventId===String(eventId)&&eventInviteRoles().includes(selection.role)?selection.role:eventInviteRoles()[0];
+}
+function selectEventInviteRole(role){
+  if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.busy)return;
+  if(eventInviteRoles().includes(role))eventInviteSelection.role=role;
+}
 function openEventInviteSheet(eventId){
-  const event=findEvent(eventId);if(!event)return;const layer=ensureEventActionLayer(),shareData=eventShareData(event);
-  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><button type="button" class="event-invite-primary" onclick="openEventMemberSearch('${eventEsc(event.id)}')"><span class="event-invite-check">✓</span><span>Convidar como participante</span></button><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch('${eventEsc(event.id)}')"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="closeEventActionLayer();sharePlaylist('${eventEsc(event.id)}')"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action" onclick="closeEventActionLayer();sharePlaylist('${eventEsc(event.id)}')"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div></section></div>`;
+  const event=findEvent(eventId),actor=event&&eventPermissionActor(event);
+  if(!event||!eventModel.canEditShared(event,actor.id)){showToast('Somente o líder pode convidar integrantes.');return;}
+  if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.eventId!==String(eventId))eventInviteSelection={owner:eventInviteOwner(),eventId:String(eventId),role:eventInviteRoles()[0],busy:false};
+  if(eventInviteSelection.busy)return;
+  const layer=ensureEventActionLayer(),shareData=eventShareData(event),role=getEventInviteRole(event.id);
+  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
   requestAnimationFrame(()=>layer.classList.add('is-open'));
 }
-function openEventMemberSearch(eventId){closeEventActionLayer();setTimeout(()=>eventUserInvites.openSearchSheet(eventId),180)}
+function openEventMemberSearch(eventId){
+  const role=getEventInviteRole(eventId),owner=eventInviteOwner();
+  closeEventActionLayer();setTimeout(()=>{if(owner===eventInviteOwner())eventUserInvites.openSearchSheet(eventId,{role});},180);
+}
+async function shareEventMemberInvitation(eventId){
+  const event=findEvent(eventId),selection=eventInviteSelection,owner=eventInviteOwner();
+  if(!currentAuthState.authenticated){showToast('Entre com sua conta para convidar integrantes.');return;}
+  if(!selection||selection.busy||selection.owner!==owner||selection.eventId!==String(eventId))return;
+  if(!event||!eventModel.canEditShared(event,eventPermissionActor(event).id)){showToast('Somente o líder pode convidar integrantes.');return;}
+  if(event.remoteVersion==null){showToast('Salve o evento na nuvem antes de convidar.');return;}
+  const role=getEventInviteRole(eventId),status=document.getElementById('event-invite-status'),controls=[...document.querySelectorAll('.event-invite-sheet select,.event-invite-actions button')];
+  selection.busy=true;controls.forEach(node=>node.disabled=true);if(status)status.textContent='Gerando convite…';
+  const valid=()=>eventInviteSelection===selection&&owner===eventInviteOwner()&&document.getElementById('event-action-layer')?.classList.contains('is-open')&&Boolean(document.getElementById('event-invite-role'));
+  try{
+    // MANUTENÇÃO: Link de convite autenticado, com função no servidor; não compartilhar uma simples cópia do evento.
+    const invitation=await eventCollaboration.createInvitation(event.id,'',role);
+    if(!valid())return;
+    const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+    const text=`Você foi convidado(a) para ${invitation.eventTitle||event.title} como ${eventInviteRoleLabel(role)}. Abra o link e entre com sua conta para participar.`;
+    if(navigator.share){try{await navigator.share({title:'Convite para '+event.title,text,url:link.href});if(valid())closeEventActionLayer();return;}catch(error){if(error?.name==='AbortError')throw error;if(!valid())return;}}
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text+'\n'+link.href);if(valid()){if(status)status.textContent='Convite copiado para compartilhar.';showToast('Link do convite copiado.');}}
+    else appPrompt('Copie o convite e envie ao integrante:',text+'\n'+link.href);
+  }catch(error){if(valid()&&status)status.textContent=error?.name==='AbortError'?'':error?.message||'Não foi possível gerar o convite. Tente novamente.';}
+  finally{selection.busy=false;if(valid())controls.forEach(node=>node.disabled=false);}
+}
 
 let eventParticipantsMorphCleanup=null;
 let eventDetailHeaderCleanup=null;
@@ -5032,7 +5095,7 @@ async function changeEventOfficialKey(eventId,itemId,direction){
   control?.querySelectorAll('button').forEach(button=>button.disabled=true);
   try{
     const changes={...item.shared,key:nextKey,updatedAt:new Date().toISOString()};
-    if(changes.chordSheet)changes.chordSheet=transposeEventChordText(changes.chordSheet,direction<0?-1:1);
+    if(changes.chordSheet){changes.chordSheet=eventChordSheetAtKey(item.shared,nextKey);changes.chordSheetKey=nextKey;}
     let updated=eventModel.applySharedEdit(event,itemId,actor.id,changes);
     updated=eventModel.withSharedChange(eventModel.create({...updated,syncState:'pending',pendingShared:true}),actor,'repertoire.key.updated',`alterou o tom oficial para ${nextKey}`);
     if(updated.remoteVersion==null)throw new Error('Salve o evento na nuvem antes de alterar o tom oficial.');
@@ -5043,14 +5106,14 @@ async function changeEventOfficialKey(eventId,itemId,direction){
       const latestItem=latest.repertoire.find(value=>String(value.id)===String(itemId));
       if(!latestItem)throw error;
       const retryChanges={...latestItem.shared,key:nextKey,updatedAt:new Date().toISOString()};
-      if(retryChanges.chordSheet)retryChanges.chordSheet=transposeEventChordText(retryChanges.chordSheet,direction<0?-1:1);
+      if(retryChanges.chordSheet){retryChanges.chordSheet=eventChordSheetAtKey(latestItem.shared,nextKey);retryChanges.chordSheetKey=nextKey;}
       updated=await eventCollaboration.saveSharedItem(latest,itemId,retryChanges,appCurrentUser);
     }
     // Se o líder tem uma versão pessoal com outro tom, ela escondia a mudança dele mesmo: acompanha o tom oficial.
     const leaderPersonal=updated.repertoire.find(value=>String(value.id)===String(itemId))?.personalEdits?.[String(actor.id)];
     if(leaderPersonal&&(leaderPersonal.key||leaderPersonal.chordSheet)&&leaderPersonal.key!==nextKey){
       const personalChanges={...leaderPersonal,key:nextKey,updatedAt:new Date().toISOString()};
-      if(leaderPersonal.chordSheet)personalChanges.chordSheet=transposeEventChordText(leaderPersonal.chordSheet,eventKeyShift(leaderPersonal.key||baseKey,nextKey));
+      if(leaderPersonal.chordSheet){personalChanges.chordSheet=eventChordSheetAtKey(leaderPersonal,nextKey);personalChanges.chordSheetKey=nextKey;}
       updated=eventModel.applyPersonalEdit(updated,itemId,actor.id,personalChanges);
       try{updated=await eventCollaboration.savePersonalItem(updated,itemId,personalChanges,appCurrentUser);}catch(error){eventCollaboration.queuePersonalOperation(updated.id,itemId,'upsert',personalChanges);}
     }
@@ -5119,10 +5182,10 @@ function openEventSongEdit(eventId,itemId,trigger,scope='band'){
   const actor=eventPermissionActor(event);
   if(scope==='band'&&!eventModel.canEditShared(event,actor.id)){showToast('🔒 Somente o líder pode editar o repertório oficial.');return;}
   const song=eventSongSource(event,item);if(!song)return;
-  const personal=scope==='personal'?(item.personalEdits?.[String(appCurrentUser.id)]||{}):null,edit=personal||item.shared||{},model=eventSongModel(song,{...(item.shared||{}),...(personal||{})}),layer=document.getElementById('event-song-edit-layer');
+  const personal=scope==='personal'?(item.personalEdits?.[String(appCurrentUser.id)]||{}):null,edit=personal||item.shared||{},model=eventSongModel(song,{...(item.shared||{}),...(personal||{}),...(personal?{chordSheetKey:personal.chordSheet?(personal.chordSheetKey||personal.key):(item.shared?.chordSheetKey||item.shared?.key)}:{})}),layer=document.getElementById('event-song-edit-layer');
   clearTimeout(eventSongEditCloseTimer);
   const activeView=['summary','chords','combined','lyrics'].includes(edit.view)?edit.view:'summary',viewTexts=Object.fromEntries(['summary','chords','combined','lyrics'].map(view=>[view,eventSongEditTextForView(model,view)]));
-  if(edit.chordSheet)viewTexts[activeView]=edit.chordSheet;
+  if(edit.chordSheet)viewTexts[activeView]=eventChordSheetAtKey(edit,model.originalKey);
   eventSongEditDraft={eventId:event.id,itemId:item.id,song,model,edit,scope,trigger:trigger||document.activeElement,activeView,viewTexts};
   document.getElementById('event-song-edit-title').textContent=scope==='personal'?'Minha versão':'Versão da banda';
   document.getElementById('event-song-edit-context').innerHTML=`<strong>${eventEsc(model.title||song.title)}</strong> · ${scope==='personal'?'ajustes pessoais':'repertório oficial do evento'}`;
@@ -5150,6 +5213,8 @@ async function saveEventSongEdit(){
   const draft=eventSongEditDraft;if(!draft)return;let event=findEvent(draft.eventId);if(!event)return;
   const saveButton=document.getElementById('event-song-edit-save');if(saveButton.disabled)return;
   const changes={title:draft.edit.title||draft.song.title||'',artist:draft.edit.artist||draft.song.artist||'',key:document.getElementById('event-song-edit-key').value.trim()||draft.model.originalKey,capo:String(songFormat.parseCapo(document.getElementById('event-song-edit-capo').value)||''),view:document.getElementById('event-song-edit-view').value,chordSheet:document.getElementById('event-song-edit-text').value,notes:document.getElementById('event-song-edit-notes').value.trim()};
+  // O editor recebe texto materializado no tom mostrado ao abrir. Salvar outro tom transpõe uma vez.
+  changes.chordSheet=transposeEventChordText(changes.chordSheet,eventKeyShift(draft.model.originalKey,changes.key));changes.chordSheetKey=changes.key;
   try{event=draft.scope==='personal'?eventModel.applyPersonalEdit(event,draft.itemId,appCurrentUser.id,changes):eventModel.applySharedEdit(event,draft.itemId,eventPermissionActor(event).id,changes);}catch(error){showToast('🔒 '+error.message);return;}
   event=eventModel.create({...event,syncState:'pending',pendingShared:draft.scope!=='personal'});
   if(draft.scope!=='personal')event=eventModel.withSharedChange(event,appCurrentUser,'repertoire.song.updated','alterou uma música do repertório oficial');
