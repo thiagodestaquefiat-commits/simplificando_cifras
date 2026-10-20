@@ -309,3 +309,13 @@ class EventMessage(db.Model):
     deleted = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, index=True)
     edited_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class SharedPlaylist(db.Model):
+    """Cópia de uma playlist compartilhada por link (somente leitura; quem recebe salva na própria conta)."""
+    __tablename__ = "shared_playlists"
+
+    id = db.Column(db.String(36), primary_key=True)
+    owner_user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    playlist_data = db.Column(db.JSON, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)

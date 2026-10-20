@@ -284,7 +284,9 @@
       const hasHook = lines.some(line => line.lyrics && !chordLine(line.lyrics));
       // Padrão ROUDY: o resumo mostra só acordes e frases-gancho; nomes de seção (Intro, Primeira
       // Parte, Pré-Refrão...) não aparecem, inclusive em músicas antigas (sem alterar o que está salvo).
-      return { type: section.type, label: section.label,
+      // sourceIndex: posição da seção original, para a edição rápida do bloco salvar no bloco certo
+      // mesmo quando o resumo esconde seções técnicas, vazias ou repetidas.
+      return { type: section.type, label: section.label, sourceIndex: sectionIndex,
         showLabel: !section.hideLabel && !generic.test(section.label) &&
           !realSection.test(section.label.trim()) &&
           (hasStructuredSource || Boolean(song?.blocos?.[sectionIndex]?.l)), lines };
