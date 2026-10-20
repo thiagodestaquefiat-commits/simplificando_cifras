@@ -118,14 +118,14 @@ panel.innerHTML=`<h3>Adicionar integrantes</h3><p>Busque cada pessoa da banda e 
     const button=byId('event-people-search-results')?.querySelector('[data-sheet-user="0"]');
     return button?inviteFromSheet(user,button,guard):{ok:false};
   }
-  async function inviteScanned(eventId,rawIdentity){
-    const account=owner(),identity=String(rawIdentity||'').trim(),term=identity.replace(/^@+/,'');if(!account)throw new Error('Entre com sua conta para convidar integrantes.');if(!eventId||term.length<2)throw new Error('Este QR Code não contém um perfil válido.');
+  async function inviteScanned(eventId,rawIdentity,requestedRole='Outra'){
+    const account=owner(),identity=String(rawIdentity||'').trim(),term=identity.replace(/^@+/,''),role=global.eventInviteRoles?.().includes(requestedRole)?requestedRole:'Outra';if(!account)throw new Error('Entre com sua conta para convidar integrantes.');if(!eventId||term.length<2)throw new Error('Este QR Code não contém um perfil válido.');
     const event=global.findEvent?.(eventId);if(!event||event.remoteVersion==null)throw new Error('Salve o evento na nuvem antes de convidar.');
-    const data=await global.eventCollaboration.searchUsers(term,0),normalized=term.toLocaleLowerCase('pt-BR'),users=data.users||[],user=users.find(item=>String(item.id)===identity||String(item.username||'').toLocaleLowerCase('pt-BR')===normalized)||(users.length===1?users[0]:null);
+    const data=await global.eventCollaboration.searchUsers(term,0,role),normalized=term.toLocaleLowerCase('pt-BR'),users=data.users||[],user=users.find(item=>String(item.id)===identity||String(item.username||'').toLocaleLowerCase('pt-BR')===normalized)||(users.length===1?users[0]:null);
     if(!user)throw new Error('Não encontramos um perfil ROUDY correspondente a este QR Code.');
     if((event.members||[]).some(member=>String(member.id)===String(user.id)))throw new Error(`${user.name} já participa deste evento.`);
-    if(global.appConfirm&&!global.appConfirm(`Adicionar ${user.name} ao evento?`))throw new Error('Convite cancelado.');
-    await global.eventCollaboration.inviteUser(eventId,user.id,'Outra');return user;
+    if(global.appConfirm&&!global.appConfirm(`Convidar ${user.name} como ${global.eventInviteRoleLabel?.(role)||role} para o evento?`))throw new Error('Convite cancelado.');
+    await global.eventCollaboration.inviteUser(eventId,user.id,role);return user;
   }
   function updateBadge(){if(global.notificationCenter){global.notificationCenter.update();return;}const button=byId('user-invitations-button');if(!button)return;button.hidden=!owner();button.querySelector('.event-notification-badge')?.remove();if(invitations.length){const badge=document.createElement('span');badge.className='event-notification-badge';badge.textContent=invitations.length>99?'99+':String(invitations.length);button.appendChild(badge);}button.setAttribute('aria-label',`Convites para eventos${invitations.length?': '+invitations.length+' pendentes':''}`);}
   async function refresh(showError=false){

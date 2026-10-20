@@ -25,11 +25,13 @@
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=9">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
 <link rel="stylesheet" href="js/event-people-search.css?v=2">
-<link rel="stylesheet" href="js/account-drawer.css?v=12">
+<link rel="stylesheet" href="js/account-drawer.css?v=13">
 <link rel="stylesheet" href="js/account-tools.css?v=3">
-<link rel="stylesheet" href="js/account-profile.css?v=3">
+<link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
   <link rel="stylesheet" href="js/event-detail-refactor.css?v=53">
+<link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
+<link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
 <link rel="stylesheet" href="js/account-contribution.css?v=13">
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
@@ -1306,11 +1308,13 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-sequences.js?v=2"></script>
 <script src="js/app-assistant.js?v=33"></script>
  <script src="js/event-user-invites.js?v=10"></script>
+ <script src="js/event-qr-scanner.js?v=1"></script>
 <script>
-// QR Code do Pix (contribuição) carrega só quando a tela de contribuição abre.
+// Bibliotecas de QR Code carregam sob demanda.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
-window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1")};
+window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
+ <script src="js/profile-qr.js?v=4"></script>
  <script src="js/notification-center.js?v=3"></script>
 <script src="js/user-playlists.js?v=1"></script>
 <script src="js/home-playlists.js?v=2"></script>
@@ -1449,9 +1453,9 @@ function toggleSongControls(force){
   panel.hidden=!expanded;controls.classList.toggle('is-expanded',expanded);button.setAttribute('aria-expanded',String(expanded));button.setAttribute('aria-label',expanded?'Ocultar controles musicais':'Mostrar controles musicais');if(expanded)requestAnimationFrame(()=>syncStudyMeterWheel(true));
 }
 let preferredStudyMeter='4/4';
-function updateSongControls(){
+function updateSongControls(summaryOverride=null){
   const song=currentDetailSongOverride||musicas.find(item=>String(item.id)===String(currentDetailId));if(!song)return;
-  const key=shiftText(songFormat.harmonicSummary(song).currentKey,currentSemitones),capo=selectedCapo?String(selectedCapo):'—',bpm=document.getElementById('metronome-bpm')?.textContent||'72',meter=studyMetronome.getMeter()||'—';
+  const summary=summaryOverride&&typeof summaryOverride.currentKey==='string'?summaryOverride:songFormat.harmonicSummary(song),key=shiftText(summary.currentKey,currentSemitones),capo=selectedCapo?String(selectedCapo):'—',bpm=document.getElementById('metronome-bpm')?.textContent||'72',meter=studyMetronome.getMeter()||'—';
   document.getElementById('song-control-key').textContent=key;document.getElementById('song-control-capo').textContent=capo;document.getElementById('song-control-capo-expanded').textContent=capo;document.getElementById('song-control-bpm').textContent=bpm;document.getElementById('song-control-meter').textContent=meter;
   const bpmRange=document.getElementById('song-bpm-range');if(bpmRange&&bpmRange.value!==bpm)bpmRange.value=bpm;const tempo=document.getElementById('song-bpm-tempo');if(tempo)tempo.textContent=tempoNameForBpm(Number(bpm));
   document.getElementById('song-capo-minus').disabled=selectedCapo===0;document.getElementById('song-capo-plus').disabled=selectedCapo===12;
@@ -1928,8 +1932,8 @@ function drawValidatedKeyboardSVG(data,name){
   return `<div class="chord-card keyboard-card" data-instrument="${data.instrumentId}" data-renderer="keyboard"><div class="chord-card-name">${eventEsc(name)}</div><svg width="${scaledDiagramSize(252)}" height="${scaledDiagramSize(116)}" viewBox="0 0 252 116" aria-label="Teclas do acorde ${eventEsc(name)}">${svg}</svg><div class="chord-tuning">${data.notes.join(' · ')}${bass!==root?` · baixo ${bass}`:''}</div></div>`;
 }
 
-function extractChords(m){
-  const summary=songFormat.harmonicSummary(m),seen=new Set(),result=[];
+function extractChords(m,summaryOverride=null){
+  const summary=summaryOverride||songFormat.harmonicSummary(m),seen=new Set(),result=[];
   summary.sections.forEach(section=>section.lines.forEach(line=>line.chords.forEach(item=>{
     const chord=chordUtils.normalizeChordName(item.chord);
     if(chord&&!seen.has(chord)){seen.add(chord);result.push(chord);}
@@ -1950,11 +1954,11 @@ function renderUnavailableChord(name){
   return `<div class="chord-card chord-card-unavailable"><div class="chord-card-name">${eventEsc(name)}</div><div class="chord-unavailable-message">Diagrama não disponível</div></div>`;
 }
 
-function renderChordStrip(m){
+function renderChordStrip(m,summaryOverride=null){
   const el=document.getElementById('chord-strip');
   if(!el) return;
   const totalShift=currentSemitones+storedCapo-selectedCapo;
-  const rawChords=extractChords(m);
+  const rawChords=extractChords(m,summaryOverride);
   const chords=[...new Set(rawChords.map(c=>shiftText(c,totalShift)))];
   if(!chords.length){el.innerHTML='';return;}
   const html=chords.map(name=>{
@@ -2011,18 +2015,19 @@ function selectCapo(n){
   const view=document.getElementById('view-detail'),position=view?.scrollTop;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
-  renderDetail();
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
-  if(m) renderChordStrip(m);
+  const preparedSong=m?tablature.prepareSong(m):null,summary=preparedSong?songFormat.harmonicSummary(preparedSong):null;
+  renderDetail(preparedSong,summary);
+  if(preparedSong) renderChordStrip(preparedSong,summary);
   if(view)view.scrollTop=position;
-  updateSongControls();
 }
 
 function transpose(delta){
   currentSemitones=Math.max(-11,Math.min(11,currentSemitones+delta));
-  renderDetail();
   const m=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);
-  if(m) renderChordStrip(m);
+  const preparedSong=m?tablature.prepareSong(m):null,summary=preparedSong?songFormat.harmonicSummary(preparedSong):null;
+  renderDetail(preparedSong,summary);
+  if(preparedSong) renderChordStrip(preparedSong,summary);
 }
 function resetTranspose(){
   currentSemitones=0;
@@ -2412,9 +2417,9 @@ function renderStageStructure(summary,totalShift){
   }).join('')}</section>`;
 }
 
-function renderDetail(){
+function renderDetail(preparedSong=null,preparedSummary=null){
   const source=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);if(!source)return;
-  const m=tablature.prepareSong(source),visibleTablature=tablature.compatible(m.tablature,currentInstrument);
+  const m=preparedSong||tablature.prepareSong(source),visibleTablature=tablature.compatible(m.tablature,currentInstrument);
   SONG_LAST_PAGE=visibleTablature?3:2;SONG_PAGE_LABELS.splice(3,1,...(visibleTablature?['Tablaturas']:[]));
   if(currentSongPage>SONG_LAST_PAGE){currentSongPage=1;currentSongView='full';}
   const indicator=document.getElementById('song-page-indicator');indicator.querySelector('[data-song-page="3"]')?.remove();
@@ -2424,7 +2429,7 @@ function renderDetail(){
   document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('stage-capo-minus').disabled=selectedCapo===0;
   document.getElementById('stage-capo-plus').disabled=selectedCapo===12;
-  const summary=songFormat.harmonicSummary(m);
+  const summary=preparedSummary||songFormat.harmonicSummary(m);
   // tom que SONA = tom original + transpose
   const soundingKey=shiftText(summary.currentKey, currentSemitones);
   // tom das formas tocadas = sounding - capo selecionado
@@ -2458,7 +2463,7 @@ function renderDetail(){
   updateSongPageIndicator({announce:false});
   if(!stageMode||STAGE_CLEAN)requestAnimationFrame(syncSongPageHeight);
   if(smartScrollController.isActive())smartScrollController.sync();
-  updateSongControls();
+  updateSongControls(summary);
   updateDetailSaveButton();
   if(stageMode)updateStagePresentation();
 }
@@ -2509,7 +2514,7 @@ function openDetail(id,options={}){
     if(Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
     currentSongView=currentSongPage===0?'summary':'full';
   }
-  const summary=songFormat.harmonicSummary(m);
+  const preparedSong=tablature.prepareSong(m),summary=songFormat.harmonicSummary(preparedSong);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
   document.getElementById('detail-title').textContent=summary.title;
   document.getElementById('detail-artist-label').textContent=summary.artist||'';
@@ -2527,8 +2532,8 @@ function openDetail(id,options={}){
   if(lbl) lbl.innerHTML=instrumentIconMarkup(INSTRUMENTS.find(item=>item.id===instrumentInfo.id)||INSTRUMENTS[0])+'<span>'+eventEsc(instrumentInfo.shortName)+'</span>';
   const capoSelector=document.getElementById('capo-selector-group');
   if(capoSelector) capoSelector.style.display='grid';
-  renderDetail();
-  renderChordStrip(m);
+  renderDetail(preparedSong,summary);
+  renderChordStrip(preparedSong,summary);
   updatePlaylistNavigation();
   const vd=document.getElementById('view-detail');
   document.getElementById('event-chat-fab').hidden=true;
@@ -4000,7 +4005,7 @@ async function openAccountModal(){
   document.getElementById('modal-overlay').style.display='none';
   const layer=ensureAccountDrawer();
   layer.querySelector('.account-drawer').innerHTML=`
-    <button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile,'account-avatar','account-drawer-avatar')}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button>
+    <div class="account-drawer-profile-head"><button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile,'account-avatar','account-drawer-avatar')}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button><button class="account-drawer-qr-button" type="button" onclick="profileQr.open()" aria-label="Abrir código QR do perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><path d="M14 14h3v3h-3z"/></svg></button></div>
     <nav class="account-drawer-menu" aria-label="Conta e configurações">
       <button class="account-drawer-item" type="button" onclick="showAccountPremiumInfo()"><span class="account-drawer-icon account-drawer-icon--brand"><img class="roudy-rd-mark" src="assets/icons/roudy-rd-premium.svg?v=1" alt="" aria-hidden="true"></span><span class="account-drawer-label"><strong>Meu Premium</strong><small>Recursos Premium do ROUDY</small></span><span class="account-drawer-badge">Em breve</span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('profile')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-4.2 3.1-6.3 7-6.3s6.3 2.1 7 6.3"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span></button>
@@ -4784,7 +4789,7 @@ function openEventInviteSheet(eventId){
   if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.eventId!==String(eventId))eventInviteSelection={owner:eventInviteOwner(),eventId:String(eventId),role:eventInviteRoles()[0],busy:false};
   if(eventInviteSelection.busy)return;
   const layer=ensureEventActionLayer(),shareData=eventShareData(event),role=getEventInviteRole(event.id);
-  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
+  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action event-invite-action--qr" onclick="closeEventActionLayer();eventQrScanner.open(${attrJs(event.id)},{role:getEventInviteRole(${attrJs(event.id)})})"><i><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".35"/><rect x="18" y="14" width="3" height="3" rx=".35"/><rect x="14" y="18" width="3" height="3" rx=".35"/><rect x="18" y="18" width="3" height="3" rx=".35"/></svg></i><span>Escanear QR</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
   requestAnimationFrame(()=>layer.classList.add('is-open'));
 }
 function openEventMemberSearch(eventId){
@@ -5409,28 +5414,28 @@ function renderPollMessage(bubble,eventId,message){
   const title=document.createElement('div');title.className='event-poll-question';title.textContent=message.poll.question;bubble.appendChild(title);
   const hint=document.createElement('div');hint.className='event-poll-hint';hint.textContent=message.poll.multiple?'Selecione uma ou mais opções.':'Selecione uma opção.';bubble.appendChild(hint);
   const list=document.createElement('div');list.className='event-poll-options';
-  message.poll.options.forEach(option=>{const voters=votes[option.id]||[],selected=voters.includes(appCurrentUser.id),percent=uniqueVoters.size?Math.round(voters.length/uniqueVoters.size*100):0,item=document.createElement('button');item.type='button';item.className='event-poll-option'+(selected?' selected':'');item.setAttribute('aria-pressed',String(selected));item.setAttribute('aria-label',`${option.label}: ${voters.length} ${voters.length===1?'voto':'votos'}`);item.innerHTML=`<span class="event-poll-option-line"><i class="event-poll-check" aria-hidden="true">${selected?'✓':''}</i><span class="event-poll-option-label">${eventEsc(option.label)}</span>${voters.length?eventPollVoterAvatar(eventPollMember(event,voters[0])):''}<strong>${voters.length}</strong></span><span class="event-poll-option-track" aria-hidden="true"><i style="width:${percent}%"></i></span>`;item.addEventListener('click',eventClick=>{eventClick.stopPropagation();eventChat.vote(eventId,message.id,option.id);renderEventChatMessages(false);});list.appendChild(item);});bubble.appendChild(list);
+  message.poll.options.forEach(option=>{const voters=votes[option.id]||[],selected=voters.includes(appCurrentUser.id),percent=uniqueVoters.size?Math.round(voters.length/uniqueVoters.size*100):0,item=document.createElement('button');item.type='button';item.className='event-poll-option'+(selected?' selected':'');item.setAttribute('aria-pressed',String(selected));item.setAttribute('aria-label',`${option.label}: ${voters.length} ${voters.length===1?'voto':'votos'}`);item.innerHTML=`<span class="event-poll-option-line"><i class="event-poll-check" aria-hidden="true">${selected?'✓':''}</i><span class="event-poll-option-label">${eventEsc(option.label)}</span>${voters.length?eventPollVoterAvatar(eventPollMember(event,voters[0])):''}<strong>${voters.length}</strong></span><span class="event-poll-option-track" aria-hidden="true"><i style="width:${percent}%"></i></span>`;item.addEventListener('click',eventClick=>{eventClick.stopPropagation();eventChat.vote(eventId,message.id,option.id);});list.appendChild(item);});bubble.appendChild(list);
   const pollTime=document.createElement('time');pollTime.className='event-poll-time';pollTime.dateTime=message.createdAt;pollTime.textContent=new Date(message.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(String(message.sender.id)===String(appCurrentUser.id)?' ✓✓':'');bubble.appendChild(pollTime);
   if(message.poll.showVoters!==false){const view=document.createElement('button');view.type='button';view.className='event-poll-view-votes';view.textContent='Ver votos';view.addEventListener('click',eventClick=>{eventClick.stopPropagation();openEventPollVotes(eventId,message.id);});bubble.appendChild(view);}
 }
 function openEventPollVotes(eventId,messageId){const event=findEvent(eventId),message=eventChat.list(eventId,10000).find(item=>String(item.id)===String(messageId));if(!event||message?.type!=='poll')return;closeEventChatContext();const votes=message.poll.votes||{},options=message.poll.options.map(option=>{const voterIds=votes[option.id]||[],voters=voterIds.map(id=>eventPollMember(event,id));return `<section class="event-poll-results-option"><header><strong>${eventEsc(option.label)}</strong><span>${voters.length} ${voters.length===1?'voto':'votos'}</span></header>${voters.length?`<div class="event-poll-results-voters">${voters.map(member=>`<button type="button" onclick="closeModal();openEventMemberProfile('${eventEsc(member.id)}',true)">${eventPollVoterAvatar(member,'event-poll-results-avatar')}<strong>${eventEsc(String(member.id)===String(appCurrentUser.id)?'Você':member.name)}</strong></button>`).join('')}</div>`:''}</section>`;}).join('');const overlay=document.getElementById('modal-overlay');overlay.classList.add('event-poll-results-overlay');document.getElementById('modal-body').innerHTML=`<section class="event-poll-results" role="dialog" aria-modal="true" aria-labelledby="event-poll-results-title"><header class="event-poll-results-header"><button type="button" onclick="closeModal()">Fechar</button><h2 id="event-poll-results-title">Votos da enquete</h2><span></span></header><main><h3>${eventEsc(message.poll.question)}</h3>${options}</main></section>`;overlay.style.display='flex';}
-function sendEventMessage(){const input=document.getElementById('event-chat-input'),event=findEvent(currentSdId);if(!event)return;try{eventChat.sendText(event.id,input.value,chatReplyTo);input.value='';cancelChatReply();renderEventChatMessages(true);}catch(error){showToast(error.message);}}
+function sendEventMessage(){const input=document.getElementById('event-chat-input'),event=findEvent(currentSdId);if(!event)return;try{eventChat.sendText(event.id,input.value,chatReplyTo);input.value='';cancelChatReply();}catch(error){showToast(error.message);}}
 function handleChatKey(event){if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendEventMessage();}}
 function insertChatEmoji(){const input=document.getElementById('event-chat-input');input.value+=' 🙏';input.focus();}
 function replyEventMessage(messageId){closeEventChatContext();chatReplyTo=messageId;const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(messageId)),preview=document.getElementById('event-chat-reply'),text=message&&message.content||message&&message.poll&&message.poll.question||'Mensagem';preview.hidden=false;preview.innerHTML=`<div><strong>Respondendo a ${eventEsc(message&&message.sender.name||'mensagem')}</strong><span>${eventEsc(text.slice(0,110))}</span></div><button type="button" onclick="cancelChatReply()" aria-label="Cancelar resposta">×</button>`;requestAnimationFrame(()=>document.getElementById('event-chat-input').focus());}
 function cancelChatReply(){chatReplyTo=null;const preview=document.getElementById('event-chat-reply');preview.hidden=true;preview.textContent='';}
 function editChatMessage(message){const content=appPrompt('Editar mensagem:',message.content);if(content!=null){eventChat.edit(currentSdId,message.id,content);renderEventChatMessages(false);}}
-function deleteChatMessage(message){if(appConfirm('Excluir sua mensagem?')){eventChat.remove(currentSdId,message.id);renderEventChatMessages(false);}}
+function deleteChatMessage(message){if(appConfirm('Excluir sua mensagem?'))eventChat.remove(currentSdId,message.id);}
 function copyChatMessage(message){navigator.clipboard&&navigator.clipboard.writeText(message.content||message.poll&&message.poll.question||'').then(()=>showToast('Mensagem copiada')).catch(()=>{});}
 const EVENT_CHAT_HIDDEN_KEY='sc_event_chat_hidden_v1';
 let eventChatContextMessageId=null,eventChatLongPressTimer=null;
 function eventChatHiddenIds(eventId){const all=storage.get(EVENT_CHAT_HIDDEN_KEY,{});return new Set(all[String(eventId)]||[]);}
 function hideEventMessageForMe(messageId){const all=storage.get(EVENT_CHAT_HIDDEN_KEY,{}),key=String(currentSdId),ids=new Set(all[key]||[]);ids.add(String(messageId));storage.set(EVENT_CHAT_HIDDEN_KEY,{...all,[key]:[...ids]});closeEventChatContext();renderEventChatMessages(false);showToast('Mensagem apagada somente para você neste dispositivo');}
 function closeEventChatContext(){const layer=document.getElementById('event-chat-context');if(!layer)return;layer.hidden=true;layer.setAttribute('aria-hidden','true');layer.textContent='';document.getElementById('event-chat-view')?.classList.remove('is-context-open');document.querySelectorAll('.event-message.is-context-target').forEach(row=>row.classList.remove('is-context-target'));eventChatContextMessageId=null;}
-function reactFromEventChatContext(emoji){if(!eventChatContextMessageId)return;eventChat.react(currentSdId,eventChatContextMessageId,emoji);closeEventChatContext();renderEventChatMessages(false);}
+function reactFromEventChatContext(emoji){if(!eventChatContextMessageId)return;eventChat.react(currentSdId,eventChatContextMessageId,emoji);closeEventChatContext();}
 function openEventChatReactionPicker(){const bar=document.querySelector('.event-chat-context-reactions');if(!bar)return;bar.innerHTML=['❤️','😂','😮','😢','😡','👍','🙏','👏','🔥','🎉'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('');bar.classList.add('is-expanded');}
 function confirmDeleteEventMessageForEveryone(){const menu=document.querySelector('.event-chat-context-menu');if(!menu)return;menu.innerHTML=`<p>Apagar esta mensagem para todos?</p><button type="button" class="event-chat-context-danger" onclick="deleteEventMessageForEveryone()">Confirmar exclusão</button><button type="button" onclick="closeEventChatContext()">Cancelar</button>`;}
-function deleteEventMessageForEveryone(){const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(eventChatContextMessageId));if(!message)return closeEventChatContext();eventChat.remove(currentSdId,message.id);closeEventChatContext();renderEventChatMessages(false);}
+function deleteEventMessageForEveryone(){const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(eventChatContextMessageId));if(!message)return closeEventChatContext();eventChat.remove(currentSdId,message.id);closeEventChatContext();}
 function openEventChatContext(message,row,bubble){if(message.deleted||message.type==='system')return;closeEventChatContext();eventChatContextMessageId=message.id;row.classList.add('is-context-target');const layer=document.getElementById('event-chat-context'),mine=String(message.sender.id)===String(appCurrentUser.id),rect=bubble.getBoundingClientRect(),view=document.getElementById('event-chat-view').getBoundingClientRect();layer.innerHTML=`<button type="button" class="event-chat-context-backdrop" onclick="closeEventChatContext()" aria-label="Fechar ações"></button><div class="event-chat-context-stack${mine?' is-mine':''}" role="dialog" aria-label="Ações da mensagem"><div class="event-chat-context-reactions" aria-label="Reações">${['❤️','😂','😮','😢','😡','👍'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('')}<button type="button" onclick="openEventChatReactionPicker()" aria-label="Mais reações">＋</button></div><div class="event-chat-context-ghost">${eventEsc(message.content||message.poll?.question||'Mensagem')}</div><div class="event-chat-context-menu"><button type="button" onclick="replyEventMessage('${eventEsc(message.id)}')">Responder</button><button type="button" onclick="showToast('Fixar ainda não possui suporte compartilhado');closeEventChatContext()">Fixar</button><button type="button" onclick="hideEventMessageForMe('${eventEsc(message.id)}')">Apagar para mim</button>${mine?`<button type="button" class="event-chat-context-danger" onclick="confirmDeleteEventMessageForEveryone()">Apagar para todos</button>`:''}</div></div>`;layer.hidden=false;layer.setAttribute('aria-hidden','false');document.getElementById('event-chat-view').classList.add('is-context-open');const stack=layer.querySelector('.event-chat-context-stack'),preferred=Math.max(view.top+12,Math.min(rect.top-76,view.bottom-390)),stackWidth=Math.min(320,view.width-28),ideal=mine?rect.right-view.left-stackWidth:rect.left-view.left,left=Math.max(14,Math.min(ideal,view.width-stackWidth-14));stack.style.top=`${preferred-view.top}px`;stack.style.left=`${left}px`;stack.querySelector('button')?.focus();}
 function installEventMessageContext(row,bubble,message){row.tabIndex=0;row.setAttribute('aria-label','Mensagem de '+message.sender.name+'. Pressione Enter para ações.');const start=()=>{clearTimeout(eventChatLongPressTimer);eventChatLongPressTimer=setTimeout(()=>openEventChatContext(message,row,bubble),430);};const cancel=()=>clearTimeout(eventChatLongPressTimer);bubble.addEventListener('pointerdown',start);bubble.addEventListener('pointerup',cancel);bubble.addEventListener('pointercancel',cancel);bubble.addEventListener('pointermove',cancel);bubble.addEventListener('contextmenu',event=>{event.preventDefault();openEventChatContext(message,row,bubble);});row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10')){event.preventDefault();openEventChatContext(message,row,bubble);}});}
 function eventPollOptionRow(){const row=document.createElement('div'),input=document.createElement('input');row.className='event-poll-compose-option';input.className='event-poll-option-input';input.type='text';input.placeholder='Adicionar';input.maxLength=120;input.setAttribute('aria-label','Opção da enquete');input.addEventListener('input',eventPollComposerChanged);input.addEventListener('keydown',event=>{if(event.key!=='Enter')return;event.preventDefault();const inputs=[...document.querySelectorAll('.event-poll-option-input')],index=inputs.indexOf(input);if(input.value.trim()&&index===inputs.length-1)appendEventPollOption();requestAnimationFrame(()=>[...document.querySelectorAll('.event-poll-option-input')][index+1]?.focus());});row.appendChild(input);return row;}

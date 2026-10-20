@@ -3,11 +3,13 @@ const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('service-work
 for(const source of [html,sw,assistant,invites])assert.doesNotMatch(source,/^(?:<<<<<<<|=======|>>>>>>>)/m,'nenhum conflito pendente');
 const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]);
 assert.equal(new Set(scripts).size,scripts.length,'scripts não carregados em duplicidade');
-for(const path of ['js/app-assistant.js?v=33','js/tuner.js?v=5','js/chord-audio.js?v=2','js/smart-scroll.js?v=7','js/tablature.js?v=2','js/assistant-language.js?v=1','js/assistant-dialogue.js?v=4','js/event-user-invites.js?v=8']){
+for(const path of ['js/app-assistant.js?v=33','js/tuner.js?v=5','js/chord-audio.js?v=2','js/smart-scroll.js?v=7','js/tablature.js?v=2','js/assistant-language.js?v=1','js/assistant-dialogue.js?v=4','js/event-user-invites.js?v=10']){
   assert.ok(scripts.includes(path),path+' preservado');assert.ok(sw.includes('./'+path),path+' no cache offline');
 }
-// QR de perfil/convite retirado a pedido do Thiago (12/10).
-assert.doesNotMatch(html,/event-qr-scanner|profile-qr|jsqr/);
+// QR de perfil e convite restaurado; geração e leitura continuam sob demanda.
+assert.match(html,/event-qr-scanner\.js/);
+assert.match(html,/profile-qr\.js/);
+assert.match(html,/jsqr\.min\.js/);
 assert.match(html,/function commitSongs\(next\)/);
 assert.doesNotMatch(html,/shared:eventSongModel\(song\)/,'novas inclusões usam a cópia persistida e isolada do evento');
 assert.match(html,/shared:eventEditFromSong\(eventSongCopy\(song\)\)/);
