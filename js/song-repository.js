@@ -315,15 +315,31 @@
     const songs = activeOwnerId ? filterDeleted(activeOwnerId, collection) : global.songModel.normalizeCollection(collection);
     const previous = activeOwnerId && activeOwnerId !== legacyCandidateOwnerId
       ? ownerCaches()[activeOwnerId] || [] : global.storage.get(CURRENT_STORAGE_KEY, []);
-    if (global.libraryRecovery && !global.libraryRecovery.beforeSave(activeOwnerId || "guest", previous, songs)) return false;
-    if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
-    if (global.storage.setMany) {
-      const saved = global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs]]);
-      if (saved) releaseLegacyCopy();
-      return saved;
+    const recoveryOwner = activeOwnerId || "guest";
+    const recovery = global.libraryRecovery;
+    // A cópia de segurança da versão anterior é um extra: se não couber, a música é salva assim mesmo.
+    // Antes, uma falha aqui cancelava todo salvamento ("Não foi possível salvar a biblioteca...").
+    if (recovery && !recovery.beforeSave(recoveryOwner, previous, songs)) {
+      if (!(recovery.shrink && recovery.shrink(recoveryOwner) && recovery.beforeSave(recoveryOwner, previous, songs))) {
+        console.warn("Cópia de segurança local não coube; salvando a biblioteca sem ela.");
+      }
     }
-    global.storage.set(SEED_ONLY_KEY, false);
-    return persistCurrent(songs);
+    const write = () => {
+      if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
+      if (global.storage.setMany) {
+        const saved = global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs]]);
+        if (saved) releaseLegacyCopy();
+        return saved;
+      }
+      global.storage.set(SEED_ONLY_KEY, false);
+      return persistCurrent(songs);
+    };
+    if (write()) return true;
+    // Armazenamento cheio: libera espaço só nas cópias de segurança antigas e tenta de novo.
+    while (recovery && recovery.shrink && recovery.shrink(recoveryOwner)) {
+      if (write()) return true;
+    }
+    return false;
   }
 
   function addOrReuse(collection, input, options) {

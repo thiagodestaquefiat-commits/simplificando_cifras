@@ -45,6 +45,12 @@ for(let i=0;i<25;i++)c.libraryRecovery.retain('account-a',[{song:{...a,key:Strin
 assert.equal(c.libraryRecovery.list('account-a').length,20);
 assert.equal(c.libraryRecovery.list('account-a')[0].song.key,'24');
 assert.equal(c.libraryRecovery.retain('account-a',[{song:{...a,notes:'x'.repeat(1024*1024)}}]),false);
+// Muitas mudanças de uma vez: guarda as 20 mais recentes em vez de recusar (antes bloqueava o salvamento).
+assert.equal(c.libraryRecovery.retain('account-a',Array.from({length:30},(_,i)=>({song:{...a,key:'M'+i}}))),true);
+assert.equal(c.libraryRecovery.list('account-a').length,20);
+// shrink descarta as cópias mais antigas.
+assert.equal(c.libraryRecovery.shrink('account-a'),true);
+assert.equal(c.libraryRecovery.list('account-a').length,10);
 
 const storageErrors=[];c.storage.subscribeErrors(error=>storageErrors.push(plain(error)));
 c.storage.set('first',{before:true});fail('second');
@@ -88,4 +94,8 @@ isolated.fail('sc_personal_song_caches_v1');
 r.activateOwner('A',[],[]);
 assert.equal(r.save([{...a,key:'F'}]),false);
 assert.equal(JSON.parse(isolated.memory.get('sc_personal_song_caches_v1')).A[0].key,'E');
+// Cópia de segurança que não cabe nunca impede a música de ser salva.
+{const t=setup();const repo=t.context.songRepository;repo.load([a]);t.fail('sc_library_recovery_v1:guest');
+ assert.equal(repo.save([{...a,key:'E'}]),true,'backup cheio não bloqueia o salvamento');t.fail(null);
+ assert.equal(t.context.storage.get('sc_songs_v1')[0].key,'E');}
 console.log('backup-safety.test.js: OK (segredos, seleção, cópias, isolamento, histórico, quota e rollback)');
