@@ -4396,6 +4396,9 @@ async function saveContextEventSong(context,data,options={}){
   const editorUnchanged=originalSimpleEditor===simpleReviewDraft&&originalEventEditor===eventSongEditDraft&&originalModalOpen===(document.getElementById('modal-overlay').style.display==='flex')&&(!originalModalOpen||(originalModalChild===document.getElementById('modal-body').firstElementChild&&originalModalValues===modalValues()));
   if(detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId&&editorUnchanged&&originalDraft===JSON.stringify(detailEditableState())){
     currentDetailSongOverride=eventSongVariant(updated,updated.repertoire.find(i=>String(i.id)===String(item.id)),owner);
+    // A cópia salva já vem com tom e capo aplicados (eventSongCopy). Sincroniza a tela com ela,
+    // senão o capo/tom é somado de novo: acordes não voltam ao tirar o capo e o tom sobe sozinho.
+    storedCapo=songFormat.harmonicSummary(currentDetailSongOverride).capo;selectedCapo=storedCapo;currentSemitones=0;
     detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));
     if(!options.quiet){closeModal();openDetailFromEventItem(event.id,item.id);}
   }
