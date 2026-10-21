@@ -67,14 +67,24 @@ def _upsert(client_id, song_data, expected_version=None):
                             song_data=song_data, version=1)
         db.session.add(song)
         SharedSongService.contribute(song_data, g.current_user.id)
-        # MANUTENÇÃO: A elegibilidade por origem é responsabilidade do serviço; não repita esta contribuição nas edições.
+        # MANUTENÇÃO: A elegibilidade por origem é responsabilidade do serviço.
         return song, "created"
     if song.song_data == song_data and song.deleted_at is None:
         return song, "existing"
+    completed = not _has_full_sheet(song.song_data) and _has_full_sheet(song_data)
     song.song_data, song.deleted_at, song.version = song_data, None, song.version + 1
     song.updated_at = datetime.now(timezone.utc)
-    # Edições posteriores são pessoais, mesmo que a origem inicial seja IA/upload.
+    if completed:
+        # Força-tarefa: música completada (ganhou Letra + Cifras) também vai para o catálogo compartilhado.
+        # O serviço só preenche o que falta: nunca sobrescreve uma versão do catálogo que já está completa,
+        # então ajustes pessoais (tom, título, trechos) não alteram a música dos outros usuários.
+        SharedSongService.contribute(song_data, g.current_user.id)
     return song, "updated"
+
+
+def _has_full_sheet(song_data):
+    sheet = song_data.get("fullChordSheet") if isinstance(song_data, dict) else None
+    return isinstance(sheet, dict) and bool(str(sheet.get("content") or "").strip())
 
 
 @blueprint.get("")
