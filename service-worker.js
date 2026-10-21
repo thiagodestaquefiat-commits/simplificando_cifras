@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v512-playlists-sugestoes";
+const CACHE_NAME = "simplificando-cifras-v513-catalogo-compartilhado";
 // Compatibility marker: simplificando-cifras-v511-playlists-estilos
 // Compatibility marker: simplificando-cifras-v510-sugestoes-encerramento
 // Compatibility marker: simplificando-cifras-v510-playlists-home
