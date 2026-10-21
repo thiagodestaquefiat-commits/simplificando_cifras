@@ -1,0 +1,21 @@
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path');const assert=require('node:assert/strict');const {chromium}=require('playwright');
+const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml'};
+const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.split('?')[0]);const file=path.join(process.cwd(),url==='/'?'index.html':url);fs.readFile(file,(e,d)=>{if(e){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(d);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const b=await chromium.launch({...(process.env.ROUDY_CHROME?{executablePath:process.env.ROUDY_CHROME}:{})});const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+const errs=[];p.on('pageerror',e=>errs.push(String(e)));
+await p.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+await p.waitForFunction(()=>typeof continueWithoutLogin==='function').catch(()=>{});
+await p.evaluate(()=>{try{continueWithoutLogin();}catch(e){};const song={id:'t1',title:'Canção de Simeão',artist:'X',key:'A',blocos:[{l:'Verso',c:'A D E F#m'}]};musicas.push(song);
+ const d=new Date();setlists.push(eventModel.create({id:'ev',title:'Culto',date:d.toISOString().slice(0,10),leaderId:appCurrentUser.id,members:[{...appCurrentUser,isLeader:true}],repertoire:[{id:'it',songId:'t1',shared:eventEditFromSong(eventSongCopy(song))}]}));
+ openDetailFromEventItem('ev','it');});
+await p.waitForTimeout(800);
+const read=()=>p.evaluate(()=>({tom:document.getElementById('song-control-key').textContent,badge:document.getElementById('detail-key').textContent,capo:selectedCapo,acordes:[...document.querySelectorAll('#chord-strip .chord-card-name, #chord-strip [class*=name]')].map(e=>e.textContent.trim()).filter(Boolean).slice(0,4).join(' ')}));
+const step=async(fn,arg)=>{await p.evaluate(fn,arg);await p.waitForTimeout(1200);return read();};
+assert.deepEqual(await read(),{tom:'A',badge:'Tom: A',capo:0,acordes:'A D E F#m'});
+for(const c of [1,2,3]){const r=await step(c=>selectCapo(c),c);assert.equal(r.tom,'A','capo não muda o tom');}
+let r=await step(()=>selectCapo(0));assert.equal(r.tom,'A');assert.equal(r.acordes.split(' ').slice(0,3).join(' '),'A D E','tirar o capo volta aos acordes do tom');
+r=await step(()=>transpose(1));assert.equal(r.tom,'Bb');
+r=await step(c=>selectCapo(c),1);assert.equal(r.tom,'Bb','capo depois de mudar o tom não sobe o tom');assert.equal(r.acordes.split(' ').slice(0,3).join(' '),'A D E');
+r=await step(c=>selectCapo(c),2);assert.equal(r.tom,'Bb');
+assert.deepEqual(errs,[]);console.log('event-capo-ui.test.js: OK (capo no evento muda só os acordes)');
+await b.close();server.close();})().catch(e=>{console.error(e);process.exit(1)});
