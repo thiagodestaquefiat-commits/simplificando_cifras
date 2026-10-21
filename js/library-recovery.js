@@ -15,10 +15,20 @@
       savedAt: new Date().toISOString(), reason: entry.reason || "edição",
       song: global.libraryExporter.sanitize(entry.song)
     }));
-    if (additions.length > MAX_VERSIONS || new Blob([JSON.stringify(additions)]).size > MAX_BYTES) return false;
-    const history = [...additions, ...list(owner)].slice(0, MAX_VERSIONS);
-    while (history.length > additions.length && new Blob([JSON.stringify(history)]).size > MAX_BYTES) history.pop();
+    // Muitas mudanças de uma vez (sync, atualização do app): guarda só as MAX_VERSIONS mais recentes.
+    const kept = additions.slice(0, MAX_VERSIONS).filter(entry => new Blob([JSON.stringify(entry)]).size <= MAX_BYTES);
+    if (!kept.length) return false;
+    const history = [...kept, ...list(owner)].slice(0, MAX_VERSIONS);
+    while (history.length > 1 && new Blob([JSON.stringify(history)]).size > MAX_BYTES) history.pop();
     return global.storage.set(key(owner), history);
+  }
+  // Armazenamento cheio: descarta as cópias de segurança MAIS ANTIGAS (nunca as músicas) para liberar espaço.
+  // Retorna true se liberou algo.
+  function shrink(owner) {
+    const history = list(owner);
+    if (!history.length) return false;
+    const keep = Math.floor(history.length / 2);
+    return keep ? global.storage.set(key(owner), history.slice(0, keep)) : global.storage.remove(key(owner));
   }
   function musical(song) {
     const copy = clone(song); delete copy.librarySync; delete copy.updatedAt;
@@ -41,5 +51,5 @@
     copy.updatedAt = new Date().toISOString();
     return global.songModel.create(copy);
   }
-  global.libraryRecovery = Object.freeze({ list, retain, beforeSave, copySong, maxVersions: MAX_VERSIONS, maxBytes: MAX_BYTES });
+  global.libraryRecovery = Object.freeze({ list, retain, beforeSave, shrink, copySong, maxVersions: MAX_VERSIONS, maxBytes: MAX_BYTES });
 })(window);
