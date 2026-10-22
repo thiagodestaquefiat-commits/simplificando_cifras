@@ -5,11 +5,11 @@
     inset: 0 0 auto !important;
     display: grid !important;
     width: 100% !important;
-    height: 132px !important;
-    min-height: 132px !important;
+    height: 126px !important;
+    min-height: 126px !important;
     padding: calc(4px + env(safe-area-inset-top)) 4px 4px !important;
     grid-template-columns: 40px 52px minmax(0, 1fr) 52px 78px !important;
-    grid-template-rows: 48px 76px !important;
+    grid-template-rows: 48px 70px !important;
     column-gap: 2px !important;
     row-gap: 0 !important;
     align-items: center;
@@ -152,25 +152,27 @@
   #view-detail.stage-mode .stage-capo-controls { display: contents !important; }
 
   #view-detail.stage-mode .stage-scroll-speed {
-    display: grid !important;
-    width: min(181px, 52vw);
+    display: none !important;
+    width: min(170px, 52vw);
     min-width: 0;
-    height: 54px;
+    height: 76px;
     grid-column: 2 !important;
     grid-row: 1 !important;
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    align-items: center;
+    grid-template-columns: 44px 82px 44px;
+    align-items: start;
+    padding-top: 3px;
   }
 
   #view-detail.stage-mode .stage-start-row {
     position: relative;
     z-index: 2;
-    display: grid !important;
+    display: none !important;
     width: 100%;
     height: 76px;
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
-    place-items: center;
+    padding-top: 3px;
+    place-items: start center;
     pointer-events: none;
   }
 
@@ -184,6 +186,14 @@
     align-items: center;
     justify-content: center;
     gap: 0;
+  }
+
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child {
+    gap: 8px;
+  }
+
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child output {
+    min-width: 38px !important;
   }
 
   #view-detail.stage-mode .stage-tone-controls { grid-column: 1 !important; grid-row: 1 !important; }
@@ -264,7 +274,9 @@
   #view-detail.stage-mode.stage-scroll-compact .stage-start-row { display: none !important; }
 
   #view-detail.stage-mode .stage-execution-controls {
-    display: none;
+    position: relative;
+    z-index: 2;
+    display: flex;
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     width: 100%;
@@ -274,10 +286,11 @@
     align-items: center;
     justify-content: center;
     gap: 5px;
+    pointer-events: none;
   }
 
   #view-detail.stage-mode.stage-scroll-compact .stage-execution-controls { display: flex; }
-  #view-detail.stage-mode .stage-execution-actions { gap: 14px; }
+  #view-detail.stage-mode .stage-execution-actions { gap: 14px; pointer-events: auto; }
 
   #view-detail.stage-mode .stage-execution-step {
     width: 44px;
@@ -293,6 +306,14 @@
     height: 54px;
     background: #25262a;
   }
+
+  #view-detail.stage-mode .stage-execution-toggle.is-initial {
+    background: linear-gradient(145deg, #f7f7f7 48%, #ffe553 100%);
+    color: #3f3f46;
+  }
+
+  #view-detail.stage-mode .stage-execution-toggle.is-initial svg { fill: currentColor; }
+  #view-detail.stage-mode .stage-execution-controls:has(.stage-execution-toggle.is-initial) > span { visibility: hidden; }
 
   #view-detail.stage-mode .stage-execution-toggle svg { width: 23px; height: 23px; }
   #view-detail.stage-mode .stage-execution-controls > span { font-size: 9px; }
@@ -330,9 +351,7 @@
   #view-detail.stage-mode #detail-content .chord-line { margin-bottom: 4px; }
 
   @media (max-width: 375px) {
-    #view-detail.stage-mode .stage-preparation-controls { grid-template-columns: minmax(0, 1fr) min(181px, 52vw) minmax(0, 1fr); }
-    #view-detail.stage-mode .stage-scroll-speed { width: min(181px, 52vw); grid-template-columns: 44px minmax(0, 1fr) 44px; }
-    #view-detail.stage-mode .stage-start-button,
-    #view-detail.stage-mode .stage-start-button.active { width: 48px !important; min-width: 48px !important; height: 48px !important; min-height: 48px !important; }
+    #view-detail.stage-mode .stage-preparation-controls { grid-template-columns: minmax(0, 1fr) min(170px, 52vw) minmax(0, 1fr); }
+    #view-detail.stage-mode .stage-scroll-speed { width: min(170px, 52vw); grid-template-columns: 44px 82px 44px; }
   }
 }

@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=61">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=64">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -997,7 +997,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 .topbar-cover-action{display:grid;width:40px;height:40px;flex:0 0 40px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#d9dfe7;cursor:pointer}.topbar-cover-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.topbar-cover-input{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)}
 .tab-bar,html[data-ui-scale] .tab-bar{position:fixed;z-index:15;right:0;bottom:0;left:0;width:100%;height:calc(49px + env(safe-area-inset-bottom));min-height:0;margin:0;padding:0 0 env(safe-area-inset-bottom);grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;overflow:visible;border:0;border-radius:0;background-color:rgba(18,18,18,.75);box-shadow:none;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transform:none;isolation:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif}
 .tab-bar .tab-indicator{display:none}.tab-bar .tab,html[data-ui-scale] .tab-bar .tab{display:flex;width:100%;height:49px;min-height:49px;padding:4px 0 2px;align-items:center;justify-content:flex-start;flex-direction:column;gap:1px;border:0;border-radius:0;background:transparent;color:#8e8e93;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;font-size:10px;font-weight:500;letter-spacing:0;line-height:12px;text-shadow:none;transition:none;-webkit-tap-highlight-color:transparent}.tab-bar .tab::before{display:none}.tab-bar .tab:hover{color:#8e8e93}.tab-bar .tab.active,.tab-bar .tab.active:hover,html[data-ui-scale] .tab-bar .tab.active{color:#0a84ff!important;background:transparent;text-shadow:none}.tab-bar .tab:focus,.tab-bar .tab:focus-visible{outline:none!important;box-shadow:none!important}.tab-icon{display:block;width:25px;height:25px;flex:0 0 25px;margin:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.tab-icon .tab-icon-filled{display:none;fill:currentColor;stroke:none}.tab-bar .tab.active .tab-icon{stroke-width:1.8}.tab-bar .tab.active .tab-icon .tab-icon-outline{display:none}.tab-bar .tab.active .tab-icon .tab-icon-filled{display:block}
-#tab-search:active,#tab-search.active{color:#0789E7!important}#tab-search.active .tab-icon-filled{display:block;fill:#0789E7}
+#tab-search{touch-action:manipulation}#tab-search .tab-icon,#tab-search .tab-icon *{pointer-events:none}#tab-search:active,#tab-search.active{color:#0789E7!important}#tab-search.active .tab-icon-filled{display:block;fill:#0789E7}
 #view-main>.fab,#view-main:has(#tab-setlists.active)>.fab{bottom:calc(61px + env(safe-area-inset-bottom))}
 #view-main{padding-bottom:0}
 #pane-musicas>.content,#pane-setlists>.content,#pane-medley>.content{padding-bottom:calc(57px + env(safe-area-inset-bottom))}
@@ -1088,8 +1088,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=23">
-<link rel="stylesheet" href="css/search-menu.css?v=9">
-<link rel="stylesheet" href="css/stage-mode-reference.css?v=9">
+<link rel="stylesheet" href="css/search-menu.css?v=10">
+<link rel="stylesheet" href="css/stage-mode-reference.css?v=15">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -2864,7 +2864,7 @@ function updateStageScrollState(){
   vd.classList.toggle('stage-scroll-compact',stageMode&&stageExecutionStarted);
   const startButton=document.getElementById('stage-scroll-toggle'),pauseButton=document.getElementById('stage-scroll-pause');
   if(startButton){startButton.classList.toggle('active',running);startButton.setAttribute('aria-label','Iniciar rolagem automática');}
-  if(pauseButton){const paused=stageMode&&stageExecutionStarted&&!running;pauseButton.classList.toggle('is-paused',paused);pauseButton.setAttribute('aria-label',paused?'Retomar rolagem automática':'Pausar rolagem automática');pauseButton.innerHTML=paused?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1"/><rect x="13.5" y="4" width="4.5" height="16" rx="1"/></svg>';}
+  if(pauseButton){const paused=stageMode&&stageExecutionStarted&&!running,showPlay=!running;pauseButton.classList.toggle('is-paused',paused);pauseButton.classList.toggle('is-initial',showPlay);pauseButton.setAttribute('aria-label',showPlay?(stageExecutionStarted?'Retomar rolagem automática':'Iniciar rolagem automática'):'Pausar rolagem automática');pauseButton.innerHTML=showPlay?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4.5" height="16" rx="1"/><rect x="13.5" y="4" width="4.5" height="16" rx="1"/></svg>';}
   measureStageHeader();
 }
 function toggleAutoScroll(){if(scrollTimer!==null){if(stageMode)pauseAutoScroll();else stopAutoScroll(true);}else startAutoScroll();revealStageControls();}
@@ -4981,6 +4981,7 @@ function setupEventDetailHeaderMotion(){
   let frame=0;
   function renderHeader(){
     frame=0;const progress=Math.max(0,Math.min(1,view.scrollTop/78)),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    view.classList.toggle('is-event-header-compact',progress>=.999);
     view.style.setProperty('--event-header-progress',progress.toFixed(4));view.style.setProperty('--event-header-height',`${112-progress*52}px`);view.style.setProperty('--event-header-alpha',(progress*.96).toFixed(3));view.style.setProperty('--event-header-blur',`${progress*12}px`);view.style.setProperty('--event-spotlight-opacity',String(Math.max(.02,1-progress*.98).toFixed(3)));view.style.setProperty('--event-title-scale',String((1-progress*.12).toFixed(3)));view.style.setProperty('--event-condensed-title-opacity',String(Math.max(0,Math.min(1,(progress-.48)/.34)).toFixed(3)));view.style.setProperty('--event-header-accent',`${Math.round(72+progress*166)} ${Math.round(153+progress*87)} 255`);view.style.setProperty('--event-header-icon',`${Math.round(218+progress*27)} ${Math.round(226+progress*19)} ${Math.round(236+progress*9)}`);view.style.setProperty('--event-icon-scale',reduced?'1':String((1-progress*.08).toFixed(3)));view.style.setProperty('--event-icon-y',reduced?'0px':`${(-progress*2).toFixed(2)}px`);view.style.setProperty('--event-meta-opacity',String(Math.max(0,1-progress*1.45).toFixed(3)));view.style.setProperty('--event-meta-y',reduced?'0px':`${(-progress*8).toFixed(2)}px`);
   }
   const requestRender=()=>{if(!frame)frame=requestAnimationFrame(renderHeader);};
