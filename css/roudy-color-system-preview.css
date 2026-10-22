@@ -235,7 +235,7 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 #event-chat-view[data-chat-background="graphite"]{background:linear-gradient(180deg,var(--roudy-dark),var(--ui-black))}
 #event-chat-view .event-chat-header{border-color:var(--ui-separator);background:rgba(11,11,12,.94)}
 #event-chat-view .event-chat-appearance-open,#event-chat-view .event-chat-poll-open{color:var(--text-primary)}
-#event-chat-view .event-message-bubble{background:var(--ui-control-active);color:var(--text-primary)}
+#event-chat-view .event-message-bubble{background:var(--ui-control);color:var(--text-primary)}
 #event-chat-view .event-message.mine .event-message-bubble,
 #event-chat-view .event-message.mine .event-message-content,
 #event-chat-view .event-chat-emoji,#event-chat-view .event-chat-send{background:var(--roudy-electric-blue);color:var(--text-primary)}

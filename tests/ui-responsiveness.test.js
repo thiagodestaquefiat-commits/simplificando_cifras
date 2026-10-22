@@ -150,14 +150,14 @@ async function openApp(browser, baseUrl, width, height) {
     const controlsBeforeScroll = await page.locator(".stage-performance-header").boundingBox();
     const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.locator("#stage-scroll-toggle").click();
-    assert.ok(await page.locator("#stage-scroll-toggle").evaluate((element) => element.classList.contains("active")));
+    assert.equal(await page.locator("#stage-scroll-pause").getAttribute("aria-label"), "Pausar rolagem automática");
     await page.waitForTimeout(400);
     const scrollWhilePlaying = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     const controlsWhileScrolling = await page.locator(".stage-performance-header").boundingBox();
     const scrollMetrics = await page.locator("#view-detail").evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
     assert.ok(scrollWhilePlaying >= scrollBeforePlay + 8, `auto-scroll deveria avançar visivelmente: ${scrollBeforePlay} -> ${scrollWhilePlaying}; área ${scrollMetrics.clientHeight}/${scrollMetrics.scrollHeight}`);
     assert.equal(Math.round(controlsWhileScrolling.y), Math.round(controlsBeforeScroll.y), "os controles devem permanecer fixos no rodapé durante a rolagem");
-    await page.locator("#stage-scroll-toggle").click();
+    await page.locator("#stage-scroll-pause").click();
     const scrollWhenPaused = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.waitForTimeout(250);
     const scrollAfterPause = await page.locator("#view-detail").evaluate((element) => element.scrollTop);

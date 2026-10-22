@@ -421,7 +421,7 @@ def _event_song_data(value):
     if value is None:
         return None
     from .library import _payload
-    fields = {"id", "title", "artist", "key", "capo", "blocos", "editorData", "fullChordSheet", "tablature", "playbackSettings", "bpm", "instrumento", "originalKey", "currentKey", "notes", "coverUrl", "youtubeVideoId", "youtubeUrl", "youtubeChannelTitle", "songFormatVersion"}
+    fields = {"id", "title", "artist", "key", "capo", "blocos", "editorData", "fullChordSheet", "tablature", "playbackSettings", "bpm", "instrumento", "originalKey", "currentKey", "notes", "artworkUrl", "artworkSource", "youtubeThumbnailUrl", "coverUrl", "youtubeVideoId", "youtubeUrl", "youtubeChannelTitle", "songFormatVersion"}
     if not isinstance(value, dict):
         raise ApiError("musica_invalida", "Cópia da música inválida.", 400)
     return _payload({key: item for key, item in value.items() if key in fields})
@@ -766,6 +766,9 @@ def create_event_message(event_id: str):
             "album": _text(raw_song.get("album"), 240, "song.album") or None,
             "key": _text(raw_song.get("key"), 24, "song.key"),
             "capo": _text(raw_song.get("capo"), 24, "song.capo"),
+            "artworkUrl": _text(raw_song.get("artworkUrl"), 2000, "song.artworkUrl") or None,
+            "artworkSource": _text(raw_song.get("artworkSource"), 40, "song.artworkSource") or None,
+            "youtubeThumbnailUrl": _text(raw_song.get("youtubeThumbnailUrl"), 2000, "song.youtubeThumbnailUrl") or None,
             "coverUrl": _text(raw_song.get("coverUrl"), 2000, "song.coverUrl") or None,
             "youtubeVideoId": _text(raw_song.get("youtubeVideoId"), 80, "song.youtubeVideoId") or None,
             "youtubeUrl": _text(raw_song.get("youtubeUrl"), 2000, "song.youtubeUrl") or None,
@@ -1368,5 +1371,24 @@ def delete_event(event_id: str):
     from ..services.vocal_key_history import refresh_history, vocalist_ids
     refresh_history(vocalist_ids(event))
     db.session.delete(event)
+    db.session.commit()
+    return "", 204
+
+
+@blueprint.delete("/events/<event_id>/members/me")
+@authenticated
+def leave_event(event_id: str):
+    event = _event_or_404(event_id)
+    member = _member(event, g.current_user.id)
+    if event.leader_id == g.current_user.id:
+        raise ApiError(
+            "lider_nao_pode_sair",
+            "Transfira a liderança antes de sair do evento.",
+            403,
+        )
+    event.version += 1
+    event.updated_at = datetime.now(timezone.utc)
+    _change(event, "event.member.left", "saiu do evento")
+    db.session.delete(member)
     db.session.commit()
     return "", 204

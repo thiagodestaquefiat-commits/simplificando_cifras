@@ -26,6 +26,7 @@ global.fetch = async (url, options) => {
   if (url.endsWith("/events/event-1") && options.method === "PUT") return response(200, { ...remoteEvent(), ...JSON.parse(options.body), remoteVersion: 2 });
   if (url.endsWith("/events/event-1/leader") && options.method === "PATCH") return response(200, { ...remoteEvent(), leaderId: JSON.parse(options.body).leaderId, remoteVersion: 2, members: [...remoteEvent().members, { id: "member-2", name: "Ana", role: "Vocal" }] });
   if (url.endsWith("/events/event-1") && options.method === "DELETE") return response(204, null);
+  if (url.endsWith("/events/event-1/members/me") && options.method === "DELETE") return response(204, null);
   if (url.endsWith("/events/event-1/invitations") && options.method === "POST") return response(201, { token: "secret-invitation", name: "Ana", role: "Vocal" });
   if (url.endsWith("/invitations/secret-invitation/accept") && options.method === "POST") return response(200, remoteEvent());
   if (url.includes('/directory/users?')) return response(200,{users:[{id:'member-2',name:'Ana'}],nextOffset:null});
@@ -124,6 +125,9 @@ require("../js/event-collaboration-client.js");
   assert.equal(transferred.leaderId, "member-2");
   assert.deepEqual(JSON.parse(requests.at(-1).options.body), { leaderId: "member-2", remoteVersion: 1 });
   assert.equal(await window.eventCollaboration.deleteEvent(updated, identity.user), true);
+  assert.equal(requests.at(-1).options.method, "DELETE");
+  assert.equal(await window.eventCollaboration.leaveEvent("event-1", identity.user), true);
+  assert.match(requests.at(-1).url, /\/events\/event-1\/members\/me$/);
   assert.equal(requests.at(-1).options.method, "DELETE");
   await assert.rejects(
     window.eventCollaboration.saveSharedEvent({ ...local, id: "event-invalid", remoteVersion: null }, identity.user),

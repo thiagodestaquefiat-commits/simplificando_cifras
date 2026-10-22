@@ -197,6 +197,29 @@ def test_leader_can_transfer_leadership_and_new_leader_receives_permissions(clie
     assert client.delete("/api/collaboration/events/event-sunday", headers=auth(member)).status_code == 204
 
 
+def test_member_can_leave_event_without_deleting_it_and_leader_cannot_leave(client, app):
+    leader = register(client, "leader-user", "Líder")
+    member = register(client, "member-user", "Integrante")
+    assert client.post("/api/collaboration/events", headers=auth(leader), json=event_payload()).status_code == 201
+
+    denied = client.delete("/api/collaboration/events/event-sunday/members/me", headers=auth(leader))
+    assert denied.status_code == 403
+    assert denied.get_json()["erro"]["codigo"] == "lider_nao_pode_sair"
+
+    left = client.delete("/api/collaboration/events/event-sunday/members/me", headers=auth(member))
+    assert left.status_code == 204
+    assert client.get("/api/collaboration/events/event-sunday", headers=auth(member)).status_code == 403
+
+    leader_view = client.get("/api/collaboration/events/event-sunday", headers=auth(leader))
+    assert leader_view.status_code == 200
+    body = leader_view.get_json()
+    assert [item["id"] for item in body["members"]] == ["leader-user"]
+    assert any(item["kind"] == "event.member.left" and item["actorId"] == "member-user" for item in body["notifications"])
+    with app.app_context():
+        assert Event.query.count() == 1
+        assert EventMember.query.filter_by(event_id="event-sunday").count() == 1
+
+
 def test_song_addition_creates_structured_change_without_preparation_receipt(client, app):
     leader = register(client, "leader-user", "Líder")
     register(client, "member-user", "Integrante")

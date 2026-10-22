@@ -378,6 +378,13 @@
     return true;
   }
 
+  async function leaveEvent(eventId, fallback) {
+    await ensureRegistered(fallback);
+    await request("/events/" + encodeURIComponent(eventId) + "/members/me", { method: "DELETE" });
+    if (global.syncRealtime) global.syncRealtime.publishEvent(eventId);
+    return true;
+  }
+
   function queueEventDeletion(eventId) {
     const state = global.appAuth && global.appAuth.getState && global.appAuth.getState();
     const ownerId = String(state && state.user && state.user.id || "").trim();
@@ -411,5 +418,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, searchUsers, inviteUser, listInvitations, respondInvitation, getUsername, checkUsername, claimUsername, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, markSongAsReviewed, listContextAcknowledgements, acknowledgeContextAction, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, searchUsers, inviteUser, listInvitations, respondInvitation, getUsername, checkUsername, claimUsername, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, markSongAsReviewed, listContextAcknowledgements, acknowledgeContextAction, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, leaveEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

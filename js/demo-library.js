@@ -169,7 +169,8 @@
     return JSON.stringify({
       id: value.id, title: value.title, artist: value.artist || "", key: value.key || "", capo: value.capo || "",
       blocos: value.blocos || [], fullChordSheet: value.fullChordSheet || null, album: value.album || null,
-      coverUrl: value.coverUrl || null, spotifyTrackId: value.spotifyTrackId || null,
+      artworkUrl: value.artworkUrl || null, artworkSource: value.artworkSource || null,
+      youtubeThumbnailUrl: value.youtubeThumbnailUrl || null, coverUrl: value.coverUrl || null, spotifyTrackId: value.spotifyTrackId || null,
       spotifyUri: value.spotifyUri || null, isrc: value.isrc || null
     });
   }

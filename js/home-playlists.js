@@ -8,6 +8,11 @@
   let view = "home";
   let currentPlaylistId = null;
   let libraryDirty = true;
+  let sortMode = "recent";
+  let playlistSwipeGesture = null;
+  let playlistPressGesture = null;
+  let suppressPlaylistClickId = null;
+  let coverCropState = null;
 
   const owner = () => (typeof appCurrentUser !== "undefined" && appCurrentUser && appCurrentUser.id) || "local";
   const esc = (value) => global.eventEsc(String(value ?? ""));
@@ -39,11 +44,19 @@
     return count + (count === 1 ? " música" : " músicas");
   }
 
-  function artwork(name) {
-    const initials = String(name || "?").trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
-    let hash = 0;
-    for (const char of String(name || "")) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    return `<span class="home-playlist-art home-playlist-art--${hash % 6}" aria-hidden="true">${esc(initials || "♪")}</span>`;
+  function trashIcon() {
+    return '<svg viewBox="0 0 24 26" aria-hidden="true"><g class="trash-lid"><path d="M5 6.5h14"/><path d="M9 4.5h6v2H9z"/></g><g class="trash-body"><path d="M7 8v14h10V8"/></g><g class="trash-slats"><path d="M10 10v9"/><path d="M14 10v9"/></g></svg>';
+  }
+
+  function playlistSongs(playlist) {
+    return (playlist?.items || []).map((item) => songById(item.songId)).filter(Boolean);
+  }
+
+  function artwork(_name, coverImage = null, songs = []) {
+    if (coverImage) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(coverImage)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`;
+    const urls = global.songArtwork?.collectDistinct(songs, 4) || [];
+    if (!urls.length) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(global.songArtwork?.DEFAULT_ARTWORK || "assets/icons/roudy-icon-v4-192.png")}" alt="" loading="lazy" decoding="async"></span>`;
+    return `<span class="home-playlist-art has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)">`).join("")}</span>`;
   }
 
   // ── Visões da aba Home ──────────────────────────────────────────────
@@ -55,7 +68,10 @@
     if (next === "library" && libraryDirty) global.renderMusicas();
     if (next === "playlist") renderPlaylist();
     if (next === "home") renderHome();
-    if (!options.keepScroll) global.scrollTo({ top: 0, behavior: "auto" });
+    if (!options.keepScroll) {
+      global.scrollTo({ top: 0, behavior: "auto" });
+      if (next === "playlist") requestAnimationFrame(() => global.scrollTo({ top: 0, behavior: "auto" }));
+    }
   }
 
   function libraryVisible() {
@@ -74,15 +90,108 @@
   function renderHome() {
     const target = document.getElementById("home-playlists-list");
     if (!target) return;
-    const playlists = global.userPlaylists.list(owner());
-    const total = musicas.length;
-    const library = `<button type="button" class="home-playlist-row home-playlist-row--library" onclick="homePlaylists.openLibrary()"><span class="home-playlist-art home-playlist-art--library" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><span class="home-playlist-copy"><strong>Todas as músicas</strong><small>${esc(countLabel(total))}</small></span><span class="home-playlist-chevron" aria-hidden="true">›</span></button>`;
+    const order = sortMode === "name"
+      ? (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
+      : sortMode === "added"
+        ? (a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+        : sortMode === "creator"
+          ? (a, b) => String(a.sharedFrom ? "recebida" : "você").localeCompare(String(b.sharedFrom ? "recebida" : "você"), "pt-BR") || String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
+          : (a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
+    const playlists = global.userPlaylists.list(owner()).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || order(a, b));
     const rows = playlists.map((playlist) => {
       const available = playlist.items.filter((item) => songById(item.songId)).length;
-      return `<button type="button" class="home-playlist-row" onclick="homePlaylists.open(${js(playlist.id)})">${artwork(playlist.name)}<span class="home-playlist-copy"><strong>${esc(playlist.name)}</strong><small>${esc(countLabel(available))}${playlist.sharedFrom ? " · recebida" : ""}</small></span><span class="home-playlist-chevron" aria-hidden="true">›</span></button>`;
+      return `<button type="button" class="home-playlist-row" data-playlist-id="${esc(playlist.id)}">${artwork(playlist.name, playlist.coverImage, playlistSongs(playlist))}<span class="home-playlist-copy"><strong>${esc(playlist.name)}</strong><small>${playlist.pinned ? `<span class="home-playlist-pinned-mark" aria-label="Fixada">${pinIcon(true)}</span> ` : ""}Playlist · ${esc(countLabel(available))}${playlist.sharedFrom ? " · recebida" : ""}</small></span></button>`;
     }).join("");
     const empty = playlists.length ? "" : `<p class="home-playlists-hint">Monte playlists do seu jeito: por estilo (rock, blues, samba…), por ministro ou por evento. Cada música guarda o tom daquela playlist.</p>`;
-    target.innerHTML = library + rows + empty;
+    const sortLabel = { recent: "Recentes", added: "Adicionado recentemente", name: "Alfabeticamente", creator: "Por criador" }[sortMode];
+    target.innerHTML = `<button type="button" class="home-playlists-sort" onclick="homePlaylists.openSortSheet()" aria-label="Classificar playlists; ordem atual: ${esc(sortLabel)}"><img src="assets/icons/icone-ajuste-vertical.svg" alt="" aria-hidden="true"><span>${esc(sortLabel)}</span></button>${rows}${empty}`;
+    installPlaylistLongPress(target);
+  }
+
+  function installPlaylistLongPress(target) {
+    target.querySelectorAll(".home-playlist-row").forEach((row) => {
+      const id = row.dataset.playlistId;
+      row.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        const origin = { x: event.clientX, y: event.clientY };
+        clearTimeout(playlistPressGesture?.timer);
+        playlistPressGesture = { id, origin, timer: setTimeout(() => {
+          suppressPlaylistClickId = id;
+          setTimeout(() => { if (suppressPlaylistClickId === id) suppressPlaylistClickId = null; }, 800);
+          navigator.vibrate?.(10);
+          openPlaylistContext(id);
+        }, 470) };
+      });
+      row.addEventListener("pointermove", (event) => {
+        if (!playlistPressGesture || playlistPressGesture.id !== id) return;
+        if (Math.hypot(event.clientX - playlistPressGesture.origin.x, event.clientY - playlistPressGesture.origin.y) > 9) clearTimeout(playlistPressGesture.timer);
+      });
+      ["pointerup", "pointercancel", "pointerleave"].forEach((name) => row.addEventListener(name, () => clearTimeout(playlistPressGesture?.timer)));
+      row.addEventListener("contextmenu", (event) => { event.preventDefault(); suppressPlaylistClickId = id; setTimeout(() => { if (suppressPlaylistClickId === id) suppressPlaylistClickId = null; }, 800); openPlaylistContext(id); });
+      row.addEventListener("click", (event) => {
+        if (suppressPlaylistClickId === id) { event.preventDefault(); suppressPlaylistClickId = null; return; }
+        open(id);
+      });
+    });
+  }
+
+  function pinIcon(pinned) {
+    return `<svg class="home-playlist-pin-icon${pinned ? " is-pinned" : ""}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5M5 3h14l-2 6v4l2 2H5l2-2V9L5 3Z"/></svg>`;
+  }
+
+  function openPlaylistContext(id) {
+    const playlist = global.userPlaylists.get(owner(), id);
+    if (!playlist) return;
+    actionSheet(`<div class="home-playlist-context-preview">${artwork(playlist.name, playlist.coverImage, playlistSongs(playlist))}<span><strong>${esc(playlist.name)}</strong><small>Sua playlist</small></span></div><div class="home-playlist-context-actions"><button type="button" onclick="homePlaylists.togglePinned(${js(id)})">${pinIcon(playlist.pinned)}<span>${playlist.pinned ? "Deixar de fixar playlist" : "Fixar playlist"}</span></button><button type="button" class="is-danger" onclick="homePlaylists.deleteFromHome(${js(id)})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 4h6l1 3H8l1-3Zm-2 3 1 14h8l1-14M10 11v6M14 11v6"/></svg><span>Apagar playlist</span></button></div>`, `Opções de ${playlist.name}`);
+  }
+
+  function togglePinned(id) {
+    const playlist = global.userPlaylists.get(owner(), id);
+    if (!playlist) return;
+    global.userPlaylists.setPinned(owner(), id, !playlist.pinned);
+    closeActionSheet();
+    renderHome();
+    toast(playlist.pinned ? "Playlist desafixada." : "Playlist fixada.");
+  }
+
+  function deleteFromHome(id) {
+    const playlist = global.userPlaylists.get(owner(), id);
+    if (!playlist || !global.appConfirm(`Apagar a playlist “${playlist.name}”?`)) return;
+    global.userPlaylists.remove(owner(), id);
+    closeActionSheet();
+    renderHome();
+    toast("Playlist apagada.");
+  }
+
+  function closeActionSheet() {
+    clearCoverCrop();
+    const layer = document.getElementById("home-playlist-action-layer");
+    if (!layer) return;
+    layer.classList.remove("is-open");
+    setTimeout(() => layer.remove(), 200);
+  }
+
+  function actionSheet(content, label) {
+    closeActionSheet();
+    const layer = document.createElement("div");
+    layer.id = "home-playlist-action-layer";
+    layer.className = "home-playlist-action-layer";
+    layer.setAttribute("role", "presentation");
+    layer.innerHTML = `<button type="button" class="home-playlist-action-scrim" onclick="homePlaylists.closeActionSheet()" aria-label="Fechar"></button><section class="home-playlist-action-sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><i class="home-playlist-action-handle" aria-hidden="true"></i>${content}</section>`;
+    document.body.appendChild(layer);
+    requestAnimationFrame(() => layer.classList.add("is-open"));
+  }
+
+  function openSortSheet() {
+    const options = [["recent", "Recentes"], ["added", "Adicionado recentemente"], ["name", "Alfabeticamente"], ["creator", "Por criador"]];
+    actionSheet(`<h2>Classificar por</h2><div class="home-playlist-sort-options">${options.map(([value, label]) => `<button type="button" class="${sortMode === value ? "is-selected" : ""}" onclick="homePlaylists.selectSort('${value}')"><span>${label}</span>${sortMode === value ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>' : ""}</button>`).join("")}</div><button type="button" class="home-playlist-sheet-cancel" onclick="homePlaylists.closeActionSheet()">Cancelar</button>`, "Classificar playlists");
+  }
+
+  function selectSort(value) {
+    if (!["recent", "added", "name", "creator"].includes(value)) return;
+    sortMode = value;
+    closeActionSheet();
+    renderHome();
   }
 
   // ── Playlist aberta ─────────────────────────────────────────────────
@@ -94,14 +203,77 @@
     const entries = playlist.items.map((item) => ({ item, song: songById(item.songId) }));
     const available = entries.filter((entry) => entry.song);
     const rows = entries.map(({ item, song }, index) => {
-      if (!song) return `<div class="home-playlist-song is-missing"><span class="home-playlist-song-copy"><strong>Música indisponível</strong><small>Ela não está mais na sua biblioteca</small></span><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções">⋯</button></div>`;
+      if (!song) return `<div class="home-playlist-song-swipe" data-item-id="${esc(item.id)}"><button type="button" class="home-playlist-song-delete" onclick="homePlaylists.removeItem(${js(item.id)})" aria-label="Tirar música indisponível da playlist">${trashIcon()}</button><div class="home-playlist-song is-missing"><span class="home-playlist-song-copy"><strong>Música indisponível</strong><small>Ela não está mais na sua biblioteca</small></span><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções">⋯</button></div></div>`;
       const key = itemKey(song, item);
       const capo = Number(itemPlayback(song, item).capo) || 0;
-      return `<div class="home-playlist-song" data-item-id="${esc(item.id)}"><button type="button" class="home-playlist-song-open" onclick="homePlaylists.openSong(${js(item.id)})"><span class="home-playlist-song-index">${index + 1}</span><span class="home-playlist-song-copy"><strong>${esc(song.title)}</strong><small>${esc(song.artist || "Artista não informado")}${capo ? ` · Capo ${capo}` : ""}${item.notes ? ` · ${esc(item.notes)}` : ""}</small></span></button><div class="home-playlist-key" role="group" aria-label="Tom de ${esc(song.title)} nesta playlist"><button type="button" onclick="homePlaylists.shiftKey(${js(item.id)},-1)" aria-label="Descer o tom de ${esc(song.title)}" ${key ? "" : "disabled"}>−</button><output>${esc(key || "—")}</output><button type="button" onclick="homePlaylists.shiftKey(${js(item.id)},1)" aria-label="Subir o tom de ${esc(song.title)}" ${key ? "" : "disabled"}>+</button></div><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções de ${esc(song.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`;
+      return `<div class="home-playlist-song-swipe" data-item-id="${esc(item.id)}"><button type="button" class="home-playlist-song-delete" onclick="homePlaylists.removeItem(${js(item.id)})" aria-label="Tirar ${esc(song.title)} da playlist">${trashIcon()}</button><div class="home-playlist-song"><button type="button" class="home-playlist-song-open" onclick="homePlaylists.openSong(${js(item.id)})"><span class="home-playlist-song-copy"><strong>${esc(song.title)}</strong><small>${esc(song.artist || "Artista não informado")}${capo ? ` · Capo ${capo}` : ""}${item.notes ? ` · ${esc(item.notes)}` : ""}</small></span></button><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções de ${esc(song.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div></div>`;
     }).join("");
-    target.innerHTML = `<header class="home-playlist-header"><button type="button" class="home-playlist-back" onclick="homePlaylists.back()" aria-label="Voltar para as playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>${artwork(playlist.name)}<div class="home-playlist-heading"><h2>${esc(playlist.name)}</h2><small>${esc(countLabel(available.length))}${playlist.sharedFrom ? " · recebida" : ""}</small></div></header>
-      <div class="home-playlist-actions"><button type="button" class="home-playlist-play" onclick="homePlaylists.play()" ${available.length ? "" : "disabled"}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg><span>Tocar</span></button><button type="button" class="home-playlist-chip" onclick="homePlaylists.openAddSongs()"><span aria-hidden="true">＋</span><span>Músicas</span></button><button type="button" class="home-playlist-chip" onclick="homePlaylists.share()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg><span>Compartilhar</span></button><button type="button" class="home-playlist-chip home-playlist-chip--icon" onclick="homePlaylists.playlistMenu()" aria-label="Mais opções da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>
-      <div class="home-playlist-songs">${rows || `<div class="home-playlist-empty"><strong>Playlist vazia</strong><span>Adicione músicas da sua biblioteca. Cada uma fica com o tom desta playlist.</span><button type="button" onclick="homePlaylists.openAddSongs()">Adicionar músicas</button></div>`}</div>`;
+    const memberName = String((typeof appCurrentUser !== "undefined" && appCurrentUser?.name) || "Você");
+    const memberAvatar = typeof appCurrentUser !== "undefined" && appCurrentUser?.avatarUrl;
+    const memberInitial = memberName.trim().charAt(0).toUpperCase() || "V";
+    target.classList.toggle("has-cover", Boolean(playlist.coverImage));
+    if (playlist.coverImage) target.style.setProperty("--playlist-cover-image", `url("${playlist.coverImage}")`);
+    else target.style.removeProperty("--playlist-cover-image");
+    target.innerHTML = `<div class="home-playlist-detail-hero"><button type="button" class="home-playlist-back" onclick="homePlaylists.back()" aria-label="Voltar para as playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="home-playlist-cover">${artwork(playlist.name, playlist.coverImage, available.map((entry) => entry.song))}<button type="button" class="home-playlist-cover-edit" onclick="homePlaylists.chooseCover()" aria-label="Adicionar ou alterar foto da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button></div><div class="home-playlist-heading"><h2>${esc(playlist.name)}</h2><div class="home-playlist-member"><button type="button" class="home-playlist-member-add" onclick="homePlaylists.share()" aria-label="Adicionar pessoa à playlist">＋</button><span class="home-playlist-member-avatar${memberAvatar ? " has-image" : ""}">${memberAvatar ? `<img src="${esc(memberAvatar)}" alt="">` : esc(memberInitial)}</span><strong>${esc(memberName)}</strong></div><small>Playlist · ${esc(countLabel(available.length))}${playlist.sharedFrom ? " · recebida" : ""}</small></div></div>
+      <div class="home-playlist-actions"><button type="button" class="home-playlist-action-round" onclick="homePlaylists.renameCurrent()" aria-label="Editar nome da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.share()" aria-label="Compartilhar playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg></button><button type="button" class="home-playlist-play" onclick="homePlaylists.play()" ${available.length ? "" : "disabled"} aria-label="Abrir primeira música no Estudo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg></button><button type="button" class="home-playlist-action-round home-playlist-tone-action" onclick="homePlaylists.openKeys()" ${available.length ? "" : "disabled"} aria-label="Ajustar tons das músicas"><span aria-hidden="true">Tom</span></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.useInEvent()" aria-label="Adicionar playlist a um evento"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M12 13v5M9.5 15.5h5"/></svg></button></div>
+      <button type="button" class="home-playlist-add-row" onclick="homePlaylists.openAddSongs()"><span aria-hidden="true">＋</span><strong>Adicionar uma música</strong></button><div class="home-playlist-songs">${rows || `<div class="home-playlist-empty"><strong>Playlist vazia</strong><span>Adicione músicas da sua biblioteca. Cada uma fica com o tom desta playlist.</span><button type="button" onclick="homePlaylists.openAddSongs()">Adicionar músicas</button></div>`}</div>`;
+    installPlaylistSwipe(target);
+  }
+
+  function installPlaylistSwipe(target) {
+    if (target.dataset.swipeInstalled === "true") return;
+    target.dataset.swipeInstalled = "true";
+    target.addEventListener("pointerdown", (event) => {
+      const song = event.target.closest(".home-playlist-song");
+      if (!song || !["touch", "pen"].includes(event.pointerType)) return;
+      const row = song.closest(".home-playlist-song-swipe");
+      playlistSwipeGesture = { pointerId: event.pointerId, row, song, startX: event.clientX, startY: event.clientY, horizontal: false, armed: false };
+      song.setPointerCapture?.(event.pointerId);
+    });
+    target.addEventListener("pointermove", (event) => {
+      const gesture = playlistSwipeGesture;
+      if (!gesture || event.pointerId !== gesture.pointerId) return;
+      const dx = event.clientX - gesture.startX;
+      const dy = event.clientY - gesture.startY;
+      if (!gesture.horizontal && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (!gesture.horizontal) {
+        if (Math.abs(dy) >= Math.abs(dx)) { playlistSwipeGesture = null; return; }
+        gesture.horizontal = true;
+        gesture.song.style.transition = "none";
+      }
+      const width = Math.max(1, gesture.row.getBoundingClientRect().width);
+      const offset = Math.max(-width, Math.min(0, dx));
+      const progress = Math.abs(offset) / width;
+      gesture.armed = progress >= .52;
+      gesture.song.style.transform = `translate3d(${offset}px,0,0)`;
+      const reveal=Math.min(1,progress/.52);
+      gesture.row.style.setProperty("--playlist-swipe-progress",String(reveal));
+      gesture.row.style.setProperty("--playlist-trash-right",`${5+reveal*19}px`);
+      gesture.row.style.setProperty("--playlist-trash-opacity",String(.26+reveal*.74));
+      gesture.row.style.setProperty("--playlist-trash-scale",String(.68+reveal*.32));
+      gesture.row.style.setProperty("--playlist-trash-bars",`${2-reveal*4}px`);
+      gesture.row.classList.toggle("is-armed", gesture.armed);
+      event.preventDefault();
+    });
+    const finish = (event) => {
+      const gesture = playlistSwipeGesture;
+      if (!gesture || event.pointerId !== gesture.pointerId) return;
+      playlistSwipeGesture = null;
+      gesture.song.style.removeProperty("transition");
+      if (!gesture.horizontal) return;
+      if (gesture.armed && event.type !== "pointercancel") {
+        gesture.row.classList.add("is-removing");
+        navigator.vibrate?.(10);
+        global.userPlaylists.removeItem(owner(), currentPlaylistId, gesture.row.dataset.itemId);
+        setTimeout(renderPlaylist, 260);
+        return;
+      }
+      gesture.song.style.removeProperty("transform");
+      ["--playlist-swipe-progress","--playlist-trash-right","--playlist-trash-opacity","--playlist-trash-scale","--playlist-trash-bars"].forEach(name=>gesture.row.style.removeProperty(name));
+      gesture.row.classList.remove("is-armed");
+    };
+    target.addEventListener("pointerup", finish);
+    target.addEventListener("pointercancel", finish);
   }
 
   function open(id) {
@@ -143,6 +315,144 @@
     if (first) openSong(first.item.id);
   }
 
+  function chooseCover() {
+    actionSheet(`<div class="home-playlist-cover-options"><button type="button" onclick="homePlaylists.pickCover('library')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m5 18 5-5 3 3 2-2 4 4"/></svg><span>Escolher da biblioteca</span></button><button type="button" onclick="homePlaylists.pickCover('camera')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="4"/></svg><span>Tirar foto</span></button><button type="button" onclick="homePlaylists.coverAiUnavailable()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m5 17 5-5 3 3 2-2 4 4M18 2v4M16 4h4"/></svg><span>Criar com IA</span><small>Em breve</small></button></div>`, "Alterar foto da playlist");
+  }
+
+  function pickCover(source) {
+    closeActionSheet();
+    let input = document.getElementById("home-playlist-cover-input");
+    if (!input) {
+      input = document.createElement("input");
+      input.id = "home-playlist-cover-input";
+      input.type = "file";
+      input.accept = "image/*";
+      input.className = "home-playlist-cover-input";
+      input.addEventListener("change", () => {
+        const file = input.files && input.files[0];
+        input.value = "";
+        if (file) setCoverFromFile(file);
+      });
+      document.body.appendChild(input);
+    }
+    if (source === "camera") input.setAttribute("capture", "environment");
+    else input.removeAttribute("capture");
+    input.click();
+  }
+
+  function coverAiUnavailable() {
+    closeActionSheet();
+    toast("Criação de capas com IA estará disponível em breve.");
+  }
+
+  async function setCoverFromFile(file) {
+    if (!file || !file.type.startsWith("image/")) { toast("Escolha uma imagem para a playlist."); return; }
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => openCoverCrop(image, url);
+    image.onerror = () => { URL.revokeObjectURL(url); toast("Não foi possível usar esta foto."); };
+    image.src = url;
+  }
+
+  function openCoverCrop(image, url) {
+    actionSheet(`<div class="home-playlist-cover-crop"><h2>Ajustar foto</h2><div class="home-playlist-cover-crop-frame" id="home-playlist-cover-crop-frame" role="application" tabindex="0" aria-label="Enquadramento da foto. Arraste para ajustar."><img id="home-playlist-cover-crop-image" src="${esc(url)}" alt="" draggable="false"></div><p>Arraste a foto para ajustar o enquadramento.</p><div class="home-playlist-cover-crop-actions"><button type="button" onclick="homePlaylists.closeActionSheet()">Cancelar</button><button type="button" class="is-primary" onclick="homePlaylists.saveCoverCrop()">Usar foto</button></div></div>`, "Ajustar foto da playlist");
+    coverCropState = { image, url, playlistId: currentPlaylistId, x: 0, y: 0, pointerId: null, startX: 0, startY: 0, originX: 0, originY: 0, resizeObserver: null };
+    requestAnimationFrame(installCoverCrop);
+  }
+
+  function clearCoverCrop() {
+    if (!coverCropState) return;
+    coverCropState.resizeObserver?.disconnect();
+    URL.revokeObjectURL(coverCropState.url);
+    coverCropState = null;
+  }
+
+  function coverCropMetrics() {
+    const state = coverCropState;
+    const frame = document.getElementById("home-playlist-cover-crop-frame");
+    const target = document.getElementById("home-playlist-cover-crop-image");
+    if (!state || !frame || !target) return null;
+    const size = frame.clientWidth;
+    const scale = Math.max(size / state.image.naturalWidth, size / state.image.naturalHeight);
+    const width = state.image.naturalWidth * scale;
+    const height = state.image.naturalHeight * scale;
+    const limitX = Math.max(0, (width - size) / 2);
+    const limitY = Math.max(0, (height - size) / 2);
+    state.x = Math.max(-limitX, Math.min(limitX, state.x));
+    state.y = Math.max(-limitY, Math.min(limitY, state.y));
+    const left = (size - width) / 2 + state.x;
+    const top = (size - height) / 2 + state.y;
+    Object.assign(target.style, { width: `${width}px`, height: `${height}px`, left: `${left}px`, top: `${top}px` });
+    return { state, frame, target, size, scale, left, top };
+  }
+
+  function installCoverCrop() {
+    const metrics = coverCropMetrics();
+    if (!metrics) return;
+    const { state, frame } = metrics;
+    frame.addEventListener("pointerdown", (event) => {
+      if (state.pointerId !== null) return;
+      state.pointerId = event.pointerId;
+      state.startX = event.clientX;
+      state.startY = event.clientY;
+      state.originX = state.x;
+      state.originY = state.y;
+      frame.classList.add("is-dragging");
+      frame.setPointerCapture?.(event.pointerId);
+    });
+    frame.addEventListener("pointermove", (event) => {
+      if (state.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      state.x = state.originX + event.clientX - state.startX;
+      state.y = state.originY + event.clientY - state.startY;
+      coverCropMetrics();
+    });
+    const finish = (event) => {
+      if (state.pointerId !== event.pointerId) return;
+      if (frame.hasPointerCapture?.(event.pointerId)) frame.releasePointerCapture(event.pointerId);
+      state.pointerId = null;
+      frame.classList.remove("is-dragging");
+    };
+    frame.addEventListener("pointerup", finish);
+    frame.addEventListener("pointercancel", finish);
+    frame.addEventListener("keydown", (event) => {
+      const movement = { ArrowLeft: [8, 0], ArrowRight: [-8, 0], ArrowUp: [0, 8], ArrowDown: [0, -8] }[event.key];
+      if (!movement) return;
+      event.preventDefault();
+      state.x += movement[0];
+      state.y += movement[1];
+      coverCropMetrics();
+    });
+    if (global.ResizeObserver) {
+      state.resizeObserver = new ResizeObserver(() => coverCropMetrics());
+      state.resizeObserver.observe(frame);
+    }
+    frame.focus({ preventScroll: true });
+  }
+
+  function saveCoverCrop() {
+    const metrics = coverCropMetrics();
+    if (!metrics) return;
+    const { state, size, scale, left, top } = metrics;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 720;
+      const sourceX = Math.max(0, -left / scale);
+      const sourceY = Math.max(0, -top / scale);
+      const sourceSide = size / scale;
+      canvas.getContext("2d").drawImage(state.image, sourceX, sourceY, sourceSide, sourceSide, 0, 0, 720, 720);
+      const value = canvas.toDataURL("image/jpeg", .82);
+      if (!global.userPlaylists.setCoverImage(owner(), state.playlistId, value)) throw new Error("save");
+      closeActionSheet();
+      renderPlaylist();
+      global.scrollTo({ top: 0, behavior: "auto" });
+      requestAnimationFrame(() => global.scrollTo({ top: 0, behavior: "auto" }));
+      toast("Foto da playlist atualizada.");
+    } catch (_error) {
+      toast("Não foi possível usar esta foto.");
+    }
+  }
+
   // Usado pela navegação (anterior/próxima) da tela da música.
   function variantForContext(context) {
     if (!context || !String(context.playlistId || "").startsWith(PREFIX)) return null;
@@ -159,7 +469,21 @@
     const semitones = (Number(itemPlayback(song, item).semitones) || 0) + (direction < 0 ? -1 : 1);
     const normalized = ((semitones % 12) + 18) % 12 - 6;
     global.userPlaylists.setItemPlayback(owner(), playlist.id, item.id, { semitones: normalized });
-    renderPlaylist();
+    if (document.getElementById("home-playlist-keys")) renderKeysSheet();
+    else renderPlaylist();
+  }
+
+  function openKeys() {
+    eventAdminSheetState = { type: "field" };
+    global.showEventAdminSheet(`${global.eventAdminHeader("Tom das músicas")}<div class="home-playlist-keys" id="home-playlist-keys"></div>`, "Ajustar tons das músicas");
+    renderKeysSheet();
+  }
+
+  function renderKeysSheet() {
+    const target = document.getElementById("home-playlist-keys");
+    const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
+    if (!target || !playlist) return;
+    target.innerHTML = availableEntries(playlist).map(({ item, song }) => `<div class="home-playlist-key-row"><span><strong>${esc(song.title)}</strong><small>${esc(song.artist || "Artista não informado")}</small></span><div class="home-playlist-key-stepper" aria-label="Tom de ${esc(song.title)}"><button type="button" onclick="homePlaylists.shiftKey(${js(item.id)},-1)" aria-label="Baixar tom de ${esc(song.title)}">−</button><output aria-live="polite">${esc(itemKey(song, item) || "—")}</output><button type="button" onclick="homePlaylists.shiftKey(${js(item.id)},1)" aria-label="Aumentar tom de ${esc(song.title)}">+</button></div></div>`).join("") || '<p class="home-playlist-key-empty">Adicione músicas para ajustar os tons.</p>';
   }
 
   // Salva tom/capo/BPM… alterados na tela da música, só nesta playlist.
@@ -177,9 +501,30 @@
     setTimeout(() => document.getElementById("home-playlist-name")?.select(), 80);
   }
 
+  function closeCreate() {
+    const overlay = document.getElementById("home-playlist-create");
+    if (!overlay) return;
+    overlay.classList.remove("is-open");
+    setTimeout(() => overlay.remove(), 180);
+  }
+
+  function openCreate() {
+    closeCreate();
+    const overlay = document.createElement("section");
+    overlay.id = "home-playlist-create";
+    overlay.className = "home-playlist-create";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "home-playlist-create-title");
+    overlay.innerHTML = `<button type="button" class="home-playlist-create-close" onclick="homePlaylists.closeCreate()" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button><div class="home-playlist-create-content"><h2 id="home-playlist-create-title">Dê um nome à sua playlist</h2><label><span class="sr-only">Nome da playlist</span><input id="home-playlist-name" maxlength="120" autocomplete="off" placeholder="Ex.: Rock, Blues, Ministro João" onkeydown="if(event.key==='Enter'){event.preventDefault();homePlaylists.confirmCreate()}"></label><button type="button" class="home-playlist-create-submit" onclick="homePlaylists.confirmCreate()">Criar</button></div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+    setTimeout(() => document.getElementById("home-playlist-name")?.focus(), 100);
+  }
+
   function create(songIds = []) {
     pendingSongIds = songIds;
-    nameSheet("Nova playlist", "", "homePlaylists.confirmCreate()");
+    openCreate();
   }
 
   let pendingSongIds = [];
@@ -189,7 +534,7 @@
     const items = pendingSongIds.map((songId) => ({ songId, playback: global.userPlaylists.cleanPlayback(songById(songId)?.playbackSettings) }));
     const playlist = global.userPlaylists.create(owner(), name, items);
     pendingSongIds = [];
-    global.closeEventAdminSheet();
+    closeCreate();
     if (!playlist) { toast("Não foi possível criar a playlist."); return; }
     toast(items.length ? `Playlist “${name}” criada.` : `Playlist “${name}” criada. Adicione as músicas.`);
     open(playlist.id);
@@ -244,13 +589,50 @@
     const item = playlist && playlist.items.find((value) => value.id === String(itemId));
     if (!item) return;
     const song = songById(item.songId);
-    const index = playlist.items.indexOf(item);
-    const actions = [];
-    if (index > 0) actions.push(["Mover para cima", `homePlaylists.moveItem(${js(item.id)},-1)`]);
-    if (index < playlist.items.length - 1) actions.push(["Mover para baixo", `homePlaylists.moveItem(${js(item.id)},1)`]);
-    actions.push(["Observação", `homePlaylists.editNotes(${js(item.id)})`]);
-    actions.push(["Tirar da playlist", `homePlaylists.removeItem(${js(item.id)})`, true]);
-    menuSheet(song ? song.title : "Música", actions);
+    menuSheet(song ? song.title : "Música", [
+      ["Adicionar ao repertório", `homePlaylists.addItemToRepertoire(${js(item.id)})`],
+      ["Compartilhar", `homePlaylists.shareItem(${js(item.id)})`],
+      ["Remover da playlist", `homePlaylists.removeItem(${js(item.id)})`, true],
+      ["Observação", `homePlaylists.editNotes(${js(item.id)})`]
+    ]);
+  }
+
+  function playlistItem(itemId) {
+    const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
+    return playlist && playlist.items.find((value) => value.id === String(itemId));
+  }
+
+  function addItemToRepertoire(itemId) {
+    const item = playlistItem(itemId);
+    const song = item && songById(item.songId);
+    if (!song) return;
+    const trigger = document.activeElement;
+    global.closeEventAdminSheet();
+    global.showAddSongEventSheet(itemVariant(song, item), trigger, "repertoire");
+  }
+
+  async function shareItem(itemId) {
+    const item = playlistItem(itemId);
+    const song = item && songById(item.songId);
+    if (!song) return;
+    const variant = itemVariant(song, item);
+    const key = itemKey(song, item);
+    const text = [variant.title, variant.artist, key ? `Tom: ${key}` : ""].filter(Boolean).join(" · ");
+    global.closeEventAdminSheet();
+    if (global.navigator.share) {
+      try {
+        await global.navigator.share({ title: variant.title, text });
+        return;
+      } catch (error) {
+        if (error && error.name === "AbortError") return;
+      }
+    }
+    try {
+      await global.navigator.clipboard.writeText(text);
+      toast("Música copiada para compartilhar.");
+    } catch (_error) {
+      global.appPrompt("Copie e compartilhe:", text);
+    }
   }
 
   function moveItem(itemId, direction) {
@@ -302,13 +684,13 @@
     if (!target || !playlist) return;
     const present = new Set(playlist.items.map((item) => String(item.songId)));
     const songs = [...musicas]
+      .filter((song) => !present.has(String(song.id)))
       .filter((song) => !addQuery || `${song.title || ""} ${song.artist || ""}`.toLocaleLowerCase("pt-BR").includes(addQuery))
       .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"))
       .slice(0, 120);
     target.innerHTML = songs.map((song) => {
-      const added = present.has(String(song.id));
-      return `<div class="event-admin-song-row">${global.eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${esc(song.title)}</strong>${song.artist ? `<small>${esc(song.artist)}</small>` : ""}</span><button type="button" class="event-admin-add-button${added ? " is-added" : ""}" ${added ? "disabled" : ""} onclick="homePlaylists.addSong(${js(song.id)},this)" aria-label="${added ? `${esc(song.title)} já está na playlist` : `Adicionar ${esc(song.title)}`}"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`;
-    }).join("") || `<div class="event-admin-empty">${addQuery ? "Nenhuma música encontrada." : "Sua biblioteca está vazia."}</div>`;
+      return `<div class="event-admin-song-row">${global.eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${esc(song.title)}</strong>${song.artist ? `<small>${esc(song.artist)}</small>` : ""}</span><button type="button" class="event-admin-add-button" onclick="homePlaylists.addSong(${js(song.id)},this)" aria-label="Adicionar ${esc(song.title)}"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`;
+    }).join("") || `<div class="event-admin-empty">${addQuery ? "Nenhuma música encontrada." : musicas.length ? "Todas as músicas já estão nesta playlist." : "Sua biblioteca está vazia."}</div>`;
   }
 
   function addSong(songId, button) {
@@ -317,6 +699,7 @@
     global.userPlaylists.addSong(owner(), currentPlaylistId, song.id, global.userPlaylists.cleanPlayback(song.playbackSettings));
     if (button) { button.disabled = true; button.classList.add("is-added"); }
     renderPlaylist();
+    setTimeout(renderAddList, 180);
   }
 
   // A partir das opções de uma música da biblioteca.
@@ -468,8 +851,8 @@
   }
 
   global.homePlaylists = Object.freeze({
-    PREFIX, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, open, openLibrary, back, openSong, play, variantForContext, shiftKey, saveItemPlayback,
-    create, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, itemMenu, moveItem, removeItem, editNotes, saveNotes,
+    PREFIX, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
+    create, closeCreate, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
     openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
     get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }
   });

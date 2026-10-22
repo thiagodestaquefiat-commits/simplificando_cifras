@@ -39,6 +39,8 @@
       id: String(value.id || newId("pl")),
       name,
       description: String(value.description || "").trim().slice(0, 300),
+      coverImage: typeof value.coverImage === "string" && value.coverImage.startsWith("data:image/") ? value.coverImage : null,
+      pinned: Boolean(value.pinned),
       items: (Array.isArray(value.items) ? value.items : []).map(normalizeItem).filter(Boolean),
       sharedFrom: value.sharedFrom ? String(value.sharedFrom) : null,
       createdAt: value.createdAt || now(),
@@ -128,10 +130,19 @@
     return update(owner, id, (playlist) => ({ ...playlist, items: playlist.items.map((item) => item.id === String(itemId) ? { ...item, notes: String(notes || "").trim() } : item) }));
   }
 
+  function setCoverImage(owner, id, coverImage) {
+    const value = typeof coverImage === "string" && coverImage.startsWith("data:image/") ? coverImage : null;
+    return update(owner, id, (playlist) => ({ ...playlist, coverImage: value }));
+  }
+
+  function setPinned(owner, id, pinned) {
+    return update(owner, id, (playlist) => ({ ...playlist, pinned: Boolean(pinned) }));
+  }
+
   function subscribe(listener) {
     listeners.add(listener);
     return () => listeners.delete(listener);
   }
 
-  global.userPlaylists = Object.freeze({ STORAGE_KEY, PLAYBACK_FIELDS, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, cleanPlayback, subscribe });
+  global.userPlaylists = Object.freeze({ STORAGE_KEY, PLAYBACK_FIELDS, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setCoverImage, setPinned, cleanPlayback, subscribe });
 })(window);

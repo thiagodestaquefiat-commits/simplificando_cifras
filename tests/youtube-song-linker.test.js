@@ -14,7 +14,7 @@ assert.equal(window.youtubeSongLinker.findAutomaticMatch({ title: "A Casa É Sua
 assert.equal(window.youtubeSongLinker.searchQuery({ title: "Oceans", artist: "Hillsong" }), "Oceans Hillsong");
 assert.deepEqual(window.youtubeSongLinker.changesForVideo({ artist: "Artista local" }, videos[0]), {
   artist: "Artista local",
-  coverUrl: "cover",
+  youtubeThumbnailUrl: "cover",
   youtubeVideoId: "one",
   youtubeUrl: "https://youtu.be/one",
   youtubeChannelTitle: "Casa Worship",
@@ -22,4 +22,6 @@ assert.deepEqual(window.youtubeSongLinker.changesForVideo({ artist: "Artista loc
   youtubeDescription: null,
   youtubePublishedAt: null
 });
+assert.equal(window.youtubeSongLinker.changesForVideo({ artworkUrl: "official", coverUrl: "legacy" }, videos[0]).artworkUrl, undefined);
+assert.equal(window.youtubeSongLinker.changesForVideo({ artworkUrl: "official", coverUrl: "legacy" }, videos[0]).coverUrl, undefined);
 console.log("youtube-song-linker.test.js: OK");

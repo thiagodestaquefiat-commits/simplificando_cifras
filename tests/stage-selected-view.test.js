@@ -14,6 +14,7 @@ const server=http.createServer((req,res)=>{
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/api/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{"enabled":false}'}));
   await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
+  await page.getByRole('button',{name:'Continuar sem login'}).click();
   await page.evaluate(view=>{
    const sections=Array.from({length:30},(_,i)=>({label:'Verso',lines:[{lyrics:`Frase real número ${i}`,chords:[{chord:'C',position:0},{chord:'G/B',position:5}]}]}));
    for(const id of ['selected-1','selected-2'])musicas.push(songFormat.toLegacy(songFormat.normalize({id,title:id,originalKey:'C',sections,fullChordSheet:{content:Array.from({length:70},()=> 'C G/B\nLetra completa diferente').join('\n')}})));
@@ -39,9 +40,10 @@ const server=http.createServer((req,res)=>{
   const header=await page.locator('#stage-performance-header').boundingBox();
   await page.locator('#stage-scroll-toggle').click();
   await page.waitForFunction(()=>document.getElementById('view-detail').scrollTop>8);
-  await page.locator('#stage-scroll-toggle').click();
+  await page.locator('#stage-scroll-pause').click();
   assert.equal(await page.evaluate(()=>scrollTimer),null);
-  assert.deepEqual(await page.locator('#stage-performance-header').boundingBox(),header);
+  assert.equal(await page.locator('#view-detail.stage-scroll-compact').count(),0);
+  assert.equal(await page.locator('.stage-capo-controls').isVisible(),true);
   await page.locator('#stage-next').click();assert.equal(await page.evaluate(()=>currentDetailId),'selected-2');
   assert.equal(await page.evaluate(()=>currentSongView),view);
   await page.locator('#stage-prev').click();assert.equal(await page.evaluate(()=>currentDetailId),'selected-1');
