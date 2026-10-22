@@ -63,17 +63,17 @@ _BRASILIA = timezone(timedelta(hours=-3))
 
 
 def web_quota_message(amount: int | None = None, reset_at: float | None = None) -> str:
-    """Aviso do limite para o usuário: quantas buscas, quando libera e o que fazer enquanto isso."""
-    parts = ["Você atingiu o limite de busca na web"]
-    if amount:
-        parts[0] += f" ({amount} buscas a cada 24 horas)"
-    parts[0] += "."
+    """Aviso curto do limite: título (quantas buscas), quando volta e o que fazer enquanto isso.
+
+    A primeira frase é o título do aviso no app; o resto é a linha de baixo.
+    """
+    parts = [f"Limite de {amount} buscas na web atingido." if amount else "Limite de buscas na web atingido."]
     if reset_at:
         when = datetime.fromtimestamp(reset_at, _BRASILIA)
         today = datetime.now(_BRASILIA).date()
-        day = "hoje" if when.date() == today else "amanhã" if (when.date() - today).days == 1 else when.strftime("%d/%m")
-        parts.append(f"Novas buscas liberam {day} às {when:%H:%M}.")
-    parts.append("Enquanto isso, você pode enviar um arquivo ou foto da cifra.")
+        day = "" if when.date() == today else "amanhã " if (when.date() - today).days == 1 else f"em {when:%d/%m} "
+        parts.append(f"Volta {day}às {when:%H:%M}.")
+    parts.append("Enquanto isso, envie foto ou PDF da cifra.")
     return " ".join(parts)
 
 
