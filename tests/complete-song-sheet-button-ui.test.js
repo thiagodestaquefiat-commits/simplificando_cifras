@@ -77,7 +77,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     await page.evaluate(() => closeModal && closeModal());
     await page.evaluate((songId) => openDetail(songId), limited);
     await page.locator("#complete-sheet-button").click();
-    await page.getByText("Novas buscas liberam hoje às 12:30").waitFor();
+    await page.getByText("Volta às 12:30", { exact: false }).waitFor();
     assert.ok(!(await page.evaluate((songId) => musicas.find((m) => String(m.id) === String(songId)).fullChordSheet, limited)));
     console.log("complete-song-sheet-button-ui.test.js: OK (acrescenta letra, mantém resumo/tom/capo, não encontrada abre editor, limite diário avisa)");
   } finally {

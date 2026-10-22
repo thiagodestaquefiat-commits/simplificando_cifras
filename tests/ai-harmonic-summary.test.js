@@ -134,7 +134,10 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
     context.harmonicSummaryClient.generate("texto", { conteudo: "Teste" }, { fetch: async () => ({ ok: false, status: 429, json: async () => ({ erro: { codigo: "limite_busca_web", mensagem: limitMessage } }) }) }),
     (error) => error.kind === "not_found" && error.message === limitMessage
   );
-  await expectApiError(429, "limite_busca_web", "not_found", /^Você atingiu o limite de busca na web\. Enquanto isso/);
+  assert.deepEqual({ ...context.harmonicSummaryClient.webLimitNotice(limitMessage) }, { title: "Limite de 10 buscas na web atingido.", body: "Volta às 12:30. Enquanto isso, envie foto ou PDF da cifra." });
+  assert.deepEqual({ ...context.harmonicSummaryClient.webLimitNotice("Limite de 10 buscas na web atingido. Volta amanhã às 11:40. Enquanto isso, envie foto ou PDF da cifra.") }, { title: "Limite de 10 buscas na web atingido.", body: "Volta amanhã às 11:40. Enquanto isso, envie foto ou PDF da cifra." });
+  assert.equal(context.harmonicSummaryClient.webLimitNotice("Não encontramos esta cifra."), null);
+  await expectApiError(429, "limite_busca_web", "not_found", /^Limite de buscas na web atingido\. Enquanto isso/);
   await expectApiError(504, "provedor_timeout", "provider_timeout", /demorou mais/);
   await expectApiError(429, "provedor_rate_limit", "provider_rate_limit", /temporariamente ocupado/);
   await expectApiError(422, "provedor_rejeitou_requisicao", "provider_rejected", /processar este arquivo/);

@@ -12,6 +12,31 @@
     }
   }
 
+  function webLimitNotice(message) {
+    const text = String(message || "").replace(/\s+/g, " ").trim();
+    let match = text.match(/^(Limite de (?:\d+ )?buscas na web atingido\.)\s*(.*)$/i);
+    if (match) return { title: match[1], body: match[2] || "Enquanto isso, envie foto ou PDF da cifra." };
+    if (!/^Você atingiu o limite de busca na web/i.test(text)) return null;
+    const amount = (text.match(/\((\d+) buscas a cada 24 horas\)/) || [])[1];
+    const when = text.match(/Novas buscas liberam (hoje|amanhã|\d{2}\/\d{2}) às (\d{1,2}:\d{2})/);
+    const day = !when ? "" : when[1] === "hoje" ? "" : when[1] === "amanhã" ? "amanhã " : `em ${when[1]} `;
+    return {
+      title: amount ? `Limite de ${amount} buscas na web atingido.` : "Limite de buscas na web atingido.",
+      body: `${when ? `Volta ${day}às ${when[2]}. ` : ""}Enquanto isso, envie foto ou PDF da cifra.`
+    };
+  }
+
+  function renderWebLimitNotice(element, message) {
+    const notice = webLimitNotice(message);
+    if (!element || !notice) return false;
+    const doc = element.ownerDocument || global.document;
+    const title = doc.createElement("strong"); title.className = "search-limit-notice-title"; title.textContent = notice.title;
+    const body = doc.createElement("span"); body.className = "search-limit-notice-body"; body.textContent = notice.body;
+    element.replaceChildren(title, body);
+    element.classList.add("search-limit-notice");
+    return true;
+  }
+
   function clean(value, maxLength) {
     return global.songFormat.cleanText(value == null ? "" : value, maxLength);
   }
@@ -189,7 +214,7 @@
       }
       if (code === "servico_nao_configurado") throw new HarmonicSummaryError("server", "A busca está indisponível neste ambiente (serviço de IA não configurado).", response.status);
       if (code === "cifra_nao_encontrada") throw new HarmonicSummaryError("not_found", "Não encontramos esta cifra. Envie um arquivo (PDF, foto ou TXT) da cifra para continuar.", response.status);
-      if (code === "limite_busca_web") throw new HarmonicSummaryError("not_found", clean(data?.erro?.mensagem, 400).trim() || "Você atingiu o limite de busca na web. Enquanto isso, você pode enviar um arquivo ou foto da cifra.", response.status);
+      if (code === "limite_busca_web") throw new HarmonicSummaryError("not_found", clean(data?.erro?.mensagem, 400).trim() || "Limite de buscas na web atingido. Enquanto isso, envie foto ou PDF da cifra.", response.status);
       if (code === "fonte_nao_selecionada") throw new HarmonicSummaryError("source_required", "Escolha uma fonte antes de gerar com IA.", response.status);
       if (code === "fonte_timeout") throw new HarmonicSummaryError("source_timeout", "A fonte demorou mais que o esperado. Tente novamente.", response.status);
       if (code === "fonte_indisponivel") throw new HarmonicSummaryError("source_unavailable", "A fonte musical está temporariamente indisponível.", response.status);
@@ -208,5 +233,5 @@
     return { payload, data: assertResponse(data) };
   }
 
-  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, validatePayload, assertResponse, responseToEditorModel, searchSources, generate });
+  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, webLimitNotice, renderWebLimitNotice, validatePayload, assertResponse, responseToEditorModel, searchSources, generate });
 })(window);
