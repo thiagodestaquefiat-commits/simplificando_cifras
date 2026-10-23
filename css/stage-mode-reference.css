@@ -320,6 +320,7 @@
 
   #view-detail.stage-mode .stage-execution-toggle.is-initial svg { fill: currentColor; }
   #view-detail.stage-mode .stage-execution-controls:has(.stage-execution-toggle.is-initial) > span { visibility: hidden; }
+  #view-detail.stage-mode .stage-execution-controls.is-speed-visible:has(.stage-execution-toggle.is-initial) > span { visibility: visible; }
 
   #view-detail.stage-mode .stage-execution-toggle svg { width: 23px; height: 23px; }
   #view-detail.stage-mode .stage-execution-controls > span { font-size: 9px; }

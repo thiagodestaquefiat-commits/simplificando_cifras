@@ -9,6 +9,7 @@ const css = fs.readFileSync(path.join(root, 'css/search-menu.css'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
 
 assert.match(html, /id="roudy-search"/);
+assert.match(html, /id="roudy-search-avatar"[^>]*onclick="openAccountModal\(\)"[^>]*aria-label="Abrir menu do perfil"/);
 assert.match(html, /id="tab-search"[\s\S]*?>Buscar<\/span>/, 'Buscar fica na navegação inferior ao lado de Home');
 assert.match(html, /O que vamos tocar hoje\?/);
 for (const label of ['Músicas', 'Minha playlist', 'Eventos', 'Medley']) assert.match(html, new RegExp(`>${label}<`));
@@ -20,7 +21,7 @@ assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as tela
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=10/);
+assert.match(sw, /css\/search-menu\.css\?v=11/);
 assert.match(sw, /js\/search-menu\.js\?v=5/);
 
 console.log('search-menu-source.test.js: OK');

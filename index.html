@@ -1088,8 +1088,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=23">
-<link rel="stylesheet" href="css/search-menu.css?v=10">
-<link rel="stylesheet" href="css/stage-mode-reference.css?v=16">
+<link rel="stylesheet" href="css/search-menu.css?v=11">
+<link rel="stylesheet" href="css/stage-mode-reference.css?v=17">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -1188,7 +1188,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
   <section class="roudy-search" id="roudy-search" aria-label="Buscar" hidden>
     <header class="roudy-search-header">
-      <div class="roudy-search-title-row"><div class="roudy-search-identity"><span class="roudy-search-avatar" id="roudy-search-avatar" aria-hidden="true">R</span><h1 class="roudy-search-title">Buscar</h1></div><button type="button" class="roudy-search-camera" onclick="roudyCamera.open()" aria-label="Fotografar ou importar uma cifra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button></div>
+      <div class="roudy-search-title-row"><div class="roudy-search-identity"><button class="roudy-search-avatar" id="roudy-search-avatar" type="button" onclick="openAccountModal()" aria-label="Abrir menu do perfil">R</button><h1 class="roudy-search-title">Buscar</h1></div><button type="button" class="roudy-search-camera" onclick="roudyCamera.open()" aria-label="Fotografar ou importar uma cifra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button></div>
       <div class="roudy-search-form" role="search"><label class="roudy-search-field"><input class="roudy-search-input" id="roudy-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar músicas, artistas..." aria-label="Buscar músicas e artistas" onfocus="roudySearchMenu.activate()" oninput="roudySearchMenu.input()"><button class="roudy-search-clear" id="roudy-search-clear" type="button" onclick="roudySearchMenu.clear()" aria-label="Limpar busca" hidden>×</button></label><button class="roudy-search-voice" id="roudy-search-voice" type="button" onclick="toggleRoudySearchVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="roudy-search-cancel" type="button" onclick="roudySearchMenu.cancel()">Cancelar</button></div>
     </header>
     <main class="roudy-search-scroll">
@@ -2787,7 +2787,7 @@ function openStageFromEvent(eventId){
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
 var STAGE_CLEAN=false;
-let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
+let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
 function stageContextData(){
@@ -2970,17 +2970,24 @@ function updateScrollSpeedControls(){
   document.querySelectorAll('[data-scroll-step]').forEach(button=>button.disabled=Number(button.dataset.scrollStep)<0?scrollSpeed<=6:scrollSpeed>=120);
   const slider=document.getElementById('song-scroll-speed');if(slider){slider.value=String(scrollSpeed);slider.style.setProperty('--scroll-progress',`${(scrollSpeed-6)/114*100}%`)}
 }
+function showStageScrollSpeedFeedback(){
+  if(!stageMode||scrollTimer!==null)return;
+  const controls=document.querySelector('.stage-execution-controls');if(!controls)return;
+  controls.classList.add('is-speed-visible');
+  clearTimeout(stageSpeedFeedbackTimer);
+  stageSpeedFeedbackTimer=setTimeout(()=>{controls.classList.remove('is-speed-visible');stageSpeedFeedbackTimer=null;},1400);
+}
 function setSongScrollSpeed(value){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(Number(value));
   const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
-  updateScrollSpeedControls();revealStageControls();
+  updateScrollSpeedControls();showStageScrollSpeedFeedback();revealStageControls();
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
   const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
-  updateScrollSpeedControls();revealStageControls();
+  updateScrollSpeedControls();showStageScrollSpeedFeedback();revealStageControls();
   updateDetailSaveButton();
 }
 function navigateSong(direction){const target=navigationContext.move(direction);if(!target){updatePlaylistNavigation();return;}const view=document.getElementById('view-detail'),wasExecution=stageMode&&stageExecutionStarted,wasRunning=scrollTimer!==null;stopAutoScroll(true);openDetail(target.songId,{preserveNavigation:true});view.scrollTop=0;if(stageMode&&wasExecution){stageExecutionStarted=true;if(wasRunning)startAutoScroll();else updateStageScrollState();}else if(stageMode&&activeStagePreferences?.autoScroll)startAutoScroll();}
