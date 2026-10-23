@@ -2,6 +2,8 @@
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
 const CACHE_NAME = "simplificando-cifras-v516-integracao-101-105-106";
+// Compatibility marker: simplificando-cifras-v513-partituras
+// Compatibility marker: simplificando-cifras-v512-playlists-sugestoes
 // Compatibility marker: simplificando-cifras-v511-playlists-estilos
 // Compatibility marker: simplificando-cifras-v510-sugestoes-encerramento
 // Compatibility marker: simplificando-cifras-v510-playlists-home
@@ -101,6 +103,7 @@ const ASSETS = [
   "./js/youtube-player-ui.js?v=18",
   "./js/youtube-player.js?v=8",
   "./js/tablature.js?v=2",
+  "./js/sheet-music.js?v=1",
   "./js/song-model.js?v=6",
   "./js/editor/song-format.js?v=12",
   "./js/editor/song-format.js?v=13",
