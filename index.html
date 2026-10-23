@@ -4749,7 +4749,26 @@ async function syncEventsNow(silent){
     }
     for(const synced of await eventCollaboration.flushPersonalQueue(appCurrentUser))setlists=eventRepository.upsert(setlists,synced).events;
     const remote=await eventCollaboration.listEvents(appCurrentUser);
-    setlists=eventRepository.reconcileRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
+    // Eventos que eu lidero e que estão no servidor sem a cópia de alguma música: os outros
+    // integrantes não têm essa música na biblioteca e viam o evento vazio. Guarda quais itens faltam
+    // antes de juntar com o aparelho (que preserva a cópia local e esconderia o problema).
+    const missingCopies=new Map(remote.filter(event=>eventModel.isLeader(event,appCurrentUser.id))
+      .map(event=>[String(event.id),event.repertoire.filter(item=>!item.shared?.songData).map(item=>String(item.id))])
+      .filter(([,items])=>items.length));
+    setlists=eventRepository.reconcileRemote(setlists,remote);
+    for(const [eventId,itemIds] of missingCopies){
+      const local=setlists.find(event=>String(event.id)===eventId);if(!local)continue;
+      const event=eventModel.create(local);let filled=0;
+      for(const item of event.repertoire){
+        if(!itemIds.includes(String(item.id)))continue;
+        if(!item.shared.songData)eventSongSource(event,item); // monta a cópia a partir da minha biblioteca
+        if(item.shared.songData)filled++;
+      }
+      if(!filled)continue; // a música também não está neste aparelho: nada a enviar
+      try{const synced=await eventCollaboration.saveSharedEvent(event,appCurrentUser);setlists=eventRepository.upsert(setlists,synced).events;console.info('[eventos] cópias das músicas enviadas',{eventId,filled});}
+      catch(error){failures.push({eventId,status:error.status||null,codigo:error.code||null,mensagem:error.message||null,requestId:error.requestId||null});console.warn('Cópias das músicas do evento ficaram para nova tentativa.',failures[failures.length-1]);}
+    }
+    eventRepository.save(setlists);renderSetlists();
     await refreshBands(true);
     if(status)status.textContent=failures.length?'Alguns Eventos aguardam nova tentativa':'Compartilhamento concluído';if(!silent)showToast(failures.length?'⚠️ Alguns Eventos continuam salvos neste dispositivo':'✅ Alterações compartilhadas');
   }catch(error){if(status)status.textContent='Modo offline — dados preservados neste dispositivo';if(!silent)showToast('⚠️ '+(error.message||'Sincronização indisponível'));}
