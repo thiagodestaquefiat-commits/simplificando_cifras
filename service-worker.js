@@ -4,6 +4,9 @@
 const CACHE_NAME = "simplificando-cifras-v582-functional-audit-fixes";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
+// Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
+// Compatibility marker: simplificando-cifras-v517-evento-copias-musicas
+// Compatibility marker: simplificando-cifras-v513-partituras
 // Compatibility marker: simplificando-cifras-v512-playlists-sugestoes
 // Compatibility marker: simplificando-cifras-v511-playlists-estilos
 // Compatibility marker: simplificando-cifras-v510-sugestoes-encerramento
@@ -143,7 +146,9 @@ const ASSETS = [
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=7",
   "./js/song-artwork.js?v=2",
+  "./js/sheet-music.js?v=1",
   "./js/editor/song-format.js?v=12",
+  "./js/editor/song-format.js?v=13",
   "./js/event-model.js?v=6",
   "./js/event-repository.js?v=9",
   "./js/closing-suggestions.js?v=1",

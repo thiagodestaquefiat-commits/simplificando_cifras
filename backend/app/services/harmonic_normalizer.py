@@ -568,6 +568,59 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
     return normalized
 
 
+# Mesmo vocabulário do isSectionName do app (js/editor/song-format.js): nome de seção não é frase-gancho.
+_SECTION_NAME_RE = re.compile(
+    r"^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|"
+    r"(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)"
+    r"(?:\s*\d+)?\s*\]?\)?:?$",
+    re.IGNORECASE,
+)
+_SEGMENT_MIN_CHORDS = 9  # até 8 acordes cabe numa linha; acima disso vale quebrar em partes repetidas
+_SEGMENT_MAX_UNIT = 8
+
+
+def is_section_name(value) -> bool:
+    return bool(_SECTION_NAME_RE.match(str(value or "").strip()))
+
+
+def segment_progression(chords: list[str]) -> list[tuple[list[str], int]]:
+    """Quebra uma sequência longa em partes que se repetem em seguida (padrão ROUDY).
+
+    Am F Dm Am F Dm Am F Dm Am Am7 G6/A Am Am7 G6/A  ->  [Am F Dm] 3x, [Am Am7 G6/A] 2x
+    Em cada ponto escolhe o padrão que cobre mais acordes repetindo seguido; acordes soltos
+    ficam juntos numa parte só, sem repetição.
+    """
+    parts: list[tuple[list[str], int]] = []
+    loose: list[str] = []
+    index, total = 0, len(chords)
+    while index < total:
+        best_unit, best_count = None, 1
+        for size in range(1, min(_SEGMENT_MAX_UNIT, (total - index) // 2) + 1):
+            unit = chords[index:index + size]
+            count = 1
+            while chords[index + count * size:index + (count + 1) * size] == unit:
+                count += 1
+            if count >= 2 and (best_unit is None or count * size > best_count * len(best_unit)):
+                best_unit, best_count = unit, count
+        if best_unit is None or (len(best_unit) == 1 and best_count < 3):
+            loose.append(chords[index])
+            index += 1
+            continue
+        if loose:
+            parts.append((loose, 1))
+            loose = []
+        if len(best_unit) == 1:
+            # Um acorde repetido (Am Am Am) não é progressão: entra uma vez nos acordes soltos.
+            loose.append(best_unit[0])
+        else:
+            parts.append((best_unit, best_count))
+        index += best_count * len(best_unit)
+    if loose:
+        parts.append((loose, 1))
+    return parts
+
+
+
 def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
     """Última barreira antes de responder: todo acorde precisa passar no parseChord do frontend.
 
@@ -593,12 +646,29 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
     for trecho in fixed.harmonicSummary.blocos:
         trecho.acordes = [chord for chord in (adapt(value) for value in trecho.acordes) if chord]
     fixed.harmonicSummary.blocos = [trecho for trecho in fixed.harmonicSummary.blocos if trecho.acordes]
+    condensed = []
     for trecho in fixed.harmonicSummary.blocos:
         # Padrão ROUDY: resumo só com acordes e frases-gancho, sem nomes de seção.
         trecho.secao = None
+        if trecho.fraseGuia and is_section_name(trecho.fraseGuia):
+            trecho.fraseGuia = None
         trecho.acordes, trecho.repeticoes = condense_progression(trecho.acordes, trecho.repeticoes)
         if trecho.repeticoes == 1:
             trecho.repeticoes = None
+        parts = segment_progression(trecho.acordes) if len(trecho.acordes) >= _SEGMENT_MIN_CHORDS else []
+        if len(parts) > 1 and sum(len(unit) for unit, _ in parts) < len(trecho.acordes):
+            # Sequência longa sem um único padrão: vira várias linhas "Am F Dm (5x)"; a frase fica na primeira.
+            outer = trecho.repeticoes or 1
+            for position, (unit, count) in enumerate(parts):
+                piece = trecho.model_copy(deep=True)
+                piece.acordes = unit
+                piece.repeticoes = min(count * outer, 99) if count * outer > 1 else None
+                if position:
+                    piece.fraseGuia = None
+                condensed.append(piece)
+        else:
+            condensed.append(trecho)
+    fixed.harmonicSummary.blocos = condensed[:40]
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:

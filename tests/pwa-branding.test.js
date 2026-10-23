@@ -43,7 +43,7 @@ assert.match(indexHtml, /Menos papel, menos distração, mais música/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=11/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
-assert.match(indexHtml, /js\/editor\/song-format\.js\?v=12/);
+assert.match(indexHtml, /js\/editor\/song-format\.js\?v=13/);
 assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=10/);
 assert.match(indexHtml, /js\/song-model\.js\?v=7/);
 assert.match(serviceWorker, /js\/song-model\.js\?v=5/);

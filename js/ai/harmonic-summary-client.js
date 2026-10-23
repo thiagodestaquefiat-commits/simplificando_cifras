@@ -12,6 +12,9 @@
     }
   }
 
+  // Aviso do limite de buscas na web em duas partes: título curto e linha de baixo.
+  // Entende o texto novo do servidor e também o antigo ("Você atingiu o limite..."),
+  // para o aviso ficar curto mesmo antes do backend ser atualizado.
   function webLimitNotice(message) {
     const text = String(message || "").replace(/\s+/g, " ").trim();
     let match = text.match(/^(Limite de (?:\d+ )?buscas na web atingido\.)\s*(.*)$/i);
@@ -26,6 +29,7 @@
     };
   }
 
+  // Mostra o aviso de limite dentro de um elemento de status (título maior + linha de baixo).
   function renderWebLimitNotice(element, message) {
     const notice = webLimitNotice(message);
     if (!element || !notice) return false;

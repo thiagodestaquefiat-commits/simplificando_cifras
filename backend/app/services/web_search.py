@@ -78,6 +78,22 @@ class _ChordSheetParser(HTMLParser):
                 return
 
 
+_INVISIBLE_RE = re.compile("[\u00ad\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\ufeff]")
+_ODD_SPACE_RE = re.compile("[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]")
+
+
+def clean_sheet_text(text: str) -> str:
+    """Tira caracteres invisíveis da cifra copiada da página.
+
+    Espaço de largura zero, espaço não separável e afins fazem "D9" deixar de ser reconhecido
+    como acorde (vira letra, na cor da letra) e "[Refrão]" deixar de ser título de seção.
+    Mantém o alinhamento: espaços especiais viram espaço comum; tab vira 4 espaços.
+    """
+    text = _INVISIBLE_RE.sub("", str(text or "").replace("\r\n", "\n").replace("\r", "\n"))
+    text = _ODD_SPACE_RE.sub(" ", text).replace("\t", "    ")
+    return "\n".join(line.rstrip() for line in text.split("\n"))
+
+
 def extract_chord_sheet(html: str | None, *, include_article: bool = False) -> str | None:
     if not html:
         return None
@@ -86,7 +102,7 @@ def extract_chord_sheet(html: str | None, *, include_article: bool = False) -> s
     parser.close()
     candidates = (parser.pre_blocks, parser.class_blocks) + ((parser.article_blocks,) if include_article else ())
     for blocks in candidates:
-        text = "\n".join("".join(block).strip("\n") for block in blocks if "".join(block).strip())
+        text = "\n".join(clean_sheet_text("".join(block)).strip("\n") for block in blocks if "".join(block).strip())
         if text.strip():
             return text.strip()[:MAX_PAGE_CHARS]
     return None
@@ -273,11 +289,49 @@ def _fetch_page(url: str, http_client, name: str, hosts: tuple[str, ...], includ
         if sheet:
             meta = extract_sheet_metadata(html)
             logger.info("%s_extract_ok url=%s render=%s sheet_len=%d meta=%s", name, url, render, len(sheet), meta)
+            # Amostra do texto (com caracteres invisíveis escapados) para diagnosticar cifras que saem erradas.
+            logger.info("%s_sheet_sample url=%s sample=%a", name, url, sheet[:400])
             return sheet, meta
         preview = (html or "")[:300].replace("\n", " ")
         logger.warning("%s_extract_empty url=%s render=%s html_len=%d html_preview=%r", name, url, render, len(html or ""), preview)
         no_sheet = True
     return None, ({"not_found": True} if no_sheet else {})
+
+
+def simplified_url(url: str | None) -> str | None:
+    """Endereço da versão simplificada no Cifra Club (".../musica/simplificada.html").
+
+    Só para a página principal da música (termina em "/"); páginas de variação (.html) ficam como estão.
+    """
+    if not url:
+        return None
+    parsed = urlparse(url)
+    if (parsed.hostname or "").casefold() not in CIFRACLUB_HOSTS or not parsed.path.endswith("/"):
+        return None
+    if len([segment for segment in parsed.path.split("/") if segment]) != 2:
+        return None
+    return f"https://www.cifraclub.com.br{parsed.path}simplificada.html"
+
+
+def _fetch_cifraclub(url: str, client, deadline: float | None = None,
+                     allow_render: bool = True) -> tuple[str | None, dict, str]:
+    """Abre a música no Cifra Club preferindo a versão simplificada.
+
+    1) .../simplificada.html, só no modo rápido (sem render): acordes mais fáceis, padrão do ROUDY.
+    2) Se não existir (404) ou vier sem cifra, a versão principal, como antes.
+    Devolve (cifra, metadados, endereço usado).
+    """
+    simple = simplified_url(url)
+    if simple:
+        sheet, meta = _fetch_page(simple, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline, allow_render=False)
+        if sheet:
+            logger.info("cifraclub_simplified_used url=%s", simple)
+            return sheet, meta, simple
+        logger.info("cifraclub_simplified_missing url=%s", simple)
+        if deadline is not None and time.monotonic() >= deadline:
+            return None, meta, url
+    sheet, meta = _fetch_page(url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline, allow_render=allow_render)
+    return sheet, meta, url
 
 
 _NON_SHEET_PATHS = ("/letra", "/imprimir", "/videoaulas", "/tabs", "/partitura", "/playlist")
@@ -501,9 +555,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
     if site_search is not None and not out_of_time("site_search:cifraclub"):
         found = site_search(titulo, artista, client)
         if found.ok and found.url:
-            sheet, meta = _fetch_page(found.url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline)
+            sheet, meta, used_url = _fetch_cifraclub(found.url, client, deadline)
             if sheet:
-                return ChordSheetHit(sheet, found.url, "cifraclub", artist=found.artist, title=found.title, **meta), []
+                return ChordSheetHit(sheet, used_url, "cifraclub", artist=found.artist, title=found.title, **meta), []
         elif found.ok:
             confirmed_missing = True
             logger.info("cifraclub_search_not_found titulo=%r artista=%r", titulo, artista)
@@ -517,9 +571,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
     if cifraclub_url and confirmed_missing:
         cifraclub_url = None  # a busca do próprio site já disse que não existe
     if cifraclub_url:
-        sheet, meta = _fetch_page(cifraclub_url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline, allow_render=False)
+        sheet, meta, used_url = _fetch_cifraclub(cifraclub_url, client, deadline, allow_render=False)
         if sheet:
-            return ChordSheetHit(sheet, cifraclub_url, "cifraclub", **meta), []
+            return ChordSheetHit(sheet, used_url, "cifraclub", **meta), []
         cifraclub_missing, cifraclub_404 = bool(meta.get("not_found")), bool(meta.get("http_404"))
 
     # 2) Endereço direto não existe ou não tem cifra (ex.: "a-boa-parte-part-florianopolis-house-of-prayer",
@@ -527,9 +581,9 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
     if artista and cifraclub_missing and not out_of_time("artist_list:cifraclub"):
         url = _artist_song_url(titulo, artista, client, deadline)
         if url and not out_of_time("artist_song:cifraclub"):
-            sheet, meta = _fetch_page(url, client, "cifraclub", CIFRACLUB_HOSTS, False, deadline)
+            sheet, meta, used_url = _fetch_cifraclub(url, client, deadline)
             if sheet:
-                return ChordSheetHit(sheet, url, "cifraclub", **meta), []
+                return ChordSheetHit(sheet, used_url, "cifraclub", **meta), []
 
     # 3) Outras fontes pelo endereço direto (como antes).
     for name, hosts, include_article in PAGE_SOURCES:
@@ -575,9 +629,12 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
         for url in urls:
             if out_of_time(f"fetch:{name}"):
                 return None, all_results
-            sheet, meta = _fetch_page(url, client, name, hosts, include_article, deadline)
+            if name == "cifraclub":
+                sheet, meta, used_url = _fetch_cifraclub(url, client, deadline)
+            else:
+                sheet, meta, used_url = (*_fetch_page(url, client, name, hosts, include_article, deadline), url)
             if sheet:
-                return ChordSheetHit(sheet, url, name, **meta), all_results
+                return ChordSheetHit(sheet, used_url, name, **meta), all_results
     return None, all_results
 
 

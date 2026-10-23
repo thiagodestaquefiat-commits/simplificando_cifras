@@ -5,7 +5,6 @@ from app.models import SharedSong
 from test_event_permissions import auth, register
 from test_shared_songs import ai_song
 
-
 PDF = {"source": "user_upload", "content": "G C\nLetra", "sections": []}
 
 

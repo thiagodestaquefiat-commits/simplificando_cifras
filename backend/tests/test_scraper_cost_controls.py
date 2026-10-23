@@ -146,7 +146,7 @@ def test_song_with_featuring_in_cifraclub_slug_is_found_via_artist_list():
     finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
     hit = finder("A Boa parte", "Nívea Soares")
     assert hit is not None and hit.url == real and "A boa parte escolhi" in hit.content
-    assert calls[-2:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real]
+    assert calls[-3:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real + "simplificada.html", real]
 
 
 def test_artist_list_without_matching_song_gives_up_cheaply():
@@ -203,7 +203,6 @@ def test_limit_message_tells_how_many_when_it_frees_and_what_to_do():
     assert message.endswith("Enquanto isso, envie foto ou PDF da cifra.")
     assert web_quota_message() == "Limite de buscas na web atingido. Enquanto isso, envie foto ou PDF da cifra."
 
-
 def test_limit_error_carries_the_user_message():
     class Quota:
         def __call__(self, user_id):
@@ -224,3 +223,91 @@ def test_real_user_quota_reports_reset_time(app):
         quota = _user_web_quota("2 per day")
         assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
         assert "Limite de 2 buscas" in quota.message("quota-user") and "Volta" in quota.message("quota-user")
+        assert " às " in quota.message("quota-user")
+
+
+def test_catalog_summary_with_long_mixed_progression_is_split_roudy_style():
+    """Minha Alma (O Rappa) no catálogo: 'Primeira Parte:' como frase e 55 acordes numa linha só."""
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = ("Am F Dm " * 5 + "Am Am7 G6/A Am Am7 G6/A Dm9/A").split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "Minha alma", "artista": "O Rappa", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Primeira Parte:"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert [(b.acordes, b.repeticoes) for b in blocks][:2] == [(["Am", "F", "Dm"], 5), (["Am", "Am7", "G6/A"], 2)]
+    assert all(b.fraseGuia is None for b in blocks), "nome de seção não é frase-gancho"
+
+
+def test_normal_line_without_repetition_is_left_alone():
+    from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from app.services.harmonic_normalizer import ensure_client_chords
+    chords = "C G Am F Dm Em G C D".split()
+    raw = ResumoHarmonicoResponse.model_validate({"titulo": "X", "tom": "C", "confianca": "media",
+                                                  "harmonicSummary": {"blocos": [{"acordes": chords, "fraseGuia": "Tu és bem-vindo aqui"}]}})
+    blocks = ensure_client_chords(raw).harmonicSummary.blocos
+    assert len(blocks) == 1 and blocks[0].acordes == chords and blocks[0].fraseGuia == "Tu és bem-vindo aqui"
+
+
+def test_plain_text_section_headers_and_stanzas_follow_roudy_standard():
+    """Cifra Club com partes em texto ("Primeira Parte:", "Refrão:"), como em Minha Alma (O Rappa).
+    Cada estrofe vira um bloco com frase-guia; estrofe repetida em seguida vira (2x); parte repetida depois some."""
+    sheet = """Primeira Parte:
+
+Linha sem acorde que abre a parte
+           Am
+Segunda linha da parte
+                 F          Dm
+Terceira linha da parte
+              Am
+Quarta linha
+
+Segunda parte:
+
+Começo da segunda parte
+
+Linha seguinte
+        F                           Dm
+Mais uma linha
+                  Am
+Fim da estrofe
+
+
+Começo da segunda parte
+
+Linha seguinte
+        F                           Dm
+Mais uma linha
+                  Am
+Fim da estrofe
+
+Primeira Parte:
+
+Linha sem acorde que abre a parte
+                 F          Dm
+Terceira linha da parte
+              Am
+Quarta linha
+
+Refrão:
+
+       Am7
+Grades do refrão
+          G6/A       Am
+Outra linha
+        Am7          Dm9/A
+Mais uma
+
+      Am7             G6/A
+Segunda estrofe do refrão
+ Dm9/A           Am
+Linha final
+"""
+    blocks = [(b.fraseGuia, b.acordes, b.repeticoes)
+              for b in parse_chord_sheet(sheet, "Minha Alma", "O Rappa", key="Am").harmonicSummary.blocos]
+    assert blocks == [
+        ("Linha sem acorde que", ["Am", "F", "Dm", "Am"], None),
+        ("Começo da segunda parte", ["F", "Dm", "Am"], 2),
+        ("Grades do refrão", ["Am7", "G6/A", "Am", "Am7", "Dm9/A"], None),
+        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A", "Am"], None),
+    ], blocks
+    assert all(not (b[0] or "").endswith(":") for b in blocks), "nome de parte nunca vira frase"

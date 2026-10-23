@@ -134,6 +134,7 @@ assert.throws(() => context.harmonicSummaryClient.assertResponse({ ...response, 
     context.harmonicSummaryClient.generate("texto", { conteudo: "Teste" }, { fetch: async () => ({ ok: false, status: 429, json: async () => ({ erro: { codigo: "limite_busca_web", mensagem: limitMessage } }) }) }),
     (error) => error.kind === "not_found" && error.message === limitMessage
   );
+  // Aviso curto: título + linha de baixo, tanto do texto antigo quanto do novo.
   assert.deepEqual({ ...context.harmonicSummaryClient.webLimitNotice(limitMessage) }, { title: "Limite de 10 buscas na web atingido.", body: "Volta às 12:30. Enquanto isso, envie foto ou PDF da cifra." });
   assert.deepEqual({ ...context.harmonicSummaryClient.webLimitNotice("Limite de 10 buscas na web atingido. Volta amanhã às 11:40. Enquanto isso, envie foto ou PDF da cifra.") }, { title: "Limite de 10 buscas na web atingido.", body: "Volta amanhã às 11:40. Enquanto isso, envie foto ou PDF da cifra." });
   assert.equal(context.harmonicSummaryClient.webLimitNotice("Não encontramos esta cifra."), null);
