@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
-from .harmonic_normalizer import normalize_chord, split_chord_token
+from .harmonic_normalizer import is_section_name, normalize_chord, split_chord_token
 
 _SECTION_RE = re.compile(r"^\s*\[([^\]]{1,60})\]\s*(.*)$")
 _TAB_LINE_RE = re.compile(r"^\s*[A-Ga-g][#b]?\s*\|")
@@ -45,12 +45,14 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     sections: list[dict] = []
     current = {"nome": None, "linhas": [], "tab": False}
     pending_chords: list[tuple[str, int]] | None = None
+    stanza = 0  # estrofes (separadas por linha em branco) viram blocos próprios no resumo
 
     def flush_pending():
         nonlocal pending_chords
         if pending_chords and not current["tab"]:
             offset = min(position for _, position in pending_chords)
-            current["linhas"].append({"letra": "", "acordes": [(chord, position - offset) for chord, position in pending_chords]})
+            current["linhas"].append({"letra": "", "acordes": [(chord, position - offset) for chord, position in pending_chords],
+                                      "estrofe": stanza})
         pending_chords = None
 
     def start_section(name: str | None):
@@ -66,8 +68,13 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
         if header:
             start_section(header.group(1).strip())
             line = " " * (len(line) - len(header.group(2))) + header.group(2) if header.group(2).strip() else ""
+        elif is_section_name(line):
+            # Cifra Club também escreve as partes como texto: "Primeira Parte:", "Refrão:".
+            start_section(line.strip().rstrip(":").strip())
+            continue
         if not line.strip():
             flush_pending()
+            stanza += 1
             continue
         if current["tab"] or _TAB_LINE_RE.match(line):
             continue
@@ -76,27 +83,30 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
             flush_pending()
             pending_chords = chords
             continue
-        current["linhas"].append({"letra": line.strip(), "acordes": _shift(pending_chords, line)})
+        current["linhas"].append({"letra": line.strip(), "acordes": _shift(pending_chords, line), "estrofe": stanza})
         pending_chords = None
     start_section(None)
 
     sections = [section for section in sections if not section["tab"] and section["linhas"]][:_MAX_SECTIONS]
     blocos = []
     seen = set()
-    for section in sections:
-        chords = [chord for line in section["linhas"] for chord, _ in line["acordes"]]
-        if not chords:
-            continue
-        lyric = next((line["letra"] for line in section["linhas"] if line["letra"]), None)
+    last_identity = None
+    for name, lyric, chords in _stanzas(sections):
         progression, repetitions = _condense(chords)
-        # Padrão ROUDY: seção + frase-guia curta + progressão de uma volta; cada seção uma vez.
-        identity = ((section["nome"] or "").casefold(), tuple(progression))
+        # Padrão ROUDY: frase-guia curta + progressão de uma volta. Estrofe repetida em seguida vira (2x);
+        # a mesma parte mais adiante na música aparece uma vez só.
+        phrase = _guide_phrase(lyric)
+        identity = ("frase", phrase.casefold()) if phrase else ("acordes", (name or "").casefold(), tuple(progression))
+        if identity == last_identity and blocos:
+            blocos[-1]["repeticoes"] = min((blocos[-1]["repeticoes"] or 1) + (repetitions or 1), 99)
+            continue
+        last_identity = identity
         if identity in seen:
             continue
         seen.add(identity)
         blocos.append({"acordes": progression[:_MAX_CHORDS],
                        "repeticoes": repetitions if lyric is None else None,
-                       "fraseGuia": _guide_phrase(lyric), "secao": section["nome"]})
+                       "fraseGuia": phrase, "secao": name})
     if not blocos:
         return None
     first_chord = blocos[0]["acordes"][0]
@@ -120,6 +130,30 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
             } for section in sections],
         },
     })
+
+
+def _stanzas(sections: list[dict]) -> list[tuple[str | None, str | None, list[str]]]:
+    """(seção, primeira letra, acordes) de cada estrofe com acordes.
+
+    Linhas de letra sem acorde que vêm antes (ex.: "A minha alma tá armada..." seguida de linha em
+    branco) entram na estrofe seguinte e viram a frase-guia dela.
+    """
+    result = []
+    for section in sections:
+        carry: list[str] = []
+        groups: dict[int, list[dict]] = {}
+        for line in section["linhas"]:
+            groups.setdefault(line.get("estrofe", 0), []).append(line)
+        for lines in groups.values():
+            chords = [chord for line in lines for chord, _ in line["acordes"]]
+            lyrics = [line["letra"] for line in lines if line["letra"]]
+            if not chords:
+                carry.extend(lyrics)
+                continue
+            lyric = next(iter(carry + lyrics), None)
+            carry = []
+            result.append((section["nome"], lyric, chords))
+    return result
 
 
 _MAX_PROGRESSION = 8
