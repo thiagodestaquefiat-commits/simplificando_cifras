@@ -19,6 +19,9 @@
   const js = (value) => global.attrJs(value);
   const pane = () => document.getElementById("pane-musicas");
   const songById = (id) => musicas.find((song) => String(song.id) === String(id));
+  // A collaborator reads the playlist's own snapshot, never a same-id song in
+  // their personal library. Virtual ids keep navigation independent of that library.
+  const itemSong = item => item?.song ? { ...item.song, id: item.songId } : songById(item?.songId);
   const toast = (message) => global.showToast && global.showToast(message);
 
   function baseKey(song) {
@@ -49,7 +52,7 @@
   }
 
   function playlistSongs(playlist) {
-    return (playlist?.items || []).map((item) => songById(item.songId)).filter(Boolean);
+    return (playlist?.items || []).map(itemSong).filter(Boolean);
   }
 
   function artwork(_name, coverImage = null, songs = []) {
@@ -118,7 +121,7 @@
           : (a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
     const playlists = global.userPlaylists.list(owner()).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || order(a, b));
     const rows = playlists.map((playlist) => {
-      const available = playlist.items.filter((item) => songById(item.songId)).length;
+      const available = playlist.items.filter(itemSong).length;
       return `<button type="button" class="home-playlist-row" data-playlist-id="${esc(playlist.id)}">${artwork(playlist.name, playlist.coverImage, playlistSongs(playlist))}<span class="home-playlist-copy"><strong>${esc(playlist.name)}</strong><small>${playlist.pinned ? `<span class="home-playlist-pinned-mark" aria-label="Fixada">${pinIcon(true)}</span> ` : ""}Playlist · ${esc(countLabel(available))}${playlist.sharedFrom ? " · recebida" : ""}</small></span></button>`;
     }).join("");
     const empty = playlists.length ? "" : `<p class="home-playlists-hint">Monte playlists do seu jeito: por estilo (rock, blues, samba…), por ministro ou por evento. Cada música guarda o tom daquela playlist.</p>`;
@@ -175,7 +178,7 @@
 
   function deleteFromHome(id) {
     const playlist = global.userPlaylists.get(owner(), id);
-    if (!playlist || !global.appConfirm(`Apagar a playlist “${playlist.name}”?`)) return;
+    if (!playlist || !global.appConfirm(`Apagar a playlist “${playlist.name}”?${playlist.collaboration ? ' Ela será excluída para todos os integrantes.' : ''}`)) return;
     global.userPlaylists.remove(owner(), id);
     closeActionSheet();
     renderHome();
@@ -219,7 +222,7 @@
     const playlist = currentPlaylistId && global.userPlaylists.get(owner(), currentPlaylistId);
     if (!target) return;
     if (!playlist) { setView("home"); return; }
-    const entries = playlist.items.map((item) => ({ item, song: songById(item.songId) }));
+    const entries = playlist.items.map((item) => ({ item, song: itemSong(item) }));
     const available = entries.filter((entry) => entry.song);
     const rows = entries.map(({ item, song }, index) => {
       if (!song) return `<div class="home-playlist-song-swipe" data-item-id="${esc(item.id)}"><button type="button" class="home-playlist-song-delete" onclick="homePlaylists.removeItem(${js(item.id)})" aria-label="Tirar música indisponível da playlist">${trashIcon()}</button><div class="home-playlist-song is-missing"><span class="home-playlist-song-copy"><strong>Música indisponível</strong><small>Ela não está mais na sua biblioteca</small></span><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções">⋯</button></div></div>`;
@@ -234,6 +237,17 @@
     target.innerHTML = `<div class="home-playlist-detail-hero"><button type="button" class="home-playlist-back" onclick="homePlaylists.back()" aria-label="Voltar para as playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="home-playlist-cover">${artwork(playlist.name, playlist.coverImage, available.map((entry) => entry.song))}<button type="button" class="home-playlist-cover-edit" onclick="homePlaylists.chooseCover()" aria-label="Adicionar ou alterar foto da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button></div><div class="home-playlist-heading"><h2>${esc(playlist.name)}</h2><div class="home-playlist-member"><button type="button" class="home-playlist-member-add" onclick="homePlaylists.share()" aria-label="Adicionar pessoa à playlist">＋</button><span class="home-playlist-member-avatar${memberAvatar ? " has-image" : ""}">${memberAvatar ? `<img src="${esc(memberAvatar)}" alt="">` : esc(memberInitial)}</span><strong>${esc(memberName)}</strong></div><small>Playlist · ${esc(countLabel(available.length))}${playlist.sharedFrom ? " · recebida" : ""}</small></div></div>
       <div class="home-playlist-actions"><button type="button" class="home-playlist-action-round" onclick="homePlaylists.renameCurrent()" aria-label="Editar nome da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.share()" aria-label="Compartilhar playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg></button><button type="button" class="home-playlist-play" onclick="homePlaylists.play()" ${available.length ? "" : "disabled"} aria-label="Abrir primeira música no Estudo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg></button><button type="button" class="home-playlist-action-round home-playlist-tone-action" onclick="homePlaylists.openKeys()" ${available.length ? "" : "disabled"} aria-label="Ajustar tons das músicas"><span aria-hidden="true">Tom</span></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.useInEvent()" aria-label="Adicionar playlist a um evento"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M12 13v5M9.5 15.5h5"/></svg></button></div>
       <button type="button" class="home-playlist-add-row" onclick="homePlaylists.openAddSongs()"><span aria-hidden="true">＋</span><strong>Adicionar uma música</strong></button><div class="home-playlist-songs">${rows || `<div class="home-playlist-empty"><strong>Playlist vazia</strong><span>Adicione músicas da sua biblioteca. Cada uma fica com o tom desta playlist.</span><button type="button" onclick="homePlaylists.openAddSongs()">Adicionar músicas</button></div>`}</div>`;
+    const members = target.querySelector('.home-playlist-member');
+    members.querySelector('.home-playlist-member-add').setAttribute('onclick', 'playlistInvites.open(homePlaylists.currentPlaylistId)');
+    if (playlist.collaboration?.members?.length) {
+      const addButton = members.querySelector('.home-playlist-member-add').outerHTML;
+      members.innerHTML = addButton + playlist.collaboration.members.map(member => `<span class="home-playlist-member-avatar${member.avatarUrl ? ' has-image' : ''}" role="img" aria-label="${esc(member.name)}, colaborador" title="${esc(member.name)}">${member.avatarUrl ? `<img src="${esc(member.avatarUrl)}" alt="" referrerpolicy="no-referrer">` : esc(String(member.name || '?').charAt(0))}</span>`).join('') + `<strong>${esc(playlist.collaboration.members.map(member => member.name).join(', '))}</strong>`;
+    }
+    if (playlist.collaboration?.blocked) {
+      const notice = document.createElement('button'); notice.type = 'button'; notice.className = 'btn btn-outline';
+      notice.textContent = 'Revisar ajustes não enviados'; notice.onclick = () => global.playlistInvites.open(playlist.id);
+      target.querySelector('.home-playlist-heading').appendChild(notice);
+    }
     installPlaylistSwipe(target);
   }
 
@@ -308,7 +322,7 @@
   }
 
   function availableEntries(playlist) {
-    return playlist.items.map((item) => ({ item, song: songById(item.songId) })).filter((entry) => entry.song);
+    return playlist.items.map((item) => ({ item, song: itemSong(item) })).filter((entry) => entry.song);
   }
 
   function openSong(itemId, options = {}) {
@@ -321,7 +335,7 @@
     global.openDetail(song.id, {
       playlistContext: { playlistId: PREFIX + playlist.id, songIds: entries.map((entry) => entry.song.id), currentIndex: index },
       songOverride: itemVariant(song, item),
-      userPlaylistItem: { playlistId: playlist.id, itemId: item.id }
+      userPlaylistItem: { playlistId: playlist.id, itemId: item.id, ownerId: owner() }
     });
     if (options.stage && global.enterStageMode) global.enterStageMode();
   }
@@ -475,13 +489,13 @@
     if (!context || !String(context.playlistId || "").startsWith(PREFIX)) return null;
     const playlist = global.userPlaylists.get(owner(), String(context.playlistId).slice(PREFIX.length));
     const entry = playlist && availableEntries(playlist)[context.currentIndex];
-    return entry ? { song: itemVariant(entry.song, entry.item), item: { playlistId: playlist.id, itemId: entry.item.id } } : null;
+    return entry ? { song: itemVariant(entry.song, entry.item), item: { playlistId: playlist.id, itemId: entry.item.id, ownerId: owner() } } : null;
   }
 
   function shiftKey(itemId, direction) {
     const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
     const item = playlist && playlist.items.find((value) => value.id === String(itemId));
-    const song = item && songById(item.songId);
+    const song = item && itemSong(item);
     if (!song) return;
     const semitones = (Number(itemPlayback(song, item).semitones) || 0) + (direction < 0 ? -1 : 1);
     const normalized = ((semitones % 12) + 18) % 12 - 6;
@@ -505,10 +519,19 @@
 
   // Salva tom/capo/BPM… alterados na tela da música, só nesta playlist.
   function saveItemPlayback(context, state) {
-    if (!context) return false;
+    if (!context || (context.ownerId && context.ownerId !== owner())) return false;
     const playback = {};
     for (const field of global.userPlaylists.PLAYBACK_FIELDS) if (state[field] !== undefined) playback[field] = state[field];
+    if (isCollaborativeContext(context)) {
+      const item = global.userPlaylists.get(owner(), context.playlistId)?.items.find(item => item.id === context.itemId);
+      return Boolean(item && global.userPlaylists.setItemContent(owner(), context.playlistId, context.itemId, { ...item.song, ...state.video }, playback));
+    }
     return Boolean(global.userPlaylists.setItemPlayback(owner(), context.playlistId, context.itemId, playback));
+  }
+
+  function isCollaborativeContext(context) { return Boolean(context && (!context.ownerId || context.ownerId === owner()) && global.userPlaylists.get(owner(), context.playlistId)?.collaboration); }
+  function saveItemSong(context, song) {
+    return isCollaborativeContext(context) && Boolean(global.userPlaylists.setItemContent(owner(), context.playlistId, context.itemId, song));
   }
 
   // ── Criar, renomear, apagar ─────────────────────────────────────────
@@ -595,7 +618,7 @@
   function deleteCurrent() {
     const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
     global.closeEventAdminSheet();
-    if (!playlist || !global.appConfirm(`Apagar a playlist “${playlist.name}”? As músicas continuam na sua biblioteca.`)) return;
+    if (!playlist || !global.appConfirm(`Apagar a playlist “${playlist.name}”? ${playlist.collaboration ? 'Ela será excluída para todos os integrantes. ' : ''}As músicas continuam na sua biblioteca.`)) return;
     global.userPlaylists.remove(owner(), playlist.id);
     toast("Playlist apagada.");
     back();
@@ -605,7 +628,7 @@
     const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
     const item = playlist && playlist.items.find((value) => value.id === String(itemId));
     if (!item) return;
-    const song = songById(item.songId);
+    const song = itemSong(item);
     menuSheet(song ? song.title : "Música", [
       ["Adicionar ao repertório", `homePlaylists.addItemToRepertoire(${js(item.id)})`],
       ["Compartilhar", `homePlaylists.shareItem(${js(item.id)})`],
@@ -621,7 +644,7 @@
 
   function addItemToRepertoire(itemId) {
     const item = playlistItem(itemId);
-    const song = item && songById(item.songId);
+    const song = item && itemSong(item);
     if (!song) return;
     const trigger = document.activeElement;
     global.closeEventAdminSheet();
@@ -630,7 +653,7 @@
 
   async function shareItem(itemId) {
     const item = playlistItem(itemId);
-    const song = item && songById(item.songId);
+    const song = item && itemSong(item);
     if (!song) return;
     const variant = itemVariant(song, item);
     const key = itemKey(song, item);
@@ -786,6 +809,7 @@
   async function share() {
     const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
     if (!playlist) return;
+    // Share always exports a fixed copy; collaboration invitations belong to +.
     const token = global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken();
     if (!token) { toast("Entre com sua conta para compartilhar a playlist."); return; }
     const items = availableEntries(playlist).map(({ item, song }) => ({ song: global.songFormat.toLegacy(global.songFormat.fromLegacy(song), song), playback: item.playback, notes: item.notes }));
@@ -871,6 +895,8 @@
     PREFIX, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
     create, closeCreate, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
     openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
-    get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }
+    refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
+    isCollaborativeContext, saveItemSong,
+    get ownerId() { return owner(); }, get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }
   });
 })(window);

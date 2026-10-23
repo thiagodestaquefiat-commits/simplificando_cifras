@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=65">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=66">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -1087,8 +1087,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=16">
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
-<link rel="stylesheet" href="css/home-playlists.css?v=24">
-<link rel="stylesheet" href="css/search-menu.css?v=11">
+<link rel="stylesheet" href="css/home-playlists.css?v=25">
+<link rel="stylesheet" href="css/search-menu.css?v=12">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=18">
 </head>
 <body>
@@ -1432,16 +1432,18 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-sequences.js?v=2"></script>
 <script src="js/app-assistant.js?v=33"></script>
  <script src="js/event-user-invites.js?v=10"></script>
- <script src="js/event-qr-scanner.js?v=1"></script>
+ <script src="js/event-qr-scanner.js?v=2"></script>
 <script>
 // Bibliotecas de QR Code carregam sob demanda.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
  <script src="js/profile-qr.js?v=4"></script>
- <script src="js/notification-center.js?v=4"></script>
-<script src="js/user-playlists.js?v=2"></script>
-<script src="js/home-playlists.js?v=17"></script>
+ <script src="js/notification-center.js?v=5"></script>
+<script src="js/user-playlists.js?v=3"></script>
+<script src="js/home-playlists.js?v=19"></script>
+<script src="js/playlist-collaboration.js?v=1"></script>
+<script src="js/playlist-invites.js?v=1"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -2249,6 +2251,11 @@ function cancelInlineBlockEdit(){renderDetail()}
 // Grava a música editada no lugar certo: na variante do evento (como o editor completo faz) ou na
 // biblioteca — e, se a música veio de uma playlist, atualiza também a cópia aberta na tela.
 async function commitInlineSongEdit(song,candidate,message){
+  if(homePlaylists.isCollaborativeContext(detailPlaylistContext)){
+    if(!homePlaylists.saveItemSong(detailPlaylistContext,candidate)){showToast('Não foi possível guardar a alteração nesta playlist.');return false;}
+    currentDetailSongOverride={...candidate,playbackSettings:currentDetailSongOverride?.playbackSettings};
+    renderDetail();showToast(message+' na playlist compartilhada');return true;
+  }
   if(detailEventContext&&currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id)){
     const result=await saveContextEventSong({...detailEventContext},eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:songFormat.parseCapo(candidate.capo)}}));
     if(result?.ok===false){showToast('⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
@@ -2464,7 +2471,7 @@ function renderTablature(value){
 // A partitura fica na música da biblioteca. Aberta por evento/playlist, a tela mostra a cópia
 // (currentDetailSongOverride), então buscamos a partitura também na música da biblioteca.
 let sheetMusicZoom=window.innerWidth<600?.7:1,sheetMusicRemoveArmed=false,sheetMusicRemoveTimer=0,sheetMusicBusy=false;
-function sheetMusicLibrarySong(songId=currentDetailId){return musicas.find(item=>String(item.id)===String(songId))||null;}
+function sheetMusicLibrarySong(songId=currentDetailId){if(homePlaylists.isCollaborativeContext(detailPlaylistContext)&&String(currentDetailSongOverride?.id)===String(songId))return currentDetailSongOverride;return musicas.find(item=>String(item.id)===String(songId))||null;}
 function currentSheetMusic(source){return window.sheetMusic?.normalize(source?.sheetMusic||sheetMusicLibrarySong(source?.id)?.sheetMusic)||null;}
 function renderSheetMusicPage(sheet){
   if(!sheet)return `<div class="sheet-music-view sheet-music-empty"><div class="sheet-music-empty-copy"><strong>Partitura</strong><p>Adicione a partitura desta música em PDF ou MusicXML. Com MusicXML, a partitura acompanha o Tom.</p></div><button type="button" class="btn btn-primary" onclick="openSheetMusicPicker()">Adicionar partitura</button><p class="tablature-note">MusicXML: no MuseScore, use Arquivo → Exportar → MusicXML. O PDF fica salvo neste aparelho.</p></div>`;
@@ -2487,6 +2494,11 @@ function openSheetMusicPicker(){
   const input=document.getElementById('sheet-music-input');input.accept=sheetMusic.accept;input.value='';input.click();
 }
 async function commitSongSheetMusic(value){
+  if(homePlaylists.isCollaborativeContext(detailPlaylistContext)){
+    const candidate={...currentDetailSongOverride,sheetMusic:value||null};
+    if(!homePlaylists.saveItemSong(detailPlaylistContext,candidate))return false;
+    currentDetailSongOverride=candidate;return true;
+  }
   const library=sheetMusicLibrarySong();if(!library)return false;
   const result=songRepository.update(musicas,library.id,{sheetMusic:value||null});
   if(!commitSongs(result.songs))return false;
@@ -2495,12 +2507,14 @@ async function commitSongSheetMusic(value){
 }
 async function handleSheetMusicFile(input){
   const file=input.files&&input.files[0];input.value='';if(!file||sheetMusicBusy)return;
+  const ownerAtStart=appCurrentUser.id,songAtStart=currentDetailId,sharedContext=homePlaylists.isCollaborativeContext(detailPlaylistContext);
   const previous=currentSheetMusic(sheetMusicLibrarySong());
   sheetMusicBusy=true;showToast('⏳ Preparando a partitura…');
   try{
     const sheet=await sheetMusic.importFile(file);
+    if(appCurrentUser.id!==ownerAtStart||currentDetailId!==songAtStart){await sheetMusic.discard(sheet);return;}
     if(!await commitSongSheetMusic(sheet)){await sheetMusic.discard(sheet);return;}
-    if(previous&&previous.fileKey!==sheet.fileKey)sheetMusic.discard(previous);
+    if(!sharedContext&&previous&&previous.fileKey!==sheet.fileKey)sheetMusic.discard(previous);
     renderDetail();setSongView('sheet');
     showToast(sheet.format==='pdf'?'✅ Partitura em PDF adicionada neste aparelho':'✅ Partitura adicionada. Ela acompanha o Tom.');
   }catch(error){showToast('⚠️ '+(error?.message||'Não foi possível abrir este arquivo.'));}
@@ -2512,7 +2526,7 @@ async function removeSheetMusic(){
   if(!sheetMusicRemoveArmed){sheetMusicRemoveArmed=true;if(button){button.textContent='Toque de novo para remover';button.classList.add('is-armed');}clearTimeout(sheetMusicRemoveTimer);sheetMusicRemoveTimer=setTimeout(()=>{sheetMusicRemoveArmed=false;const again=document.getElementById('sheet-music-remove');if(again){again.textContent='Remover partitura';again.classList.remove('is-armed');}},4000);return;}
   sheetMusicRemoveArmed=false;clearTimeout(sheetMusicRemoveTimer);
   if(!await commitSongSheetMusic(null))return;
-  sheetMusic.discard(previous);renderDetail();setSongView('sheet');showToast('Partitura removida');
+  if(!homePlaylists.isCollaborativeContext(detailPlaylistContext))sheetMusic.discard(previous);renderDetail();setSongView('sheet');showToast('Partitura removida');
 }
 function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
 // Páginas depois de Resumo / Letra e cifra / Letra: Partitura (sempre, para adicionar ali) e Tablaturas.
@@ -2689,10 +2703,12 @@ function openDetail(id,options={}){
   }
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0;
-  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride; if(!baseSong) return;
+  const sharedPlaylistVariant=options.preserveNavigation&&window.homePlaylists?homePlaylists.variantForContext(navigationContext.get()):null;
+  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride||sharedPlaylistVariant?.song; if(!baseSong) return;
   storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,openedAt:new Date().toISOString()});
   renderContextualHomeCard();
-  let contextualSong=options.songOverride||null;
+  let contextualSong=options.songOverride||sharedPlaylistVariant?.song||null;
+  if(sharedPlaylistVariant)detailPlaylistContext=sharedPlaylistVariant.item;
   if(!contextualSong&&options.preserveNavigation&&window.homePlaylists){const variant=homePlaylists.variantForContext(navigationContext.get());if(variant){contextualSong=variant.song;detailPlaylistContext=variant.item;}}
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
   currentDetailSongOverride=contextualSong;
@@ -3364,7 +3380,8 @@ let completingSongId=null;
 function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 async function completeSongSheet(id){
   const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
-  const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
+  const playlistContext=homePlaylists.isCollaborativeContext(detailPlaylistContext)?{...detailPlaylistContext}:null;
+  const song=eventContext||playlistContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
   if(!song||completingSongId)return;
   const ownerAtStart=songRepository.getActiveOwnerId();
   const button=document.getElementById('complete-sheet-button');
@@ -3380,8 +3397,10 @@ async function completeSongSheet(id){
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
     if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
-    const current=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
+    if(playlistContext&&(playlistContext.ownerId!==appCurrentUser.id||playlistContext.itemId!==detailPlaylistContext?.itemId))return;
+    const current=eventContext||playlistContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
+    if(playlistContext){await commitInlineSongEdit(current,{...current,fullChordSheet:sheet},'Letra e cifra salvas');return;}
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
     if(eventContext){
       // Completar dentro do evento também completa a música da biblioteca (se ela ainda não tem),
@@ -3406,6 +3425,7 @@ async function completeSongSheet(id){
 }
 function editMusica(id){
   const nid=isNaN(+id)?id:+id;
+  if(homePlaylists.isCollaborativeContext(detailPlaylistContext)&&String(currentDetailId)===String(id)){const song=currentDetailSongOverride;if(song)openSimpleSongEditor(songFormat.fromLegacy(song),song,{playlistContext:{...detailPlaylistContext}});return;}
   if(detailEventContext&&String(currentDetailId)===String(id)){const song=currentDetailSongOverride;if(song)openSimpleSongEditor(songFormat.fromLegacy(song),song,{eventContext:{...detailEventContext}});return;}
   const song=musicas.find(item=>String(item.id)===String(nid));
   if(song) openSimpleSongEditor(songFormat.fromLegacy(song),song);
@@ -3430,7 +3450,7 @@ function openSimpleSongEditor(model,sourceSong,options={}){
   const isAi=options.isAi===true||model.aiGenerated===true;
   const normalized=songFormat.normalize({...model,instrument:model.instrument||currentInstrument,...(isAi?{status:'draft',source:'ai',aiGenerated:true,reviewedByUser:false}:{})});
   if(sourceSong) normalized.id=sourceSong.id;
-  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null,eventContext:options.eventContext||sourceSong?._eventEditContext||null};
+  simpleReviewDraft={model:normalized,sourceSong:sourceSong||null,eventContext:options.eventContext||sourceSong?._eventEditContext||null,playlistContext:options.playlistContext||sourceSong?._playlistEditContext||null};
   const fullSheet=normalized.fullChordSheet;
   const tab=normalized.tablature,tabInstrument=tab?.instrument||'guitar';
   const tabOptions=[['guitar','Violão / Guitarra'],['bass','Contrabaixo'],['ukulele','Ukulele'],['violin','Violino'],['other','Outro'],['unknown','Não identificado']].map(([value,label])=>`<option value="${value}" ${tabInstrument===value?'selected':''}>${label}</option>`).join('');
@@ -3499,7 +3519,7 @@ function setSimpleEditorView(view){
     button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));
   });
 }
-function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditContext;if(context&&context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra o evento.');return;}openSimpleSongEditor(model,sourceSong,{isAi:true,eventContext:context||null});}
+function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditContext,playlistContext=sourceSong?._playlistEditContext;if((context&&context.ownerId!==appCurrentUser.id)||(playlistContext&&playlistContext.ownerId!==appCurrentUser.id)){showToast('⚠️ A conta mudou. Reabra a música.');return;}openSimpleSongEditor(model,sourceSong,{isAi:true,eventContext:context||null,playlistContext:playlistContext||null});}
 // Restaurado do main (perdido na integração): música encontrada pela busca abre para o usuário
 // ver e confirmar. Nada entra na playlist até Salvar.
 function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
@@ -3520,6 +3540,11 @@ async function saveSimpleSongReview(){
   const reviewed=songFormat.normalize({...simpleReviewDraft.model,title:values.title,artist:values.artist,originalKey:values.key,currentKey:values.key,capo:songFormat.parseCapo(values.capo),sections:values.sections,fullChordSheet,tablature,status:'published',reviewedByUser:simpleReviewDraft.model.aiGenerated?true:simpleReviewDraft.model.reviewedByUser});
   const sourceSong=simpleReviewDraft.sourceSong;
   const candidate=songFormat.toLegacy(reviewed,sourceSong||null);
+  if(simpleReviewDraft.playlistContext){
+    const context=simpleReviewDraft.playlistContext;
+    if(!homePlaylists.saveItemSong(context,candidate)){showToast('Não foi possível salvar nesta playlist compartilhada.');return;}
+    closeModal();openDetail(candidate.id,{preserveNavigation:true});showToast('Alteração salva apenas na playlist compartilhada.');return;
+  }
   if(simpleReviewDraft.eventContext&&candidate.fullChordSheet?.content){
     // Cifra completada dentro do evento também completa a música da biblioteca, se ela só tinha o resumo.
     const library=musicas.find(item=>String(item.id)===String(candidate.id));
@@ -3538,6 +3563,7 @@ function openAdvancedSongEditor(id){
   editMusica(id);
 }
 function generateAiForSong(id){
+  if(homePlaylists.isCollaborativeContext(detailPlaylistContext)&&String(currentDetailId)===String(id)){aiHarmonicSummary.open({song:{...currentDetailSongOverride,_playlistEditContext:{...detailPlaylistContext}}});return;}
   if(detailEventContext&&String(currentDetailId)===String(id)){aiHarmonicSummary.open({song:{...currentDetailSongOverride,_eventEditContext:{...detailEventContext}}});return;}
   const song=musicas.find(item=>String(item.id)===String(id)); if(song) aiHarmonicSummary.open({song});
 }
@@ -4543,6 +4569,8 @@ async function logoutAppAccount(){
   showToast('Salvando tudo na sua conta antes de sair…');
   try{await librarySync.syncNow();}catch(_){/* a verificação abaixo decide */}
   try{await syncEventsNow(true);}catch(_){/* a verificação abaixo decide */}
+  try{await window.playlistCollaboration?.flush();}catch(_){}
+  if(window.playlistCollaboration?.hasPending()){appAlert('Há alterações de playlists compartilhadas aguardando envio ou revisão. Abra o botão + da playlist antes de sair para preservar seus ajustes.');return;}
   const pendingSongs=songsPendingUpload(),pendingEvents=eventsPendingUpload();
   if(pendingSongs||pendingEvents){
     const parts=[pendingSongs?`${pendingSongs} música${pendingSongs===1?'':'s'}`:'',pendingEvents?`${pendingEvents} evento${pendingEvents===1?'':'s'}`:''].filter(Boolean).join(' e ');
@@ -5937,7 +5965,7 @@ youtubePlayerUI.initialize({
   showToast
 });
 </script>
-<script src="js/search-menu.js?v=5"></script>
+<script src="js/search-menu.js?v=6"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){

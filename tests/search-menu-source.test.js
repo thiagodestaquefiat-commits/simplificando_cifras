@@ -21,7 +21,7 @@ assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as tela
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=11/);
-assert.match(sw, /js\/search-menu\.js\?v=5/);
+assert.match(sw, /css\/search-menu\.css\?v=12/);
+assert.match(sw, /js\/search-menu\.js\?v=6/);
 
 console.log('search-menu-source.test.js: OK');

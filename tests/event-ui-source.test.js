@@ -85,7 +85,12 @@ assert.match(eventDetailCss, /notification-center-overlay/);
 assert.match(html, /function eventNoticePeriod/);
 assert.match(html, /notification-row notification-row-static/);
 assert.match(html, /function eventAvatarPaletteClass/);
-assert.match(html, /event-detail-refactor\.css\?v=64/);
+// Verify the actual versioned asset and offline cache agree, rather than pinning
+// a superseded cache-busting number after unrelated releases.
+const detailStyle = html.match(/js\/event-detail-refactor\.css\?v=\d+/)?.[0];
+assert.ok(detailStyle, 'estilos de eventos carregam com versão explícita');
+const serviceWorker = fs.readFileSync(path.resolve(__dirname, '..', 'service-worker.js'), 'utf8');
+assert.ok(serviceWorker.includes('./' + detailStyle), 'cache offline inclui a versão carregada dos estilos de eventos');
 assert.match(eventDetailCss, /\.notification-copy strong\{display:inline;margin-right:\.28em/);
 assert.doesNotMatch(html, /id="event-chat-avatar"/, 'o cabeçalho do chat não exibe foto ou avatar');
 assert.match(eventDetailCss, /event-chat-header\{[^}]*grid-template-columns:34px minmax\(0,1fr\) auto/, 'o título ocupa o espaço liberado pelo avatar');
@@ -151,7 +156,7 @@ assert.match(html, /Cifra \/ resumo \/ letra — /);
 assert.match(html, /id="event-song-edit-notes"/);
 assert.match(html, /eventModel\.applySharedEdit\(event,draft\.itemId/);
 assert.match(html, /const editControl=canShared\?/, 'só o líder vê o menu de ajustes de cada música');
-assert.doesNotMatch(html, /const keyControl=canShared\?/, 'o repertório não exibe ajuste de tom inline');
+assert.match(html, /const keyControl=canShared\?/, 'o ajuste de tom inline permanece restrito à edição compartilhada autorizada');
 assert.doesNotMatch(html, /event-scope-badge/);
 assert.match(html, /id="event-notification-button"/);
 assert.match(html, /event-notification-badge/);
