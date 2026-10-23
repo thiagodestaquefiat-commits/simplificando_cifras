@@ -59,6 +59,25 @@
     return `<span class="home-playlist-art has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)">`).join("")}</span>`;
   }
 
+  function applyPlaylistBackdrop(target, coverImage, songs) {
+    const urls = coverImage ? [coverImage] : (global.songArtwork?.collectDistinct(songs, 4) || []);
+    target.classList.toggle("has-cover", Boolean(urls.length));
+    ["--playlist-cover-image", "--playlist-cover-size", "--playlist-cover-position"].forEach((property) => target.style.removeProperty(property));
+    if (!urls.length) return;
+    const cssUrls = urls.map((url) => `url("${String(url).replace(/"/g, "%22")}")`).join(",");
+    target.style.setProperty("--playlist-cover-image", cssUrls);
+    if (urls.length === 2) {
+      target.style.setProperty("--playlist-cover-size", "50% 100%");
+      target.style.setProperty("--playlist-cover-position", "left top,right top");
+    } else if (urls.length === 3) {
+      target.style.setProperty("--playlist-cover-size", "50% 100%,50% 50%,50% 50%");
+      target.style.setProperty("--playlist-cover-position", "left top,right top,right bottom");
+    } else if (urls.length >= 4) {
+      target.style.setProperty("--playlist-cover-size", "50% 50%");
+      target.style.setProperty("--playlist-cover-position", "left top,right top,left bottom,right bottom");
+    }
+  }
+
   // ── Visões da aba Home ──────────────────────────────────────────────
   function setView(next, options = {}) {
     view = next;
@@ -211,9 +230,7 @@
     const memberName = String((typeof appCurrentUser !== "undefined" && appCurrentUser?.name) || "Você");
     const memberAvatar = typeof appCurrentUser !== "undefined" && appCurrentUser?.avatarUrl;
     const memberInitial = memberName.trim().charAt(0).toUpperCase() || "V";
-    target.classList.toggle("has-cover", Boolean(playlist.coverImage));
-    if (playlist.coverImage) target.style.setProperty("--playlist-cover-image", `url("${playlist.coverImage}")`);
-    else target.style.removeProperty("--playlist-cover-image");
+    applyPlaylistBackdrop(target, playlist.coverImage, available.map((entry) => entry.song));
     target.innerHTML = `<div class="home-playlist-detail-hero"><button type="button" class="home-playlist-back" onclick="homePlaylists.back()" aria-label="Voltar para as playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="home-playlist-cover">${artwork(playlist.name, playlist.coverImage, available.map((entry) => entry.song))}<button type="button" class="home-playlist-cover-edit" onclick="homePlaylists.chooseCover()" aria-label="Adicionar ou alterar foto da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button></div><div class="home-playlist-heading"><h2>${esc(playlist.name)}</h2><div class="home-playlist-member"><button type="button" class="home-playlist-member-add" onclick="homePlaylists.share()" aria-label="Adicionar pessoa à playlist">＋</button><span class="home-playlist-member-avatar${memberAvatar ? " has-image" : ""}">${memberAvatar ? `<img src="${esc(memberAvatar)}" alt="">` : esc(memberInitial)}</span><strong>${esc(memberName)}</strong></div><small>Playlist · ${esc(countLabel(available.length))}${playlist.sharedFrom ? " · recebida" : ""}</small></div></div>
       <div class="home-playlist-actions"><button type="button" class="home-playlist-action-round" onclick="homePlaylists.renameCurrent()" aria-label="Editar nome da playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"/></svg></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.share()" aria-label="Compartilhar playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/></svg></button><button type="button" class="home-playlist-play" onclick="homePlaylists.play()" ${available.length ? "" : "disabled"} aria-label="Abrir primeira música no Estudo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg></button><button type="button" class="home-playlist-action-round home-playlist-tone-action" onclick="homePlaylists.openKeys()" ${available.length ? "" : "disabled"} aria-label="Ajustar tons das músicas"><span aria-hidden="true">Tom</span></button><button type="button" class="home-playlist-action-round" onclick="homePlaylists.useInEvent()" aria-label="Adicionar playlist a um evento"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M12 13v5M9.5 15.5h5"/></svg></button></div>
       <button type="button" class="home-playlist-add-row" onclick="homePlaylists.openAddSongs()"><span aria-hidden="true">＋</span><strong>Adicionar uma música</strong></button><div class="home-playlist-songs">${rows || `<div class="home-playlist-empty"><strong>Playlist vazia</strong><span>Adicione músicas da sua biblioteca. Cada uma fica com o tom desta playlist.</span><button type="button" onclick="homePlaylists.openAddSongs()">Adicionar músicas</button></div>`}</div>`;

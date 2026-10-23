@@ -16,6 +16,7 @@
 #view-sd .event-song-note{display:none}
 #view-sd .event-song-edit{color:#c7c9ce}
 #view-sd .event-song-edit svg{width:22px;height:22px;fill:currentColor;stroke:none}
+#view-sd .event-repertoire-actions{display:flex;flex:0 0 auto;align-items:center;gap:4px}.event-official-key-control{display:grid;grid-template-columns:36px minmax(30px,auto) 36px;align-items:center;border-radius:999px;background:rgba(255,255,255,.075)}.event-official-key-control button{display:grid;width:36px;height:40px;padding:0;place-items:center;border:0;background:transparent;color:#f4f5f7;font:700 18px/1 inherit;cursor:pointer}.event-official-key-control button:disabled{cursor:wait;opacity:.4}.event-official-key-control output{min-width:30px;color:#fff;font:800 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;text-align:center;white-space:nowrap}.event-official-key-control:focus-within{outline:2px solid rgba(7,137,231,.72);outline-offset:1px}@media(max-width:360px){.event-official-key-control{grid-template-columns:32px minmax(27px,auto) 32px}.event-official-key-control button{width:32px}.event-repertoire-actions{gap:0!important}}
 #view-sd .event-section-title--repertoire{margin:22px 0 11px;color:#fff;font-size:16px;font-weight:720;letter-spacing:-.02em}
 #view-sd .event-stage-action{margin:22px 0 30px}
 #view-sd .event-reference-actions{display:flex;margin:2px 0 10px;align-items:center;justify-content:space-between;gap:10px}

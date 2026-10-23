@@ -143,7 +143,7 @@
 /* Detalhe: a ação de tocar abre o Estudo; não cria um player paralelo. */
 .home-playlist-view{position:relative;isolation:isolate;min-height:100dvh;overflow:hidden}
 .home-playlist-view::before,.home-playlist-view::after{content:"";position:absolute;z-index:-2;top:-70px;right:-50px;left:-50px;height:min(92vh,820px);pointer-events:none;opacity:0}
-.home-playlist-view.has-cover::before{height:min(78vh,680px);background-image:var(--playlist-cover-image);background-position:center top;background-size:cover;filter:blur(42px) saturate(.78);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 38%,rgba(0,0,0,.72) 58%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 38%,rgba(0,0,0,.72) 58%,transparent 100%);opacity:.7;transform:scale(1.14)}
+.home-playlist-view.has-cover::before{height:min(78vh,680px);background-image:var(--playlist-cover-image);background-position:var(--playlist-cover-position,center top);background-size:var(--playlist-cover-size,cover);background-repeat:no-repeat;filter:blur(42px) saturate(.78);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 38%,rgba(0,0,0,.72) 58%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 38%,rgba(0,0,0,.72) 58%,transparent 100%);opacity:.7;transform:scale(1.14)}
 .home-playlist-view.has-cover::after{z-index:-1;background:linear-gradient(180deg,rgba(4,5,7,.16) 0%,rgba(8,9,11,.32) 30%,rgba(10,10,11,.78) 52%,rgba(11,11,12,.97) 72%,var(--ui-background,#0B0B0C) 88%);opacity:1}
 .home-playlist-detail-hero{position:relative;display:flex;padding:calc(24px + env(safe-area-inset-top)) 20px 12px;flex-direction:column;align-items:center;background:transparent}
 .home-playlist-detail-hero .home-playlist-back{position:absolute;top:6px;left:8px}

@@ -9,6 +9,10 @@ const css = fs.readFileSync(path.join(root, "css", "home-playlists.css"), "utf8"
 assert.match(script, /songArtwork\?\.collectDistinct\(songs, 4\)/);
 assert.match(script, /if \(coverImage\) return/);
 assert.match(script, /home-playlist-mosaic--\$\{urls\.length\}/);
+assert.match(script, /function applyPlaylistBackdrop/);
+assert.match(script, /applyPlaylistBackdrop\(target, playlist\.coverImage/);
+assert.match(css, /--playlist-cover-size,cover/);
+assert.match(css, /--playlist-cover-position,center top/);
 assert.match(script, /loading="lazy" decoding="async"/);
 const artworkBody = script.slice(script.indexOf("function artwork"), script.indexOf("// ── Visões"));
 assert.doesNotMatch(artworkBody, /canvas|toDataURL\(/i);

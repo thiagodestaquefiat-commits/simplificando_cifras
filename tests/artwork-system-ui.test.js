@@ -68,6 +68,16 @@ const server = http.createServer((request, response) => {
     await page.waitForTimeout(120);
     const heroMosaic = page.locator(".home-playlist-cover .home-playlist-art.has-mosaic");
     assert.equal(await heroMosaic.locator("img").count(), 2);
+    const playlistView = page.locator("#home-playlist-view");
+    assert.equal(await playlistView.evaluate((element) => element.classList.contains("has-cover")), true, "mosaico automático ativa o fundo glass");
+    const backdrop = await playlistView.evaluate((element) => ({
+      images: element.style.getPropertyValue("--playlist-cover-image"),
+      size: element.style.getPropertyValue("--playlist-cover-size"),
+      position: element.style.getPropertyValue("--playlist-cover-position")
+    }));
+    assert.equal((backdrop.images.match(/url\(/g) || []).length, 2, "fundo usa as duas capas do mosaico");
+    assert.equal(backdrop.size, "50% 100%");
+    assert.equal(backdrop.position, "left top,right top");
     await page.screenshot({ path: path.join(artifacts, "roudy-playlist-mosaico-detalhe.png"), fullPage: false });
 
     await page.evaluate((songId) => {

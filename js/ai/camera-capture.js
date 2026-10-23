@@ -12,6 +12,7 @@
   function stopStream(){if(stream){stream.getTracks().forEach(track=>track.stop());stream=null}}
   function clearPreview(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;capturedFile=null}
   function setStatus(message){const node=overlay?.querySelector('[data-camera-status]');if(node)node.textContent=message||''}
+  function closeSearchBeforeDraft(){if(document.getElementById('roudy-search')?.classList.contains('is-open'))global.roudySearchMenu?.close?.()}
   function build(){
     overlay=document.createElement('section');overlay.className='roudy-camera';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Câmera');
     overlay.innerHTML=`<div class="roudy-camera-viewfinder"><video class="roudy-camera-video" autoplay muted playsinline></video><img class="roudy-camera-review" alt="Prévia da foto" hidden><span class="roudy-camera-shade"></span></div><header class="roudy-camera-top"><button class="roudy-camera-icon" type="button" data-camera-close aria-label="Fechar câmera">${icon.close}</button><span class="roudy-camera-top-actions"><button class="roudy-camera-icon roudy-camera-flash" type="button" data-camera-flash aria-label="Ativar flash">${icon.flash}</button><button class="roudy-camera-icon roudy-camera-flip" type="button" data-camera-flip aria-label="Trocar câmera">${icon.flip}</button></span></header><p class="roudy-camera-status" data-camera-status role="status" aria-live="polite"></p><div class="roudy-camera-bottom" data-camera-controls><label class="roudy-camera-gallery" aria-label="Escolher imagem da galeria">${icon.gallery}<input type="file" accept="image/*" data-camera-gallery></label><button class="roudy-camera-shutter" type="button" data-camera-shutter aria-label="Tirar foto"></button><input type="file" accept="image/*" capture="environment" data-camera-native hidden><label class="roudy-camera-file" aria-label="Escolher PDF ou texto nos arquivos">${icon.file}<input type="file" accept="application/pdf,text/plain,.pdf,.txt,.text" data-camera-file></label></div><div class="roudy-camera-review-actions" data-camera-review-actions hidden><button class="roudy-camera-retake" type="button" data-camera-retake>Tirar outra</button><button class="roudy-camera-use" type="button" data-camera-use>Usar foto</button></div>`;
@@ -42,13 +43,13 @@
     if(!capturedFile)return;
     const file=capturedFile,actions=overlay.querySelector('[data-camera-review-actions]'),closeButton=overlay.querySelector('[data-camera-close]');
     actions.hidden=true;closeButton.disabled=true;setStatus('Analisando a foto e criando a música…');
-    try{await global.aiHarmonicSummary.generateFiles([file]);close()}
+    try{await global.aiHarmonicSummary.generateFiles([file]);closeSearchBeforeDraft();close()}
     catch(error){setStatus(error?.message||'Não foi possível analisar esta foto.');actions.hidden=false;closeButton.disabled=false}
   }
   async function useFiles(files){
     stopStream();setStatus('Analisando o arquivo e criando a música…');
     overlay.querySelector('[data-camera-controls]').hidden=true;
-    try{await global.aiHarmonicSummary.generateFiles(files);close()}
+    try{await global.aiHarmonicSummary.generateFiles(files);closeSearchBeforeDraft();close()}
     catch(error){setStatus(error?.message||'Não foi possível analisar este arquivo.');overlay.querySelector('[data-camera-controls]').hidden=false}
   }
   async function flip(){facing=facing==='environment'?'user':'environment';torch=false;await start()}

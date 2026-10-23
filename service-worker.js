@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v584-stage-speed-feedback";
+const CACHE_NAME = "simplificando-cifras-v587-search-camera-layer";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -36,7 +36,7 @@ const CACHE_NAME = "simplificando-cifras-v584-stage-speed-feedback";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./js/event-detail-refactor.css?v=64",
+  "./js/event-detail-refactor.css?v=65",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./css/search-menu.css?v=11",
@@ -47,8 +47,8 @@ const ASSETS = [
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=23",
-  "./js/home-playlists.js?v=16",
+  "./css/home-playlists.css?v=24",
+  "./js/home-playlists.js?v=17",
   "./js/user-playlists.js?v=2",
   "./js/notification-center.js?v=4",
   "./js/event-model.js?v=7",
@@ -303,7 +303,7 @@ const ASSETS = [
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=17",
   "./js/ai/ai-harmonic-summary.css?v=8",
-  "./js/ai/camera-capture.js?v=5",
+  "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
   "./css/roudy-color-system-preview.css?v=16",
   "./manifest.webmanifest?v=15",
