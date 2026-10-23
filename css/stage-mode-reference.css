@@ -81,12 +81,20 @@
 
   #view-detail.stage-mode .stage-heading,
   #view-detail.stage-mode.stage-scroll-compact .stage-heading {
-    display: block !important;
-    grid-column: 3 !important;
-    grid-row: 1 !important;
-    width: auto !important;
+    display: flex !important;
+    position: absolute !important;
+    z-index: 2;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    top: calc(4px + env(safe-area-inset-top)) !important;
+    left: 50% !important;
+    width: min(40vw, 152px) !important;
+    height: 48px;
     align-self: center;
+    flex-direction: column;
+    justify-content: center;
     overflow: hidden;
+    transform: translateX(-50%) !important;
     text-align: center;
   }
 
