@@ -213,6 +213,8 @@
     for (const remote of global.eventModel.normalizeCollection(remoteEvents)) {
       const index = values.findIndex((item) => String(item.id) === String(remote.id));
       if (index < 0) values.push(remote);
+      // Alteração do líder ainda não enviada: nunca troca pelo servidor (perderia o repertório).
+      else if (values[index].syncState === "pending" && values[index].pendingShared) continue;
       else if (values[index].syncState !== "pending" || remote.remoteVersion >= (values[index].remoteVersion || 0)) values[index] = preserveSongCopies(values[index],remote);
     }
     return values;
