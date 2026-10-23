@@ -1266,7 +1266,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=2"></script>
 <script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=12"></script>
+<script src="js/editor/song-format.js?v=13"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -2036,8 +2036,12 @@ function isChordLine(linha){
   return songFormat.chordLine(linha);
 }
 
+// "[Refrão]", "Intro:", "Primeira Parte" sozinhos na linha = título de seção.
+const SHEET_SECTION_LINE=/^\s*(?:\[[^\]]{1,60}\]|intro|introdução|verso(?:\s+\d+)?|pré-refrão|refrão|ponte|solo|interlúdio|final|outro|(?:primeira|segunda|terceira|quarta|quinta)\s+parte)\s*:?\s*$/i;
 function renderMusicalText(text,totalShift,full=false){
-  return String(text||'').split('\n').map(line=>{
+  return String(text||'').split('\n').map(raw=>{
+    const line=songFormat.cleanSheetLine(raw);
+    if(full&&SHEET_SECTION_LINE.test(line))return `<div class="full-chord-line is-section">${eventEsc(line.trim().replace(/^\[|\]$/g,''))}</div>`;
     const chord=isChordLine(line);
     const css=full?`full-chord-line${chord?' is-chord':''}`:chord?'chord-line':'letra-linha';
     return `<div class="${css}">${eventEsc(chord?shiftText(line,totalShift):line)}</div>`;
@@ -2305,12 +2309,18 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${structured}</article>`;
   }
   const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
-    const text=raw.trimEnd();
-    if(!text) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
+    const text=songFormat.cleanSheetLine(raw).trimEnd();
+    if(!text.trim()) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
     if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
-    const section=/^\s*(?:\[.*\]|intro|introdução|verso(?:\s+\d+)?|pré-refrão|refrão|ponte|solo|interlúdio|final|outro)\s*:?\s*$/i.test(text);
+    // "[Intro] C7M  D9  Bm7": título da seção + linha de acordes.
+    const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
+    if(tagged&&tagged[2].trim()&&isChordLine(tagged[2])){
+      const label=`<div class="full-chord-line is-section">${eventEsc(tagged[1].trim())}</div>`;
+      return contentMode==='lyrics'?label:label+renderSmartFullChordLine(shiftText(tagged[2].trim(),totalShift));
+    }
+    const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
-    return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(text)}</div>`;
+    return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(section?text.trim().replace(/^\[|\]$/g,''):text)}</div>`;
   }).join('');
   return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
 }
