@@ -50,6 +50,9 @@ const SHEET = "[Primeira Parte]\n\nFm         Db9\nPrimeira linha do verso aqui\
     assert.deepEqual(sent, ["org-1"], "só manda ao servidor quem está fora do padrão e pode ser remontada");
     assert.equal(await page.locator(".summary-organizer-item").count(), 1);
     assert.match(await page.locator(".summary-organizer-compare").innerText(), /Primeira linha do verso aqui/);
+    const missing = await page.locator(".summary-organizer-missing").innerText();
+    assert.match(missing, /Complete a cifra primeiro \(1\)/, "lista quem precisa completar a cifra antes");
+    assert.match(missing, /Sem Letra/); assert.ok(!/Já Bonita/.test(missing));
     const untouched = await page.evaluate(() => songRepository.load().find((song) => song.id === "org-1").blocos.map((b) => b.c).join("|"));
     assert.ok(!/Primeira linha/.test(untouched), "nada é salvo antes de confirmar");
     await page.locator(".summary-organizer-save").click();

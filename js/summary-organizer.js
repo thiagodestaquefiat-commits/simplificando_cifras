@@ -1,4 +1,7 @@
-// MANUTENÇÃO: "Organizar resumos" — deixa os resumos da biblioteca no padrão ROUDY
+// MANUTENÇÃO: TEMPORÁRIO (força-tarefa de out/2026, como o botão "Completar cifra"): remover este
+// arquivo, o item "Organizar resumos" do menu da conta e o endpoint /api/resumo-harmonico/organizar
+// quando todas as músicas estiverem completas e no padrão.
+// "Organizar resumos" — deixa os resumos da biblioteca no padrão ROUDY
 // (frase-guia + uma volta dos acordes + repetições), remontando pela Letra + Cifras salva.
 // O servidor só calcula (sem IA, sem ScraperAPI, sem limite de busca); quem salva é o app,
 // depois que o usuário confere. Nada muda sem confirmação (sem migração automática).
@@ -36,6 +39,15 @@
     const tooLong = lines.some((line) => chordsOf(line).length > MAX_CHORDS_PER_LINE);
     const noHook = !lines.some((line) => hook(line));
     return (sectionAsHook || tooLong || noHook) && (hasSheet(song) || tooLong);
+  }
+
+  // Fora do padrão, mas sem Letra + Cifras salva: precisa completar a cifra antes de organizar.
+  function needsSheet(song) {
+    if (hasSheet(song)) return false;
+    const lines = summaryLines(song);
+    if (!lines.length) return false;
+    const sectionAsHook = lines.some((line) => global.songFormat.isSectionName(String(line.lyrics || "").trim()));
+    return sectionAsHook || !lines.some((line) => hook(line));
   }
 
   function payload(song) {
@@ -115,8 +127,8 @@
       }
       settings.onProgress?.(Math.min(start + BATCH, candidates.length), candidates.length);
     }
-    return { checked: candidates.length, changes };
+    return { checked: candidates.length, changes, missingSheet: (songs || []).filter(needsSheet) };
   }
 
-  global.summaryOrganizer = Object.freeze({ offStandard, payload, apply, analyze, preview, currentPreview });
+  global.summaryOrganizer = Object.freeze({ offStandard, needsSheet, payload, apply, analyze, preview, currentPreview });
 })(window);
