@@ -2646,7 +2646,9 @@ function renderDetail(preparedSong=null,preparedSummary=null){
   const summaryHtml=renderSummaryProjection(summary,totalShift,m.id,'combined');
   // "Completar cifra": só para músicas sem Letra + Cifras (provisório, até o acervo estar completo).
   const completeHtml=hasFull?'':`<div class="complete-sheet-notice"><p>Esta música só tem o resumo harmônico.</p><button class="btn btn-primary" id="complete-sheet-button" type="button" onclick="completeSongSheet(${attrJs(m.id)})"><span aria-hidden="true">📄</span> Completar cifra</button></div>`;
-  const combinedHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,m.view==='chords'?'chords':'combined'):completeHtml+summaryHtml;
+  const sheetKeyShift=hasFull&&!stageMode?detectSheetShiftToSummary(m.fullChordSheet.content,m):null;
+  const sheetKeyNotice=sheetKeyShift?`<div class="complete-sheet-notice"><p>A Letra + Cifras está em outro tom que o resumo harmônico.</p><button class="btn btn-primary" type="button" onclick="fixSheetKey(${attrJs(m.id)})">Ajustar cifra para o tom ${eventEsc(m.key||summary.currentKey||'')}</button></div>`:'';
+  const combinedHtml=hasFull?sheetKeyNotice+renderFullChordSheet(m.fullChordSheet,totalShift,m.id,m.view==='chords'?'chords':'combined'):completeHtml+summaryHtml;
   const lyricsHtml=hasFull?renderFullChordSheet(m.fullChordSheet,totalShift,m.id,'lyrics'):renderSummaryProjection(summary,totalShift,m.id,'lyrics');
   const stageHtml=stageMode&&activeStagePreferences?.contentMode==='structure'
     ?renderStageStructure(summary,totalShift)
@@ -3361,6 +3363,54 @@ musicList.addEventListener('pointerup',finishSongSwipe);musicList.addEventListen
 
 // ── EDIT / ADD ────────────────────────────────────────────────────────
 let completingSongId=null;
+// Tom da Letra + Cifras x resumo (Thiago, 23/10): os dois precisam ficar no mesmo tom.
+// A cifra completa é levada para o tom do resumo (o tom salvo da música); o resumo não muda.
+const SHEET_KEY_NOTES={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
+function chordClassSet(chords,shift=0){
+  const out=new Set();
+  chords.forEach(chord=>{const m=String(chord||'').trim().replace(/♯/g,'#').replace(/♭/g,'b').match(/^([A-G][#b]?)(m(?!aj))?/);if(!m||SHEET_KEY_NOTES[m[1]]==null)return;out.add(((SHEET_KEY_NOTES[m[1]]+shift)%12+12)%12+(m[2]?'m':''));});
+  return out;
+}
+function summaryChordList(song){
+  try{return(songFormat.harmonicSummary(song).sections||[]).flatMap(section=>(section.lines||[]).flatMap(line=>(line.chords||[]).map(item=>item.chord)));}catch(_){return[];}
+}
+function sheetChordList(content){
+  const parse=window.multiInstrumentChordLibrary?.parseChord;
+  return String(content||'').split('\n').filter(line=>songFormat.chordLine(line)).flatMap(line=>line.replace(/\(\d+x\)/gi,' ').split(/[\s|]+/).filter(token=>token&&(!parse||parse(token))));
+}
+// Quantos semitons a cifra completa precisa andar para bater com os acordes do resumo.
+// null = não dá para afirmar (resumo com poucos acordes ou empate entre tons).
+function detectSheetShiftToSummary(content,song){
+  const summary=chordClassSet(summaryChordList(song)),sheetChords=sheetChordList(content);
+  if(summary.size<2||!sheetChords.length)return null;
+  const scores=Array.from({length:12},(_,shift)=>{const shifted=chordClassSet(sheetChords,shift);let hit=0;summary.forEach(item=>{if(shifted.has(item))hit++;});return hit;});
+  const best=Math.max(...scores);
+  if(best<2||best/summary.size<0.6||scores.filter(score=>score===best).length>1)return null;
+  return scores.indexOf(best);
+}
+// Fallback pelo tom/capo que a busca informou: forma da cifra encontrada -> forma da música salva.
+function keyShiftFromSearch(song,data){
+  const tom=String(data?.tom||'').match(/^[A-G][#b]?/)?.[0];if(!tom||!song?.key)return 0;
+  const capoDiff=(Number(songFormat.parseCapo(song.capo))||0)-(Number(data?.capotraste)||0);
+  return((eventKeyShift(tom,song.key)-capoDiff)%12+12)%12;
+}
+function sheetAtSongKey(sheet,song,data){
+  if(!sheet?.content)return sheet;
+  const detected=detectSheetShiftToSummary(sheet.content,song);
+  const shift=detected!=null?detected:keyShiftFromSearch(song,data);
+  return shift?{...sheet,content:transposeEventChordText(sheet.content,shift),sections:[]}:sheet;
+}
+async function fixSheetKey(id){
+  const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
+  const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
+  const shift=song?.fullChordSheet?.content?detectSheetShiftToSummary(song.fullChordSheet.content,song):null;
+  if(!shift)return;
+  const fullChordSheet={...song.fullChordSheet,content:transposeEventChordText(song.fullChordSheet.content,shift),sections:[]};
+  if(eventContext){await saveContextEventSong(eventContext,eventSongCopy({...song,fullChordSheet}));showToast('✅ Letra + Cifras ajustada para o tom do resumo.');return;}
+  const updated=songRepository.update(musicas,song.id,{fullChordSheet});
+  if(!commitSongs(updated.songs))return;
+  openDetail(updated.song.id);showToast('✅ Letra + Cifras ajustada para o tom do resumo.');
+}
 function openCompleteSheetEditor(id){editMusica(id);setTimeout(()=>setSimpleEditorView('full'),0);}
 async function completeSongSheet(id){
   const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
@@ -3387,10 +3437,10 @@ async function completeSongSheet(id){
       // Completar dentro do evento também completa a música da biblioteca (se ela ainda não tem),
       // senão a mesma música continua "só com resumo" fora do evento.
       const library=musicas.find(item=>String(item.id)===String(current.id));
-      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheet});commitSongs(lib.songs);}
-      await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheet}));return;
+      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheetAtSongKey(sheet,library,result?.data)});commitSongs(lib.songs);}
+      await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheetAtSongKey(sheet,current,result?.data)}));return;
     }
-    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheet});
+    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheetAtSongKey(sheet,current,result?.data)});
     if(!commitSongs(updated.songs))return;
     renderMusicas();openDetail(updated.song.id);
     showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
