@@ -57,8 +57,20 @@ const server = http.createServer((req, res) => {
     await ana.getByRole('searchbox', { name: 'Buscar por nome ou nome de usuário' }).fill('@bruno');
     await ana.locator('[data-playlist-user]').first().waitFor({ timeout: 6000 }).catch(async error => { throw new Error((await ana.locator('#playlist-invite-status').textContent()) + ' | ' + errors.join('; ') + ' | ' + error.message); });
     await ana.locator('[data-playlist-user]').first().click();
-    await ana.getByRole('button', { name: 'Convidar como colaborador', exact: true }).click();
+    await ana.evaluate(()=>{
+      window.originalPlaylistCollaboration=playlistCollaboration;
+      window.playlistCollaboration={...playlistCollaboration,invite:async()=>{throw new Error('Falha de conexão no teste.');}};
+    });
+    await ana.screenshot({path:path.join(root,'artifacts/playlist-invite-profile-compact.png')});
+    assert.equal(await ana.locator('.playlist-invite-profile').count(),1,'perfil usa a confirmação compacta dedicada');
+    await ana.getByRole('button', { name: 'Enviar convite', exact: true }).click();
+    await ana.getByText('Falha de conexão no teste.', { exact: true }).waitFor();
+    assert.equal(await ana.locator('#playlist-invite-layer').count(),1,'falha mantém o convite aberto para nova tentativa');
+    assert.equal(await ana.locator('#playlist-send-invite').isEnabled(),true,'falha reabilita o envio');
+    await ana.evaluate(()=>{window.playlistCollaboration=window.originalPlaylistCollaboration;delete window.originalPlaylistCollaboration;});
+    await ana.getByRole('button', { name: 'Enviar convite', exact: true }).click();
     await ana.getByText('Convite enviado. A pessoa entrará após aceitar.', { exact: true }).waitFor();
+    assert.equal(await ana.locator('#playlist-invite-layer').count(),0,'sucesso fecha a tela de convite');
     await ana.evaluate(() => playlistInvites.close());
     await bruno.evaluate(async () => { await playlistCollaboration.refresh(true); notificationCenter.open(); });
     assert.equal(await bruno.evaluate(() => playlistCollaboration.getInbox().invitations.length), 1, 'recipient inbox contains the direct invitation');

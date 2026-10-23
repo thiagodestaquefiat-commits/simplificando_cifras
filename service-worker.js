@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v594-event-version-conflict";
+const CACHE_NAME = "simplificando-cifras-v598-mobile-invites-integrated";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -39,20 +39,20 @@ const ASSETS = [
   "./js/event-detail-refactor.css?v=66",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
-  "./css/search-menu.css?v=12",
-  "./css/stage-mode-reference.css?v=18",
+  "./css/search-menu.css?v=13",
+  "./css/stage-mode-reference.css?v=19",
   "./js/search-menu.js?v=6",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=25",
+  "./css/home-playlists.css?v=26",
   "./js/home-playlists.js?v=19",
   "./js/user-playlists.js?v=3",
   "./js/notification-center.js?v=5",
   "./js/playlist-collaboration.js?v=1",
-  "./js/playlist-invites.js?v=1",
+  "./js/playlist-invites.js?v=3",
   "./js/event-model.js?v=7",
   "./js/event-user-invites.js?v=10",
   "./js/event-collaboration-client.js?v=19",
