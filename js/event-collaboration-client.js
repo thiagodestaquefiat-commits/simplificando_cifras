@@ -242,11 +242,24 @@
     if(event.repertoire?.some(item=>item.shared?.songData))await requireEventSongData();
     await ensureRegistered(fallback);
     if(owner!==personalQueueOwner())throw new CollaborationError('A conta mudou. Reabra o evento.',409,'conta_alterada');
-    const normalized = global.eventModel.create(event);
-    const body = await request("/events" + (normalized.remoteVersion == null ? "" : "/" + encodeURIComponent(normalized.id)), {
-      method: normalized.remoteVersion == null ? "POST" : "PUT",
-      body: JSON.stringify({ ...toRemotePayload(normalized), legacyMigration: Boolean(options && options.legacyMigration) })
+    let normalized = global.eventModel.create(event);
+    const send = (value) => request("/events" + (value.remoteVersion == null ? "" : "/" + encodeURIComponent(value.id)), {
+      method: value.remoteVersion == null ? "POST" : "PUT",
+      body: JSON.stringify({ ...toRemotePayload(value), legacyMigration: Boolean(options && options.legacyMigration) })
     });
+    let body;
+    try {
+      body = await send(normalized);
+    } catch (error) {
+      // Quando alguém aceita um convite, a versão do evento sobe no servidor e o
+      // repertório do líder era recusado em silêncio. Reaplica as alterações do
+      // líder sobre a versão atual, mantendo os integrantes que estão no servidor.
+      if (error.code !== "versao_desatualizada" || normalized.remoteVersion == null) throw error;
+      const remote = fromRemote(await request("/events/" + encodeURIComponent(normalized.id), { method: "GET" }));
+      if (String(remote.leaderId) !== String(normalized.leaderId)) throw error;
+      normalized = global.eventModel.create({ ...normalized, members: remote.members, remoteVersion: remote.remoteVersion });
+      body = await send(normalized);
+    }
     if (global.syncRealtime) global.syncRealtime.publishEvent(body.id || normalized.id);
     return fromRemote(body);
   }

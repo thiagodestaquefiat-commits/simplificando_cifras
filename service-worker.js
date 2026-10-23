@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v597-invite-profile";
+const CACHE_NAME = "simplificando-cifras-v598-mobile-invites-integrated";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -55,7 +55,7 @@ const ASSETS = [
   "./js/playlist-invites.js?v=3",
   "./js/event-model.js?v=7",
   "./js/event-user-invites.js?v=10",
-  "./js/event-collaboration-client.js?v=18",
+  "./js/event-collaboration-client.js?v=19",
   "./js/event-detail-refactor.css?v=53",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
@@ -152,7 +152,7 @@ const ASSETS = [
   "./js/editor/song-format.js?v=12",
   "./js/editor/song-format.js?v=13",
   "./js/event-model.js?v=6",
-  "./js/event-repository.js?v=9",
+  "./js/event-repository.js?v=10",
   "./js/closing-suggestions.js?v=1",
   "./js/event-collaboration-client.js?v=15",
   "./js/smart-scroll.js?v=5",
