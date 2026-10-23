@@ -66,8 +66,16 @@
     return { type, name, url };
   }
 
+  // Caracteres invisíveis vindos de páginas da web (espaço de largura zero, BOM, espaço não
+  // separável...) faziam "D9" não ser reconhecido como acorde e aparecer na cor da letra.
+  const INVISIBLE_CHARS = /[\u00ad\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\ufeff]/g;
+  const ODD_SPACES = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
+  function cleanSheetLine(value) {
+    return String(value == null ? "" : value).replace(INVISIBLE_CHARS, "").replace(ODD_SPACES, " ").replace(/\t/g, "    ");
+  }
+
   function chordLine(value) {
-    const tokens = repeatFromText(value).text.trim().split(/\s+/).filter(Boolean);
+    const tokens = repeatFromText(cleanSheetLine(value)).text.trim().split(/\s+/).filter(Boolean);
     return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token));
   }
 
@@ -337,5 +345,5 @@
     };
   }
 
-  global.songFormat = Object.freeze({ isSectionName, types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
+  global.songFormat = Object.freeze({ isSectionName, cleanSheetLine, types: TYPES, typeLabels: TYPE_LABELS, id, cleanText, parseCapo, chordLine, normalizeAccessContext, normalizeSourceInfo, normalizeFullChordSheet, normalize, fromLegacy, toLegacy, renderChordLine, simpleText, sectionsFromSimpleText, harmonicSummary });
 })(window);

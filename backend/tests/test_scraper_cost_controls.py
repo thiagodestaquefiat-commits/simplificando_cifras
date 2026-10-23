@@ -146,7 +146,7 @@ def test_song_with_featuring_in_cifraclub_slug_is_found_via_artist_list():
     finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
     hit = finder("A Boa parte", "Nívea Soares")
     assert hit is not None and hit.url == real and "A boa parte escolhi" in hit.content
-    assert calls[-2:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real]
+    assert calls[-3:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real + "simplificada.html", real]
 
 
 def test_artist_list_without_matching_song_gives_up_cheaply():
