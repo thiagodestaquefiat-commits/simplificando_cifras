@@ -46,7 +46,8 @@ def test_fetches_first_cifraclub_result_and_uses_chord_sheet(monkeypatch):
     context = web_search.search_chord_context("Música", http_client=client)
 
     assert context == "G   D\nLetra da música"
-    assert [call[0] for call in client.calls] == ["https://www.cifraclub.com.br/artista/musica/"]
+    # Tenta primeiro a versão simplificada; aqui ela existe, então nem abre a principal.
+    assert [call[0] for call in client.calls] == ["https://www.cifraclub.com.br/artista/musica/simplificada.html"]
     assert client.calls[0][1] == web_search.CIFRACLUB_HOSTS
     assert client.calls[0][2] == ("text/html",)
 
@@ -95,7 +96,8 @@ class RoutingHttpClient:
 
     def get_text(self, url, *, allowed_hosts, allowed_content_types):
         self.calls.append((url, allowed_hosts))
-        page = self.pages[url]
+        # Endereço que o teste não cadastrou = página inexistente (ex.: .../simplificada.html).
+        page = self.pages.get(url, MusicSourceUnavailable("ScraperAPI retornou status 404"))
         if isinstance(page, Exception):
             raise page
         return page, url
@@ -126,7 +128,8 @@ def test_cifraclub_is_fetched_before_simplificacifras_even_if_ranked_lower(monke
     client = RoutingHttpClient({"https://www.cifraclub.com.br/artista/musica/": "<pre>G D</pre>"})
 
     assert web_search.search_chord_context("Música", http_client=client) == "G D"
-    assert client.calls == [("https://www.cifraclub.com.br/artista/musica/", web_search.CIFRACLUB_HOSTS)]
+    assert client.calls == [("https://www.cifraclub.com.br/artista/musica/simplificada.html", web_search.CIFRACLUB_HOSTS),
+                            ("https://www.cifraclub.com.br/artista/musica/", web_search.CIFRACLUB_HOSTS)]
 
 
 def test_falls_back_to_simplificacifras_when_cifraclub_fails(monkeypatch):
@@ -174,7 +177,8 @@ def test_direct_url_is_tried_before_duckduckgo(monkeypatch):
     hit = web_search.find_chord_sheet("Música", "Artista", http_client=client)
 
     assert hit == web_search.ChordSheetHit("C G\nLetra", CIFRACLUB_DIRECT, "cifraclub")
-    assert client.calls == [(CIFRACLUB_DIRECT, web_search.CIFRACLUB_HOSTS)]
+    assert client.calls == [(CIFRACLUB_DIRECT + "simplificada.html", web_search.CIFRACLUB_HOSTS),
+                            (CIFRACLUB_DIRECT, web_search.CIFRACLUB_HOSTS)]
     assert queries == []
 
 
@@ -198,7 +202,8 @@ def test_fallback_order_cifraclub_simplificacifras_then_search(monkeypatch):
 
     assert hit == web_search.ChordSheetHit("Am F", ddg_simplifica, "simplificacifras")
     # Cifra Club sem cifra no endereço direto -> tenta uma vez a lista de músicas do artista antes da busca.
-    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT, "https://www.cifraclub.com.br/artista/musicas.html",
+    assert [call[0] for call in client.calls] == [CIFRACLUB_DIRECT + "simplificada.html", CIFRACLUB_DIRECT,
+                                                  "https://www.cifraclub.com.br/artista/musicas.html",
                                                   SIMPLIFICA_DIRECT, ddg_simplifica]
     assert queries == ["Música Artista cifra site:cifraclub.com.br", "Música Artista cifra site:simplificacifras.com.br"]
 
@@ -306,6 +311,7 @@ def test_web_search_respects_time_budget(monkeypatch):
             raise MusicSourceUnavailable("lento")
 
     hit, results = web_search._find("Música", "Artista", SlowClient(), lambda q: calls.append(q) or [], budget_seconds=45)
+    # Só a tentativa da simplificada: o tempo acabou e não abre mais nada.
     assert hit is None and len(calls) == 1
 
 
@@ -350,7 +356,8 @@ def test_cifraclub_is_tried_first_without_render():
     client = _ScraperLike({(url, False): "<pre>C  G4(6)  Am</pre>"})
     hit = web_search.find_chord_sheet("Isaías 9", "Rodolfo Abrantes", http_client=client, search_fn=lambda q: [])
     assert hit.source_name == "cifraclub" and hit.content == "C  G4(6)  Am"
-    assert client.calls[0][:2] == (url, False) and len(client.calls) == 1
+    # 1) simplificada (não existe aqui) 2) principal sem render. Nenhum render.
+    assert [call[:2] for call in client.calls] == [(url + "simplificada.html", False), (url, False)]
 
 
 def test_render_is_used_only_as_fallback():
@@ -406,3 +413,50 @@ def test_page_without_sheet_uses_artist_list_before_slow_render():
     hit = web_search.find_chord_sheet("Maranata / Lágrimas de Fogo", "Vitohria Sounds", http_client=client, search_fn=lambda q: [])
     assert hit is not None and hit.url == real
     assert not any(call[1] for call in client.calls), "não deveria usar o render"
+
+
+def test_simplified_version_is_preferred_when_it_exists():
+    """Cifra Club tem a principal e a simplificada: o ROUDY fica com a simplificada."""
+    main = "https://www.cifraclub.com.br/gabriela-rocha/me-atraiu/"
+    client = RoutingHttpClient({
+        main + "simplificada.html": "<pre>[Intro] <b>G</b>  <b>D</b>\n\n<b>G</b>\nLetra simples</pre>",
+        main: "<pre>[Intro] <b>C7M</b>  <b>D9</b>\n\n<b>C7M</b>\nLetra principal</pre>",
+    })
+    hit = web_search.find_chord_sheet("Me Atraiu", "Gabriela Rocha", http_client=client, search_fn=lambda q: [])
+    assert hit.url == main + "simplificada.html" and "Letra simples" in hit.content
+    assert [call[0] for call in client.calls] == [main + "simplificada.html"]
+
+
+def test_main_version_is_used_when_there_is_no_simplified():
+    main = "https://www.cifraclub.com.br/gabriela-rocha/me-atraiu/"
+    client = RoutingHttpClient({main: "<pre><b>C7M</b>\nLetra principal</pre>"})
+    hit = web_search.find_chord_sheet("Me Atraiu", "Gabriela Rocha", http_client=client, search_fn=lambda q: [])
+    assert hit.url == main and "Letra principal" in hit.content
+
+
+@pytest.mark.parametrize("url, expected", [
+    ("https://www.cifraclub.com.br/artista/musica/", "https://www.cifraclub.com.br/artista/musica/simplificada.html"),
+    ("https://cifraclub.com.br/artista/musica/", "https://www.cifraclub.com.br/artista/musica/simplificada.html"),
+    ("https://www.cifraclub.com.br/artista/musica/simplificada.html", None),
+    ("https://www.cifraclub.com.br/artista/", None),
+    ("https://www.simplificacifras.com.br/cifras/artista/musica", None),
+    (None, None),
+])
+def test_simplified_url(url, expected):
+    assert web_search.simplified_url(url) == expected
+
+
+def test_invisible_characters_do_not_break_chords_or_sections():
+    """Espaço de largura zero / não separável fazia "D9" virar letra e "[Refrão]" não virar seção."""
+    html = ("<pre>[Primeira Parte]\u200b\n\n\u00a0\u00a0\u00a0\u00a0<b>D9</b>\u200b\nEm qualquer lugar\n"
+            "\u200b\n\ufeff[Refrão]\n<b>C7M</b>\tD9\nOutra linha</pre>")
+    text = web_search.extract_chord_sheet(html)
+    assert "\u200b" not in text and "\u00a0" not in text and "\ufeff" not in text
+    assert text.splitlines()[2] == "    D9"
+    from app.services.local_sheet_parser import parse_chord_sheet
+    result = parse_chord_sheet(text, "Teste", "X")
+    sections = result.fullChordSheet.sections
+    assert [section.nome for section in sections] == ["Primeira Parte", "Refrão"]
+    assert sections[0].linhas[0].letra == "Em qualquer lugar"
+    assert [item.acorde for item in sections[0].linhas[0].acordes] == ["D9"]
+    assert [item.acorde for item in sections[1].linhas[0].acordes] == ["C7M", "D9"]

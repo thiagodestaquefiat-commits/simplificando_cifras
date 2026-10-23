@@ -146,7 +146,7 @@ def test_song_with_featuring_in_cifraclub_slug_is_found_via_artist_list():
     finder, _ = web_search.make_web_searchers("k", http_client=Site(), search_fn=lambda q: [], allow_search=False)
     hit = finder("A Boa parte", "Nívea Soares")
     assert hit is not None and hit.url == real and "A boa parte escolhi" in hit.content
-    assert calls[-2:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real]
+    assert calls[-3:] == ["https://www.cifraclub.com.br/nivea-soares/musicas.html", real + "simplificada.html", real]
 
 
 def test_artist_list_without_matching_song_gives_up_cheaply():
@@ -198,11 +198,10 @@ def test_limit_message_tells_how_many_when_it_frees_and_what_to_do():
     import time
     from app.services.ia_service import web_quota_message
     message = web_quota_message(10, time.time() + 3600)
-    assert message.startswith("Você atingiu o limite de busca na web (10 buscas a cada 24 horas).")
-    assert "Novas buscas liberam " in message and " às " in message
-    assert message.endswith("Enquanto isso, você pode enviar um arquivo ou foto da cifra.")
-    assert web_quota_message() == "Você atingiu o limite de busca na web. Enquanto isso, você pode enviar um arquivo ou foto da cifra."
-
+    assert message.startswith("Limite de 10 buscas na web atingido. Volta ")
+    assert " às " in message
+    assert message.endswith("Enquanto isso, envie foto ou PDF da cifra.")
+    assert web_quota_message() == "Limite de buscas na web atingido. Enquanto isso, envie foto ou PDF da cifra."
 
 def test_limit_error_carries_the_user_message():
     class Quota:
@@ -223,4 +222,4 @@ def test_real_user_quota_reports_reset_time(app):
     with app.app_context():
         quota = _user_web_quota("2 per day")
         assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
-        assert "(2 buscas a cada 24 horas)" in quota.message("quota-user") and "liberam" in quota.message("quota-user")
+        assert quota.message("quota-user").startswith("Limite de 2 buscas na web atingido. Volta ") and " às " in quota.message("quota-user")

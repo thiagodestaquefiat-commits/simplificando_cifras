@@ -48,7 +48,7 @@ def test_find_goes_straight_to_the_page_found_by_site_search():
     hit, _ = _find("Na Sua Estante", None, client, search_fn=lambda q: [],
                    site_search=lambda t, a, c: SiteSearchResult(ok=True, url=url))
     assert hit and hit.url == url and "Letra da música" in hit.content
-    assert client.requests == [url]
+    assert client.requests == [url + "simplificada.html", url]  # simplificada não existe -> principal
 
 
 def test_find_stops_early_when_cifraclub_confirms_song_does_not_exist():

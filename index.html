@@ -427,7 +427,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 .profile-image-editor{position:fixed;inset:0;z-index:160;display:flex;background:#000;color:#fff}.profile-image-editor[hidden]{display:none}.profile-image-editor-card{display:flex;width:100%;height:100dvh;min-height:0;overflow:hidden;flex-direction:column;background:#000}.profile-image-editor-header{display:grid;min-height:calc(58px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 12px 8px;grid-template-columns:minmax(76px,1fr) minmax(0,2fr) minmax(76px,1fr);align-items:center;border-bottom:1px solid rgba(255,255,255,.1);background:#090909}.profile-image-editor-header strong{overflow:hidden;font-size:14px;text-align:center;text-overflow:ellipsis;white-space:nowrap}.profile-image-editor-action{min-height:42px;padding:0 8px;border:0;background:transparent;color:#f5f5f5;font:700 12px/1 inherit;cursor:pointer}.profile-image-editor-action:first-child{text-align:left}.profile-image-editor-action:last-child{color:#0789e7;text-align:right}.profile-image-editor-action:focus-visible{outline:2px solid #0789e7;outline-offset:2px}.profile-image-editor-body{display:flex;min-height:0;flex:1}.profile-crop-stage{display:flex;width:100%;min-height:0;padding:24px 18px calc(24px + env(safe-area-inset-bottom));align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#050505}.profile-crop-canvas-wrap{position:relative;width:min(82vw,560px,calc(100dvh - 190px));max-width:100%;aspect-ratio:1;overflow:hidden;border-radius:50%;background:#111;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}.profile-crop-canvas-wrap.is-interacting{cursor:grabbing}.profile-crop-canvas{display:block;width:100%;height:100%}.profile-crop-ring{position:absolute;inset:1px;border:2px solid rgba(255,255,255,.92);border-radius:50%;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.16)}.profile-crop-grid{position:absolute;inset:0;opacity:0;border-radius:50%;background:linear-gradient(90deg,transparent 33.1%,rgba(255,255,255,.34) 33.3% 33.6%,transparent 33.8% 66.2%,rgba(255,255,255,.34) 66.4% 66.7%,transparent 66.9%),linear-gradient(transparent 33.1%,rgba(255,255,255,.34) 33.3% 33.6%,transparent 33.8% 66.2%,rgba(255,255,255,.34) 66.4% 66.7%,transparent 66.9%);pointer-events:none;transition:opacity .16s ease}.profile-crop-canvas-wrap.is-interacting .profile-crop-grid{opacity:1}.profile-crop-hint{margin:0;color:#a3a3a3;font-size:11px;line-height:1.4;text-align:center}.profile-crop-hint strong{display:block;margin-bottom:4px;color:#f5f5f5;font-size:13px}@media(max-width:620px){.profile-image-editor-header{grid-template-columns:82px minmax(0,1fr) 82px}.profile-crop-stage{padding-inline:12px}.profile-crop-canvas-wrap{width:min(92vw,calc(100dvh - 200px));min-width:230px}}@media(prefers-reduced-motion:reduce){.profile-crop-grid{transition:none}}
 html.a11y-colorblind{--music-accent:#e69f00;--chord-color:#e69f00;--success:#009e73;--danger:#d55e00}html.a11y-high-contrast{--bg:#000;--bg2:#050505;--bg3:#111;--surface:#050505;--surface-hover:#171717;--accent:#ffd400;--accent2:rgba(255,212,0,.18);--text:#fff;--text2:#eee;--border:rgba(255,255,255,.42);--music-accent:#ffd400;--chord-color:#ffd400;--success:#00ff85;--danger:#ff6b6b}html.a11y-high-contrast button:focus-visible,html.a11y-high-contrast input:focus-visible,html.a11y-high-contrast select:focus-visible{outline:3px solid #ffd400!important;outline-offset:2px}
 .song-view-switch{display:grid;grid-template-columns:repeat(var(--song-view-count,2),minmax(0,1fr));gap:5px;margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#091525}.song-view-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:800;cursor:pointer}.song-view-switch button.active{background:#1d4ed8;color:#fff}.full-chord-sheet{padding:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.full-chord-line{min-height:1.55em;color:#f8fafc;font:500 15.3px/1.65 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.full-chord-line.is-chord{color:var(--chord-color);font-weight:700;white-space:pre-wrap}.full-chord-line.is-section{margin-top:14px;color:#93c5fd;font-size:11.7px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.full-chord-private{margin:0 0 12px;color:var(--text2);font-size:10px}.stage-mode .song-view-switch{display:none}
-.tablature-view{display:grid;gap:12px}.tablature-toolbar{display:flex;padding:10px 12px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:10px}.tablature-toolbar strong{color:var(--text);font-size:11px}.tablature-toolbar span:nth-child(3){margin-left:auto}.tablature-size-btn{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);font-weight:900;cursor:pointer}.tablature-section{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.tablature-section h3{padding:10px 14px;border-bottom:1px solid var(--border);color:#93c5fd;font-size:11px;letter-spacing:.6px;text-transform:uppercase}.tablature-scroll{overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}.tablature-content{min-width:max-content;color:#f8fafc;font:600 var(--tablature-font-size,13px)/1.55 'JetBrains Mono',Consolas,monospace;white-space:pre}.tablature-note{padding:11px 13px;border:1px solid rgba(245,158,11,.25);border-radius:11px;background:rgba(245,158,11,.06);color:var(--text2);font-size:10px;line-height:1.45}
+.sheet-music-view{display:grid;gap:12px}.sheet-music-empty{padding:28px 4px;justify-items:stretch;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.sheet-music-empty .btn,.sheet-music-empty .tablature-note{font-family:inherit}.sheet-music-empty-copy{display:grid;gap:6px}.sheet-music-empty-copy strong{font-size:18px;color:var(--text)}.sheet-music-empty-copy p{margin:0;color:var(--text2);font-size:14px;line-height:1.5}.sheet-music-toolbar{flex-wrap:wrap}.sheet-music-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 120px}.sheet-music-paper{background:#fff;color:#111;border-radius:12px;padding:8px 4px;overflow-x:auto;min-height:160px}.sheet-music-paper svg{max-width:none}.sheet-music-status{margin:0;padding:28px 16px;text-align:center;color:#4b5160;font-size:14px;line-height:1.5}.sheet-music-pdf-page{display:block;margin:0 auto 8px;background:#fff;max-width:none}.sheet-music-actions{display:flex;flex-wrap:wrap;gap:8px}.sheet-music-actions .btn{flex:1 1 140px;width:auto;margin:0}.sheet-music-remove.is-armed{border-color:#e5484d;color:#e5484d}.tablature-view{display:grid;gap:12px}.tablature-toolbar{display:flex;padding:10px 12px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:10px}.tablature-toolbar strong{color:var(--text);font-size:11px}.tablature-toolbar span:nth-child(3){margin-left:auto}.tablature-size-btn{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);font-weight:900;cursor:pointer}.tablature-section{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,rgba(17,31,51,.88),rgba(11,23,40,.92))}.tablature-section h3{padding:10px 14px;border-bottom:1px solid var(--border);color:#93c5fd;font-size:11px;letter-spacing:.6px;text-transform:uppercase}.tablature-scroll{overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}.tablature-content{min-width:max-content;color:#f8fafc;font:600 var(--tablature-font-size,13px)/1.55 'JetBrains Mono',Consolas,monospace;white-space:pre}.tablature-note{padding:11px 13px;border:1px solid rgba(245,158,11,.25);border-radius:11px;background:rgba(245,158,11,.06);color:var(--text2);font-size:10px;line-height:1.45}
 
 .event-section-title--center{text-align:center}
 .event-repertoire-list{display:block}
@@ -934,7 +934,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 .topbar-search-back:focus,.topbar-search-back:focus-visible,.topbar-search-clear:focus,.topbar-search-clear:focus-visible,.topbar-search-input:focus,.topbar-search-input:focus-visible{outline:none!important;box-shadow:none!important}
 .playlist-search-recents{position:absolute;z-index:20;top:100%;right:0;left:0;min-height:calc(100dvh - 70px);padding:6px 14px 14px;border:0;background:#000;color:#fff}.playlist-search-recents[hidden]{display:none}.playlist-search-recents-title{display:flex;min-height:30px;align-items:center;justify-content:space-between;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-recents-clear{border:0;background:transparent;color:#0a84ff;font:600 11px/1 inherit;cursor:pointer}.playlist-search-recent{display:grid;width:100%;min-height:48px;padding:0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:30px minmax(0,1fr) 22px;align-items:center;gap:10px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-recent svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-recent>svg{color:#d8d8dc}.playlist-search-recent span{overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}.playlist-search-recent .playlist-search-recent-arrow{width:18px;height:18px;color:#b5b5ba}
 .playlist-search-results-label{min-height:34px;padding-top:7px;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-result{display:grid;width:100%;min-height:58px;padding:5px 0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:42px minmax(0,1fr) 24px;align-items:center;gap:11px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-result-art{display:grid;width:42px;height:42px;place-items:center;border-radius:5px;background:#1c1c1e;color:#d8d8dc}.playlist-search-result-art svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-result-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-result-copy strong,.playlist-search-result-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-search-result-copy strong{font-size:14px;font-weight:650}.playlist-search-result-copy small{color:#9b9ba1;font-size:12px}.playlist-search-result-arrow{color:#b5b5ba;font-size:25px;font-weight:300}.playlist-search-no-results{padding:28px 0;color:#8e8e93;text-align:center;font-size:13px}
-.playlist-search-online{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}@media(min-width:900px){.detail-view.detail-view{box-shadow:0 0 0 100vmax rgba(0,0,0,.78)!important}}.complete-sheet-notice{display:grid;gap:10px;margin:4px 0 18px;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03)}.complete-sheet-notice p{margin:0;color:var(--text-secondary,#a1a1a6);font-size:13px}.complete-sheet-notice .btn{width:100%;min-height:44px}.playlist-search-fallback-actions{display:flex;gap:8px;margin-top:10px}.playlist-search-fallback-actions .btn{flex:1;min-height:40px;font-size:13px}.playlist-search-online-status{min-height:48px;padding:15px 0;color:#8e8e93;font-size:12px}.playlist-search-online-row{display:grid;min-height:62px;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-online-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-online-copy strong{overflow:hidden;font-size:14px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.playlist-search-online-copy small{display:-webkit-box;overflow:hidden;color:#9b9ba1;font-size:12px;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:2}.playlist-search-online-source{display:none}
+.playlist-search-online{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}@media(min-width:900px){.detail-view.detail-view{box-shadow:0 0 0 100vmax rgba(0,0,0,.78)!important}}.complete-sheet-notice{display:grid;gap:10px;margin:4px 0 18px;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03)}.complete-sheet-notice p{margin:0;color:var(--text-secondary,#a1a1a6);font-size:13px}.complete-sheet-notice .btn{width:100%;min-height:44px}.playlist-search-fallback-actions{display:flex;gap:8px;margin-top:10px}.playlist-search-fallback-actions .btn{flex:1;min-height:40px;font-size:13px}.playlist-search-online-status{min-height:48px;padding:15px 0;color:#8e8e93;font-size:12px}.search-limit-notice-title{display:block;color:var(--text-primary,#F5F5F7);font-size:20px;font-weight:700;line-height:1.25}.search-limit-notice-body{display:block;margin-top:6px;color:var(--text-secondary,#c7c7cc);font-size:16px;line-height:1.4}.playlist-search-online-row{display:grid;min-height:62px;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-online-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-online-copy strong{overflow:hidden;font-size:14px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.playlist-search-online-copy small{display:-webkit-box;overflow:hidden;color:#9b9ba1;font-size:12px;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:2}.playlist-search-online-source{display:none}
 .topbar-cover-action{display:grid;width:40px;height:40px;flex:0 0 40px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#d9dfe7;cursor:pointer}.topbar-cover-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.topbar-cover-input{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)}
 .tab-bar,html[data-ui-scale] .tab-bar{position:fixed;z-index:15;right:0;bottom:0;left:0;width:100%;height:calc(49px + env(safe-area-inset-bottom));min-height:0;margin:0;padding:0 0 env(safe-area-inset-bottom);grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;overflow:visible;border:0;border-radius:0;background-color:rgba(18,18,18,.75);box-shadow:none;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transform:none;isolation:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif}
 .tab-bar .tab-indicator{display:none}.tab-bar .tab,html[data-ui-scale] .tab-bar .tab{display:flex;width:100%;height:49px;min-height:49px;padding:4px 0 2px;align-items:center;justify-content:flex-start;flex-direction:column;gap:1px;border:0;border-radius:0;background:transparent;color:#8e8e93;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;font-size:10px;font-weight:500;letter-spacing:0;line-height:12px;text-shadow:none;transition:none;-webkit-tap-highlight-color:transparent}.tab-bar .tab::before{display:none}.tab-bar .tab:hover{color:#8e8e93}.tab-bar .tab.active,.tab-bar .tab.active:hover,html[data-ui-scale] .tab-bar .tab.active{color:#0a84ff!important;background:transparent;text-shadow:none}.tab-bar .tab:focus,.tab-bar .tab:focus-visible{outline:none!important;box-shadow:none!important}.tab-icon{display:block;width:25px;height:25px;flex:0 0 25px;margin:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.tab-icon .tab-icon-filled{display:none;fill:currentColor;stroke:none}.tab-bar .tab.active .tab-icon{stroke-width:1.8}.tab-bar .tab.active .tab-icon .tab-icon-outline{display:none}.tab-bar .tab.active .tab-icon .tab-icon-filled{display:block}
@@ -1170,6 +1170,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 3 — Letra"></button>
       <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 3 — Letra e cifra</span>
     </nav>
+    <input type="file" id="sheet-music-input" hidden onchange="handleSheetMusicFile(this)">
     <div class="detail-body" id="detail-content"></div>
   </div>
 
@@ -1238,6 +1239,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
 <script src="js/storage.js?v=2"></script>
 <script src="js/tablature.js?v=2"></script>
+<script src="js/sheet-music.js?v=1"></script>
 <script src="js/song-model.js?v=6"></script>
 <script src="js/demo-library.js?v=4"></script>
 <script src="js/medley-repository.js?v=2"></script>
@@ -1266,7 +1268,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=2"></script>
 <script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=12"></script>
+<script src="js/editor/song-format.js?v=13"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -1291,8 +1293,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-delivery.js?v=1"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=16"></script>
-<script src="js/ai/ai-harmonic-summary.js?v=20"></script>
+<script src="js/ai/harmonic-summary-client.js?v=17"></script>
+<script src="js/ai/ai-harmonic-summary.js?v=21"></script>
 <script src="js/ai/camera-capture.js?v=5"></script>
 <script src="js/assistant-intent-catalog.js?v=1"></script>
 <script src="js/assistant-intent-client.js?v=1"></script>
@@ -2036,8 +2038,12 @@ function isChordLine(linha){
   return songFormat.chordLine(linha);
 }
 
+// "[Refrão]", "Intro:", "Primeira Parte" sozinhos na linha = título de seção.
+const SHEET_SECTION_LINE=/^\s*(?:\[[^\]]{1,60}\]|intro|introdução|verso(?:\s+\d+)?|pré-refrão|refrão|ponte|solo|interlúdio|final|outro|(?:primeira|segunda|terceira|quarta|quinta)\s+parte)\s*:?\s*$/i;
 function renderMusicalText(text,totalShift,full=false){
-  return String(text||'').split('\n').map(line=>{
+  return String(text||'').split('\n').map(raw=>{
+    const line=songFormat.cleanSheetLine(raw);
+    if(full&&SHEET_SECTION_LINE.test(line))return `<div class="full-chord-line is-section">${eventEsc(line.trim().replace(/^\[|\]$/g,''))}</div>`;
     const chord=isChordLine(line);
     const css=full?`full-chord-line${chord?' is-chord':''}`:chord?'chord-line':'letra-linha';
     return `<div class="${css}">${eventEsc(chord?shiftText(line,totalShift):line)}</div>`;
@@ -2305,12 +2311,18 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${structured}</article>`;
   }
   const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
-    const text=raw.trimEnd();
-    if(!text) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
+    const text=songFormat.cleanSheetLine(raw).trimEnd();
+    if(!text.trim()) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
     if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
-    const section=/^\s*(?:\[.*\]|intro|introdução|verso(?:\s+\d+)?|pré-refrão|refrão|ponte|solo|interlúdio|final|outro)\s*:?\s*$/i.test(text);
+    // "[Intro] C7M  D9  Bm7": título da seção + linha de acordes.
+    const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
+    if(tagged&&tagged[2].trim()&&isChordLine(tagged[2])){
+      const label=`<div class="full-chord-line is-section">${eventEsc(tagged[1].trim())}</div>`;
+      return contentMode==='lyrics'?label:label+renderSmartFullChordLine(shiftText(tagged[2].trim(),totalShift));
+    }
+    const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
-    return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(text)}</div>`;
+    return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(section?text.trim().replace(/^\[|\]$/g,''):text)}</div>`;
   }).join('');
   return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
 }
@@ -2321,10 +2333,68 @@ function renderTablature(value){
   const sections=tab.sections.map(section=>`<section class="tablature-section"><h3>${eventEsc(section.title)}</h3>${section.tuning?`<p class="tablature-note">Afinação: ${eventEsc(section.tuning)}</p>`:''}<div class="tablature-scroll"><pre class="tablature-content">${eventEsc(section.content)}</pre></div></section>`).join('');
   return `<div class="tablature-view" style="--tablature-font-size:${tablatureFontSize}px"><div class="tablature-toolbar"><strong>${eventEsc(instrumentLabels[tab.instrument]||instrumentLabels.other)}</strong><span>Afinação: ${eventEsc(tab.tuning)}</span><span>Capotraste: ${tab.capo||'Sem'}</span><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(-1)" aria-label="Diminuir tablatura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustTablatureSize(1)" aria-label="Aumentar tablatura">A+</button></div><p class="tablature-note">A tablatura é exibida exatamente como foi cadastrada e não é alterada ao transpor o tom.</p>${sections}</div>`;
 }
+// ── Partitura (PDF ou MusicXML) ─────────────────────────────────────────
+// A partitura fica na música da biblioteca. Aberta por evento/playlist, a tela mostra a cópia
+// (currentDetailSongOverride), então buscamos a partitura também na música da biblioteca.
+let sheetMusicZoom=window.innerWidth<600?.7:1,sheetMusicRemoveArmed=false,sheetMusicRemoveTimer=0,sheetMusicBusy=false;
+function sheetMusicLibrarySong(songId=currentDetailId){return musicas.find(item=>String(item.id)===String(songId))||null;}
+function currentSheetMusic(source){return window.sheetMusic?.normalize(source?.sheetMusic||sheetMusicLibrarySong(source?.id)?.sheetMusic)||null;}
+function renderSheetMusicPage(sheet){
+  if(!sheet)return `<div class="sheet-music-view sheet-music-empty"><div class="sheet-music-empty-copy"><strong>Partitura</strong><p>Adicione a partitura desta música em PDF ou MusicXML. Com MusicXML, a partitura acompanha o Tom.</p></div><button type="button" class="btn btn-primary" onclick="openSheetMusicPicker()">Adicionar partitura</button><p class="tablature-note">MusicXML: no MuseScore, use Arquivo → Exportar → MusicXML. O PDF fica salvo neste aparelho.</p></div>`;
+  const transposes=sheet.format==='musicxml';
+  const note=transposes?(currentSemitones?`Partitura transposta ${currentSemitones>0?'+':'−'}${Math.abs(currentSemitones)} semitom${Math.abs(currentSemitones)>1?'s':''}, acompanhando o Tom.`:'A partitura acompanha o Tom da música.'):'PDF exibido como foi enviado. Ele não muda ao transpor o tom.';
+  return `<div class="sheet-music-view"><div class="tablature-toolbar sheet-music-toolbar"><strong>${eventEsc(sheetMusic.formatLabel(sheet))}</strong><span class="sheet-music-name">${eventEsc(sheet.name)}</span><button class="tablature-size-btn" type="button" onclick="adjustSheetMusicZoom(-1)" aria-label="Diminuir partitura">A−</button><button class="tablature-size-btn" type="button" onclick="adjustSheetMusicZoom(1)" aria-label="Aumentar partitura">A+</button></div><p class="tablature-note">${note}</p><div class="sheet-music-paper" id="sheet-music-paper"><p class="sheet-music-status">Abrindo a partitura…</p></div><div class="sheet-music-actions"><button type="button" class="btn btn-outline" onclick="openSheetMusicPicker()">Trocar arquivo</button><button type="button" class="btn btn-outline sheet-music-remove" id="sheet-music-remove" onclick="removeSheetMusic()">Remover partitura</button></div></div>`;
+}
+function paintSheetMusic(sheet){
+  const paper=document.getElementById('sheet-music-paper');if(!paper||!window.sheetMusic)return;
+  sheetMusic.render(paper,sheet,{semitones:currentSemitones,zoom:sheetMusicZoom,onRendered:()=>requestAnimationFrame(syncSongPageHeight)});
+}
+function adjustSheetMusicZoom(delta){
+  sheetMusicZoom=Math.max(.6,Math.min(1.8,Math.round((sheetMusicZoom+(delta<0?-.1:.1))*10)/10));
+  const source=currentDetailSongOverride||sheetMusicLibrarySong(),sheet=currentSheetMusic(source);if(sheet)paintSheetMusic(sheet);
+  showToast(`Partitura em ${Math.round(sheetMusicZoom*100)}%`);
+}
+function openSheetMusicPicker(){
+  if(sheetMusicBusy)return;
+  if(!sheetMusicLibrarySong()){showToast('⚠️ Adicione esta música à sua biblioteca para anexar uma partitura.');return;}
+  const input=document.getElementById('sheet-music-input');input.accept=sheetMusic.accept;input.value='';input.click();
+}
+async function commitSongSheetMusic(value){
+  const library=sheetMusicLibrarySong();if(!library)return false;
+  const result=songRepository.update(musicas,library.id,{sheetMusic:value||null});
+  if(!commitSongs(result.songs))return false;
+  if(currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(library.id))currentDetailSongOverride={...currentDetailSongOverride,sheetMusic:value||null};
+  renderMusicas();return true;
+}
+async function handleSheetMusicFile(input){
+  const file=input.files&&input.files[0];input.value='';if(!file||sheetMusicBusy)return;
+  const previous=currentSheetMusic(sheetMusicLibrarySong());
+  sheetMusicBusy=true;showToast('⏳ Preparando a partitura…');
+  try{
+    const sheet=await sheetMusic.importFile(file);
+    if(!await commitSongSheetMusic(sheet)){await sheetMusic.discard(sheet);return;}
+    if(previous&&previous.fileKey!==sheet.fileKey)sheetMusic.discard(previous);
+    renderDetail();setSongView('sheet');
+    showToast(sheet.format==='pdf'?'✅ Partitura em PDF adicionada neste aparelho':'✅ Partitura adicionada. Ela acompanha o Tom.');
+  }catch(error){showToast('⚠️ '+(error?.message||'Não foi possível abrir este arquivo.'));}
+  finally{sheetMusicBusy=false;}
+}
+async function removeSheetMusic(){
+  const button=document.getElementById('sheet-music-remove'),previous=currentSheetMusic(sheetMusicLibrarySong());if(!previous)return;
+  // Confirmação dentro da própria tela: o primeiro toque arma, o segundo remove.
+  if(!sheetMusicRemoveArmed){sheetMusicRemoveArmed=true;if(button){button.textContent='Toque de novo para remover';button.classList.add('is-armed');}clearTimeout(sheetMusicRemoveTimer);sheetMusicRemoveTimer=setTimeout(()=>{sheetMusicRemoveArmed=false;const again=document.getElementById('sheet-music-remove');if(again){again.textContent='Remover partitura';again.classList.remove('is-armed');}},4000);return;}
+  sheetMusicRemoveArmed=false;clearTimeout(sheetMusicRemoveTimer);
+  if(!await commitSongSheetMusic(null))return;
+  sheetMusic.discard(previous);renderDetail();setSongView('sheet');showToast('Partitura removida');
+}
 function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
+// Páginas depois de Resumo / Letra e cifra / Letra: Partitura (sempre, para adicionar ali) e Tablaturas.
+let SONG_EXTRA_VIEWS=[];
+function songViewForPage(index){return index===0?'summary':index<=2?'full':SONG_EXTRA_VIEWS[index-3]||'full';}
 function setSongView(view){
-  currentSongView=view==='tablature'&&SONG_LAST_PAGE===3?'tablature':view==='full'?'full':'summary';
-  if(!stageMode)setSongPage(currentSongView==='tablature'?3:view==='full'?1:0,{source:'legacy'});
+  const extra=SONG_EXTRA_VIEWS.indexOf(view);
+  currentSongView=extra>=0?view:view==='full'?'full':'summary';
+  if(!stageMode)setSongPage(extra>=0?3+extra:view==='full'?1:0,{source:'legacy'});
   else renderDetail();
 }
 
@@ -2369,7 +2439,7 @@ function restoreSongPosition(anchor,page){
 function setSongPage(index,options={}){
   const next=Math.max(0,Math.min(SONG_LAST_PAGE,Number(index)||0));
   if(next!==currentSongPage)stopSmartScroll();
-  currentSongView=next===3?'tablature':next===0?'summary':'full';
+  currentSongView=songViewForPage(next);
   const track=document.querySelector('#detail-content .song-page-track');
   if(!track){currentSongPage=next;if(options.persist!==false&&currentDetailId!=null)storage.set(songPageStorageKey(),currentSongPage);updateSongPageIndicator(options);return;}
   const anchor=songPositionAnchor(currentSongPageElement());
@@ -2415,10 +2485,14 @@ function renderStageStructure(summary,totalShift){
 function renderDetail(){
   const source=currentDetailSongOverride||musicas.find(x=>x.id===currentDetailId);if(!source)return;
   const m=tablature.prepareSong(source),visibleTablature=tablature.compatible(m.tablature,currentInstrument);
-  SONG_LAST_PAGE=visibleTablature?3:2;SONG_PAGE_LABELS.splice(3,1,...(visibleTablature?['Tablaturas']:[]));
+  const sheet=currentSheetMusic(source);
+  SONG_EXTRA_VIEWS=['sheet',...(visibleTablature?['tablature']:[])];
+  SONG_LAST_PAGE=2+SONG_EXTRA_VIEWS.length;SONG_PAGE_LABELS.splice(3,Infinity,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?'Partitura':'Tablaturas'));
   if(currentSongPage>SONG_LAST_PAGE){currentSongPage=1;currentSongView='full';}
-  const indicator=document.getElementById('song-page-indicator');indicator.querySelector('[data-song-page="3"]')?.remove();
-  if(visibleTablature)indicator.insertAdjacentHTML('beforeend',`<button class="song-page-dot" type="button" data-song-page="3" onclick="setSongView('tablature')" aria-label="Tablaturas"></button>`);
+  const indicator=document.getElementById('song-page-indicator');indicator.querySelectorAll('[data-song-page]').forEach(dot=>{if(Number(dot.dataset.songPage)>=3)dot.remove();});
+  SONG_EXTRA_VIEWS.forEach((view,offset)=>indicator.querySelector('.song-page-status').insertAdjacentHTML('beforebegin',view==='sheet'
+    ?`<button class="song-page-dot" type="button" data-song-page="${3+offset}" onclick="setSongView('sheet')" aria-label="Partitura"></button>`
+    :`<button class="song-page-dot" type="button" data-song-page="${3+offset}" onclick="setSongView('tablature')" aria-label="Tablaturas"></button>`));
   updateScrollSpeedControls();
   document.getElementById('stage-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
   document.getElementById('detail-capo-value').textContent=selectedCapo?String(selectedCapo):'Sem';
@@ -2452,9 +2526,10 @@ function renderDetail(){
     :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
   // Modo Palco limpo (Thiago, 12/10): mesma cifra da tela de estudo, sem as caixas do palco antigo.
-  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...(visibleTablature?[renderTablature(visibleTablature)]:[])].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
+  if(sheet)paintSheetMusic(sheet);
   updateSongPageIndicator({announce:false});
   if(!stageMode||STAGE_CLEAN)requestAnimationFrame(syncSongPageHeight);
   if(smartScrollController.isActive())smartScrollController.sync();
@@ -2962,7 +3037,7 @@ async function addPlaylistOnlineCandidate(candidate,button,panel){
   catch(error){button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,name,false,true);const status=document.createElement('div');status.className='playlist-search-online-status';status.textContent=error?.message||'Não foi possível adicionar esta música.';panel.prepend(status)}
 }
 function splitPlaylistQuery(query){const parts=String(query||'').trim().split(/\s+(?:—|–|-)\s+/);return {titulo:(parts.shift()||'').trim(),artista:parts.join(' ').trim()}}
-function playlistSearchStatus(panel,text){let status=panel.querySelector('.playlist-search-online-status');if(!status){status=document.createElement('div');status.className='playlist-search-online-status';status.setAttribute('role','status');panel.appendChild(status)}status.replaceChildren();status.textContent=text;return status}
+function playlistSearchStatus(panel,text){let status=panel.querySelector('.playlist-search-online-status');if(!status){status=document.createElement('div');status.className='playlist-search-online-status';status.setAttribute('role','status');panel.appendChild(status)}status.replaceChildren();status.classList.remove('search-limit-notice');status.textContent=text;return status}
 // Busca de música nova pelo nome: 1) catálogo ROUDY, 2) web (Cifra Club). Se não achar, oferece foto ou arquivo.
 function renderPlaylistCatalogSearchRow(panel,query){
   const {titulo,artista}=splitPlaylistQuery(query);if(!titulo)return;
@@ -2984,7 +3059,7 @@ async function addPlaylistCatalogSong(query,button,panel){
     reviewSearchedSong(model);
   }catch(error){
     button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,titulo,false,true);
-    const status=playlistSearchStatus(panel,error?.message||'Não foi possível buscar esta música agora.');
+    const status=playlistSearchStatus(panel,error?.message||'Não foi possível buscar esta música agora.');harmonicSummaryClient.renderWebLimitNotice?.(status,error?.message);
     if(error?.kind==='not_found'){
       const actions=document.createElement('div');actions.className='playlist-search-fallback-actions';
       const photo=document.createElement('button');photo.type='button';photo.className='btn btn-outline';photo.textContent='Enviar foto';photo.addEventListener('click',()=>{closePlaylistSearch();roudyCamera.open()});
@@ -3140,7 +3215,7 @@ async function completeSongSheet(id){
     const sheet=songFormat.normalizeFullChordSheet(result?.data?.fullChordSheet);
     if(!sheet){
       const notes=(result?.data?.observacoes||[]).map(String),limited=notes.some(note=>/Limite diário de buscas na web/i.test(note));
-      if(limited){showToast('⏳ '+(notes.find(note=>/^Você atingiu o limite de busca na web/.test(note))||'Você atingiu o limite de busca na web.'));return;}
+      if(limited){const limitNote=notes.find(note=>harmonicSummaryClient.webLimitNotice?.(note)),notice=limitNote&&harmonicSummaryClient.webLimitNotice(limitNote);showToast('⏳ '+(notice?notice.title+' '+notice.body:'Limite de buscas na web atingido.'));return;}
       showToast('ℹ️ Não encontramos a letra desta música. Cole ou anexe a cifra.');openCompleteSheetEditor(song.id);return;
     }
     if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
@@ -4674,7 +4749,26 @@ async function syncEventsNow(silent){
     }
     for(const synced of await eventCollaboration.flushPersonalQueue(appCurrentUser))setlists=eventRepository.upsert(setlists,synced).events;
     const remote=await eventCollaboration.listEvents(appCurrentUser);
-    setlists=eventRepository.reconcileRemote(setlists,remote);eventRepository.save(setlists);renderSetlists();
+    // Eventos que eu lidero e que estão no servidor sem a cópia de alguma música: os outros
+    // integrantes não têm essa música na biblioteca e viam o evento vazio. Guarda quais itens faltam
+    // antes de juntar com o aparelho (que preserva a cópia local e esconderia o problema).
+    const missingCopies=new Map(remote.filter(event=>eventModel.isLeader(event,appCurrentUser.id))
+      .map(event=>[String(event.id),event.repertoire.filter(item=>!item.shared?.songData).map(item=>String(item.id))])
+      .filter(([,items])=>items.length));
+    setlists=eventRepository.reconcileRemote(setlists,remote);
+    for(const [eventId,itemIds] of missingCopies){
+      const local=setlists.find(event=>String(event.id)===eventId);if(!local)continue;
+      const event=eventModel.create(local);let filled=0;
+      for(const item of event.repertoire){
+        if(!itemIds.includes(String(item.id)))continue;
+        if(!item.shared.songData)eventSongSource(event,item); // monta a cópia a partir da minha biblioteca
+        if(item.shared.songData)filled++;
+      }
+      if(!filled)continue; // a música também não está neste aparelho: nada a enviar
+      try{const synced=await eventCollaboration.saveSharedEvent(event,appCurrentUser);setlists=eventRepository.upsert(setlists,synced).events;console.info('[eventos] cópias das músicas enviadas',{eventId,filled});}
+      catch(error){failures.push({eventId,status:error.status||null,codigo:error.code||null,mensagem:error.message||null,requestId:error.requestId||null});console.warn('Cópias das músicas do evento ficaram para nova tentativa.',failures[failures.length-1]);}
+    }
+    eventRepository.save(setlists);renderSetlists();
     await refreshBands(true);
     if(status)status.textContent=failures.length?'Alguns Eventos aguardam nova tentativa':'Compartilhamento concluído';if(!silent)showToast(failures.length?'⚠️ Alguns Eventos continuam salvos neste dispositivo':'✅ Alterações compartilhadas');
   }catch(error){if(status)status.textContent='Modo offline — dados preservados neste dispositivo';if(!silent)showToast('⚠️ '+(error.message||'Sincronização indisponível'));}
@@ -5176,7 +5270,34 @@ function closeEventSongMenu(options={}){const layer=document.getElementById('eve
 function eventSongMenuOpenStudy(){const state=eventSongMenuState;if(!state)return;closeEventSongMenu({restoreFocus:false});setTimeout(()=>openDetailFromEventItem(state.eventId,state.itemId),180);}
 function eventSongMenuEdit(scope){const state=eventSongMenuState;if(!state)return;const trigger=state.trigger;closeEventSongMenu({restoreFocus:false});setTimeout(()=>openEventSongEdit(state.eventId,state.itemId,trigger,scope),180);}
 function eventSongMenuMove(){closeEventSongMenu({restoreFocus:false});setTimeout(focusEventReorder,180);}
-function eventSongMenuAddPlaylist(){const state=eventSongMenuState,event=findEvent(state?.eventId),item=event?.repertoire.find(value=>String(value.id)===String(state?.itemId)),song=item&&eventSongSource(event,item);closeEventSongMenu({restoreFocus:false});showToast(song&&musicas.some(value=>String(value.id)===String(song.id))?'Esta música já está na playlist':'Música adicionada à playlist');}
+// "Adicionar à playlist" no menu da música do evento: antes só mostrava a mensagem e não salvava.
+// Agora guarda uma cópia na biblioteca pessoal de quem tocou (acordes, letra, tom e capo do evento,
+// com as edições pessoais dele) e abre a escolha da playlist. Mudanças depois ficam só com ele.
+function eventSongLibraryCopy(event,item){
+  const variant=eventSongVariant(event,item,appCurrentUser.id);if(!variant)return null;
+  const copy=JSON.parse(JSON.stringify(variant));
+  ['view','personalNotes','sharedNotes'].forEach(key=>delete copy[key]);
+  if(copy.playbackSettings)delete copy.playbackSettings.video;
+  return copy;
+}
+function addEventSongToLibrary(eventId,itemId){
+  const event=findEvent(eventId),item=event?.repertoire.find(value=>String(value.id)===String(itemId));
+  const copy=event&&item&&eventSongLibraryCopy(event,item);
+  if(!copy){showToast('⚠️ Esta música ainda não chegou do líder do evento. Tente de novo em instantes.');return null;}
+  const existing=musicas.find(song=>String(song.id)===String(copy.id))||songModel.findDuplicate(musicas,songModel.create(copy));
+  if(existing)return {song:existing,created:false};
+  const result=songRepository.addOrReuse(musicas,copy);
+  const previous=musicas;musicas=result.songs;
+  if(!songRepository.save(musicas)){musicas=previous;showToast('⚠️ Não foi possível salvar a música neste aparelho.');return null;}
+  librarySync.schedule();renderMusicas();
+  return {song:result.song,created:result.created};
+}
+function eventSongMenuAddPlaylist(){
+  const state=eventSongMenuState;closeEventSongMenu({restoreFocus:false});if(!state)return;
+  const saved=addEventSongToLibrary(state.eventId,state.itemId);if(!saved)return;
+  showToast(saved.created?'✅ Música salva na sua biblioteca. Escolha a playlist.':'Esta música já está na sua biblioteca. Escolha a playlist.');
+  setTimeout(()=>homePlaylists.chooseForSong(saved.song.id),180);
+}
 function eventSongMenuOpenYoutube(){eventSongMenuOpenStudy();setTimeout(()=>document.getElementById('youtube-song-player')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}),420);}
 function shareEventSongFromMenu(){const state=eventSongMenuState,event=findEvent(state?.eventId),item=event?.repertoire.find(value=>String(value.id)===String(state?.itemId)),song=item&&eventSongSource(event,item);if(!song)return;try{eventChat.sendSong(event.id,song);closeEventSongMenu({restoreFocus:false});setTimeout(()=>{currentSdId=event.id;openEventChat();},180);}catch(error){showToast(error.message||'Não foi possível compartilhar a música.');}}
 async function removeEventSongFromMenu(){const state=eventSongMenuState;let event=findEvent(state?.eventId);if(!event||!appConfirm('Remover esta música do evento?'))return;try{eventModel.requireLeader(event,eventPermissionActor(event).id);event=eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.id)!==String(state.itemId)),syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,appCurrentUser,'repertoire.song.removed','removeu uma música do repertório oficial');if(event.remoteVersion!=null)event=await eventCollaboration.saveSharedEvent(event,appCurrentUser);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeEventSongMenu({restoreFocus:false});openSD(event.id);showToast('Música removida do evento');}
