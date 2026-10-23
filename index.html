@@ -5270,7 +5270,34 @@ function closeEventSongMenu(options={}){const layer=document.getElementById('eve
 function eventSongMenuOpenStudy(){const state=eventSongMenuState;if(!state)return;closeEventSongMenu({restoreFocus:false});setTimeout(()=>openDetailFromEventItem(state.eventId,state.itemId),180);}
 function eventSongMenuEdit(scope){const state=eventSongMenuState;if(!state)return;const trigger=state.trigger;closeEventSongMenu({restoreFocus:false});setTimeout(()=>openEventSongEdit(state.eventId,state.itemId,trigger,scope),180);}
 function eventSongMenuMove(){closeEventSongMenu({restoreFocus:false});setTimeout(focusEventReorder,180);}
-function eventSongMenuAddPlaylist(){const state=eventSongMenuState,event=findEvent(state?.eventId),item=event?.repertoire.find(value=>String(value.id)===String(state?.itemId)),song=item&&eventSongSource(event,item);closeEventSongMenu({restoreFocus:false});showToast(song&&musicas.some(value=>String(value.id)===String(song.id))?'Esta música já está na playlist':'Música adicionada à playlist');}
+// "Adicionar à playlist" no menu da música do evento: antes só mostrava a mensagem e não salvava.
+// Agora guarda uma cópia na biblioteca pessoal de quem tocou (acordes, letra, tom e capo do evento,
+// com as edições pessoais dele) e abre a escolha da playlist. Mudanças depois ficam só com ele.
+function eventSongLibraryCopy(event,item){
+  const variant=eventSongVariant(event,item,appCurrentUser.id);if(!variant)return null;
+  const copy=JSON.parse(JSON.stringify(variant));
+  ['view','personalNotes','sharedNotes'].forEach(key=>delete copy[key]);
+  if(copy.playbackSettings)delete copy.playbackSettings.video;
+  return copy;
+}
+function addEventSongToLibrary(eventId,itemId){
+  const event=findEvent(eventId),item=event?.repertoire.find(value=>String(value.id)===String(itemId));
+  const copy=event&&item&&eventSongLibraryCopy(event,item);
+  if(!copy){showToast('⚠️ Esta música ainda não chegou do líder do evento. Tente de novo em instantes.');return null;}
+  const existing=musicas.find(song=>String(song.id)===String(copy.id))||songModel.findDuplicate(musicas,songModel.create(copy));
+  if(existing)return {song:existing,created:false};
+  const result=songRepository.addOrReuse(musicas,copy);
+  const previous=musicas;musicas=result.songs;
+  if(!songRepository.save(musicas)){musicas=previous;showToast('⚠️ Não foi possível salvar a música neste aparelho.');return null;}
+  librarySync.schedule();renderMusicas();
+  return {song:result.song,created:result.created};
+}
+function eventSongMenuAddPlaylist(){
+  const state=eventSongMenuState;closeEventSongMenu({restoreFocus:false});if(!state)return;
+  const saved=addEventSongToLibrary(state.eventId,state.itemId);if(!saved)return;
+  showToast(saved.created?'✅ Música salva na sua biblioteca. Escolha a playlist.':'Esta música já está na sua biblioteca. Escolha a playlist.');
+  setTimeout(()=>homePlaylists.chooseForSong(saved.song.id),180);
+}
 function eventSongMenuOpenYoutube(){eventSongMenuOpenStudy();setTimeout(()=>document.getElementById('youtube-song-player')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}),420);}
 function shareEventSongFromMenu(){const state=eventSongMenuState,event=findEvent(state?.eventId),item=event?.repertoire.find(value=>String(value.id)===String(state?.itemId)),song=item&&eventSongSource(event,item);if(!song)return;try{eventChat.sendSong(event.id,song);closeEventSongMenu({restoreFocus:false});setTimeout(()=>{currentSdId=event.id;openEventChat();},180);}catch(error){showToast(error.message||'Não foi possível compartilhar a música.');}}
 async function removeEventSongFromMenu(){const state=eventSongMenuState;let event=findEvent(state?.eventId);if(!event||!appConfirm('Remover esta música do evento?'))return;try{eventModel.requireLeader(event,eventPermissionActor(event).id);event=eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.id)!==String(state.itemId)),syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,appCurrentUser,'repertoire.song.removed','removeu uma música do repertório oficial');if(event.remoteVersion!=null)event=await eventCollaboration.saveSharedEvent(event,appCurrentUser);}catch(error){if(!collaborationAllowsOffline(error)){showToast('🔒 '+error.message);return;}}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeEventSongMenu({restoreFocus:false});openSD(event.id);showToast('Música removida do evento');}
