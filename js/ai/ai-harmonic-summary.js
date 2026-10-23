@@ -443,6 +443,7 @@
       setSearchAddState(addButton, name, false, true);
       searchPanel.querySelectorAll("button,input").forEach(control => control.disabled = false);
       status.textContent = error?.message || "Não foi possível gerar esta música.";
+      global.harmonicSummaryClient.renderWebLimitNotice?.(status, error?.message);
       if (candidate.catalog && error?.kind === "not_found") {
         const actions = element("div", "playlist-search-fallback-actions");
         const photo = element("button", "btn btn-outline", "Enviar foto"); photo.type = "button";
