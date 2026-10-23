@@ -5413,7 +5413,8 @@ function openSD(id){
   document.getElementById('sd-title-condensed').textContent=event.title;
   const availableItems=event.repertoire.filter(item=>Boolean(eventSongSource(event,item)));
   const rows=availableItems.map((item,index)=>{
-    const song=musicas.find(value=>String(value.id)===String(item.songId));if(!song)return'';
+    // Membro que não tem a música na biblioteca usa a cópia que veio com o evento (songData).
+    const song=musicas.find(value=>String(value.id)===String(item.songId))||eventSongSource(event,item);if(!song)return'';
     const effective=eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id),variant=eventSongVariant(event,item,appCurrentUser.id);
     const notes=effective.effective.notes||'';
     const editControl=canShared?`<button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongMenu('${eventEsc(event.id)}','${eventEsc(item.id)}',this)" aria-label="Abrir opções de ${eventEsc(variant.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>`:'';
