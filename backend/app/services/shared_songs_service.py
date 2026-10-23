@@ -14,14 +14,13 @@ from ..models import PersonalSong, SharedSong, SharedSongReport
 from ..schemas.resumo_harmonico import ResumoHarmonicoResponse, SecaoCifraCompleta
 
 MAX_CANDIDATES = 10
-# Força-tarefa do catálogo (out/2026, decisão do Thiago): toda música adicionada ou completada pelo
-# usuário vai para o catálogo compartilhado — Busca por IA/Cifra Club, arquivo/foto, aba Texto e as
-# músicas da biblioteca base. As regras serão reformuladas depois; ajuste só estas duas constantes.
-# Continua fora: conteúdo inventado pela IA (model_knowledge) e rascunhos "somente IA" sem letra real.
-SHAREABLE_SOURCE_TYPES = {"online", "upload", "text", "manual"}
-# Letra + Cifras que o catálogo aceita receber (de arquivo, da web ou digitada/colada pelo usuário).
-CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+# Só vai para o catálogo compartilhado o que veio de fonte real: Busca por IA (Cifra Club/catálogo) ou arquivo/foto.
+# Músicas digitadas (aba Texto) ou criadas à mão são versões pessoais: ficam só na biblioteca do usuário.
+SHAREABLE_SOURCE_TYPES = {"online", "upload"}
+# Letra + Cifras que o catálogo aceita receber (digitada pelo usuário = versão pessoal, não entra).
+CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
 # Fontes que podem ser LIDAS na busca (inclusive da biblioteca pessoal).
+# Isso não autoriza publicar conteúdo de Texto no catálogo.
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
@@ -271,8 +270,8 @@ class SharedSongService:
         if not blocos:
             return None
         capo = song_data.get("capo")
-        # Cifra completa (letra) vai ao catálogo quando veio do usuário (arquivo/texto) ou da web.
-        # Conteúdo gerado pela IA (model_knowledge) fica fora: só o resumo harmônico.
+        # Cifra completa (letra) só vai ao catálogo quando foi enviada pelo usuário.
+        # Web e IA: somente resumo harmônico, com o link da fonte nas observações.
         full_sheet = song_data.get("fullChordSheet")
         full_sheet_payload = None
         observacoes = ["Cifra do catálogo compartilhado; revise antes de usar."]
@@ -328,7 +327,8 @@ class SharedSongService:
         source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
         full_sheet = song_data.get("fullChordSheet") if isinstance(song_data.get("fullChordSheet"), dict) else {}
         has_real_lyrics = bool(str(full_sheet.get("content") or "").strip()) and full_sheet.get("source") in CONTRIBUTABLE_FULL_SHEET_SOURCES
-        # Música da biblioteca base/antiga (origem "manual") ou da aba Texto também vai ao catálogo.
+        # Música da biblioteca base/antiga (origem "manual") completada com letra do Cifra Club ou de arquivo
+        # também vai ao catálogo: a letra veio de fonte real. Só letra digitada continua pessoal.
         if source_type not in SHAREABLE_SOURCE_TYPES:
             return None
         if AI_ONLY_MARKER in str(song_data.get("notes") or "") and not has_real_lyrics:

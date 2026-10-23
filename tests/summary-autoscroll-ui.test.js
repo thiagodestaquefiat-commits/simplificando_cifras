@@ -35,6 +35,7 @@ const server=http.createServer((req,res)=>{
       await page.route('**/api/**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({enabled:false,provider:'local'})}));
       await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({status:200,body:''}));
       await page.goto(process.env.TEST_BASE_URL||`http://127.0.0.1:${server.address().port}/`);
+      const guest=page.getByRole('button',{name:'Continuar sem login'});if(await guest.count())await guest.click();
       await page.getByText('Resumo de teste',{exact:true}).click();
       await page.evaluate(()=>toggleSongControls());
       const normal=page.locator('#song-control-panel .song-scroll-slider-wrap');
@@ -74,6 +75,7 @@ const server=http.createServer((req,res)=>{
       const header=page.locator('#stage-performance-header'),headerBefore=await header.boundingBox();
       const score=await page.locator('#detail-content').boundingBox();
       assert.ok(score.y>=headerBefore.y+headerBefore.height,'score starts below the header');
+      if(process.env.SCREENSHOT_DIR){fs.mkdirSync(process.env.SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.SCREENSHOT_DIR,`stage-${viewport.width}x${viewport.height}.png`)});}
       assert.equal(await page.locator('.stage-floating-controls').count(),0);
       assert.ok(await page.locator('#view-detail').evaluate(el=>el.scrollWidth<=el.clientWidth),'no horizontal overflow');
       for(const button of await header.locator('button').all()){
@@ -109,7 +111,7 @@ const server=http.createServer((req,res)=>{
         'header stays anchored during scroll'
       );
       assert.ok((await page.locator('#view-detail').boundingBox()).y>=headerDuringScroll.height,'scroll viewport is below header');
-      await page.locator('#stage-scroll-toggle').click();assert.equal(await page.evaluate(()=>scrollTimer),null);
+      await page.locator('#stage-scroll-pause').click();assert.equal(await page.evaluate(()=>scrollTimer),null);
       const bounds=await stage.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=viewport.width);
       assert.ok((await plus(stage).boundingBox()).height>=44);
       await page.getByRole('button',{name:'Sair do Modo Palco',exact:true}).click();

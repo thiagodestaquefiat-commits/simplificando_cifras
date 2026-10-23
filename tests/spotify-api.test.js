@@ -56,6 +56,8 @@ require("../js/spotify-api.js");
     artist: "Hillsong UNITED",
     album: "Zion",
     duration: 503123,
+    artworkUrl: "https://example.test/cover.jpg",
+    artworkSource: "spotify",
     coverUrl: "https://example.test/cover.jpg",
     spotifyTrackId: "track-1",
     spotifyUri: "spotify:track:track-1",

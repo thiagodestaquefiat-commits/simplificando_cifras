@@ -28,8 +28,10 @@ function createAuthHarness(options = {}) {
     async signOut(options) { calls.signOut += 1; calls.signOutOptions=options; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
   };
   const window = {
-    apiConfig: { authEndpoint: (suffix) => "http://api.test/api/auth" + suffix },
-    fetch: async () => {
+    setTimeout,clearTimeout,
+    apiConfig: { authEndpoint: (suffix) => "http://api.test/api/auth" + suffix, collaborationEndpoint:suffix=>'http://api.test/api/collaboration'+suffix },
+    fetch: async (url, payload) => {
+      if(url.endsWith('/me/avatar')){calls.avatarRequests=calls.avatarRequests||[];calls.avatarRequests.push(payload);return {ok:!options.avatarFailure,json:async()=>JSON.parse(payload.body)};}
       calls.configFetches += 1;
       return { ok: true, json: async () => options.config || { enabled: true, provider: "supabase", supabaseUrl: "https://supabase.test", supabaseAnonKey: "anon-public" } };
     },
@@ -139,5 +141,17 @@ function createAuthHarness(options = {}) {
   assert.equal(reloadState.authenticated, true, "getSession deve restaurar a sessão persistida após reload/reabertura");
   assert.equal(reloaded.calls.exchange.length, 0);
 
-  console.log("app-auth.test.js: OK (Google, PKCE, persistência, renovação, logout e redirects)");
+  const photo=createAuthHarness({initialSession:{access_token:'photo-token',user:{id:'photo-user',email:'a@example.test',user_metadata:{picture:'https://example.test/google.jpg'}}}});
+  await photo.window.appAuth.initialize();
+  const image='data:image/jpeg;base64,dGVzdA==';
+  assert.equal((await photo.window.appAuth.updateProfile({name:'A',avatarUrl:image})).user.avatarUrl,image);
+  assert.equal(photo.calls.avatarRequests[0].headers.Authorization,'Bearer photo-token');
+  assert.ok(!JSON.stringify(photo.calls.updateUser).includes(image),'a imagem não deve entrar nos metadados/JWT do login');
+  photo.listeners[0]('TOKEN_REFRESHED',{access_token:'renewed',user:{id:'photo-user',user_metadata:{picture:'https://example.test/google.jpg'}}});
+  assert.equal(photo.window.appAuth.getState().user.avatarUrl,image,'renovar a sessão não restaura a foto do Google');
+  assert.equal((await photo.window.appAuth.updateProfile({name:'A',avatarUrl:null})).user.avatarUrl,null,'remoção explícita prevalece sobre o Google');
+  const failedPhoto=createAuthHarness({avatarFailure:true,initialSession:{access_token:'photo-token',user:{id:'photo-user',user_metadata:{}}}});
+  await failedPhoto.window.appAuth.initialize();
+  await assert.rejects(()=>failedPhoto.window.appAuth.updateProfile({name:'A',avatarUrl:image}),/não foi possível guardá-la/,'não anunciar persistência remota quando o servidor falha');
+  console.log("app-auth.test.js: OK (Google, PKCE, persistência, renovação, logout, redirects e foto da conta)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

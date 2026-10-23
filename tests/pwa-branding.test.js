@@ -34,7 +34,7 @@ assert.match(indexHtml, /rel="manifest" href="manifest\.webmanifest\?v=15"/);
 assert.doesNotMatch(indexHtml.slice(0,indexHtml.indexOf('</head>')), /assets\/icons\/icon-(?:48|72|96|128|192|256|512)\.png|["/]icon\.svg/);
 assert.match(serviceWorker, /simplificando-cifras-v475-metronome-drag/);
 assert.match(serviceWorker, /assets\/icons\/roudy-assistant-headphones\.svg\?v=1/);
-assert.equal((indexHtml.match(/roudy-assistant-headphones\.svg\?v=1/g) || []).length, 4);
+assert.equal((indexHtml.match(/roudy-assistant-headphones\.svg\?v=1/g) || []).length, 3);
 assert.match(serviceWorker, /assets\/empty-medley-disc\.svg/);
 assert.match(serviceWorker, /assets\/empty-events-calendar\.svg/);
 assert.match(indexHtml, /<title>ROUDY<\/title>/);
@@ -45,13 +45,13 @@ assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
 assert.match(indexHtml, /js\/editor\/song-format\.js\?v=12/);
 assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=10/);
-assert.match(indexHtml, /js\/song-model\.js\?v=6/);
+assert.match(indexHtml, /js\/song-model\.js\?v=7/);
 assert.match(serviceWorker, /js\/song-model\.js\?v=5/);
-assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=16/);
-assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=16/);
+assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=17/);
+assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=17/);
 for(const match of indexHtml.matchAll(/(?:src|href)="(js\/[^"\s]+)"/g))assert.ok(serviceWorker.includes('"./'+match[1]+'"'),`Recurso da interface ausente do cache offline: ${match[1]}`);
 assert.match(serviceWorker, /js\/song-model\.js/);
-assert.match(serviceWorker, /js\/demo-library\.js\?v=4/);
+assert.match(serviceWorker, /js\/demo-library\.js\?v=5/);
 assert.match(serviceWorker, /js\/app-assistant\.js\?v=1/);
 assert.match(serviceWorker, /js\/app-assistant\.js\?v=2/);
 assert.match(serviceWorker, /js\/app-assistant\.js\?v=3/);
@@ -62,7 +62,7 @@ assert.match(serviceWorker, /js\/library-sync\.js\?v=17/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=7/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=7/);
-for (const [script, version] of [["youtube-api", 6], ["youtube-song-linker", 1], ["youtube-player", 7], ["youtube-player-ui", 19], ["youtube-ui", 3]]) {
+for (const [script, version] of [["youtube-api", 8], ["youtube-song-linker", 2], ["youtube-player", 8], ["youtube-player-ui", 22], ["youtube-ui", 3]]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }
@@ -157,7 +157,7 @@ const server = http.createServer((request, response) => {
       favoritos: [],
       configuracoes: {}
     })));
-    await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
+    await page.evaluate(() => openAccountModal());
     await page.getByRole("button", { name: /Configurações/ }).click();
     await page.getByRole("button", { name: /Ajuda e Suporte/ }).click();
     await page.getByRole("button", { name: /Backup e dados/ }).click();

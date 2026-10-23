@@ -71,6 +71,8 @@ def authenticated(handler):
                 db.session.add(ExternalIdentity(provider="supabase", subject=subject, user_id=user.id))
                 db.session.flush()
             g.current_access_token = None
+            from .profile_instruments import sync_profile_instruments
+            sync_profile_instruments(user.id, metadata)
             g.auth_provider = "supabase"
             g.external_subject = subject
         g.current_user = user

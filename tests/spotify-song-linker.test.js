@@ -20,6 +20,9 @@ assert.equal(linker.findAutomaticMatch({ title: "Duplicada" }, [{ title: "Duplic
 const changes = linker.changesForTrack({ title: "Oceans", artist: "" }, tracks[2]);
 assert.equal(changes.artist, "Hillsong UNITED, TAYA");
 assert.equal(changes.spotifyTrackId, "oceans");
+assert.equal(linker.changesForTrack({ artworkUrl: "custom", artworkSource: "custom", coverUrl: "legacy" }, tracks[0]).artworkUrl, "custom");
+assert.equal(linker.changesForTrack({ artworkUrl: "custom", artworkSource: "custom", coverUrl: "legacy" }, tracks[0]).coverUrl, undefined);
+assert.equal(linker.changesForTrack({}, tracks[0]).artworkSource, "spotify");
 assert.equal(linker.searchQuery({ title: "Oceans", artist: "Hillsong UNITED" }), "Oceans Hillsong UNITED");
 
 console.log("spotify-song-linker.test.js: OK");

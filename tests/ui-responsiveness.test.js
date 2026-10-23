@@ -8,6 +8,7 @@ const projectRoot = path.resolve(__dirname, "..");
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".webmanifest": "application/manifest+json; charset=utf-8",
   ".svg": "image/svg+xml"
@@ -60,6 +61,8 @@ async function openApp(browser, baseUrl, width, height) {
   });
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => loginGateAuthReady);
+  await page.evaluate(() => { continueWithoutLogin(); switchTab("musicas"); homePlaylists.openLibrary(); });
   return { context, page, errors };
 }
 
@@ -77,6 +80,10 @@ async function openApp(browser, baseUrl, width, height) {
         const accountButton = document.getElementById("app-account-btn").getBoundingClientRect();
         return {
           bodyScrollWidth: document.body.scrollWidth,
+          offenders: [...document.querySelectorAll("body *")].map((element) => {
+            const rect = element.getBoundingClientRect();
+            return { tag: element.tagName.toLowerCase(), id: element.id, className: typeof element.className === "string" ? element.className : "", src: element.getAttribute("src"), parent: element.parentElement?.className || element.parentElement?.id || "", left: rect.left, right: rect.right, width: rect.width };
+          }).filter((item) => item.width > 0 && (item.left < -0.5 || item.right > innerWidth + 0.5)).slice(0, 12),
           appLeft: app.left,
           appRight: app.right,
           appWidth: app.width,
@@ -84,7 +91,7 @@ async function openApp(browser, baseUrl, width, height) {
           accountRight: accountButton.right
         };
       });
-      assert.ok(layout.bodyScrollWidth <= width, `${width}x${height}: rolagem horizontal na página`);
+      assert.ok(layout.bodyScrollWidth <= width, `${width}x${height}: rolagem horizontal na página (${layout.bodyScrollWidth}px); elementos: ${JSON.stringify(layout.offenders)}`);
       assert.ok(layout.appLeft >= 0 && layout.appRight <= width + 0.5, `${width}x${height}: app fora da viewport`);
       assert.ok(layout.appWidth <= (width >= 900 ? 1180.5 : 720.5), `${width}x${height}: app largo demais`);
       assert.ok(layout.accountLeft >= 0 && layout.accountRight <= width, `${width}x${height}: acesso à conta fora da viewport`);
@@ -100,11 +107,15 @@ async function openApp(browser, baseUrl, width, height) {
       const before = { headerTop: header.getBoundingClientRect().top, listTop: list.getBoundingClientRect().top };
       window.scrollTo(0, Math.min(320, document.documentElement.scrollHeight - innerHeight));
       const after = { headerTop: header.getBoundingClientRect().top, listTop: list.getBoundingClientRect().top };
-      return { before, after, pageScroll: window.scrollY, listOverflow: getComputedStyle(list).overflowY };
+      return { before, after, pageScroll: window.scrollY, listOverflow: getComputedStyle(list).overflowY, headerPosition: getComputedStyle(header).position };
     });
     assert.ok(mainScroll.pageScroll > 0, "a página inicial deve usar a rolagem principal do documento");
-    assert.ok(mainScroll.after.headerTop < mainScroll.before.headerTop, "o cabeçalho deve acompanhar a rolagem");
-    assert.ok(mainScroll.after.listTop < mainScroll.before.listTop, "a lista deve acompanhar a mesma rolagem do cabeçalho");
+    if (["sticky", "fixed"].includes(mainScroll.headerPosition)) {
+      assert.ok(Math.abs(mainScroll.after.headerTop - mainScroll.before.headerTop) <= 1, "o cabeçalho sticky deve permanecer estável na viewport");
+    } else {
+      assert.ok(mainScroll.after.headerTop < mainScroll.before.headerTop, "o cabeçalho estático deve acompanhar a rolagem");
+    }
+    assert.ok(mainScroll.after.listTop < mainScroll.before.listTop, `a lista deve acompanhar a rolagem principal: ${JSON.stringify(mainScroll)}`);
     assert.equal(mainScroll.listOverflow, "visible", "a lista não deve criar uma segunda área de rolagem");
     await page.evaluate(() => window.scrollTo(0, 0));
 
@@ -114,7 +125,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.deepEqual(missingCatalogChords, [], `Acordes do catálogo sem diagrama: ${missingCatalogChords.join(", ")}`);
 
     await page.getByRole("button", { name: "Buscar música", exact: true }).click();
-    await page.getByPlaceholder("Buscar músicas, artistas...").fill("A alegria");
+    await page.locator("#search-music").fill("A alegria");
     await page.getByText("A alegria", { exact: true }).click();
     assert.equal(await page.locator("#btn-previous-song").isVisible(), false);
     assert.equal(await page.locator("#btn-next-song").isVisible(), false);
@@ -150,14 +161,14 @@ async function openApp(browser, baseUrl, width, height) {
     const controlsBeforeScroll = await page.locator(".stage-performance-header").boundingBox();
     const scrollBeforePlay = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.locator("#stage-scroll-toggle").click();
-    assert.ok(await page.locator("#stage-scroll-toggle").evaluate((element) => element.classList.contains("active")));
+    assert.equal(await page.locator("#stage-scroll-pause").getAttribute("aria-label"), "Pausar rolagem automática");
     await page.waitForTimeout(400);
     const scrollWhilePlaying = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     const controlsWhileScrolling = await page.locator(".stage-performance-header").boundingBox();
     const scrollMetrics = await page.locator("#view-detail").evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
     assert.ok(scrollWhilePlaying >= scrollBeforePlay + 8, `auto-scroll deveria avançar visivelmente: ${scrollBeforePlay} -> ${scrollWhilePlaying}; área ${scrollMetrics.clientHeight}/${scrollMetrics.scrollHeight}`);
     assert.equal(Math.round(controlsWhileScrolling.y), Math.round(controlsBeforeScroll.y), "os controles devem permanecer fixos no rodapé durante a rolagem");
-    await page.locator("#stage-scroll-toggle").click();
+    await page.locator("#stage-scroll-pause").click();
     const scrollWhenPaused = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
     await page.waitForTimeout(250);
     const scrollAfterPause = await page.locator("#view-detail").evaluate((element) => element.scrollTop);
@@ -166,7 +177,7 @@ async function openApp(browser, baseUrl, width, height) {
     assert.equal(await page.locator("#chord-diagrams-section").isVisible(), true);
 
     await page.locator(".back-btn").first().click();
-    await page.getByPlaceholder("Buscar músicas, artistas...").fill("");
+    await page.locator("#search-music").fill("");
     await page.getByText("Quem é esse", { exact: true }).click();
     assert.equal(await page.locator(".chord-card-unavailable").count(), 0);
     assert.ok(await page.getByText("A9", { exact: true }).count() > 0);

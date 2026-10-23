@@ -21,7 +21,7 @@
   function changesForVideo(song, video) {
     return {
       artist: String((song && song.artist) || "").trim() || String((video && video.artist) || "").trim(),
-      coverUrl: video && video.coverUrl || (song && song.coverUrl) || null,
+      youtubeThumbnailUrl: video && (video.youtubeThumbnailUrl || video.coverUrl) || null,
       youtubeVideoId: video && video.youtubeVideoId || null,
       youtubeUrl: video && video.youtubeUrl || null,
       youtubeChannelTitle: video && (video.youtubeChannelTitle || video.artist) || null,

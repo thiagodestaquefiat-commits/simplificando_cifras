@@ -54,8 +54,10 @@
   function imageFor(source, className) {
     const cover = global.document.createElement("img");
     cover.className = className;
-    cover.src = source.coverUrl || `https://i.ytimg.com/vi/${source.youtubeVideoId}/hqdefault.jpg`;
+    cover.src = global.songArtwork?.resolveYoutubeThumbnail(source) || source.youtubeThumbnailUrl || source.coverUrl || `https://i.ytimg.com/vi/${source.youtubeVideoId}/hqdefault.jpg`;
     cover.alt = `Miniatura de ${source.title}`;
+    cover.decoding = "async";
+    cover.addEventListener("error", () => global.songArtwork?.handleImageError(cover), { once: false });
     return cover;
   }
 

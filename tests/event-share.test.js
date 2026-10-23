@@ -35,11 +35,11 @@ const event={id:'event-42',title:'Ensaio de interface',date:'2026-10-10',time:'1
   global.File=class File {constructor(parts,name,options){this.parts=parts;this.name=name;this.type=options.type;}};
   let sharedPayload;
   const fileResult=await eventShare.share(data,{type:'image/png'},{canShare:payload=>payload.files?.length===1,share:async payload=>{sharedPayload=payload;}});
-  assert.strictEqual(fileResult.kind,'link');assert.strictEqual(sharedPayload.url,data.link);assert(!sharedPayload.files,'o mensageiro deve montar a prévia Open Graph do link');
+  assert.strictEqual(fileResult.kind,'image');assert.strictEqual(sharedPayload.files.length,1);assert.strictEqual(sharedPayload.url,undefined);assert.strictEqual(sharedPayload.files[0].type,'image/png');
   const textResult=await eventShare.share(data,{type:'image/png'},{canShare:()=>false,share:async payload=>{sharedPayload=payload;}});
-  assert.strictEqual(textResult.kind,'link');assert.strictEqual(sharedPayload.url,data.link);
+  assert.strictEqual(textResult.kind,'download');assert.strictEqual(textResult.filename,'roudy-ensaio-de-interface.png');
   const fallback=await eventShare.share(data,null,{});
-  assert.strictEqual(fallback.kind,'fallback');assert(fallback.text.includes(data.link),'fallback deve preservar o link');
+  assert.strictEqual(fallback.kind,'unavailable');
   global.File=OriginalFile;
 
   console.log('event-share tests passed');

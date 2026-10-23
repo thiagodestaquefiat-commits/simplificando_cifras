@@ -33,7 +33,12 @@ const server = http.createServer((request, response) => {
       assert.equal(await controls.isVisible(), true);
       assert.equal(await page.locator('#song-control-panel').isVisible(), false);
       assert.equal(await page.locator('#btn-font').count(), 0);
-      assert.ok(await controls.evaluate(element => element.scrollWidth <= element.clientWidth), `control strip must fit ${width}px`);
+      const controlFit = await controls.evaluate(element => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        strip: (() => { const strip = element.querySelector('.song-control-strip'); return { clientWidth: strip.clientWidth, scrollWidth: strip.scrollWidth, columns: getComputedStyle(strip).gridTemplateColumns, children: [...strip.children].map(child => ({ id: child.id, width: child.getBoundingClientRect().width, minWidth: getComputedStyle(child).minWidth })) }; })()
+      }));
+      assert.ok(controlFit.scrollWidth <= controlFit.clientWidth, `control strip must fit ${width}px (${controlFit.scrollWidth}/${controlFit.clientWidth}): ${JSON.stringify(controlFit.strip)}`);
       assert.ok(await page.locator('#detail-content .song-page[aria-hidden="false"]').evaluate(element => element.scrollWidth <= element.clientWidth), `song content must reflow at ${width}px`);
 
       await page.evaluate(()=>toggleSongControls());

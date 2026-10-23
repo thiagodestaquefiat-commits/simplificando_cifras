@@ -218,6 +218,7 @@ class EventRepertoireItem(db.Model):
     shared_chord_sheet = db.Column(db.Text, nullable=False, default="")
     shared_notes = db.Column(db.Text, nullable=False, default="")
     shared_song_data = db.Column(db.JSON, nullable=True)
+    vocal_key_state = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
