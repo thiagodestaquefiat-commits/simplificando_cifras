@@ -130,5 +130,52 @@
     return { checked: candidates.length, changes, missingSheet: (songs || []).filter(needsSheet) };
   }
 
-  global.summaryOrganizer = Object.freeze({ offStandard, needsSheet, payload, apply, analyze, preview, currentPreview });
+  // ---- Catálogo compartilhado (só equipe de revisão). TEMPORÁRIO como o resto deste arquivo. ----
+  async function adminRequest(path, init, options) {
+    const settings = options || {};
+    const token = settings.accessToken || global.appAuth?.getAccessToken?.();
+    if (!token) throw new Error("Entre com a sua conta.");
+    const response = await (settings.fetch || global.fetch)(global.apiConfig.sharedSongsEndpoint(path), {
+      ...(init || {}), headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+    });
+    let data = null;
+    try { data = await response.json(); } catch (_) { data = null; }
+    if (!response.ok) { const error = new Error(data?.erro?.mensagem || "Não foi possível falar com o servidor."); error.status = response.status; throw error; }
+    return data || {};
+  }
+
+  async function canOrganizeCatalog(options) {
+    try { return Boolean((await adminRequest("review-capability", { method: "GET" }, options)).canReview); } catch (_) { return false; }
+  }
+
+  // Simulação do catálogo inteiro (não grava nada). onProgress(feitas, total).
+  async function catalogPreview(options) {
+    const settings = options || {};
+    const items = [];
+    let offset = 0, total = 0;
+    for (let guard = 0; guard < 200; guard++) {
+      const page = await adminRequest(`admin/organizar?offset=${offset}`, { method: "GET" }, settings);
+      total = page.total || 0;
+      items.push(...(page.items || []));
+      offset += (page.items || []).length;
+      settings.onProgress?.(Math.min(offset, total), total);
+      if (!page.hasMore || !(page.items || []).length) break;
+    }
+    return { total, items };
+  }
+
+  // Aplica em lotes de 100; o servidor recalcula cada uma. onProgress(feitas, total).
+  async function catalogApply(ids, options) {
+    const settings = options || {};
+    const applied = [];
+    for (let start = 0; start < ids.length; start += 100) {
+      const batch = ids.slice(start, start + 100);
+      const result = await adminRequest("admin/organizar", { method: "POST", body: JSON.stringify({ ids: batch }) }, settings);
+      applied.push(...(result.aplicadas || []));
+      settings.onProgress?.(Math.min(start + 100, ids.length), ids.length);
+    }
+    return applied;
+  }
+
+  global.summaryOrganizer = Object.freeze({ canOrganizeCatalog, catalogPreview, catalogApply, offStandard, needsSheet, payload, apply, analyze, preview, currentPreview });
 })(window);
