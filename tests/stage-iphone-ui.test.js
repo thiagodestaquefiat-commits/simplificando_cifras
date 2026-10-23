@@ -18,7 +18,7 @@ const center = (box) => box.x + box.width / 2;
   try {
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     browser = await chromium.launch({ headless: true, executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
-    for (const viewport of [{ width: 320, height: 720 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }]) {
+    for (const viewport of [{ width: 320, height: 720 }, { width: 375, height: 812 }, { width: 376, height: 740 }, { width: 390, height: 844 }, { width: 430, height: 932 }]) {
       const context = await browser.newContext({ viewport, serviceWorkers: "block" });
       const page = await context.newPage();
       const errors = [];
@@ -58,12 +58,16 @@ const center = (box) => box.x + box.width / 2;
       assert.ok(Math.abs(leftEdgeGap-rightEdgeGap)<=1,`espaçamento simétrico entre os controles: ${leftEdgeGap}/${rightEdgeGap}`);
       for (const name of ["Diminuir capotraste", "Aumentar capotraste", "Descer o tom", "Subir o tom"]) {
         const box = await header.getByRole("button", { name, exact: true }).boundingBox();
-        assert.ok(box.width >= 44 && box.height >= 44, `${name}: alvo mínimo 44x44, obtido ${box.width}x${box.height}`);
+        const minimumWidth = name.includes('capotraste') ? 30 : 44;
+        assert.ok(box.width >= minimumWidth && box.height >= 44, `${name}: área de toque preservada na geometria compacta, obtido ${box.width}x${box.height}`);
       }
       const [capoMinus,capoValue,capoPlus]=await Promise.all([page.locator('#stage-capo-minus').boundingBox(),page.locator('#stage-capo-value').boundingBox(),page.locator('#stage-capo-plus').boundingBox()]);
       assert.ok(capoMinus&&capoValue&&capoPlus,'controle de capotraste completo e visível');
       const capoDoesNotOverlap=capoMinus.x+capoMinus.width<=capoValue.x&&capoValue.x+capoValue.width<=capoPlus.x;
       const capoIsCentered=Math.abs(center(capoValue)-(center(capoMinus)+center(capoPlus))/2)<=1;
+      assert.ok(Math.abs(capoPlus.x+capoPlus.width-capoMinus.x-94)<=1,'grupo do capotraste compacto de 94px');
+      const sameRow=capoMinus.y<plusBox.y+plusBox.height&&capoMinus.y+capoMinus.height>plusBox.y;
+      if(sameRow)assert.ok(capoMinus.x>=plusBox.x+plusBox.width+2,`capotraste não invade o botão de velocidade: ${JSON.stringify({capoMinus,plusBox})}`);
       assert.equal(await page.locator("#stage-prev").isDisabled(), true, "anterior desativado na primeira música");
       await page.locator("#stage-next").click(); assert.equal(await page.evaluate(() => currentDetailId), "stage-iphone-2");
       assert.equal(await page.locator("#stage-next").isDisabled(), true, "próxima desativada na última música");

@@ -197,17 +197,17 @@
   }
 
   #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child {
-    width: 126px;
-    min-width: 126px;
+    width: 94px;
+    min-width: 94px;
     justify-self: end;
     gap: 0;
   }
 
   #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child output {
     display: block;
-    flex: 0 0 38px;
-    width: 38px;
-    min-width: 38px !important;
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px !important;
   }
 
   #view-detail.stage-mode .stage-tone-controls { grid-column: 1 !important; grid-row: 1 !important; }
@@ -240,6 +240,14 @@
     font-size: 15px !important;
     font-weight: 800 !important;
     text-align: center;
+  }
+
+  /* Fit − / Sem / + inside the right-hand slot, clear of scroll controls.
+     Keep the original vertical touch area and the separate tone controls. */
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child button {
+    width: 30px !important;
+    min-width: 30px !important;
+    flex: 0 0 30px;
   }
 
   #view-detail.stage-mode .stage-scroll-speed > button {

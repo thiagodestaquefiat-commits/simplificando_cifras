@@ -18,6 +18,20 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.waitForTimeout(300);
   assert.equal(await page.locator('.roudy-search-shortcut').count(),4);
   assert.equal(await page.getByText('Explorar no ROUDY',{exact:true}).count(),1);
+  // Search is a primary screen, not a modal: tools opened from its profile
+  // must cover the whole screen instead of leaking only below search.
+  await page.evaluate(()=>openTuner());
+  assert.equal(await page.locator('#tuner-instrument').evaluate(node=>{
+    const r=node.getBoundingClientRect();return document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('#modal-overlay')!==null;
+  }),true,'afinador recebe os toques acima da tela Buscar');
+  await page.screenshot({path:path.join(shots,'roudy-buscar-afinador-camadas.png'),fullPage:false});
+  await page.evaluate(()=>closeModal());
+  for(const height of [640,760,844]){
+    await page.setViewportSize({width:390,height});
+    assert.equal(await page.locator('#tab-search').evaluate(node=>{
+      const r=node.getBoundingClientRect();return document.elementFromPoint(r.left+r.width/2,r.top+12)?.closest('#tab-search')!==null;
+    }),true,'navegação continua acessível com a mudança de altura do navegador');
+  }
   await page.screenshot({path:path.join(shots,'roudy-buscar-mobile-inicial.png'),fullPage:false});
   const songCount=await page.evaluate(()=>musicas.length);
   await page.getByRole('button',{name:'Explorar músicas',exact:true}).click();

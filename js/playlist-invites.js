@@ -106,10 +106,17 @@
   }
   function profile(user) {
     const id = activeId;
-    const host = mount(`<header class="event-people-search-header"><button class="event-people-search-cancel" data-playlist-close type="button">Cancelar</button><h2 class="event-people-search-title">Convidar colaborador</h2><span></span></header><span class="event-people-search-avatar">${avatar(user)}</span><h3>${esc(user.name)}</h3><p>${user.username ? '@' + esc(user.username) : ''}</p><p>${esc(user.location || '')}</p><p>${esc((user.instruments || []).join(', '))}</p><p>Terá os mesmos direitos que você nesta playlist, após aceitar o convite.</p><button type="button" class="btn btn-primary" id="playlist-send-invite">Convidar como colaborador</button><p id="playlist-invite-status" role="status" aria-live="polite"></p>`, 'Perfil do colaborador');
+    const details = [user.location, (user.instruments || []).join(', ')].filter(Boolean).join(' · ');
+    const host = mount(`<header class="playlist-invite-profile-header"><button class="event-people-search-cancel" data-playlist-close type="button">Cancelar</button><h2>Convidar</h2><span aria-hidden="true"></span></header><div class="playlist-invite-profile-person"><span class="playlist-invite-profile-avatar">${avatar(user)}</span><div class="playlist-invite-profile-identity"><h3>${esc(user.name)}</h3>${user.username ? `<p>@${esc(user.username)}</p>` : ''}${details ? `<p class="playlist-invite-profile-details">${esc(details)}</p>` : ''}</div></div><p class="playlist-invite-profile-permissions" id="playlist-invite-permissions">Após aceitar, poderá editar, convidar pessoas e excluir esta playlist, assim como você.</p><button type="button" class="playlist-invite-profile-submit" id="playlist-send-invite" aria-describedby="playlist-invite-permissions">Enviar convite</button><p id="playlist-invite-status" class="playlist-invite-profile-status" role="status" aria-live="polite"></p>`, 'Convidar colaborador');
+    host.querySelector('.home-playlist-action-sheet').classList.add('playlist-invite-profile');
     host.querySelector('#playlist-send-invite').onclick = async event => {
       const gen = sequence; event.target.disabled = true;
-      try { await api().invite(id, user.id); if (gen === sequence) status('Convite enviado. A pessoa entrará após aceitar.'); }
+      try {
+        await api().invite(id, user.id);
+        // Only dismiss the screen that submitted this invitation. A late
+        // response must not close a newer dialog or a different account's UI.
+        if (gen === sequence) { close(); global.showToast('Convite enviado. A pessoa entrará após aceitar.'); }
+      }
       catch (error) { if (gen === sequence) { status(error.message); event.target.disabled = false; } }
     };
   }
