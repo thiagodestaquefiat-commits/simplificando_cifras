@@ -99,7 +99,7 @@
 .notification-mark-all:disabled{visibility:hidden}
 .notification-center-content{min-height:0;padding:0 20px calc(28px + env(safe-area-inset-bottom));overflow-y:auto}
 .notification-period{margin:25px 0 14px;color:#f8fafc;font-size:20px;font-weight:850;letter-spacing:-.3px}
-.notification-invitations:has(#user-invitations-list:empty){display:none}
+.notification-invitations:has(#user-invitations-list:empty):not(:has(#playlist-invitations-list:not(:empty))){display:none}
 .notification-invitations #user-invitations-status:empty{display:none}
 .notification-swipe{position:relative;overflow:hidden;background:#e53e3e}
 .notification-row{position:relative;z-index:1;display:grid;width:100%;min-height:84px;padding:8px 0;border:0;grid-template-columns:60px minmax(0,1fr);align-items:center;gap:12px;background:#080d12;color:#f7f8fa;text-align:left;cursor:pointer;touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.72,.3,1)}

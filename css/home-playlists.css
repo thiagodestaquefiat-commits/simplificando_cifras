@@ -155,11 +155,12 @@
 .home-playlist-heading{display:flex;width:100%;align-items:center;flex-direction:column;text-align:center}
 .home-playlist-heading h2{font-size:clamp(28px,8vw,38px);white-space:normal}
 .home-playlist-heading small{display:block;margin-top:8px;color:#a2a7af;font-size:13px}
-.home-playlist-member{display:flex;margin-top:10px;align-items:center;justify-content:center;gap:0;color:#f4f5f7;font-size:13px}
+.home-playlist-member{display:flex;margin-top:10px;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;row-gap:6px;color:#f4f5f7;font-size:13px}
 .home-playlist-member-add{position:relative;z-index:2;display:grid;width:34px;height:34px;flex:0 0 34px;margin-right:-3px;padding:0;place-items:center;border:1px solid rgba(255,255,255,.08);border-radius:50%;background:#343438;color:#fff;font:300 27px/1 Inter,sans-serif;cursor:pointer}
-.home-playlist-member-avatar{position:relative;z-index:1;display:grid;width:34px;height:34px;place-items:center;overflow:hidden;border-radius:50%;background:#0789E7;color:#fff;font-size:12px;font-weight:800}
+.home-playlist-member-avatar{position:relative;z-index:1;display:grid;width:34px;height:34px;flex:0 0 34px;place-items:center;overflow:hidden;border-radius:50%;background:#0789E7;color:#fff;font-size:12px;font-weight:800}
 .home-playlist-member-avatar.has-image img{width:100%;height:100%;object-fit:cover}
-.home-playlist-member strong{margin-left:10px;font-weight:650}
+.home-playlist-member strong{max-width:100%;margin-left:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+#playlist-invite-layer .event-people-search-title{margin:0;font-family:inherit;font-size:18px;line-height:1.2;font-weight:700;text-align:center}
 .home-playlist-actions{min-height:76px;padding:6px 12px 12px;justify-content:center;gap:clamp(10px,3.5vw,20px)}
 .home-playlist-actions .home-playlist-play{width:58px;height:58px;min-height:58px;padding:0;justify-content:center;border-radius:50%;background:#0789E7;color:#fff}
 .home-playlist-actions .home-playlist-play svg{width:34px;height:34px;margin-left:4px}

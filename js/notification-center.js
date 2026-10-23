@@ -7,9 +7,9 @@
   function dismissedState(){const value=global.storage.get(dismissedKey,{});return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
   const seen=()=>new Set(Array.isArray(readState()[scope()])?readState()[scope()].filter(id=>typeof id==='string'):[]);
   const dismissed=()=>new Set(Array.isArray(dismissedState()[scope()])?dismissedState()[scope()].filter(id=>typeof id==='string'):[]);
-  const pending=()=>global.eventUserInvites?.getPending?.()||[];
+  const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))];
   const items=()=>{
-    const values=typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[];
+    const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
     const hidden=dismissed();
     return (Array.isArray(values)?values:[]).filter(item=>!hidden.has(String(item.id))).slice().sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0)||String(a.id).localeCompare(String(b.id)));
   };
@@ -40,12 +40,15 @@
       if(button.dataset.suppressClick==='true'){button.dataset.suppressClick='false';return;}
       const item=feed[Number(button.dataset.notificationIndex)];
       if(!saveRead([item.id]))global.showToast('Não foi possível registrar a leitura neste dispositivo.');
+      else if(item.kind==='playlist')global.playlistCollaboration.readNotice(item).catch(()=>{});
       else global.readRoudyNotification?.(item);
-      update();if(typeof global.openRoudyNotification==='function')await global.openRoudyNotification(item);
+      update();if(item.kind==='playlist')global.playlistInvites.openNotice(item);else if(typeof global.openRoudyNotification==='function')await global.openRoudyNotification(item);
     }));
+    target.querySelectorAll('[data-notification-index]').forEach(button=>{if(feed[Number(button.dataset.notificationIndex)]?.kind==='playlist')button.querySelector('small').textContent='Ver playlist';});
     target.querySelectorAll('[data-notification-delete]').forEach(button=>button.addEventListener('click',()=>dismiss(feed[Number(button.dataset.notificationDelete)]?.id)));
     installSwipe(target);
     global.eventUserInvites?.renderInbox?.();
+    global.playlistInvites?.renderInbox?.();
     el('notification-mark-all').disabled=!pending().some(i=>!read.has('invite:'+i.id))&&!feed.some(i=>i.unread&&!read.has(i.id));
   }
   function installSwipe(target){
@@ -61,15 +64,17 @@
   function formatDate(value){const date=new Date(value);return Number.isFinite(date.getTime())?date.toLocaleString():'';}
   function markAll(){
     const feed=items();if(!saveRead([...feed.map(i=>i.id),...pending().map(i=>'invite:'+i.id)])){global.showToast('Não foi possível registrar a leitura neste dispositivo.');return;}
-    feed.forEach(i=>global.readRoudyNotification?.(i));update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
+    feed.forEach(i=>i.kind==='playlist'?global.playlistCollaboration.readNotice(i).catch(()=>{}):global.readRoudyNotification?.(i));update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
   }
   function markChatRead(eventId){saveRead(items().filter(i=>i.kind==='message'&&String(i.eventId)===String(eventId)).map(i=>i.id));update();}
   function open(){
     global.closeModal();
     el('modal-overlay').classList.add('notification-center-overlay');
     el('modal-body').innerHTML='<section class="notification-center-page"><header class="notification-center-header"><button id="notification-center-close" class="notification-center-back" type="button" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>Notificações</h1><button id="notification-mark-all" class="notification-mark-all" type="button">Ler todas</button></header><main class="notification-center-content"><section class="notification-invitations"><h2 class="notification-period">Convites</h2><div id="user-invitations-status" role="status" aria-live="polite"></div><div id="user-invitations-list"></div></section><div id="roudy-notification-items"></div></main></section>';
+    const playlistInvitations=document.createElement('div');playlistInvitations.id='playlist-invitations-list';el('user-invitations-list').after(playlistInvitations);
     el('notification-mark-all').addEventListener('click',markAll);el('notification-center-close').addEventListener('click',global.closeModal);
     el('modal-overlay').style.display='flex';update();global.eventUserInvites?.refresh?.(true);
+    global.playlistCollaboration?.refresh(true);
   }
   global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss});
   global.appAuth?.subscribe?.(()=>{if(el('roudy-notification-items'))global.closeModal();update();});

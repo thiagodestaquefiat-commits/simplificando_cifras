@@ -1,6 +1,7 @@
 from .profile_avatar import ProfileAvatar
 from .profile_instrument import ProfileInstrument
 from .vocal_key_memory import VocalKeyMemory
+from .playlist_collaboration import CollaborativePlaylist, PlaylistMember, PlaylistInvite, PlaylistOperation, PlaylistNotification
 from .collaboration import (
     CollaborationUser,
     UserHandle,
@@ -25,6 +26,7 @@ from .collaboration import (
 )
 
 __all__ = [
+    "CollaborativePlaylist", "PlaylistMember", "PlaylistInvite", "PlaylistOperation", "PlaylistNotification",
     "ProfileAvatar",
     "ProfileInstrument",
     "VocalKeyMemory",

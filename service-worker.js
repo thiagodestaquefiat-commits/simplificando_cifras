@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v589-event-suggestion-images";
+const CACHE_NAME = "simplificando-cifras-v593-search-account-songs";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -36,21 +36,23 @@ const CACHE_NAME = "simplificando-cifras-v589-event-suggestion-images";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./js/event-detail-refactor.css?v=65",
+  "./js/event-detail-refactor.css?v=66",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
-  "./css/search-menu.css?v=11",
+  "./css/search-menu.css?v=12",
   "./css/stage-mode-reference.css?v=18",
-  "./js/search-menu.js?v=5",
+  "./js/search-menu.js?v=6",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=24",
-  "./js/home-playlists.js?v=17",
-  "./js/user-playlists.js?v=2",
-  "./js/notification-center.js?v=4",
+  "./css/home-playlists.css?v=25",
+  "./js/home-playlists.js?v=19",
+  "./js/user-playlists.js?v=3",
+  "./js/notification-center.js?v=5",
+  "./js/playlist-collaboration.js?v=1",
+  "./js/playlist-invites.js?v=1",
   "./js/event-model.js?v=7",
   "./js/event-user-invites.js?v=10",
   "./js/event-collaboration-client.js?v=18",
@@ -58,7 +60,7 @@ const ASSETS = [
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
   "./js/app-auth.js?v=16",
-  "./js/event-qr-scanner.js?v=1",
+  "./js/event-qr-scanner.js?v=2",
   "./js/event-qr-scanner.css?v=1",
   "./js/vendor/jsqr.min.js?v=1",
   "./js/profile-qr.js?v=4",
