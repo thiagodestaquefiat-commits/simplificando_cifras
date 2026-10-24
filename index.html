@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=66">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=67">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -934,6 +934,8 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #view-detail:not(.stage-mode).video-study-expanded{--video-header-height:58px}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header{position:sticky;z-index:30;top:0;min-height:58px;height:58px;margin-bottom:-58px;padding-block:8px;overflow:hidden;border-bottom-color:rgba(255,255,255,calc(var(--video-header-progress)*.09));background:rgba(5,5,6,var(--video-header-progress));box-shadow:0 6px 20px rgba(0,0,0,calc(var(--video-header-progress)*.3));backdrop-filter:blur(calc(var(--video-header-progress)*14px));-webkit-backdrop-filter:blur(calc(var(--video-header-progress)*14px));transform:none;transition:none;pointer-events:auto;will-change:background-color,backdrop-filter}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap,#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-key-badge{opacity:var(--video-header-progress);transform:translate3d(0,calc((1 - var(--video-header-progress))*5px),0);pointer-events:none;will-change:opacity,transform}
+#view-detail:not(.stage-mode).video-study-expanded:not(.video-header-compact)>.detail-header .detail-palco-btn{visibility:hidden;opacity:0;pointer-events:none}
+#view-detail:not(.stage-mode).video-study-expanded.video-header-compact>.detail-header .detail-palco-btn{visibility:visible;opacity:1;pointer-events:auto}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap{grid-column:2/4;padding-right:6px;text-align:left}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-capo{text-align:left}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;z-index:31;top:7px;left:6px;width:44px;height:44px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -1088,7 +1090,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=26">
-<link rel="stylesheet" href="css/search-menu.css?v=13">
+<link rel="stylesheet" href="css/search-menu.css?v=14">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 </head>
 <body>
@@ -1370,15 +1372,15 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/song-repository.js?v=17"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=21"></script>
-<script src="js/event-model.js?v=7"></script>
-<script src="js/context-intelligence.js?v=2"></script>
+<script src="js/event-model.js?v=8"></script>
+<script src="js/context-intelligence.js?v=4"></script>
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
 <script src="js/event-chat.js?v=5"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=8"></script>
-<script src="js/youtube-player-ui.js?v=22"></script>
+<script src="js/youtube-player-ui.js?v=23"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1413,9 +1415,10 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-collaboration-client.js?v=19"></script>
 <script src="js/event-share.js?v=4"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
-<script src="js/contextual-copy.js?v=1"></script>
-<script src="js/context-delivery.js?v=1"></script>
+<script src="js/contextual-copy.js?v=3"></script>
+<script src="js/context-delivery.js?v=2"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
+<script src="js/context-history.js?v=2"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=17"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=21"></script>
@@ -2706,7 +2709,7 @@ function openDetail(id,options={}){
   const sharedPlaylistVariant=options.preserveNavigation&&window.homePlaylists?homePlaylists.variantForContext(navigationContext.get()):null;
   const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride||sharedPlaylistVariant?.song; if(!baseSong) return;
   storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,openedAt:new Date().toISOString()});
-  renderContextualHomeCard();
+  recordRecentlyOpenedSong(baseSong.id);
   let contextualSong=options.songOverride||sharedPlaylistVariant?.song||null;
   if(sharedPlaylistVariant)detailPlaylistContext=sharedPlaylistVariant.item;
   if(!contextualSong&&options.preserveNavigation&&window.homePlaylists){const variant=homePlaylists.variantForContext(navigationContext.get());if(variant){contextualSong=variant.song;detailPlaylistContext=variant.item;}}
@@ -2714,7 +2717,8 @@ function openDetail(id,options={}){
   currentDetailSongOverride=contextualSong;
   const m=contextualSong||baseSong;
   const activeContext=navigationContext.get(),activeEvent=activeContext&&findEvent(activeContext.playlistId);
-  if(contextualSong&&activeEvent){const item=activeEvent.repertoire.filter(value=>eventSongSource(activeEvent,value))[activeContext.currentIndex];if(item)detailEventContext={eventId:activeEvent.id,itemId:item.id,ownerId:appCurrentUser.id};}
+  if(contextualSong&&activeEvent){const item=activeEvent.repertoire.filter(value=>eventSongSource(activeEvent,value))[activeContext.currentIndex];if(item){detailEventContext={eventId:activeEvent.id,itemId:item.id,ownerId:appCurrentUser.id};storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,eventId:activeEvent.id,repertoireItemId:item.id,openedAt:new Date().toISOString()});}}
+  renderContextualHomeCard();
   detailEditBaseline={};
   document.getElementById('study-metronome').hidden=false;
   studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
@@ -3992,6 +3996,12 @@ function eventSortValue(event){
   return new Date(year,month-1,day,time?Number(time[1]):0,time?Number(time[2]):0).getTime();
 }
 const HOME_CARD_LAST_SONG_KEY='sc_home_last_opened_song_v1';
+const RECENT_OPENED_SONGS_KEY='sc_recent_opened_songs_v1';
+function recordRecentlyOpenedSong(songId){
+  const userId=String(appCurrentUser?.id||'local'),stored=storage.get(RECENT_OPENED_SONGS_KEY,{}),byUser=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{},current=Array.isArray(byUser[userId])?byUser[userId]:[],entry={songId,openedAt:new Date().toISOString()};
+  byUser[userId]=[entry,...current.filter(item=>String(item?.songId)!==String(songId))].slice(0,5);
+  storage.set(RECENT_OPENED_SONGS_KEY,byUser);
+}
 const presentedContextFingerprints=new Set();
 function homeCardUserName(){
   const name=String(appCurrentUser?.name||'').trim();
@@ -4025,11 +4035,11 @@ function homeCardPreviewModel(){
 function resolveHomeCardContext(now=new Date()){
   const preview=homeCardPreviewModel();if(preview)return preview;
   try{
-    const result=roudyContextIntelligence.evaluate({now,user:appCurrentUser,bands:appBands,events:setlists,preferences:{stageModeAvailable:true}},{acknowledgedFingerprints:contextAcknowledgements.fingerprints(appCurrentUser.id)});
-    const delivery=contextDelivery.select(result.nextBestAction,{events:setlists});
+    const result=roudyContextIntelligence.evaluate({now,user:appCurrentUser,bands:appBands,events:setlists,activity:storage.get(HOME_CARD_LAST_SONG_KEY,null),preferences:{stageModeAvailable:true}},{acknowledgedFingerprints:contextAcknowledgements.fingerprints(appCurrentUser.id),history:contextHistory.list(appCurrentUser.id)});
+    const history=contextHistory.list(appCurrentUser.id),delivery=contextDelivery.select(result.nextBestAction,{events:setlists,history});
     if(delivery.surface==='HOME'&&delivery.copy){
       const action=delivery.action,copy=delivery.copy;
-      return {context:'contextual_delivery',artDirection:'standard',kicker:copy.kicker,title:copy.title,description:copy.description,contextAction:action,actions:[{label:copy.actionLabel,kind:'context_action',contextAction:action,primary:true},{label:'Agora não',kind:'context_acknowledge',contextAction:action}]};
+      return {context:'contextual_delivery',artDirection:'standard',kicker:copy.kicker,title:copy.title,description:copy.description,contextAction:action,contextCopy:copy,actions:[{label:copy.actionLabel,kind:'context_action',contextAction:action,primary:true},{label:'Agora não',kind:'context_acknowledge',contextAction:action}]};
     }
   }catch(error){console.warn('Contextual delivery indisponível; mantendo a Home atual.',error)}
   const contextFirstName=homeCardUserName(),contextGreeting=homeCardGreeting();
@@ -4068,14 +4078,18 @@ function activateHomeCardAction(action){
   if(action.kind==='camera')roudyCamera.open();
 }
 function dispatchContextEvent(type,action){document.dispatchEvent(new CustomEvent(type,{detail:{fingerprint:action?.fingerprint||null,actionType:action?.actionType||null,eventId:action?.eventId||null}}))}
-function markContextActionPresented(action){
+function markContextActionPresented(action,copy){
+  const homeVisible=document.getElementById('tab-musicas')?.getAttribute('aria-selected')==='true'&&document.getElementById('view-detail')?.style.display!=='flex'&&document.getElementById('view-sd')?.style.display!=='flex';if(!homeVisible)return;
   const fingerprint=String(action?.fingerprint||'');if(!fingerprint||presentedContextFingerprints.has(fingerprint))return;
-  presentedContextFingerprints.add(fingerprint);dispatchContextEvent('context_action_presented',action);
+  presentedContextFingerprints.add(fingerprint);contextHistory.presented(action,appCurrentUser.id,null,copy);dispatchContextEvent('context_action_presented',action);
 }
 function openContextualAction(action){
-  if(!action)return;dispatchContextEvent('context_action_opened',action);
+  if(!action)return;contextHistory.opened(action,appCurrentUser.id);dispatchContextEvent('context_action_opened',action);
   if(action.actionType==='REVIEW_CHANGED_SONG'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
+  if(action.actionType==='CHECK_EVENT_CHANGES'){switchTab('setlists');openSD(action.eventId);setTimeout(openEventNotifications,0);return;}
   if(['START_PREPARATION','CONTINUE_PREPARATION'].includes(action.actionType)){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=Math.max(0,items.findIndex(item=>item.preparation?.state!=='READY'));if(event&&items[index])openDetailFromPlaylist(event.id,index);else if(event){switchTab('setlists');openSD(event.id)}return;}
+  if(action.actionType==='CONTINUE_STUDY'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
+  if(['OPEN_UPCOMING_EVENT','RECOGNIZE_PREPARATION'].includes(action.actionType)){switchTab('setlists');openSD(action.eventId);return;}
   if(action.actionType==='ENTER_STAGE_MODE'){openStageFromEvent(action.eventId);}
 }
 async function acknowledgeContextualAction(action){
@@ -4090,7 +4104,7 @@ function renderContextualHomeCard(){
   const model=resolveHomeCardContext();
   // Desempenho: se o card já mostra exatamente este conteúdo, não recria botões nem reinicia a animação.
   let signature='';try{signature=JSON.stringify(model);}catch(_error){signature='';}
-  if(signature&&signature===homeCardRenderSignature&&normal.isConnected&&document.getElementById('playlist-context-actions')?.childElementCount){if(model.contextAction)markContextActionPresented(model.contextAction);return;}
+  if(signature&&signature===homeCardRenderSignature&&normal.isConnected&&document.getElementById('playlist-context-actions')?.childElementCount){if(model.contextAction)markContextActionPresented(model.contextAction,model.contextCopy);return;}
   const card=document.getElementById('playlist-ai-card'),kicker=document.getElementById('playlist-context-kicker'),title=document.getElementById('playlist-ai-title'),editorial=document.getElementById('playlist-context-editorial'),description=document.getElementById('playlist-context-description'),actions=document.getElementById('playlist-context-actions');
   if(!card||!kicker||!title||!editorial||!description||!actions)return;
   kicker.textContent=model.kicker;title.textContent=model.title;description.textContent=model.description||'';description.hidden=!model.description;actions.replaceChildren();
@@ -4100,7 +4114,7 @@ function renderContextualHomeCard(){
   const primaryAction=model.actions.find(action=>action.primary)||model.actions[0];
   if(primaryAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--primary';button.innerHTML=homeCardActionIcon(primaryAction.kind)+'<span></span>';button.querySelector('span').textContent=primaryAction.label;button.addEventListener('click',()=>activateHomeCardAction(primaryAction));actions.appendChild(button);}
   const dismissAction=model.actions.find(action=>action.kind==='context_acknowledge');if(dismissAction){const button=document.createElement('button');button.type='button';button.className='playlist-ai-action playlist-ai-action--secondary';button.textContent=dismissAction.label;button.setAttribute('aria-label','Dispensar esta sugestão');button.addEventListener('click',()=>activateHomeCardAction(dismissAction));actions.appendChild(button);}
-  if(model.contextAction)markContextActionPresented(model.contextAction);
+  if(model.contextAction)markContextActionPresented(model.contextAction,model.contextCopy);
   card.dataset.artDirection=model.artDirection||'standard';normal.dataset.context=model.context;normal.dataset.typographyVariant=model.typographyVariant||'standard';normal.classList.remove('is-refreshing');homeCardRenderSignature=signature;
   // Reinicia a animação sem forçar recálculo de layout (antes: void normal.offsetWidth).
   requestAnimationFrame(()=>requestAnimationFrame(()=>normal.classList.add('is-refreshing')));
@@ -4287,7 +4301,7 @@ function chordColorPickerMarkup(selected){const colors=[['orange','Laranja (padr
 function toggleChordColorPicker(button){toggleAccountSettingsPicker(button,'.account-drawer-color-picker');}
 function toggleAccountSettingsPicker(button,selector){const picker=document.querySelector(selector);if(!picker)return;const open=picker.hidden;picker.hidden=!open;button.setAttribute('aria-expanded',String(open));button.classList.toggle('is-open',open);}
 function selectChordColor(value,button){const input=document.getElementById('setting-chord-color');if(!input)return;input.value=value;button.closest('.account-drawer-color-picker')?.querySelectorAll('.account-drawer-color-option').forEach(option=>{const selected=option===button;option.classList.toggle('is-selected',selected);option.setAttribute('aria-checked',String(selected));});const trigger=document.querySelector('.account-drawer-color-heading');trigger?.style.setProperty('--selected-color',chordColorValue(value));previewAppSettings();}
-function interfaceThemePickerMarkup(selected){const themes=[['dark','Escuro',false],['light','Claro',false],['system','Sistema',false]];return `<input id="setting-theme" type="hidden" value="${eventEsc(selected)}"><div class="account-drawer-theme-picker" role="radiogroup" aria-label="Tema da Interface" hidden>${themes.map(([value,label,beta])=>`<button type="button" role="radio" aria-checked="${selected===value}" aria-disabled="${beta}" class="account-drawer-theme-option ${selected===value?'is-selected':''}${beta?' is-beta':''}" data-theme-value="${value}" ${beta?'disabled':''} onclick="selectInterfaceTheme('${value}',this)"><i class="theme-sample theme-sample--${value}" aria-hidden="true"></i><span class="account-drawer-theme-label">${beta?'<small>Beta</small>':''}${label}</span><b aria-hidden="true">✓</b></button>`).join('')}</div>`;}
+function interfaceThemePickerMarkup(selected){const themes=[['dark','Escuro',true],['light','Claro',true],['system','Sistema',false]];return `<input id="setting-theme" type="hidden" value="${eventEsc(selected)}"><div class="account-drawer-theme-picker" role="radiogroup" aria-label="Tema da Interface" hidden>${themes.map(([value,label,beta])=>`<button type="button" role="radio" aria-checked="${selected===value}" aria-disabled="${beta}" class="account-drawer-theme-option ${selected===value?'is-selected':''}${beta?' is-beta':''}" data-theme-value="${value}" ${beta?'disabled':''} onclick="selectInterfaceTheme('${value}',this)"><i class="theme-sample theme-sample--${value}" aria-hidden="true"></i><span class="account-drawer-theme-label">${beta?'<small>Beta</small>':''}${label}</span><b aria-hidden="true">✓</b></button>`).join('')}</div>`;}
 function selectInterfaceTheme(value,button){if(button?.disabled)return;const input=document.getElementById('setting-theme');if(!input)return;input.value=value;button.closest('.account-drawer-theme-picker')?.querySelectorAll('.account-drawer-theme-option').forEach(option=>{const selected=option===button;option.classList.toggle('is-selected',selected);option.setAttribute('aria-checked',String(selected));});const sample=document.querySelector('.account-drawer-theme-heading>.theme-sample');if(sample)sample.className=`theme-sample theme-sample--${value}`;previewAppSettings();}
 function openAccountDrawerAppearanceSettings(){const value=loadAppSettings(),drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Aparência e Acessibilidade','openAccountDrawerSettings')}<main class="account-drawer-settings account-drawer-settings--form"><div class="account-drawer-settings-section-title">Aparência</div><section class="account-drawer-settings-group"><button type="button" class="account-drawer-color-heading" style="--selected-color:${chordColorValue(value.chordColor)}" aria-expanded="false" onclick="toggleChordColorPicker(this)"><span class="account-drawer-settings-icon">${settingsUiIcon('chord')}</span><strong>Cor da cifra</strong><i aria-hidden="true"></i><b aria-hidden="true">›</b></button>${chordColorPickerMarkup(value.chordColor)}<button type="button" class="account-drawer-color-heading account-drawer-theme-heading" aria-expanded="false" onclick="toggleAccountSettingsPicker(this,'.account-drawer-theme-picker')"><span class="account-drawer-settings-icon">${settingsUiIcon('theme')}</span><strong>Tema da Interface</strong><i class="theme-sample theme-sample--${value.theme}" aria-hidden="true"></i><b aria-hidden="true">›</b></button>${interfaceThemePickerMarkup(value.theme)}</section><div class="account-drawer-settings-section-title">Acessibilidade</div><section class="account-drawer-settings-group"><div class="account-drawer-setting-row"><span class="account-drawer-settings-icon">${settingsUiIcon('contrast')}</span><strong>Alto contraste</strong><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="account-drawer-setting-row"><span class="account-drawer-settings-icon">${settingsUiIcon('eye')}</span><strong>Modo para daltônicos</strong><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="account-drawer-setting-row"><span class="account-drawer-settings-icon">${settingsUiIcon('size')}</span><strong>Tamanho dos elementos</strong><select id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="account-drawer-settings-save" type="button" onclick="saveAccountDrawerSettings()">Salvar configurações</button></main>`;drawer.scrollTop=0;}
 function saveAccountDrawerSettings(){const value=settingsFromForm();storage.set(APP_SETTINGS_KEY,value);applyAppSettings(value);showToast('✅ Configurações salvas.');openAccountDrawerSettings();}
@@ -5431,7 +5445,8 @@ async function saveEventFieldSheet(){
   }catch(error){if(errorTarget)errorTarget.textContent=error.message||'Não foi possível salvar esta informação.';}
 }
 
-function openSD(id){
+function openSD(id,options={}){
+  const eventView=document.getElementById('view-sd'),preservedScroll=options.preserveScroll&&eventView?.style.display==='flex'&&String(currentSdId)===String(id)?eventView.scrollTop:null;
   cleanupEventParticipantsMorph();
   cleanupEventDetailHeaderMotion();
   const event=findEvent(id);if(!event)return;currentSdId=event.id;const eventFilter=document.querySelector('.event-filter-segments');if(eventFilter)eventFilter.hidden=true;
@@ -5464,10 +5479,10 @@ function openSD(id){
   eventDetailContent.innerHTML=`${eventMeta}${referenceActions}<div id="event-detail-map" class="event-map-preview" hidden></div>${repertoireContent}${eventParticipantsMarkup(event)}`;
   restoreEventSuggestionArtwork(eventDetailContent,retainedSuggestionArtwork);
   renderEventChatButton(event);
-  if(currentAuthState.authenticated)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
+  if(currentAuthState.authenticated&&options.refreshChat!==false)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
   renderEventNoticeButton(event);
   eventMapPreview.render(document.getElementById('event-detail-map'),event.eventLocation);
-  document.getElementById('view-sd').style.display='flex';document.getElementById('view-sd').style.zIndex='15';
+  eventView.style.display='flex';eventView.style.zIndex='15';if(preservedScroll!=null)eventView.scrollTop=preservedScroll;
   requestAnimationFrame(()=>{setupEventDetailHeaderMotion();setupEventParticipantsMorph();});
 }
 
@@ -5538,9 +5553,8 @@ async function refreshOpenEventFromCloud(){
   try{
     const remote=await eventCollaboration.getEvent(currentSdId,appCurrentUser);
     if(Number(remote.remoteVersion||0)<=Number(local.remoteVersion||0))return;
-    const position=document.getElementById('view-sd').scrollTop;
     setlists=eventRepository.upsert(setlists,remote).events;eventRepository.save(setlists);
-    openSD(remote.id);document.getElementById('view-sd').scrollTop=position;
+    openSD(remote.id,{preserveScroll:true,refreshChat:false});
   }catch(error){if(!collaborationAllowsOffline(error))console.warn('Não foi possível atualizar o evento aberto.',error);}
   finally{eventLiveRefreshRunning=false;}
 }
@@ -5883,7 +5897,7 @@ eventChat.subscribe(eventId=>{
   if(!chat.hidden&&(!eventId||String(eventId)===String(currentSdId))){try{eventChat.markRead(currentSdId);}catch(error){}}
   renderSetlists();
   if(!chat.hidden&&(!eventId||String(eventId)===String(currentSdId))) renderEventChatMessages(true);
-  if(document.getElementById('view-sd').style.display==='flex'&&eventId&&String(eventId)===String(currentSdId)) openSD(currentSdId);
+  if(document.getElementById('view-sd').style.display==='flex'&&eventId&&String(eventId)===String(currentSdId)) openSD(currentSdId,{preserveScroll:true,refreshChat:false});
 });
 renderMusicas();
 applyPlaylistCover();
@@ -5965,7 +5979,7 @@ youtubePlayerUI.initialize({
   showToast
 });
 </script>
-<script src="js/search-menu.js?v=6"></script>
+<script src="js/search-menu.js?v=7"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){

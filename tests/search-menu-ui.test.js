@@ -55,8 +55,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.getByRole('button',{name:'Minha playlist',exact:true}).last().click();
   assert.ok(await page.locator('.roudy-search-local-row').count()>0,'busca local deve apresentar música real');
   assert.equal(await page.locator('[data-playlist-online-results]').count(),0,'filtro da playlist não deve buscar fora');
+  const firstResult=page.locator('.roudy-search-local-row').first();
+  await firstResult.locator('.roudy-search-local-more').click();
+  assert.equal(await page.getByRole('dialog',{name:'Adicionar à playlist'}).count(),1,'três pontos devem abrir o seletor de playlists');
+  await page.evaluate(()=>closeEventAdminSheet());
   await page.screenshot({path:path.join(shots,'roudy-buscar-mobile-resultados.png'),fullPage:false});
-  await page.locator('.roudy-search-local-row').first().click();await page.waitForTimeout(260);
+  await firstResult.locator('.roudy-search-local-open').click();await page.waitForTimeout(260);
   assert.ok(await page.locator('#view-detail').evaluate(node=>node.classList.contains('open')||getComputedStyle(node).display!=='none'),'resultado abre o Estudo');
   assert.deepEqual(errors,[]);
   console.log('search-menu-ui.test.js: OK');

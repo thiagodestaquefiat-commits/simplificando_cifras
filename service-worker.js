@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v598-mobile-invites-integrated";
+const CACHE_NAME = "simplificando-cifras-v599-selective-context-search-event";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -36,12 +36,12 @@ const CACHE_NAME = "simplificando-cifras-v598-mobile-invites-integrated";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./js/event-detail-refactor.css?v=66",
+  "./js/event-detail-refactor.css?v=67",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
-  "./css/search-menu.css?v=13",
+  "./css/search-menu.css?v=14",
   "./css/stage-mode-reference.css?v=19",
-  "./js/search-menu.js?v=6",
+  "./js/search-menu.js?v=7",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
   "./assets/search/playlists.svg?v=2",
@@ -53,7 +53,7 @@ const ASSETS = [
   "./js/notification-center.js?v=5",
   "./js/playlist-collaboration.js?v=1",
   "./js/playlist-invites.js?v=3",
-  "./js/event-model.js?v=7",
+  "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-detail-refactor.css?v=53",
@@ -141,7 +141,7 @@ const ASSETS = [
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=8",
   "./js/youtube-song-linker.js?v=2",
-  "./js/youtube-player-ui.js?v=22",
+  "./js/youtube-player-ui.js?v=23",
   "./js/spotify-player-ui.js?v=23",
   "./js/youtube-player-ui.js?v=18",
   "./js/youtube-player.js?v=8",
@@ -283,11 +283,12 @@ const ASSETS = [
   "./js/stage-offline.js?v=1",
   "./js/stage-offline.js?v=2",
   "./js/event-offline.js?v=2",
-  "./js/context-intelligence.js?v=2",
+  "./js/context-intelligence.js?v=4",
   "./js/preparation-receipts.js?v=1",
-  "./js/contextual-copy.js?v=1",
-  "./js/context-delivery.js?v=1",
+  "./js/contextual-copy.js?v=3",
+  "./js/context-delivery.js?v=2",
   "./js/context-acknowledgements.js?v=1",
+  "./js/context-history.js?v=2",
   "./js/study-metronome.js?v=2",
   "./js/study-metronome.js?v=3",
   "./js/study-metronome.js?v=4",

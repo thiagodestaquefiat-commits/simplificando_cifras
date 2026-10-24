@@ -15,13 +15,16 @@ assert.match(html, /O que vamos tocar hoje\?/);
 for (const label of ['Músicas', 'Minha playlist', 'Eventos', 'Medley']) assert.match(html, new RegExp(`>${label}<`));
 for (const filter of ['all', 'playlist', 'external']) assert.match(html, new RegExp(`data-search-filter="${filter}"`));
 assert.match(js, /sc_home_last_opened_song_v1/, 'retomada usa histórico real já existente');
+assert.match(js, /sc_recent_opened_songs_v1/, 'retomada mantém até cinco músicas recentes por conta');
 assert.match(js, /global\.schedulePlaylistOnlineSearch/, 'busca externa reutiliza o mecanismo existente');
 assert.match(js, /global\.openDetail/, 'resultado local abre o Estudo existente');
+assert.match(js, /data-search-song-menu/, 'resultado local oferece o menu de três pontos');
+assert.match(js, /homePlaylists\?\.chooseForSong/, 'três pontos reutilizam o seletor existente de playlists');
 assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as telas existentes');
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=12/);
-assert.match(sw, /js\/search-menu\.js\?v=6/);
+assert.match(sw, /css\/search-menu\.css\?v=14/);
+assert.match(sw, /js\/search-menu\.js\?v=7/);
 
 console.log('search-menu-source.test.js: OK');

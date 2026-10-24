@@ -37,8 +37,10 @@ assert.match(html,/\['purple','Roxo'\]/);assert.match(html,/\['orange','Laranja 
 assert.match(html,/>Claro<\/option>/);
 assert.match(html,/>Escuro<\/option>/);
 assert.match(html,/>Sistema<\/option>/);
-assert.doesNotMatch(html,/Claro — Beta/);
-assert.match(html,/\['light','Claro',false\]/);
+assert.match(html,/\['dark','Escuro',true\]/);
+assert.match(html,/\['light','Claro',true\]/);
+assert.match(html,/\['system','Sistema',false\]/);
+assert.match(html,/\$\{beta\?'<small>Beta<\/small>':''\}\$\{label\}/);
 
 assert.match(fs.readFileSync('css/light-theme.css','utf8'),/html\[data-theme="light"\]/);
 assert.equal(fs.existsSync('css/dark-theme.css'),false,'tema escuro pesado removido');

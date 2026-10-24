@@ -105,6 +105,7 @@
       location: text(value.location),
       eventLocation: eventLocation(value.eventLocation),
       description: text(value.description),
+      status: text(value.status) || 'active',
       bandId: text(value.bandId) || null,
       repertoire,
       musicas: repertoire.map((item) => item.songId),
@@ -115,6 +116,7 @@
       syncState: ["synced", "pending", "error"].includes(value.syncState) ? value.syncState : "pending",
       pendingShared: value.pendingShared == null ? value.remoteVersion == null && value.syncState !== "synced" : Boolean(value.pendingShared),
       createdAt: value.createdAt || new Date().toISOString(),
+      createdAtReliable: value.createdAtReliable === false ? false : Boolean(value.createdAt),
       updatedAt: value.updatedAt || new Date().toISOString()
     };
   }

@@ -62,7 +62,7 @@ assert.match(serviceWorker, /js\/library-sync\.js\?v=17/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=7/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=7/);
-for (const [script, version] of [["youtube-api", 8], ["youtube-song-linker", 2], ["youtube-player", 8], ["youtube-player-ui", 22], ["youtube-ui", 3]]) {
+for (const [script, version] of [["youtube-api", 8], ["youtube-song-linker", 2], ["youtube-player", 8], ["youtube-player-ui", 23], ["youtube-ui", 3]]) {
   assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
   assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
 }

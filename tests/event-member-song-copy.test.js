@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-const start = html.indexOf('function openSD(id){');
+const start = html.search(/function openSD\(id(?:,options=\{\})?\)\{/);
 assert.ok(start >= 0, 'openSD não encontrado');
 const body = html.slice(start, html.indexOf('const rows=', start) + 2000);
 

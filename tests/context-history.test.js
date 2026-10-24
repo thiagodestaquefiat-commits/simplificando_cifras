@@ -1,0 +1,14 @@
+const assert = require('node:assert/strict');
+const values = {};
+global.storage = { get: (key, fallback) => values[key] ?? fallback, set: (key, value) => (values[key] = value, true) };
+const history = require('../js/context-history.js');
+const action = { fingerprint: 'fp-1', eventId: 'event-1', actionType: 'START_PREPARATION', category: 'preparation' };
+history.presented(action, 'user-1', '2026-10-23T12:00:00Z', { variantId: 'START_PREPARATION.withCount.1', editorialFamily: 'withCount', editorialStructure: 'fato-acao', intensity: 'DISCRETO' });
+history.presented(action, 'user-1', '2026-10-23T13:00:00Z');
+assert.equal(history.list('user-1')[0].presentationCount, 2);
+assert.equal(history.list('user-1')[0].firstPresentedAt, '2026-10-23T12:00:00Z');
+assert.equal(history.list('user-1')[0].editorialStructure, 'fato-acao');
+history.opened(action, 'user-1', '2026-10-23T13:05:00Z');
+assert.equal(history.list('user-1')[0].openedAt, '2026-10-23T13:05:00Z');
+assert.deepEqual(history.list('other-user'), []);
+console.log('context-history.test.js: OK');
