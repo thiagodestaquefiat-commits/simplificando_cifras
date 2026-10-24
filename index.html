@@ -2451,7 +2451,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
       }).join('');
       return `<section data-song-section-id="${sectionIndex}">${heading+lines}</section>`;
     }).join('');
-    return `<div class="full-chord-private">Privada · conteúdo fornecido por você</div><article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${structured}</article>`;
+    return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${structured}</article>`;
   }
   const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
     const text=songFormat.cleanSheetLine(raw).trimEnd();
@@ -2467,7 +2467,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     if(contentMode==='chords'&&!section)return '';
     return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(section?text.trim().replace(/^\[|\]$/g,''):text)}</div>`;
   }).join('');
-  return `<div class="full-chord-private">Privada · conteúdo fornecido por você</div><article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
+  return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
 }
 
 function renderTablature(value){
