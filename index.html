@@ -696,7 +696,7 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 @media(max-width:520px){#view-main>.topbar{min-height:58px;padding:8px 12px}#view-main .topbar-icon{width:38px;height:38px;flex-basis:38px}#pane-musicas>.content{padding-inline:14px}#pane-musicas .music-item{min-height:calc(54px + var(--a11y-touch-add));padding-inline:2px}}
 /* DETAIL — hierarquia musical compacta e materiais neutros */
 #view-detail:not(.stage-mode){--detail-surface:#111318;--detail-line:rgba(199,209,223,.13);--detail-muted:#929ba8;--detail-accent:#ed8b70;background:linear-gradient(180deg,#080a0d,#030405 32%);box-shadow:none}
-#view-detail:not(.stage-mode)>.detail-header{min-height:58px;padding:8px 14px;gap:11px;border-bottom:1px solid var(--detail-line);background:rgba(6,8,11,.86);backdrop-filter:saturate(125%) blur(18px);-webkit-backdrop-filter:saturate(125%) blur(18px)}
+#view-detail:not(.stage-mode)>.detail-header{min-height:58px;padding:8px 14px;gap:11px;border:0;box-shadow:none;background:rgba(6,8,11,.86);backdrop-filter:saturate(125%) blur(18px);-webkit-backdrop-filter:saturate(125%) blur(18px)}
 #view-detail:not(.stage-mode)>.detail-header{display:grid;grid-template-columns:40px minmax(0,1fr) 40px}
 #view-detail:not(.stage-mode) .back-btn{display:grid;width:40px;height:40px;padding:0;place-items:center;border:0;border-radius:0;background:transparent;color:#f5f7fa;box-shadow:none;cursor:pointer;transition:opacity .16s,transform .12s}
 #view-detail:not(.stage-mode) .back-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
