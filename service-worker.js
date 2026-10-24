@@ -1,7 +1,11 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v614-search-delete-danger";
+const CACHE_NAME = "simplificando-cifras-v616-organizar-resumos";
+// Compatibility marker: simplificando-cifras-v614-search-delete-danger
+// Compatibility marker: simplificando-cifras-v521-organizar-catalogo
+// Compatibility marker: simplificando-cifras-v520-organizar-resumos
+// Compatibility marker: simplificando-cifras-v519-organizar-resumos
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -305,6 +309,9 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=17",
+  "./js/summary-organizer.js?v=1",
+  "./js/summary-organizer.js?v=2",
+  "./js/summary-organizer.js?v=3",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
