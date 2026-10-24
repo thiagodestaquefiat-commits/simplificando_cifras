@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v614-search-delete-danger";
+const CACHE_NAME = "simplificando-cifras-v615-compartilhar-musica";
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -48,7 +48,8 @@ const ASSETS = [
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
   "./css/home-playlists.css?v=27",
-  "./js/home-playlists.js?v=21",
+  "./js/home-playlists.js?v=22",
+  "./js/song-share.js?v=1",
   "./js/user-playlists.js?v=3",
   "./js/notification-center.js?v=5",
   "./js/playlist-collaboration.js?v=1",
