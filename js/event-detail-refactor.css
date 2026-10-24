@@ -22,7 +22,7 @@
 #view-sd .event-reference-actions{display:flex;margin:2px 0 10px;align-items:center;justify-content:space-between;gap:10px}
 #view-sd .event-reference-utilities{display:flex;align-items:center;gap:3px}
 #view-sd .event-reference-icon{position:relative;display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#e7e9ec;cursor:pointer}
-#view-sd .event-reference-icon svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#view-sd .event-reference-icon svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #view-sd .event-reference-icon--more svg{fill:currentColor;stroke:none}
 #view-sd .event-reference-icon:active{background:rgba(255,255,255,.08);transform:scale(.94)}
 #view-sd .event-reference-actions .event-stage-entry--origin{width:auto;min-width:138px;height:38px;min-height:38px;max-height:38px;padding:0 18px;font-size:12px;white-space:nowrap}
