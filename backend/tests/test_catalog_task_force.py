@@ -13,37 +13,23 @@ def catalog(app):
         return {song.title: song.song_data.get("fullChordSheet") for song in SharedSong.query.all()}
 
 
-def test_added_songs_go_to_catalog_but_ai_only_drafts_stay_out(client, app):
+def test_legacy_open_flag_cannot_publish_private_songs(client, app):
+    app.config["CATALOG_OPEN_CONTRIBUTION"] = True
     token = register(client, "open-a", "A")
     client.put("/api/library/songs/t", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo={"type": "text"}, fullChordSheet=TYPED)})
     client.put("/api/library/songs/m", headers=auth(token), json={"songData": ai_song(title="Feita a Mao", aiGenerated=False, sourceInfo={"type": "manual"})})
     client.put("/api/library/songs/i", headers=auth(token), json={"songData": ai_song(title="Velha IA", notes=AI_ONLY)})
     stored = catalog(app)
-    assert set(stored) == {"Digitada", "Feita a Mao"}
-    assert stored["Digitada"]["content"] == TYPED["content"]
+    assert stored == {}
 
 
-def test_completing_existing_personal_song_reaches_the_catalog(client, app):
+def test_completing_existing_personal_song_stays_private(client, app):
     token = register(client, "open-b", "B")
     old = ai_song(title="Velha IA", sourceInfo={"type": "manual"}, notes=AI_ONLY)
     client.put("/api/library/songs/s", headers=auth(token), json={"songData": old})
     assert catalog(app) == {}
     client.put("/api/library/songs/s", headers=auth(token), json={"songData": {**old, "fullChordSheet": PDF}})
-    assert catalog(app)["Velha IA"]["content"] == PDF["content"]
-    reader = register(client, "open-b2", "B2")
-    found = client.get("/api/shared-songs/search?title=Velha%20IA", headers=auth(reader)).get_json()["match"]
-    assert found["songData"]["fullChordSheet"]["content"] == PDF["content"]
-
-
-def test_completing_a_summary_only_catalog_song_fills_it_once(client, app):
-    token = register(client, "open-b3", "B3")
-    summary_only = ai_song(title="So Resumo", sourceInfo={"type": "online"})
-    client.put("/api/library/songs/r", headers=auth(token), json={"songData": summary_only})
-    assert catalog(app) == {"So Resumo": None}
-    client.put("/api/library/songs/r", headers=auth(token), json={"songData": {**summary_only, "fullChordSheet": PDF}})
-    with app.app_context():
-        assert SharedSong.query.count() == 1
-    assert catalog(app)["So Resumo"]["content"] == PDF["content"]
+    assert catalog(app) == {}
 
 
 def test_completion_with_slightly_different_artist_updates_existing_entry(client, app):

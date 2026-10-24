@@ -12,6 +12,7 @@
   let authSubscription = null;
   let config = { enabled: false, provider: "local" };
   const listeners = new Set();
+  const profileAvatars = new Map();
   const CONFIG_KEY = "sc_public_auth_config_v1";
   const AUTH_REQUEST_TIMEOUT_MS = 5000;
 
@@ -52,7 +53,8 @@
         id: String(user.id),
         name: String(metadata.full_name || metadata.name || user.email || "Usuário"),
         email: String(user.email || ""),
-        avatarUrl: metadata.avatar_url || metadata.picture || null,
+        avatarUrl: profileAvatars.has(String(user.id)) ? profileAvatars.get(String(user.id)) : metadata.avatar_url || metadata.picture || null,
+        avatarSet: profileAvatars.has(String(user.id)),
         location: String(metadata.location || '').trim().slice(0,120),
         instruments: Array.isArray(metadata.instruments)?metadata.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[],
         role: "Liderança"
@@ -167,6 +169,7 @@
   async function updateProfile(values) {
     if (!client || !session || !session.user) throw new Error("Entre na sua conta para atualizar os dados na nuvem.");
     const profile = values && typeof values === "object" ? values : {};
+    const ownerId=String(session.user.id),accessToken=session.access_token;
     const attributes = {
       data: {
         ...session.user.user_metadata,
@@ -180,7 +183,18 @@
     if (nextEmail && nextEmail !== session.user.email) attributes.email = nextEmail;
     const result = await client.auth.updateUser(attributes);
     if (result.error) throw result.error;
+    if(String(session?.user?.id)!==ownerId)throw new Error('A conta mudou. Reabra o perfil para salvar.');
     if (result.data && result.data.user) session = { ...session, user: result.data.user };
+    if(Object.prototype.hasOwnProperty.call(profile,'avatarUrl') && (profile.avatarUrl===null || String(profile.avatarUrl).startsWith('data:image/'))){
+      const response=await withTimeout(global.fetch(global.apiConfig.collaborationEndpoint('/me/avatar'),{
+        method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+accessToken},
+        body:JSON.stringify({avatarUrl:profile.avatarUrl})
+      }), 'A foto foi salva neste aparelho, mas o envio para a conta demorou demais.');
+      if(!response.ok)throw new Error('A foto foi salva neste aparelho, mas não foi possível guardá-la na conta.');
+      const avatar=await response.json();
+      if(String(session?.user?.id)!==ownerId)throw new Error('A conta mudou. Reabra o perfil para salvar.');
+      profileAvatars.set(ownerId,avatar.avatarUrl??null);
+    }
     emit();
     return getState();
   }

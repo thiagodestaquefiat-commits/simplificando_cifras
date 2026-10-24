@@ -6,7 +6,7 @@ const { spawn } = require("node:child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
 const host = "0.0.0.0";
-const port = 4173;
+const port = Number(process.env.ROUDY_PORT) || 4173;
 const apiOrigin = new URL(process.env.ROUDY_API_ORIGIN || "https://simplificandocifras-production.up.railway.app");
 const pythonPath=path.join(projectRoot,'backend','.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
 const assistantProcess=spawn(fs.existsSync(pythonPath)?pythonPath:'python',['-m','voice_assistant.http_server'],{cwd:path.join(projectRoot,'backend'),windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,PYTHONIOENCODING:'utf-8'}});

@@ -34,6 +34,7 @@ ADDITIVE_COLLABORATION_COLUMNS = {
         "location_provider": "VARCHAR(40) NOT NULL DEFAULT ''",
     },
     "event_repertoire_items": {
+        "vocal_key_state": "JSON",
         "shared_song_data": "JSON",
         "shared_title": "VARCHAR(160) NOT NULL DEFAULT ''",
         "shared_artist": "VARCHAR(160) NOT NULL DEFAULT ''",

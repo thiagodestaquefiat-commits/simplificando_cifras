@@ -1,0 +1,393 @@
+/* Geometria móvel do Modo Palco, isolada das demais telas. */
+@media (max-width: 560px) {
+  #view-detail.stage-mode .stage-performance-header {
+    position: fixed !important;
+    inset: 0 0 auto !important;
+    display: grid !important;
+    width: 100% !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    padding: calc(4px + env(safe-area-inset-top)) 4px 4px !important;
+    grid-template-columns: 40px 52px minmax(0, 1fr) 52px 78px !important;
+    grid-template-rows: 48px 70px !important;
+    column-gap: 2px !important;
+    row-gap: 0 !important;
+    align-items: center;
+    border: 0 !important;
+    background: #000;
+  }
+
+  #view-detail.stage-mode.stage-scroll-compact .stage-performance-header {
+    height: 126px !important;
+    min-height: 126px !important;
+    padding: calc(4px + env(safe-area-inset-top)) 4px 4px !important;
+    grid-template-columns: 40px 52px minmax(0, 1fr) 52px 78px !important;
+    grid-template-rows: 48px 70px !important;
+    column-gap: 2px !important;
+    row-gap: 0 !important;
+  }
+
+  #view-detail.stage-mode .stage-close,
+  #view-detail.stage-mode.stage-scroll-compact .stage-close,
+  #view-detail.stage-mode .stage-prev-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-prev-button,
+  #view-detail.stage-mode .stage-heading,
+  #view-detail.stage-mode.stage-scroll-compact .stage-heading,
+  #view-detail.stage-mode .stage-next-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-next-button,
+  #view-detail.stage-mode .stage-upcoming-preview,
+  #view-detail.stage-mode.stage-scroll-compact .stage-upcoming-preview {
+    position: static !important;
+    inset: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  #view-detail.stage-mode .stage-close,
+  #view-detail.stage-mode.stage-scroll-compact .stage-close {
+    display: grid !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 40px !important;
+    height: 44px !important;
+    place-items: center;
+    color: #a1a1aa;
+    font-size: 24px !important;
+    opacity: 1 !important;
+  }
+
+  #view-detail.stage-mode .stage-prev-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-prev-button,
+  #view-detail.stage-mode .stage-next-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-next-button {
+    display: grid !important;
+    grid-row: 1 !important;
+    width: 52px !important;
+    height: 44px !important;
+    place-items: center;
+  }
+
+  #view-detail.stage-mode .stage-prev-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-prev-button { grid-column: 2 !important; }
+  #view-detail.stage-mode .stage-next-button,
+  #view-detail.stage-mode.stage-scroll-compact .stage-next-button { grid-column: 4 !important; }
+
+  #view-detail.stage-mode .stage-nav-icon svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  #view-detail.stage-mode .stage-heading,
+  #view-detail.stage-mode.stage-scroll-compact .stage-heading {
+    display: flex !important;
+    position: absolute !important;
+    z-index: 2;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    top: calc(4px + env(safe-area-inset-top)) !important;
+    left: 50% !important;
+    width: min(40vw, 152px) !important;
+    height: 48px;
+    align-self: center;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    transform: translateX(-50%) !important;
+    text-align: center;
+  }
+
+  #view-detail.stage-mode .stage-heading strong,
+  #view-detail.stage-mode .stage-heading span:not(.stage-position) {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #view-detail.stage-mode .stage-heading strong {
+    font-size: 15px !important;
+    font-weight: 750;
+    line-height: 1.12 !important;
+    letter-spacing: -.01em;
+  }
+
+  #view-detail.stage-mode .stage-heading span:not(.stage-position) {
+    margin-top: 3px;
+    color: #a1a1aa;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+
+  #view-detail.stage-mode .stage-upcoming-preview,
+  #view-detail.stage-mode.stage-scroll-compact .stage-upcoming-preview {
+    display: flex !important;
+    grid-column: 5 !important;
+    grid-row: 1 !important;
+    width: 78px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    align-self: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  #view-detail.stage-mode .stage-upcoming-preview small,
+  #view-detail.stage-mode .stage-upcoming-preview span {
+    width: 100%;
+    overflow: hidden;
+    font-size: 9px !important;
+    line-height: 1.08 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #view-detail.stage-mode .stage-preparation-controls {
+    position: relative;
+    z-index: 1;
+    display: grid !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) min(181px, 52vw) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  #view-detail.stage-mode .stage-capo-controls { display: contents !important; }
+
+  #view-detail.stage-mode .stage-scroll-speed {
+    display: none !important;
+    width: min(170px, 52vw);
+    min-width: 0;
+    height: 76px;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    grid-template-columns: 44px 82px 44px;
+    align-items: start;
+    padding-top: 3px;
+  }
+
+  #view-detail.stage-mode .stage-start-row {
+    position: relative;
+    z-index: 2;
+    display: none !important;
+    width: 100%;
+    height: 76px;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    padding-top: 3px;
+    place-items: start center;
+    pointer-events: none;
+  }
+
+  #view-detail.stage-mode .stage-tone-controls,
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child {
+    display: flex;
+    grid-row: 2 !important;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child {
+    width: 94px;
+    min-width: 94px;
+    justify-self: end;
+    gap: 0;
+  }
+
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child output {
+    display: block;
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px !important;
+  }
+
+  #view-detail.stage-mode .stage-tone-controls { grid-column: 1 !important; grid-row: 1 !important; }
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child { grid-column: 3 !important; grid-row: 1 !important; }
+
+  #view-detail.stage-mode .stage-setting-prefix,
+  #view-detail.stage-mode .stage-scroll-speed > span { display: none; }
+
+  #view-detail.stage-mode .stage-setting-group button {
+    display: grid;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #f4f4f5;
+    font-size: 20px !important;
+    font-weight: 700;
+  }
+
+  #view-detail.stage-mode .stage-setting-group output {
+    min-width: 24px !important;
+    padding: 0;
+    background: transparent;
+    color: #f4f4f5;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    text-align: center;
+  }
+
+  /* Fit − / Sem / + inside the right-hand slot, clear of scroll controls.
+     Keep the original vertical touch area and the separate tone controls. */
+  #view-detail.stage-mode .stage-capo-controls .stage-setting-group:first-child button {
+    width: 30px !important;
+    min-width: 30px !important;
+    flex: 0 0 30px;
+  }
+
+  #view-detail.stage-mode .stage-scroll-speed > button {
+    display: grid;
+    grid-row: 2 !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0;
+    align-self: center;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #25262a;
+    color: #f4f4f5;
+    font-size: 18px !important;
+    font-weight: 600;
+  }
+
+  #view-detail.stage-mode .stage-scroll-speed > button:first-child {
+    grid-column: 1 !important;
+    justify-self: center !important;
+  }
+
+  #view-detail.stage-mode .stage-scroll-speed > button:last-child {
+    grid-column: 3 !important;
+    justify-self: center !important;
+  }
+
+  #view-detail.stage-mode .stage-start-button,
+  #view-detail.stage-mode .stage-start-button.active {
+    display: grid;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    padding: 0;
+    place-self: center;
+    pointer-events: auto;
+  }
+
+  #view-detail.stage-mode.stage-scroll-compact .stage-preparation-controls,
+  #view-detail.stage-mode.stage-scroll-compact .stage-start-row { display: none !important; }
+
+  #view-detail.stage-mode .stage-execution-controls {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100%;
+    min-height: 60px;
+    padding: 0;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    pointer-events: none;
+  }
+
+  #view-detail.stage-mode.stage-scroll-compact .stage-execution-controls { display: flex; }
+  #view-detail.stage-mode .stage-execution-actions { gap: 14px; pointer-events: auto; }
+
+  #view-detail.stage-mode .stage-execution-step {
+    width: 44px;
+    height: 44px;
+    background: #25262a;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  #view-detail.stage-mode .stage-execution-toggle,
+  #view-detail.stage-mode .stage-execution-toggle.is-paused {
+    width: 54px;
+    height: 54px;
+    background: #25262a;
+  }
+
+  #view-detail.stage-mode .stage-execution-toggle.is-initial {
+    background: linear-gradient(145deg, #f7f7f7 48%, #ffe553 100%);
+    color: #3f3f46;
+  }
+
+  #view-detail.stage-mode .stage-execution-toggle.is-initial svg { fill: currentColor; }
+  #view-detail.stage-mode .stage-execution-controls:has(.stage-execution-toggle.is-initial) > span { visibility: hidden; }
+  #view-detail.stage-mode .stage-execution-controls.is-speed-visible:has(.stage-execution-toggle.is-initial) > span { visibility: visible; }
+
+  #view-detail.stage-mode .stage-execution-toggle svg { width: 23px; height: 23px; }
+  #view-detail.stage-mode .stage-execution-controls > span { font-size: 9px; }
+
+  #view-detail.stage-mode .detail-body {
+    overflow: visible !important;
+    padding: 112px 38px max(28px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #view-detail.stage-mode.stage-scroll-compact .detail-body { padding-top: 22px !important; }
+  #view-detail.stage-mode .stage-harmonic-summary { gap: 0; }
+
+  #view-detail.stage-mode .stage-harmonic-summary .wa-block {
+    display: flex;
+    margin: 0 0 30px !important;
+    padding: 0 !important;
+    flex-direction: column;
+    border: 0;
+    background: transparent;
+  }
+
+  #view-detail.stage-mode .stage-harmonic-summary .wa-block .smart-scroll-line:has(.chord-line) { order: 1; }
+  #view-detail.stage-mode .stage-harmonic-summary .wa-block .smart-scroll-line:has(.letra-linha) { order: 2; }
+  #view-detail.stage-mode .stage-harmonic-summary .wa-block:first-child .smart-scroll-line:has(.letra-linha) { display: none; }
+
+  #view-detail.stage-mode #detail-content .letra-linha,
+  #view-detail.stage-mode #detail-content .chord-line,
+  #view-detail.stage-mode #detail-content .full-chord-line {
+    margin: 0;
+    font-size: 22px !important;
+    line-height: 1.25 !important;
+    letter-spacing: -.02em;
+  }
+
+  #view-detail.stage-mode #detail-content .chord-line { margin-bottom: 4px; }
+
+  @media (max-width: 375px) {
+    #view-detail.stage-mode .stage-performance-header,
+    #view-detail.stage-mode.stage-scroll-compact .stage-performance-header {
+      height: 174px !important;
+      min-height: 174px !important;
+      grid-template-rows: 48px 70px 48px !important;
+    }
+
+    #view-detail.stage-mode .stage-preparation-controls {
+      grid-row: 3 !important;
+    }
+
+    #view-detail.stage-mode .detail-body { padding-top: 160px !important; }
+    #view-detail.stage-mode.stage-scroll-compact .detail-body { padding-top: 22px !important; }
+    #view-detail.stage-mode .stage-preparation-controls { grid-template-columns: minmax(0, 1fr) min(170px, 52vw) minmax(0, 1fr); }
+    #view-detail.stage-mode .stage-scroll-speed { width: min(170px, 52vw); grid-template-columns: 44px 82px 44px; }
+  }
+}

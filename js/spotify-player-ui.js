@@ -44,16 +44,12 @@
     return item;
   }
   function imageFor(song, className) {
-    if (!song.coverUrl) {
-      const fallback = global.document.createElement("div");
-      fallback.className = className + " song-player-cover-fallback";
-      fallback.textContent = "♫";
-      return fallback;
-    }
     const cover = global.document.createElement("img");
     cover.className = className;
-    cover.src = song.coverUrl;
+    cover.src = global.songArtwork?.resolve(song) || song.artworkUrl || song.coverUrl || "assets/icons/roudy-icon-v4-192.png";
     cover.alt = "Capa de " + song.title;
+    cover.decoding = "async";
+    cover.addEventListener("error", () => global.songArtwork?.handleImageError(cover), { once: false });
     return cover;
   }
 

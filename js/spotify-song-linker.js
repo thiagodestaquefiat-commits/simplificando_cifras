@@ -26,11 +26,14 @@
   }
 
   function changesForTrack(song, track) {
+    const customArtwork = song && song.artworkSource === "custom" && song.artworkUrl;
+    const officialArtwork = track && (track.artworkUrl || track.coverUrl);
     return {
       artist: String((song && song.artist) || "").trim() || String((track && track.artist) || "").trim(),
       album: track && track.album || null,
       duration: track && track.duration,
-      coverUrl: track && track.coverUrl || null,
+      artworkUrl: customArtwork || officialArtwork || song && song.artworkUrl || null,
+      artworkSource: customArtwork ? "custom" : officialArtwork ? "spotify" : song && song.artworkSource || null,
       spotifyTrackId: track && track.spotifyTrackId || null,
       spotifyUri: track && track.spotifyUri || null,
       isrc: track && track.isrc || null

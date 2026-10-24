@@ -1,17 +1,20 @@
-"""
-SOMENTE LEITURA — lista as músicas do catálogo compartilhado que ainda só têm o resumo harmônico
-(sem Letra + Cifras). Não grava, não altera e não apaga nada no banco.
+"""Relatório manual e somente leitura de músicas sem Letra + Cifras.
 
-Para cada música informa se ALGUM usuário já tem a versão completa na biblioteca pessoal:
-  - "SIM" -> dá para completar o catálogo a partir dessa versão (script de preenchimento, com OK).
-  - "NÃO" -> precisa ser completada (PDF/arquivo, colar a cifra ou "Completar cifra").
+O relatório não identifica proprietários e não altera o banco. Por padrão, escreve
+somente no terminal. Um CSV é criado apenas quando ``--csv CAMINHO`` é informado.
 
-Uso (no Railway, serviço do backend):  python listar_musicas_so_resumo.py
-Gera também o arquivo musicas_so_resumo.csv.
+Uso, a partir de ``backend``::
+
+    python listar_musicas_so_resumo.py
+    python listar_musicas_so_resumo.py --csv relatorios/musicas_so_resumo.csv
 """
+from __future__ import annotations
+
+import argparse
 import csv
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,7 +31,7 @@ def has_full_sheet(song_data, accepted=None) -> bool:
 
 
 def complete_personal_index():
-    """(título normalizado) -> artistas normalizados que já têm a versão completa em alguma biblioteca."""
+    """Mapeia título normalizado para artistas com versão completa, sem expor usuários."""
     index = {}
     for personal in PersonalSong.query.filter(PersonalSong.deleted_at.is_(None)).all():
         data = personal.song_data if isinstance(personal.song_data, dict) else {}
@@ -40,7 +43,7 @@ def complete_personal_index():
     return index
 
 
-def main(app=None, csv_path="musicas_so_resumo.csv", out=sys.stdout):
+def main(app=None, csv_path=None, out=sys.stdout):
     app = app or create_app()
     with app.app_context():
         catalog = SharedSong.query.order_by(SharedSong.title).all()
@@ -50,28 +53,51 @@ def main(app=None, csv_path="musicas_so_resumo.csv", out=sys.stdout):
             if has_full_sheet(song.song_data):
                 continue
             artists = complete.get(song.normalized_title, [])
-            available = any(a is None or song.normalized_artist is None or same_artist(a, song.normalized_artist) for a in artists)
-            rows.append({"titulo": song.title, "artista": song.artist or "", "tom": song.song_key or "",
-                         "buscas": song.times_searched or 0, "versao_completa_em_biblioteca": "SIM" if available else "NÃO"})
+            available = any(
+                artist is None or song.normalized_artist is None or same_artist(artist, song.normalized_artist)
+                for artist in artists
+            )
+            rows.append({
+                "titulo": song.title,
+                "artista": song.artist or "",
+                "tom": song.song_key or "",
+                "buscas": song.times_searched or 0,
+                "versao_completa_em_biblioteca": "SIM" if available else "NÃO",
+            })
         rows.sort(key=lambda row: (-row["buscas"], row["titulo"].lower()))
-        total, filled = len(catalog), sum(1 for row in rows if row["versao_completa_em_biblioteca"] == "SIM")
+        total = len(catalog)
+        available_count = sum(row["versao_completa_em_biblioteca"] == "SIM" for row in rows)
         print(f"Catálogo compartilhado: {total} músicas", file=out)
-        print(f"Completas (resumo + letra e cifra + letra): {total - len(rows)}", file=out)
+        print(f"Completas: {total - len(rows)}", file=out)
         print(f"Só com resumo harmônico: {len(rows)}", file=out)
-        print(f"  - já existe versão completa em alguma biblioteca: {filled}", file=out)
-        print(f"  - precisam ser completadas pela equipe: {len(rows) - filled}\n", file=out)
-        print("Ordem: as mais buscadas primeiro.\n", file=out)
+        print(f"  - versão completa disponível em alguma biblioteca: {available_count}", file=out)
+        print(f"  - precisam ser completadas: {len(rows) - available_count}\n", file=out)
         for number, row in enumerate(rows, 1):
             artist = f" — {row['artista']}" if row["artista"] else ""
-            print(f"{number:>4}. {row['titulo']}{artist} | tom {row['tom'] or '?'} | {row['buscas']} buscas | completa em biblioteca: {row['versao_completa_em_biblioteca']}", file=out)
+            print(
+                f"{number:>4}. {row['titulo']}{artist} | tom {row['tom'] or '?'} | "
+                f"{row['buscas']} buscas | completa disponível: {row['versao_completa_em_biblioteca']}",
+                file=out,
+            )
         if csv_path:
-            with open(csv_path, "w", newline="", encoding="utf-8-sig") as handle:
-                writer = csv.DictWriter(handle, fieldnames=["titulo", "artista", "tom", "buscas", "versao_completa_em_biblioteca"], delimiter=";")
+            destination = Path(csv_path).expanduser().resolve()
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with destination.open("w", newline="", encoding="utf-8-sig") as handle:
+                writer = csv.DictWriter(handle, fieldnames=[
+                    "titulo", "artista", "tom", "buscas", "versao_completa_em_biblioteca"
+                ], delimiter=";")
                 writer.writeheader()
                 writer.writerows(rows)
-            print(f"\nArquivo gerado: {csv_path}", file=out)
+            print(f"\nArquivo gerado: {destination}", file=out)
         return rows
 
 
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--csv", metavar="CAMINHO", help="gera o CSV somente no caminho explicitamente informado")
+    return parser.parse_args(argv)
+
+
 if __name__ == "__main__":
-    main()
+    arguments = parse_args()
+    main(csv_path=arguments.csv)

@@ -5,6 +5,9 @@
 
   const EXTERNAL_FIELDS = Object.freeze([
     "album",
+    "artworkUrl",
+    "artworkSource",
+    "youtubeThumbnailUrl",
     "coverUrl",
     "spotifyTrackId",
     "spotifyUri",
@@ -106,6 +109,9 @@
       title,
       artist: cleanText(source.artist),
       album: optionalText(source.album),
+      artworkUrl: optionalText(source.artworkUrl),
+      artworkSource: optionalText(source.artworkSource),
+      youtubeThumbnailUrl: optionalText(source.youtubeThumbnailUrl),
       duration: normalizeDuration(source.duration !== undefined ? source.duration : source.durationMs),
       coverUrl: optionalText(source.coverUrl),
       spotifyTrackId: optionalText(source.spotifyTrackId),

@@ -37,6 +37,7 @@ require("../js/youtube-api.js");
     youtubeChannelTitle: "Canal",
     youtubeVideoId: "abc",
     youtubeUrl: "https://www.youtube.com/watch?v=abc",
+    youtubeThumbnailUrl: "https://img.test/abc.jpg",
     coverUrl: "https://img.test/abc.jpg",
     publishedAt: null,
     description: "",
@@ -67,6 +68,7 @@ require("../js/youtube-api.js");
   assert.equal(fallback[0].title, "Vídeo do YouTube");
   assert.equal(fallback[0].youtubeVideoId, linkedId);
   assert.equal(fallback[0].youtubeUrl, `https://www.youtube.com/watch?v=${linkedId}`);
+  assert.equal(fallback[0].youtubeThumbnailUrl, `https://i.ytimg.com/vi/${linkedId}/hqdefault.jpg`);
   assert.equal(fallback[0].coverUrl, `https://i.ytimg.com/vi/${linkedId}/hqdefault.jpg`);
 
   rejectOembed = false;

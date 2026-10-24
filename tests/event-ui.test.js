@@ -218,8 +218,8 @@ const server = http.createServer((request, response) => {
       setlists = eventRepository.upsert(setlists, eventModel.create({ ...current, id: "member-view", title: "Evento como integrante", leaderId: otherLeader.id })).events;
       openSD("member-view");
     });
-    assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 1);
-    assert.equal(await page.locator("#view-sd button", { hasText: "Excluir" }).count(), 1);
+    assert.equal(await page.locator('#view-sd button[onclick^="editSetlistById"]').count(), 0, 'integrante comum não vê Editar evento');
+    assert.equal(await page.locator("#view-sd button", { hasText: "Excluir" }).count(), 0, 'integrante comum não vê Excluir evento');
     await page.locator(".event-song-edit").first().click();
     assert.equal(await page.locator('input[name="event-edit-scope"][value="shared"]').count(), 0);
     await page.getByRole("button", { name: "Cancelar" }).click();

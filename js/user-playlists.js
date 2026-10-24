@@ -28,7 +28,7 @@
 
   function normalizeItem(item) {
     if (!item || item.songId === undefined || item.songId === null || item.songId === "") return null;
-    return { id: String(item.id || newId("pli")), songId: item.songId, playback: cleanPlayback(item.playback), notes: String(item.notes || "").slice(0, 500) };
+    return { id: String(item.id || newId("pli")), songId: item.songId, playback: cleanPlayback(item.playback), notes: String(item.notes || "").slice(0, 500), ...(item.song && typeof item.song === "object" ? { song: item.song } : {}) };
   }
 
   function normalizePlaylist(value) {
@@ -39,16 +39,29 @@
       id: String(value.id || newId("pl")),
       name,
       description: String(value.description || "").trim().slice(0, 300),
+      coverImage: typeof value.coverImage === "string" && value.coverImage.startsWith("data:image/") ? value.coverImage : null,
+      pinned: Boolean(value.pinned),
       items: (Array.isArray(value.items) ? value.items : []).map(normalizeItem).filter(Boolean),
       sharedFrom: value.sharedFrom ? String(value.sharedFrom) : null,
+      ...(value.collaboration && typeof value.collaboration === "object" ? { collaboration: value.collaboration } : {}),
       createdAt: value.createdAt || now(),
       updatedAt: value.updatedAt || now()
     };
   }
 
-  function list(owner) {
+  function all(owner) {
     const values = readAll()[String(owner || "local")];
     return (Array.isArray(values) ? values : []).map(normalizePlaylist).filter(Boolean);
+  }
+
+  function list(owner) { return all(owner).filter(playlist => !playlist.collaboration?.deleted); }
+
+  // Remote reception bypasses edit hooks. Each playlist and its durable queue are
+  // saved together in one storage write, so a failed write never acknowledges an edit.
+  function replace(owner, playlist) {
+    const values = all(owner), index = values.findIndex(value => value.id === playlist.id);
+    if (index < 0) values.push(playlist); else values[index] = playlist;
+    return save(owner, values);
   }
 
   function save(owner, playlists) {
@@ -64,11 +77,12 @@
   }
 
   function update(owner, id, change) {
-    const playlists = list(owner);
+    const playlists = all(owner);
     const index = playlists.findIndex((playlist) => playlist.id === String(id));
     if (index < 0) return null;
-    const next = normalizePlaylist({ ...change(playlists[index]), id: playlists[index].id, createdAt: playlists[index].createdAt, updatedAt: now() });
+    let next = normalizePlaylist({ ...change(playlists[index]), id: playlists[index].id, createdAt: playlists[index].createdAt, updatedAt: now() });
     if (!next) return null;
+    if (playlists[index].collaboration && global.playlistCollaboration) next = global.playlistCollaboration.prepare(playlists[index], next);
     playlists[index] = next;
     return save(owner, playlists) ? next : null;
   }
@@ -76,7 +90,7 @@
   function create(owner, name, items = [], extra = {}) {
     const playlist = normalizePlaylist({ ...extra, id: newId("pl"), name, items, createdAt: now(), updatedAt: now() });
     if (!playlist) return null;
-    return save(owner, [...list(owner), playlist]) ? playlist : null;
+    return save(owner, [...all(owner), playlist]) ? playlist : null;
   }
 
   function rename(owner, id, name) {
@@ -86,7 +100,9 @@
   }
 
   function remove(owner, id) {
-    const playlists = list(owner);
+    const current = get(owner, id);
+    if (current?.collaboration) return Boolean(update(owner, id, playlist => ({ ...playlist, collaboration: { ...playlist.collaboration, deleted: true } })));
+    const playlists = all(owner);
     const next = playlists.filter((playlist) => playlist.id !== String(id));
     return next.length !== playlists.length && save(owner, next);
   }
@@ -128,10 +144,24 @@
     return update(owner, id, (playlist) => ({ ...playlist, items: playlist.items.map((item) => item.id === String(itemId) ? { ...item, notes: String(notes || "").trim() } : item) }));
   }
 
+  function setItemContent(owner, id, itemId, song, playback) {
+    return update(owner, id, playlist => ({ ...playlist, items: playlist.items.map(item => item.id === String(itemId)
+      ? { ...item, song: { ...song, id: item.song?.id ?? song.id }, ...(playback ? { playback: { ...item.playback, ...cleanPlayback(playback) } } : {}) } : item) }));
+  }
+
+  function setCoverImage(owner, id, coverImage) {
+    const value = typeof coverImage === "string" && coverImage.startsWith("data:image/") ? coverImage : null;
+    return update(owner, id, (playlist) => ({ ...playlist, coverImage: value }));
+  }
+
+  function setPinned(owner, id, pinned) {
+    return update(owner, id, (playlist) => ({ ...playlist, pinned: Boolean(pinned) }));
+  }
+
   function subscribe(listener) {
     listeners.add(listener);
     return () => listeners.delete(listener);
   }
 
-  global.userPlaylists = Object.freeze({ STORAGE_KEY, PLAYBACK_FIELDS, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, cleanPlayback, subscribe });
+  global.userPlaylists = Object.freeze({ STORAGE_KEY, PLAYBACK_FIELDS, all, replace, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setItemContent, setCoverImage, setPinned, cleanPlayback, subscribe });
 })(window);

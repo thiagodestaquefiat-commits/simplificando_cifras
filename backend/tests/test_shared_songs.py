@@ -36,25 +36,25 @@ def test_ai_song_is_contributed_once_and_searchable(client, app):
     assert client.get("/api/shared-songs/search?title=", headers=auth(token)).status_code == 400
 
 
-def test_all_added_songs_go_to_catalog(client, app):
-    """Força-tarefa: busca, arquivo/foto, Texto e músicas feitas à mão entram no catálogo compartilhado."""
+def test_only_search_and_file_songs_go_to_catalog(client, app):
+    """Busca por IA (online) e arquivo/foto (upload) entram no catálogo; Texto e músicas feitas à mão são pessoais."""
     token = register(client, "shared-b", "B")
     client.put("/api/library/songs/up", headers=auth(token), json={"songData": ai_song(sourceInfo={"type": "upload"})})
     client.put("/api/library/songs/web", headers=auth(token), json={"songData": ai_song(title="Da Busca")})
     client.put("/api/library/songs/txt", headers=auth(token), json={"songData": ai_song(title="Digitada", sourceInfo={"type": "text"})})
     client.put("/api/library/songs/manual", headers=auth(token), json={"songData": ai_song(aiGenerated=False, title="Feita a Mao", sourceInfo={"type": "manual"})})
     with app.app_context():
-        assert sorted(song.title for song in SharedSong.query.all()) == ["Asa Branca", "Da Busca", "Digitada", "Feita a Mao"]
+        assert sorted(song.title for song in SharedSong.query.all()) == ["Asa Branca", "Da Busca"]
 
 
-def test_typed_lyrics_go_to_catalog_with_the_song(client, app):
-    """Força-tarefa: letra digitada/colada pelo usuário (user_text) também vai para o catálogo."""
+def test_typed_lyrics_stay_personal_even_on_shared_song(client, app):
+    """Letra digitada pelo usuário (user_text) não vai para o catálogo; o resumo da fonte real vai."""
     token = register(client, "shared-c", "C")
     typed = {"source": "user_text", "content": "G  C\nMinha versão", "sections": []}
     client.put("/api/library/songs/one", headers=auth(token), json={"songData": ai_song(fullChordSheet=typed)})
     with app.app_context():
         stored = SharedSong.query.one()
-        assert stored.song_data["fullChordSheet"]["content"] == "G  C\nMinha versão"
+        assert stored.song_data["fullChordSheet"] is None
         assert stored.song_data["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
 
 
@@ -162,7 +162,7 @@ def test_web_scraped_song_goes_to_catalog_with_full_sheet_and_source(client, app
         assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
 
 
-def test_completion_fills_summary_only_catalog_entry(client, app):
+def test_personal_completion_does_not_change_catalog_entry(client, app):
     """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa."""
     token = register(client, "shared-upgrade", "U")
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": ai_song()})
@@ -170,7 +170,7 @@ def test_completion_fills_summary_only_catalog_entry(client, app):
         assert SharedSong.query.one().song_data["fullChordSheet"] is None
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": _with_sheet("web_source")})
     with app.app_context():
-        assert SharedSong.query.one().song_data["fullChordSheet"]["source"] == "web_source"
+        assert SharedSong.query.one().song_data["fullChordSheet"] is None
     friend = register(client, "shared-friend", "F")
     found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(friend)).get_json()
     assert found["match"]["title"] == "Asa Branca"
@@ -269,8 +269,8 @@ def test_summary_only_personal_song_has_no_fake_full_sheet(client, app):
         assert match.summary["harmonicSummary"]["blocos"][0]["acordes"] == ["G", "C"]
 
 
-def test_manual_origin_with_full_sheet_goes_to_catalog(client, app):
-    """Força-tarefa: música de origem manual (biblioteca base / PDF antigo) com letra entra no catálogo."""
+def test_manual_origin_stays_private_even_with_full_sheet(client, app):
+    """Origem manual permanece privada; anexar letra não libera compartilhamento."""
     token = register(client, "task-a", "A")
     base = {"type": "manual", "name": "PDF fornecido pelo usuário", "url": None}
     web = {"source": "web_source", "content": "G  C\nVocê é bem vindo aqui", "sections": []}
@@ -280,8 +280,8 @@ def test_manual_origin_with_full_sheet_goes_to_catalog(client, app):
     upload = {"source": "user_upload", "content": "D  A\nLetra do PDF", "sections": []}
     client.put("/api/library/songs/pdf", headers=auth(token), json={"songData": ai_song(title="Por Arquivo", sourceInfo=base, fullChordSheet=upload)})
     with app.app_context():
-        songs = {song.title: song.song_data["fullChordSheet"]["source"] for song in SharedSong.query.all()}
-        assert songs == {"A casa é sua": "web_source", "Digitada": "user_text", "Por Arquivo": "user_upload"}
+        songs = {song.title: song for song in SharedSong.query.all()}
+        assert songs == {}
 
 
 def test_teammate_completion_updates_summary_only_catalog_entry(client, app):

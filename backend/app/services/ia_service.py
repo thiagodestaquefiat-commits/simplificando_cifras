@@ -64,10 +64,7 @@ _BRASILIA = timezone(timedelta(hours=-3))
 
 
 def web_quota_message(amount: int | None = None, reset_at: float | None = None) -> str:
-    """Aviso curto do limite: título (quantas buscas), quando volta e o que fazer enquanto isso.
-
-    A primeira frase é o título do aviso no app; o resto é a linha de baixo.
-    """
+    """Aviso curto: quantidade, liberação e alternativa disponível."""
     parts = [f"Limite de {amount} buscas na web atingido." if amount else "Limite de buscas na web atingido."]
     if reset_at:
         when = datetime.fromtimestamp(reset_at, _BRASILIA)

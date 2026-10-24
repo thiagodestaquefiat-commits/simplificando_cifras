@@ -52,11 +52,14 @@
   const canvasBlob=canvas=>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Não foi possível gerar a imagem.')),'image/png',1));
   async function renderImage(data,documentRef){return canvasBlob(renderToCanvas(data,documentRef))}
   function shareText(data){return [data.title,[data.date,data.time].filter(Boolean).join(' · '),data.location,data.link].filter(Boolean).join('\n')}
+  function imageFilename(data){const slug=clean(data.title).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'evento';return `roudy-${slug}.png`}
   async function share(data,imageBlob,navigatorRef=global.navigator){
-    const text=shareText(data);
-    if(navigatorRef?.share){await navigatorRef.share({title:data.title,text:data.link?shareText({...data,link:''}):text,url:data.link||undefined});return {kind:'link'}}
-    return {kind:'fallback',text};
+    if(!imageBlob)return {kind:'unavailable'};
+    const file=typeof global.File==='function'?new global.File([imageBlob],imageFilename(data),{type:'image/png'}):null;
+    const payload=file?{title:data.title,text:shareText({...data,link:''}),files:[file]}:null;
+    if(payload&&navigatorRef?.share&&(!navigatorRef.canShare||navigatorRef.canShare(payload))){await navigatorRef.share(payload);return {kind:'image',file}}
+    return {kind:'download',blob:imageBlob,filename:imageFilename(data)};
   }
-  global.roudyEventShare=Object.freeze({FORMATS,gradientVariant,createData,cardMarkup,renderToCanvas,renderImage,shareText,share});
+  global.roudyEventShare=Object.freeze({FORMATS,gradientVariant,createData,cardMarkup,renderToCanvas,renderImage,shareText,imageFilename,share});
   if(typeof module!=='undefined'&&module.exports)module.exports=global.roudyEventShare;
 })(typeof window!=='undefined'?window:globalThis);

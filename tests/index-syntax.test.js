@@ -22,6 +22,7 @@ assert.match(topbar, /onclick="roudyCamera\.open\(\)"/, "a câmera deve abrir di
 assert.match(cameraSource, /data-camera-file/, "a câmera deve manter acesso direto ao seletor de arquivos");
 assert.match(cameraSource, /capture="environment" data-camera-native/, "em HTTP local o disparador deve abrir a câmera nativa do celular");
 assert.match(cameraSource, /querySelector\('\[data-camera-native\]'\)\?\.click\(\)/, "a ação central deve acionar o capturador nativo quando getUserMedia não existe");
+assert.match(cameraSource, /closeSearchBeforeDraft\(\);close\(\)/, "após importar pela câmera, o editor não deve permanecer atrás do menu Buscar");
 assert.match(cameraSource, /accept="application\/pdf,text\/plain,\.pdf,\.txt,\.text" data-camera-file/, "Arquivos deve abrir o fluxo documental sem repetir as fontes de imagem do iOS");
 assert.match(html, /id="btn-smart-scroll"[\s\S]{0,500}Rolagem inteligente/, "a rolagem inteligente deve aparecer ao lado da rolagem comum");
 assert.doesNotMatch(html.slice(html.indexOf('function renderPlaylistCatalogSearchRow'),html.indexOf('async function addPlaylistCatalogSong')),/ROUDY \+ web/, "a busca externa não deve exibir o rótulo técnico");

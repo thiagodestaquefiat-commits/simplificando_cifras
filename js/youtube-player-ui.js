@@ -54,8 +54,10 @@
   function imageFor(source, className) {
     const cover = global.document.createElement("img");
     cover.className = className;
-    cover.src = source.coverUrl || `https://i.ytimg.com/vi/${source.youtubeVideoId}/hqdefault.jpg`;
+    cover.src = global.songArtwork?.resolveYoutubeThumbnail(source) || source.youtubeThumbnailUrl || source.coverUrl || `https://i.ytimg.com/vi/${source.youtubeVideoId}/hqdefault.jpg`;
     cover.alt = `Miniatura de ${source.title}`;
+    cover.decoding = "async";
+    cover.addEventListener("error", () => global.songArtwork?.handleImageError(cover), { once: false });
     return cover;
   }
 
@@ -108,7 +110,7 @@
     const detail = element("view-detail");
     if (detail) {
       detail.style.removeProperty("--video-header-progress");
-      detail.classList.remove("video-study-expanded");
+      detail.classList.remove("video-study-expanded", "video-header-compact");
     }
     resetFloating(container);
   }
@@ -135,6 +137,7 @@
       const revealStart = Math.max(1, playerBottom - 58);
       const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
       detail.style.setProperty("--video-header-progress", progress.toFixed(4));
+      detail.classList.toggle("video-header-compact", progress >= 0.98);
     };
     const onScroll = () => {
       if (!frame) frame = global.requestAnimationFrame(render);

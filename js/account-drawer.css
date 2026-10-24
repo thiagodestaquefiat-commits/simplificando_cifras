@@ -37,3 +37,9 @@
 .account-drawer-sync-page .sync-advanced-content>.btn{width:100%;height:46px;margin:8px 0 0;border:0;border-radius:12px;background:#242426;color:#f5f5f7;font-size:13px;font-weight:650}
 .account-drawer-sync-page .sync-advanced-content>.btn:first-of-type{background:#0789e7;color:#fff}
 .account-drawer-sync-page .sync-advanced-content>.btn:active,.account-drawer-sync-page>.btn:active{opacity:.72}
+.account-drawer-profile-head{display:grid;grid-template-columns:minmax(0,1fr) 60px;align-items:center;border-bottom:1px solid rgba(255,255,255,.08)}
+.account-drawer-profile-head .account-drawer-profile{min-width:0;padding-right:8px;border-bottom:0}
+.account-drawer-qr-button{display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;border-radius:50%;background:#29292d;color:#fff;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035)}
+.account-drawer-qr-button svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.account-drawer-qr-button:active{transform:scale(.96);background:#36363b}
+.account-drawer-qr-button:focus-visible{outline:2px solid #0789e7;outline-offset:2px}

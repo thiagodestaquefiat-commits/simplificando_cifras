@@ -1,8 +1,22 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
 const { chromium } = require('playwright');
 
+const root = path.resolve(__dirname, '..');
+const server = http.createServer((request, response) => {
+  const pathname = new URL(request.url, 'http://localhost').pathname;
+  const file = path.resolve(root, pathname === '/' ? 'index.html' : pathname.slice(1));
+  if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return response.writeHead(404).end();
+  response.setHeader('Content-Type', ({ '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' })[path.extname(file)] || 'application/octet-stream');
+  fs.createReadStream(file).pipe(response);
+});
+
 (async () => {
-  const browser = await chromium.launch({ headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const executablePath = [process.env.BROWSER_EXECUTABLE, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(file => file && fs.existsSync(file));
+  const browser = await chromium.launch({ headless: true, executablePath });
   try {
     for (const width of [320, 390, 768, 1366]) {
       const context = await browser.newContext({ viewport: { width, height: 844 }, serviceWorkers: 'block' });
@@ -11,7 +25,7 @@ const { chromium } = require('playwright');
       page.on('pageerror', error => errors.push(error.message));
       await page.route('**/api/**', route => route.fulfill({ json: { enabled: false, songs: [], events: [], bands: [] } }));
       await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ body: '', contentType: 'text/css' }));
-      await page.goto('http://127.0.0.1:4173/?smart-toolbar-test=1');
+      await page.goto(`http://127.0.0.1:${server.address().port}/?smart-toolbar-test=1`);
       await page.waitForFunction(() => loginGateAuthReady);
       await page.evaluate(() => {
         continueWithoutLogin();
@@ -37,14 +51,12 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#btn-smart-scroll').isVisible(), true, 'intelligent control remains alongside scrolling controls');
       assert.ok(await strip.evaluate(node => node.scrollWidth <= node.clientWidth), `active toolbar fits at ${width}px`);
       await page.locator('#btn-scroll').click();
-      if (width === 390 || width === 1366) {
-        await page.locator('#song-controls').screenshot({ path: `C:/Users/ACER/AppData/Local/Temp/roudy-smart-toolbar-${width}.png` });
-      }
       assert.deepEqual(errors, []);
       await context.close();
     }
     console.log('smart-scroll-toolbar-ui: OK (adjacency, responsive widths, active state and preserved controls)');
   } finally {
     await browser.close();
+    server.close();
   }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+})().catch(error => { console.error(error); process.exitCode = 1; server.close(); });

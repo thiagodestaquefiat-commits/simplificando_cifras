@@ -169,7 +169,8 @@
     return JSON.stringify({
       id: value.id, title: value.title, artist: value.artist || "", key: value.key || "", capo: value.capo || "",
       blocos: value.blocos || [], fullChordSheet: value.fullChordSheet || null, album: value.album || null,
-      coverUrl: value.coverUrl || null, spotifyTrackId: value.spotifyTrackId || null,
+      artworkUrl: value.artworkUrl || null, artworkSource: value.artworkSource || null,
+      youtubeThumbnailUrl: value.youtubeThumbnailUrl || null, coverUrl: value.coverUrl || null, spotifyTrackId: value.spotifyTrackId || null,
       spotifyUri: value.spotifyUri || null, isrc: value.isrc || null
     });
   }
@@ -179,7 +180,19 @@
     for (let index = 0; index < value.length; index += 1) { hash ^= value.charCodeAt(index); hash = Math.imul(hash, 16777619); }
     return (hash >>> 0).toString(16).padStart(8, "0");
   }
-  function isLegacyCatalogSong(song) { return LEGACY_SIGNATURES.has(signature(song)); }
+  function legacySignature(song) {
+    const value = song || {};
+    const legacyValue = JSON.stringify({
+      id: value.id, title: value.title, artist: value.artist || "", key: value.key || "", capo: value.capo || "",
+      blocos: value.blocos || [], fullChordSheet: value.fullChordSheet || null, album: value.album || null,
+      coverUrl: value.coverUrl || null, spotifyTrackId: value.spotifyTrackId || null,
+      spotifyUri: value.spotifyUri || null, isrc: value.isrc || null
+    });
+    let hash = 2166136261;
+    for (let index = 0; index < legacyValue.length; index += 1) { hash ^= legacyValue.charCodeAt(index); hash = Math.imul(hash, 16777619); }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  }
+  function isLegacyCatalogSong(song) { return LEGACY_SIGNATURES.has(legacySignature(song)); }
   function isDemoSong(song) { return DEMO_SONGS.some((demo) => String(demo.id) === String(song && song.id)); }
   function catalog() { return clone(DEMO_SONGS); }
   function testSong() { return clone(LOCAL_TEST_SONG); }

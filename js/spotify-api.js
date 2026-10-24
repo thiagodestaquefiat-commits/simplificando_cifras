@@ -6,12 +6,15 @@
   function mapTrack(track) {
     const source = track || {};
     const images = source.album && Array.isArray(source.album.images) ? source.album.images : [];
+    const artworkUrl = images[0] ? images[0].url || null : null;
     return {
       title: source.name || "",
       artist: Array.isArray(source.artists) ? source.artists.map((artist) => artist.name).filter(Boolean).join(", ") : "",
       album: source.album ? source.album.name || null : null,
       duration: Number.isFinite(Number(source.duration_ms)) ? Number(source.duration_ms) : null,
-      coverUrl: images[0] ? images[0].url || null : null,
+      artworkUrl,
+      artworkSource: artworkUrl ? "spotify" : null,
+      coverUrl: artworkUrl,
       spotifyTrackId: source.id || null,
       spotifyUri: source.uri || null,
       isrc: source.external_ids ? source.external_ids.isrc || null : null,

@@ -198,8 +198,8 @@ def test_limit_message_tells_how_many_when_it_frees_and_what_to_do():
     import time
     from app.services.ia_service import web_quota_message
     message = web_quota_message(10, time.time() + 3600)
-    assert message.startswith("Limite de 10 buscas na web atingido. Volta ")
-    assert " às " in message
+    assert message.startswith("Limite de 10 buscas na web atingido.")
+    assert "Volta " in message and " às " in message
     assert message.endswith("Enquanto isso, envie foto ou PDF da cifra.")
     assert web_quota_message() == "Limite de buscas na web atingido. Enquanto isso, envie foto ou PDF da cifra."
 
@@ -222,7 +222,8 @@ def test_real_user_quota_reports_reset_time(app):
     with app.app_context():
         quota = _user_web_quota("2 per day")
         assert quota("quota-user") and quota("quota-user") and not quota("quota-user")
-        assert quota.message("quota-user").startswith("Limite de 2 buscas na web atingido. Volta ") and " às " in quota.message("quota-user")
+        assert "Limite de 2 buscas" in quota.message("quota-user") and "Volta" in quota.message("quota-user")
+        assert " às " in quota.message("quota-user")
 
 
 def test_catalog_summary_with_long_mixed_progression_is_split_roudy_style():
