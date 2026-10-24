@@ -7,6 +7,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const js = fs.readFileSync(path.join(root, 'js/search-menu.js'), 'utf8');
 const homePlaylists = fs.readFileSync(path.join(root, 'js/home-playlists.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'css/search-menu.css'), 'utf8');
+assert.match(css, /\.roudy-search-key\{[^}]*background:rgba\(255,255,255,\.12\)/, 'o tom usa chip cinza preenchido nos resultados');
 const sw = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
 
 assert.match(html, /id="roudy-search"/);
@@ -33,7 +34,7 @@ assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as tela
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=14/);
+assert.match(sw, /css\/search-menu\.css\?v=15/);
 assert.match(sw, /js\/search-menu\.js\?v=8/);
 assert.match(sw, /js\/home-playlists\.js\?v=20/);
 
