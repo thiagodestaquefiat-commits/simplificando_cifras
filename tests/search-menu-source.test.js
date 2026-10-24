@@ -5,6 +5,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const js = fs.readFileSync(path.join(root, 'js/search-menu.js'), 'utf8');
+const homePlaylists = fs.readFileSync(path.join(root, 'js/home-playlists.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'css/search-menu.css'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
 
@@ -19,12 +20,16 @@ assert.match(js, /sc_recent_opened_songs_v1/, 'retomada mantém até cinco músi
 assert.match(js, /global\.schedulePlaylistOnlineSearch/, 'busca externa reutiliza o mecanismo existente');
 assert.match(js, /global\.openDetail/, 'resultado local abre o Estudo existente');
 assert.match(js, /data-search-song-menu/, 'resultado local oferece o menu de três pontos');
-assert.match(js, /homePlaylists\?\.chooseForSong/, 'três pontos reutilizam o seletor existente de playlists');
+assert.match(js, /global\.openSongOptions\?\./, 'três pontos reutilizam o menu completo de ações da música');
+assert.match(html, /playlist-search-result-more[\s\S]*?openSongOptions/, 'a busca da Home também oferece o menu completo');
+for (const label of ['Adicionar ao repertório', 'Adicionar à playlist', 'Compartilhar', 'Excluir']) assert.match(html, new RegExp(`>${label}<`));
+assert.match(homePlaylists, /Array\.isArray\(songIds\) \? songIds : \[songIds\]/, 'criação iniciada por uma música normaliza o identificador em lista');
 assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as telas existentes');
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
 assert.match(sw, /css\/search-menu\.css\?v=14/);
-assert.match(sw, /js\/search-menu\.js\?v=7/);
+assert.match(sw, /js\/search-menu\.js\?v=8/);
+assert.match(sw, /js\/home-playlists\.js\?v=20/);
 
 console.log('search-menu-source.test.js: OK');

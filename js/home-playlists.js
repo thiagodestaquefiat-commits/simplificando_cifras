@@ -563,7 +563,8 @@
   }
 
   function create(songIds = []) {
-    pendingSongIds = songIds;
+    pendingSongIds = (Array.isArray(songIds) ? songIds : [songIds]).filter((songId) => songId != null && songId !== "");
+    global.closeEventAdminSheet?.();
     openCreate();
   }
 
