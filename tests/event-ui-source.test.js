@@ -104,7 +104,9 @@ assert.doesNotMatch(html, /id="event-assistant-launch"/, 'a página do evento n�
 assert.doesNotMatch(eventDetailCss, /event-reference-assistant/, 'não permanecem estilos órfãos do assistente no evento');
 assert.match(eventDetailCss, /#view-sd \.event-notification-button>svg,#view-sd \.event-more-button>svg\{width:24px!important;height:24px!important\}/, 'chat, notificações e mais opções seguem o padrão mobile do app');
 assert.match(eventDetailCss, /#view-sd \.event-reference-icon svg\{[^}]*width:20px;height:20px/, 'atalhos internos do evento são visualmente menores sem reduzir o alvo de toque');
-assert.match(eventDetailCss, /#view-sd \.event-reference-icon\{[^}]*width:44px;height:44px/, 'atalhos internos preservam área de toque confortável');
+assert.match(eventDetailCss, /#view-sd \.event-reference-icon\{[^}]*width:39px;height:39px/, 'atalhos internos preservam a geometria original da main');
+assert.match(eventDetailCss, /#view-sd \.event-reference-icon\{width:36px;height:36px\}/, 'no celular, a fileira preserva o espaçamento compacto original');
+assert.match(eventDetailCss, /#view-sd \.event-reference-chip svg\{width:17px;height:17px/, 'ícones dos chips permanecem no tamanho original da main');
 assert.match(eventDetailCss, /@media\(max-width:560px\)\{#view-sd #event-chat-fab\{right:104px\}/, 'no celular o cabeçalho reserva somente os controles que permanecem nele');
 assert.match(eventDetailCss, /#view-sd \.event-condensed-title\{[^}]*right:112px[^}]*left:56px[^}]*width:auto[^}]*justify-content:center[^}]*text-align:center[^}]*transform:none/, 'no celular o título compacto recupera o espaço liberado pelo assistente');
 assert.match(html, /event-chat-header-button\[hidden\]/);
