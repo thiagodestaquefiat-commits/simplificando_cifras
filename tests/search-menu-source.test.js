@@ -25,6 +25,9 @@ assert.match(html, /playlist-search-result-more[\s\S]*?openSongOptions/, 'a busc
 for (const label of ['Adicionar ao repertório', 'Adicionar à playlist', 'Compartilhar', 'Excluir']) assert.match(html, new RegExp(`>${label}<`));
 assert.match(html, /@media\(max-width:600px\)\{\.song-options-sheet\{[\s\S]*?bottom:0/, 'no celular, as opções abrem como sheet inferior');
 assert.match(html, /class="song-options-handle"/, 'sheet inferior possui alça visual');
+assert.match(html, />Novo repertório</, 'seletor de repertório permite criar um novo evento');
+assert.match(html, /openNewRepertoireForSong/, 'novo repertório preserva a música escolhida');
+assert.match(html, /repertoire:initialRepertoire/, 'evento novo já nasce com a música selecionada');
 assert.match(homePlaylists, /Array\.isArray\(songIds\) \? songIds : \[songIds\]/, 'criação iniciada por uma música normaliza o identificador em lista');
 assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as telas existentes');
 assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
