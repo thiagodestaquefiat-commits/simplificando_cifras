@@ -4,12 +4,13 @@
 // MANUTENÇÃO: a música continua única na biblioteca (que já sincroniza) e a playlist sempre mostra a versão atual.
 // MANUTENÇÃO: Regras: alteração local ainda não enviada nunca é trocada pela da nuvem; exclusão em outro
 // MANUTENÇÃO: aparelho só remove aqui se a playlist não tinha alteração local pendente.
+// MANUTENÇÃO: A nuvem só é apagada por exclusão feita pela pessoa (registrada em userPlaylists.remove).
+// MANUTENÇÃO: Playlist ausente no aparelho NUNCA é tratada como excluída: é baixada de volta.
 (function (global) {
   "use strict";
 
-  const KNOWN_KEY = "sc_personal_playlists_sync_v1"; // { [owner]: { [clientId]: true } } — já sincronizadas neste aparelho
-  const MAX_COVER = 1_500_000;
-  let running = false, again = false, timer = null, applying = false, cursor = null, cursorOwner = null;
+    const MAX_COVER = 1_500_000;
+  let running = false, again = false, timer = null, applying = false, cursor = null, cursorOwner = null, lastRemoteIds = [];
 
   const playlists = () => global.userPlaylists;
   const songs = () => (typeof musicas !== "undefined" ? musicas : global.musicas) || []; // eslint-disable-line no-undef
@@ -78,15 +79,12 @@
     return { ...local, cloud: { version: remote.version, signature: signature(local) } };
   }
 
-  function known(owner) {
-    const all = global.storage.get(KNOWN_KEY, {}) || {};
-    return { ...(all[owner] || {}) };
-  }
-  function saveKnown(owner, value) {
-    const all = global.storage.get(KNOWN_KEY, {}) || {};
-    all[owner] = value;
-    global.storage.set(KNOWN_KEY, all);
-  }
+  // Recuperação única da janela do erro de 24/10 (16:10–18:30 UTC).
+  const RECOVERY_KEY = "sc_personal_playlists_recovered_v1";
+  const BUG_FROM = Date.parse("2026-10-24T16:10:00Z"), BUG_TO = Date.parse("2026-10-24T18:30:00Z");
+  function inBugWindow(remote) { const at = Date.parse(remote.updatedAt || 0) || 0; return at >= BUG_FROM && at <= BUG_TO; }
+  function recovered(owner) { return Boolean((global.storage.get(RECOVERY_KEY, {}) || {})[owner]); }
+  function markRecovered(owner) { const all = global.storage.get(RECOVERY_KEY, {}) || {}; all[owner] = true; global.storage.set(RECOVERY_KEY, all); }
 
   async function request(method, path, body) {
     const response = await global.fetch(endpoint(path), {
@@ -109,7 +107,7 @@
   }
   function removeLocal(owner, id) {
     applying = true;
-    try { return playlists().remove(owner, id); } finally { applying = false; }
+    try { return playlists().remove(owner, id, { fromCloud: true }); } finally { applying = false; }
   }
   function markSynced(owner, playlist, remote) {
     const latest = playlists().all(owner).find((value) => value.id === playlist.id);
@@ -132,42 +130,60 @@
     if (!acc || !token() || !playlists() || global.navigator.onLine === false || owner === "local") return;
     const guard = () => { if (account() !== acc || ownerId() !== owner) throw new Error("conta_alterada"); };
     const pending = playlists().all(owner).some((value) => !value.collaboration && (!value.cloud || value.cloud.signature !== signature(value)))
-      || Object.keys(known(owner)).some((id) => !playlists().all(owner).some((value) => value.id === id));
+      || Object.keys(playlists().deletions ? playlists().deletions(owner) : {}).length > 0 || !recovered(owner)
+      || lastRemoteIds.some((id) => !playlists().all(owner).some((value) => value.id === id)); // sumiu do aparelho: baixa de novo
     const since = cursorOwner === acc + "|" + owner && cursor && !pending ? "?since=" + encodeURIComponent(cursor) : "";
     const { body } = await request("GET", since);
     guard();
     if (body?.unchanged) return;
     cursor = body?.cursor || null; cursorOwner = acc + "|" + owner;
+    lastRemoteIds = (Array.isArray(body?.playlists) ? body.playlists : []).filter((remote) => !remote.deleted).map((remote) => String(remote.clientId));
     const remoteList = Array.isArray(body?.playlists) ? body.playlists : [];
     const remoteById = new Map(remoteList.map((remote) => [String(remote.clientId), remote]));
-    const seen = known(owner);
-    const nextKnown = {};
+
+    const tombs = playlists().deletions ? playlists().deletions(owner) : {};
+    let tombsChanged = false;
+    const dropTomb = (id) => { if (tombs[id]) { delete tombs[id]; tombsChanged = true; } };
+    const recover = !recovered(owner);
 
     for (const remote of remoteList) {
       guard();
       const id = String(remote.clientId);
       const local = playlists().all(owner).find((value) => value.id === id && !value.collaboration);
       if (!local) {
-        if (remote.deleted) continue;
-        if (seen[id]) {
-          // Apagada neste aparelho: apaga na nuvem (se ninguém mudou lá depois).
+        const tomb = tombs[id];
+        if (tomb) {
+          // Apagada pela pessoa neste aparelho: apaga na nuvem, se ninguém mudou lá depois.
+          if (remote.deleted) { dropTomb(id); continue; }
+          if (tomb.version != null && tomb.version !== remote.version) { dropTomb(id); write(owner, fromRemote(remote)); continue; }
           cursor = null;
           const result = await request("DELETE", "/" + encodeURIComponent(id), { baseVersion: remote.version });
           guard();
-          if (result.status === 409 && result.body?.playlist && !result.body.playlist.deleted) { if (write(owner, fromRemote(result.body.playlist))) nextKnown[id] = true; }
+          dropTomb(id);
+          if (result.status === 409 && result.body?.playlist && !result.body.playlist.deleted) write(owner, fromRemote(result.body.playlist));
           continue;
         }
-        if (write(owner, fromRemote(remote))) nextKnown[id] = true;
+        if (remote.deleted) {
+          // Recuperação (24/10): a primeira versão da sincronização apagava na nuvem playlists que
+          // só tinham sumido do aparelho. Restaura uma vez as apagadas nessa janela.
+          if (recover && inBugWindow(remote)) {
+            const restored = await push(owner, { ...fromRemote(remote), cloud: null }, remote.version, true).catch(() => null);
+            guard();
+            if (restored?.remote) write(owner, fromRemote(restored.remote));
+          }
+          continue;
+        }
+        // Existe na nuvem e não foi apagada aqui: baixa (inclusive se tinha sumido do aparelho).
+        write(owner, fromRemote(remote));
         continue;
       }
+      dropTomb(id);
       const changedHere = !local.cloud || local.cloud.signature !== signature(local);
       if (remote.deleted) {
         if (local.cloud && !changedHere) { removeLocal(owner, id); continue; }
         await push(owner, local, remote.version, true); // editada aqui depois da exclusão: recria
-        nextKnown[id] = true;
         continue;
       }
-      nextKnown[id] = true;
       if (local.cloud?.version === remote.version) {
         if (changedHere) {
           const result = await push(owner, local, remote.version);
@@ -183,20 +199,22 @@
       if (localTime >= remoteTime) await push(owner, local, remote.version, true);
       else write(owner, fromRemote(remote, local));
     }
+    // Exclusões de playlists que nem estão mais na nuvem: nada a fazer.
+    for (const id of Object.keys(tombs)) if (!remoteById.has(id)) dropTomb(id);
+    if (tombsChanged && playlists().setDeletions) playlists().setDeletions(owner, tombs);
+    if (recover) markRecovered(owner);
 
     // Playlists que ainda não estão na nuvem.
     for (const local of playlists().all(owner).filter((value) => !value.collaboration && !remoteById.has(value.id))) {
       guard();
       if (!local.items.length && !local.name) continue;
       try {
-        const result = await push(owner, local, null);
-        if (result.remote) nextKnown[local.id] = true;
+        await push(owner, local, null);
       } catch (error) {
         if (error.status === 413 || error.status === 400) console.warn("[playlists] não sincronizada:", local.name, error.message);
         else throw error;
       }
     }
-    saveKnown(owner, nextKnown);
   }
 
   async function sync() {

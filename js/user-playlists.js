@@ -101,12 +101,32 @@
     return update(owner, id, (playlist) => ({ ...playlist, name: clean }));
   }
 
-  function remove(owner, id) {
+  // Exclusões feitas pela pessoa, para a sincronização apagar também na nuvem.
+  // A nuvem só é apagada a partir daqui: playlist que "sumiu" do aparelho por outro motivo é baixada de volta.
+  const DELETED_KEY = "sc_user_playlists_deleted_v1";
+  function deletions(owner) {
+    const value = store() ? store().get(DELETED_KEY, {}) : {};
+    return { ...((value && typeof value === "object" && value[String(owner || "local")]) || {}) };
+  }
+  function setDeletions(owner, map) {
+    if (!store()) return false;
+    const value = store().get(DELETED_KEY, {}) || {};
+    value[String(owner || "local")] = map;
+    return store().set(DELETED_KEY, value) !== false;
+  }
+
+  function remove(owner, id, options = {}) {
     const current = get(owner, id);
     if (current?.collaboration) return Boolean(update(owner, id, playlist => ({ ...playlist, collaboration: { ...playlist.collaboration, deleted: true } })));
     const playlists = all(owner);
     const next = playlists.filter((playlist) => playlist.id !== String(id));
-    return next.length !== playlists.length && save(owner, next);
+    if (next.length === playlists.length) return false;
+    if (current?.cloud && !options.fromCloud) {
+      const map = deletions(owner);
+      map[String(id)] = { version: current.cloud.version ?? null, at: now() };
+      if (!setDeletions(owner, map)) return false;
+    }
+    return save(owner, next);
   }
 
   function duplicate(owner, id) {
@@ -165,5 +185,5 @@
     return () => listeners.delete(listener);
   }
 
-  global.userPlaylists = Object.freeze({ STORAGE_KEY, PLAYBACK_FIELDS, all, replace, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setItemContent, setCoverImage, setPinned, cleanPlayback, subscribe });
+  global.userPlaylists = Object.freeze({ STORAGE_KEY, deletions, setDeletions, PLAYBACK_FIELDS, all, replace, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setItemContent, setCoverImage, setPinned, cleanPlayback, subscribe });
 })(window);
