@@ -128,5 +128,28 @@ const pc = device("pc", [song("x9", "c-grat", "Gratidão"), song("x8", "c-isaias
   const ensaio = phone.list().find((p) => p.name === "Ensaio");
   assert.equal(ensaio.items[0].songId, "p1", "aponta para a Gratidão do celular");
 
+  // 8) O caso real de 24/10: as playlists somem do aparelho (armazenamento corrompido/limpo).
+  //    A sincronização NÃO pode apagar na nuvem: tem de baixar de volta.
+  const beforeVanish = phone.list().map((p) => p.name).sort();
+  phone.w.storage.set("sc_user_playlists_v1", {});
+  await phone.sync();
+  assert.ok([...server.values()].filter((row) => !row.deleted).length >= 2, "nada foi apagado na nuvem");
+  assert.deepEqual(phone.list().map((p) => p.name).sort(), beforeVanish, "as playlists voltaram para o aparelho");
+
+  // 9) Recuperação: playlist apagada na nuvem pelo erro (janela de 24/10) volta, uma vez.
+  const victim = [...server.values()].find((row) => row.data.name === "Ensaio");
+  Object.assign(victim, { deleted: true, version: victim.version + 1, updatedAt: "2026-10-24T17:00:00.000Z" });
+  const freshPhone = device("celular-novo", [song("p1", "c-grat", "Gratidão")]);
+  await freshPhone.sync();
+  assert.equal(server.get(victim.clientId).deleted, false, "restaurada na nuvem");
+  assert.ok(freshPhone.list().some((p) => p.name === "Ensaio"), "e baixada no aparelho");
+  // Exclusão feita pela pessoa depois disso continua valendo.
+  const ensaioLocal = freshPhone.list().find((p) => p.name === "Ensaio");
+  freshPhone.pl.remove(OWNER, ensaioLocal.id);
+  await freshPhone.sync();
+  assert.equal(server.get(victim.clientId).deleted, true, "exclusão de verdade apaga na nuvem");
+  await freshPhone.sync();
+  assert.ok(!freshPhone.list().some((p) => p.name === "Ensaio"), "e não volta");
+
   console.log("personal-playlist-sync.test.js: OK");
 })().catch((error) => { console.error(error); process.exit(1); });
