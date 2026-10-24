@@ -8,6 +8,6 @@ assert.match(html, /\.song-controls\.is-expanded\{[^}]*border:0;[^}]*border-radi
 assert.match(html, /\.song-controls\.is-expanded \.song-control-strip\{border-bottom:0;background:#111111\}/);
 assert.match(html, /\.song-control-panel\{[^}]*border:0;[^}]*border-radius:0 0 16px 16px;[^}]*background:#111111\}/);
 assert.match(html, /#view-detail:not\(\.stage-mode\)\{background:#050505\}/);
-assert.match(html, /\.video-study-expanded>\.detail-header\{[^}]*border-bottom:0;/, 'o cabeçalho compacto do estudo não deve exibir linha inferior');
+assert.match(html, /\.video-study-expanded>\.detail-header\{[^}]*border:0;[^}]*box-shadow:none;/, 'o cabeçalho compacto do estudo não deve exibir borda nem sombra inferior');
 
 console.log('study-toolbar-surface.test.js: OK');
