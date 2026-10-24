@@ -1,6 +1,7 @@
 // Dois aparelhos da mesma conta (celular e PC) sincronizando playlists pessoais.
 // O "servidor" abaixo segue as regras de /api/personal-playlists (versão, 409, exclusão lógica).
 const assert = require("node:assert/strict");
+const same = (a, b, message) => assert.equal(JSON.stringify(a), JSON.stringify(b), message);
 const fs = require("node:fs");
 const vm = require("node:vm");
 
@@ -69,14 +70,14 @@ const pc = device("pc", [song("x9", "c-grat", "Gratidão"), song("x8", "c-isaias
   await phone.sync();
   assert.equal(server.size, 2, "as duas playlists subiram");
   const up = server.get(louvores.id).data;
-  assert.deepEqual(up.items.map((i) => i.songClientId), ["c-grat", "c-isaias", "c-rei"], "vai só a referência da música");
+  same(up.items.map((i) => i.songClientId), ["c-grat", "c-isaias", "c-rei"], "vai só a referência da música");
   assert.equal(up.items[0].song, undefined, "não envia a música inteira");
 
   // 2) PC baixa as playlists, apontando para as músicas da biblioteca dele.
   await pc.sync();
   const pcLouvores = pc.list().find((p) => p.name === "Louvores");
   assert.ok(pcLouvores, "Louvores apareceu no PC");
-  assert.deepEqual(pcLouvores.items.map((i) => i.songId), ["x9", "x8", "c-rei"], "usa a música local; a que falta fica pelo clientId");
+  same(pcLouvores.items.map((i) => i.songId), ["x9", "x8", "c-rei"], "usa a música local; a que falta fica pelo clientId");
   assert.equal(pcLouvores.items[0].playback.semitones, -2, "tom da playlist preservado");
   assert.equal(pc.list().length, 2);
 
@@ -134,7 +135,7 @@ const pc = device("pc", [song("x9", "c-grat", "Gratidão"), song("x8", "c-isaias
   phone.w.storage.set("sc_user_playlists_v1", {});
   await phone.sync();
   assert.ok([...server.values()].filter((row) => !row.deleted).length >= 2, "nada foi apagado na nuvem");
-  assert.deepEqual(phone.list().map((p) => p.name).sort(), beforeVanish, "as playlists voltaram para o aparelho");
+  same(phone.list().map((p) => p.name).sort(), beforeVanish, "as playlists voltaram para o aparelho");
 
   // 9) Recuperação: playlist apagada na nuvem pelo erro (janela de 24/10) volta, uma vez.
   const victim = [...server.values()].find((row) => row.data.name === "Ensaio");
