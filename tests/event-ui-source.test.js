@@ -4,6 +4,7 @@ const path = require("node:path");
 
 const html = fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8");
 const eventDetailCss = fs.readFileSync(path.resolve(__dirname, "..", "js", "event-detail-refactor.css"), "utf8");
+assert.match(eventDetailCss, /#view-sd>\.detail-header\{[^}]*border-bottom:0!important;[^}]*box-shadow:none!important;/, "event header must remain seamless while becoming compact");
 const notificationCenterJs = fs.readFileSync(path.resolve(__dirname, "..", "js", "notification-center.js"), "utf8");
 const colorPreviewCss = fs.readFileSync(path.resolve(__dirname, "..", "css", "roudy-color-system-preview.css"), "utf8");
 assert.match(html, /roudy-color-system-preview\.css\?v=16/);

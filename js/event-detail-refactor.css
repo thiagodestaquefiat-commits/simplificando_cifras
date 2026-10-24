@@ -1,5 +1,5 @@
 #view-sd .detail-content{padding-inline:10px;background:#050607}
-#view-sd>.detail-header{border-bottom:0!important;background:rgba(2,6,13,var(--event-header-alpha))!important;box-shadow:0 1px 0 rgba(255,255,255,calc(var(--event-header-progress)*.09))!important;backdrop-filter:blur(calc(var(--event-header-progress)*18px)) saturate(135%)!important;-webkit-backdrop-filter:blur(calc(var(--event-header-progress)*18px)) saturate(135%)!important}
+#view-sd>.detail-header{border-bottom:0!important;background:rgba(2,6,13,var(--event-header-alpha))!important;box-shadow:none!important;backdrop-filter:blur(calc(var(--event-header-progress)*18px)) saturate(135%)!important;-webkit-backdrop-filter:blur(calc(var(--event-header-progress)*18px)) saturate(135%)!important}
 #view-sd.is-event-header-compact>.detail-header{box-shadow:none!important}
 #view-sd>.detail-header::before{inset:0!important;background:radial-gradient(ellipse 70% 130% at 22% -35%,rgba(25,107,216,.42),transparent 68%),radial-gradient(ellipse 32% 110% at 91% -30%,rgba(245,196,38,.14),transparent 72%),linear-gradient(180deg,rgba(5,17,34,.98),rgba(2,7,15,.98))!important}
 #view-sd .event-notification-button>svg,#view-sd .event-more-button>svg{width:24px!important;height:24px!important}
