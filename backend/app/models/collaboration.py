@@ -319,3 +319,22 @@ class SharedPlaylist(db.Model):
     owner_user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
     playlist_data = db.Column(db.JSON, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class PersonalPlaylist(db.Model):
+    """Playlist pessoal sincronizada entre os aparelhos do dono.
+
+    Guarda só referências às músicas da biblioteca (clientId da sincronização da biblioteca)
+    e o tom/ajustes de cada item: a música em si continua única na biblioteca.
+    """
+    __tablename__ = "personal_playlists"
+    __table_args__ = (db.UniqueConstraint("owner_user_id", "client_id", name="uq_personal_playlist_owner_client"),)
+
+    id = db.Column(db.String(36), primary_key=True)
+    owner_user_id = db.Column(db.String(80), db.ForeignKey("collaboration_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    client_id = db.Column(db.String(160), nullable=False)
+    playlist_data = db.Column(db.JSON, nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    deleted = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)

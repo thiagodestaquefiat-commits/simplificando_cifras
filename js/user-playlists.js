@@ -44,6 +44,8 @@
       items: (Array.isArray(value.items) ? value.items : []).map(normalizeItem).filter(Boolean),
       sharedFrom: value.sharedFrom ? String(value.sharedFrom) : null,
       ...(value.collaboration && typeof value.collaboration === "object" ? { collaboration: value.collaboration } : {}),
+      // Sincronização da playlist pessoal com a nuvem (versão/assinatura do último envio); ver personal-playlist-sync.js.
+      ...(value.cloud && typeof value.cloud === "object" && !value.collaboration ? { cloud: { ...value.cloud } } : {}),
       createdAt: value.createdAt || now(),
       updatedAt: value.updatedAt || now()
     };
