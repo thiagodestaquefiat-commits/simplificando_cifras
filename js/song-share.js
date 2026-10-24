@@ -55,7 +55,9 @@
       const body = await response.json().catch(() => null);
       if (!response.ok || !body || !body.id) throw new Error(body?.erro?.mensagem || "Não foi possível compartilhar agora.");
       const target = new URL(global.location.href);
+      const api = target.searchParams.get("api"); // previews do Netlify usam ?api=producao
       target.search = "";
+      if (api === "producao") target.searchParams.set("api", api);
       target.hash = "";
       target.searchParams.set(PARAM, body.id);
       url = target.toString();
