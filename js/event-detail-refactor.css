@@ -304,3 +304,4 @@
 .event-invite-status{margin:15px 0 0;color:#a7abb2;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
 .event-invite-status:empty{display:none}
 .event-invite-actions button:disabled,.event-invite-role select:disabled{opacity:.55;cursor:wait}
+.event-admin-add-filters{grid-template-columns:repeat(4,minmax(0,1fr));touch-action:pan-y;user-select:none;-webkit-user-select:none}

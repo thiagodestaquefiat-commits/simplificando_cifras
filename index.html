@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=67">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=68">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -5318,7 +5318,16 @@ function openEventAddSongs(eventId){
   const event=findEvent(eventId),actor=event&&eventPermissionActor(event);if(!event||!eventModel.canEditShared(event,actor.id)){showToast('Somente o líder pode editar o repertório oficial.');return;}
   eventAdminSheetState={type:'add',eventId:String(event.id),query:'',filter:'playlist',added:new Set()};
   showEventAdminSheet(`${eventAdminHeader('Adicionar músicas')}<div class="event-admin-add-filters" role="group" aria-label="Origem das músicas"><button type="button" data-event-song-filter="playlist" aria-pressed="true" onclick="setEventAddSongsFilter('playlist')">Todas</button><button type="button" data-event-song-filter="recent" aria-pressed="false" onclick="setEventAddSongsFilter('recent')">Recentes</button><button type="button" data-event-song-filter="repertoires" aria-pressed="false" onclick="setEventAddSongsFilter('repertoires')">Repertórios</button><button type="button" data-event-song-filter="playlists" aria-pressed="false" onclick="setEventAddSongsFilter('playlists')">Playlists</button></div><div class="event-admin-song-list" id="event-admin-song-list"></div><label class="event-admin-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><input id="event-admin-search-input" type="search" placeholder="O que você quer adicionar?" aria-label="Buscar música para adicionar" oninput="filterEventAddSongs(this.value)"></label>`,'Adicionar músicas ao repertório');
+  installEventAddFilterDrag();
   renderEventAddSongs();
+}
+let eventAddFilterDrag=null;
+function installEventAddFilterDrag(){
+  const control=document.querySelector('.event-admin-add-filters');if(!control)return;
+  control.addEventListener('pointerdown',pointer=>{if(pointer.button!==0)return;eventAddFilterDrag={pointerId:pointer.pointerId,startX:pointer.clientX,startY:pointer.clientY,lastFilter:null,dragging:false};control.setPointerCapture?.(pointer.pointerId)});
+  control.addEventListener('pointermove',pointer=>{const drag=eventAddFilterDrag;if(!drag||drag.pointerId!==pointer.pointerId)return;const dx=pointer.clientX-drag.startX,dy=pointer.clientY-drag.startY;if(!drag.dragging){if(Math.abs(dx)<7)return;if(Math.abs(dy)>Math.abs(dx)){eventAddFilterDrag=null;return}drag.dragging=true}pointer.preventDefault();const button=document.elementFromPoint(pointer.clientX,pointer.clientY)?.closest?.('[data-event-song-filter]');if(!button||!control.contains(button)||button.dataset.eventSongFilter===drag.lastFilter)return;drag.lastFilter=button.dataset.eventSongFilter;setEventAddSongsFilter(drag.lastFilter)});
+  const finish=pointer=>{if(eventAddFilterDrag?.pointerId!==pointer.pointerId)return;eventAddFilterDrag=null;if(control.hasPointerCapture?.(pointer.pointerId))control.releasePointerCapture(pointer.pointerId)};
+  control.addEventListener('pointerup',finish);control.addEventListener('pointercancel',finish);
 }
 function filterEventAddSongs(value){if(eventAdminSheetState?.type!=='add')return;eventAdminSheetState.query=String(value||'').trim().toLocaleLowerCase('pt-BR');renderEventAddSongs();}
 function setEventAddSongsFilter(filter){

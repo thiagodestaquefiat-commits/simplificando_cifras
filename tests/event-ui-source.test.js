@@ -201,6 +201,10 @@ assert.match(html, /event-reference-chip--more/, 'o chip de três pontos permane
 assert.match(html, /openEventInfoSheet\('\$\{eventEsc\(event\.id\)\}'\)/, 'o chip Editar permanece nas ações do evento');
 assert.match(html, /function openEventAddSongs/);
 assert.match(html, /O que você quer adicionar\?/);
+assert.match(html, /function installEventAddFilterDrag/, 'filtros de músicas aceitam gesto horizontal');
+assert.match(html, /pointermove[\s\S]*?data-event-song-filter/, 'arrastar seleciona a opção sob o dedo');
+assert.match(eventDetailCss, /event-admin-add-filters\{[^}]*grid-template-columns:repeat\(4/, 'as quatro opções ocupam a mesma linha');
+assert.match(eventDetailCss, /event-admin-add-filters\{[^}]*touch-action:pan-y/, 'rolagem vertical continua disponível durante o gesto');
 assert.match(html, /function openEventOrderSheet/);
 assert.match(html, /Pressione e arraste pelo ícone à direita/);
 assert.match(html, /function openEventInfoSheet/);
