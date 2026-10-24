@@ -49,6 +49,27 @@ def same_artist(first: str | None, second: str | None) -> bool:
     return SequenceMatcher(None, first, second).ratio() >= SAME_ARTIST_MIN_RATIO
 
 
+_NOTE_NUMBERS = {"C": 0, "C#": 1, "DB": 1, "D": 2, "D#": 3, "EB": 3, "E": 4, "F": 5, "F#": 6, "GB": 6,
+                 "G": 7, "G#": 8, "AB": 8, "A": 9, "A#": 10, "BB": 10, "B": 11}
+
+
+def key_identity(value) -> str | None:
+    """Tom comparável: nota (com enarmonia) + menor. "Db" == "C#", "Am" != "A". Vazio = desconhecido."""
+    raw = str(value or "").strip().replace("♯", "#").replace("♭", "b")
+    match = re.match(r"^([A-Ga-g])([#b]?)(m(?!aj))?", raw)
+    if not match:
+        return None
+    number = _NOTE_NUMBERS.get((match.group(1) + match.group(2)).upper())
+    return None if number is None else f"{number}{'m' if match.group(3) else ''}"
+
+
+def same_key(first, second) -> bool:
+    """Versões do catálogo (decisão 24/10): mesmo título + artista + TOM é a mesma música.
+    Tom desconhecido em um dos lados não separa versões (é a entrada que pode ser completada)."""
+    a, b = key_identity(first), key_identity(second)
+    return a is None or b is None or a == b
+
+
 def parse_capo(value) -> int | None:
     """Casa do capotraste a partir de 2, "2", "Capotraste casa 2" ou "2ª casa"."""
     if isinstance(value, bool):
@@ -165,6 +186,25 @@ class SharedSongService:
         best.song.times_searched = (best.song.times_searched or 0) + 1
         db.session.commit()
         return best
+
+    VERSION_MIN_TITLE_RATIO = 0.85
+    MAX_VERSIONS = 12
+
+    @classmethod
+    def versions(cls, title, artist=None) -> list[SharedSong]:
+        """Todas as versões do catálogo para um nome (artistas e tons diferentes), para a pessoa escolher.
+        Ordem: artista buscado primeiro, depois as com Letra + Cifras, depois as mais buscadas."""
+        normalized_title, normalized_artist = normalize_text(title), normalize_text(artist)
+        if not normalized_title:
+            return []
+        found = []
+        for song in cls._candidates(normalized_title, normalized_artist):
+            ratio = SequenceMatcher(None, normalized_title, song.normalized_title).ratio()
+            if ratio >= cls.VERSION_MIN_TITLE_RATIO or song.normalized_title.startswith(normalized_title):
+                found.append((song, ratio))
+        artist_first = (lambda song: 0 if normalized_artist and same_artist(song.normalized_artist, normalized_artist) else 1)
+        found.sort(key=lambda item: (artist_first(item[0]), -round(item[1], 2), not cls._has_full_sheet(item[0]), -(item[0].times_searched or 0), item[0].created_at.timestamp() if item[0].created_at else 0))
+        return [song for song, _ratio in found[: cls.MAX_VERSIONS]]
 
     @staticmethod
     def _full_sheet_sections(song_data: dict) -> list[dict]:
@@ -309,13 +349,15 @@ class SharedSongService:
         return response.model_dump(mode="json")
 
     @staticmethod
-    def _existing(normalized_title: str, normalized_artist: str | None) -> SharedSong | None:
-        """Mesma música no catálogo: título igual e artista igual ou parecido (evita duplicar ao completar)."""
-        exact = SharedSong.query.filter_by(normalized_title=normalized_title, normalized_artist=normalized_artist).first()
-        if exact is not None:
-            return exact
+    def _existing(normalized_title: str, normalized_artist: str | None, key=None) -> SharedSong | None:
+        """Mesma VERSÃO no catálogo: título igual, artista igual/parecido e mesmo tom.
+        Mesmo nome com outro artista ou outro tom é outra versão e entra no catálogo (decisão 24/10)."""
         same_title = SharedSong.query.filter_by(normalized_title=normalized_title).all()
-        similar = [song for song in same_title if same_artist(song.normalized_artist, normalized_artist)]
+        exact = [song for song in same_title if song.normalized_artist == normalized_artist and same_key(song.song_key, key)]
+        if exact:
+            exact.sort(key=lambda song: (song.song_data or {}).get("fullChordSheet") is not None)
+            return exact[0]
+        similar = [song for song in same_title if same_artist(song.normalized_artist, normalized_artist) and same_key(song.song_key, key)]
         # Prefere a versão que ainda não tem letra: é ela que precisa ser completada.
         similar.sort(key=lambda song: (song.song_data or {}).get("fullChordSheet") is not None)
         return similar[0] if similar else None
@@ -343,7 +385,7 @@ class SharedSongService:
         if summary is None:
             return None
         new_has_full = summary.get("fullChordSheet") is not None
-        existing = cls._existing(normalized_title, normalized_artist)
+        existing = cls._existing(normalized_title, normalized_artist, summary.get("tom"))
         if existing is not None:
             # Atualiza o catálogo apenas se a nova versão é mais completa:
             # tem cifra completa e a versão existente não tem.
@@ -377,7 +419,7 @@ def _keeper_rank(song: SharedSong):
 
 
 def duplicate_groups() -> list[list[SharedSong]]:
-    """Entradas repetidas do catálogo: mesmo título e artista igual/parecido (ou sem artista).
+    """Entradas repetidas do catálogo: mesmo título, artista igual/parecido (ou sem artista) e mesmo tom.
 
     A primeira entrada de cada grupo é a que fica. Entrada sem artista só entra num grupo quando o
     título tem um único artista; com artistas diferentes ela é ambígua e fica de fora.
@@ -402,7 +444,16 @@ def duplicate_groups() -> list[list[SharedSong]]:
             clusters[0].extend(no_artist)
         elif not clusters:
             clusters.append(no_artist)
-        groups.extend(sorted(cluster, key=_keeper_rank) for cluster in clusters if len(cluster) > 1)
+        # Versões com tons diferentes não são duplicatas (decisão 24/10): separa por tom.
+        for cluster in clusters:
+            by_key: list[list[SharedSong]] = []
+            for song in cluster:
+                target = next((group for group in by_key if all(same_key(song.song_key, other.song_key) for other in group)), None)
+                if target is None:
+                    by_key.append([song])
+                else:
+                    target.append(song)
+            groups.extend(sorted(group, key=_keeper_rank) for group in by_key if len(group) > 1)
     return groups
 
 

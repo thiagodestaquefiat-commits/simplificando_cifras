@@ -1367,7 +1367,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
 <script src="js/storage.js?v=3"></script>
 <script src="js/tablature.js?v=2"></script>
-<script src="js/song-model.js?v=7"></script>
+<script src="js/song-model.js?v=8"></script>
 <script src="js/song-artwork.js?v=2"></script>
 <script src="js/sheet-music.js?v=1"></script>
 <script src="js/demo-library.js?v=5"></script>
@@ -1423,7 +1423,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/context-history.js?v=2"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=17"></script>
+<script src="js/ai/harmonic-summary-client.js?v=18"></script>
 <script src="js/summary-organizer.js?v=3"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=21"></script>
 <script src="js/ai/camera-capture.js?v=6"></script>
@@ -3214,11 +3214,26 @@ function schedulePlaylistOnlineSearch(query){clearTimeout(playlistOnlineSearchTi
 async function loadPlaylistOnlineResults(query,version){
   const panel=document.querySelector('[data-playlist-online-results]');if(!panel||!playlistSearchMode)return;
   try{
-    const candidates=await harmonicSummaryClient.searchSources(query,'');if(version!==playlistOnlineSearchVersion||!playlistSearchMode)return;
-    panel.replaceChildren();const label=document.createElement('div');label.className='playlist-search-results-label';label.textContent='Adicionar à playlist';panel.appendChild(label);
+    // Catálogo ROUDY (todas as versões: artistas e tons diferentes) + fontes da web, em paralelo.
+    const {titulo:catalogTitle,artista:catalogArtist}=splitPlaylistQuery(query);
+    const [versions,candidates]=await Promise.all([harmonicSummaryClient.catalogVersions?harmonicSummaryClient.catalogVersions(catalogTitle,catalogArtist).catch(()=>[]):Promise.resolve([]),harmonicSummaryClient.searchSources(query,'')]);if(version!==playlistOnlineSearchVersion||!playlistSearchMode)return;
+    panel.replaceChildren();
+    if(versions.length)renderPlaylistCatalogVersions(panel,versions);
+    const label=document.createElement('div');label.className='playlist-search-results-label';label.textContent=versions.length?'Outras fontes':'Adicionar à playlist';panel.appendChild(label);
     if(!candidates.length){renderPlaylistCatalogSearchRow(panel,query);return}
     candidates.forEach(candidate=>{const row=document.createElement('div');row.className='playlist-search-online-row';const copy=document.createElement('span');copy.className='playlist-search-online-copy';const title=document.createElement('strong');title.textContent=candidate.title||query;const artist=document.createElement('small');artist.textContent=playlistCandidateMetadata(candidate);copy.append(title,artist);const add=document.createElement('button');add.type='button';add.className='playlist-search-add-btn';add.innerHTML=playlistSearchAddIcon();setPlaylistSearchAddState(add,title.textContent,playlistContainsSong(candidate));add.addEventListener('pointerdown',()=>add.classList.add('is-pressed'));['pointerup','pointercancel','pointerleave'].forEach(type=>add.addEventListener(type,()=>add.classList.remove('is-pressed')));add.addEventListener('click',()=>addPlaylistOnlineCandidate(candidate,add,panel));row.append(copy,add);panel.appendChild(row)})
   }catch(error){if(version!==playlistOnlineSearchVersion)return;panel.innerHTML=`<div class="playlist-search-results-label">Adicionar à playlist</div><div class="playlist-search-online-status">${eventEsc(error?.message||'Não foi possível buscar novas músicas agora.')}</div>`}
+}
+// Versões do catálogo ROUDY: mesmo nome com artista ou tom diferente; a pessoa escolhe qual adicionar.
+function playlistCatalogVersionMetadata(item){return [item.artist||'Artista não informado',item.key?`Tom ${item.key}`:'',item.hasFullSheet?'Letra e cifra':'Resumo harmônico'].filter(Boolean).join(' · ')}
+function renderPlaylistCatalogVersions(panel,versions){
+  const label=document.createElement('div');label.className='playlist-search-results-label';label.textContent=versions.length>1?`Catálogo ROUDY · ${versions.length} versões`:'Catálogo ROUDY';panel.appendChild(label);
+  versions.forEach(item=>{const row=document.createElement('div');row.className='playlist-search-online-row';row.dataset.catalogVersion=item.id;const copy=document.createElement('span');copy.className='playlist-search-online-copy';const title=document.createElement('strong');title.textContent=item.title||'Música';const meta=document.createElement('small');meta.textContent=playlistCatalogVersionMetadata(item);copy.append(title,meta);const add=document.createElement('button');add.type='button';add.className='playlist-search-add-btn';add.innerHTML=playlistSearchAddIcon();setPlaylistSearchAddState(add,title.textContent,playlistContainsSong({title:item.title,artist:item.artist||'',key:item.key||''}));add.addEventListener('pointerdown',()=>add.classList.add('is-pressed'));['pointerup','pointercancel','pointerleave'].forEach(type=>add.addEventListener(type,()=>add.classList.remove('is-pressed')));add.addEventListener('click',()=>addPlaylistCatalogVersion(item,add,panel));row.append(copy,add);panel.appendChild(row)});
+}
+async function addPlaylistCatalogVersion(item,button,panel){
+  if(button.classList.contains('is-pending')||button.classList.contains('is-added'))return;const name=item.title||'Música';button.classList.add('is-pending');setPlaylistSearchAddState(button,name,true,true);
+  try{const data=await harmonicSummaryClient.catalogVersion(item.id);const model=harmonicSummaryClient.responseToEditorModel(data,currentInstrument||'guitar',{type:'online',name:'Catálogo ROUDY',url:null});button.classList.remove('is-pending','is-confirming','is-added');setPlaylistSearchAddState(button,name,false);reviewSearchedSong(model)}
+  catch(error){button.classList.remove('is-pending','is-confirming','is-added');button.classList.add('is-reverting');setPlaylistSearchAddState(button,name,false,true);const status=document.createElement('div');status.className='playlist-search-online-status';status.textContent=error?.message||'Não foi possível abrir esta versão.';panel.prepend(status)}
 }
 async function addPlaylistOnlineCandidate(candidate,button,panel){
   if(button.classList.contains('is-pending')||button.classList.contains('is-added'))return;const name=candidate.title||'Música';button.classList.add('is-pending');setPlaylistSearchAddState(button,name,true,true);
