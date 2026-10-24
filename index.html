@@ -3424,13 +3424,16 @@ function sheetAtSongKey(sheet,song,data){
   const shift=detected!=null?detected:keyShiftFromSearch(song,data);
   return shift?{...sheet,content:transposeEventChordText(sheet.content,shift),sections:[]}:sheet;
 }
+// Ajusta a Letra + Cifras para o tom do resumo onde a música foi aberta (biblioteca, evento ou
+// playlist compartilhada). commitInlineSongEdit já salva no lugar certo e zera o deslocamento
+// do evento, para não transpor a cópia duas vezes.
 async function fixSheetKey(id){
-  const eventContext=detailEventContext&&String(currentDetailId)===String(id)?{...detailEventContext}:null;
-  const song=eventContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
+  const inContext=Boolean((detailEventContext||homePlaylists.isCollaborativeContext(detailPlaylistContext))&&currentDetailSongOverride&&String(currentDetailId)===String(id));
+  const song=inContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(id));
   const shift=song?.fullChordSheet?.content?detectSheetShiftToSummary(song.fullChordSheet.content,song):null;
-  if(!shift)return;
+  if(!shift){showToast('⚠️ Não consegui identificar o tom desta cifra. Ajuste pelo editor da música.');return;}
   const fullChordSheet={...song.fullChordSheet,content:transposeEventChordText(song.fullChordSheet.content,shift),sections:[]};
-  if(eventContext){await saveContextEventSong(eventContext,eventSongCopy({...song,fullChordSheet}));showToast('✅ Letra + Cifras ajustada para o tom do resumo.');return;}
+  if(inContext){await commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Letra + Cifras ajustada para o tom do resumo');return;}
   const updated=songRepository.update(musicas,song.id,{fullChordSheet});
   if(!commitSongs(updated.songs))return;
   openDetail(updated.song.id);showToast('✅ Letra + Cifras ajustada para o tom do resumo.');
