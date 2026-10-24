@@ -1448,7 +1448,8 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
  <script src="js/profile-qr.js?v=4"></script>
  <script src="js/notification-center.js?v=5"></script>
 <script src="js/user-playlists.js?v=3"></script>
-<script src="js/home-playlists.js?v=21"></script>
+<script src="js/home-playlists.js?v=22"></script>
+<script src="js/song-share.js?v=1"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/playlist-invites.js?v=3"></script>
 <script src="js/profile-username.js?v=4"></script>
@@ -3649,13 +3650,10 @@ function removeSongFromOptions(){
   const id=songOptionsId,row=document.querySelector(`.music-swipe[data-song-id="${CSS.escape(String(id))}"]`);
   closeSongOptions({restoreFocus:false,onClosed:()=>deleteMusica(id,row)});
 }
+// Compartilhar em outros apps: envia um link da música (cópia fixa com tom e capo atuais).
 function shareSongFromOptions(){
   const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
-  const text=[song.title,song.artist,song.key?`Tom: ${song.key}`:''].filter(Boolean).join(' · ');
-  closeSongOptions({restoreFocus:false,onClosed:async()=>{
-    if(navigator.share){try{await navigator.share({title:song.title,text});return}catch(error){if(error.name==='AbortError')return}}
-    try{await navigator.clipboard.writeText(text);showToast('Música copiada para compartilhar.')}catch(error){prompt('Copie e compartilhe:',text)}
-  }});
+  closeSongOptions({restoreFocus:false,onClosed:()=>songShare.share(song)});
 }
 function shareSongToEventChatFromOptions(){
   const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
@@ -5570,12 +5568,13 @@ function openSD(id,options={}){
     const song=musicas.find(value=>String(value.id)===String(item.songId))||eventSongSource(event,item);if(!song)return'';
     const effective=eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id),variant=eventSongVariant(event,item,appCurrentUser.id);
     const notes=effective.effective.notes||'';
-    const editControl=canShared?`<button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongMenu('${eventEsc(event.id)}','${eventEsc(item.id)}',this)" aria-label="Abrir opções de ${eventEsc(variant.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>`:'';
+    // Menu da música para todos: membros salvam na biblioteca/playlist; mover e remover só o líder.
+    const editControl=`<button type="button" class="event-song-edit" onclick="event.stopPropagation();openEventSongMenu('${eventEsc(event.id)}','${eventEsc(item.id)}',this)" aria-label="Abrir opções de ${eventEsc(variant.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>`;
     const officialKey=effective.effective.key||variant.originalKey||variant.key||'—',officialCapo=effective.effective.capo||variant.capo||'—';
     const sharedKey=eventSharedKey(item,song);
     const keyControl=canShared?`<div class="event-official-key-control" data-item-id="${eventEsc(item.id)}" role="group" aria-label="Tom oficial de ${eventEsc(variant.title)}" onclick="event.stopPropagation()"><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',-1)" aria-label="Descer tom oficial de ${eventEsc(variant.title)}" ${sharedKey?'':'disabled'}>−</button><output aria-live="polite" title="Tom oficial">${eventEsc(sharedKey||'—')}</output><button type="button" onclick="event.stopPropagation();changeEventOfficialKey('${eventEsc(event.id)}','${eventEsc(item.id)}',1)" aria-label="Subir tom oficial de ${eventEsc(variant.title)}" ${sharedKey?'':'disabled'}>+</button></div>`:'';
     const meta=canShared?(officialCapo&&officialCapo!=='—'&&officialCapo!=='0'?`Capo ${eventEsc(officialCapo)}`:''):`Tom ${eventEsc(officialKey)} · Capo ${eventEsc(officialCapo)}`;
-    const actions=canShared?`<div class="event-repertoire-actions">${keyControl}${editControl}</div>`:'';
+    const actions=`<div class="event-repertoire-actions">${canShared?keyControl:''}${editControl}</div>`;
     return `<div class="sd-row event-repertoire-row" data-repertoire-item-id="${eventEsc(item.id)}" style="cursor:pointer;" onclick="openDetailFromEventItem(${attrJs(event.id)},${attrJs(item.id)})"><div class="event-repertoire-copy"><div class="event-repertoire-title">${eventEsc(variant.title)}</div>${meta?`<div class="event-repertoire-meta">${meta}</div>`:''}${notes?`<div class="event-song-note">${eventEsc(notes)}</div>`:''}</div>${actions}</div>`;
   }).join('');
   const eventIso=eventDateISO(event.date),eventWeekday=eventIso?new Intl.DateTimeFormat('pt-BR',{weekday:'long'}).format(new Date(`${eventIso}T12:00:00`)):'';
@@ -5687,7 +5686,7 @@ function ensureEventSongMenuLayer(){let layer=document.getElementById('event-son
 function openEventSongMenu(eventId,itemId,trigger){
   const event=findEvent(eventId),item=event?.repertoire.find(value=>String(value.id)===String(itemId)),song=item&&eventSongSource(event,item);if(!event||!item||!song)return;
   const effective=eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id).effective,canBand=eventModel.canEditShared(event,eventPermissionActor(event).id),title=effective.title||song.title||'Música',key=effective.key||'—',capo=effective.capo||'—',layer=ensureEventSongMenuLayer();eventSongMenuState={eventId:event.id,itemId:item.id,trigger:trigger||document.activeElement};
-  layer.innerHTML=`<section class="event-song-menu-sheet" role="dialog" aria-modal="true" aria-label="Opções de ${eventEsc(title)}" onclick="event.stopPropagation()"><div class="event-song-menu-handle" aria-hidden="true"></div><header><strong>${eventEsc(title)}</strong><span>Tom ${eventEsc(key)} · Capo ${eventEsc(capo)}</span></header><div class="event-song-menu-group"><button type="button" onclick="eventSongMenuOpenStudy()">${eventSongMenuIcon('study')}<span>Ir para a página de estudo</span></button><button type="button" onclick="eventSongMenuEdit('personal')">${eventSongMenuIcon('edit')}<span>Editar na minha versão</span></button><button type="button" ${canBand?'':'disabled'} onclick="eventSongMenuEdit('band')">${eventSongMenuIcon('band')}<span>Editar na versão da banda</span></button><button type="button" onclick="eventSongMenuMove()">${eventSongMenuIcon('move')}<span>Mover na lista</span></button><button type="button" class="event-song-menu-danger" onclick="removeEventSongFromMenu()">${eventSongMenuIcon('trash')}<span>Remover do evento</span></button></div><div class="event-song-menu-group"><button type="button" onclick="eventSongMenuAddPlaylist()">${eventSongMenuIcon('plus')}<span>Adicionar à playlist</span></button><button type="button" onclick="eventSongMenuOpenYoutube()">${eventSongMenuIcon('youtube')}<span>Ver no YouTube</span></button><button type="button" onclick="shareEventSongFromMenu()">${eventSongMenuIcon('share')}<span>Enviar no chat do evento</span></button></div><button type="button" class="event-song-menu-cancel" onclick="closeEventSongMenu()">Cancelar</button></section>`;
+  layer.innerHTML=`<section class="event-song-menu-sheet" role="dialog" aria-modal="true" aria-label="Opções de ${eventEsc(title)}" onclick="event.stopPropagation()"><div class="event-song-menu-handle" aria-hidden="true"></div><header><strong>${eventEsc(title)}</strong><span>Tom ${eventEsc(key)} · Capo ${eventEsc(capo)}</span></header><div class="event-song-menu-group"><button type="button" onclick="eventSongMenuOpenStudy()">${eventSongMenuIcon('study')}<span>Ir para a página de estudo</span></button><button type="button" onclick="eventSongMenuEdit('personal')">${eventSongMenuIcon('edit')}<span>Editar na minha versão</span></button><button type="button" ${canBand?'':'disabled'} onclick="eventSongMenuEdit('band')">${eventSongMenuIcon('band')}<span>Editar na versão da banda</span></button>${canBand?`<button type="button" onclick="eventSongMenuMove()">${eventSongMenuIcon('move')}<span>Mover na lista</span></button>`:''}${canBand?`<button type="button" class="event-song-menu-danger" onclick="removeEventSongFromMenu()">${eventSongMenuIcon('trash')}<span>Remover do evento</span></button>`:''}</div><div class="event-song-menu-group"><button type="button" onclick="eventSongMenuAddPlaylist()">${eventSongMenuIcon('plus')}<span>Adicionar à playlist</span></button><button type="button" onclick="eventSongMenuOpenYoutube()">${eventSongMenuIcon('youtube')}<span>Ver no YouTube</span></button><button type="button" onclick="shareEventSongFromMenu()">${eventSongMenuIcon('share')}<span>Enviar no chat do evento</span></button></div><button type="button" class="event-song-menu-cancel" onclick="closeEventSongMenu()">Cancelar</button></section>`;
   layer.setAttribute('aria-hidden','false');requestAnimationFrame(()=>layer.classList.add('is-open'));
 }
 function closeEventSongMenu(options={}){const layer=document.getElementById('event-song-menu-layer'),state=eventSongMenuState;if(!layer)return;layer.classList.remove('is-open');layer.setAttribute('aria-hidden','true');if(options.restoreFocus!==false)state?.trigger?.focus?.({preventScroll:true});setTimeout(()=>{if(eventSongMenuState===state)eventSongMenuState=null;},260);}
@@ -6114,7 +6113,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>try{homePlaylists.setView('home',{keepScroll:true});homePlaylists.checkSharedLink();userPlaylists.subscribe(()=>{if(homePlaylists.view==='home')homePlaylists.renderHome();});}catch(error){console.error(error);}</script>
+<script>try{homePlaylists.setView('home',{keepScroll:true});homePlaylists.checkSharedLink();songShare.checkLink();userPlaylists.subscribe(()=>{if(homePlaylists.view==='home')homePlaylists.renderHome();});}catch(error){console.error(error);}</script>
   <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
 </body>

@@ -662,29 +662,15 @@
     global.showAddSongEventSheet(itemVariant(song, item), trigger, "repertoire");
   }
 
+  // Compartilhar música da playlist: link com a cópia no tom desta playlist.
   async function shareItem(itemId) {
     const item = playlistItem(itemId);
     const song = item && itemSong(item);
     if (!song) return;
-    const variant = itemVariant(song, item);
-    const key = itemKey(song, item);
-    const text = [variant.title, variant.artist, key ? `Tom: ${key}` : ""].filter(Boolean).join(" · ");
     global.closeEventAdminSheet();
-    if (global.navigator.share) {
-      try {
-        await global.navigator.share({ title: variant.title, text });
-        return;
-      } catch (error) {
-        if (error && error.name === "AbortError") return;
-      }
-    }
-    try {
-      await global.navigator.clipboard.writeText(text);
-      toast("Música copiada para compartilhar.");
-    } catch (_error) {
-      global.appPrompt("Copie e compartilhe:", text);
-    }
+    return global.songShare.share(song, itemPlayback(song, item));
   }
+
 
   function moveItem(itemId, direction) {
     global.userPlaylists.moveItem(owner(), currentPlaylistId, itemId, direction);
