@@ -126,6 +126,7 @@
   }
 
   async function syncOnce() {
+    if (playlists()?.ready) await playlists().ready; // espera as playlists do aparelho carregarem
     const acc = account(), owner = ownerId();
     if (!acc || !token() || !playlists() || global.navigator.onLine === false || owner === "local") return;
     const guard = () => { if (account() !== acc || ownerId() !== owner) throw new Error("conta_alterada"); };
