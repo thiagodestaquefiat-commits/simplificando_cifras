@@ -38,13 +38,34 @@ assert.equal(copy.resolve(action('ENTER_STAGE_MODE', { fingerprint: 'stage:not-r
 const notReady = copy.resolve(action('START_PREPARATION', { fingerprint: 'not-ready', evidence: { pendingCount: 2, eventPhase: 'TODAY' } }), { events });
 assert.doesNotMatch(notReady.text, /Tudo preparado|Repertório inteiro revisado|ROUDY oficialmente sem assunto|Tudo certo por aqui/);
 
-let keyHumor = null;
-for (let index = 0; index < 100 && !keyHumor; index += 1) {
+const eventChange = copy.resolve(action('CHECK_EVENT_CHANGES', { fingerprint: 'change:event', evidence: { changeCount: 1, changeTypes: ['KEY_CHANGED'] } }), { events });
+assert.equal(eventChange.actionLabel, 'Conferir alteração');
+assert.match(eventChange.text, /tom|Culto de Domingo/i);
+const continuation = copy.resolve(action('CONTINUE_STUDY', { repertoireItemId: 'item-1', fingerprint: 'continue:song' }), { events });
+assert.match(continuation.text, /A Alegria/);
+assert.equal(continuation.actionLabel, 'Continuar estudando');
+const recognition = copy.resolve(action('RECOGNIZE_PREPARATION', { fingerprint: 'recognition', evidence: { readyCount: 1, totalCount: 1 } }), { events });
+assert.match(recognition.text, /revisado|preparação/i);
+const upcoming = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'upcoming', evidence: { eventMoment: 'THREE_DAYS', daysUntil: 3, repertoireCount: 2 } }), { events });
+assert.match(upcoming.text, /3 dias/);
+assert.equal(upcoming.editorialFamily, 'threeDaysUnknown');
+assert.ok(['DISCRETO', 'DIVERTIDO'].includes(upcoming.intensity));
+const readyTomorrow = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'upcoming-ready', evidence: { eventMoment: 'TOMORROW', daysUntil: 1, repertoireCount: 2, preparationState: 'READY' } }), { events });
+assert.match(readyTomorrow.text, /revisado|Preparação confirmada/);
+const unknownTomorrow = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'upcoming-unknown', evidence: { eventMoment: 'TOMORROW', daysUntil: 1, repertoireCount: 2, preparationState: 'UNKNOWN' } }), { events });
+assert.doesNotMatch(unknownTomorrow.text, /pendente|não estudou|atrasad/i, 'estado desconhecido não presume falta de estudo');
+const emptyEvent = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'empty-event', evidence: { eventMoment: 'WITHIN_WEEK', daysUntil: 6, repertoireCount: 0 } }), { events });
+assert.match(emptyEvent.text, /ainda não tem repertório/);
+
+let preciseKeyChange = null;
+for (let index = 0; index < 100 && !preciseKeyChange; index += 1) {
   const candidate = copy.resolve(action('REVIEW_CHANGED_SONG', { repertoireItemId: 'item-1', fingerprint: `key-humor-${index}`, destination: { view: 'song' }, evidence: { evidenceIncomplete: false, relevantChanges: [{ type: 'KEY_CHANGED', before: 'F', after: 'G' }] } }), { events });
-  if (/Melhor descobrir aqui/.test(candidate.text)) keyHumor = candidate;
+  if (/F|G/.test(candidate.text)) preciseKeyChange = candidate;
 }
-assert.ok(keyHumor, 'KEY_CHANGED confiável pode usar humor específico');
-assert.match(keyHumor.text, /tom mudou para G/);
+assert.ok(preciseKeyChange, 'KEY_CHANGED confiável informa a alteração musical');
+assert.equal(preciseKeyChange.intensity, 'DISCRETO');
+assert.match(preciseKeyChange.text, /A Alegria|tom/i);
+assert.match(preciseKeyChange.text, /G/);
 const keyWithoutAfter = copy.resolve(action('REVIEW_CHANGED_SONG', { repertoireItemId: 'item-1', fingerprint: 'key-missing-after', evidence: { evidenceIncomplete: false, relevantChanges: [{ type: 'KEY_CHANGED', before: 'F', after: null }] } }), { events });
 assert.doesNotMatch(keyWithoutAfter.text, /Melhor descobrir aqui|mudou de F/);
 
@@ -83,6 +104,11 @@ for (let index = 0; index < 100 && !alternative; index += 1) {
   if (candidate.variantId !== stableA.variantId) alternative = candidate;
 }
 assert.ok(alternative, 'fingerprints diferentes podem escolher variantes diferentes');
+
+const firstContinuation = copy.resolve(action('CONTINUE_STUDY', { repertoireItemId: 'item-1', fingerprint: 'editorial-1' }), { events });
+const secondContinuation = copy.resolve(action('CONTINUE_STUDY', { repertoireItemId: 'item-1', fingerprint: 'editorial-2' }), { events, history: [{ presentedAt: '2026-10-05T12:00:00Z', variantId: firstContinuation.variantId, editorialStructure: firstContinuation.editorialStructure }] });
+assert.notEqual(secondContinuation.variantId, firstContinuation.variantId, 'histórico editorial evita repetir a mesma formulação');
+assert.notEqual(secondContinuation.editorialStructure, firstContinuation.editorialStructure, 'histórico editorial varia a estrutura, não só sinônimos');
 
 const incomplete = copy.resolve(action('START_PREPARATION', { eventId: 'missing', fingerprint: 'missing', evidence: {} }), { events });
 assert.doesNotMatch(incomplete.text, /undefined|null|\[object Object\]|0 músicas/);

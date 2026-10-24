@@ -1,7 +1,13 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v588-sheet-key-match";
+const CACHE_NAME = "simplificando-cifras-v618-sheet-key-match";
+// Compatibility marker: simplificando-cifras-v616-organizar-resumos
+// Compatibility marker: simplificando-cifras-v614-search-delete-danger
+// Compatibility marker: simplificando-cifras-v588-sheet-key-match
+// Compatibility marker: simplificando-cifras-v521-organizar-catalogo
+// Compatibility marker: simplificando-cifras-v520-organizar-resumos
+// Compatibility marker: simplificando-cifras-v519-organizar-resumos
 // Compatibility marker: simplificando-cifras-v516-main-integrada
 // Compatibility marker: simplificando-cifras-v515-historico-vocal
 // Compatibility marker: simplificando-cifras-v518-evento-salvar-musica
@@ -36,29 +42,31 @@ const CACHE_NAME = "simplificando-cifras-v588-sheet-key-match";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./js/event-detail-refactor.css?v=65",
+  "./js/event-detail-refactor.css?v=73",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
-  "./css/search-menu.css?v=11",
-  "./css/stage-mode-reference.css?v=17",
-  "./js/search-menu.js?v=5",
+  "./css/search-menu.css?v=15",
+  "./css/stage-mode-reference.css?v=19",
+  "./js/search-menu.js?v=8",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=24",
-  "./js/home-playlists.js?v=17",
-  "./js/user-playlists.js?v=2",
-  "./js/notification-center.js?v=4",
-  "./js/event-model.js?v=7",
+  "./css/home-playlists.css?v=27",
+  "./js/home-playlists.js?v=21",
+  "./js/user-playlists.js?v=3",
+  "./js/notification-center.js?v=5",
+  "./js/playlist-collaboration.js?v=1",
+  "./js/playlist-invites.js?v=3",
+  "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
-  "./js/event-collaboration-client.js?v=18",
+  "./js/event-collaboration-client.js?v=19",
   "./js/event-detail-refactor.css?v=53",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
   "./js/app-auth.js?v=16",
-  "./js/event-qr-scanner.js?v=1",
+  "./js/event-qr-scanner.js?v=2",
   "./js/event-qr-scanner.css?v=1",
   "./js/vendor/jsqr.min.js?v=1",
   "./js/profile-qr.js?v=4",
@@ -139,7 +147,7 @@ const ASSETS = [
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=8",
   "./js/youtube-song-linker.js?v=2",
-  "./js/youtube-player-ui.js?v=22",
+  "./js/youtube-player-ui.js?v=23",
   "./js/spotify-player-ui.js?v=23",
   "./js/youtube-player-ui.js?v=18",
   "./js/youtube-player.js?v=8",
@@ -150,7 +158,7 @@ const ASSETS = [
   "./js/editor/song-format.js?v=12",
   "./js/editor/song-format.js?v=13",
   "./js/event-model.js?v=6",
-  "./js/event-repository.js?v=9",
+  "./js/event-repository.js?v=10",
   "./js/closing-suggestions.js?v=1",
   "./js/event-collaboration-client.js?v=15",
   "./js/smart-scroll.js?v=5",
@@ -281,11 +289,12 @@ const ASSETS = [
   "./js/stage-offline.js?v=1",
   "./js/stage-offline.js?v=2",
   "./js/event-offline.js?v=2",
-  "./js/context-intelligence.js?v=2",
+  "./js/context-intelligence.js?v=4",
   "./js/preparation-receipts.js?v=1",
-  "./js/contextual-copy.js?v=1",
-  "./js/context-delivery.js?v=1",
+  "./js/contextual-copy.js?v=3",
+  "./js/context-delivery.js?v=2",
   "./js/context-acknowledgements.js?v=1",
+  "./js/context-history.js?v=2",
   "./js/study-metronome.js?v=2",
   "./js/study-metronome.js?v=3",
   "./js/study-metronome.js?v=4",
@@ -302,6 +311,9 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=17",
+  "./js/summary-organizer.js?v=1",
+  "./js/summary-organizer.js?v=2",
+  "./js/summary-organizer.js?v=3",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",

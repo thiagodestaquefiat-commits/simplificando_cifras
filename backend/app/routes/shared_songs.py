@@ -133,3 +133,52 @@ def search_shared_songs():
         "source": "shared", "id": song.id, "title": song.title, "artist": song.artist, "key": song.song_key, "capo": song.capo,
         "score": round(match.score, 4), "timesSearched": song.times_searched, "songData": song.song_data,
     }}), 200
+
+
+# TEMPORÁRIO (força-tarefa out/2026): organizar o catálogo compartilhado no padrão ROUDY.
+# Remover estas duas rotas e services/catalog_organizer.py quando o catálogo estiver no padrão.
+_ORGANIZE_PAGE = 200
+_ORGANIZE_APPLY_MAX = 100
+
+
+def require_catalog_admin():
+    if not can_review():
+        subject = g.get("external_subject") or "—"
+        raise ApiError("acesso_negado",
+                       f"Acesso restrito à equipe de revisão. Para liberar, coloque o seu ID ({subject}) em SHARED_SONG_REVIEWER_IDS no Railway.", 403)
+
+
+@blueprint.get("/admin/organizar")
+@authenticated
+def organize_catalog_preview():
+    """Simulação: o que mudaria em cada música do catálogo. Não grava nada."""
+    from ..services import catalog_organizer
+    require_catalog_admin()
+    try:
+        offset = max(0, int(request.args.get("offset", "0")))
+    except ValueError:
+        raise ApiError("entrada_invalida", "Página inválida.", 400)
+    total = db.session.query(SharedSong).count()
+    songs = db.session.query(SharedSong).order_by(SharedSong.created_at, SharedSong.id).offset(offset).limit(_ORGANIZE_PAGE).all()
+    items = [catalog_organizer.plan(song) for song in songs]
+    return jsonify({"total": total, "offset": offset, "hasMore": offset + len(songs) < total, "items": items})
+
+
+@blueprint.post("/admin/organizar")
+@authenticated
+def organize_catalog_apply():
+    """Grava o resumo no padrão nas músicas escolhidas (recalcula aqui; não confia no que o app mandar)."""
+    from ..services import catalog_organizer
+    require_catalog_admin()
+    data = request.get_json(silent=True)
+    ids = data.get("ids") if isinstance(data, dict) else None
+    if not isinstance(ids, list) or not ids or len(ids) > _ORGANIZE_APPLY_MAX or not all(isinstance(value, str) for value in ids):
+        raise ApiError("entrada_invalida", f"Envie de 1 a {_ORGANIZE_APPLY_MAX} músicas por vez.", 400)
+    applied = []
+    for song in db.session.query(SharedSong).filter(SharedSong.id.in_(ids)).all():
+        result = catalog_organizer.apply(song)
+        if result:
+            applied.append(result)
+    db.session.commit()
+    current_app.logger.info("catalog_organizer_batch by=%s pedidas=%d aplicadas=%d", g.current_user.id, len(ids), len(applied))
+    return jsonify({"aplicadas": applied})

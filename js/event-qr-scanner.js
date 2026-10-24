@@ -24,7 +24,9 @@
   }
   function status(message){const target=byId('event-qr-status');if(target)target.textContent=message;}
   async function createDetector(){if(!('BarcodeDetector' in global))throw new Error('Este navegador não oferece leitura de QR Code. Use Buscar ou Compartilhar.');const formats=await global.BarcodeDetector.getSupportedFormats?.();if(formats&&!formats.includes('qr_code'))throw new Error('A leitura de QR Code não é suportada neste dispositivo.');return new global.BarcodeDetector({formats:['qr_code']});}
+  let identityHandler=null;
   async function open(id,options={}){
+    identityHandler=typeof options.onIdentity==='function'?options.onIdentity:null;
     eventId=String(id);inviteRole=String(options.role||'Outra');busy=false;const layer=ensureLayer();layer.hidden=false;global.document.body.classList.add('event-qr-open');status('Aponte a câmera para o QR Code do perfil ROUDY.');
     try{detector=await createDetector();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});const video=byId('event-qr-video');video.srcObject=stream;await video.play();configureTorch();scanLoop();}
     catch(error){status(error?.name==='NotAllowedError'?'A câmera não foi autorizada. Libere o acesso ou escolha uma imagem.':error.message||'Não foi possível iniciar a câmera.');}
@@ -34,7 +36,7 @@
   async function scanLoop(time=0){if(!stream||busy)return;frame=requestAnimationFrame(scanLoop);if(time-lastScan<220)return;lastScan=time;const video=byId('event-qr-video');if(!video||video.readyState<2)return;try{const codes=await detector.detect(video);if(codes[0]?.rawValue)await handle(codes[0].rawValue);}catch(_error){}}
   async function handle(raw){
     if(busy)return;const identity=extractIdentity(raw);if(!identity){status('Este QR Code não contém um perfil ROUDY válido.');return;}busy=true;status('Perfil encontrado. Preparando convite…');
-    try{const user=await global.eventUserInvites.inviteScanned(eventId,identity,inviteRole);close();global.showToast?.(`Convite enviado para ${user.name}.`);}
+    try{const user=identityHandler?await identityHandler(identity):await global.eventUserInvites.inviteScanned(eventId,identity,inviteRole);close();global.showToast?.(`Convite enviado para ${user.name}.`);}
     catch(error){busy=false;status(error?.message||'Não foi possível convidar este perfil.');scanLoop();}
   }
   function configureTorch(){const button=byId('event-qr-torch'),track=stream?.getVideoTracks?.()[0],supported=Boolean(track?.getCapabilities?.().torch);if(button)button.disabled=!supported;}

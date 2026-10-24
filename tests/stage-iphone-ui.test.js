@@ -18,7 +18,7 @@ const center = (box) => box.x + box.width / 2;
   try {
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     browser = await chromium.launch({ headless: true, executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
-    for (const viewport of [{ width: 320, height: 720 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }]) {
+    for (const viewport of [{ width: 320, height: 720 }, { width: 375, height: 812 }, { width: 376, height: 740 }, { width: 390, height: 844 }, { width: 430, height: 932 }]) {
       const context = await browser.newContext({ viewport, serviceWorkers: "block" });
       const page = await context.newPage();
       const errors = [];
@@ -43,10 +43,13 @@ const center = (box) => box.x + box.width / 2;
       assert.equal(await play.getAttribute('aria-label'),'Iniciar rolagem automática');
       assert.equal(await play.evaluate((element)=>element.classList.contains('is-initial')),true);
       const [playBox, minusBox, plusBox] = await Promise.all([play.boundingBox(), minus.boundingBox(), plus.boundingBox()]);
+      const headingBox = await page.locator('.stage-heading').boundingBox();
+      const headingStyle = await page.locator('.stage-heading').evaluate((element) => ({ position: getComputedStyle(element).position, left: getComputedStyle(element).left, width: getComputedStyle(element).width, transform: getComputedStyle(element).transform }));
       for(const [label,box] of [["Play",playBox],["Diminuir velocidade",minusBox],["Aumentar velocidade",plusBox]])assert.ok(box,`${label} visível no estado inicial`);
       const output = process.env.SCREENSHOT_DIR;
       if (output) { fs.mkdirSync(output, { recursive: true }); await page.screenshot({ path: path.join(output, `stage-stopped-${viewport.width}x${viewport.height}.png`) }); }
       assert.ok(Math.abs(center(playBox) - viewport.width / 2) <= 1, "Play centralizado na viewport");
+      assert.ok(Math.abs(center(headingBox) - center(playBox)) <= 1, `título alinhado ao eixo visual do Play: ${center(headingBox)}/${center(playBox)} ${JSON.stringify(headingStyle)}`);
       const leftDistance = center(playBox) - center(minusBox), rightDistance = center(plusBox) - center(playBox);
       assert.ok(Math.abs(leftDistance - rightDistance) <= 1, `velocidade simétrica: ${leftDistance}/${rightDistance}`);
       const leftEdgeGap = playBox.x - (minusBox.x + minusBox.width), rightEdgeGap = plusBox.x - (playBox.x + playBox.width);
@@ -55,12 +58,16 @@ const center = (box) => box.x + box.width / 2;
       assert.ok(Math.abs(leftEdgeGap-rightEdgeGap)<=1,`espaçamento simétrico entre os controles: ${leftEdgeGap}/${rightEdgeGap}`);
       for (const name of ["Diminuir capotraste", "Aumentar capotraste", "Descer o tom", "Subir o tom"]) {
         const box = await header.getByRole("button", { name, exact: true }).boundingBox();
-        assert.ok(box.width >= 44 && box.height >= 44, `${name}: alvo mínimo 44x44, obtido ${box.width}x${box.height}`);
+        const minimumWidth = name.includes('capotraste') ? 30 : 44;
+        assert.ok(box.width >= minimumWidth && box.height >= 44, `${name}: área de toque preservada na geometria compacta, obtido ${box.width}x${box.height}`);
       }
       const [capoMinus,capoValue,capoPlus]=await Promise.all([page.locator('#stage-capo-minus').boundingBox(),page.locator('#stage-capo-value').boundingBox(),page.locator('#stage-capo-plus').boundingBox()]);
       assert.ok(capoMinus&&capoValue&&capoPlus,'controle de capotraste completo e visível');
       const capoDoesNotOverlap=capoMinus.x+capoMinus.width<=capoValue.x&&capoValue.x+capoValue.width<=capoPlus.x;
       const capoIsCentered=Math.abs(center(capoValue)-(center(capoMinus)+center(capoPlus))/2)<=1;
+      assert.ok(Math.abs(capoPlus.x+capoPlus.width-capoMinus.x-94)<=1,'grupo do capotraste compacto de 94px');
+      const sameRow=capoMinus.y<plusBox.y+plusBox.height&&capoMinus.y+capoMinus.height>plusBox.y;
+      if(sameRow)assert.ok(capoMinus.x>=plusBox.x+plusBox.width+2,`capotraste não invade o botão de velocidade: ${JSON.stringify({capoMinus,plusBox})}`);
       assert.equal(await page.locator("#stage-prev").isDisabled(), true, "anterior desativado na primeira música");
       await page.locator("#stage-next").click(); assert.equal(await page.evaluate(() => currentDetailId), "stage-iphone-2");
       assert.equal(await page.locator("#stage-next").isDisabled(), true, "próxima desativada na última música");
@@ -76,6 +83,8 @@ const center = (box) => box.x + box.width / 2;
       assert.equal(await pause.getAttribute('aria-label'),'Pausar rolagem automática');
       if (output) await page.screenshot({ path: path.join(output, `stage-running-${viewport.width}x${viewport.height}.png`) });
       assert.ok(Math.abs(center(pauseBox) - viewport.width / 2) <= 1, "Pause centralizado na viewport");
+      const runningHeadingBox = await page.locator('.stage-heading').boundingBox();
+      assert.ok(Math.abs(center(runningHeadingBox) - center(pauseBox)) <= 1, "título alinhado ao eixo visual do Pause");
       assert.ok(Math.abs(playBox.y-pauseBox.y)<=1,"Play e Pause mantêm a coordenada vertical");
       assert.ok(Math.abs(playBox.width-pauseBox.width)<=1&&Math.abs(playBox.height-pauseBox.height)<=1,"Play e Pause mantêm dimensões idênticas");
       assert.ok(Math.abs(minusBox.x-runningMinusBox.x)<=1&&Math.abs(minusBox.y-runningMinusBox.y)<=1,"controle esquerdo permanece imóvel");

@@ -7,6 +7,7 @@
     IMMINENT: 'APPROACHING', SOON: 'PREPARATION', PLANNING: 'FAR'
   });
   const APPROACHING_HOURS = 24;
+  const EVENT_MOMENTS = Object.freeze({ PAST: 'PAST', TODAY: 'TODAY', TOMORROW: 'TOMORROW', THREE_DAYS: 'THREE_DAYS', WITHIN_WEEK: 'WITHIN_WEEK', LATER: 'LATER', UNKNOWN: 'UNKNOWN' });
   const PREPARATION_STATES = Object.freeze({
     UNKNOWN: 'UNKNOWN', NOT_STARTED: 'NOT_STARTED', IN_PROGRESS: 'IN_PROGRESS',
     READY: 'READY', NEEDS_REVIEW: 'NEEDS_REVIEW', CHANGED_AFTER_REVIEW: 'CHANGED_AFTER_REVIEW'
@@ -27,18 +28,22 @@
   function sameLocalDay(left, right) {
     return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
   }
+  function inactiveEvent(event) { return /^(cancelled|canceled|cancelado|encerrado|ended|archived|arquivado)$/i.test(text(event && event.status)); }
   function eventPhase(event, nowValue) {
     const now = nowValue instanceof Date ? nowValue : new Date(nowValue || Date.now());
     const startsAt = eventDateTime(event);
-    if (!startsAt || Number.isNaN(now.getTime())) return { phase: EVENT_PHASES.UNKNOWN, startsAt: null, hoursUntil: null };
+    if (!startsAt || Number.isNaN(now.getTime())) return { phase: EVENT_PHASES.UNKNOWN, moment: EVENT_MOMENTS.UNKNOWN, startsAt: null, hoursUntil: null, daysUntil: null };
     const hoursUntil = differenceHours(startsAt, now);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()), eventDay = new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate());
+    const daysUntil = Math.round((eventDay - today) / 864e5);
     let phase;
     if (sameLocalDay(startsAt, now)) phase = EVENT_PHASES.TODAY;
     else if (hoursUntil < 0) phase = EVENT_PHASES.PAST;
     else if (hoursUntil <= APPROACHING_HOURS) phase = EVENT_PHASES.APPROACHING;
     else if (hoursUntil <= 168) phase = EVENT_PHASES.PREPARATION;
     else phase = EVENT_PHASES.FAR;
-    return { phase, startsAt: startsAt.toISOString(), hoursUntil: Math.round(hoursUntil * 10) / 10 };
+    const moment = daysUntil < 0 ? EVENT_MOMENTS.PAST : daysUntil === 0 ? EVENT_MOMENTS.TODAY : daysUntil === 1 ? EVENT_MOMENTS.TOMORROW : daysUntil <= 3 ? EVENT_MOMENTS.THREE_DAYS : daysUntil <= 7 ? EVENT_MOMENTS.WITHIN_WEEK : EVENT_MOMENTS.LATER;
+    return { phase, moment, startsAt: startsAt.toISOString(), hoursUntil: Math.round(hoursUntil * 10) / 10, daysUntil };
   }
 
   function memberFor(event, userId) {
@@ -57,6 +62,7 @@
         songId: value.songId == null ? null : String(value.songId),
         order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
         official: value.shared && typeof value.shared === 'object' ? { ...value.shared } : {},
+        status: text(value.status), accessible: value.accessible !== false,
         personal: personal && typeof personal === 'object' ? { ...personal } : null,
         preparation: value.preparation && typeof value.preparation === 'object' ? { ...value.preparation } : null
       };
@@ -78,6 +84,10 @@
   }
   function changesFor(event) {
     return array(event && (event.timeline || event.changes || event.notifications)).map(change => normalizeChange(change, event.id));
+  }
+  function isOwnChange(change, userId) {
+    const actorId = text(change && change.actorId), currentUserId = text(userId);
+    return Boolean(actorId && currentUserId && actorId === currentUserId);
   }
   function preparationRecords(input, eventId, userId) {
     return array(input && input.preparationRecords).filter(record =>
@@ -110,7 +120,7 @@
         songs = items.map(item => ({ repertoireItemId: item.id, songId: item.songId, state: PREPARATION_STATES.UNKNOWN, relevantChanges: [], evidenceIncomplete: true }));
       } else {
         const bySong = new Map(records.map(record => [text(record.songId), record]));
-        const relevantChanges = changesFor(event);
+        const relevantChanges = changesFor(event).filter(change => !isOwnChange(change, userId));
         songs = items.map(item => {
           const record = bySong.get(item.songId);
           if (!record) return { repertoireItemId: item.id, songId: item.songId, state: PREPARATION_STATES.NOT_STARTED, relevantChanges: [], evidenceIncomplete: false };
@@ -153,7 +163,7 @@
     const user = source.user && typeof source.user === 'object' ? { ...source.user, id: text(source.user.id) } : { id: '' };
     const now = source.now instanceof Date ? source.now : new Date(source.now || Date.now());
     const bands = array(source.bands);
-    const events = array(source.events).filter(event => canAccessEvent(event, user.id)).map(event => {
+    const events = array(source.events).filter(event => canAccessEvent(event, user.id) && !inactiveEvent(event)).map(event => {
       const phase = eventPhase(event, now);
       const assignment = memberFor(event, user.id);
       const repertoire = repertoireItems(event, user.id);
@@ -163,14 +173,16 @@
         id: text(event.id), title: text(event.title), date: text(event.date), time: text(event.time),
         location: text(event.location), band: band ? { id: text(band.id), name: text(band.name) } : null,
         assignment: assignment ? { id: text(assignment.id || assignment.userId), role: text(assignment.role || assignment.musicalRole) } : null,
-        phase: phase.phase, startsAt: phase.startsAt, hoursUntil: phase.hoursUntil,
+        phase: phase.phase, moment: phase.moment, startsAt: phase.startsAt, hoursUntil: phase.hoursUntil, daysUntil: phase.daysUntil,
         repertoire, changes: changesFor(event), preparation,
+        status: text(event.status) || 'active', createdAt: iso(event.createdAt), createdAtReliable: event.createdAtReliable !== false && Boolean(event.createdAt), updatedAt: iso(event.updatedAt),
         version: event.remoteVersion == null ? (event.version == null ? null : Number(event.version)) : Number(event.remoteVersion)
       };
     }).sort((left, right) => (timestamp(left.startsAt) || Infinity) - (timestamp(right.startsAt) || Infinity));
     return {
       version: 1, generatedAt: now.toISOString(), user: { id: user.id, name: text(user.name), role: text(user.role) },
-      events, preferences: source.preferences && typeof source.preferences === 'object' ? { ...source.preferences } : {},
+      events, activity: source.activity && typeof source.activity === 'object' ? { ...source.activity } : null,
+      preferences: source.preferences && typeof source.preferences === 'object' ? { ...source.preferences } : {},
       missingData: [...new Set(events.flatMap(event => event.preparation.missingData))]
     };
   }
@@ -197,6 +209,7 @@
       for (const change of event.changes) {
         if (lastSeenAt && timestamp(change.timestamp) && timestamp(change.timestamp) <= lastSeenAt) continue;
         if (change.affectedUsers.length && !change.affectedUsers.includes(snapshot.user.id)) continue;
+        if (isOwnChange(change, snapshot.user.id)) continue;
         const signalType = CHANGE_SIGNAL[change.type] || 'REPERTOIRE_CHANGED';
         if (signalType === 'METADATA_CHANGED') continue;
         signals.push({
@@ -230,7 +243,9 @@
   }
 
   const PRIORITY_ORDER = Object.freeze({ NONE: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 });
-  const ACTION_ORDER = Object.freeze({ ENTER_STAGE_MODE: 1, START_PREPARATION: 2, CONTINUE_PREPARATION: 2, REVIEW_CHANGED_SONG: 3 });
+  const ACTION_ORDER = Object.freeze({ OPEN_UPCOMING_EVENT: 1, RECOGNIZE_PREPARATION: 2, CONTINUE_STUDY: 3, START_PREPARATION: 4, CONTINUE_PREPARATION: 4, ENTER_STAGE_MODE: 4, CHECK_EVENT_CHANGES: 5, REVIEW_CHANGED_SONG: 6 });
+  const CATEGORY_COOLDOWN_HOURS = Object.freeze({ changes: 6, preparation: 24, continuity: 24, recognition: 168, anticipation: 36, event_day: 4 });
+  const CATEGORY_ORDER = Object.freeze({ anticipation: 1, recognition: 2, continuity: 3, preparation: 4, event_day: 4, changes: 5 });
   function contextualPriority(event, kind) {
     if (!event || [EVENT_PHASES.UNKNOWN, EVENT_PHASES.PAST].includes(event.phase)) return PRIORITIES.NONE;
     if (kind === 'changed') {
@@ -287,16 +302,46 @@
     }
     return [...unique.values()].sort((left, right) => (timestamp(right.changedAt) || 0) - (timestamp(left.changedAt) || 0));
   }
-  function buildCandidates(snapshot, rankedSignals, options) {
+  function candidateAllowed(candidate, options, nowValue) {
     const acknowledged = new Set(array(options && options.acknowledgedFingerprints).map(String));
+    if (acknowledged.has(candidate.fingerprint)) return false;
+    const history = array(options && options.history), record = history.find(value => text(value && value.fingerprint) === candidate.fingerprint);
+    if (record && record.openedAt) return false;
+    const shownAt = timestamp(record && record.presentedAt), now = timestamp(nowValue);
+    const cooldown = CATEGORY_COOLDOWN_HOURS[candidate.category] == null ? 24 : CATEGORY_COOLDOWN_HOURS[candidate.category];
+    if (shownAt && now && now - shownAt < cooldown * 36e5) return false;
+    // Uma mudança nova tem fingerprint própria e é informativa: incentivos recentes do
+    // mesmo evento não podem escondê-la. A mesma mudança continua deduplicada acima.
+    if (candidate.deliveryClass === 'informational') return true;
+    const recentForEvent = history.filter(value => text(value && value.eventId) === text(candidate.eventId) && timestamp(value.presentedAt) && now - timestamp(value.presentedAt) < 12 * 36e5);
+    return !recentForEvent.some(value => (CATEGORY_ORDER[text(value.category)] || 0) >= (CATEGORY_ORDER[candidate.category] || 0));
+  }
+  function repertoireItemAccessible(item) {
+    if (!item) return false;
+    const status = text(item.status || item.official && item.official.status);
+    return item.accessible !== false && (!item.official || item.official.accessible !== false) && !/^(removed|deleted|archived|hidden|inaccessible)$/i.test(status);
+  }
+  function relevantEventChanges(event, nowValue) {
+    const relevant = new Set(['KEY_CHANGED', 'CAPO_CHANGED', 'STRUCTURE_CHANGED', 'PERFORMANCE_NOTES_CHANGED', 'SONG_ADDED', 'SONG_REMOVED', 'REPERTOIRE_CHANGED']);
+    const now = timestamp(nowValue);
+    return array(event.changes).filter(change => {
+      const changedAt = timestamp(change.timestamp);
+      return relevant.has(CHANGE_SIGNAL[change.type] || change.type) && (!changedAt || !now || now - changedAt <= 14 * 864e5);
+    });
+  }
+  function buildCandidates(snapshot, rankedSignals, options) {
     const candidates = [];
     for (const event of snapshot.events) {
       if ([EVENT_PHASES.PAST, EVENT_PHASES.UNKNOWN].includes(event.phase)) continue;
-      for (const song of array(event.preparation.songs).filter(value => [PREPARATION_STATES.CHANGED_AFTER_REVIEW, PREPARATION_STATES.NEEDS_REVIEW].includes(value.state))) {
+      for (const song of array(event.preparation.songs).filter(value => {
+        if (![PREPARATION_STATES.CHANGED_AFTER_REVIEW, PREPARATION_STATES.NEEDS_REVIEW].includes(value.state)) return false;
+        const changes = array(value.relevantChanges);
+        return !changes.length || changes.some(change => !isOwnChange(change, snapshot.user.id));
+      })) {
         const priority = contextualPriority(event, 'changed');
         const relevantTypes = array(song.relevantChanges).map(change => text(change.type || change.changeType)).filter(Boolean);
         const candidate = {
-          actionType: 'REVIEW_CHANGED_SONG', priority, titleKey: 'nba.reviewChangedSong', reasonCode: relevantTypes[0] || 'REVISION_CHANGED_AFTER_REVIEW',
+          actionType: 'REVIEW_CHANGED_SONG', category: 'changes', deliveryClass: 'informational', priority, titleKey: 'nba.reviewChangedSong', reasonCode: relevantTypes[0] || 'REVISION_CHANGED_AFTER_REVIEW',
           destination: { view: 'song', eventId: event.id, songId: song.songId, repertoireItemId: song.repertoireItemId },
           eventId: event.id, songId: song.songId, repertoireItemId: song.repertoireItemId,
           evidence: { previousState: PREPARATION_STATES.READY, currentState: song.state, reviewedAt: song.reviewedAt || null, reviewedRevision: song.reviewedRevision || null, currentRevision: song.currentRevision || null, relevantChanges: song.relevantChanges, evidenceIncomplete: song.evidenceIncomplete, eventPhase: event.phase, hoursUntil: event.hoursUntil },
@@ -304,7 +349,24 @@
           fingerprint: fingerprint([snapshot.user.id, event.id, 'REVIEW_CHANGED_SONG', song.repertoireItemId, song.currentRevision]),
           because: ['song-was-explicitly-reviewed', 'current-revision-differs', `event-phase-${event.phase.toLowerCase()}`, 'action-has-valid-song-destination']
         };
-        if (!acknowledged.has(candidate.fingerprint)) candidates.push(candidate);
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+      }
+      const changes = relevantEventChanges(event, snapshot.generatedAt).filter(change => {
+        if (isOwnChange(change, snapshot.user.id)) return false;
+        if (!change.songId) return true;
+        const song = array(event.preparation.songs).find(value => value.songId === change.songId);
+        return !song || song.state !== PREPARATION_STATES.READY;
+      }), latestChange = changes.slice().sort((left, right) => (timestamp(right.timestamp) || 0) - (timestamp(left.timestamp) || 0))[0];
+      if (latestChange && !array(event.preparation.songs).some(song => [PREPARATION_STATES.CHANGED_AFTER_REVIEW, PREPARATION_STATES.NEEDS_REVIEW].includes(song.state) && (song.songId === latestChange.songId || !latestChange.songId))) {
+        const changeTypes = [...new Set(changes.map(change => CHANGE_SIGNAL[change.type] || change.type))].sort();
+        const candidate = {
+          actionType: 'CHECK_EVENT_CHANGES', category: 'changes', deliveryClass: 'informational', priority: contextualPriority(event, 'changed'), titleKey: 'nba.checkEventChanges', reasonCode: changeTypes[0] || 'REPERTOIRE_CHANGED',
+          destination: { view: 'event_changes', eventId: event.id }, eventId: event.id, songId: latestChange.songId || null, repertoireItemId: latestChange.repertoireItemId || null,
+          evidence: { eventPhase: event.phase, eventMoment: event.moment, hoursUntil: event.hoursUntil, changeCount: changes.length, changeTypes, latestChange, evidenceIncomplete: !latestChange.timestamp },
+          expiresAt: recommendationExpiration(event), fingerprint: fingerprint([snapshot.user.id, event.id, 'CHECK_EVENT_CHANGES', changes.map(change => change.id || `${change.type}-${change.timestamp}`).sort().join(',')]),
+          because: ['important-event-change', `event-phase-${event.phase.toLowerCase()}`, 'action-opens-event-changes']
+        };
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
       }
       const counts = event.preparation.counts || {};
       if (counts.pending > 0) {
@@ -312,30 +374,63 @@
         const revisions = array(event.preparation.songs).filter(song => song.state === PREPARATION_STATES.NOT_STARTED).map(song => song.currentRevision || song.repertoireItemId).sort();
         const relevantChanges = pendingSongAdditions(event);
         const candidate = {
-          actionType, priority: contextualPriority(event, 'pending'), titleKey: actionType === 'START_PREPARATION' ? 'nba.startPreparation' : 'nba.continuePreparation', reasonCode: 'PREPARATION_PENDING',
+          actionType, category: 'preparation', deliveryClass: 'optional', priority: contextualPriority(event, 'pending'), titleKey: actionType === 'START_PREPARATION' ? 'nba.startPreparation' : 'nba.continuePreparation', reasonCode: 'PREPARATION_PENDING',
           destination: { view: 'event', eventId: event.id }, eventId: event.id, songId: null, repertoireItemId: null,
-          evidence: { pendingCount: counts.pending, readyCount: counts.ready, changedCount: counts.changed, totalCount: counts.total, eventPhase: event.phase, hoursUntil: event.hoursUntil, relevantChanges, evidenceIncomplete: relevantChanges.some(change => !change.changedAt || !(change.songId || change.repertoireItemId)) },
+          evidence: { preparationState: event.preparation.state, pendingCount: counts.pending, readyCount: counts.ready, changedCount: counts.changed, totalCount: counts.total, eventPhase: event.phase, eventMoment: event.moment, hoursUntil: event.hoursUntil, relevantChanges, evidenceIncomplete: relevantChanges.some(change => !change.changedAt || !(change.songId || change.repertoireItemId)) },
           expiresAt: recommendationExpiration(event), fingerprint: fingerprint([snapshot.user.id, event.id, actionType, revisions.join(',')]),
           because: ['explicit-receipts-missing', 'pending-songs-aggregated', `event-phase-${event.phase.toLowerCase()}`, 'action-has-valid-event-destination']
         };
-        if (!acknowledged.has(candidate.fingerprint)) candidates.push(candidate);
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
       }
       if (event.preparation.state === PREPARATION_STATES.READY && event.phase === EVENT_PHASES.TODAY && snapshot.preferences.stageModeAvailable !== false) {
         const candidate = {
-          actionType: 'ENTER_STAGE_MODE', priority: contextualPriority(event, 'stage'), titleKey: 'nba.enterStageMode', reasonCode: 'READY_TODAY',
+          actionType: 'ENTER_STAGE_MODE', category: 'event_day', deliveryClass: 'informational', priority: contextualPriority(event, 'stage'), titleKey: 'nba.enterStageMode', reasonCode: 'READY_TODAY',
           destination: { view: 'stage', eventId: event.id }, eventId: event.id, songId: null, repertoireItemId: null,
           evidence: { state: event.preparation.state, eventPhase: event.phase, liveInferred: false }, expiresAt: recommendationExpiration(event),
           fingerprint: fingerprint([snapshot.user.id, event.id, 'ENTER_STAGE_MODE', event.version || event.startsAt]),
           because: ['all-songs-ready', 'event-is-today', 'stage-mode-is-available', 'live-was-not-inferred']
         };
-        if (!acknowledged.has(candidate.fingerprint)) candidates.push(candidate);
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+      }
+      if (event.preparation.counts.total > 0 && event.preparation.state === PREPARATION_STATES.READY && event.phase !== EVENT_PHASES.TODAY && [EVENT_MOMENTS.TOMORROW, EVENT_MOMENTS.THREE_DAYS, EVENT_MOMENTS.WITHIN_WEEK].includes(event.moment)) {
+        const candidate = {
+          actionType: 'RECOGNIZE_PREPARATION', category: 'recognition', deliveryClass: 'optional', priority: PRIORITIES.MEDIUM, titleKey: 'nba.recognizePreparation', reasonCode: 'PREPARATION_READY',
+          destination: { view: 'event', eventId: event.id }, eventId: event.id, songId: null, repertoireItemId: null,
+          evidence: { eventPhase: event.phase, eventMoment: event.moment, readyCount: event.preparation.counts.ready, totalCount: event.preparation.counts.total, hoursUntil: event.hoursUntil },
+          expiresAt: recommendationExpiration(event), fingerprint: fingerprint([snapshot.user.id, event.id, 'RECOGNIZE_PREPARATION', event.preparation.counts.ready, event.version || event.startsAt]),
+          because: ['all-songs-explicitly-ready', `event-moment-${event.moment.toLowerCase()}`, 'progress-is-measurable']
+        };
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+      }
+      const activity = snapshot.activity, activityAt = timestamp(activity && activity.openedAt), generatedAt = timestamp(snapshot.generatedAt);
+      if (activity && text(activity.eventId) === event.id && activityAt && generatedAt - activityAt >= 0 && generatedAt - activityAt <= 7 * 864e5) {
+        const item = event.repertoire.find(value => value.id === text(activity.repertoireItemId) || value.songId === text(activity.songId));
+        if (repertoireItemAccessible(item)) {
+          const candidate = {
+            actionType: 'CONTINUE_STUDY', category: 'continuity', deliveryClass: 'optional', priority: PRIORITIES.MEDIUM, titleKey: 'nba.continueStudy', reasonCode: 'RECENT_EVENT_SONG',
+            destination: { view: 'song', eventId: event.id, songId: item.songId, repertoireItemId: item.id }, eventId: event.id, songId: item.songId, repertoireItemId: item.id,
+            evidence: { eventPhase: event.phase, eventMoment: event.moment, openedAt: activity.openedAt }, expiresAt: recommendationExpiration(event),
+            fingerprint: fingerprint([snapshot.user.id, event.id, 'CONTINUE_STUDY', item.id, activity.openedAt]), because: ['recent-event-song-activity', 'activity-is-not-treated-as-ready', 'action-resumes-same-song']
+          };
+          if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+        }
+      }
+      if ((event.moment === EVENT_MOMENTS.TODAY && event.preparation.state === PREPARATION_STATES.UNKNOWN) || [EVENT_MOMENTS.TOMORROW, EVENT_MOMENTS.THREE_DAYS, EVENT_MOMENTS.WITHIN_WEEK].includes(event.moment) || (event.createdAtReliable && event.createdAt && timestamp(snapshot.generatedAt) - timestamp(event.createdAt) <= 24 * 36e5 && event.daysUntil >= 0)) {
+        const candidate = {
+          actionType: 'OPEN_UPCOMING_EVENT', category: event.moment === EVENT_MOMENTS.TODAY ? 'event_day' : 'anticipation', deliveryClass: 'optional', priority: event.moment === EVENT_MOMENTS.TODAY ? PRIORITIES.HIGH : PRIORITIES.MEDIUM, titleKey: 'nba.openUpcomingEvent', reasonCode: event.repertoire.length ? 'UPCOMING_EVENT' : 'UPCOMING_EVENT_EMPTY',
+          destination: { view: 'event', eventId: event.id }, eventId: event.id, songId: null, repertoireItemId: null,
+          evidence: { preparationState: event.preparation.state, eventPhase: event.phase, eventMoment: event.moment, hoursUntil: event.hoursUntil, daysUntil: event.daysUntil, repertoireCount: event.repertoire.length, newlyCreated: Boolean(event.createdAtReliable && event.createdAt && timestamp(snapshot.generatedAt) - timestamp(event.createdAt) <= 24 * 36e5) },
+          expiresAt: recommendationExpiration(event), fingerprint: fingerprint([snapshot.user.id, event.id, 'OPEN_UPCOMING_EVENT', event.moment, event.repertoire.length ? 'with-repertoire' : 'empty']),
+          because: ['event-is-upcoming', `event-moment-${event.moment.toLowerCase()}`, event.repertoire.length ? 'repertoire-is-available' : 'repertoire-is-empty']
+        };
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
       }
     }
     const unique = new Map();
     for (const candidate of candidates) if (!unique.has(candidate.fingerprint)) unique.set(candidate.fingerprint, candidate);
     return [...unique.values()].sort((left, right) =>
       PRIORITY_ORDER[right.priority] - PRIORITY_ORDER[left.priority] ||
-      ACTION_ORDER[right.actionType] - ACTION_ORDER[left.actionType] ||
+      (ACTION_ORDER[right.actionType] || 0) - (ACTION_ORDER[left.actionType] || 0) ||
       String(left.eventId).localeCompare(String(right.eventId)) || String(left.repertoireItemId || '').localeCompare(String(right.repertoireItemId || ''))
     );
   }
@@ -378,6 +473,6 @@
   }
 
   global.roudyContextIntelligence = Object.freeze({
-    EVENT_PHASES, PREPARATION_STATES, PRIORITIES, APPROACHING_HOURS, eventPhase, createSnapshot, generateSignals, rankSignals, buildCandidates, nextBestAction, evaluate
+    EVENT_PHASES, EVENT_MOMENTS, PREPARATION_STATES, PRIORITIES, APPROACHING_HOURS, eventPhase, createSnapshot, generateSignals, rankSignals, buildCandidates, nextBestAction, evaluate
   });
 })(typeof window !== 'undefined' ? window : globalThis);

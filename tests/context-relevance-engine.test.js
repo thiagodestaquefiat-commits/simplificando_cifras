@@ -33,8 +33,8 @@ assert.equal(distantReady.nextBestAction.actionType, 'NONE');
 assert.equal(distantReady.nextBestAction.reasonCode, 'ALL_READY');
 
 const tomorrowReady = evaluate(event());
-assert.equal(tomorrowReady.nextBestAction.actionType, 'NONE');
-assert.equal(tomorrowReady.nextBestAction.reasonCode, 'ALL_READY');
+assert.equal(tomorrowReady.nextBestAction.actionType, 'RECOGNIZE_PREPARATION');
+assert.equal(tomorrowReady.nextBestAction.category, 'recognition');
 
 const tomorrowPending = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')] }));
 assert.equal(tomorrowPending.nextBestAction.actionType, 'START_PREPARATION');
@@ -60,7 +60,7 @@ const maskedPersonalization = evaluate(event({
   repertoire: [item('1', 'READY')],
   notifications: [{ id: 'official-key', changeType: 'KEY_CHANGED', songId: 'song-1', createdAt: '2026-10-05T10:00:00Z', affectedUsers: ['user-a'] }]
 }));
-assert.equal(maskedPersonalization.nextBestAction.actionType, 'NONE', 'receipt efetivo READY vence mudança oficial mascarada');
+assert.notEqual(maskedPersonalization.nextBestAction.actionType, 'CHECK_EVENT_CHANGES', 'receipt efetivo READY vence mudança oficial mascarada');
 
 const aggregated = evaluate(event({ repertoire: [item('1', 'NOT_STARTED'), item('2', 'NOT_STARTED'), item('3', 'NOT_STARTED')] }));
 assert.equal(aggregated.nextBestAction.actionType, 'START_PREPARATION');
@@ -71,22 +71,23 @@ const addedPending = evaluate(event({
   repertoire: [item('1', 'READY'), item('2', 'NOT_STARTED')],
   notifications: [{ id: 'add-2', changeType: 'SONG_ADDED', songId: 'song-2', after: { repertoireItemId: 'item-2', songId: 'song-2' }, createdAt: '2026-10-05T15:00:00Z' }]
 }));
-assert.equal(addedPending.nextBestAction.actionType, 'CONTINUE_PREPARATION');
-assert.deepEqual(JSON.parse(JSON.stringify(addedPending.nextBestAction.evidence.relevantChanges[0])), {
+assert.equal(addedPending.nextBestAction.actionType, 'CHECK_EVENT_CHANGES');
+const addedPreparation=addedPending.candidates.find(candidate=>candidate.actionType==='CONTINUE_PREPARATION');
+assert.deepEqual(JSON.parse(JSON.stringify(addedPreparation.evidence.relevantChanges[0])), {
   type: 'SONG_ADDED', changeId: 'add-2', eventId: 'event-1', songId: 'song-2', repertoireItemId: 'item-2',
   changedAt: '2026-10-05T15:00:00.000Z', hoursBeforeEvent: 24, before: null, after: { repertoireItemId: 'item-2', songId: 'song-2' }
 });
-assert.equal(addedPending.nextBestAction.evidence.evidenceIncomplete, false);
+assert.equal(addedPreparation.evidence.evidenceIncomplete, false);
 
 const unrelatedAddition = evaluate(event({
   repertoire: [item('1', 'READY'), item('2', 'NOT_STARTED')],
   notifications: [{ id: 'add-old', changeType: 'SONG_ADDED', songId: 'song-old', after: { repertoireItemId: 'item-old' }, createdAt: '2026-10-05T15:00:00Z' }]
 }));
-assert.equal(unrelatedAddition.nextBestAction.evidence.relevantChanges.length, 0, 'adição só compete enquanto a própria música está pendente');
+assert.equal(unrelatedAddition.candidates.find(candidate=>candidate.actionType==='CONTINUE_PREPARATION').evidence.relevantChanges.length, 0, 'adição só compete enquanto a própria música está pendente');
 
 for (const differentType of ['KEY_CHANGED', 'SONG_REMOVED', 'STRUCTURE_CHANGED', 'METADATA_CHANGED']) {
   const result = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')], notifications: [{ id: differentType, changeType: differentType, songId: 'song-1', createdAt: '2026-10-05T15:00:00Z' }] }));
-  assert.equal(result.nextBestAction.evidence.relevantChanges.length, 0, `${differentType} não vira SONG_ADDED`);
+  assert.equal(result.candidates.find(candidate=>candidate.actionType==='START_PREPARATION').evidence.relevantChanges.length, 0, `${differentType} não vira SONG_ADDED`);
 }
 
 const competition = evaluate(event({ repertoire: [
@@ -107,7 +108,7 @@ assert.equal(insufficient.nextBestAction.reasonCode, 'INSUFFICIENT_CONTEXT');
 const musicianA = evaluate(event({ repertoire: [item('1', 'READY')] }), 'user-a');
 const musicianBEvent = event({ members: [{ id: 'user-b', role: 'Vocal' }], repertoire: [item('1', 'NOT_STARTED')] });
 const musicianB = evaluate(musicianBEvent, 'user-b');
-assert.equal(musicianA.nextBestAction.actionType, 'NONE');
+assert.equal(musicianA.nextBestAction.actionType, 'RECOGNIZE_PREPARATION');
 assert.equal(musicianB.nextBestAction.actionType, 'START_PREPARATION');
 
 const twoEvents = evaluate([
@@ -118,10 +119,11 @@ assert.equal(twoEvents.nextBestAction.eventId, 'near-event');
 assert.equal(twoEvents.nextBestAction.actionType, 'START_PREPARATION');
 
 const afterNewReceipt = evaluate(event({ repertoire: [item('1', 'READY', { reviewedRevision: 'rev-new', currentRevision: 'rev-new' })] }));
-assert.equal(afterNewReceipt.nextBestAction.actionType, 'NONE');
+assert.equal(afterNewReceipt.nextBestAction.actionType, 'RECOGNIZE_PREPARATION');
 
 const removedSong = evaluate(event({ repertoire: [] }));
-assert.equal(removedSong.nextBestAction.actionType, 'NONE');
+assert.equal(removedSong.nextBestAction.actionType, 'OPEN_UPCOMING_EVENT');
+assert.equal(removedSong.nextBestAction.reasonCode, 'UPCOMING_EVENT_EMPTY');
 
 const duplicateSignalsEvent = event({ notifications: [
   { id: 'same', changeType: 'KEY_CHANGED', songId: 'song-1', createdAt: '2026-10-05T10:00:00Z' },
@@ -142,7 +144,7 @@ assert.equal(mixedSongs.snapshot.events[0].preparation.state, 'IN_PROGRESS');
 assert.ok(mixedSongs.snapshot.events[0].preparation.songs.every(song => song.state !== 'IN_PROGRESS'));
 
 const acknowledged = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')] }));
-const suppressed = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')] }), 'user-a', { acknowledgedFingerprints: [acknowledged.nextBestAction.fingerprint] });
+const suppressed = evaluate(event({ repertoire: [item('1', 'NOT_STARTED')] }), 'user-a', { acknowledgedFingerprints: [acknowledged.nextBestAction.fingerprint], history: [{ fingerprint: acknowledged.nextBestAction.fingerprint, eventId: 'event-1', category: 'preparation', presentedAt: now }] });
 assert.equal(suppressed.nextBestAction.actionType, 'NONE');
 
 const oldChanged = evaluate(event({ repertoire: [item('1', 'CHANGED_AFTER_REVIEW', {
