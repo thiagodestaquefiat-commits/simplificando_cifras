@@ -135,6 +135,42 @@ def search_shared_songs():
     }}), 200
 
 
+@blueprint.get("/versions")
+@limiter.limit(_rate_limit)
+@authenticated
+def list_song_versions():
+    """Versões do catálogo para um nome (artistas e tons diferentes), para a pessoa escolher na busca."""
+    title = str(request.args.get("title") or "").strip()[:160]
+    artist = str(request.args.get("artist") or "").strip()[:160] or None
+    if not title:
+        raise ApiError("entrada_invalida", "Informe o título da música.", 400)
+    songs = SharedSongService.versions(title, artist)
+    return jsonify({"versions": [{
+        "id": song.id, "title": song.title, "artist": song.artist, "key": song.song_key, "capo": song.capo,
+        "hasFullSheet": SharedSongService._has_full_sheet(song), "timesSearched": song.times_searched or 0,
+    } for song in songs]}), 200
+
+
+@blueprint.get("/versions/<song_id>")
+@limiter.limit(_rate_limit)
+@authenticated
+def get_song_version(song_id):
+    """A versão escolhida, no mesmo formato da busca (/api/resumo-harmonico), sem custo de IA."""
+    from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
+    from ..services.harmonic_normalizer import ensure_client_chords
+    from ..services.ia_service import roudy_summary
+    from ..services.shared_songs_service import CATALOG_FULL_SHEET_SOURCES
+    song = db.session.get(SharedSong, str(song_id)[:36])
+    if song is None:
+        raise ApiError("nao_encontrado", "Versão não encontrada no catálogo.", 404)
+    shared = ResumoHarmonicoResponse.model_validate(song.song_data)
+    if shared.fullChordSheet and shared.fullChordSheet.source not in CATALOG_FULL_SHEET_SOURCES:
+        shared.fullChordSheet = None
+    song.times_searched = (song.times_searched or 0) + 1
+    db.session.commit()
+    return jsonify(ensure_client_chords(roudy_summary(shared)).model_dump(mode="json")), 200
+
+
 # TEMPORÁRIO (força-tarefa out/2026): organizar o catálogo compartilhado no padrão ROUDY.
 # Remover estas duas rotas e services/catalog_organizer.py quando o catálogo estiver no padrão.
 _ORGANIZE_PAGE = 200

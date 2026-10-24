@@ -150,7 +150,19 @@
 
     const leftArtist = normalizeForIdentity(left && left.artist);
     const rightArtist = normalizeForIdentity(right && right.artist);
-    return leftArtist === rightArtist;
+    if (leftArtist !== rightArtist) return false;
+    // Versões (decisão 24/10/2026): mesmo título e artista em outro tom é outra versão.
+    const leftKey = keyIdentity(left && (left.originalKey || left.key));
+    const rightKey = keyIdentity(right && (right.originalKey || right.key));
+    return !leftKey || !rightKey || leftKey === rightKey;
+  }
+
+  const NOTE_NUMBERS = { C: 0, "C#": 1, DB: 1, D: 2, "D#": 3, EB: 3, E: 4, F: 5, "F#": 6, GB: 6, G: 7, "G#": 8, AB: 8, A: 9, "A#": 10, BB: 10, B: 11 };
+  function keyIdentity(value) {
+    const match = String(value || "").trim().replace(/♯/g, "#").replace(/♭/g, "b").match(/^([A-Ga-g])([#b]?)(m(?!aj))?/);
+    if (!match) return null;
+    const number = NOTE_NUMBERS[(match[1] + match[2]).toUpperCase()];
+    return number == null ? null : number + (match[3] ? "m" : "");
   }
 
   function findDuplicate(collection, candidate) {
