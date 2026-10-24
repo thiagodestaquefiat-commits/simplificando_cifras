@@ -596,7 +596,17 @@
 
   function menuSheet(title, actions) {
     eventAdminSheetState = { type: "field" };
-    global.showEventAdminSheet(`${global.eventAdminHeader(title)}<div class="home-playlist-menu">${actions.map(([label, action, danger]) => `<button type="button" class="${danger ? "is-danger" : ""}" onclick="${action}">${esc(label)}</button>`).join("")}</div>`, title);
+    global.showEventAdminSheet(`${global.eventAdminHeader(title)}<div class="home-playlist-menu">${actions.map(([label, action, danger, icon]) => `<button type="button" class="${danger ? "is-danger " : ""}${icon ? "has-icon" : ""}" onclick="${action}">${icon || ""}<span>${esc(label)}</span></button>`).join("")}</div>`, title);
+  }
+
+  function itemMenuIcon(type) {
+    const paths = {
+      repertoire: '<path d="M4 6h10M4 11h10M4 16h7M18 13v8M14 17h8"/>',
+      share: '<path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"/>',
+      remove: '<path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/>',
+      note: '<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'
+    };
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type] || ""}</svg>`;
   }
 
   function playlistMenu() {
@@ -631,10 +641,10 @@
     if (!item) return;
     const song = itemSong(item);
     menuSheet(song ? song.title : "Música", [
-      ["Adicionar ao repertório", `homePlaylists.addItemToRepertoire(${js(item.id)})`],
-      ["Compartilhar", `homePlaylists.shareItem(${js(item.id)})`],
-      ["Remover da playlist", `homePlaylists.removeItem(${js(item.id)})`, true],
-      ["Observação", `homePlaylists.editNotes(${js(item.id)})`]
+      ["Adicionar ao repertório", `homePlaylists.addItemToRepertoire(${js(item.id)})`, false, itemMenuIcon("repertoire")],
+      ["Compartilhar", `homePlaylists.shareItem(${js(item.id)})`, false, itemMenuIcon("share")],
+      ["Remover da playlist", `homePlaylists.removeItem(${js(item.id)})`, true, itemMenuIcon("remove")],
+      ["Observação", `homePlaylists.editNotes(${js(item.id)})`, false, itemMenuIcon("note")]
     ]);
   }
 

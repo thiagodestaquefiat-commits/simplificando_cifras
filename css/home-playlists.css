@@ -107,6 +107,7 @@
 .home-playlist-menu button{min-height:52px;padding:0 6px;border:0;border-bottom:1px solid rgba(255,255,255,.08);background:transparent;color:#f5f5f7;font:600 15px/1.2 Inter,sans-serif;text-align:left;cursor:pointer}
 .home-playlist-menu button:disabled{color:#5d6470}
 .home-playlist-menu button.is-danger{color:#ff6b6b}
+.home-playlist-menu button.has-icon{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:12px}.home-playlist-menu button.has-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .home-playlist-keys{display:flex;max-height:min(62dvh,520px);padding:2px 16px calc(18px + env(safe-area-inset-bottom));overflow-y:auto;flex-direction:column}
 .home-playlist-key-row{display:grid;min-height:66px;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08)}
 .home-playlist-key-row>span{min-width:0}.home-playlist-key-row strong,.home-playlist-key-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.home-playlist-key-row strong{color:#f5f5f7;font-size:14px}.home-playlist-key-row small{margin-top:4px;color:#929299;font-size:11px}
