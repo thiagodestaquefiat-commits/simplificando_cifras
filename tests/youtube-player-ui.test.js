@@ -66,6 +66,9 @@ const server = http.createServer((request, response) => {
 
     await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).click();
     await page.locator("#youtube-iframe-player").waitFor({ state: "visible" });
+    const stageButton = page.locator("#btn-palco");
+    await stageButton.evaluate((node) => { node.hidden = false; });
+    assert.equal(await stageButton.isVisible(), false, "Modo Palco não deve sobrepor o vídeo com o cabeçalho expandido");
     const changeButton = page.getByRole("button", { name: "Escolher outro vídeo" });
     assert.match(await changeButton.innerText(), /Trocar/);
     assert.equal(await changeButton.evaluate((node) => node.parentElement?.classList.contains("youtube-player-actions")), true, "o botão de troca deve ficar no menu retrátil");
@@ -88,6 +91,7 @@ const server = http.createServer((request, response) => {
     const topBefore = await player.evaluate((node) => node.getBoundingClientRect().top);
     await page.locator("#view-detail").evaluate((node) => { node.scrollTop = 700; });
     await page.waitForTimeout(50);
+    assert.equal(await stageButton.isVisible(), true, "Modo Palco deve aparecer quando o cabeçalho compacto estiver ativo");
     const topAfter = await player.evaluate((node) => node.getBoundingClientRect().top);
     assert.ok(topAfter < topBefore - 500, `${topBefore} != ${topAfter}`);
 

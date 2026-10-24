@@ -110,7 +110,7 @@
     const detail = element("view-detail");
     if (detail) {
       detail.style.removeProperty("--video-header-progress");
-      detail.classList.remove("video-study-expanded");
+      detail.classList.remove("video-study-expanded", "video-header-compact");
     }
     resetFloating(container);
   }
@@ -137,6 +137,7 @@
       const revealStart = Math.max(1, playerBottom - 58);
       const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
       detail.style.setProperty("--video-header-progress", progress.toFixed(4));
+      detail.classList.toggle("video-header-compact", progress >= 0.98);
     };
     const onScroll = () => {
       if (!frame) frame = global.requestAnimationFrame(render);
