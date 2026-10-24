@@ -96,6 +96,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.event_shares import blueprint as event_shares_blueprint
     from .routes.shared_playlists import blueprint as shared_playlists_blueprint
     from .routes.playlist_collaboration import blueprint as playlist_collaboration_blueprint
+    from .routes.personal_playlists import blueprint as personal_playlists_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
@@ -111,6 +112,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(event_shares_blueprint)
     app.register_blueprint(shared_playlists_blueprint)
     app.register_blueprint(playlist_collaboration_blueprint)
+    app.register_blueprint(personal_playlists_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

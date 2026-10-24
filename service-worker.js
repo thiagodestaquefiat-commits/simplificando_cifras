@@ -1,9 +1,17 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v617-compartilhar-musica";
+const CACHE_NAME = "simplificando-cifras-v626-compartilhar-musica-versoes";
+// Compatibility marker: simplificando-cifras-v624-sem-texto-privada
+// Compatibility marker: simplificando-cifras-v617-compartilhar-musica
+// Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
+// Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
+// Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
+// Compatibility marker: simplificando-cifras-v619-ajustar-cifra-contexto
+// Compatibility marker: simplificando-cifras-v618-sheet-key-match
 // Compatibility marker: simplificando-cifras-v616-organizar-resumos
 // Compatibility marker: simplificando-cifras-v614-search-delete-danger
+// Compatibility marker: simplificando-cifras-v588-sheet-key-match
 // Compatibility marker: simplificando-cifras-v521-organizar-catalogo
 // Compatibility marker: simplificando-cifras-v520-organizar-resumos
 // Compatibility marker: simplificando-cifras-v519-organizar-resumos
@@ -53,11 +61,12 @@ const ASSETS = [
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
   "./css/home-playlists.css?v=27",
-  "./js/home-playlists.js?v=22",
+  "./js/home-playlists.js?v=24",
   "./js/song-share.js?v=1",
-  "./js/user-playlists.js?v=3",
+  "./js/user-playlists.js?v=6",
   "./js/notification-center.js?v=5",
   "./js/playlist-collaboration.js?v=1",
+  "./js/personal-playlist-sync.js?v=3",
   "./js/playlist-invites.js?v=3",
   "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
@@ -169,7 +178,7 @@ const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
-  "./js/storage.js?v=2",
+  "./js/storage.js?v=3",
   "./js/tablature.js?v=1",
   "./js/song-model.js?v=5",
   "./js/demo-library.js?v=5",

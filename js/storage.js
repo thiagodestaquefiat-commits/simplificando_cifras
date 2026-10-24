@@ -22,6 +22,8 @@
   }
 
   function set(key, value) {
+    // JSON.stringify(undefined) gravaria o texto "undefined" e apagaria o valor anterior.
+    if (value === undefined) { console.error("Gravação ignorada: valor vazio para", key); return false; }
     try {
       global.localStorage.setItem(key, JSON.stringify(value));
       return true;
@@ -45,6 +47,7 @@
 
   // localStorage has no transactions. Restore the previous values if a write fails.
   function setMany(entries) {
+    if (entries.some(([, value]) => value === undefined)) { console.error("Gravação ignorada: valor vazio."); return false; }
     const before = new Map();
     try {
       entries.forEach(([key]) => before.set(key, global.localStorage.getItem(key)));
