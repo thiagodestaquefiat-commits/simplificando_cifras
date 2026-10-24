@@ -18,7 +18,9 @@
   const esc = (value) => global.eventEsc(String(value ?? ""));
   const js = (value) => global.attrJs(value);
   const pane = () => document.getElementById("pane-musicas");
-  const songById = (id) => musicas.find((song) => String(song.id) === String(id));
+  // Playlists sincronizadas de outro aparelho apontam para a música pelo clientId da biblioteca
+  // quando ela ainda não chegou neste aparelho; aceita os dois identificadores.
+  const songById = (id) => musicas.find((song) => String(song.id) === String(id)) || musicas.find((song) => song?.librarySync?.clientId && String(song.librarySync.clientId) === String(id));
   // A collaborator reads the playlist's own snapshot, never a same-id song in
   // their personal library. Virtual ids keep navigation independent of that library.
   const itemSong = item => item?.song ? { ...item.song, id: item.songId } : songById(item?.songId);

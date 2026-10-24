@@ -1,7 +1,8 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v619-ajustar-cifra-contexto";
+const CACHE_NAME = "simplificando-cifras-v621-playlists-na-nuvem";
+// Compatibility marker: simplificando-cifras-v619-ajustar-cifra-contexto
 // Compatibility marker: simplificando-cifras-v618-sheet-key-match
 // Compatibility marker: simplificando-cifras-v616-organizar-resumos
 // Compatibility marker: simplificando-cifras-v614-search-delete-danger
@@ -55,10 +56,11 @@ const ASSETS = [
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
   "./css/home-playlists.css?v=27",
-  "./js/home-playlists.js?v=21",
-  "./js/user-playlists.js?v=3",
+  "./js/home-playlists.js?v=23",
+  "./js/user-playlists.js?v=4",
   "./js/notification-center.js?v=5",
   "./js/playlist-collaboration.js?v=1",
+  "./js/personal-playlist-sync.js?v=1",
   "./js/playlist-invites.js?v=3",
   "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
@@ -170,7 +172,7 @@ const ASSETS = [
   "./",
   "./index.html",
   "./js/storage.js",
-  "./js/storage.js?v=2",
+  "./js/storage.js?v=3",
   "./js/tablature.js?v=1",
   "./js/song-model.js?v=5",
   "./js/demo-library.js?v=5",
