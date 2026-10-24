@@ -24,6 +24,7 @@ assert.match(js, /data-search-song-menu/, 'resultado local oferece o menu de tr�
 assert.match(js, /global\.openSongOptions\?\./, 'três pontos reutilizam o menu completo de ações da música');
 assert.match(html, /playlist-search-result-more[\s\S]*?openSongOptions/, 'a busca da Home também oferece o menu completo');
 for (const label of ['Adicionar ao repertório', 'Adicionar à playlist', 'Compartilhar', 'Excluir']) assert.match(html, new RegExp(`>${label}<`));
+assert.match(html, /\.song-options-action--danger\{color:#ff453a\}/, 'Excluir deve aparecer em vermelho no menu da música');
 assert.match(html, /@media\(max-width:600px\)\{\.song-options-sheet\{[\s\S]*?bottom:0/, 'no celular, as opções abrem como sheet inferior');
 assert.match(html, /class="song-options-handle"/, 'sheet inferior possui alça visual');
 assert.match(html, />Novo repertório</, 'seletor de repertório permite criar um novo evento');
@@ -36,6 +37,6 @@ assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
 assert.match(sw, /css\/search-menu\.css\?v=15/);
 assert.match(sw, /js\/search-menu\.js\?v=8/);
-assert.match(sw, /js\/home-playlists\.js\?v=20/);
+assert.match(sw, /js\/home-playlists\.js\?v=21/);
 
 console.log('search-menu-source.test.js: OK');
