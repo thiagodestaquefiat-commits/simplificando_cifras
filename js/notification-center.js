@@ -2,11 +2,12 @@
   'use strict';
   const key='sc_notification_center_read_v1',dismissedKey='sc_notification_center_dismissed_v1',el=id=>document.getElementById(id);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const scope=()=>typeof global.getRoudyNotificationScope==='function'?global.getRoudyNotificationScope():'local';
+  const scopes=()=>{const values=typeof global.getRoudyNotificationScopes==='function'?global.getRoudyNotificationScopes():[typeof global.getRoudyNotificationScope==='function'?global.getRoudyNotificationScope():'local'];return [...new Set((Array.isArray(values)?values:[values]).map(value=>String(value||'').trim()).filter(Boolean))];};
   function readState(){const value=global.storage.get(key,{});return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
   function dismissedState(){const value=global.storage.get(dismissedKey,{});return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
-  const seen=()=>new Set(Array.isArray(readState()[scope()])?readState()[scope()].filter(id=>typeof id==='string'):[]);
-  const dismissed=()=>new Set(Array.isArray(dismissedState()[scope()])?dismissedState()[scope()].filter(id=>typeof id==='string'):[]);
+  const scopedValues=state=>scopes().flatMap(value=>Array.isArray(state[value])?state[value]:[]).filter(id=>typeof id==='string');
+  const seen=()=>new Set(scopedValues(readState()));
+  const dismissed=()=>new Set(scopedValues(dismissedState()));
   const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))];
   const items=()=>{
     const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
@@ -16,11 +17,12 @@
   function initials(value){const word=String(value||'ROUDY').trim().split(/\s+/)[0];return Array.from(word)[0]?.toLocaleUpperCase('pt-BR')||'R';}
   function period(value){const date=new Date(value),now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),now.getDate()),day=new Date(date.getFullYear(),date.getMonth(),date.getDate()),distance=Math.floor((start-day)/86400000);if(distance<=0)return 'Hoje';if(distance===1)return 'Ontem';if(distance<7)return 'Últimos 7 dias';return 'Anteriores';}
   function relativeDate(value){const date=new Date(value),seconds=Math.max(0,Math.floor((Date.now()-date.getTime())/1000));if(!Number.isFinite(seconds))return '';if(seconds<60)return 'agora';if(seconds<3600)return Math.floor(seconds/60)+' min';if(seconds<86400)return Math.floor(seconds/3600)+' h';if(seconds<604800)return Math.floor(seconds/86400)+' d';return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','');}
-  function saveRead(ids){const all=readState();return global.storage.set(key,{...all,[scope()]:[...new Set([...seen(),...ids])]})!==false;}
+  function saveScoped(stateKey,state,values){const merged=[...new Set(values)].slice(-1000),next={...state};scopes().forEach(value=>{next[value]=merged;});return global.storage.set(stateKey,next)!==false;}
+  function saveRead(ids){return saveScoped(key,readState(),[...seen(),...ids]);}
   function dismiss(id){
     const value=String(id||'');if(!value)return false;
     const all=dismissedState(),next=[...new Set([...dismissed(),value])].slice(-500);
-    if(global.storage.set(dismissedKey,{...all,[scope()]:next})===false){global.showToast('Não foi possível excluir a notificação neste dispositivo.');return false;}
+    if(!saveScoped(dismissedKey,all,next)){global.showToast('Não foi possível excluir a notificação neste dispositivo.');return false;}
     saveRead([value]);update();return true;
   }
   function update(){

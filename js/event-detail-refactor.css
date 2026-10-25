@@ -101,12 +101,12 @@
 .notification-period{margin:25px 0 14px;color:#f8fafc;font-size:20px;font-weight:850;letter-spacing:-.3px}
 .notification-invitations:has(#user-invitations-list:empty):not(:has(#playlist-invitations-list:not(:empty))){display:none}
 .notification-invitations #user-invitations-status:empty{display:none}
-.notification-swipe{position:relative;overflow:hidden;background:#e53e3e}
+.notification-swipe{position:relative;overflow:hidden;background:#080d12}
 .notification-row{position:relative;z-index:1;display:grid;width:100%;min-height:84px;padding:8px 0;border:0;grid-template-columns:60px minmax(0,1fr);align-items:center;gap:12px;background:#080d12;color:#f7f8fa;text-align:left;cursor:pointer;touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.72,.3,1)}
 .notification-swipe.is-open .notification-row{transform:translate3d(-92px,0,0)}
 .notification-swipe-delete{position:absolute;z-index:0;top:0;right:0;bottom:0;display:flex;width:92px;padding:0;align-items:center;justify-content:center;flex-direction:column;gap:3px;border:0;background:#e53e3e;color:#fff;font:700 11px/1 inherit;cursor:pointer}.notification-swipe-delete svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .notification-row-static{cursor:default}
-.notification-row:active{opacity:.68}
+.notification-swipe .notification-row:active{opacity:1}
 .notification-avatar{position:relative;display:grid;width:56px;height:56px;place-items:center;overflow:visible;border:2px solid rgba(255,255,255,.16);border-radius:50%;font-size:19px;font-weight:900}
 .notification-avatar.has-image{overflow:visible;background:#1b2633}
 .notification-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}

@@ -1,0 +1,40 @@
+/* Identificador estrutural compartilhado por Resumo, Letra + Cifras, Só letras
+   e Modo Palco. Mantém o título secundário sem alterar as linhas musicais. */
+#view-detail #detail-content .full-chord-line.is-section.song-section-heading {
+  min-height: 0;
+  margin: 44px 0 20px;
+  break-after: avoid;
+  color: #a1a1aa !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: calc(13px * var(--song-text-scale, 1)) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: .04em !important;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+#view-detail #detail-content :is(.full-chord-sheet, .wa-block, [data-song-section-id]) > .full-chord-line.is-section.song-section-heading:first-of-type {
+  margin-top: 0;
+}
+
+#view-detail #detail-content .full-chord-sheet > [data-song-section-id] + [data-song-section-id] {
+  margin-top: 44px;
+}
+
+/* A página de letras já controla o intervalo entre estrofes semanticamente. */
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .song-lyrics-stanza + .song-lyrics-stanza {
+  margin-top: 44px;
+}
+
+@media (max-width: 430px) {
+  #view-detail #detail-content .full-chord-line.is-section.song-section-heading {
+    margin-top: 40px;
+  }
+
+  #view-detail #detail-content .full-chord-sheet > [data-song-section-id] + [data-song-section-id],
+  #view-detail:not(.stage-mode) #detail-content .song-page-lyrics .song-lyrics-stanza + .song-lyrics-stanza {
+    margin-top: 40px;
+  }
+}

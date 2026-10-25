@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..');
+const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,p==='/'?'index.html':decodeURIComponent(p.slice(1)));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())return res.writeHead(404).end();res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png'}[path.extname(file)]||'application/octet-stream')+'; charset=utf-8'});fs.createReadStream(file).pipe(res);});
+(async()=>{let browser;try{
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({contentType:'text/css',body:''}));
+  await page.route('**/api/**',route=>route.fulfill({status:200,json:route.request().url().includes('/auth/config')?{enabled:false}:{}}));
+  await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+  const result=await page.evaluate(()=>{
+    const originalUser=appCurrentUser,originalAuth=currentAuthState,createdAt=new Date().toISOString();
+    currentAuthState={authenticated:true,user:{id:'auth-subject'}};
+    appCurrentUser=Object.freeze({...originalUser,id:'collaboration-user',name:'Músico'});
+    const event=eventModel.create({id:'event-read',title:'Ensaio',leaderId:'collaboration-user',members:[{id:'collaboration-user',name:'Músico'},{id:'leader',name:'Líder'}],notifications:[{id:'change-1',actorId:'leader',actorName:'Líder',summary:'alterou o repertório',createdAt}]});
+    setlists=[event];storage.set(EVENT_NOTICE_READ_KEY,{});storage.set('sc_notification_center_read_v1',{});
+    markEventNoticesRead(event);
+    const eventState=storage.get(EVENT_NOTICE_READ_KEY,{});
+    storage.set('sc_notification_center_read_v1',{'auth-subject':['event:event-read:change-1']});
+    appCurrentUser=Object.freeze({...appCurrentUser,id:'temporary-local'});
+    const duringIdentityTransition={eventUnread:eventUnreadNotices(event).length,scopes:getRoudyNotificationScopes()};
+    appCurrentUser=Object.freeze({...appCurrentUser,id:'collaboration-user'});
+    notificationCenter.update();
+    const badgeAfterLogin=document.querySelector('#user-invitations-button .event-notification-badge')?.textContent||'';
+    currentAuthState=originalAuth;appCurrentUser=originalUser;
+    return {eventState,duringIdentityTransition,badgeAfterLogin};
+  });
+  assert.deepEqual(result.eventState['auth-subject']['event-read'],['change-1'],'a leitura é guardada no escopo estável da autenticação');
+  assert.deepEqual(result.eventState['collaboration-user']['event-read'],['change-1'],'a leitura também acompanha a identidade colaborativa');
+  assert.equal(result.duringIdentityTransition.eventUnread,0,'a troca temporária de identidade durante o login não recria novidades');
+  assert.deepEqual(result.duringIdentityTransition.scopes,['auth-subject','temporary-local']);
+  assert.equal(result.badgeAfterLogin,'','o sino permanece sem contador depois da restauração da conta');
+  assert.deepEqual(errors,[]);console.log('notification-read-login-persistence-ui.test.js: OK');
+}finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}})().catch(error=>{console.error(error);process.exitCode=1;});
