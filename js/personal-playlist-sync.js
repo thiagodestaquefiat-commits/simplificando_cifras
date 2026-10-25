@@ -10,7 +10,7 @@
   "use strict";
 
     const MAX_COVER = 1_500_000;
-  let running = false, again = false, timer = null, applying = false, cursor = null, cursorOwner = null, lastRemoteIds = [];
+  let running = false, again = false, timer = null, applying = false, cursor = null, cursorOwner = null, lastRemoteIds = [], activeSync = null;
 
   const playlists = () => global.userPlaylists;
   const songs = () => (typeof musicas !== "undefined" ? musicas : global.musicas) || []; // eslint-disable-line no-undef
@@ -218,17 +218,44 @@
     }
   }
 
-  async function sync() {
-    if (running) { again = true; return; }
-    running = true;
-    try {
-      let rounds = 0;
-      do { again = false; await syncOnce(); } while (again && ++rounds < 3);
-    } catch (error) {
-      if (error.message !== "conta_alterada") console.warn("[playlists] sincronização adiada:", error.message || error);
-    } finally {
-      running = false;
+  function hasPending(owner = ownerId()) {
+    if (!playlists() || !owner || owner === "local") return false;
+    return playlists().all(owner).some((value) => !value.collaboration && (!value.cloud || value.cloud.signature !== signature(value)))
+      || Object.keys(playlists().deletions ? playlists().deletions(owner) : {}).length > 0;
+  }
+
+  async function sync(options = {}) {
+    if (running) {
+      again = true;
+      const result = await activeSync;
+      if (result && options.throwOnError) throw result;
+      return;
     }
+    running = true;
+    let failure = null;
+    activeSync = (async () => {
+      try {
+        let rounds = 0;
+        do { again = false; await syncOnce(); } while (again && ++rounds < 3);
+      } catch (error) {
+        failure = error;
+        if (error.message !== "conta_alterada") console.warn("[playlists] sincronização adiada:", error.message || error);
+      }
+      return failure;
+    })();
+    try { await activeSync; }
+    finally { running = false; activeSync = null; }
+    if (failure && options.throwOnError) throw failure;
+  }
+
+  // Usado antes do logout: espera o IndexedDB e a nuvem confirmarem as alterações.
+  // Assim, playlists e capas recém-criadas não dependem do timer de sincronização.
+  async function flush() {
+    if (playlists()?.ready) await playlists().ready;
+    await playlists()?.flush?.();
+    await sync({ throwOnError: true });
+    await playlists()?.flush?.();
+    return !hasPending();
   }
 
   function schedule(delay = 1500) {
@@ -247,5 +274,5 @@
     schedule(2500);
   }
 
-  global.personalPlaylistSync = Object.freeze({ sync, schedule, start, payload, signature, fromRemote });
+  global.personalPlaylistSync = Object.freeze({ sync, flush, hasPending, schedule, start, payload, signature, fromRemote });
 })(window);
