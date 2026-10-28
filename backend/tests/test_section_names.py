@@ -43,3 +43,4 @@ def test_section_vocabulary():
         assert is_section_name(name), name
     for lyric in ["Oceanos onde os pés podem falhar", "Final feliz da minha história", "Tu és fiel"]:
         assert not is_section_name(lyric), lyric
+
