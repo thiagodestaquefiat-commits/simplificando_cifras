@@ -20,8 +20,31 @@
     }
   }
 
+  // Cada música completa guardava a Letra + Cifras duas vezes (em song.fullChordSheet e de novo em
+  // song.editorData.fullChordSheet). Com a força-tarefa completando as cifras, a biblioteca passou
+  // do limite do navegador (~5 MB) e o salvar falhava. A cópia de dentro do editorData só é lida
+  // quando falta a de fora (songFormat.fromLegacy), então ela não vai mais para o armazenamento.
+  // Também troca a cópia inteira da música guardada pela sincronização (librarySync.baseSongData)
+  // pela impressão digital dela (librarySync.compactForStorage).
+  function forStorage(songs) {
+    const compactSync = global.librarySync && typeof global.librarySync.compactForStorage === "function"
+      ? global.librarySync.compactForStorage : (song) => song;
+    return (Array.isArray(songs) ? songs : []).map(compactSync).map((song) => {
+      const editor = song && song.editorData;
+      if (!editor || typeof editor !== "object") return song;
+      const keepSheet = !song.fullChordSheet && editor.fullChordSheet;
+      const keepTab = !song.tablature && editor.tablature;
+      if (keepSheet && keepTab) return song;
+      if (!("fullChordSheet" in editor) && !("tablature" in editor)) return song;
+      const compact = { ...editor };
+      if (!keepSheet) delete compact.fullChordSheet;
+      if (!keepTab) delete compact.tablature;
+      return { ...song, editorData: compact };
+    });
+  }
+
   function persistCurrent(songs) {
-    const saved = global.storage.set(CURRENT_STORAGE_KEY, songs);
+    const saved = global.storage.set(CURRENT_STORAGE_KEY, forStorage(songs));
     if (saved) releaseLegacyCopy();
     return saved;
   }
@@ -102,7 +125,9 @@
 
   function saveOwnerCache(ownerId, collection) {
     const caches = ownerCaches();
-    caches[String(ownerId)] = filterDeleted(ownerId, collection);
+    // Compacta todas as contas guardadas, não só a ativa: o espaço é um só para o site todo.
+    Object.keys(caches).forEach((key) => { if (Array.isArray(caches[key])) caches[key] = forStorage(caches[key]); });
+    caches[String(ownerId)] = forStorage(filterDeleted(ownerId, collection));
     return global.storage.set(OWNER_CACHES_KEY, caches);
   }
 
@@ -319,15 +344,15 @@
     const recovery = global.libraryRecovery;
     // A cópia de segurança da versão anterior é um extra: se não couber, a música é salva assim mesmo.
     // Antes, uma falha aqui cancelava todo salvamento ("Não foi possível salvar a biblioteca...").
-    if (recovery && !recovery.beforeSave(recoveryOwner, previous, songs)) {
-      if (!(recovery.shrink && recovery.shrink(recoveryOwner) && recovery.beforeSave(recoveryOwner, previous, songs))) {
+    if (recovery && !recovery.beforeSave(recoveryOwner, forStorage(previous), forStorage(songs))) {
+      if (!(recovery.shrink && recovery.shrink(recoveryOwner) && recovery.beforeSave(recoveryOwner, forStorage(previous), forStorage(songs)))) {
         console.warn("Cópia de segurança local não coube; salvando a biblioteca sem ela.");
       }
     }
     const write = () => {
       if (activeOwnerId && activeOwnerId !== legacyCandidateOwnerId) return saveOwnerCache(activeOwnerId, songs);
       if (global.storage.setMany) {
-        const saved = global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, songs]]);
+        const saved = global.storage.setMany([[SEED_ONLY_KEY, false], [CURRENT_STORAGE_KEY, forStorage(songs)]]);
         if (saved) releaseLegacyCopy();
         return saved;
       }

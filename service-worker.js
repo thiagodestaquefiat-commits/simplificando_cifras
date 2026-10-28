@@ -1,7 +1,12 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v645-seletor-artes-evento";
+const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
+// Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
+// Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
+// Compatibility marker: simplificando-cifras-v625-catalogo-versoes
+// Compatibility marker: simplificando-cifras-v624-sem-texto-privada
+// Compatibility marker: simplificando-cifras-v617-compartilhar-musica
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -62,7 +67,8 @@ const ASSETS = [
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
   "./css/home-playlists.css?v=27",
-  "./js/home-playlists.js?v=23",
+  "./js/home-playlists.js?v=24",
+  "./js/song-share.js?v=1",
   "./js/user-playlists.js?v=6",
   "./js/notification-center.js?v=6",
   "./js/playlist-collaboration.js?v=1",
@@ -161,11 +167,12 @@ const ASSETS = [
   "./js/youtube-player-ui.js?v=18",
   "./js/youtube-player.js?v=8",
   "./js/tablature.js?v=2",
-  "./js/song-model.js?v=7",
+  "./js/song-model.js?v=8",
   "./js/song-artwork.js?v=2",
   "./js/sheet-music.js?v=1",
   "./js/editor/song-format.js?v=12",
   "./js/editor/song-format.js?v=13",
+  "./js/editor/song-format.js?v=14",
   "./js/event-model.js?v=6",
   "./js/event-repository.js?v=10",
   "./js/closing-suggestions.js?v=1",
@@ -212,7 +219,9 @@ const ASSETS = [
   "./js/library-sync.js?v=19",
   "./js/library-sync.js?v=20",
   "./js/library-sync.js?v=21",
+  "./js/library-sync.js?v=22",
   "./js/song-repository.js?v=15",
+  "./js/song-repository.js?v=18",
   "./js/library-recovery.js?v=2",
   "./js/event-model.js?v=5",
   "./js/event-repository.js?v=6",
@@ -272,6 +281,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=4",
+  "./js/song-lyrics-typography.css?v=5",
   "./js/medley-editor.css?v=30",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
@@ -319,10 +329,11 @@ const ASSETS = [
   "./js/editor/song-editor.css?v=1",
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
-  "./js/ai/harmonic-summary-client.js?v=17",
+  "./js/ai/harmonic-summary-client.js?v=18",
   "./js/summary-organizer.js?v=1",
   "./js/summary-organizer.js?v=2",
   "./js/summary-organizer.js?v=3",
+  "./js/summary-organizer.js?v=4",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",

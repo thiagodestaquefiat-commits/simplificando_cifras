@@ -237,5 +237,28 @@
     return { payload, data: assertResponse(data) };
   }
 
-  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, webLimitNotice, renderWebLimitNotice, validatePayload, assertResponse, responseToEditorModel, searchSources, generate });
+  // Catálogo ROUDY com várias versões da mesma música (título + artista + tom), decisão de 24/10/2026.
+  async function catalogRequest(path, options) {
+    const settings = options || {};
+    const accessToken = settings.accessToken || (global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken());
+    if (!accessToken) throw new HarmonicSummaryError("authentication", "Entre com Google para buscar no catálogo.", 401);
+    let response;
+    try { response = await (settings.fetch || global.fetch)(global.apiConfig.sharedSongsEndpoint(path), { headers: { "Accept": "application/json", "Authorization": `Bearer ${accessToken}` }, signal: settings.signal }); }
+    catch (error) { throw new HarmonicSummaryError("network", "Não foi possível conectar ao servidor."); }
+    let data; try { data = await response.json(); } catch (_) { throw new HarmonicSummaryError("invalid_data", "O servidor retornou uma resposta inválida.", response.status); }
+    if (!response.ok) throw new HarmonicSummaryError(response.status === 404 ? "not_found" : response.status === 401 ? "authentication" : "server", clean(data?.erro?.mensagem, 300).trim() || "Não foi possível abrir o catálogo agora.", response.status);
+    return data;
+  }
+  async function catalogVersions(titulo, artista, options) {
+    const title = clean(titulo, 160).trim(), artist = clean(artista, 160).trim();
+    if (!title) return [];
+    const query = new URLSearchParams({ title }); if (artist) query.set("artist", artist);
+    const data = await catalogRequest("versions?" + query.toString(), options);
+    return Array.isArray(data?.versions) ? data.versions : [];
+  }
+  async function catalogVersion(id, options) {
+    return assertResponse(await catalogRequest("versions/" + encodeURIComponent(String(id || "")), options));
+  }
+
+  global.harmonicSummaryClient = Object.freeze({ HarmonicSummaryError, webLimitNotice, renderWebLimitNotice, validatePayload, assertResponse, responseToEditorModel, searchSources, generate, catalogVersions, catalogVersion });
 })(window);

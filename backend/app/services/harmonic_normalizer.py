@@ -4,7 +4,7 @@ import re
 import unicodedata
 
 from ..errors import ApiError
-from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
+from ..schemas.resumo_harmonico import LinhaCifraCompleta, ResumoHarmonicoResponse, SecaoCifraCompleta
 from .content_extractor import clean_musical_text, is_technical_line, TECHNICAL_BLOCK_RE, TECHNICAL_LABEL_RE
 
 
@@ -474,6 +474,7 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         )
 
     if normalized.fullChordSheet:
+        fix_sheet_section_names(normalized.fullChordSheet)
         _clean_trailing_diagram_sections(normalized.fullChordSheet)
         normalized.fullChordSheet.sections = [section for section in normalized.fullChordSheet.sections
             if not TECHNICAL_LABEL_RE.fullmatch(section.nome or "")]
@@ -570,9 +571,10 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
 
 # Mesmo vocabulário do isSectionName do app (js/editor/song-format.js): nome de seção não é frase-gancho.
 _SECTION_NAME_RE = re.compile(
-    r"^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|"
+    r"^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|p[óo]s[- ]?refr[ãa]o|refr[ãa]o|coro|ponte|"
+    r"interl[úu]dio|instrumental|solo|final|outro|coda|vamp|parte|"
     r"(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)"
-    r"(?:\s*\d+)?\s*\]?\)?:?$",
+    r"(?:\s*\d+)?(?:\s+final)?(?:\s*\(?\s*\d+\s*x\s*\)?)?\s*\]?\)?:?$",
     re.IGNORECASE,
 )
 _SEGMENT_MIN_CHORDS = 9  # até 8 acordes cabe numa linha; acima disso vale quebrar em partes repetidas
@@ -581,6 +583,109 @@ _SEGMENT_MAX_UNIT = 8
 
 def is_section_name(value) -> bool:
     return bool(_SECTION_NAME_RE.match(str(value or "").strip()))
+
+
+_LOOP_MAX_UNIT_BLOCKS = 4
+_LOOP_MAX_CHORDS = 16
+_LOOP_SHORT_CHORDS = 4
+
+
+def _block_signature(block) -> tuple:
+    return tuple(block.acordes), block.repeticoes or 1
+
+
+def _find_block_loop(blocks: list, start: int) -> tuple[int, int] | None:
+    """(tamanho do padrão em blocos, voltas) do laço que começa em "start", ou None.
+
+    Ex.: blocos C | Bm | C | Bm | C | Bm -> padrão de 2 blocos, 3 voltas. Escolhe o que cobre mais
+    blocos; no empate, o padrão menor. Padrão de vários blocos só quando nenhum tem repetição própria.
+    """
+    signatures = [_block_signature(block) for block in blocks]
+    best = None
+    for size in range(1, _LOOP_MAX_UNIT_BLOCKS + 1):
+        unit = signatures[start:start + size]
+        if len(unit) < size:
+            break
+        if size > 1 and any(repeat != 1 for _chords, repeat in unit):
+            continue
+        if sum(len(chords) for chords, _repeat in unit) > _LOOP_MAX_CHORDS:
+            continue
+        # Laço curto (até 4 acordes, ex.: C | Bm em linhas separadas) junta mesmo com frases
+        # diferentes. Estrofe inteira repetida com outra frase ("O céu começa..." e depois
+        # "Santo, Santo, Santo") é outra parte da música: só junta se a frase também repetir.
+        short = sum(len(chords) for chords, _repeat in unit) <= _LOOP_SHORT_CHORDS
+        phrases = [_fold(block.fraseGuia) for block in blocks[start:start + size]]
+        turns = 1
+        while (signatures[start + turns * size:start + (turns + 1) * size] == unit and
+               (short or [_fold(block.fraseGuia) for block in blocks[start + turns * size:start + (turns + 1) * size]] == phrases)):
+            turns += 1
+        covered = blocks[start:start + size * turns]
+        # Intro só de acordes seguida da parte cantada com os mesmos acordes: ficam separadas,
+        # senão a frase apareceria já na primeira volta (que é instrumental).
+        if not covered[0].fraseGuia and any(block.fraseGuia for block in covered):
+            continue
+        if turns >= 2 and (best is None or size * turns > best[0] * best[1]):
+            best = (size, turns)
+    return best
+
+
+def has_repeated_block_loop(blocks: list) -> bool:
+    return any(_find_block_loop(blocks, index) for index in range(len(blocks)))
+
+
+def merge_repeated_blocks(blocks: list) -> list:
+    """Junta blocos seguidos que formam um laço numa linha só, no padrão ROUDY.
+
+    "Tudo perde o valor" C / "Quando estou com você" Bm / C / Bm / C / Bm
+    -> "Tudo perde o valor"  C Bm (3x). A frase-guia é a do primeiro bloco do laço.
+    """
+    merged, index = [], 0
+    while index < len(blocks):
+        loop = _find_block_loop(blocks, index)
+        if not loop:
+            merged.append(blocks[index])
+            index += 1
+            continue
+        size, turns = loop
+        unit = blocks[index:index + size]
+        chords = [chord for block in unit for chord in block.acordes]
+        chords = [chord for position, chord in enumerate(chords) if position == 0 or chord != chords[position - 1]]
+        block = unit[0].model_copy(deep=True)
+        block.acordes = chords
+        block.repeticoes = min(turns * (unit[0].repeticoes or 1), 99)
+        block.fraseGuia = next((item.fraseGuia for item in unit if item.fraseGuia), None)
+        merged.append(block)
+        index += size * turns
+    return merged
+
+
+def fix_sheet_section_names(sheet) -> None:
+    """Deixa como título de seção só nome de seção de verdade (Intro, Refrão, Primeira Parte...).
+
+    - Título que é letra ("Oceanos, onde os pés podem falhar") volta a ser a 1ª linha de letra da seção.
+    - Linha de letra que é nome de seção ("Refrão:") sem acordes abre uma seção nova com esse nome.
+    """
+    if not sheet or not getattr(sheet, "sections", None):
+        return
+    fixed = []
+    for section in sheet.sections:
+        name = (section.nome or "").strip()
+        lines = list(section.linhas)
+        if name and not is_section_name(name):
+            first = lines[0].letra.strip() if lines else ""
+            if _fold(first) != _fold(name):
+                lines.insert(0, LinhaCifraCompleta(letra=name))
+            name = ""
+        current = SecaoCifraCompleta(nome=name.strip("[]").strip().rstrip(":").strip() or None, linhas=[])
+        for line in lines:
+            if not line.acordes and line.letra.strip() and is_section_name(line.letra):
+                if current.linhas or current.nome:
+                    fixed.append(current)
+                current = SecaoCifraCompleta(nome=line.letra.strip().strip("[]").strip().rstrip(":").strip(), linhas=[])
+                continue
+            current.linhas.append(line)
+        fixed.append(current)
+    sheet.sections = [section for section in fixed if section.linhas or section.nome][:80]
 
 
 def segment_progression(chords: list[str]) -> list[tuple[list[str], int]]:
@@ -668,7 +773,7 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
                 condensed.append(piece)
         else:
             condensed.append(trecho)
-    fixed.harmonicSummary.blocos = condensed[:40]
+    fixed.harmonicSummary.blocos = merge_repeated_blocks(condensed)[:40]
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:
