@@ -10,3 +10,9 @@
   font-family:"Manrope","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
   letter-spacing:-.047em!important;
 }
+/* Letra e cifra (fora do Modo Palco): acordes na mesma fonte monoespaçada da letra,
+   para cada acorde cair em cima da sílaba certa. */
+#view-detail:not(.stage-mode) .full-chord-line.is-chord{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace!important;
+  letter-spacing:0!important;
+}

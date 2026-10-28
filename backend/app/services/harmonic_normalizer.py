@@ -4,7 +4,7 @@ import re
 import unicodedata
 
 from ..errors import ApiError
-from ..schemas.resumo_harmonico import ResumoHarmonicoResponse
+from ..schemas.resumo_harmonico import LinhaCifraCompleta, ResumoHarmonicoResponse, SecaoCifraCompleta
 from .content_extractor import clean_musical_text, is_technical_line, TECHNICAL_BLOCK_RE, TECHNICAL_LABEL_RE
 
 
@@ -474,6 +474,7 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         )
 
     if normalized.fullChordSheet:
+        fix_sheet_section_names(normalized.fullChordSheet)
         _clean_trailing_diagram_sections(normalized.fullChordSheet)
         normalized.fullChordSheet.sections = [section for section in normalized.fullChordSheet.sections
             if not TECHNICAL_LABEL_RE.fullmatch(section.nome or "")]
@@ -570,9 +571,10 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
 
 # Mesmo vocabulário do isSectionName do app (js/editor/song-format.js): nome de seção não é frase-gancho.
 _SECTION_NAME_RE = re.compile(
-    r"^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|"
+    r"^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|p[óo]s[- ]?refr[ãa]o|refr[ãa]o|coro|ponte|"
+    r"interl[úu]dio|instrumental|solo|final|outro|coda|vamp|parte|"
     r"(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)"
-    r"(?:\s*\d+)?\s*\]?\)?:?$",
+    r"(?:\s*\d+)?(?:\s+final)?(?:\s*\(?\s*\d+\s*x\s*\)?)?\s*\]?\)?:?$",
     re.IGNORECASE,
 )
 _SEGMENT_MIN_CHORDS = 9  # até 8 acordes cabe numa linha; acima disso vale quebrar em partes repetidas
@@ -581,6 +583,35 @@ _SEGMENT_MAX_UNIT = 8
 
 def is_section_name(value) -> bool:
     return bool(_SECTION_NAME_RE.match(str(value or "").strip()))
+
+
+def fix_sheet_section_names(sheet) -> None:
+    """Deixa como título de seção só nome de seção de verdade (Intro, Refrão, Primeira Parte...).
+
+    - Título que é letra ("Oceanos, onde os pés podem falhar") volta a ser a 1ª linha de letra da seção.
+    - Linha de letra que é nome de seção ("Refrão:") sem acordes abre uma seção nova com esse nome.
+    """
+    if not sheet or not getattr(sheet, "sections", None):
+        return
+    fixed = []
+    for section in sheet.sections:
+        name = (section.nome or "").strip()
+        lines = list(section.linhas)
+        if name and not is_section_name(name):
+            first = lines[0].letra.strip() if lines else ""
+            if _fold(first) != _fold(name):
+                lines.insert(0, LinhaCifraCompleta(letra=name))
+            name = ""
+        current = SecaoCifraCompleta(nome=name.strip("[]").strip().rstrip(":").strip() or None, linhas=[])
+        for line in lines:
+            if not line.acordes and line.letra.strip() and is_section_name(line.letra):
+                if current.linhas or current.nome:
+                    fixed.append(current)
+                current = SecaoCifraCompleta(nome=line.letra.strip().strip("[]").strip().rstrip(":").strip(), linhas=[])
+                continue
+            current.linhas.append(line)
+        fixed.append(current)
+    sheet.sections = [section for section in fixed if section.linhas or section.nome][:80]
 
 
 def segment_progression(chords: list[str]) -> list[tuple[list[str], int]]:

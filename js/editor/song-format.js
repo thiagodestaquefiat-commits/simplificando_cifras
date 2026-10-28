@@ -187,7 +187,8 @@
     return { text: String(value || "").slice(0, match.index).trim(), repeticoes: repeticoes >= 1 && repeticoes <= 99 ? repeticoes : null };
   }
 
-  const SECTION_NAME = /^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|solo|final|outro|parte|(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)(?:\s*\d+)?\s*\]?\)?:?$/i;
+  // Mesmo vocabulário do _SECTION_NAME_RE do backend (harmonic_normalizer.py).
+  const SECTION_NAME = /^\(?\[?\s*(?:intro(?:du[çc][ãa]o)?|verso|estrofe|pr[ée][- ]?refr[ãa]o|p[óo]s[- ]?refr[ãa]o|refr[ãa]o|coro|ponte|interl[úu]dio|instrumental|solo|final|outro|coda|vamp|parte|(?:primeira|segunda|terceira|quarta|quinta)\s+parte|verse|pre[- ]?chorus|chorus|bridge|interlude|ending|tag|riff|tab)(?:\s*\d+)?(?:\s+final)?(?:\s*\(?\s*\d+\s*x\s*\)?)?\s*\]?\)?:?$/i;
   function isSectionName(value) { return SECTION_NAME.test(String(value || "").trim()); }
 
   function simpleText(model) {

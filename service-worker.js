@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v626-compartilhar-musica-versoes";
+const CACHE_NAME = "simplificando-cifras-v627-secoes-cifra";
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
 // Compatibility marker: simplificando-cifras-v624-sem-texto-privada
 // Compatibility marker: simplificando-cifras-v617-compartilhar-musica
@@ -167,6 +167,7 @@ const ASSETS = [
   "./js/sheet-music.js?v=1",
   "./js/editor/song-format.js?v=12",
   "./js/editor/song-format.js?v=13",
+  "./js/editor/song-format.js?v=14",
   "./js/event-model.js?v=6",
   "./js/event-repository.js?v=10",
   "./js/closing-suggestions.js?v=1",
@@ -272,7 +273,7 @@ const ASSETS = [
   "./js/event-chat-song.css?v=1",
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
-  "./js/song-lyrics-typography.css?v=3",
+  "./js/song-lyrics-typography.css?v=4",
   "./js/medley-editor.css?v=30",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
