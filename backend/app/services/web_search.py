@@ -450,12 +450,44 @@ CIFRACLUB_SEARCH_TIMEOUT_SECONDS = 5.0
 
 @dataclass(frozen=True)
 class SiteSearchResult:
-    """Resultado da busca interna do Cifra Club: url quando achou; found=False quando a busca
-    respondeu e a música não existe lá; ok=False quando a busca em si falhou (rede/bloqueio)."""
+    """Resultado da busca interna do Cifra Club: url quando achou; ok=False quando a busca em si
+    falhou (rede/bloqueio). missing=True só quando a busca respondeu e nenhuma música dela tem a ver
+    com o que foi digitado (aí não vale gastar tempo nem créditos com as outras tentativas)."""
     ok: bool
     url: str | None = None
     artist: str | None = None
     title: str | None = None
+    missing: bool = False
+
+
+def _remove_slug_words(text: str, part: str) -> str | None:
+    """Tira "part" de "text" quando aparece como palavras inteiras (início, meio ou fim)."""
+    if not part or not text:
+        return None
+    padded = f"-{text}-"
+    if f"-{part}-" not in padded:
+        return None
+    return padded.replace(f"-{part}-", "-", 1).strip("-") or None
+
+
+def _title_matches_without_artist(doc: dict, query_slug: str) -> bool:
+    for artist in {str(doc.get("dns") or ""), slugify(doc.get("art"))}:
+        rest = _remove_slug_words(query_slug, artist)
+        if rest and any(name == rest or name.startswith(rest + "-")
+                        for name in (slugify(doc.get("txt")), str(doc.get("url")))):
+            return True
+    return False
+
+
+def _related_to_query(docs: list, titulo: str) -> bool:
+    """Alguma música da busca do Cifra Club tem palavra do que foi digitado (com 3+ letras)?"""
+    words = {word for word in slugify(titulo).split("-") if len(word) >= 3}
+    for doc in docs:
+        if not isinstance(doc, dict) or str(doc.get("tipo", "2")) != "2":
+            continue
+        if words & set(slugify(doc.get("txt")).split("-")):
+            return True
+    return False
 
 
 def _pick_cifraclub_doc(docs: list, titulo: str, artista: str | None) -> dict | None:
@@ -482,6 +514,10 @@ def _pick_cifraclub_doc(docs: list, titulo: str, artista: str | None) -> dict | 
             SequenceMatcher(None, artist_slug, name).ratio() >= 0.85 for name in names)
 
     matches = [doc for doc in songs if title_ok(doc) and artist_ok(doc)]
+    if not matches and not artist_slug:
+        # Nome e artista digitados juntos no mesmo campo ("Oceanos ana nobrega"): tira o artista
+        # do texto e compara o resto com o título ("oceanos" -> "Oceanos (Oceans)").
+        matches = [doc for doc in songs if _title_matches_without_artist(doc, song_slug)]
     if not matches:
         return None
     exact = [doc for doc in matches if slugify(doc.get("txt")) == song_slug or doc.get("url") == song_slug]
@@ -530,7 +566,9 @@ def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=N
     logger.info("cifraclub_search query=%r docs=%d match=%s after=%.2fs", query, len(docs),
                 f"{doc['dns']}/{doc['url']}" if doc else None, time.monotonic() - started)
     if not doc:
-        return SiteSearchResult(ok=True)
+        # Achou músicas parecidas mas nenhuma bateu: não dá para afirmar que não existe, então o
+        # fluxo segue para as outras tentativas. Só para cedo quando nada tem a ver com a busca.
+        return SiteSearchResult(ok=True, missing=not _related_to_query(docs, titulo))
     return SiteSearchResult(ok=True, url=f"https://www.cifraclub.com.br/{doc['dns']}/{doc['url']}/",
                             artist=str(doc.get("art") or "").strip()[:160] or None,
                             title=str(doc.get("txt") or "").strip()[:160] or None)
@@ -558,7 +596,7 @@ def _find(titulo: str, artista: str | None, http_client, search_fn=None,
             sheet, meta, used_url = _fetch_cifraclub(found.url, client, deadline)
             if sheet:
                 return ChordSheetHit(sheet, used_url, "cifraclub", artist=found.artist, title=found.title, **meta), []
-        elif found.ok:
+        elif found.ok and found.missing:
             confirmed_missing = True
             logger.info("cifraclub_search_not_found titulo=%r artista=%r", titulo, artista)
 
