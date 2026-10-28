@@ -54,7 +54,7 @@ function device(name, librarySongs) {
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync("js/user-playlists.js", "utf8"), sandbox);
   vm.runInContext(fs.readFileSync("js/personal-playlist-sync.js", "utf8"), sandbox);
-  return { name, w: sandbox, pl: sandbox.userPlaylists, sync: () => sandbox.personalPlaylistSync.sync(), list: () => sandbox.userPlaylists.list("conta-thiago") };
+  return { name, w: sandbox, pl: sandbox.userPlaylists, sync: () => sandbox.personalPlaylistSync.sync(), flush: () => sandbox.personalPlaylistSync.flush(), list: () => sandbox.userPlaylists.list("conta-thiago") };
 }
 
 const song = (id, clientId, title) => ({ id, title, artist: "Artista", key: "G", librarySync: { clientId } });
@@ -67,7 +67,7 @@ const pc = device("pc", [song("x9", "c-grat", "Gratidão"), song("x8", "c-isaias
   // 1) Celular tem playlists antigas (sem nuvem) → sobem.
   const louvores = phone.pl.create(OWNER, "Louvores", [{ songId: "p1", playback: { semitones: -2 } }, { songId: "p2" }, { songId: "p3", playback: { capo: 2 } }]);
   phone.pl.create(OWNER, "Músicas", [{ songId: "p2" }]);
-  await phone.sync();
+  assert.equal(await phone.flush(), true, "logout pode aguardar a confirmação das playlists e capas");
   assert.equal(server.size, 2, "as duas playlists subiram");
   const up = server.get(louvores.id).data;
   same(up.items.map((i) => i.songClientId), ["c-grat", "c-isaias", "c-rei"], "vai só a referência da música");

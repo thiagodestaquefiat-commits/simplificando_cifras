@@ -16,9 +16,13 @@ const event={id:'event-42',title:'Ensaio de interface',date:'2026-10-10',time:'1
 (async()=>{
   assert.strictEqual(eventShare.gradientVariant(event.id),eventShare.gradientVariant(event.id),'mesmo evento deve manter o gradiente');
   const variants=new Set(Array.from({length:30},(_,index)=>eventShare.gradientVariant(`event-${index}`)));
-  assert(variants.size>1,'eventos diferentes devem poder gerar variantes diferentes');
+  assert(variants.size>=6,'eventos diferentes devem distribuir as artes entre várias identidades visuais');
+  const completeVariantSet=new Set(Array.from({length:200},(_,index)=>eventShare.gradientVariant(`catalog-event-${index}`)));
+  assert.strictEqual(completeVariantSet.size,9,'o catálogo deve manter nove artes disponíveis');
 
   const data=eventShare.createData(event,id=>library.get(String(id)),{link:'https://roudy.test/?share=safe'});
+  const eventArtVariants=new Set(Array.from({length:12},(_,index)=>eventShare.createData({...event,id:`sample-${index}`,title:`Culto ${index}`,date:`2026-10-${String(index+1).padStart(2,'0')}`},id=>library.get(String(id))).variant));
+  assert(eventArtVariants.size>=5,'a identidade completa do evento deve distribuir as artes compartilhadas');
   assert.strictEqual(data.visibleSongs.length,4,'o card deve mostrar no máximo quatro músicas');
   assert.strictEqual(data.remainingCount,1,'a contagem restante deve ser exata');
   assert.strictEqual(data.visibleSongs[2].artist,'','artista ausente deve ser omitido');

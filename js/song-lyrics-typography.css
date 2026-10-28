@@ -16,3 +16,55 @@
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace!important;
   letter-spacing:0!important;
 }
+
+/* Leitura dedicada de letras. A página combinada e o Modo Palco não herdam
+   estas métricas: o alinhamento entre acordes e sílabas permanece intacto. */
+#view-detail:not(.stage-mode) #detail-content .song-page.song-page-lyrics {
+  padding-inline: clamp(20px, 5.65vw, 24px) !important;
+  text-align: left;
+}
+
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics :is(.full-chord-sheet, .wa-block) {
+  font-family: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-variant-ligatures: normal;
+}
+
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .song-lyrics-verse {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text);
+  font-family: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: calc(25px * var(--song-text-scale, 1)) !important;
+  font-weight: 700 !important;
+  line-height: 1.28 !important;
+  letter-spacing: -.02em !important;
+  overflow-wrap: break-word;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+/* O espaçamento nasce apenas entre versos semânticos; linhas que o navegador
+   quebra por largura permanecem ligadas pelo line-height acima. */
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .song-lyrics-verse + .song-lyrics-verse {
+  margin-top: 24px;
+}
+
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .song-lyrics-stanza-break {
+  height: 36px;
+}
+
+/* O fallback vindo do resumo usa os mesmos blocos de dados, sem aparência de
+   cartão na página de leitura. A edição e a semântica original são mantidas. */
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .wa-block.song-lyrics-stanza {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 40px;
+  background: transparent;
+  box-shadow: none;
+}
+
+#view-detail:not(.stage-mode) #detail-content .song-page-lyrics .stage-summary-label {
+  display: none;
+}

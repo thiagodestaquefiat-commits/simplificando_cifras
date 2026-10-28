@@ -25,19 +25,19 @@
 <link rel="stylesheet" href="js/ai/ai-harmonic-summary.css?v=9">
 <link rel="stylesheet" href="js/study-metronome.css?v=3">
 <link rel="stylesheet" href="js/event-people-search.css?v=2">
-<link rel="stylesheet" href="js/account-drawer.css?v=13">
+<link rel="stylesheet" href="js/account-drawer.css?v=17">
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=73">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=74">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
 <link rel="stylesheet" href="js/account-contribution.css?v=13">
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
-<link rel="stylesheet" href="js/song-lyrics-typography.css?v=4">
+<link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=14">
+<link rel="stylesheet" href="css/song-reading.css?v=15">
 <link rel="stylesheet" href="css/topbar-labels.css?v=14">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -732,10 +732,11 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 #view-detail:not(.stage-mode) .wa-block[role="button"]::before,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]::before{content:'';position:absolute;inset:0 12% auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);pointer-events:none}
 #view-detail:not(.stage-mode) .wa-block[role="button"]:hover,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:hover{border-color:rgba(207,218,232,.22);background:linear-gradient(155deg,rgba(38,44,54,.7),rgba(14,18,23,.58) 58%,rgba(24,29,37,.64));box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 9px 25px rgba(0,0,0,.22)}
 #view-detail:not(.stage-mode) .wa-block[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:active{transform:scale(.985);border-color:color-mix(in srgb,var(--roudy-stage-gold) 30%,transparent);background:linear-gradient(155deg,rgba(42,43,47,.75),rgba(17,18,22,.64))}
-#view-detail:not(.stage-mode) .wa-block.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-sheet.is-long-pressing{animation:block-long-press 560ms linear both}
+#view-detail:not(.stage-mode) .wa-block.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-sheet.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-section.is-long-pressing{animation:block-long-press 560ms linear both}
 #view-detail:not(.stage-mode) .wa-block[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:focus-visible{border-color:rgba(120,173,241,.52);box-shadow:0 0 0 3px rgba(74,143,232,.12),inset 0 1px 0 rgba(255,255,255,.1)}
 @keyframes block-long-press{0%{border-color:rgba(192,204,220,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 7px 22px rgba(0,0,0,.18)}100%{border-color:color-mix(in srgb,var(--roudy-stage-gold) 52%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 2px color-mix(in srgb,var(--roudy-stage-gold) 8%,transparent),0 8px 24px rgba(0,0,0,.24)}}
 .inline-block-label{display:block;margin:2px 0 6px;color:#929ba8;font-size:9px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+.inline-block-section-title{margin:0 0 14px;color:#a1a1aa;font:600 13px/1.4 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.04em;text-transform:uppercase}
 .inline-block-label:not(:first-child){margin-top:12px}
 .inline-block-textarea{display:block;width:100%;min-height:72px;padding:10px 11px;resize:vertical;border:1px solid rgba(194,205,220,.17);border-radius:10px;outline:0;background:rgba(2,4,7,.62);color:#f2f4f7;font:600 15px/1.55 Arial,sans-serif;box-shadow:inset 0 1px 3px rgba(0,0,0,.22)}
 .inline-block-chords{color:var(--chord-color)}.inline-block-lyrics{min-height:54px}.inline-block-full{min-height:240px}
@@ -861,11 +862,14 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #view-main .app-account-btn:hover{border-color:rgba(184,198,218,.25);background:rgba(255,255,255,.065);color:#fff}
 /* SONG CONTENT — quiet reading layer; material appears only during interaction */
 #view-detail:not(.stage-mode) .detail-body{background:#050709}
-#view-detail:not(.stage-mode) .wa-block[role="button"],#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]{margin:0 0 14px;padding:8px 2px 18px;overflow:visible;border:1px solid transparent;border-radius:13px;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;transition:transform 140ms ease-out,border-color 160ms ease-out,background 160ms ease-out,box-shadow 160ms ease-out}
+#view-detail:not(.stage-mode) .wa-block[role="button"],#view-detail:not(.stage-mode) .full-chord-sheet[role="button"],#view-detail:not(.stage-mode) .full-chord-section[role="button"]{margin:0 0 14px;padding:8px 2px 18px;overflow:visible;border:1px solid transparent;border-radius:13px;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;transition:transform 140ms ease-out,border-color 160ms ease-out,background 160ms ease-out,box-shadow 160ms ease-out}
 #view-detail:not(.stage-mode) .wa-block[role="button"]::before,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]::before{display:none}
 #view-detail:not(.stage-mode) .wa-block[role="button"]:hover,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:hover{border-color:transparent;background:rgba(255,255,255,.018);box-shadow:none}
-#view-detail:not(.stage-mode) .wa-block[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:active,#view-detail:not(.stage-mode) .wa-block.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-sheet.is-long-pressing{transform:scale(.992);border-color:rgba(197,208,222,.14);background:linear-gradient(145deg,rgba(37,42,50,.48),rgba(13,17,22,.34));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 22px rgba(0,0,0,.18);backdrop-filter:saturate(112%) blur(12px);-webkit-backdrop-filter:saturate(112%) blur(12px)}
-#view-detail:not(.stage-mode) .wa-block[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:focus-visible{border-color:rgba(112,164,233,.46);background:rgba(32,41,53,.34);box-shadow:0 0 0 3px rgba(74,143,232,.1)}
+#view-detail:not(.stage-mode) .wa-block[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-section[role="button"]:active,#view-detail:not(.stage-mode) .wa-block.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-sheet.is-long-pressing,#view-detail:not(.stage-mode) .full-chord-section.is-long-pressing{transform:scale(.992);border-color:rgba(197,208,222,.14);background:linear-gradient(145deg,rgba(37,42,50,.48),rgba(13,17,22,.34));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 22px rgba(0,0,0,.18);backdrop-filter:saturate(112%) blur(12px);-webkit-backdrop-filter:saturate(112%) blur(12px)}
+#view-detail:not(.stage-mode) .wa-block[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-section[role="button"]:focus-visible{border-color:rgba(112,164,233,.46);background:rgba(32,41,53,.34);box-shadow:0 0 0 3px rgba(74,143,232,.1)}
+#view-detail:not(.stage-mode) .full-chord-section[role="button"]{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:0}
+#view-detail:not(.stage-mode) .full-chord-section[role="button"]:hover,#view-detail:not(.stage-mode) .full-chord-section[role="button"]:active,#view-detail:not(.stage-mode) .full-chord-section[role="button"]:focus,#view-detail:not(.stage-mode) .full-chord-section[role="button"]:focus-visible,#view-detail:not(.stage-mode) .full-chord-section.is-long-pressing{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none}
+#view-detail #detail-content .full-chord-sheet.full-chord-sheet-sections{padding:0;border:0;background:transparent;box-shadow:none}
 #view-detail:not(.stage-mode) [data-inline-editing="true"]{margin:0 0 18px;padding:15px;border:1px solid rgba(197,208,222,.15);border-radius:15px;background:linear-gradient(145deg,rgba(35,41,50,.74),rgba(10,14,19,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 12px 30px rgba(0,0,0,.26);backdrop-filter:saturate(116%) blur(16px);-webkit-backdrop-filter:saturate(116%) blur(16px)}
 #view-detail:not(.stage-mode) #detail-content .chord-line,#view-detail:not(.stage-mode) #detail-content .full-chord-line.is-chord{color:var(--chord-color);font-weight:600}
 #view-detail:not(.stage-mode) #detail-content .letra-linha,#view-detail:not(.stage-mode) #detail-content .full-chord-line:not(.is-chord):not(.is-section){color:#eef0f3;font-weight:500}
@@ -1093,8 +1097,10 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=27">
-<link rel="stylesheet" href="css/search-menu.css?v=15">
+<link rel="stylesheet" href="css/search-menu.css?v=16">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
+<link rel="stylesheet" href="css/song-section-heading.css?v=1">
+<link rel="stylesheet" href="css/event-share-variants.css?v=5">
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -1446,14 +1452,14 @@ window.roudyLoadScript=(function(){const pending={};return function(src){if(!pen
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
  <script src="js/profile-qr.js?v=4"></script>
- <script src="js/notification-center.js?v=5"></script>
+ <script src="js/notification-center.js?v=6"></script>
 <script src="js/user-playlists.js?v=6"></script>
 <script src="js/home-playlists.js?v=24"></script>
 <script src="js/song-share.js?v=1"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
-<script src="js/playlist-invites.js?v=3"></script>
+<script src="js/playlist-invites.js?v=5"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -2181,14 +2187,55 @@ function isChordLine(linha){
 // Título de seção: nome conhecido (Intro, Refrão, Primeira Parte...) ou rótulo curto entre colchetes ("[Tab - Solo]").
 // Letra entre colchetes ou fora do vocabulário continua sendo letra.
 const SHEET_SECTION_LINE={test(value){const text=String(value||'').trim();if(!text)return false;if(songFormat.isSectionName(text))return true;const tagged=text.match(/^\[([^\]]{1,40})\]:?$/);return !!tagged&&tagged[1].trim().split(/\s+/).length<=3}};
+function renderSongSectionHeading(label,extraClass=''){
+  const text=String(label||'').trim().replace(/^\[|\]$/g,'');
+  return text?`<div class="full-chord-line is-section song-section-heading${extraClass?` ${extraClass}`:''}">${eventEsc(text)}</div>`:'';
+}
 function renderMusicalText(text,totalShift,full=false){
   return String(text||'').split('\n').map(raw=>{
     const line=songFormat.cleanSheetLine(raw);
-    if(full&&SHEET_SECTION_LINE.test(line))return `<div class="full-chord-line is-section">${eventEsc(line.trim().replace(/^\[|\]$/g,''))}</div>`;
+    if(SHEET_SECTION_LINE.test(line))return renderSongSectionHeading(line);
     const chord=isChordLine(line);
     const css=full?`full-chord-line${chord?' is-chord':''}`:chord?'chord-line':'letra-linha';
     return `<div class="${css}">${eventEsc(chord?shiftText(line,totalShift):line)}</div>`;
   }).join('');
+}
+
+// A página "Só letras" preserva cada quebra explícita como um verso. Quebras
+// visuais causadas pela largura continuam dentro do mesmo elemento e, portanto,
+// mantêm o line-height sem ganhar espaçamento de verso.
+function renderLyricsReadingText(text){
+  return String(text||'').replace(/\r\n?/g,'\n').split('\n').map(raw=>{
+    const line=songFormat.cleanSheetLine(raw);
+    if(!line.trim())return '<div class="song-lyrics-stanza-break" aria-hidden="true"></div>';
+    if(SHEET_SECTION_LINE.test(line))return renderSongSectionHeading(line,'song-lyrics-section-title');
+    if(isChordLine(line))return '';
+    return `<div class="full-chord-line song-lyrics-verse">${eventEsc(line)}</div>`;
+  }).join('');
+}
+
+function renderLyricsReadingRows(content){
+  const rows=[],pendingTitles=[];
+  String(content||'').replace(/\r\n?/g,'\n').split('\n').forEach(raw=>{
+    const text=songFormat.cleanSheetLine(raw).trimEnd();
+    if(!text.trim()){
+      if(!pendingTitles.length&&rows.length&&rows.at(-1)!=='<div class="song-lyrics-stanza-break" aria-hidden="true"></div>')rows.push('<div class="song-lyrics-stanza-break" aria-hidden="true"></div>');
+      return;
+    }
+    if(isChordLine(text))return;
+    const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
+    if(tagged&&(!tagged[2].trim()||isChordLine(tagged[2]))){
+      pendingTitles.splice(0,pendingTitles.length,renderSongSectionHeading(tagged[1],'song-lyrics-section-title'));
+      return;
+    }
+    if(SHEET_SECTION_LINE.test(text)){
+      pendingTitles.splice(0,pendingTitles.length,renderSongSectionHeading(text,'song-lyrics-section-title'));
+      return;
+    }
+    rows.push(...pendingTitles.splice(0),`<div class="full-chord-line song-lyrics-verse">${eventEsc(text)}</div>`);
+  });
+  while(rows.at(-1)==='<div class="song-lyrics-stanza-break" aria-hidden="true"></div>')rows.pop();
+  return rows.join('');
 }
 
 function stageSentenceCase(value){
@@ -2241,13 +2288,44 @@ function inlineSectionToBlock(section){
   });
   return {l:section.label||'',c:rows.join('\n')};
 }
+function fullSheetStructuredSectionText(section){
+  const rows=[];if(section?.nome)rows.push(String(section.nome).trim());
+  for(const line of Array.isArray(section?.linhas)?section.linhas:[]){
+    const chords=[...(line.acordes||[])].sort((a,b)=>(Number(a.posicao)||0)-(Number(b.posicao)||0));let chordLine='';
+    chords.forEach(item=>{const chord=String(item.acorde||'').trim();if(!chord)return;const position=Math.max(chordLine.length,Number(item.posicao)||0);chordLine+=' '.repeat(position-chordLine.length)+chord;});
+    if(chordLine)rows.push(chordLine);if(String(line.letra||'').trim())rows.push(String(line.letra).trimEnd());
+  }
+  return rows.join('\n').trim();
+}
+function splitFullSheetSections(sheet){
+  if(Array.isArray(sheet?.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length))return sheet.sections.map(fullSheetStructuredSectionText).filter(Boolean);
+  const lines=String(sheet?.content||'').replace(/\r\n?/g,'\n').split('\n'),chunks=[];let current=[];
+  const flush=()=>{const value=current.join('\n').trim();if(value)chunks.push(value);current=[];};
+  lines.forEach(line=>{const clean=songFormat.cleanSheetLine(line),tagged=clean.match(/^\s*\[[^\]]{1,60}\]\s*(.*)$/),starts=SHEET_SECTION_LINE.test(clean)||Boolean(tagged&&(!tagged[1].trim()||isChordLine(tagged[1])));if(starts&&current.some(value=>value.trim()))flush();current.push(line);});flush();
+  return chunks.length?chunks:[String(sheet?.content||'').trim()].filter(Boolean);
+}
+function editableFullSectionParts(content){
+  const lines=String(content||'').replace(/\r\n?/g,'\n').split('\n'),first=songFormat.cleanSheetLine(lines[0]||''),hasHeading=SHEET_SECTION_LINE.test(first)||Boolean(first.match(/^\s*\[[^\]]{1,60}\]\s*$/));
+  const heading=hasHeading?lines.shift().trim():'';
+  return {heading,pattern:lines.map(line=>!line.trim()?'blank':isChordLine(songFormat.cleanSheetLine(line))?'chord':'lyrics'),chords:lines.filter(line=>line.trim()&&isChordLine(songFormat.cleanSheetLine(line))).join('\n'),lyrics:lines.filter(line=>line.trim()&&!isChordLine(songFormat.cleanSheetLine(line))).join('\n')};
+}
+function mergeEditableFullSection(original,chordsValue,lyricsValue){
+  const parts=editableFullSectionParts(original),chords=String(chordsValue||'').replace(/\r\n?/g,'\n').split('\n').filter(line=>line.trim()),lyrics=String(lyricsValue||'').replace(/\r\n?/g,'\n').split('\n').filter(line=>line.trim()),rows=[];
+  parts.pattern.forEach(type=>{if(type==='chord'&&chords.length)rows.push(chords.shift());else if(type==='lyrics'&&lyrics.length)rows.push(lyrics.shift());else if(type==='blank'&&rows.length&&rows.at(-1)!=='')rows.push('');});
+  while(chords.length||lyrics.length){if(chords.length)rows.push(chords.shift());if(lyrics.length)rows.push(lyrics.shift());}
+  while(rows.at(-1)==='')rows.pop();return [parts.heading,...rows].filter((line,index)=>index===0?Boolean(line):true).join('\n').trim();
+}
 
 function beginInlineBlockEdit(target){
   if(!target||target.dataset.inlineEditing==='true'||stageMode)return;
   const songId=target.dataset.longPressEdit,section=target.dataset.editSection;
   const song=inlineEditSong(songId);
   if(!song)return;
-  if(section==='full'){
+  if(section==='full-section'){
+    const index=Number(target.dataset.editFullSection),chunks=splitFullSheetSections(song.fullChordSheet),content=chunks[index];if(content==null){renderDetail();return;}const parts=editableFullSectionParts(content),heading=parts.heading.replace(/^\[|\]$/g,''),lyricsOnly=Boolean(target.closest('.song-page-lyrics'));
+    target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
+    target.dataset.editLyricsOnly=String(lyricsOnly);target.innerHTML=`${heading?`<div class="inline-block-section-title">${eventEsc(heading)}</div>`:''}${lyricsOnly?'':`<label class="inline-block-label" for="inline-full-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-full-chords-${index}">${eventEsc(parts.chords)}</textarea>`}<label class="inline-block-label" for="inline-full-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-full-lyrics-${index}">${eventEsc(parts.lyrics)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullSectionEdit('${eventEsc(String(songId))}',${index},this)">Salvar</button></div>`;
+  }else if(section==='full'){
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
     const content=song.fullChordSheet?.content||'';
     target.innerHTML=`<label class="inline-block-label" for="inline-full-${eventEsc(String(songId))}">Letra e cifra</label><textarea class="inline-block-textarea inline-block-full" id="inline-full-${eventEsc(String(songId))}">${eventEsc(content)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullEdit('${eventEsc(String(songId))}',this)">Salvar</button></div>`;
@@ -2299,6 +2377,13 @@ function saveInlineFullEdit(songId,button){
   const fullChordSheet={...(song.fullChordSheet||{}),content,sections:[]};
   button.disabled=true;
   return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Letra e cifra salvas');
+}
+function saveInlineFullSectionEdit(songId,index,button){
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){showToast('⚠️ Esta seção mudou. Reabra a música e tente de novo.');renderDetail();return;}
+  const original=editableFullSectionParts(chunks[index]),chords=card.querySelector('.inline-block-chords')?.value??original.chords,lyrics=card.querySelector('.inline-block-lyrics').value,content=mergeEditableFullSection(chunks[index],chords,lyrics);if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
+  chunks[index]=content;const fullChordSheet={...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]};button.disabled=true;
+  return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Seção salva');
 }
 
 (()=>{
@@ -2436,12 +2521,12 @@ function renderSmartFullChordLine(chordLine){
 }
 
 function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
-  if(!sheet?.content) return '';
+  if(!sheet?.content&&!Array.isArray(sheet?.sections)) return '';
   if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
     const structured=sheet.sections.map((section,sectionIndex)=>{
       // Só nome de seção vira título (cinza). Letra que veio no lugar do nome volta a ser letra (branca).
       const name=String(section.nome||'').trim(),firstLyric=String(section.linhas?.[0]?.letra||'').trim();
-      const heading=!name?'':isChordLine(name)?renderMusicalText(name,totalShift,true):SHEET_SECTION_LINE.test(name)?`<div class="full-chord-line is-section">${eventEsc(name.replace(/^\[|\]$/g,'').replace(/:$/,''))}</div>`:(contentMode==='chords'||name.localeCompare(firstLyric,'pt-BR',{sensitivity:'base'})===0?'':`<div class="full-chord-line">${eventEsc(name)}</div>`);
+      const heading=!name?'':isChordLine(name)?renderMusicalText(name,totalShift,true):SHEET_SECTION_LINE.test(name)?renderSongSectionHeading(name.replace(/:$/,''),contentMode==='lyrics'?'song-lyrics-section-title':''):(contentMode==='chords'||name.localeCompare(firstLyric,'pt-BR',{sensitivity:'base'})===0?'':`<div class="full-chord-line">${eventEsc(name)}</div>`);
       const lines=(section.linhas||[]).map(line=>{
         const ordered=[...(line.acordes||[])].sort((a,b)=>a.posicao-b.posicao);
         let chordLine='';
@@ -2451,28 +2536,34 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
           chordLine+=' '.repeat(position-chordLine.length)+chord;
         });
         const chords=chordLine&&contentMode!=='lyrics'?renderSmartFullChordLine(chordLine):'';
-        const lyric=line.letra&&contentMode!=='chords'?renderMusicalText(line.letra,totalShift,true):'';
+        const lyric=line.letra&&contentMode!=='chords'?(contentMode==='lyrics'?renderLyricsReadingText(line.letra):renderMusicalText(line.letra,totalShift,true)):'';
         return chords+lyric;
       }).join('');
-      return `<section data-song-section-id="${sectionIndex}">${heading+lines}</section>`;
+      if(contentMode==='lyrics'&&!lines.includes('song-lyrics-verse'))return '';
+      return `<section class="full-chord-section${contentMode==='lyrics'?' song-lyrics-stanza':''}" data-song-section-id="${sectionIndex}" ${editableBlockAttrs(songId,`editar ${section.nome||`seção ${sectionIndex+1}`}`,'full-section')} data-edit-full-section="${sectionIndex}">${heading+lines}</section>`;
     }).join('');
-    return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${structured}</article>`;
+    if(contentMode!=='lyrics'||structured)return `<article class="full-chord-sheet full-chord-sheet-sections">${structured}</article>`;
   }
-  const rows=sheet.content.replace(/\r\n?/g,'\n').split('\n').map(raw=>{
+  const renderRows=content=>String(content||'').replace(/\r\n?/g,'\n').split('\n').map(raw=>{
     const text=songFormat.cleanSheetLine(raw).trimEnd();
-    if(!text.trim()) return contentMode==='chords'?'':'<div class="full-chord-line">&nbsp;</div>';
+    if(!text.trim()) return contentMode==='chords'?'':contentMode==='lyrics'?'<div class="song-lyrics-stanza-break" aria-hidden="true"></div>':'<div class="full-chord-line">&nbsp;</div>';
     if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
     // "[Intro] C7M  D9  Bm7": título da seção + linha de acordes.
     const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
     if(tagged&&tagged[2].trim()&&isChordLine(tagged[2])){
-      const label=`<div class="full-chord-line is-section">${eventEsc(tagged[1].trim())}</div>`;
+      const label=renderSongSectionHeading(tagged[1],contentMode==='lyrics'?'song-lyrics-section-title':'');
       return contentMode==='lyrics'?label:label+renderSmartFullChordLine(shiftText(tagged[2].trim(),totalShift));
     }
     const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
-    return `<div class="full-chord-line${section?' is-section':''}">${eventEsc(section?text.trim().replace(/^\[|\]$/g,''):text)}</div>`;
+    return section?renderSongSectionHeading(text,contentMode==='lyrics'?'song-lyrics-section-title':''):`<div class="full-chord-line${contentMode==='lyrics'?' song-lyrics-verse':''}">${eventEsc(text)}</div>`;
   }).join('');
-  return `<article class="full-chord-sheet" ${editableBlockAttrs(songId,'editar letra e cifra')}>${rows}</article>`;
+  const chunks=splitFullSheetSections(sheet),sections=chunks.map((chunk,index)=>{
+    const rows=contentMode==='lyrics'?renderLyricsReadingRows(chunk):renderRows(chunk);
+    if(contentMode==='lyrics'&&!rows.includes('song-lyrics-verse'))return '';
+    return `<section class="full-chord-section${contentMode==='lyrics'?' song-lyrics-stanza':''}" data-song-section-id="${index}" ${editableBlockAttrs(songId,`editar seção ${index+1}`,'full-section')} data-edit-full-section="${index}">${rows}</section>`;
+  }).join('');
+  return `<article class="full-chord-sheet full-chord-sheet-sections${contentMode==='lyrics'?' lyrics-reading-sheet':''}">${sections}</article>`;
 }
 
 function renderTablature(value){
@@ -2616,14 +2707,14 @@ function renderSummaryProjection(summary,totalShift,songId,contentMode='combined
       const repeat=line.repeticoes?` (${line.repeticoes}x)`:'';
       const chordHtml=chords&&contentMode!=='lyrics'?`<div class="chord-line">${renderSmartChordTokens(shiftText(chords,totalShift))}${repeat}</div>`:'';
       const lyricText=line.lyrics.startsWith('*')&&line.lyrics.endsWith('*')?line.lyrics.slice(1,-1):line.lyrics;
-      const lyricHtml=lyricText&&contentMode!=='chords'?renderMusicalText(lyricText,totalShift):'';
+      const lyricHtml=lyricText&&contentMode!=='chords'?(contentMode==='lyrics'?renderLyricsReadingText(lyricText):renderMusicalText(lyricText,totalShift)):'';
       if(contentMode==='lyrics')return lyricHtml;
       const smartRepeat=line.repeticoes||smartScroll.repeatCount(line.lyrics,0)||(section.lines.length===1?smartScroll.repeatCount(section.label,0):0)||1;
       return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${smartRepeat}" data-smart-chords="${eventEsc(shiftText(chords,totalShift))}">${chordHtml+lyricHtml}</div>`;
     }).join('');
-    const labelHtml=section.showLabel&&section.label?`<div class="full-chord-line is-section">${eventEsc(section.label)}</div>`:'';
+    const labelHtml=section.showLabel&&section.label?renderSongSectionHeading(section.label,contentMode==='lyrics'?'song-lyrics-section-title':''):'';
     const stageLabel=section.label||`Trecho ${sectionIndex+1}`;
-    return corpo||labelHtml?`<section class="wa-block" data-song-section-id="${sectionIndex}" ${editableBlockAttrs(songId,`editar bloco ${sectionIndex+1} da cifra`,section.sourceIndex??sectionIndex)}><span class="stage-summary-label">${eventEsc(stageLabel)}</span>${labelHtml}${corpo}</section>`:'';
+    return corpo||labelHtml?`<section class="wa-block${contentMode==='lyrics'?' song-lyrics-stanza':''}" data-song-section-id="${sectionIndex}" ${editableBlockAttrs(songId,`editar bloco ${sectionIndex+1} da cifra`,section.sourceIndex??sectionIndex)}><span class="stage-summary-label">${eventEsc(stageLabel)}</span>${labelHtml}${corpo}</section>`:'';
   }).join('');
   return html||'<div class="empty-state"><div class="emoji">🎼</div><p>Cifra ainda não cadastrada</p></div>';
 }
@@ -4358,7 +4449,7 @@ async function openAccountModal(){
   document.getElementById('modal-overlay').style.display='none';
   const layer=ensureAccountDrawer();
   layer.querySelector('.account-drawer').innerHTML=`
-    <div class="account-drawer-profile-head"><button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile,'account-avatar','account-drawer-avatar')}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button><button class="account-drawer-qr-button" type="button" onclick="profileQr.open()" aria-label="Abrir código QR do perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><path d="M14 14h3v3h-3z"/></svg></button></div>
+    <div class="account-drawer-profile-head"><button class="account-drawer-profile" type="button" onclick="openAccountDrawerDestination('profile')">${accountAvatar(profile,'account-avatar','account-drawer-avatar')}<span class="account-drawer-profile-copy"><strong>${eventEsc(profile.name)}</strong><span>Ver perfil</span></span></button><button class="account-drawer-qr-button" type="button" onclick="profileQr.open()" aria-label="Abrir código QR do perfil"><img src="assets/icons/icone-qrcode-roudy.svg" alt="" aria-hidden="true"></button></div>
     <nav class="account-drawer-menu" aria-label="Conta e configurações">
       <button class="account-drawer-item" type="button" onclick="showAccountPremiumInfo()"><span class="account-drawer-icon account-drawer-icon--brand"><img class="roudy-rd-mark" src="assets/icons/roudy-rd-premium.svg?v=1" alt="" aria-hidden="true"></span><span class="account-drawer-label"><strong>Meu Premium</strong><small>Recursos Premium do ROUDY</small></span><span class="account-drawer-badge">Em breve</span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('profile')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-4.2 3.1-6.3 7-6.3s6.3 2.1 7 6.3"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('myProfile'))}</strong><small>${eventEsc(appText('profileHelp'))}</small></span></button>
@@ -4748,6 +4839,9 @@ async function logoutAppAccount(){
   showToast('Salvando tudo na sua conta antes de sair…');
   try{await librarySync.syncNow();}catch(_){/* a verificação abaixo decide */}
   try{await syncEventsNow(true);}catch(_){/* a verificação abaixo decide */}
+  let playlistsSaved=false;
+  try{playlistsSaved=await window.personalPlaylistSync?.flush?.();}catch(_){playlistsSaved=false;}
+  if(!playlistsSaved){appAlert('Ainda não foi possível salvar suas playlists e capas na sua conta.\n\nPara não perder nada, você continua conectado. Verifique a internet e tente sair de novo.');return;}
   try{await window.playlistCollaboration?.flush();}catch(_){}
   if(window.playlistCollaboration?.hasPending()){appAlert('Há alterações de playlists compartilhadas aguardando envio ou revisão. Abra o botão + da playlist antes de sair para preservar seus ajustes.');return;}
   const pendingSongs=songsPendingUpload(),pendingEvents=eventsPendingUpload();
@@ -5167,9 +5261,10 @@ async function syncEventsNow(silent){
 }
 
 const EVENT_NOTICE_READ_KEY='sc_event_notice_read_v1';
+function roudyNotificationScopes(){return [...new Set([currentAuthState?.user?.id,appCurrentUser?.id].map(value=>String(value||'').trim()).filter(Boolean))];}
 function eventNoticeReadIds(eventId){
-  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),userState=state&&state[String(appCurrentUser.id)]||{};
-  return new Set(Array.isArray(userState[String(eventId)])?userState[String(eventId)]:[]);
+  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),values=roudyNotificationScopes().flatMap(userId=>{const userState=state&&state[userId]||{};return Array.isArray(userState[String(eventId)])?userState[String(eventId)]:[];});
+  return new Set(values.map(String));
 }
 function eventNoticeTargetsUser(notice,userId=appCurrentUser?.id){
   const actorId=String(notice?.actorId||'').trim(),recipientId=String(userId||'').trim();
@@ -5177,11 +5272,12 @@ function eventNoticeTargetsUser(notice,userId=appCurrentUser?.id){
 }
 function eventUnreadNotices(event){const read=eventNoticeReadIds(event.id);return (Array.isArray(event?.notifications)?event.notifications:[]).filter(notice=>eventNoticeTargetsUser(notice)&&!read.has(String(notice.id)));}
 function markEventNoticesRead(event){
-  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),userId=String(appCurrentUser.id),userState={...(state&&state[userId]||{})};
-  userState[String(event.id)]=(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id)).slice(-50);
-  storage.set(EVENT_NOTICE_READ_KEY,{...(state||{}),[userId]:userState});
+  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),next={...(state||{})},ids=[...new Set([...eventNoticeReadIds(event.id),...(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id))])].slice(-50);
+  roudyNotificationScopes().forEach(userId=>{const userState={...(next[userId]||{})};userState[String(event.id)]=ids;next[userId]=userState;});
+  storage.set(EVENT_NOTICE_READ_KEY,next);
 }
 function getRoudyNotificationScope(){return String(currentAuthState?.user?.id||appCurrentUser?.id||'local');}
+function getRoudyNotificationScopes(){const values=roudyNotificationScopes();return values.length?values:['local'];}
 function getRoudyNotificationItems(){
   const actorId=String(appCurrentUser?.id||''),messages=storage.get('sc_event_messages_v1',{}),feed=[];
   for(const event of Array.isArray(setlists)?setlists:[]){
@@ -5263,7 +5359,7 @@ function openEventInviteSheet(eventId){
   if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.eventId!==String(eventId))eventInviteSelection={owner:eventInviteOwner(),eventId:String(eventId),role:eventInviteRoles()[0],busy:false};
   if(eventInviteSelection.busy)return;
   const layer=ensureEventActionLayer(),shareData=eventShareData(event),role=getEventInviteRole(event.id);
-  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action event-invite-action--qr" onclick="closeEventActionLayer();eventQrScanner.open(${attrJs(event.id)},{role:getEventInviteRole(${attrJs(event.id)})})"><i><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".35"/><rect x="18" y="14" width="3" height="3" rx=".35"/><rect x="14" y="18" width="3" height="3" rx=".35"/><rect x="18" y="18" width="3" height="3" rx=".35"/></svg></i><span>Escanear QR</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
+  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action event-invite-action--qr" onclick="closeEventActionLayer();eventQrScanner.open(${attrJs(event.id)},{role:getEventInviteRole(${attrJs(event.id)})})"><i><img src="assets/icons/icone-qrcode-roudy.svg" alt="" aria-hidden="true"></i><span>Escanear QR</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
   requestAnimationFrame(()=>layer.classList.add('is-open'));
 }
 function openEventMemberSearch(eventId){
@@ -5861,13 +5957,15 @@ let eventShareState=null;
 function eventShareData(event){return roudyEventShare.createData(event,id=>musicas.find(song=>String(song.id)===String(id)));}
 function ensureEventShareLayer(){
   let layer=document.getElementById('event-share-layer');if(layer)return layer;
-  layer=document.createElement('div');layer.id='event-share-layer';layer.className='event-share-layer';layer.innerHTML='<section class="event-share-sheet" role="dialog" aria-modal="true" aria-labelledby="event-share-title" onclick="event.stopPropagation()"><header class="event-share-header"><button type="button" class="event-share-cancel" onclick="closeEventSharePreview()">Cancelar</button><strong id="event-share-title">Compartilhar evento</strong><span></span></header><div class="event-share-preview" id="event-share-preview"></div><button type="button" class="event-share-submit" id="event-share-submit" onclick="confirmEventShare()" aria-label="Compartilhar este evento">Compartilhar</button><p class="event-share-status" id="event-share-status" role="status" aria-live="polite"></p></section>';
+  layer=document.createElement('div');layer.id='event-share-layer';layer.className='event-share-layer';layer.innerHTML='<section class="event-share-sheet" role="dialog" aria-modal="true" aria-labelledby="event-share-title" onclick="event.stopPropagation()"><header class="event-share-header"><button type="button" class="event-share-cancel" onclick="closeEventSharePreview()">Cancelar</button><strong id="event-share-title">Compartilhar evento</strong><span></span></header><div class="event-share-preview" id="event-share-preview"></div><div class="event-share-palette" id="event-share-palette" role="group" aria-label="Cor da arte do evento"></div><button type="button" class="event-share-submit" id="event-share-submit" onclick="confirmEventShare()" aria-label="Compartilhar este evento">Compartilhar</button><p class="event-share-status" id="event-share-status" role="status" aria-live="polite"></p></section>';
   layer.addEventListener('click',closeEventSharePreview);document.body.appendChild(layer);return layer;
 }
 function closeEventSharePreview(){const layer=document.getElementById('event-share-layer');if(layer)layer.classList.remove('is-open');eventShareState=null;}
+function renderEventSharePalette(){const target=document.getElementById('event-share-palette'),state=eventShareState;if(!target||!state)return;target.innerHTML=Array.from({length:9},(_,variant)=>`<button type="button" aria-label="Cor ${variant+1}" aria-pressed="${state.data.variant===variant}" onclick="selectEventShareVariant(${variant})"></button>`).join('');}
+function selectEventShareVariant(variant){const state=eventShareState,value=Math.max(0,Math.min(8,Number(variant)||0));if(!state||state.data.variant===value)return;state.data=Object.freeze({...state.data,variant:value});state.blob=null;document.getElementById('event-share-preview').innerHTML=roudyEventShare.cardMarkup(state.data);renderEventSharePalette();}
 async function prepareEventShareImage(state){try{state.blob=await roudyEventShare.renderImage(state.data,document);return state.blob}catch(error){state.blob=null;const status=document.getElementById('event-share-status');if(status)status.textContent='Não foi possível gerar a imagem deste evento.';return null;}}
 function sharePlaylist(id){
-  const event=findEvent(id);if(!event)return;closeEventActionLayer();const data=eventShareData(event),layer=ensureEventShareLayer();eventShareState={event,data,blob:null};document.getElementById('event-share-preview').innerHTML=roudyEventShare.cardMarkup(data);document.getElementById('event-share-status').textContent='';document.getElementById('event-share-submit').disabled=false;requestAnimationFrame(()=>{layer.classList.add('is-open');document.getElementById('event-share-submit').focus({preventScroll:true});});
+  const event=findEvent(id);if(!event)return;closeEventActionLayer();const data=eventShareData(event),layer=ensureEventShareLayer();eventShareState={event,data,blob:null};document.getElementById('event-share-preview').innerHTML=roudyEventShare.cardMarkup(data);renderEventSharePalette();document.getElementById('event-share-status').textContent='';document.getElementById('event-share-submit').disabled=false;requestAnimationFrame(()=>{layer.classList.add('is-open');document.getElementById('event-share-submit').focus({preventScroll:true});});
 }
 async function confirmEventShare(){
   const state=eventShareState,button=document.getElementById('event-share-submit'),status=document.getElementById('event-share-status');if(!state||button.disabled)return;button.disabled=true;status.textContent='Preparando compartilhamento…';
@@ -6115,6 +6213,11 @@ appAuth.subscribe(async state=>{
     appIdentity=await eventCollaboration.ensureRegistered(previousUser);
     if(accountGeneration!==accountAuthGeneration||!currentAuthState.authenticated||currentAuthState.user?.id!==state.user.id)return;
     appCurrentUser=Object.freeze({...appIdentity.user,role:previousUser.role||'Liderança'});
+    // A identidade estável já está pronta: mostra imediatamente avatar e playlists em cache,
+    // e inicia a reconciliação na nuvem sem esperar eventos, convites e contexto terminarem.
+    appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
+    renderAccountButton();homePlaylists.renderHome();
+    personalPlaylistSync.schedule(0);
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
     restoreMedleyForOwner(appCurrentUser.id);
@@ -6130,7 +6233,7 @@ appAuth.subscribe(async state=>{
     try{await contextAcknowledgements.hydrate(appCurrentUser.id);}catch(error){console.warn('[conta] avisos de preparação ficaram para depois',error);}
     if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
-    renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();
+    renderAccountButton();renderSetlists();renderBandToolbar();renderContextualHomeCard();window.notificationCenter?.update?.();
     // Eventos criados enquanto o envio falhou ficavam só neste aparelho até um evento 'online'. Reenvia ao entrar.
     if(!eventMigrationCandidate&&setlists.some(event=>event.syncState==='pending'&&event.pendingShared&&eventModel.isLeader(event,appCurrentUser.id)))setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true);},0);
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}

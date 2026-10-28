@@ -1,7 +1,9 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v630-biblioteca-compacta";
+const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
+// Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
+// Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
 // Compatibility marker: simplificando-cifras-v624-sem-texto-privada
 // Compatibility marker: simplificando-cifras-v617-compartilhar-musica
@@ -50,11 +52,14 @@ const CACHE_NAME = "simplificando-cifras-v630-biblioteca-compacta";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./js/event-detail-refactor.css?v=73",
+  "./css/event-share-variants.css?v=5",
+  "./js/event-detail-refactor.css?v=74",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
-  "./css/search-menu.css?v=15",
+  "./assets/icons/icone-qrcode-roudy.svg",
+  "./css/search-menu.css?v=16",
   "./css/stage-mode-reference.css?v=19",
+  "./css/song-section-heading.css?v=1",
   "./js/search-menu.js?v=8",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
@@ -65,10 +70,10 @@ const ASSETS = [
   "./js/home-playlists.js?v=24",
   "./js/song-share.js?v=1",
   "./js/user-playlists.js?v=6",
-  "./js/notification-center.js?v=5",
+  "./js/notification-center.js?v=6",
   "./js/playlist-collaboration.js?v=1",
   "./js/personal-playlist-sync.js?v=3",
-  "./js/playlist-invites.js?v=3",
+  "./js/playlist-invites.js?v=5",
   "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
   "./js/event-collaboration-client.js?v=19",
@@ -81,7 +86,7 @@ const ASSETS = [
   "./js/vendor/jsqr.min.js?v=1",
   "./js/profile-qr.js?v=4",
   "./js/profile-qr.css?v=2",
-  "./js/account-drawer.css?v=13",
+  "./js/account-drawer.css?v=17",
   "./js/account-profile.css?v=4",
   "./css/home-playlists.css?v=1",
   "./js/user-playlists.js?v=1",
@@ -101,7 +106,7 @@ const ASSETS = [
   "./css/song-reading.css?v=11",
   "./css/song-reading.css?v=12",
   "./css/song-reading.css?v=13",
-  "./css/song-reading.css?v=14",
+  "./css/song-reading.css?v=15",
   "./js/ai/ai-harmonic-summary.js?v=21",
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
@@ -276,6 +281,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=4",
+  "./js/song-lyrics-typography.css?v=5",
   "./js/medley-editor.css?v=30",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
