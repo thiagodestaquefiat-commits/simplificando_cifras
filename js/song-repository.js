@@ -24,8 +24,12 @@
   // song.editorData.fullChordSheet). Com a força-tarefa completando as cifras, a biblioteca passou
   // do limite do navegador (~5 MB) e o salvar falhava. A cópia de dentro do editorData só é lida
   // quando falta a de fora (songFormat.fromLegacy), então ela não vai mais para o armazenamento.
+  // Também troca a cópia inteira da música guardada pela sincronização (librarySync.baseSongData)
+  // pela impressão digital dela (librarySync.compactForStorage).
   function forStorage(songs) {
-    return (Array.isArray(songs) ? songs : []).map((song) => {
+    const compactSync = global.librarySync && typeof global.librarySync.compactForStorage === "function"
+      ? global.librarySync.compactForStorage : (song) => song;
+    return (Array.isArray(songs) ? songs : []).map(compactSync).map((song) => {
       const editor = song && song.editorData;
       if (!editor || typeof editor !== "object") return song;
       const keepSheet = !song.fullChordSheet && editor.fullChordSheet;
