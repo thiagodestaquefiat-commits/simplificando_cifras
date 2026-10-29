@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=74">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=75">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -741,10 +741,11 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 .inline-block-textarea{display:block;width:100%;min-height:72px;padding:10px 11px;resize:vertical;border:1px solid rgba(194,205,220,.17);border-radius:10px;outline:0;background:rgba(2,4,7,.62);color:#f2f4f7;font:600 15px/1.55 Arial,sans-serif;box-shadow:inset 0 1px 3px rgba(0,0,0,.22)}
 .inline-block-chords{color:var(--chord-color)}.inline-block-lyrics{min-height:54px}.inline-block-full{min-height:240px}
 .inline-block-textarea:focus{border-color:rgba(111,166,238,.5);box-shadow:0 0 0 3px rgba(76,142,229,.1),inset 0 1px 3px rgba(0,0,0,.2)}
-.inline-block-actions{display:flex;margin-top:12px;justify-content:flex-end;gap:7px}
-.inline-block-actions button{min-width:78px;min-height:38px;padding:0 13px;border:1px solid rgba(194,205,220,.16);border-radius:10px;background:rgba(255,255,255,.05);color:#c4cbd4;font:700 11px/1 system-ui;cursor:pointer}
-.inline-block-actions button.primary{border-color:rgba(111,166,238,.36);background:#2672df;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+.inline-block-actions{display:flex;margin-top:12px;align-items:center;justify-content:flex-end;gap:8px}.inline-block-actions .inline-block-delete{min-width:0;margin-right:auto;padding-inline:10px;border-color:transparent;background:transparent;color:#e66b68}.inline-block-action-group{display:flex;align-items:center;gap:8px}
+.inline-block-actions button{display:inline-flex;min-width:82px;min-height:40px;padding:0 15px;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(194,205,220,.13);border-radius:999px;background:#292c31;color:#e2e5e9;font-family:"SF Pro Text",-apple-system,BlinkMacSystemFont,sans-serif!important;font-size:13px!important;font-weight:650!important;line-height:1!important;letter-spacing:-.01em;white-space:nowrap;cursor:pointer}.inline-block-actions button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inline-block-actions button.primary{border-color:#287be8;background:#287be8;color:#fff;box-shadow:none}
 .inline-block-actions button:active{transform:scale(.97)}
+.inline-delete-confirm-layer{position:fixed;z-index:420;inset:0;display:flex;padding:18px;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7)}.inline-delete-confirm{width:min(100%,430px);padding:22px 20px calc(18px + env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.08);border-radius:24px;background:#1c1d20;color:#f5f5f7;box-shadow:0 -16px 42px rgba(0,0,0,.38)}.inline-delete-confirm h2{margin:0;font-size:19px;letter-spacing:-.02em}.inline-delete-confirm p{margin:8px 0 20px;color:#a8abb1;font-size:13px;line-height:1.45}.inline-delete-confirm-actions{display:flex;justify-content:flex-end;gap:9px}.inline-delete-confirm-actions button{min-height:42px;padding:0 17px;border:0;border-radius:999px;background:#2a2c31;color:#f3f4f6;font:650 13px/1 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.inline-delete-confirm-actions .danger{background:rgba(229,72,77,.16);color:#ff7470}@media(max-width:374px){.inline-block-actions{align-items:stretch}.inline-block-actions .inline-block-delete{padding-inline:6px}.inline-block-action-group{gap:6px}.inline-block-actions button{min-width:72px;padding-inline:11px}}
 @media(prefers-reduced-transparency:reduce){#view-detail:not(.stage-mode) .wa-block[role="button"],#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]{background:#13161b;backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media(prefers-reduced-motion:reduce){#view-detail:not(.stage-mode) .wa-block[role="button"],#view-detail:not(.stage-mode) .full-chord-sheet[role="button"]{transition:none}}
 /* SONG CONTROLS — compact musical state, progressive disclosure, direct text scaling */
@@ -927,9 +928,8 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #view-sd>.detail-header .detail-title-wrap{transform:translate3d(0,calc(var(--event-header-progress)*-10px),0) scale(var(--event-title-scale))}
 #pane-setlists .band-toolbar{min-height:0;padding:0}
 #view-main[data-active-tab="setlists"] .event-month-heading:first-child{margin-top:26px}
-.events-more-action{display:none;width:40px;height:40px;flex:0 0 40px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#e8ebef;cursor:pointer;transition:background .15s,transform .15s}.events-more-action:hover,.events-more-action[aria-expanded="true"]{background:rgba(255,255,255,.07)}.events-more-action svg{width:21px;height:21px;fill:currentColor}.events-more-action:active{background:rgba(255,255,255,.1);transform:scale(.94)}
+.events-more-action{display:none;width:40px;height:40px;flex:0 0 40px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#e8ebef;cursor:pointer;transition:background .15s,transform .15s}.events-more-action:hover{background:rgba(255,255,255,.07)}.events-more-action svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}.events-more-action:active{background:rgba(255,255,255,.1);transform:scale(.94)}
 #view-main[data-active-tab="setlists"] .events-more-action{display:grid}#view-main[data-active-tab="setlists"] .app-account-btn{display:none}
-.events-header-menu{position:fixed;z-index:80;width:178px;padding:6px;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(34,35,39,.94);box-shadow:0 12px 34px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);opacity:0;transform:translate3d(8px,-8px,0) scale(.92);transform-origin:top right;transition:opacity 120ms ease,transform 170ms cubic-bezier(.2,.82,.26,1);backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%);pointer-events:none}.events-header-menu.is-open{opacity:1;transform:none;pointer-events:auto}.events-header-menu button{display:grid;width:100%;min-height:42px;padding:0 10px;border:0;border-radius:8px;grid-template-columns:22px minmax(0,1fr);align-items:center;gap:9px;background:transparent;color:#f3f4f6;font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;text-align:left;cursor:pointer}.events-header-menu button:hover,.events-header-menu button:active{background:rgba(255,255,255,.09)}.events-header-menu svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #view-sd .event-stage-action{display:flex;margin:14px 0 16px;justify-content:center}#view-sd .event-stage-entry{position:relative;min-width:176px;min-height:49px;padding:0 24px;border:0;border-radius:999px;background:linear-gradient(105deg,#f0f2f5 0%,#d9dde2 42%,#f5d83a 82%,#ffd91f 100%);color:#17191c;box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 6px 20px rgba(0,0,0,.3);font-size:12px;font-weight:750;letter-spacing:0;text-transform:none;transition:transform .14s,filter .14s}#view-sd .event-stage-entry:hover{background:linear-gradient(105deg,#fff 0%,#e7e9ed 42%,#ffe34b 82%,#ffdf27 100%);color:#111}#view-sd .event-stage-entry:active{filter:brightness(.93);transform:scale(.97)}
 @media(max-width:430px){#view-sd .event-meta-item{padding-inline:7px}#view-sd .event-meta-item span{font-size:9px}}
 #view-sd .event-detail-back{top:8px;left:8px;display:grid;width:44px;height:44px;padding:0;place-items:center;gap:0;font-size:0}
@@ -1121,7 +1121,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <input class="topbar-cover-input" id="playlist-cover-input" type="file" accept="image/*" onchange="setPlaylistCoverFromFile(this.files[0]);this.value=''">
         <button class="topbar-camera-action topbar-labeled" data-label="Foto/Arquivo" type="button" onclick="roudyCamera.open()" aria-label="Abrir câmera para adicionar música"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button>
         <button class="topbar-events-action topbar-labeled" data-label="Notificações" id="user-invitations-button" type="button" onclick="eventUserInvites.openInbox()" aria-label="Notificações" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 15 18 15 18 8Z"></path><path d="M9.5 20h5"></path></svg></button>
-        <button class="events-more-action" id="events-more-action" type="button" onclick="toggleEventsHeaderMenu(event)" aria-label="Mais opções de eventos" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.55"></circle><circle cx="12" cy="12" r="1.55"></circle><circle cx="19" cy="12" r="1.55"></circle></svg></button>
+        <button class="events-more-action" id="events-more-action" type="button" onclick="openAddSetlist()" aria-label="Novo evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
         <span class="topbar-labeled topbar-account-wrap" data-label="Menu" onclick="if(event.target===this)openAccountModal()"><button class="app-account-btn" id="app-account-btn" type="button" onclick="openAccountModal()" aria-label="Abrir menu">EU</button></span>
       </div>
       <div class="topbar-search-mode" id="topbar-search-mode" role="search" hidden>
@@ -1133,10 +1133,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         <button class="topbar-search-tool" id="playlist-voice-search" type="button" onclick="togglePlaylistVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg></button>
         <div class="playlist-search-recents" id="playlist-search-recents" hidden></div>
       </div>
-    </div>
-    <div class="events-header-menu" id="events-header-menu" role="menu" aria-label="Opções de eventos">
-      <button type="button" role="menuitem" onclick="runEventsHeaderAction('new')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2"></rect><path d="M8 3v5M16 3v5M8 12h8M12 9v6"></path></svg><span>Novo evento</span></button>
-      <button type="button" role="menuitem" onclick="runEventsHeaderAction('teams')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="16.5" cy="9" r="2.5"></circle><path d="M3.5 18c.5-3.7 2.4-5.5 5.5-5.5s5 1.8 5.5 5.5M14 13.2c3.7-.7 5.8.9 6.4 4.8"></path></svg><span>Equipes</span></button>
     </div>
     <div class="tab-bar" id="primary-tabs" role="tablist" aria-label="Seções principais" data-active="musicas">
       <span class="tab-indicator" aria-hidden="true"></span>
@@ -2312,6 +2308,11 @@ function mergeEditableFullSection(original,chordsValue,lyricsValue){
   while(chords.length||lyrics.length){if(chords.length)rows.push(chords.shift());if(lyrics.length)rows.push(lyrics.shift());}
   while(rows.at(-1)==='')rows.pop();return [parts.heading,...rows].filter((line,index)=>index===0?Boolean(line):true).join('\n').trim();
 }
+function inlineBlockActionMarkup(songId,index,kind,saveHandler,saveLabel='Salvar'){
+  const trash='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/></svg>';
+  const check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+  return `<div class="inline-block-actions"><button type="button" class="inline-block-delete" onclick="event.stopPropagation();openInlineBlockDeleteConfirm('${eventEsc(String(songId))}',${index},'${kind}')">${trash}<span>Excluir</span></button><div class="inline-block-action-group"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();${saveHandler}">${check}<span>${saveLabel}</span></button></div></div>`;
+}
 
 function beginInlineBlockEdit(target){
   if(!target||target.dataset.inlineEditing==='true'||stageMode)return;
@@ -2319,9 +2320,13 @@ function beginInlineBlockEdit(target){
   const song=inlineEditSong(songId);
   if(!song)return;
   if(section==='full-section'){
-    const index=Number(target.dataset.editFullSection),chunks=splitFullSheetSections(song.fullChordSheet),content=chunks[index];if(content==null){renderDetail();return;}const parts=editableFullSectionParts(content),heading=parts.heading.replace(/^\[|\]$/g,''),lyricsOnly=Boolean(target.closest('.song-page-lyrics'));
+    const index=Number(target.dataset.editFullSection),chunks=splitFullSheetSections(song.fullChordSheet),content=chunks[index];if(content==null){renderDetail();return;}const parts=editableFullSectionParts(content),heading=parts.heading.replace(/^\[|\]$/g,''),lyricsOnly=Boolean(target.closest('.song-page-lyrics')),combined=Boolean(target.closest('.song-page-combined'));
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
-    target.dataset.editLyricsOnly=String(lyricsOnly);target.innerHTML=`${heading?`<div class="inline-block-section-title">${eventEsc(heading)}</div>`:''}${lyricsOnly?'':`<label class="inline-block-label" for="inline-full-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-full-chords-${index}">${eventEsc(parts.chords)}</textarea>`}<label class="inline-block-label" for="inline-full-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-full-lyrics-${index}">${eventEsc(parts.lyrics)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullSectionEdit('${eventEsc(String(songId))}',${index},this)">Salvar</button></div>`;
+    target.dataset.editLyricsOnly=String(lyricsOnly);
+    target.dataset.editCombined=String(combined);
+    target.innerHTML=combined
+      ?`<label class="inline-block-label" for="inline-full-section-${index}">Seção — letra e cifras</label><textarea class="inline-block-textarea inline-block-full inline-block-section-full" id="inline-full-section-${index}">${eventEsc(content)}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineCombinedSectionEdit('${eventEsc(String(songId))}',${index},this)`,'Salvar')}`
+      :`${heading?`<div class="inline-block-section-title">${eventEsc(heading)}</div>`:''}${lyricsOnly?'':`<label class="inline-block-label" for="inline-full-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-full-chords-${index}">${eventEsc(parts.chords)}</textarea>`}<label class="inline-block-label" for="inline-full-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-full-lyrics-${index}">${eventEsc(parts.lyrics)}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineFullSectionEdit('${eventEsc(String(songId))}',${index},this)`)}`;
   }else if(section==='full'){
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
     const content=song.fullChordSheet?.content||'';
@@ -2330,11 +2335,31 @@ function beginInlineBlockEdit(target){
     const index=Number(section),current=inlineEditSection(song,index);if(!current){renderDetail();return;}
     const block=inlineSectionToBlock(current);
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
-    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)">Salvar</button></div>`;
+    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
   }
   target.querySelector('textarea')?.focus();
 }
-function cancelInlineBlockEdit(){renderDetail()}
+function closeInlineBlockDeleteConfirm(){document.getElementById('inline-delete-confirm-layer')?.remove()}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('inline-delete-confirm-layer')){event.preventDefault();closeInlineBlockDeleteConfirm();}});
+function openInlineBlockDeleteConfirm(songId,index,kind){
+  closeInlineBlockDeleteConfirm();
+  const layer=document.createElement('div');layer.id='inline-delete-confirm-layer';layer.className='inline-delete-confirm-layer';layer.setAttribute('role','presentation');
+  layer.innerHTML=`<section class="inline-delete-confirm" role="alertdialog" aria-modal="true" aria-labelledby="inline-delete-title" aria-describedby="inline-delete-description" onclick="event.stopPropagation()"><h2 id="inline-delete-title">Excluir este bloco?</h2><p id="inline-delete-description">As cifras e a letra deste bloco serão removidas.</p><div class="inline-delete-confirm-actions"><button type="button" onclick="closeInlineBlockDeleteConfirm()">Cancelar</button><button type="button" class="danger" onclick="deleteInlineBlock('${eventEsc(String(songId))}',${Number(index)},'${kind}',this)">Excluir bloco</button></div></section>`;
+  layer.addEventListener('click',closeInlineBlockDeleteConfirm);document.body.appendChild(layer);layer.querySelector('.danger')?.focus();
+}
+async function deleteInlineBlock(songId,index,kind,button){
+  const song=inlineEditSong(songId);if(!song)return closeInlineBlockDeleteConfirm();button.disabled=true;
+  let candidate=null;
+  if(kind==='full-section'){
+    const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){closeInlineBlockDeleteConfirm();showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');return renderDetail();}
+    chunks.splice(index,1);candidate={...song,fullChordSheet:{...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]}};
+  }else{
+    const model=songFormat.fromLegacy(song);if(!model.sections[index]){closeInlineBlockDeleteConfirm();showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');return renderDetail();}
+    candidate=songFormat.toLegacy(songFormat.normalize({...model,sections:model.sections.filter((_section,sectionIndex)=>sectionIndex!==index)}),song);
+  }
+  closeInlineBlockDeleteConfirm();return commitInlineSongEdit(song,candidate,'✅ Bloco excluído');
+}
+function cancelInlineBlockEdit(){closeInlineBlockDeleteConfirm();renderDetail()}
 // Grava a música editada no lugar certo: na variante do evento (como o editor completo faz) ou na
 // biblioteca — e, se a música veio de uma playlist, atualiza também a cópia aberta na tela.
 async function commitInlineSongEdit(song,candidate,message){
@@ -2379,6 +2404,13 @@ function saveInlineFullSectionEdit(songId,index,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
   const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){showToast('⚠️ Esta seção mudou. Reabra a música e tente de novo.');renderDetail();return;}
   const original=editableFullSectionParts(chunks[index]),chords=card.querySelector('.inline-block-chords')?.value??original.chords,lyrics=card.querySelector('.inline-block-lyrics').value,content=mergeEditableFullSection(chunks[index],chords,lyrics);if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
+  chunks[index]=content;const fullChordSheet={...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]};button.disabled=true;
+  return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Seção salva');
+}
+function saveInlineCombinedSectionEdit(songId,index,button){
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){showToast('⚠️ Esta seção mudou. Reabra a música e tente de novo.');renderDetail();return;}
+  const content=card.querySelector('.inline-block-section-full')?.value.replace(/\r\n?/g,'\n').trim();if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
   chunks[index]=content;const fullChordSheet={...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]};button.disabled=true;
   return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Seção salva');
 }
@@ -3208,29 +3240,7 @@ function tocarMedley(){
 }
 
 // ── SWITCH TAB (atualizado) ───────────────────────────────────────────
-function closeEventsHeaderMenu(){
-  const menu=document.getElementById('events-header-menu'),trigger=document.getElementById('events-more-action');
-  if(menu)menu.classList.remove('is-open');
-  if(trigger)trigger.setAttribute('aria-expanded','false');
-}
-function toggleEventsHeaderMenu(event){
-  event?.stopPropagation();
-  const menu=document.getElementById('events-header-menu'),trigger=document.getElementById('events-more-action');if(!menu||!trigger)return;
-  const opening=!menu.classList.contains('is-open');closeEventsHeaderMenu();if(!opening)return;
-  const rect=trigger.getBoundingClientRect(),menuWidth=178,gutter=10;
-  menu.style.top=`${Math.round(rect.bottom+6)}px`;
-  menu.style.left=`${Math.round(Math.max(gutter,Math.min(innerWidth-menuWidth-gutter,rect.right-menuWidth)))}px`;
-  menu.classList.add('is-open');trigger.setAttribute('aria-expanded','true');
-}
-function runEventsHeaderAction(action){
-  closeEventsHeaderMenu();
-  if(action==='new'){openAddSetlist();return;}
-  if(action==='teams')openBandManager();
-}
-document.addEventListener('click',event=>{if(!event.target.closest('#events-header-menu,#events-more-action'))closeEventsHeaderMenu();});
-document.addEventListener('keydown',event=>{if(event.key==='Escape')closeEventsHeaderMenu();});
 function switchTab(tab){
-  closeEventsHeaderMenu();
   if(primarySearchTabActive&&tab!=='search'){primarySearchTabActive=false;roudySearchMenu.close()}
   if(tab!=='musicas'&&playlistSearchMode)closePlaylistSearch();
   currentTab=tab;
