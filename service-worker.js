@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
+const CACHE_NAME = "simplificando-cifras-v654-inline-controls-sf-pro";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -53,7 +53,7 @@ const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=74",
+  "./js/event-detail-refactor.css?v=75",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
