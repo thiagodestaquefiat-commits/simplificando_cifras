@@ -169,8 +169,16 @@ Eu canto outra vez`;
         await page.evaluate(() => setSongPage(1, { animate: false }));
         const combinedChorus = page.locator('.song-page-combined .full-chord-section[data-edit-full-section="2"]');
         await combinedChorus.evaluate(element => beginInlineBlockEdit(element));
-        assert.equal(await combinedChorus.locator('.inline-block-chords').inputValue(), 'F G C', 'Letra + cifras continua oferecendo o campo de cifras');
-        assert.equal(await combinedChorus.locator('.inline-block-lyrics').inputValue(), 'Texto atualizado', 'Letra + cifras continua oferecendo o campo de letra');
+        assert.equal(await combinedChorus.locator('.inline-block-chords').count(), 0, 'Letra + cifras não separa a cifra em outro campo');
+        assert.equal(await combinedChorus.locator('.inline-block-lyrics').count(), 0, 'Letra + cifras não separa a letra em outro campo');
+        assert.equal(await combinedChorus.locator('.inline-block-section-full').inputValue(), '[REFRÃO]\nF G C\nTexto atualizado', 'a seção combinada mantém título, cifras e letra no mesmo editor');
+        assert.equal(await combinedChorus.getByRole('button', { name: 'Excluir' }).count(), 1, 'a seção oferece exclusão isolada');
+        await combinedChorus.getByRole('button', { name: 'Excluir' }).click();
+        assert.equal(await page.getByRole('heading', { name: 'Excluir este bloco?' }).count(), 1, 'a exclusão exige confirmação explícita');
+        assert.match(await page.locator('#inline-delete-description').textContent(), /cifras e a letra deste bloco serão removidas/i);
+        await page.locator('#inline-delete-confirm-layer').getByRole('button', { name: 'Cancelar' }).click();
+        assert.equal(await page.locator('#inline-delete-confirm-layer').count(), 0, 'cancelar mantém o bloco e fecha a confirmação');
+        assert.equal(await combinedChorus.getByRole('button', { name: 'Editar música inteira' }).count(), 0, 'o editor inline permanece restrito à seção selecionada');
         await page.evaluate(() => cancelInlineBlockEdit());
       }
       assert.deepEqual(errors, []);
