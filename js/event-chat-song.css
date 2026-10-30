@@ -5,8 +5,11 @@
 .event-chat-song{display:grid;grid-template-columns:minmax(0,1fr) minmax(126px,42%);gap:9px;align-items:stretch}
 .event-chat-song-card{min-width:0;padding:7px;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:#24272b}
 .event-chat-song-cover{position:relative;display:grid;width:100%;aspect-ratio:1/1;place-items:center;overflow:hidden;border-radius:8px;background:linear-gradient(145deg,#152947,#08111d);color:#8dbdff;font-size:42px;isolation:isolate}
+.event-chat-song-cover:not(.has-image){background:#202124;color:#a8abb2}
+.event-chat-song-cover:not(.has-image) svg{width:46%;height:46%;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .event-chat-song-cover img{width:156%;height:156%;max-width:none;object-fit:cover;object-position:center}
 .event-chat-song-cover::after{position:absolute;z-index:1;inset:38% 0 0;background:linear-gradient(180deg,transparent 0%,rgba(8,12,20,.22) 28%,rgba(8,12,20,.9) 100%);content:"";pointer-events:none}
+.event-chat-song-cover:not(.has-image)::after{display:none}
 .event-chat-song-brand{position:absolute;z-index:2;top:7px;left:7px;color:#61abff;font:900 12px/1 Inter,system-ui,sans-serif;letter-spacing:-.06em;text-shadow:0 1px 4px rgba(0,0,0,.88)}
 .event-chat-song-copy{display:block;min-width:0;padding:9px 3px 3px}
 .event-chat-song-copy strong,.event-chat-song-copy span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
