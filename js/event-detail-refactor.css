@@ -363,7 +363,7 @@
 #event-chat-view .event-chat-pinned:not([hidden])~.event-chat-messages{padding-top:150px}
 #event-chat-view #event-chat-pinned-text{display:block;overflow:hidden;color:#d7d9de;font-size:13px;font-weight:600;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
 /* As mensagens usam pressão longa para ações; a seleção nativa azul não deve parecer um estado da conversa. */
-#event-chat-view .event-message-content,#event-chat-view .event-message-author,#event-chat-view .event-message-time{-webkit-user-select:none;user-select:none}
+#event-chat-view .event-message-bubble,#event-chat-view .event-message-content,#event-chat-view .event-message-author,#event-chat-view .event-message-time{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #event-chat-view .event-message-content::selection,#event-chat-view .event-message-author::selection,#event-chat-view .event-message-time::selection{background:transparent;color:inherit}
 /* Busca contextual: ocupa a área do cabeçalho sem deslocar a conversa. */
 #event-chat-view .event-chat-search{position:absolute;z-index:14;top:0;right:0;left:0;display:grid;min-height:74px;padding:10px 14px;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:10px;background:#252526}
