@@ -352,6 +352,10 @@
 #event-chat-view .event-chat-header{border-bottom:0!important;box-shadow:none!important}
 #event-chat-view .event-chat-group-open #event-chat-title{color:#f4f4f6;font-weight:700}
 #event-chat-view .event-chat-group-open #event-chat-subtitle{margin-top:2px;color:#aaadb2;font-size:10px;font-weight:500}
+#event-chat-view .event-chat-group-menu{padding:0;align-items:flex-start;justify-content:stretch;background:transparent}
+#event-chat-view .event-chat-group-menu>section{width:100%;min-height:0;border-radius:0 0 22px 22px;background:#252526}
+#event-chat-view .event-chat-group-menu-actions i{display:grid;place-items:center}
+#event-chat-view .event-chat-group-menu-actions i svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 /* O último controle de participantes não pode ser recortado pelo palco animado. */
 #view-sd .event-participants-section.is-single .event-participants-stage{height:196px!important;overflow:visible!important}
 #view-sd .event-participants-section.is-single .event-participants-add{transform:translate3d(0,84px,0)!important}
