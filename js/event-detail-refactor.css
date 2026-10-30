@@ -132,9 +132,10 @@
 .notification-center-overlay .user-invite-actions{gap:8px;margin-top:9px}.notification-center-overlay .user-invite-actions .btn{min-height:34px;border:0;border-radius:9px;background:#2f80ed;color:#fff;font-size:11px}.notification-center-overlay .user-invite-actions .btn-outline{background:#252b32}
 @media(min-width:721px){.modal-overlay.notification-center-overlay{align-items:stretch;padding:0}.notification-center-overlay .modal{border:0;border-radius:0}}
 @media(prefers-reduced-motion:reduce){.notification-row{transition:none}}
-.event-participants-section.is-single .event-participants-stage{height:156px!important}
+.event-participants-section.is-single .event-participants-stage{height:168px!important}
 .event-participants-section.is-single .event-member-card{height:68px;transform:translate3d(0,8px,0)!important}
 .event-participants-section.is-single .event-participants-add{transform:translate3d(0,80px,0)!important}
+#view-sd .detail-body{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
 #event-chat-view .event-chat-header{min-height:74px;padding:10px 14px;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;border-bottom:0;background:#080d12}
 #event-chat-view .event-chat-back{width:34px;height:44px;padding:0;border:0;border-radius:0;background:transparent;color:#f3f4f6}
 #event-chat-view .event-chat-back svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
