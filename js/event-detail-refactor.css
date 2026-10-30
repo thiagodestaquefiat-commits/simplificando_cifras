@@ -356,6 +356,15 @@
 #event-chat-view .event-chat-group-menu>section{width:100%;min-height:0;border-radius:0 0 22px 22px;background:#252526}
 #event-chat-view .event-chat-group-menu-actions i{display:grid;place-items:center}
 #event-chat-view .event-chat-group-menu-actions i svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Busca contextual: ocupa a área do cabeçalho sem deslocar a conversa. */
+#event-chat-view .event-chat-search{position:absolute;z-index:14;top:0;right:0;left:0;display:grid;min-height:74px;padding:10px 14px;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:10px;background:#252526}
+#event-chat-view .event-chat-search[hidden]{display:none}
+#event-chat-view .event-chat-search>button{display:grid;width:34px;height:42px;padding:0;place-items:center;border:0;background:transparent;color:#f4f4f6;font:400 40px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;cursor:pointer}
+#event-chat-view .event-chat-search label{display:grid;min-width:0;height:42px;padding:0 13px;grid-template-columns:20px minmax(0,1fr);align-items:center;gap:9px;border-radius:13px;background:#1a1a1c;color:#aeb1b7}
+#event-chat-view .event-chat-search svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#event-chat-view .event-chat-search input{min-width:0;width:100%;padding:0;border:0;outline:0;background:transparent;color:#f4f4f6;font:500 16px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif}
+#event-chat-view .event-chat-search input::placeholder{color:#aeb1b7}
+#event-chat-view .event-chat-search-empty{margin:20px auto;color:#aeb1b7;font-size:14px;text-align:center}
 /* O último controle de participantes não pode ser recortado pelo palco animado. */
 #view-sd .event-participants-section.is-single .event-participants-stage{height:196px!important;overflow:visible!important}
 #view-sd .event-participants-section.is-single .event-participants-add{transform:translate3d(0,84px,0)!important}
