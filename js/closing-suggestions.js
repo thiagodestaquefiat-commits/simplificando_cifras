@@ -1,5 +1,6 @@
 // MANUTENÇÃO: Sugestões para encerrar o culto/evento a partir da última música do repertório.
-// MANUTENÇÃO: Funciona só no aparelho, sobre a biblioteca do próprio usuário — sem IA, sem custo e sem banco novo.
+// MANUTENÇÃO: Funciona no aparelho, sobre a biblioteca do próprio usuário. O tema da letra decide;
+// MANUTENÇÃO: o perfil do catálogo (subgênero, BPM, sacra) só desempata e filtra, quando existir (profileOf).
 // MANUTENÇÃO: O tema vem da letra (não do título); o tom é resolvido por transposição na hora de adicionar.
 (function (global) {
   "use strict";
@@ -136,6 +137,29 @@
     return normalize(song && song.title);
   }
 
+  function bpmOf(song, profile) {
+    const value = Number(song && song.bpm) || Number(profile && profile.bpm);
+    return value >= 40 && value <= 220 ? value : null;
+  }
+
+  // Bônus do perfil do catálogo. null = não combina (música secular para encerrar culto, ou vice-versa).
+  function profileBonus(reference, song, profileOf) {
+    if (typeof profileOf !== "function") return 0;
+    const base = profileOf(reference), other = profileOf(song);
+    if (base && other && typeof base.sacra === "boolean" && typeof other.sacra === "boolean" && base.sacra !== other.sacra) return null;
+    let bonus = 0;
+    if (base && other) {
+      if (base.subgenero && other.subgenero && normalize(base.subgenero) === normalize(other.subgenero)) bonus += 0.08;
+      else if (base.genero && base.genero === other.genero) bonus += 0.03;
+    }
+    const left = bpmOf(reference, base), right = bpmOf(song, other);
+    if (left && right) {
+      const gap = Math.abs(left - right);
+      bonus += gap <= 8 ? 0.05 : gap <= 15 ? 0.02 : 0;
+    }
+    return bonus;
+  }
+
   function suggest(options) {
     const settings = options || {};
     const reference = settings.reference;
@@ -158,6 +182,8 @@
       const themeScore = cosine(base.themes, candidate.themes);
       const lyricScore = cosine(base.terms, candidate.terms);
       if (themeScore < 0.35 && lyricScore < 0.12) return null;
+      const extra = profileBonus(reference, song, settings.profileOf);
+      if (extra === null) return null;
       const distance = keyDistance(song.key, targetKey);
       const keyBonus = distance === 0 ? 0.1 : distance <= 2 ? 0.04 : 0;
       const sharedThemes = Object.keys(base.themes)
@@ -165,7 +191,7 @@
         .sort((a, b) => (base.themes[b] + candidate.themes[b]) - (base.themes[a] + candidate.themes[a]));
       return {
         song,
-        score: themeScore * 0.65 + lyricScore * 0.35 + keyBonus,
+        score: themeScore * 0.65 + lyricScore * 0.35 + keyBonus + extra,
         sharedThemes,
         semitones: semitonesTo(song.key, targetKey),
         keyDistance: distance

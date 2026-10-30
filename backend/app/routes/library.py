@@ -17,6 +17,7 @@ from ..errors import ApiError
 from ..models import ExternalIdentity, PersonalSong
 from ..services.collaboration_auth import authenticated
 from ..services.shared_songs_service import SharedSongService, dedupe_titles, normalize_text
+from ..services.song_classifier import classify_after_save, parse_bpm, record_bpm_vote
 
 blueprint = Blueprint("library", __name__, url_prefix="/api/library/songs")
 MAX_ITEMS = 500
@@ -57,12 +58,29 @@ def _track(shared_song):
     """Guarda os títulos que entraram no catálogo nesta requisição para checar duplicatas após o commit."""
     if shared_song is not None:
         g.setdefault("catalog_titles", set()).add(shared_song.normalized_title)
+        g.setdefault("catalog_ids", []).append(shared_song.id)
 
 
 def _dedupe_catalog():
     titles = g.pop("catalog_titles", None)
     if titles:
         dedupe_titles(titles)
+    ids = g.pop("catalog_ids", None)
+    if ids:
+        classify_after_save(ids)
+
+
+def _vote_bpm(previous, current):
+    """BPM salvo pela pessoa vira voto anônimo na mesma versão do catálogo (título + artista + tom)."""
+    bpm = parse_bpm(current.get("bpm"))
+    if bpm is None or (isinstance(previous, dict) and parse_bpm(previous.get("bpm")) == bpm):
+        return
+    title = normalize_text(current.get("title"))
+    if not title:
+        return
+    shared = SharedSongService._existing(title, normalize_text(current.get("artist")) or None,
+                                         current.get("originalKey") or current.get("key"))
+    record_bpm_vote(shared, g.current_user.id, bpm)
 
 
 def _upsert(client_id, song_data, expected_version=None):
@@ -80,12 +98,15 @@ def _upsert(client_id, song_data, expected_version=None):
                             song_data=song_data, version=1)
         db.session.add(song)
         _track(SharedSongService.contribute(song_data, g.current_user.id))
+        _vote_bpm(None, song_data)
         # MANUTENÇÃO: A elegibilidade por origem é responsabilidade do serviço; não repita esta contribuição nas edições.
         return song, "created"
     if song.song_data == song_data and song.deleted_at is None:
         return song, "existing"
     if song.deleted_at is None and SharedSongService.is_completion(song.song_data, song_data):
         _track(SharedSongService.contribute_completion(song_data, g.current_user.id))
+    if song.deleted_at is None:
+        _vote_bpm(song.song_data, song_data)
     song.song_data, song.deleted_at, song.version = song_data, None, song.version + 1
     song.updated_at = datetime.now(timezone.utc)
     # Outras edições (título, artista, tom, letra de música já completa) são pessoais.

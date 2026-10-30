@@ -530,6 +530,8 @@ def merge_duplicates(group: list[SharedSong]) -> SharedSong:
             else:
                 report.song_id = keeper.id
         db.session.flush()
+        from .song_classifier import merge_profiles
+        merge_profiles(keeper.id, extra.id)
         db.session.delete(extra)
     db.session.flush()
     return keeper
@@ -552,3 +554,56 @@ def dedupe_titles(normalized_titles) -> int:
         except Exception:  # noqa: BLE001 - outra requisição pode ter juntado o mesmo grupo antes
             db.session.rollback()
     return merged
+
+
+_COMPLETION_PREFERENCE = {"user_upload": 0, "web_source": 1, "user_text": 2}
+
+
+def backfill_completions() -> list[dict]:
+    """Recupera as músicas que a força-tarefa já completou antes da regra de 30/10/2026.
+
+    Para cada entrada do catálogo que ainda só tem resumo, procura nas bibliotecas uma música igual
+    (título + artista igual/parecido + mesmo tom) que já tenha Letra + Cifras de fonte aceita, e completa
+    a entrada com ela. Preferência: PDF/arquivo > Cifra Club > letra colada; empate, a mais antiga.
+    Não cria entradas novas (o título pode ter sido trocado numa edição pessoal) e não altera nenhuma
+    biblioteca pessoal. Não faz commit: quem chama decide (simulação x gravar).
+    """
+    pending = [song for song in SharedSong.query.order_by(SharedSong.normalized_title).all()
+               if not SharedSongService._has_full_sheet(song)]
+    if not pending:
+        return []
+    titles = {song.normalized_title for song in pending}
+    candidates: dict[str, list[tuple]] = {}
+    for personal in PersonalSong.query.filter_by(deleted_at=None).all():
+        data = personal.song_data if isinstance(personal.song_data, dict) else {}
+        title = normalize_text(data.get("title"))
+        if title not in titles:
+            continue
+        sheet = data.get("fullChordSheet") if isinstance(data.get("fullChordSheet"), dict) else {}
+        source = sheet.get("source")
+        if source not in COMPLETION_FULL_SHEET_SOURCES or not str(sheet.get("content") or "").strip():
+            continue
+        if ((data.get("sourceInfo") or {}).get("type") or "manual") not in COMPLETION_SOURCE_TYPES:
+            continue
+        candidates.setdefault(title, []).append((_COMPLETION_PREFERENCE[source], personal.updated_at, personal, data))
+    report = []
+    for song in pending:
+        options = []
+        for preference, updated, personal, data in candidates.get(song.normalized_title, []):
+            if not same_artist(song.normalized_artist, normalize_text(data.get("artist")) or None):
+                continue
+            if not same_key(song.song_key, data.get("originalKey") or data.get("key")):
+                continue
+            options.append((preference, updated.timestamp() if updated else 0, personal.id, data))
+        if not options:
+            continue
+        options.sort(key=lambda item: item[:3])
+        summary = SharedSongService._summary_from_song(options[0][3], COMPLETION_FULL_SHEET_SOURCES)
+        if summary is None or summary.get("fullChordSheet") is None:
+            continue
+        song.song_data = summary
+        song.song_key = summary.get("tom") or song.song_key
+        song.capo = str(summary["capotraste"]) if summary.get("capotraste") is not None else song.capo
+        report.append({"id": song.id, "title": song.title, "artist": song.artist, "key": song.song_key,
+                       "source": summary["fullChordSheet"]["source"], "versions": len(options)})
+    return report

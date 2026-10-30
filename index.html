@@ -1384,7 +1384,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-model.js?v=8"></script>
 <script src="js/context-intelligence.js?v=4"></script>
 <script src="js/event-repository.js?v=10"></script>
-<script src="js/closing-suggestions.js?v=1"></script>
+<script src="js/song-profiles.js?v=1"></script>
+<script src="js/closing-suggestions.js?v=2"></script>
 <script src="js/event-chat.js?v=5"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
@@ -4856,7 +4857,7 @@ function openLoginOptions(){
 // Sair da conta: confirma que tudo está na nuvem e só então apaga do aparelho os dados DESTA conta.
 function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
 function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
-async function logoutAppAccount(){
+async function logoutAppAccount(){window.songProfiles?.clear();
   if(!currentAuthState.authenticated){try{await appAuth.signOut();}catch(_){}closeModal();return;}
   if(navigator.onLine===false){appAlert('Você está sem internet.\n\nConecte-se antes de sair, para que suas músicas e eventos fiquem salvos na sua conta.');return;}
   showToast('Salvando tudo na sua conta antes de sair…');
@@ -5646,7 +5647,8 @@ function addSuggestedSongToEvent(eventId,songId,button){
   setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();openSD(event.id);
 }
 // Sugestões para encerrar: 3 músicas da biblioteca do próprio usuário com o mesmo tema de letra
-// da última música do repertório, já levadas para o mesmo tom. Nada vai para o servidor nem para a IA.
+// da última música do repertório, já levadas para o mesmo tom. Com login, o perfil do catálogo
+// (subgênero, BPM, sacra x secular) desempata e filtra; a IA não é chamada aqui.
 function eventClosingKeyLabel(key,semitones,targetKey){
   const shifted=shiftText(String(key||''),semitones),root=value=>String(value||'').match(/^[A-G](?:#|b)?/)?.[0]||'';
   const targetRoot=root(targetKey);
@@ -5658,10 +5660,21 @@ function eventClosingSuggestions(event,items){
   const targetKey=effective?.effective?.key||reference?.key||'';
   if(!reference||!targetKey)return {reference,targetKey,suggestions:[]};
   const presentTitles=items.map(item=>eventSongVariant(event,item,appCurrentUser.id)?.title).filter(Boolean);
-  const suggestions=closingSuggestions.suggest({reference,targetKey,candidates:musicas,excludeIds:event.repertoire.map(item=>item.songId),excludeTitles:presentTitles,limit:3});
+  const suggestions=closingSuggestions.suggest({reference,targetKey,candidates:musicas,excludeIds:event.repertoire.map(item=>item.songId),excludeTitles:presentTitles,limit:3,profileOf:window.songProfiles?.get});
   return {reference,targetKey,suggestions};
 }
+let closingSuggestionsArgs=null;
 function eventClosingSuggestionsMarkup(event,items,canShared){
+  closingSuggestionsArgs={eventId:event.id,items,canShared};
+  // Busca o perfil (subgênero/BPM) das músicas uma vez; quando chega, refaz só este bloco.
+  window.songProfiles?.prefetch([...musicas,...items.map(item=>eventSongVariant(event,item,appCurrentUser.id)).filter(Boolean)],refreshClosingSuggestions);
+  return `<div data-closing-event="${eventEsc(String(event.id))}">${eventClosingSuggestionsInner(event,items,canShared)}</div>`;
+}
+function refreshClosingSuggestions(){
+  const args=closingSuggestionsArgs,slot=args&&document.querySelector(`[data-closing-event="${CSS.escape(String(args.eventId))}"]`),event=args&&findEvent(args.eventId);
+  if(slot&&event)slot.innerHTML=eventClosingSuggestionsInner(event,args.items,args.canShared);
+}
+function eventClosingSuggestionsInner(event,items,canShared){
   // Todos os membros veem as sugestões; só o líder (quem edita o repertório oficial) pode adicionar.
   if(!items.length)return'';
   const {reference,targetKey,suggestions}=eventClosingSuggestions(event,items);if(!reference)return'';
