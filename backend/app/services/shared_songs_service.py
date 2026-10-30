@@ -22,6 +22,12 @@ CONTRIBUTABLE_FULL_SHEET_SOURCES = {"user_upload", "web_source"}
 # Fontes que podem ser LIDAS na busca (inclusive da biblioteca pessoal).
 # Isso não autoriza publicar conteúdo de Texto no catálogo.
 CATALOG_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+# Música COMPLETADA (ganhou Letra + Cifras sem mudar título, artista e tom) vai ao catálogo com qualquer
+# letra, inclusive colada (decisão do Thiago, 30/10/2026). Edições continuam pessoais.
+COMPLETION_FULL_SHEET_SOURCES = {"user_upload", "user_text", "web_source"}
+# Origens que podem ser completadas. "manual" (biblioteca base/antiga) só completa uma entrada que já
+# está no catálogo; nunca cria entrada nova, porque música feita do zero pelo usuário é pessoal.
+COMPLETION_SOURCE_TYPES = {"online", "upload", "manual"}
 # Observação gravada nos rascunhos gerados só pela IA (fluxo antigo, antes de exigir fonte real).
 AI_ONLY_MARKER = "Gerado somente por IA"
 # Cifra completa que entra no catálogo público: enviada pelo usuário (upload/texto) ou obtida da web
@@ -270,7 +276,7 @@ class SharedSongService:
         return response.model_dump(mode="json")
 
     @staticmethod
-    def _summary_from_song(song_data: dict) -> dict | None:
+    def _summary_from_song(song_data: dict, accepted_sources=CONTRIBUTABLE_FULL_SHEET_SOURCES) -> dict | None:
         """Converte a música salva no editor em resumo harmônico com cifra completa para o catálogo compartilhado."""
         sections = song_data.get("sections")
         if not isinstance(sections, list):
@@ -324,7 +330,7 @@ class SharedSongService:
         if isinstance(full_sheet, dict):
             content = str(full_sheet.get("content") or "").strip()
             source = full_sheet.get("source")
-            accepted = CONTRIBUTABLE_FULL_SHEET_SOURCES
+            accepted = accepted_sources
             if content and source in accepted:
                 full_sheet_payload = {
                     "source": source,
@@ -362,6 +368,67 @@ class SharedSongService:
         similar.sort(key=lambda song: (song.song_data or {}).get("fullChordSheet") is not None)
         return similar[0] if similar else None
 
+    @staticmethod
+    def has_full_sheet_data(song_data) -> bool:
+        sheet = song_data.get("fullChordSheet") if isinstance(song_data, dict) else None
+        return isinstance(sheet, dict) and bool(str(sheet.get("content") or "").strip())
+
+    @classmethod
+    def is_completion(cls, previous, current) -> bool:
+        """A música ganhou Letra + Cifras e continua sendo a mesma (título, artista e tom iguais)."""
+        if not isinstance(previous, dict) or not isinstance(current, dict):
+            return False
+        if cls.has_full_sheet_data(previous) or not cls.has_full_sheet_data(current):
+            return False
+        if normalize_text(previous.get("title")) != normalize_text(current.get("title")):
+            return False
+        if normalize_text(previous.get("artist")) != normalize_text(current.get("artist")):
+            return False
+        key = lambda data: data.get("originalKey") or data.get("key")
+        return key_identity(key(previous)) == key_identity(key(current))
+
+    @classmethod
+    def contribute_completion(cls, song_data, user_id) -> SharedSong | None:
+        """Envia ao catálogo a música que acabou de ser completada (força-tarefa e uso normal)."""
+        source_type = (song_data.get("sourceInfo") or {}).get("type") or "manual"
+        if source_type not in COMPLETION_SOURCE_TYPES:
+            return None  # aba Texto: versão pessoal
+        normalized_title = normalize_text(song_data.get("title"))
+        normalized_artist = normalize_text(song_data.get("artist")) or None
+        if not normalized_title:
+            return None
+        summary = cls._summary_from_song(song_data, COMPLETION_FULL_SHEET_SOURCES)
+        if summary is None or summary.get("fullChordSheet") is None:
+            return None
+        existing = cls._existing(normalized_title, normalized_artist, summary.get("tom"))
+        if existing is not None:
+            if cls._has_full_sheet(existing):
+                return None  # outra pessoa já completou esta versão
+            existing.song_data = summary
+            existing.song_key = summary.get("tom")
+            existing.capo = str(summary["capotraste"]) if summary.get("capotraste") is not None else None
+            return existing
+        if source_type == "manual":
+            return None
+        return cls._new_entry(summary, normalized_title, normalized_artist, user_id)
+
+    @staticmethod
+    def _new_entry(summary, normalized_title, normalized_artist, user_id) -> SharedSong:
+        song = SharedSong(
+            id=str(uuid.uuid4()),
+            title=summary["titulo"][:255],
+            artist=summary["artista"],
+            normalized_title=normalized_title,
+            normalized_artist=normalized_artist,
+            song_key=summary["tom"],
+            capo=str(summary["capotraste"]) if summary["capotraste"] is not None else None,
+            song_data=summary,
+            contributed_by=user_id,
+            times_searched=0,
+        )
+        db.session.add(song)
+        return song
+
     @classmethod
     def contribute(cls, song_data, user_id) -> SharedSong | None:
         if not isinstance(song_data, dict):
@@ -396,20 +463,7 @@ class SharedSongService:
                 existing.capo = str(summary["capotraste"]) if summary.get("capotraste") is not None else None
                 return existing
             return None
-        song = SharedSong(
-            id=str(uuid.uuid4()),
-            title=summary["titulo"][:255],
-            artist=summary["artista"],
-            normalized_title=normalized_title,
-            normalized_artist=normalized_artist,
-            song_key=summary["tom"],
-            capo=str(summary["capotraste"]) if summary["capotraste"] is not None else None,
-            song_data=summary,
-            contributed_by=user_id,
-            times_searched=0,
-        )
-        db.session.add(song)
-        return song
+        return cls._new_entry(summary, normalized_title, normalized_artist, user_id)
 
 
 def _keeper_rank(song: SharedSong):
@@ -418,14 +472,17 @@ def _keeper_rank(song: SharedSong):
     return (not SharedSongService._has_full_sheet(song), -(song.times_searched or 0), created, song.id)
 
 
-def duplicate_groups() -> list[list[SharedSong]]:
+def duplicate_groups(normalized_title: str | None = None) -> list[list[SharedSong]]:
     """Entradas repetidas do catálogo: mesmo título, artista igual/parecido (ou sem artista) e mesmo tom.
 
     A primeira entrada de cada grupo é a que fica. Entrada sem artista só entra num grupo quando o
     título tem um único artista; com artistas diferentes ela é ambígua e fica de fora.
     """
     by_title: dict[str, list[SharedSong]] = {}
-    for song in SharedSong.query.order_by(SharedSong.created_at, SharedSong.id).all():
+    query = SharedSong.query
+    if normalized_title is not None:
+        query = query.filter_by(normalized_title=normalized_title)
+    for song in query.order_by(SharedSong.created_at, SharedSong.id).all():
         by_title.setdefault(song.normalized_title, []).append(song)
     groups = []
     for songs in by_title.values():
@@ -476,3 +533,22 @@ def merge_duplicates(group: list[SharedSong]) -> SharedSong:
         db.session.delete(extra)
     db.session.flush()
     return keeper
+
+
+def dedupe_titles(normalized_titles) -> int:
+    """Rede de segurança contra duas pessoas salvando a mesma música ao mesmo tempo.
+
+    Roda depois do commit, só para os títulos que acabaram de entrar no catálogo: se a mesma versão
+    (título + artista + tom) ficou duas vezes, junta numa só. Mesmo nome com outro tom continua separado.
+    """
+    merged = 0
+    for title in sorted({value for value in normalized_titles if value}):
+        try:
+            groups = duplicate_groups(title)
+            for group in groups:
+                merge_duplicates(group)
+                merged += len(group) - 1
+            db.session.commit()
+        except Exception:  # noqa: BLE001 - outra requisição pode ter juntado o mesmo grupo antes
+            db.session.rollback()
+    return merged

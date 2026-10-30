@@ -162,15 +162,16 @@ def test_web_scraped_song_goes_to_catalog_with_full_sheet_and_source(client, app
         assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
 
 
-def test_personal_completion_does_not_change_catalog_entry(client, app):
-    """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa."""
+def test_completion_updates_catalog_entry(client, app):
+    """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa
+    (decisão do Thiago, 30/10/2026: toda música completada vai para o catálogo compartilhado)."""
     token = register(client, "shared-upgrade", "U")
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": ai_song()})
     with app.app_context():
         assert SharedSong.query.one().song_data["fullChordSheet"] is None
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": _with_sheet("web_source")})
     with app.app_context():
-        assert SharedSong.query.one().song_data["fullChordSheet"] is None
+        assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
     friend = register(client, "shared-friend", "F")
     found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(friend)).get_json()
     assert found["match"]["title"] == "Asa Branca"
