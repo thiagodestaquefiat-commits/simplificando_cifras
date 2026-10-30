@@ -346,7 +346,7 @@
 #event-chat-view .event-chat-send{display:grid;place-items:center}
 #event-chat-view .event-chat-send svg{width:15px;height:15px;fill:#fff;transform:translateX(1px)}
 #event-chat-view .event-chat-header{grid-template-columns:34px minmax(0,1fr) auto}
-#event-chat-view .event-chat-group-open{display:grid;width:fit-content;max-width:100%;min-height:58px;padding:4px 13px 4px 4px;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:9px;justify-self:start;border:0;border-radius:30px}
+#event-chat-view .event-chat-group-open{display:grid;width:fit-content;max-width:100%;min-height:58px;padding:4px 13px 4px 4px;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:9px;justify-self:start;border:0;border-radius:30px;background:#242625}
 #event-chat-view .event-chat-group-open .event-chat-heading-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start}
 #event-chat-view .event-chat-group-open .event-chat-event-avatar{width:48px;height:48px}
 /* O último controle de participantes não pode ser recortado pelo palco animado. */
