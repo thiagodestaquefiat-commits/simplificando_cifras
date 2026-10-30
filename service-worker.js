@@ -48,7 +48,7 @@ const CACHE_NAME = "simplificando-cifras-v686-song-artwork-clean-crop";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=105",
+  "./js/event-detail-refactor.css?v=106",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
