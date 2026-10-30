@@ -343,6 +343,8 @@
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(4) i{color:#a9c8ff}
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(5) i{color:#f6bd42}
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(6) i{color:#70d5a2}
+#event-chat-view .event-chat-send{display:grid;place-items:center}
+#event-chat-view .event-chat-send svg{width:19px;height:19px;fill:currentColor;transform:translateX(1px)}
 /* O último controle de participantes não pode ser recortado pelo palco animado. */
 #view-sd .event-participants-section.is-single .event-participants-stage{height:196px!important;overflow:visible!important}
 #view-sd .event-participants-section.is-single .event-participants-add{transform:translate3d(0,84px,0)!important}
