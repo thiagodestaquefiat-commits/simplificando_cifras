@@ -146,6 +146,17 @@ def test_event_chat_persists_across_members_and_protects_authorship(client):
     assert shared_playlist.status_code == 201, shared_playlist.get_json()
     assert shared_playlist.get_json()["attachment"]["title"] == "Ensaio de domingo"
 
+    shared_file = client.post(
+        "/api/collaboration/events/event-sunday/messages",
+        headers=auth(member),
+        json={"clientId": "file-message-device-b", "type": "file", "attachment": {
+            "title": "Escala de domingo.pdf", "fileName": "Escala de domingo.pdf", "mimeType": "application/pdf",
+            "url": "data:application/pdf;base64,JVBERi0=",
+        }},
+    )
+    assert shared_file.status_code == 201, shared_file.get_json()
+    assert shared_file.get_json()["attachment"]["fileName"] == "Escala de domingo.pdf"
+
     denied = client.patch(
         "/api/collaboration/events/event-sunday/messages/message-device-b",
         headers=auth(leader), json={"action": "edit", "content": "Alteração indevida"},

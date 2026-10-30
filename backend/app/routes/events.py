@@ -239,7 +239,7 @@ def _adapt_vocal_keys(event, item_ids=None):
 
 def _serialize_message(message: EventMessage) -> dict:
     song = message.poll if message.message_type == "song" else None
-    attachment = message.poll if message.message_type in {"playlist", "event", "image"} else None
+    attachment = message.poll if message.message_type in {"playlist", "event", "image", "file"} else None
     return {
         "id": message.id,
         "eventId": message.event_id,
@@ -730,7 +730,7 @@ def create_event_message(event_id: str):
             raise ApiError("mensagem_existente", "Este identificador de mensagem já está em uso.", 409)
         return jsonify(_serialize_message(existing)), 200
     message_type = _text(payload.get("type"), 16, "type") or "text"
-    if message_type not in {"text", "system", "poll", "song", "playlist", "event", "image"}:
+    if message_type not in {"text", "system", "poll", "song", "playlist", "event", "image", "file"}:
         raise ApiError("tipo_invalido", "Tipo de mensagem inválido.", 400)
     content = _text(payload.get("content"), 5000 if message_type == "text" else 500, "content")
     poll = None
@@ -777,19 +777,24 @@ def create_event_message(event_id: str):
             "blocos": blocks,
         }
         content = title
-    elif message_type in {"playlist", "event", "image"}:
+    elif message_type in {"playlist", "event", "image", "file"}:
         raw_attachment = payload.get("attachment") if isinstance(payload.get("attachment"), dict) else {}
         title = _text(raw_attachment.get("title"), 240, "attachment.title", True)
         image_url = _text(raw_attachment.get("imageUrl"), 1_500_000, "attachment.imageUrl") or None
-        if image_url and not image_url.startswith(("data:image/", "https://", "http://")):
+        if message_type == "image" and image_url and not image_url.startswith(("data:image/", "https://", "http://")):
             raise ApiError("anexo_invalido", "Imagem do anexo inválida.", 400)
+        file_url = _text(raw_attachment.get("url"), 1_500_000, "attachment.url") or None
+        if message_type == "file" and (not file_url or not file_url.startswith("data:")):
+            raise ApiError("anexo_invalido", "Arquivo do anexo inválido.", 400)
         poll = {
             "id": _text(raw_attachment.get("id"), 120, "attachment.id") or None,
             "title": title,
             "subtitle": _text(raw_attachment.get("subtitle"), 240, "attachment.subtitle"),
             "imageUrl": image_url,
-            "url": _text(raw_attachment.get("url"), 2000, "attachment.url") or None,
+            "url": file_url if message_type == "file" else _text(raw_attachment.get("url"), 2000, "attachment.url") or None,
             "count": _text(raw_attachment.get("count"), 80, "attachment.count") or None,
+            "fileName": _text(raw_attachment.get("fileName"), 240, "attachment.fileName") or None,
+            "mimeType": _text(raw_attachment.get("mimeType"), 120, "attachment.mimeType") or None,
         }
         content = title
     elif not content:

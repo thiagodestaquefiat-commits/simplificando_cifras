@@ -137,9 +137,9 @@
     return message;
   }
   function sendAttachment(eventId, type, attachment, replyTo) {
-    const allowed = new Set(["playlist", "event", "image"]);
+    const allowed = new Set(["playlist", "event", "image", "file"]);
     if (!allowed.has(type) || !attachment || typeof attachment !== "object") throw new Error("Anexo inválido.");
-    const title = String(attachment.title || (type === "image" ? "Foto" : "Compartilhamento") || "").trim();
+    const title = String(attachment.title || (type === "image" ? "Foto" : type === "file" ? "Arquivo" : "Compartilhamento") || "").trim();
     if (!title) throw new Error("O anexo precisa de um título.");
     const message = { ...baseMessage(eventId, type), content: title.slice(0, 500), attachment, replyTo: replyTo || null };
     write(eventId, (values) => [...values, message]);

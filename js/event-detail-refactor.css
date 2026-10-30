@@ -337,3 +337,6 @@
 #event-chat-view .event-chat-playlist-share-song i.is-placeholder{background:#202124;color:#a8abb2}
 /* A barra do compositor permanece em glass; somente o painel expandido dos atalhos ganha a superfície cinza. */
 #event-chat-view .event-chat-attachment-tray{background:#2a2b2d!important;border-top-color:rgba(255,255,255,.08)!important;box-shadow:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
+#event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(4) i{color:#a9c8ff}
+#event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(5) i{color:#f6bd42}
+#event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(6) i{color:#70d5a2}
