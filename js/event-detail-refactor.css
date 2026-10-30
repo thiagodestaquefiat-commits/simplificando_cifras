@@ -339,14 +339,14 @@
 #event-chat-view .event-chat-playlist-share-song i img{width:132%;height:132%;max-width:none;object-fit:cover;object-position:center;transform:none}
 #event-chat-view .event-chat-playlist-share-song i.is-placeholder{background:#202124;color:#a8abb2}
 /* A barra do compositor permanece em glass; somente o painel expandido dos atalhos ganha a superfície cinza. */
-#event-chat-view .event-chat-attachment-tray{background:#202123!important;border-top-color:rgba(255,255,255,.08)!important;box-shadow:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
+#event-chat-view .event-chat-attachment-tray{background:#252526!important;border-top-color:rgba(255,255,255,.08)!important;box-shadow:none!important;backdrop-filter:none;-webkit-backdrop-filter:none}
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(4) i{color:#a9c8ff}
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(5) i{color:#f6bd42}
 #event-chat-view .event-chat-attachment-tray .event-chat-attachment-action:nth-child(6) i{color:#70d5a2}
 #event-chat-view .event-chat-send{display:grid;place-items:center}
 #event-chat-view .event-chat-send svg{width:15px;height:15px;fill:#fff;transform:translateX(1px)}
 #event-chat-view .event-chat-header{grid-template-columns:34px minmax(0,1fr) auto}
-#event-chat-view .event-chat-group-open{display:grid;width:fit-content;max-width:100%;min-height:58px;padding:4px 13px 4px 4px;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:9px;justify-self:start;border:0;border-radius:30px;background:#242625}
+#event-chat-view .event-chat-group-open{display:grid;width:fit-content;max-width:100%;min-height:58px;padding:4px 13px 4px 4px;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:9px;justify-self:start;border:0;border-radius:30px;background:#252526}
 #event-chat-view .event-chat-group-open .event-chat-heading-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start}
 #event-chat-view .event-chat-group-open .event-chat-event-avatar{width:48px;height:48px}
 /* O último controle de participantes não pode ser recortado pelo palco animado. */
