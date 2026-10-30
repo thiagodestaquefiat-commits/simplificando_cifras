@@ -48,7 +48,7 @@ const CACHE_NAME = "simplificando-cifras-v687-chat-send-icon";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=116",
+  "./js/event-detail-refactor.css?v=117",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
