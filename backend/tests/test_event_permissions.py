@@ -136,6 +136,16 @@ def test_event_chat_persists_across_members_and_protects_authorship(client):
     assert refreshed[1]["type"] == "song"
     assert refreshed[1]["song"]["blocos"][0]["c"] == "A D"
 
+    shared_playlist = client.post(
+        "/api/collaboration/events/event-sunday/messages",
+        headers=auth(member),
+        json={"clientId": "playlist-message-device-b", "type": "playlist", "attachment": {
+            "id": "playlist-1", "title": "Ensaio de domingo", "subtitle": "Playlist ROUDY", "count": "3 músicas",
+        }},
+    )
+    assert shared_playlist.status_code == 201, shared_playlist.get_json()
+    assert shared_playlist.get_json()["attachment"]["title"] == "Ensaio de domingo"
+
     denied = client.patch(
         "/api/collaboration/events/event-sunday/messages/message-device-b",
         headers=auth(leader), json={"action": "edit", "content": "Alteração indevida"},

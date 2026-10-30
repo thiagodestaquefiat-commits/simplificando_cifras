@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none" role="img" aria-label="Ícone de teclado musical">
+  <rect x="3" y="3" width="114" height="74" rx="22" stroke="#F5F5F5" stroke-width="7"/>
+  <rect x="16" y="19" width="88" height="43" rx="6" fill="#F2F2F2"/>
+  <path d="M38 42V62 M60 42V62 M82 42V62" stroke="#171717" stroke-width="3.5"/>
+  <rect x="31" y="17" width="14" height="29" rx="3" fill="#646464"/>
+  <rect x="53" y="17" width="14" height="29" rx="3" fill="#646464"/>
+  <rect x="75" y="17" width="14" height="29" rx="3" fill="#646464"/>
+</svg>

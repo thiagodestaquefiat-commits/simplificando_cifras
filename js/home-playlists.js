@@ -58,10 +58,10 @@
   }
 
   function artwork(_name, coverImage = null, songs = []) {
-    if (coverImage) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(coverImage)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`;
+    if (coverImage) return global.roudyListLoading?.artwork({ artworkUrl: coverImage }, { frameClass: "home-playlist-art has-image" }) || `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(coverImage)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`;
     const urls = global.songArtwork?.collectDistinct(songs, 4) || [];
-    if (!urls.length) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(global.songArtwork?.DEFAULT_ARTWORK || "assets/icons/roudy-icon-v4-192.png")}" alt="" loading="lazy" decoding="async"></span>`;
-    return `<span class="home-playlist-art has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)">`).join("")}</span>`;
+    if (!urls.length) return global.roudyListLoading?.artwork(null, { frameClass: "home-playlist-art has-image" }) || `<span class="home-playlist-art has-image" aria-hidden="true"></span>`;
+    return `<span class="home-playlist-art has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<span><img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`).join("")}</span>`;
   }
 
   function applyPlaylistBackdrop(target, coverImage, songs) {

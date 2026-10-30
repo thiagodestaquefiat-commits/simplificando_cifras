@@ -32,11 +32,16 @@ assert.match(html, /openNewRepertoireForSong/, 'novo repertório preserva a mús
 assert.match(html, /repertoire:initialRepertoire/, 'evento novo já nasce com a música selecionada');
 assert.match(homePlaylists, /Array\.isArray\(songIds\) \? songIds : \[songIds\]/, 'criação iniciada por uma música normaliza o identificador em lista');
 assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as telas existentes');
-assert.doesNotMatch(js, /spotify|player|recommend/i, 'menu não introduz reprodução ou recomendações artificiais');
+assert.match(html, /id="roudy-search-for-you"/, 'a Busca possui uma faixa de sugestões abaixo da retomada');
+assert.match(js, /function recommendations\(recent\)/, 'as sugestões usam apenas dados que já existem no ROUDY');
+assert.match(js, /Repertório de \$\{event\.title\}/, 'músicas do próximo repertório recebem prioridade contextual');
+assert.match(js, /Da sua biblioteca/, 'a biblioteca local preenche a faixa sem catálogo externo');
+assert.match(css, /roudy-search-for-you-rail/, 'a faixa é horizontal e própria para mobile');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=15/);
-assert.match(sw, /js\/search-menu\.js\?v=8/);
-assert.match(sw, /js\/home-playlists\.js\?v=21/);
+assert.match(sw, /css\/search-menu\.css\?v=17/, 'o cache mantém o CSS atual da busca');
+assert.match(sw, /js\/search-menu\.js\?v=10/, 'o cache deve usar a faixa contextual da Busca');
+assert.match(sw, /js\/home-playlists\.js\?v=24/, 'o cache deve usar o placeholder de capa atual');
+assert.match(sw, /js\/list-loading\.js\?v=1/, 'o cache deve conter o módulo compartilhado de carregamento');
 
 console.log('search-menu-source.test.js: OK');

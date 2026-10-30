@@ -59,7 +59,7 @@
     return allMessages()[String(eventId)] || [];
   }
   async function createRemote(message) {
-    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll, song: message.song }) });
+    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll, song: message.song, attachment: message.attachment }) });
     write(message.eventId, (values) => values.map((value) => String(value.id) === String(message.id) ? saved : value));
     if (global.syncRealtime) global.syncRealtime.publishChat(message.eventId);
     return saved;
@@ -136,6 +136,16 @@
     createRemote(message).catch(() => {});
     return message;
   }
+  function sendAttachment(eventId, type, attachment, replyTo) {
+    const allowed = new Set(["playlist", "event", "image"]);
+    if (!allowed.has(type) || !attachment || typeof attachment !== "object") throw new Error("Anexo inválido.");
+    const title = String(attachment.title || (type === "image" ? "Foto" : "Compartilhamento") || "").trim();
+    if (!title) throw new Error("O anexo precisa de um título.");
+    const message = { ...baseMessage(eventId, type), content: title.slice(0, 500), attachment, replyTo: replyTo || null };
+    write(eventId, (values) => [...values, message]);
+    createRemote(message).catch(() => {});
+    return message;
+  }
   function updateOwn(eventId, messageId, updater) {
     const user = currentUser();
     write(eventId, (values) => values.map((message) => {
@@ -192,5 +202,5 @@
     global.addEventListener("online", () => Object.keys(allMessages()).forEach((eventId) => flush(eventId)));
   }
 
-  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
+  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, sendAttachment, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
 })(window);

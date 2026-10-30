@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v654-inline-controls-sf-pro";
+const CACHE_NAME = "simplificando-cifras-v686-song-artwork-clean-crop";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -48,21 +48,24 @@ const CACHE_NAME = "simplificando-cifras-v654-inline-controls-sf-pro";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=75",
+  "./js/event-detail-refactor.css?v=101",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
-  "./css/search-menu.css?v=16",
+  "./assets/icons/icone-teclado-musical.svg",
+  "./assets/icons/icone-fone-mais.svg",
+  "./css/search-menu.css?v=17",
   "./css/stage-mode-reference.css?v=19",
   "./css/song-section-heading.css?v=1",
-  "./js/search-menu.js?v=8",
+  "./js/search-menu.js?v=10",
+  "./js/list-loading.js?v=1",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=27",
-  "./js/home-playlists.js?v=23",
+  "./css/home-playlists.css?v=29",
+  "./js/home-playlists.js?v=24",
   "./js/user-playlists.js?v=6",
   "./js/notification-center.js?v=6",
   "./js/playlist-collaboration.js?v=1",
@@ -241,7 +244,7 @@ const ASSETS = [
   "./js/account-drawer.css?v=12",
   "./js/account-tools.css?v=3",
   "./js/account-profile.css?v=3",
-  "./js/event-member-profile.css?v=1",
+  "./js/event-member-profile.css?v=2",
   "./js/event-detail-refactor.css?v=50",
   "./js/event-detail-refactor.css?v=51",
   "./js/event-detail-refactor.css?v=52",
@@ -267,8 +270,8 @@ const ASSETS = [
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=2",
   "./js/event-chat.js?v=3",
-  "./js/event-chat.js?v=5",
-  "./js/event-chat-song.css?v=1",
+  "./js/event-chat.js?v=6",
+  "./js/event-chat-song.css?v=4",
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=4",

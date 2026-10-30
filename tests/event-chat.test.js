@@ -28,6 +28,11 @@ assert.equal(sharedSong.type, "song");
 assert.equal(sharedSong.song.title, "A alegria");
 assert.equal(window.eventChat.list("e1", 40)[2].song.blocos[0].c, "A D");
 
+const sharedPlaylist = window.eventChat.sendAttachment("e1", "playlist", { id: "p1", title: "Ensaio de domingo", subtitle: "Playlist ROUDY", count: "3 músicas" });
+assert.equal(sharedPlaylist.type, "playlist");
+assert.equal(sharedPlaylist.attachment.title, "Ensaio de domingo");
+assert.throws(() => window.eventChat.sendAttachment("e1", "invalid", { title: "Não enviar" }), /Anexo inválido/);
+
 user = { id: "u2", name: "Maria" };
 window.eventChat.sendText("e1", "Confirmado", first.id);
 user = { id: "u1", name: "João" };
