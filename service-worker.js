@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v694-chat-bubble-palette";
+const CACHE_NAME = "simplificando-cifras-v695-event-chat-date-avatar";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -48,7 +48,7 @@ const CACHE_NAME = "simplificando-cifras-v694-chat-bubble-palette";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=124",
+  "./js/event-detail-refactor.css?v=125",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
