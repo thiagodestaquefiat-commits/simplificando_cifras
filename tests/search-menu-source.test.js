@@ -39,7 +39,7 @@ assert.match(js, /Da sua biblioteca/, 'a biblioteca local preenche a faixa sem c
 assert.match(css, /roudy-search-for-you-rail/, 'a faixa é horizontal e própria para mobile');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=17/, 'o cache mantém o CSS atual da busca');
+assert.match(sw, /css\/search-menu\.css\?v=18/, 'o cache mantém o CSS atual da busca');
 assert.match(sw, /js\/search-menu\.js\?v=10/, 'o cache deve usar a faixa contextual da Busca');
 assert.match(sw, /js\/home-playlists\.js\?v=24/, 'o cache deve usar o placeholder de capa atual');
 assert.match(sw, /js\/list-loading\.js\?v=1/, 'o cache deve conter o módulo compartilhado de carregamento');

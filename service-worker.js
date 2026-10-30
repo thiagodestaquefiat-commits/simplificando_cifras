@@ -54,7 +54,7 @@ const ASSETS = [
   "./assets/icons/icone-qrcode-roudy.svg",
   "./assets/icons/icone-teclado-musical.svg",
   "./assets/icons/icone-fone-mais.svg",
-  "./css/search-menu.css?v=17",
+  "./css/search-menu.css?v=18",
   "./css/stage-mode-reference.css?v=19",
   "./css/song-section-heading.css?v=1",
   "./js/search-menu.js?v=10",
