@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=131">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=132">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=6">
@@ -5410,7 +5410,7 @@ function eventParticipantsMarkup(event){
   const cards=members.map((member,index)=>{
     const leader=String(member.id)===String(event.leaderId),role=String(eventMemberRole(member,event.leaderId)||'').trim(),representative=index<visibleLimit;
     const currentOrbit=leader?-1:orbitIndex++;
-    return `<li class="event-member-card${leader?' is-leader':''}${representative?'':' is-constellation-hidden'}" data-member-index="${index}" data-orbit-index="${currentOrbit}" data-representative="${representative?'true':'false'}"${leader?' data-leader="true"':''}><button class="event-member-avatar event-member-avatar-button${member.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(member.id||member.name)}" type="button" onclick="openEventMemberProfile('${eventEsc(member.id)}',false)" aria-label="Ver perfil de ${eventEsc(member.name)}">${eventMemberAvatar(member)}</button>${leader?'<span class="event-leader-orbit-label" aria-hidden="true">LÍDER</span>':''}<span class="event-member-copy"><span class="event-member-name">${eventEsc(member.name)}${leader?'<span class="event-leader-badge">Líder</span>':''}</span>${role?`<span class="event-member-role">${eventEsc(role)}</span>`:''}</span></li>`;
+    return `<li class="event-member-card${leader?' is-leader':''}${representative?'':' is-constellation-hidden'}" data-member-index="${index}" data-orbit-index="${currentOrbit}" data-representative="${representative?'true':'false'}"${leader?' data-leader="true"':''}><button class="event-member-avatar event-member-avatar-button${member.avatarUrl?'':' roudy-avatar-fallback '+eventAvatarPaletteClass(member.id||member.name)}" type="button" onclick="openEventMemberProfile('${eventEsc(member.id)}',false)" aria-label="Ver perfil de ${eventEsc(member.name)}">${eventMemberAvatar(member)}</button>${leader?'<span class="event-leader-orbit-label" aria-hidden="true">LÍDER</span>':''}<span class="event-member-copy"><span class="event-member-name">${eventEsc(member.name)}</span>${role?`<span class="event-member-role">${eventEsc(role)}</span>`:''}</span></li>`;
   }).join('');
   const isCurrentMember=members.some(member=>String(member.id)===String(appCurrentUser.id)),canLeave=isCurrentMember&&String(event.leaderId)!==String(appCurrentUser.id);
   const leave=canLeave?`<div class="event-leave-card"><button type="button" class="event-leave-button" onclick="leaveEvent('${eventEsc(event.id)}',this)">Sair do evento</button></div>`:'';
