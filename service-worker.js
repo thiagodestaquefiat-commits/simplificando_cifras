@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v705-event-member-icon";
+const CACHE_NAME = "simplificando-cifras-v706-playlist-add-cover-radius";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -65,7 +65,7 @@ const ASSETS = [
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./js/event-detail-refactor.css?v=54",
-  "./css/home-playlists.css?v=29",
+  "./css/home-playlists.css?v=30",
   "./js/home-playlists.js?v=24",
   "./js/user-playlists.js?v=6",
   "./js/notification-center.js?v=6",
