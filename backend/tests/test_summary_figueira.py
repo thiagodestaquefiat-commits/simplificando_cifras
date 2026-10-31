@@ -62,3 +62,30 @@ def test_same_phrase_with_other_chords_is_kept():
 def test_single_chord_line_is_kept_when_next_line_starts_elsewhere():
     blocks = [("Bm7 A E9 Bm7 A E9 Bm7 A E9 Bm7 A E9 D", None, None), ("G A", None, "Outra parte")]
     assert lines(ensure_client_chords(response(blocks))) == [("Bm7 A E9 (4x)", None), ("D", None), ("G A", "Outra parte")]
+
+
+LAST_KISS = [
+    ("G Em C D", None, "Oh where, oh where"),
+    ("Em C D G Em C D", None, "We were out on"),
+    ("G Em C D", None, "I couldn't stop so"),
+    ("Em C D G Em C D", None, "When I woke up"),
+    ("G Em C D G", None, "I lifted her head"),
+    ("Em C D G", None, "I kissed her our last kiss"),
+]
+
+
+def test_last_kiss_whole_song_is_one_loop():
+    """Simplificando cifras (31/10/2026): a música inteira é G Em C D, então o resumo é uma linha."""
+    original = response(LAST_KISS, "Last Kiss")
+    assert summary_off_standard(original)
+    assert lines(ensure_client_chords(original)) == [("G Em C D", "Oh where, oh where")]
+
+
+def test_loop_merge_keeps_different_progressions_apart():
+    blocks = [("G Em C D", None, "Primeira frase"), ("D C G", None, "Outra parte"), ("Em C D G", None, "Volta o começo")]
+    assert lines(ensure_client_chords(response(blocks))) == [("G Em C D", "Primeira frase"), ("D C G", "Outra parte"), ("Em C D G", "Volta o começo")]
+
+
+def test_same_loop_same_phrase_adds_up():
+    blocks = [("G Em C D", 2, "Oh where"), ("Em C D G", None, "Oh where")]
+    assert lines(ensure_client_chords(response(blocks))) == [("G Em C D (3x)", "Oh where")]

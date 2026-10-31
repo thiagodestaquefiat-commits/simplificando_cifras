@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, ResumoHarmonicoResponse
-from .harmonic_normalizer import (block_needs_condensing, ensure_client_chords, has_repeated_block_loop, has_repeated_phrase,
+from .harmonic_normalizer import (block_needs_condensing, ensure_client_chords, has_repeated_block_loop, has_repeated_phrase, has_rotated_loops,
                                   is_section_name, normalize_response, render_full_chord_sheet)
 from .content_extractor import clean_musical_text
 from .local_sheet_parser import parse_chord_sheet
@@ -130,6 +130,8 @@ def summary_off_standard(result: ResumoHarmonicoResponse) -> bool:
     if any(block_needs_condensing(block) for block in blocks):  # Bm7 A E9 Bm7 A E9 ... em vez de "Bm7 A E9 (4x)"
         return True
     if has_repeated_phrase(blocks):  # a mesma parte ("Ainda que a figueira") escrita duas vezes
+        return True
+    if has_rotated_loops(blocks):  # G Em C D | Em C D G Em C D: a mesma volta quebrada pela letra
         return True
     return not any(block.fraseGuia for block in blocks)
 

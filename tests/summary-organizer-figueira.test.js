@@ -34,4 +34,11 @@ assert.equal(summaryOrganizer.offStandard(teuAmor), false, "Teu Amor Não Falha 
 assert.equal(summaryOrganizer.offStandard(soLaco), true, "laço escondido numa linha, mesmo sem Letra + Cifras");
 assert.equal(summaryOrganizer.offStandard(soRepetida), true, "mesma parte escrita duas vezes");
 assert.equal(summaryOrganizer.offStandard(modulada), false, "mesma frase com outros acordes é outra parte");
+const lastKiss = song("Last Kiss", [
+  ["G Em C D", null, "Oh where, oh where"], ["Em C D G Em C D", null, "We were out on"], ["G Em C D", null, "I couldn't stop so"],
+  ["Em C D G Em C D", null, "When I woke up"], ["G Em C D G", null, "I lifted her head"], ["Em C D G", null, "I kissed her our last kiss"]
+]);
+const estrofes = song("Isaías 9", [["Am Em Am F7M C Em F7M", null, "O céu começa a se abrir"], ["Am Em Am F7M C Em F7M", null, "Santo, Santo, Santo"]]);
+assert.equal(summaryOrganizer.offStandard(lastKiss), true, "Last Kiss é uma volta só: G Em C D");
+assert.equal(summaryOrganizer.offStandard(estrofes), false, "estrofe inteira com outra frase continua separada");
 console.log("summary-organizer-figueira.test.js: OK");

@@ -762,6 +762,66 @@ def has_repeated_phrase(blocks: list) -> bool:
     return False
 
 
+_LOOP_UNIT_MAX = 8
+
+
+def period_unit(chords: list[str]) -> list[str] | None:
+    """Menor volta que gera a linha inteira, mesmo começando/terminando no meio dela.
+
+    "Em C D G Em C D" -> [Em, C, D, G];  "G Em C D G" -> [G, Em, C, D];  "G Em C D" -> [G, Em, C, D].
+    """
+    chords = [chord for index, chord in enumerate(chords) if index == 0 or chord != chords[index - 1]]
+    for size in range(2, min(len(chords), _LOOP_UNIT_MAX) + 1):
+        unit = chords[:size]
+        if len(set(unit)) < 2:
+            continue
+        if all(chord == unit[index % size] for index, chord in enumerate(chords)):
+            return unit
+    return None
+
+
+def same_loop(first: list[str] | None, second: list[str] | None) -> bool:
+    """A mesma volta, começando em qualquer acorde dela (G Em C D == Em C D G == C D G Em)."""
+    if not first or not second or len(first) != len(second):
+        return False
+    doubled = first + first
+    return any(doubled[start:start + len(second)] == second for start in range(len(first)))
+
+
+def merge_rotated_loops(blocks: list) -> list:
+    """Simplificando cifras: linhas seguidas que são a mesma volta viram uma linha só.
+
+    Last Kiss: G Em C D | Em C D G Em C D | G Em C D G | Em C D G ... -> G Em C D (a música inteira).
+    A letra quebrar no meio da volta não cria parte nova. A frase-guia é a da primeira linha; com frases
+    diferentes a contagem sai (a música segue na mesma volta). Intro só de acordes seguida da parte
+    cantada continua separada.
+    """
+    result, current_unit = [], None
+    for block in blocks:
+        unit = period_unit(block.acordes)
+        previous = result[-1] if result else None
+        same_phrase = previous is not None and _fold(previous.fraseGuia) == _fold(block.fraseGuia)
+        # Volta curta (até 4 acordes) junta mesmo com frases diferentes; estrofe inteira com a mesma
+        # harmonia e outra frase ("O céu começa..." / "Santo, Santo, Santo") continua separada.
+        if (previous is not None and same_loop(current_unit, unit)
+                and (same_phrase or len(unit) <= _LOOP_SHORT_CHORDS)
+                and not (not previous.fraseGuia and block.fraseGuia)):
+            previous.acordes = list(current_unit)
+            if same_phrase:
+                previous.repeticoes = min((previous.repeticoes or 1) + (block.repeticoes or 1), 99)
+            else:
+                previous.repeticoes = None
+            previous.fraseGuia = previous.fraseGuia or block.fraseGuia
+            continue
+        result.append(block.model_copy(deep=True))
+        current_unit = unit
+    return result
+
+
+def has_rotated_loops(blocks: list) -> bool:
+    return len(merge_rotated_loops(blocks)) < len(blocks)
+
+
 def drop_repeated_parts(blocks: list) -> list:
     """Padrão ROUDY: a mesma parte (mesma frase-guia, mesmos acordes) aparece uma vez só no resumo.
     Também tira a linha de um acorde só, sem frase, que é só o primeiro acorde da linha seguinte."""
@@ -830,7 +890,7 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
                 condensed.append(piece)
         else:
             condensed.append(trecho)
-    fixed.harmonicSummary.blocos = drop_repeated_parts(merge_repeated_blocks(condensed))[:40]
+    fixed.harmonicSummary.blocos = drop_repeated_parts(merge_rotated_loops(merge_repeated_blocks(condensed)))[:40]
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:

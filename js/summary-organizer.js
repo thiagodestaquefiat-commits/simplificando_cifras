@@ -79,13 +79,40 @@
     return false;
   }
 
+  // A mesma volta quebrada pela letra: "G Em C D" | "Em C D G Em C D" | "G Em C D G" (Last Kiss).
+  // Mesmo critério do merge_rotated_loops do servidor: volta curta (até 4 acordes) em linhas seguidas.
+  function periodUnit(line) {
+    const chords = chordsOf(line).filter((chord, index, all) => index === 0 || chord !== all[index - 1]);
+    for (let size = 2; size <= Math.min(chords.length, 8); size += 1) {
+      const unit = chords.slice(0, size);
+      if (new Set(unit).size < 2) continue;
+      if (chords.every((chord, index) => chord === unit[index % size])) return unit;
+    }
+    return null;
+  }
+
+  function sameLoop(first, second) {
+    if (!first || !second || first.length !== second.length) return false;
+    const doubled = first.concat(first).join(" ");
+    return (" " + doubled + " ").includes(" " + second.join(" ") + " ");
+  }
+
+  function hasRotatedLoop(lines) {
+    for (let index = 1; index < lines.length; index += 1) {
+      const previous = periodUnit(lines[index - 1]), current = periodUnit(lines[index]);
+      if (!previous || !sameLoop(previous, current) || (!hook(lines[index - 1]) && hook(lines[index]))) continue;
+      if (current.length <= 4 || String(hook(lines[index - 1]) || "") === String(hook(lines[index]) || "")) return true;
+    }
+    return false;
+  }
+
   // Mesmo critério do servidor (summary_off_standard): sem nenhuma frase-guia, nome de seção no
   // lugar da frase, linha com acordes demais ou laço espalhado em linhas. Só manda ao servidor quem pode melhorar.
   function offStandard(song) {
     // Laço escondido ou parte repetida o servidor arruma mesmo sem Letra + Cifras salva.
     const lines = summaryLines(song);
     if (!lines.length) return hasSheet(song);
-    if (hasBlockLoop(lines) || lines.some(hasInnerLoop) || hasRepeatedPart(lines)) return true;
+    if (hasBlockLoop(lines) || lines.some(hasInnerLoop) || hasRepeatedPart(lines) || hasRotatedLoop(lines)) return true;
     const sectionAsHook = lines.some((line) => global.songFormat.isSectionName(String(line.lyrics || "").trim()));
     const tooLong = lines.some((line) => chordsOf(line).length > MAX_CHORDS_PER_LINE);
     const noHook = !lines.some((line) => hook(line));
