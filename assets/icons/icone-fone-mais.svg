@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none">
   <title>Adicionar membro</title>
-  <g fill="#343438">
+  <g fill="#2B2B2D">
     <path d="M32 113C39 65 79 29 128 29s89 36 96 84h-17C200 74 167 46 128 46S56 74 49 113H32Z"/>
     <rect x="13" y="115" width="38" height="74" rx="17"/>
     <rect x="205" y="115" width="38" height="74" rx="17"/>
