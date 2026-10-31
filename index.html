@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=132">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=133">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=6">
@@ -5445,7 +5445,7 @@ function setupEventParticipantsMorph(){
       item.style.setProperty('--member-copy-opacity',copy.toFixed(3));item.style.setProperty('--member-copy-y',`${(4*(1-copy)).toFixed(2)}px`);item.style.setProperty('--member-role-opacity',role.toFixed(3));item.style.setProperty('--member-divider-opacity',divider.toFixed(3));item.style.setProperty('--leader-anchor-opacity',String(1-copy));
     });
     if(remaining){const rx=(width-43)*.5,ry=topInset+compactHeight*.68;remaining.style.transform=`translate3d(${rx.toFixed(2)}px,${ry.toFixed(2)}px,0)`;remaining.style.opacity=String(1-clampEventMemberProgress((progress-.12)/.28));}
-    if(add){const initialY=topInset+compactHeight-38,finalY=topInset+count*rowHeight+8;add.style.transform=`translate3d(0,${(initialY+(finalY-initialY)*progress).toFixed(2)}px,0)`;add.style.opacity=String(clampEventMemberProgress((progress-.12)/.3));add.style.pointerEvents=progress>.25?'auto':'none';}
+    if(add){const initialY=topInset+compactHeight-38,finalY=topInset+count*rowHeight;add.style.transform=`translate3d(0,${(initialY+(finalY-initialY)*progress).toFixed(2)}px,0)`;add.style.opacity=String(clampEventMemberProgress((progress-.12)/.3));add.style.pointerEvents=progress>.25?'auto':'none';}
     section.style.setProperty('--member-progress',progress.toFixed(3));
   }
   const requestRender=()=>{if(!frame)frame=requestAnimationFrame(renderParticipants);};
