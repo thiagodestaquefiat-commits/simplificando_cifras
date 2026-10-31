@@ -37,6 +37,10 @@ class Config:
     DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
     DEEPSEEK_TIMEOUT_SECONDS = float(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", "90"))
     DEEPSEEK_MAX_OUTPUT_TOKENS = int(os.getenv("DEEPSEEK_MAX_OUTPUT_TOKENS", "12000"))
+    # Classificação do catálogo para recomendações (uma chamada por música nova/completada).
+    CATALOG_CLASSIFY_ENABLED = os.getenv("CATALOG_CLASSIFY_ENABLED", "true").lower() == "true"
+    CATALOG_CLASSIFY_PER_REQUEST = int(os.getenv("CATALOG_CLASSIFY_PER_REQUEST", "3"))
+    CATALOG_CLASSIFY_TIMEOUT_SECONDS = float(os.getenv("CATALOG_CLASSIFY_TIMEOUT_SECONDS", "20"))
     DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS = int(os.getenv("DEEPSEEK_RESEARCH_MAX_OUTPUT_TOKENS", "1200"))
 
     CORS_ALLOWED_ORIGINS = _csv(

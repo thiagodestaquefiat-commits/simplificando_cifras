@@ -47,12 +47,72 @@
     return false;
   }
 
+  // Laço escondido numa linha: "Bm7 A E9 Bm7 A E9 Bm7 A E9 D" em vez de "Bm7 A E9 (3x)".
+  // Mesmo critério do block_needs_condensing do servidor (ciclo inteiro, ou laço em linha de 9+ acordes).
+  function hasInnerLoop(line) {
+    const chords = chordsOf(line);
+    for (let size = 2; size <= chords.length / 2; size += 1) {
+      if (chords.every((chord, index) => chord === chords[index % size])) return true;
+    }
+    if (chords.length < 9) return false;
+    for (let start = 0; start < chords.length; start += 1) {
+      for (let size = 2; size <= 8 && start + size * 2 <= chords.length; size += 1) {
+        const unit = chords.slice(start, start + size).join(" ");
+        if (new Set(chords.slice(start, start + size)).size > 1 && chords.slice(start + size, start + size * 2).join(" ") === unit) return true;
+      }
+    }
+    return false;
+  }
+
+  // A mesma parte escrita duas vezes: mesma frase-guia e uma linha é começo da outra ("Ainda que a figueira").
+  function hasRepeatedPart(lines) {
+    const seen = new Map();
+    for (const line of lines) {
+      const phrase = String(hook(line) || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      if (!phrase) continue;
+      const chords = chordsOf(line);
+      if (seen.has(phrase)) {
+        const first = seen.get(phrase), [shorter, longer] = first.length <= chords.length ? [first, chords] : [chords, first];
+        if (shorter.length && shorter.every((chord, index) => longer[index] === chord)) return true;
+      } else seen.set(phrase, chords);
+    }
+    return false;
+  }
+
+  // A mesma volta quebrada pela letra: "G Em C D" | "Em C D G Em C D" | "G Em C D G" (Last Kiss).
+  // Mesmo critério do merge_rotated_loops do servidor: volta curta (até 4 acordes) em linhas seguidas.
+  function periodUnit(line) {
+    const chords = chordsOf(line).filter((chord, index, all) => index === 0 || chord !== all[index - 1]);
+    for (let size = 2; size <= Math.min(chords.length, 8); size += 1) {
+      const unit = chords.slice(0, size);
+      if (new Set(unit).size < 2) continue;
+      if (chords.every((chord, index) => chord === unit[index % size])) return unit;
+    }
+    return null;
+  }
+
+  function sameLoop(first, second) {
+    if (!first || !second || first.length !== second.length) return false;
+    const doubled = first.concat(first).join(" ");
+    return (" " + doubled + " ").includes(" " + second.join(" ") + " ");
+  }
+
+  function hasRotatedLoop(lines) {
+    for (let index = 1; index < lines.length; index += 1) {
+      const previous = periodUnit(lines[index - 1]), current = periodUnit(lines[index]);
+      if (!previous || !sameLoop(previous, current) || (!hook(lines[index - 1]) && hook(lines[index]))) continue;
+      if (current.length <= 4 || String(hook(lines[index - 1]) || "") === String(hook(lines[index]) || "")) return true;
+    }
+    return false;
+  }
+
   // Mesmo critério do servidor (summary_off_standard): sem nenhuma frase-guia, nome de seção no
   // lugar da frase, linha com acordes demais ou laço espalhado em linhas. Só manda ao servidor quem pode melhorar.
   function offStandard(song) {
+    // Laço escondido ou parte repetida o servidor arruma mesmo sem Letra + Cifras salva.
     const lines = summaryLines(song);
     if (!lines.length) return hasSheet(song);
-    if (hasBlockLoop(lines)) return true;
+    if (hasBlockLoop(lines) || lines.some(hasInnerLoop) || hasRepeatedPart(lines) || hasRotatedLoop(lines)) return true;
     const sectionAsHook = lines.some((line) => global.songFormat.isSectionName(String(line.lyrics || "").trim()));
     const tooLong = lines.some((line) => chordsOf(line).length > MAX_CHORDS_PER_LINE);
     const noHook = !lines.some((line) => hook(line));

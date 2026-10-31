@@ -726,6 +726,123 @@ def segment_progression(chords: list[str]) -> list[tuple[list[str], int]]:
 
 
 
+def _split_loops(chords: list[str]) -> list[tuple[list[str], int]] | None:
+    """Partes da linha quando ela esconde um laço (Bm7 A E9 Bm7 A E9 Bm7 A E9 D -> [Bm7 A E9] 3x, [D])."""
+    if len(chords) < _SEGMENT_MIN_CHORDS:
+        return None
+    parts = segment_progression(chords)
+    if len(parts) > 1 and sum(len(unit) for unit, _ in parts) < len(chords):
+        return parts
+    return None
+
+
+def block_needs_condensing(block) -> bool:
+    """A linha do resumo não está numa volta só: ciclo inteiro repetido ou laço escondido no meio."""
+    chords = list(block.acordes)
+    condensed, _ = condense_progression(chords, block.repeticoes)
+    return condensed != chords or _split_loops(chords) is not None
+
+
+def _same_part(first: list[str], second: list[str]) -> bool:
+    """Mesma parte da música escrita duas vezes: uma é começo da outra (a 2ª só emendou a volta seguinte).
+    Com outros acordes (ex.: refrão final modulado) é outra parte e fica."""
+    shorter, longer = (first, second) if len(first) <= len(second) else (second, first)
+    return bool(shorter) and longer[:len(shorter)] == shorter
+
+
+def has_repeated_phrase(blocks: list) -> bool:
+    seen = {}
+    for block in blocks:
+        phrase = _fold(block.fraseGuia)
+        if not phrase:
+            continue
+        if phrase in seen and _same_part(seen[phrase], list(block.acordes)):
+            return True
+        seen.setdefault(phrase, list(block.acordes))
+    return False
+
+
+_LOOP_UNIT_MAX = 8
+
+
+def period_unit(chords: list[str]) -> list[str] | None:
+    """Menor volta que gera a linha inteira, mesmo começando/terminando no meio dela.
+
+    "Em C D G Em C D" -> [Em, C, D, G];  "G Em C D G" -> [G, Em, C, D];  "G Em C D" -> [G, Em, C, D].
+    """
+    chords = [chord for index, chord in enumerate(chords) if index == 0 or chord != chords[index - 1]]
+    for size in range(2, min(len(chords), _LOOP_UNIT_MAX) + 1):
+        unit = chords[:size]
+        if len(set(unit)) < 2:
+            continue
+        if all(chord == unit[index % size] for index, chord in enumerate(chords)):
+            return unit
+    return None
+
+
+def same_loop(first: list[str] | None, second: list[str] | None) -> bool:
+    """A mesma volta, começando em qualquer acorde dela (G Em C D == Em C D G == C D G Em)."""
+    if not first or not second or len(first) != len(second):
+        return False
+    doubled = first + first
+    return any(doubled[start:start + len(second)] == second for start in range(len(first)))
+
+
+def merge_rotated_loops(blocks: list) -> list:
+    """Simplificando cifras: linhas seguidas que são a mesma volta viram uma linha só.
+
+    Last Kiss: G Em C D | Em C D G Em C D | G Em C D G | Em C D G ... -> G Em C D (a música inteira).
+    A letra quebrar no meio da volta não cria parte nova. A frase-guia é a da primeira linha; com frases
+    diferentes a contagem sai (a música segue na mesma volta). Intro só de acordes seguida da parte
+    cantada continua separada.
+    """
+    result, current_unit = [], None
+    for block in blocks:
+        unit = period_unit(block.acordes)
+        previous = result[-1] if result else None
+        same_phrase = previous is not None and _fold(previous.fraseGuia) == _fold(block.fraseGuia)
+        # Volta curta (até 4 acordes) junta mesmo com frases diferentes; estrofe inteira com a mesma
+        # harmonia e outra frase ("O céu começa..." / "Santo, Santo, Santo") continua separada.
+        if (previous is not None and same_loop(current_unit, unit)
+                and (same_phrase or len(unit) <= _LOOP_SHORT_CHORDS)
+                and not (not previous.fraseGuia and block.fraseGuia)):
+            previous.acordes = list(current_unit)
+            if same_phrase:
+                previous.repeticoes = min((previous.repeticoes or 1) + (block.repeticoes or 1), 99)
+            else:
+                previous.repeticoes = None
+            previous.fraseGuia = previous.fraseGuia or block.fraseGuia
+            continue
+        result.append(block.model_copy(deep=True))
+        current_unit = unit
+    return result
+
+
+def has_rotated_loops(blocks: list) -> bool:
+    return len(merge_rotated_loops(blocks)) < len(blocks)
+
+
+def drop_repeated_parts(blocks: list) -> list:
+    """Padrão ROUDY: a mesma parte (mesma frase-guia, mesmos acordes) aparece uma vez só no resumo.
+    Também tira a linha de um acorde só, sem frase, que é só o primeiro acorde da linha seguinte."""
+    kept, seen = [], {}
+    for block in blocks:
+        phrase = _fold(block.fraseGuia)
+        if phrase and phrase in seen and _same_part(seen[phrase], list(block.acordes)):
+            continue
+        if phrase:
+            seen.setdefault(phrase, list(block.acordes))
+        kept.append(block)
+    result = []
+    for index, block in enumerate(kept):
+        following = kept[index + 1] if index + 1 < len(kept) else None
+        if (len(block.acordes) == 1 and not block.fraseGuia and not block.repeticoes and following is not None
+                and following.acordes and following.acordes[0] == block.acordes[0]):
+            continue
+        result.append(block)
+    return result
+
+
 def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
     """Última barreira antes de responder: todo acorde precisa passar no parseChord do frontend.
 
@@ -760,8 +877,8 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
         trecho.acordes, trecho.repeticoes = condense_progression(trecho.acordes, trecho.repeticoes)
         if trecho.repeticoes == 1:
             trecho.repeticoes = None
-        parts = segment_progression(trecho.acordes) if len(trecho.acordes) >= _SEGMENT_MIN_CHORDS else []
-        if len(parts) > 1 and sum(len(unit) for unit, _ in parts) < len(trecho.acordes):
+        parts = _split_loops(trecho.acordes)
+        if parts:
             # Sequência longa sem um único padrão: vira várias linhas "Am F Dm (5x)"; a frase fica na primeira.
             outer = trecho.repeticoes or 1
             for position, (unit, count) in enumerate(parts):
@@ -773,7 +890,7 @@ def ensure_client_chords(response: ResumoHarmonicoResponse) -> ResumoHarmonicoRe
                 condensed.append(piece)
         else:
             condensed.append(trecho)
-    fixed.harmonicSummary.blocos = merge_repeated_blocks(condensed)[:40]
+    fixed.harmonicSummary.blocos = drop_repeated_parts(merge_rotated_loops(merge_repeated_blocks(condensed)))[:40]
     if fixed.fullChordSheet:
         fixed.fullChordSheet.content = simplify_chord_text(fixed.fullChordSheet.content)
         for section in fixed.fullChordSheet.sections:

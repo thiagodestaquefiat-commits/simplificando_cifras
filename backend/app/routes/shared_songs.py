@@ -171,6 +171,54 @@ def get_song_version(song_id):
     return jsonify(ensure_client_chords(roudy_summary(shared)).model_dump(mode="json")), 200
 
 
+MAX_PROFILE_ITEMS = 300
+
+
+@blueprint.post("/profiles")
+@limiter.limit(_rate_limit)
+@authenticated
+def song_profiles():
+    """Gênero, subgênero, BPM e temas das músicas da biblioteca da pessoa (casadas com o catálogo).
+
+    Usado pelas sugestões do app. Recebe só título, artista e tom; devolve null quando a versão não está
+    no catálogo ou ainda não foi classificada.
+    """
+    from ..services.song_classifier import profile
+    data = request.get_json(silent=True)
+    items = data.get("items") if isinstance(data, dict) else None
+    if not isinstance(items, list) or len(items) > MAX_PROFILE_ITEMS:
+        raise ApiError("entrada_invalida", f"Envie uma lista com no máximo {MAX_PROFILE_ITEMS} músicas.", 400)
+    result = []
+    for item in items:
+        item = item if isinstance(item, dict) else {}
+        title = normalize_text(str(item.get("title") or "")[:160])
+        song = SharedSongService._existing(title, normalize_text(str(item.get("artist") or "")[:160]) or None,
+                                           str(item.get("key") or "")[:20] or None) if title else None
+        value = profile(song) if song is not None else None
+        result.append(value if value and (value["classificada"] or value["bpm"]) else None)
+    return jsonify({"profiles": result}), 200
+
+
+@blueprint.get("/similar")
+@limiter.limit(_rate_limit)
+@authenticated
+def similar_shared_songs():
+    """Músicas parecidas do catálogo (mesmo subgênero/gênero, temas e BPM próximos; sacra só com sacra)."""
+    from ..services.song_classifier import profile, similar_songs
+    title = normalize_text(str(request.args.get("title") or "")[:160])
+    if not title:
+        raise ApiError("entrada_invalida", "Informe o título da música.", 400)
+    artist = normalize_text(str(request.args.get("artist") or "")[:160]) or None
+    song = SharedSongService._existing(title, artist, str(request.args.get("key") or "")[:20] or None)
+    if song is None:
+        return jsonify({"song": None, "similar": []}), 200
+    try:
+        limit = min(12, max(1, int(request.args.get("limit", "6"))))
+    except ValueError:
+        limit = 6
+    return jsonify({"song": profile(song), "similar": similar_songs(song, limit)}), 200
+
+
 # TEMPORÁRIO (força-tarefa out/2026): organizar o catálogo compartilhado no padrão ROUDY.
 # Remover estas duas rotas e services/catalog_organizer.py quando o catálogo estiver no padrão.
 _ORGANIZE_PAGE = 200

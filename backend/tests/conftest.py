@@ -24,6 +24,8 @@ class TestConfig:
     DEEPSEEK_MODEL = "test-model"
     DEEPSEEK_TIMEOUT_SECONDS = 1
     DEEPSEEK_MAX_OUTPUT_TOKENS = 500
+    CATALOG_CLASSIFY_ENABLED = False  # testes nunca chamam a IA de verdade
+    CATALOG_CLASSIFY_ASYNC = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     COLLABORATION_TOKEN_BYTES = 32
