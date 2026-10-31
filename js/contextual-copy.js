@@ -190,6 +190,12 @@
   function interpolate(template, variables) {
     return text(template).replace(/\{([A-Za-z0-9_]+)\}/g, (_, key) => text(variables[key]));
   }
+  function normalizeTerminology(value) {
+    return text(value).replace(/\bshow\b/gi, (matched) => {
+      if (matched === matched.toUpperCase()) return 'APRESENTAÇÃO';
+      return matched[0] === matched[0].toUpperCase() ? 'Apresentação' : 'apresentação';
+    });
+  }
   function normalizedVariant(value, family) {
     return typeof value === 'string' ? { text: value, intensity: F, structure: family } : value;
   }
@@ -213,11 +219,11 @@
     return Object.freeze({
       messageKey, variantId, tone: 'roudy-contextual', variables: Object.freeze({ ...variables }),
       editorialFamily: family, intensity: selected.value.intensity, editorialStructure: selected.value.structure,
-      text: interpolate(selected.value.text, variables), kicker: meta.kicker, actionLabel: meta.actionLabel,
+      text: normalizeTerminology(interpolate(selected.value.text, variables)), kicker: meta.kicker, actionLabel: meta.actionLabel,
       usedLlm: false
     });
   }
 
-  global.contextualCopy = Object.freeze({ CATALOG, resolve, hash });
+  global.contextualCopy = Object.freeze({ CATALOG, resolve, hash, normalizeTerminology });
   if (typeof module !== 'undefined' && module.exports) module.exports = global.contextualCopy;
 })(typeof window !== 'undefined' ? window : globalThis);

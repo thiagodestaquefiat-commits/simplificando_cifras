@@ -34,13 +34,14 @@ assert.match(homePlaylists, /Array\.isArray\(songIds\) \? songIds : \[songIds\]/
 assert.match(js, /global\.homePlaylists\?\.setView/, 'atalhos reutilizam as telas existentes');
 assert.match(html, /id="roudy-search-for-you"/, 'a Busca possui uma faixa de sugestões abaixo da retomada');
 assert.match(js, /function recommendations\(recent\)/, 'as sugestões usam apenas dados que já existem no ROUDY');
-assert.match(js, /Repertório de \$\{event\.title\}/, 'músicas do próximo repertório recebem prioridade contextual');
-assert.match(js, /Da sua biblioteca/, 'a biblioteca local preenche a faixa sem catálogo externo');
+assert.match(js, /eventSongSource/, 'músicas do próximo repertório recebem prioridade contextual');
+assert.doesNotMatch(js, /Da sua biblioteca|Repertório de \$\{event\.title\}/, 'a faixa não expõe rótulos de origem');
+assert.doesNotMatch(js, /Para tocar, revisar e deixar por perto\./, 'a faixa não usa a descrição de biblioteca');
 assert.match(css, /roudy-search-for-you-rail/, 'a faixa é horizontal e própria para mobile');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=18/, 'o cache mantém o CSS atual da busca');
-assert.match(sw, /js\/search-menu\.js\?v=10/, 'o cache deve usar a faixa contextual da Busca');
+assert.match(sw, /css\/search-menu\.css\?v=19/, 'o cache mantém o CSS atual da busca');
+assert.match(sw, /js\/search-menu\.js\?v=11/, 'o cache deve usar a faixa contextual da Busca');
 assert.match(sw, /js\/home-playlists\.js\?v=24/, 'o cache deve usar o placeholder de capa atual');
 assert.match(sw, /js\/list-loading\.js\?v=1/, 'o cache deve conter o módulo compartilhado de carregamento');
 

@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v706-playlist-add-cover-radius";
+const CACHE_NAME = "simplificando-cifras-v707-search-for-you-context-copy";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -55,10 +55,10 @@ const ASSETS = [
   "./assets/icons/icone-teclado-musical.svg",
   "./assets/icons/icone-check-duplo-roudy.svg",
   "./assets/icons/icone-fone-mais.svg",
-  "./css/search-menu.css?v=18",
+  "./css/search-menu.css?v=19",
   "./css/stage-mode-reference.css?v=19",
   "./css/song-section-heading.css?v=1",
-  "./js/search-menu.js?v=10",
+  "./js/search-menu.js?v=11",
   "./js/list-loading.js?v=1",
   "./assets/search/musicas.svg?v=2",
   "./assets/search/eventos.svg?v=2",
@@ -304,7 +304,7 @@ const ASSETS = [
   "./js/event-offline.js?v=2",
   "./js/context-intelligence.js?v=4",
   "./js/preparation-receipts.js?v=1",
-  "./js/contextual-copy.js?v=3",
+  "./js/contextual-copy.js?v=4",
   "./js/context-delivery.js?v=2",
   "./js/context-acknowledgements.js?v=1",
   "./js/context-history.js?v=2",

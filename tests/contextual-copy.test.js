@@ -118,6 +118,7 @@ const immutableAction = action('START_PREPARATION', { destination, evidence: { p
 copy.resolve(immutableAction, { events });
 assert.deepEqual(immutableAction.destination, destination, 'copy não altera destination');
 assert.equal(copy.resolve(immutableAction, { events }).usedLlm, false);
+assert.equal(copy.normalizeTerminology('Show hoje e SHOW amanhã.'), 'Apresentação hoje e APRESENTAÇÃO amanhã.', 'a linguagem contextual veta “show”');
 assert.equal(global.contextAcknowledgements, undefined, 'resolver não cria acknowledgement');
 assert.equal(global.preparationReceipts, undefined, 'resolver não cria receipt');
 assert.doesNotMatch(require('node:fs').readFileSync('js/contextual-copy.js', 'utf8'), /fetch\(|XMLHttpRequest|WebSocket|Math\.random|openai|prompt/i, 'copy é local, offline e determinística');
