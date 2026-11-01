@@ -176,12 +176,20 @@
     read[String(eventId)] = new Date().toISOString();
     global.storage.set(READ_KEY, read);
   }
-  function unreadCount(eventId) {
+  function isUnread(eventId, message) {
     const readAt = global.storage.get(READ_KEY, {})[String(eventId)] || "";
     const user = currentUser();
-    return (allMessages()[String(eventId)] || []).filter((message) => message.createdAt > readAt && String(message.sender.id) !== String(user.id)).length;
+    return message.createdAt > readAt && String(message.sender?.id) !== String(user.id);
+  }
+  function unreadCount(eventId) {
+    return (allMessages()[String(eventId)] || []).filter(message => isUnread(eventId, message)).length;
   }
   function subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); }
+  function receiveAudio(message){
+    assertAccess(message.eventId);
+    write(message.eventId,values=>[...values.filter(item=>String(item.id)!==String(message.id)),message]);
+    global.syncRealtime?.publishChat(message.eventId);
+  }
   function initialize(options) {
     context = { ...context, ...(options || {}) };
     if ("BroadcastChannel" in global && !channel) {
@@ -192,5 +200,5 @@
     global.addEventListener("online", () => Object.keys(allMessages()).forEach((eventId) => flush(eventId)));
   }
 
-  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
+  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, createPoll, edit, remove, react, vote, markRead, isUnread, unreadCount, receiveAudio, subscribe });
 })(window);

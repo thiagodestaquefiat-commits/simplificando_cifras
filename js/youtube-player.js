@@ -24,8 +24,8 @@
       if (!player || !segmentLoop || typeof player.getCurrentTime !== "function") return;
       const current = Number(player.getCurrentTime());
       if (!Number.isFinite(current)) return;
-      if (current >= segmentLoop.end - .08) {
-        const ended = typeof player.getPlayerState === "function" && player.getPlayerState() === 0;
+      const ended = typeof player.getPlayerState === "function" && player.getPlayerState() === 0;
+      if (current >= segmentLoop.end - .08 || ended) {
         player.seekTo(segmentLoop.start, true);
         if (ended && typeof player.playVideo === "function") player.playVideo();
       }
@@ -194,11 +194,12 @@
 
   function setSegmentLoop(start, end) {
     const duration = getDuration();
+    if(!player||typeof player.seekTo!=="function"||duration<=0)throw new Error("Aguarde o player interativo do YouTube carregar para repetir o trecho.");
     const safeStart = Math.max(0, Number(start) || 0);
     const safeEnd = Math.min(duration || Number(end), Number(end) || 0);
     if (!Number.isFinite(safeEnd) || safeEnd <= safeStart + .5) throw new Error("Selecione um trecho válido.");
     segmentLoop = { start: safeStart, end: safeEnd };
-    if (getCurrentTime() < safeStart || getCurrentTime() >= safeEnd) player.seekTo(safeStart, true);
+    player.seekTo(safeStart, true);
     play();
     monitorSegment();
     return { ...segmentLoop };

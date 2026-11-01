@@ -149,6 +149,13 @@ function createAuthHarness(options = {}) {
   assert.ok(!JSON.stringify(photo.calls.updateUser).includes(image),'a imagem não deve entrar nos metadados/JWT do login');
   photo.listeners[0]('TOKEN_REFRESHED',{access_token:'renewed',user:{id:'photo-user',user_metadata:{picture:'https://example.test/google.jpg'}}});
   assert.equal(photo.window.appAuth.getState().user.avatarUrl,image,'renovar a sessão não restaura a foto do Google');
+  const savedPhotos=new Map([['sc_account_profiles_v1',JSON.stringify({'photo-user':{avatarUrl:image,avatarPending:false}})]]);
+  const restoredPhoto=createAuthHarness({storage:savedPhotos,initialSession:{access_token:'restored',user:{id:'photo-user',user_metadata:{picture:'https://example.test/google.jpg'}}}});
+  assert.equal((await restoredPhoto.window.appAuth.initialize()).user.avatarUrl,image,'foto própria já confirmada é restaurada antes da sincronização da identidade');
+  savedPhotos.set('sc_account_profiles_v1',JSON.stringify({'photo-user':{avatarUrl:null}}));
+  assert.equal(restoredPhoto.window.appAuth.getState().user.avatarUrl,null,'remoção explícita também é restaurada após reinicializar o motor de login');
+  const otherPhoto=createAuthHarness({storage:savedPhotos,initialSession:{access_token:'other',user:{id:'other-user',user_metadata:{picture:'https://example.test/other.jpg'}}}});
+  assert.equal((await otherPhoto.window.appAuth.initialize()).user.avatarUrl,'https://example.test/other.jpg','outro usuário mantém a própria foto inicial');
   assert.equal((await photo.window.appAuth.updateProfile({name:'A',avatarUrl:null})).user.avatarUrl,null,'remoção explícita prevalece sobre o Google');
   const failedPhoto=createAuthHarness({avatarFailure:true,initialSession:{access_token:'photo-token',user:{id:'photo-user',user_metadata:{}}}});
   await failedPhoto.window.appAuth.initialize();

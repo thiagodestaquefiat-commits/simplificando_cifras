@@ -122,7 +122,7 @@
   }
   function renderInbox() {
     const target = byId('playlist-invitations-list'); if (!target) return;
-    const invitations = api().getInbox().invitations;
+    const invitations = api().getInbox().invitations.filter(item=>!global.notificationCenter?.isDismissed('invite:playlist-invite:'+item.id));
     const eventStatus = byId('user-invitations-status');
     if (eventStatus) eventStatus.hidden = Boolean(invitations.length && !global.eventUserInvites?.getPending?.().length);
     target.innerHTML = invitations.map((item, index) => `<section class="user-invite-panel"><h3>${esc(item.playlistName)}</h3><p>${esc(item.inviter.name)} convidou você para colaborar nesta playlist.</p><small>Ao aceitar, você poderá editar, convidar pessoas e excluir esta playlist para todos.</small><div class="user-invite-actions"><button type="button" class="btn btn-primary" data-playlist-invitation="${index}" data-response="accept">Aceitar</button><button type="button" class="btn btn-outline" data-playlist-invitation="${index}" data-response="reject">Rejeitar</button></div><p role="status" aria-live="polite"></p></section>`).join('');
