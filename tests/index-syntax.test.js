@@ -44,6 +44,8 @@ assert.doesNotMatch(html, /label:'Pesquisar',kind:'ai_search'/, "o cartão centr
 assert.match(html, /js\/ai\/camera-capture\.js/, "o módulo de captura por câmera deve ser carregado");
 assert.match(musicPane, /aria-label="Limpar busca do YouTube"/);
 assert.match(topbar, /aria-label="Limpar busca"[^>]*hidden/);
+assert.match(html, /roudy-search-compact-title/, "a Busca deve possuir o título compacto acionado pela rolagem");
+assert.match(html, /expandHeaderSearch/, "o título compacto deve reabrir a barra de pesquisa");
 assert.doesNotMatch(html, /focusPlaylistSearch/, "o fluxo antigo da lupa deve ser removido");
 const playlistSearchFlow = html.slice(html.indexOf('function openPlaylistSearch'), html.indexOf('function renderMusicas'));
 assert.doesNotMatch(playlistSearchFlow, /scrollIntoView\(/, "a lupa do cabeçalho não deve rolar a página");

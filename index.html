@@ -1099,7 +1099,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=30">
-<link rel="stylesheet" href="css/search-menu.css?v=19">
+<link rel="stylesheet" href="css/search-menu.css?v=20">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
 <link rel="stylesheet" href="css/event-share-variants.css?v=5">
@@ -1203,7 +1203,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
   <section class="roudy-search" id="roudy-search" aria-label="Buscar" hidden>
     <header class="roudy-search-header">
-      <div class="roudy-search-title-row"><div class="roudy-search-identity"><button class="roudy-search-avatar" id="roudy-search-avatar" type="button" onclick="openAccountModal()" aria-label="Abrir menu do perfil">R</button><h1 class="roudy-search-title">Buscar</h1></div><button type="button" class="roudy-search-camera" onclick="roudyCamera.open()" aria-label="Fotografar ou importar uma cifra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button></div>
+      <div class="roudy-search-title-row"><div class="roudy-search-identity"><button class="roudy-search-avatar" id="roudy-search-avatar" type="button" onclick="openAccountModal()" aria-label="Abrir menu do perfil">R</button><h1 class="roudy-search-title">Buscar</h1></div></div>
+      <button type="button" class="roudy-search-camera" onclick="roudyCamera.open()" aria-label="Fotografar ou importar uma cifra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button>
+      <button class="roudy-search-compact-title" type="button" onclick="roudySearchMenu.expandHeaderSearch()" aria-label="Abrir busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg><span>Buscar</span></button>
       <div class="roudy-search-form" role="search"><label class="roudy-search-field"><input class="roudy-search-input" id="roudy-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar músicas, artistas..." aria-label="Buscar músicas e artistas" onfocus="roudySearchMenu.activate()" oninput="roudySearchMenu.input()"><button class="roudy-search-clear" id="roudy-search-clear" type="button" onclick="roudySearchMenu.clear()" aria-label="Limpar busca" hidden>×</button></label><button class="roudy-search-voice" id="roudy-search-voice" type="button" onclick="toggleRoudySearchVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="roudy-search-cancel" type="button" onclick="roudySearchMenu.cancel()">Cancelar</button></div>
     </header>
     <main class="roudy-search-scroll">
@@ -6430,7 +6432,7 @@ youtubePlayerUI.initialize({
   showToast
 });
 </script>
-<script src="js/search-menu.js?v=11"></script>
+<script src="js/search-menu.js?v=12"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
