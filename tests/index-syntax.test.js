@@ -14,11 +14,12 @@ assert.doesNotMatch(musicPane, /class="search-bar"/, "a playlist não deve reser
 assert.match(topbar, /placeholder="Buscar músicas, artistas\.\.\."/);
 assert.match(topbar, /id="topbar-search-mode"[^>]*hidden/);
 assert.match(fs.readFileSync(require("node:path").resolve(__dirname, "..", "js", "medley-editor.css"), "utf8"), /data-active-tab="medley"[^\n]*topbar:has\(\.topbar-search-mode:not\(\[hidden\]\)\)[^\n]*background:#0b0b0c/, 'a busca do Medley cobre o fundo iluminado do cabeçalho com a mesma superfície dos resultados');
-assert.match(topbar, /onclick="openPlaylistSearch\(\)"/);
+assert.match(topbar, /onclick="openHomePlaylistSearch\(\)"/);
+assert.match(topbar, /placeholder="Buscar suas playlists"/);
 assert.match(topbar, /onclick="closePlaylistSearch\(\)"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);
 assert.match(musicPane, /playlist-ai-card/, "a integração de IA deve permanecer disponível no hero da playlist");
-assert.match(topbar, /onclick="roudyCamera\.open\(\)"/, "a câmera deve abrir diretamente pelo cabeçalho");
+assert.doesNotMatch(topbar, /onclick="roudyCamera\.open\(\)"/, "a câmera não deve aparecer no cabeçalho da Home");
 assert.match(cameraSource, /data-camera-file/, "a câmera deve manter acesso direto ao seletor de arquivos");
 assert.match(cameraSource, /capture="environment" data-camera-native/, "em HTTP local o disparador deve abrir a câmera nativa do celular");
 assert.match(cameraSource, /querySelector\('\[data-camera-native\]'\)\?\.click\(\)/, "a ação central deve acionar o capturador nativo quando getUserMedia não existe");
@@ -38,7 +39,7 @@ assert.match(editorialCss, /Barlow\+Condensed/, "a voz condensada deve usar uma 
 assert.match(editorialCss, /family=Bungee/, "a voz geométrica deve usar uma família display dedicada");
 assert.match(editorialCss, /\.editorial-dimensional/, "o sistema deve incluir tratamento celebratório dimensional");
 assert.match(editorialCss, /prefers-reduced-motion:reduce[\s\S]{0,500}playlist-ai-editorial-line/, "movimento editorial deve respeitar redução de movimento");
-assert.match(topbar, /onclick="openPlaylistSearch\(\)"/, "a pesquisa (playlist + ROUDY + web) fica na lupa do cabeçalho");
+assert.match(topbar, /onclick="openHomePlaylistSearch\(\)"/, "a lupa da Home deve buscar somente playlists pessoais");
 assert.doesNotMatch(html, /label:'Pesquisar',kind:'ai_search'/, "o cartão central não repete a busca");
 assert.match(html, /js\/ai\/camera-capture\.js/, "o módulo de captura por câmera deve ser carregado");
 assert.match(musicPane, /aria-label="Limpar busca do YouTube"/);

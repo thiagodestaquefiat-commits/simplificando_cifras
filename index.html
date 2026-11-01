@@ -1118,9 +1118,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
           <div class="topbar-sub" id="count-label"></div>
         </div>
         <button class="app-assistant-launch topbar-labeled" data-label="Assistente" id="app-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
-        <button class="topbar-search-action topbar-labeled" data-label="Buscar" type="button" onclick="openPlaylistSearch()" aria-label="Buscar música"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg></button>
+        <button class="topbar-search-action topbar-labeled" data-label="Buscar playlists" type="button" onclick="openHomePlaylistSearch()" aria-label="Buscar playlists"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg></button>
         <input class="topbar-cover-input" id="playlist-cover-input" type="file" accept="image/*" onchange="setPlaylistCoverFromFile(this.files[0]);this.value=''">
-        <button class="topbar-camera-action topbar-labeled" data-label="Foto/Arquivo" type="button" onclick="roudyCamera.open()" aria-label="Abrir câmera para adicionar música"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button>
         <button class="topbar-events-action topbar-labeled" data-label="Notificações" id="user-invitations-button" type="button" onclick="eventUserInvites.openInbox()" aria-label="Notificações" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 15 18 15 18 8Z"></path><path d="M9.5 20h5"></path></svg></button>
         <button class="events-more-action" id="events-more-action" type="button" onclick="openAddSetlist()" aria-label="Novo evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
         <span class="topbar-labeled topbar-account-wrap" data-label="Menu" onclick="if(event.target===this)openAccountModal()"><button class="app-account-btn" id="app-account-btn" type="button" onclick="openAccountModal()" aria-label="Abrir menu">EU</button></span>
@@ -1133,6 +1132,13 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         </div>
         <button class="topbar-search-tool" id="playlist-voice-search" type="button" onclick="togglePlaylistVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg></button>
         <div class="playlist-search-recents" id="playlist-search-recents" hidden></div>
+      </div>
+      <div class="topbar-search-mode" id="home-playlist-search-mode" role="search" hidden>
+        <button class="topbar-search-back" type="button" onclick="closeHomePlaylistSearch()" aria-label="Fechar busca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>
+        <div class="topbar-search-field">
+          <input class="topbar-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar suas playlists" id="home-playlist-search-input" oninput="renderHomePlaylistSearch()" aria-label="Buscar suas playlists">
+        </div>
+        <div class="playlist-search-recents home-playlist-search-results" id="home-playlist-search-results" hidden></div>
       </div>
     </div>
     <div class="tab-bar" id="primary-tabs" role="tablist" aria-label="Seções principais" data-active="musicas">
@@ -3288,6 +3294,47 @@ function openPrimarySearchTab(){
   roudySearchMenu.open();
 }
 function restorePrimarySearchTab(){if(!primarySearchTabActive)return;primarySearchTabActive=false;switchTab(primarySearchReturnTab||'musicas')}
+
+// A lupa da Home navega somente pelas playlists da própria conta. A busca geral de músicas
+// continua disponível na aba Buscar e no fluxo legado usado pelo assistente.
+let homePlaylistSearchReturnScrollY=0;
+function homePlaylistSearchItems(){
+  const ownerId=appCurrentUser?.id||window.homePlaylists?.ownerId||'local';
+  const source=window.userPlaylists?.list?.(ownerId);
+  return Array.isArray(source)?source:[];
+}
+function homePlaylistSearchIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h12M7 10h12M7 15h8M3.5 5h.01M3.5 10h.01M3.5 15h.01"></path></svg>'}
+function renderHomePlaylistSearch(){
+  const panel=document.getElementById('home-playlist-search-results');
+  const input=document.getElementById('home-playlist-search-input');
+  if(!panel||!input)return;
+  const query=String(input.value||'').trim().toLocaleLowerCase('pt-BR');
+  const playlists=homePlaylistSearchItems().filter(playlist=>String(playlist?.name||'').toLocaleLowerCase('pt-BR').includes(query));
+  panel.hidden=false;
+  panel.innerHTML=`<div class="playlist-search-results-label">Suas playlists</div>${playlists.length?playlists.map(playlist=>{const items=Array.isArray(playlist.items)?playlist.items:[];const label=items.length===1?'1 música':`${items.length} músicas`;return `<div class="playlist-search-result-row"><button type="button" class="playlist-search-result" onclick="openHomePlaylistSearchResult(${attrJs(playlist.id)})"><span class="playlist-search-result-art" aria-hidden="true">${homePlaylistSearchIcon()}</span><span class="playlist-search-result-copy"><strong>${eventEsc(playlist.name||'Playlist sem nome')}</strong><small>${label}</small></span></button></div>`}).join(''):`<div class="playlist-search-no-results">${query?'Nenhuma playlist encontrada.':'Você ainda não criou playlists.'}</div>`}`;
+}
+function openHomePlaylistSearch(){
+  if(currentTab!=='musicas')switchTab('musicas');
+  homePlaylistSearchReturnScrollY=window.scrollY;
+  document.getElementById('topbar-normal').hidden=true;
+  document.getElementById('home-playlist-search-mode').hidden=false;
+  const input=document.getElementById('home-playlist-search-input');
+  if(input)input.value='';
+  renderHomePlaylistSearch();
+  requestAnimationFrame(()=>input?.focus({preventScroll:true}));
+}
+function closeHomePlaylistSearch(){
+  const search=document.getElementById('home-playlist-search-mode'),panel=document.getElementById('home-playlist-search-results'),input=document.getElementById('home-playlist-search-input');
+  if(search)search.hidden=true;
+  if(panel){panel.hidden=true;panel.replaceChildren();}
+  if(input)input.value='';
+  document.getElementById('topbar-normal').hidden=false;
+  requestAnimationFrame(()=>window.scrollTo({top:homePlaylistSearchReturnScrollY,behavior:'auto'}));
+}
+function openHomePlaylistSearchResult(id){
+  closeHomePlaylistSearch();
+  requestAnimationFrame(()=>window.homePlaylists?.open?.(id));
+}
 
 let playlistSearchMode=false,playlistSearchReturnScrollY=0,playlistOnlineSearchTimer=0,playlistOnlineSearchVersion=0;
 const PLAYLIST_SEARCH_HISTORY_KEY='sc_playlist_search_history_v1';
