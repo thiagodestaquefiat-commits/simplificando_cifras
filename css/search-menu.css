@@ -23,7 +23,9 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
 .roudy-search{--roudy-search-header-progress:0;--roudy-search-inline:20px}
 .roudy-search-header{position:absolute;z-index:3;top:0;right:0;left:0;padding:max(24px,env(safe-area-inset-top)) var(--roudy-search-inline) 14px;background:transparent;pointer-events:none}
 .roudy-search-title-row,.roudy-search-form,.roudy-search-camera{pointer-events:auto}
-.roudy-search-scroll{padding:calc(max(24px,env(safe-area-inset-top)) + 137px) var(--roudy-search-inline) calc(28px + env(safe-area-inset-bottom))}
+/* The page itself scrolls vertically only. Horizontal rails keep their own
+   overflow-x:auto, without making the entire Buscar surface draggable. */
+.roudy-search-scroll{padding:calc(max(24px,env(safe-area-inset-top)) + 137px) var(--roudy-search-inline) calc(28px + env(safe-area-inset-bottom));overflow-x:hidden}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-header{padding:max(24px,env(safe-area-inset-top)) var(--roudy-search-inline) 14px}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-title-row{min-height:58px;max-height:58px;overflow:visible;opacity:calc(1 - var(--roudy-search-header-progress));pointer-events:none;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-form{position:relative;z-index:1;max-height:none;margin-top:13px;overflow:visible;opacity:1;pointer-events:auto;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
