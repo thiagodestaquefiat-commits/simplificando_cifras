@@ -1098,7 +1098,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=17">
 <link rel="stylesheet" href="js/medley-editor.css?v=30">
 <link rel="stylesheet" href="css/responsive.css?v=1">
-<link rel="stylesheet" href="css/home-playlists.css?v=30">
+<link rel="stylesheet" href="css/home-playlists.css?v=31">
 <link rel="stylesheet" href="css/search-menu.css?v=20">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
@@ -1462,7 +1462,7 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
  <script src="js/profile-qr.js?v=4"></script>
  <script src="js/notification-center.js?v=6"></script>
 <script src="js/user-playlists.js?v=6"></script>
-<script src="js/home-playlists.js?v=24"></script>
+<script src="js/home-playlists.js?v=25"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
@@ -3307,6 +3307,7 @@ function homePlaylistSearchItems(){
   return Array.isArray(source)?source:[];
 }
 function homePlaylistSearchIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h12M7 10h12M7 15h8M3.5 5h.01M3.5 10h.01M3.5 15h.01"></path></svg>'}
+function homePlaylistSearchArtwork(playlist){const songs=(Array.isArray(playlist?.items)?playlist.items:[]).map(item=>item?.song||musicas.find(song=>String(song?.id)===String(item?.songId))).filter(Boolean);return homePlaylists?.artwork?.(playlist?.name,playlist?.coverImage,songs,'playlist-search-result-art')||`<span class="playlist-search-result-art" aria-hidden="true">${homePlaylistSearchIcon()}</span>`}
 function renderHomePlaylistSearch(){
   const panel=document.getElementById('home-playlist-search-results');
   const input=document.getElementById('home-playlist-search-input');
@@ -3314,7 +3315,7 @@ function renderHomePlaylistSearch(){
   const query=String(input.value||'').trim().toLocaleLowerCase('pt-BR');
   const playlists=homePlaylistSearchItems().filter(playlist=>String(playlist?.name||'').toLocaleLowerCase('pt-BR').includes(query));
   panel.hidden=false;
-  panel.innerHTML=`<div class="playlist-search-results-label">Suas playlists</div>${playlists.length?playlists.map(playlist=>{const items=Array.isArray(playlist.items)?playlist.items:[];const label=items.length===1?'1 música':`${items.length} músicas`;return `<div class="playlist-search-result-row"><button type="button" class="playlist-search-result" onclick="openHomePlaylistSearchResult(${attrJs(playlist.id)})"><span class="playlist-search-result-art" aria-hidden="true">${homePlaylistSearchIcon()}</span><span class="playlist-search-result-copy"><strong>${eventEsc(playlist.name||'Playlist sem nome')}</strong><small>${label}</small></span></button></div>`}).join(''):`<div class="playlist-search-no-results">${query?'Nenhuma playlist encontrada.':'Você ainda não criou playlists.'}</div>`}`;
+  panel.innerHTML=`<div class="playlist-search-results-label">Suas playlists</div>${playlists.length?playlists.map(playlist=>{const items=Array.isArray(playlist.items)?playlist.items:[];const label=items.length===1?'1 música':`${items.length} músicas`;return `<div class="playlist-search-result-row"><button type="button" class="playlist-search-result" onclick="openHomePlaylistSearchResult(${attrJs(playlist.id)})">${homePlaylistSearchArtwork(playlist)}<span class="playlist-search-result-copy"><strong>${eventEsc(playlist.name||'Playlist sem nome')}</strong><small>${label}</small></span></button></div>`}).join(''):`<div class="playlist-search-no-results">${query?'Nenhuma playlist encontrada.':'Você ainda não criou playlists.'}</div>`}`;
 }
 function openHomePlaylistSearch(){
   if(currentTab!=='musicas')switchTab('musicas');

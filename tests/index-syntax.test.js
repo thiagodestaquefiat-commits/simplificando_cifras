@@ -16,6 +16,7 @@ assert.match(topbar, /id="topbar-search-mode"[^>]*hidden/);
 assert.match(fs.readFileSync(require("node:path").resolve(__dirname, "..", "js", "medley-editor.css"), "utf8"), /data-active-tab="medley"[^\n]*topbar:has\(\.topbar-search-mode:not\(\[hidden\]\)\)[^\n]*background:#0b0b0c/, 'a busca do Medley cobre o fundo iluminado do cabeçalho com a mesma superfície dos resultados');
 assert.match(topbar, /onclick="openHomePlaylistSearch\(\)"/);
 assert.match(topbar, /placeholder="Buscar suas playlists"/);
+assert.match(html, /function homePlaylistSearchArtwork\(/, "a busca de playlists deve renderizar sua capa ou mosaico");
 assert.match(topbar, /onclick="closePlaylistSearch\(\)"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);
 assert.match(musicPane, /playlist-ai-card/, "a integração de IA deve permanecer disponível no hero da playlist");
