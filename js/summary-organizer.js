@@ -30,11 +30,29 @@
     return Boolean(String(song?.fullChordSheet?.content || "").trim());
   }
 
+  // Laço espalhado em linhas: "C" | "Bm" | "C" | "Bm" em vez de "C Bm (2x)". Mesmo critério do
+  // has_repeated_block_loop do servidor (só laços curtos, até 4 acordes, contam aqui).
+  function hasBlockLoop(lines) {
+    const signature = (line) => chordsOf(line).join(" ") + "|" + (Number.isInteger(line.repeticoes) ? line.repeticoes : 1);
+    const signatures = lines.map(signature);
+    for (let start = 0; start < lines.length; start += 1) {
+      for (let size = 1; size <= 4 && start + size * 2 <= lines.length; size += 1) {
+        const unit = lines.slice(start, start + size);
+        if (unit.reduce((total, line) => total + chordsOf(line).length, 0) > 4) continue;
+        if (size > 1 && unit.some((line) => Number.isInteger(line.repeticoes) && line.repeticoes > 1)) continue;
+        if (!hook(unit[0]) && lines.slice(start + size, start + size * 2).some((line) => hook(line))) continue;
+        if (signatures.slice(start, start + size).join("\n") === signatures.slice(start + size, start + size * 2).join("\n")) return true;
+      }
+    }
+    return false;
+  }
+
   // Mesmo critério do servidor (summary_off_standard): sem nenhuma frase-guia, nome de seção no
-  // lugar da frase ou linha com acordes demais. Só manda ao servidor quem pode melhorar.
+  // lugar da frase, linha com acordes demais ou laço espalhado em linhas. Só manda ao servidor quem pode melhorar.
   function offStandard(song) {
     const lines = summaryLines(song);
     if (!lines.length) return hasSheet(song);
+    if (hasBlockLoop(lines)) return true;
     const sectionAsHook = lines.some((line) => global.songFormat.isSectionName(String(line.lyrics || "").trim()));
     const tooLong = lines.some((line) => chordsOf(line).length > MAX_CHORDS_PER_LINE);
     const noHook = !lines.some((line) => hook(line));

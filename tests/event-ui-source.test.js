@@ -160,7 +160,12 @@ assert.match(html, /event-song-edit-text-label/);
 assert.match(html, /Cifra \/ resumo \/ letra — /);
 assert.match(html, /id="event-song-edit-notes"/);
 assert.match(html, /eventModel\.applySharedEdit\(event,draft\.itemId/);
-assert.match(html, /const editControl=canShared\?/, 'só o líder vê o menu de ajustes de cada música');
+// Regra nova (out/2026): todos os membros abrem o menu da música para salvá-la na biblioteca;
+// mover e remover continuam só para o líder.
+assert.match(html, /const editControl=`<button type="button" class="event-song-edit"/, 'todos os membros veem o menu da música');
+assert.match(html, /\$\{canShared\?keyControl:''\}\$\{editControl\}/, 'o tom inline continua só para o líder');
+assert.match(html, /\$\{canBand\?`<button type="button" onclick="eventSongMenuMove\(\)">/, 'mover na lista só para o líder');
+assert.match(html, /\$\{canBand\?`<button type="button" class="event-song-menu-danger" onclick="removeEventSongFromMenu\(\)">/, 'remover do evento só para o líder');
 assert.match(html, /const keyControl=canShared\?/, 'o ajuste de tom inline permanece restrito à edição compartilhada autorizada');
 assert.doesNotMatch(html, /event-scope-badge/);
 assert.match(html, /id="event-notification-button"/);

@@ -43,12 +43,14 @@ assert.match(indexHtml, /Menos papel, menos distração, mais música/);
 assert.match(serviceWorker, /event-collaboration-client\.js\?v=11/);
 assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js/);
 assert.match(serviceWorker, /js\/editor\/song-editor\.js/);
-assert.match(indexHtml, /js\/editor\/song-format\.js\?v=13/);
+const songFormatAsset=indexHtml.match(/js\/editor\/song-format\.js\?v=\d+/)?.[0];
+assert.ok(songFormatAsset,'formato de música deve carregar com versão explícita');
+assert.ok(serviceWorker.includes('./'+songFormatAsset),'cache offline inclui a versão efetivamente carregada');
 assert.match(serviceWorker, /js\/editor\/song-format\.js\?v=10/);
-assert.match(indexHtml, /js\/song-model\.js\?v=7/);
+assert.match(indexHtml, /js\/song-model\.js\?v=\d+/);
 assert.match(serviceWorker, /js\/song-model\.js\?v=5/);
-assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=17/);
-assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=17/);
+assert.match(indexHtml, /js\/ai\/harmonic-summary-client\.js\?v=\d+/);
+assert.match(serviceWorker, /js\/ai\/harmonic-summary-client\.js\?v=\d+/);
 for(const match of indexHtml.matchAll(/(?:src|href)="(js\/[^"\s]+)"/g))assert.ok(serviceWorker.includes('"./'+match[1]+'"'),`Recurso da interface ausente do cache offline: ${match[1]}`);
 assert.match(serviceWorker, /js\/song-model\.js/);
 assert.match(serviceWorker, /js\/demo-library\.js\?v=5/);
@@ -62,9 +64,10 @@ assert.match(serviceWorker, /js\/library-sync\.js\?v=17/);
 assert.match(serviceWorker, /js\/import-library\.js\?v=1/);
 assert.match(indexHtml, /js\/ai\/api-config\.js\?v=7/);
 assert.match(serviceWorker, /js\/ai\/api-config\.js\?v=7/);
-for (const [script, version] of [["youtube-api", 8], ["youtube-song-linker", 2], ["youtube-player", 8], ["youtube-player-ui", 23], ["youtube-ui", 3]]) {
-  assert.match(serviceWorker, new RegExp(`js/${script}\\.js\\?v=${version}`));
-  assert.match(indexHtml, new RegExp(`js/${script}\\.js\\?v=${version}`));
+for (const script of ["youtube-api", "youtube-song-linker", "youtube-player", "youtube-player-ui", "youtube-ui"]) {
+  const asset=indexHtml.match(new RegExp(`js/${script}\\.js\\?v=\\d+`))?.[0];
+  assert.ok(asset,`${script}: recurso versionado`);
+  assert.ok(serviceWorker.includes('./'+asset),`${script}: versão atual incluída no cache`);
 }
 assert.doesNotMatch(indexHtml, /js\/spotify-(?:config|auth|api|song-linker|player|player-ui|ui)\.js/);
 assert.match(serviceWorker, /js\/stage-preferences\.js\?v=3/);
