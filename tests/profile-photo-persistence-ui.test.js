@@ -17,6 +17,26 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
   assert.equal(await page.locator('#account-profile-avatar img').getAttribute('src'),photo);
   await page.reload();await page.waitForFunction(()=>loginGateAuthReady);await page.evaluate(()=>{continueWithoutLogin();openProfileSettings();});
   assert.equal(await page.locator('#account-profile-avatar img').getAttribute('src'),photo,'reabrir a página mantém a foto salva');
+  const cover=await page.evaluate(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;canvas.getContext('2d').fillRect(0,0,64,64);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    window.testCoverFile=new File([blob],'capa.png',{type:'image/png'});
+    await setPlaylistCoverFromFile(testCoverFile);updatePlaylistCoverPosition('x',0);updatePlaylistCoverPosition('y',0);
+    return playlistCoverImage();
+  });
+  assert.ok(cover.startsWith('data:image/jpeg;'));
+  assert.deepEqual(await page.evaluate(()=>playlistCoverPosition()),{x:0,y:0},'enquadramento na borda zero é válido');
+  await page.evaluate(async()=>{
+    window.originalCoverStorage=storage;
+    window.storage={...storage,set:()=>false,setMany:()=>false};
+    await setPlaylistCoverFromFile(testCoverFile);
+  });
+  assert.match(await page.locator('#toast').textContent(),/Não foi possível salvar a capa/,'falha de armazenamento não anuncia sucesso');
+  await page.evaluate(()=>{clearPlaylistCover();window.storage=originalCoverStorage;});
+  assert.equal(await page.evaluate(()=>playlistCoverImage()),cover,'remoção malsucedida preserva a foto anterior');
+  await page.reload();await page.waitForFunction(()=>loginGateAuthReady);await page.evaluate(()=>{continueWithoutLogin();openProfileSettings();});
+  assert.equal(await page.evaluate(()=>playlistCoverImage()),cover,'capa permanece após recarregar');
+  assert.deepEqual(await page.evaluate(()=>playlistCoverPosition()),{x:0,y:0},'enquadramento permanece após recarregar');
   await page.evaluate(()=>{
     closeModal();currentAuthState={authenticated:true,user:{id:'subject-a',avatarUrl:'https://example.test/google.jpg'}};
     appIdentity={status:'supabase',authSubject:'subject-a',user:{id:'internal-a',avatarSet:false}};
@@ -32,6 +52,17 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
     const profiles=accountProfiles();delete profiles['subject-a'];storage.set(ACCOUNT_PROFILES_KEY,profiles);
   });
   assert.equal(await page.evaluate(()=>accountProfile().avatarUrl),'data:image/jpeg;base64,YQ==','outro aparelho recupera a foto da conta, não a do Google');
+  await page.evaluate(photo=>{
+    saveAccountProfile({name:'A',avatarUrl:photo,avatarPending:false});
+    currentAuthState.user={...currentAuthState.user,avatarSet:true,avatarUrl:'https://example.test/google-stale.jpg'};
+    appIdentity.user={...appIdentity.user,avatarSet:true,avatarUrl:'data:image/jpeg;base64,b2xk'};
+    renderAccountButton();openProfileSettings();
+  },photo);
+  assert.equal(await page.evaluate(()=>accountProfile().avatarUrl),photo,'foto salva e confirmada prevalece sobre sessão e identidade antigas');
+  assert.equal(await page.locator('#account-profile-avatar img').getAttribute('src'),photo,'editor mostra a mesma foto própria do perfil');
+  assert.equal(await page.locator('#app-account-btn img').getAttribute('src'),photo,'cabeçalho não recupera a foto do Google');
+  await page.evaluate(()=>{saveAccountProfile({name:'A',avatarUrl:null,avatarPending:false});});
+  assert.equal(await page.evaluate(()=>accountProfile().avatarUrl),null,'foto removida não é restaurada por cache antigo com avatarSet');
   await page.evaluate(photo=>{
     saveAccountProfile({name:'A',avatarUrl:photo,avatarPending:true});
     window.appAuth={...appAuth,getState:()=>currentAuthState,signOut:async()=>{currentAuthState={authenticated:false,user:null};appIdentity={status:'local',user:{id:'visitor',name:'Visitante'}};appCurrentUser=appIdentity.user;}};

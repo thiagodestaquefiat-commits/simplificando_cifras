@@ -248,6 +248,7 @@ def _serialize_message(message: EventMessage) -> dict:
         "replyTo": message.reply_to,
         "poll": message.poll if message.message_type == "poll" else None,
         "song": song,
+        "audio": message.poll if message.message_type == "audio" and not message.deleted else None,
         "reactions": message.reactions or {},
         "deleted": message.deleted,
         "createdAt": _iso(message.created_at),
@@ -808,6 +809,11 @@ def update_event_message(event_id: str, message_id: str):
             message.content = _text(payload.get("content"), 5000, "content", True)
         else:
             message.deleted, message.content = True, ""
+            if message.message_type == "audio":
+                from ..models import EventAudio
+                audio = db.session.get(EventAudio, message.id)
+                if audio:
+                    db.session.delete(audio)
         message.edited_at = now
     elif action == "react":
         emoji = _text(payload.get("emoji"), 16, "emoji", True)

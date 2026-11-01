@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
+const CACHE_NAME = "simplificando-cifras-v653-main-integrated-audio";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -53,7 +53,7 @@ const CACHE_NAME = "simplificando-cifras-v646-pr115-correcoes";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=74",
+  "./js/event-detail-refactor.css?v=75",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
@@ -70,17 +70,18 @@ const ASSETS = [
   "./js/home-playlists.js?v=24",
   "./js/song-share.js?v=1",
   "./js/user-playlists.js?v=6",
-  "./js/notification-center.js?v=6",
+  "./js/notification-center.js?v=7",
   "./js/playlist-collaboration.js?v=1",
   "./js/personal-playlist-sync.js?v=3",
-  "./js/playlist-invites.js?v=5",
+  "./js/playlist-invites.js?v=6",
   "./js/event-model.js?v=8",
-  "./js/event-user-invites.js?v=10",
+  "./js/event-user-invites.js?v=11",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-detail-refactor.css?v=53",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
-  "./js/app-auth.js?v=16",
+  "./js/app-auth.js?v=17",
+  "./js/profile-cover.js?v=1",
   "./js/event-qr-scanner.js?v=2",
   "./js/event-qr-scanner.css?v=1",
   "./js/vendor/jsqr.min.js?v=1",
@@ -162,10 +163,10 @@ const ASSETS = [
   "./js/study-metronome.js?v=7",
   "./js/youtube-api.js?v=8",
   "./js/youtube-song-linker.js?v=2",
-  "./js/youtube-player-ui.js?v=23",
+  "./js/youtube-player-ui.js?v=24",
   "./js/spotify-player-ui.js?v=23",
   "./js/youtube-player-ui.js?v=18",
-  "./js/youtube-player.js?v=8",
+  "./js/youtube-player.js?v=9",
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=8",
   "./js/song-artwork.js?v=2",
@@ -276,7 +277,9 @@ const ASSETS = [
   "./js/location-autocomplete.js?v=1",
   "./js/event-chat.js?v=2",
   "./js/event-chat.js?v=3",
-  "./js/event-chat.js?v=5",
+  "./js/event-chat.js?v=7",
+  "./js/event-chat-audio.js?v=2",
+  "./css/event-chat-audio.css?v=1",
   "./js/event-chat-song.css?v=1",
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",

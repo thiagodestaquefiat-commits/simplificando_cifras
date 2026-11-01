@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>ROUDY</title>
+<link rel="stylesheet" href="css/event-chat-audio.css?v=1">
 <meta name="theme-color" content="#0B0B0C">
 <meta name="description" content="ROUDY — Menos papel, menos distração, mais música.">
 <meta name="application-name" content="ROUDY">
@@ -29,7 +30,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=1">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=74">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=75">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=1">
@@ -1385,11 +1386,12 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-intelligence.js?v=4"></script>
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
-<script src="js/event-chat.js?v=5"></script>
+<script src="js/event-chat.js?v=7"></script>
+<script src="js/event-chat-audio.js?v=2"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
-<script src="js/youtube-player.js?v=8"></script>
-<script src="js/youtube-player-ui.js?v=23"></script>
+<script src="js/youtube-player.js?v=9"></script>
+<script src="js/youtube-player-ui.js?v=24"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1412,7 +1414,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/editor/song-editor.js"></script>
 <script src="js/ai/api-config.js?v=7"></script>
 <script src="js/song-reports.js?v=1"></script>
-<script src="js/app-auth.js?v=16"></script>
+<script src="js/app-auth.js?v=17"></script>
+<script src="js/profile-cover.js?v=1"></script>
 <script src="js/ui-i18n.js?v=14"></script>
 <script src="js/tuner.js?v=5"></script>
 <script src="js/chord-audio.js?v=2"></script>
@@ -1444,7 +1447,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-dialogue.js?v=4"></script>
 <script src="js/assistant-sequences.js?v=2"></script>
 <script src="js/app-assistant.js?v=33"></script>
- <script src="js/event-user-invites.js?v=10"></script>
+ <script src="js/event-user-invites.js?v=11"></script>
  <script src="js/event-qr-scanner.js?v=2"></script>
 <script>
 // Bibliotecas de QR Code carregam sob demanda.
@@ -1452,14 +1455,14 @@ window.roudyLoadScript=(function(){const pending={};return function(src){if(!pen
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
  <script src="js/profile-qr.js?v=4"></script>
- <script src="js/notification-center.js?v=6"></script>
+ <script src="js/notification-center.js?v=7"></script>
 <script src="js/user-playlists.js?v=6"></script>
 <script src="js/home-playlists.js?v=24"></script>
 <script src="js/song-share.js?v=1"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
-<script src="js/playlist-invites.js?v=5"></script>
+<script src="js/playlist-invites.js?v=6"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -3412,11 +3415,24 @@ function clearPlaylistSearch(){
 const playlistHeroMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const PLAYLIST_COVER_KEY='sc_playlist_cover_v1';
 const PLAYLIST_COVER_POSITION_KEY='sc_playlist_cover_position_v1';
-function playlistCoverPosition(){const saved=storage.get(PLAYLIST_COVER_POSITION_KEY,{x:50,y:38});return{x:Math.max(0,Math.min(100,Number(saved?.x)||50)),y:Math.max(0,Math.min(100,Number(saved?.y)||38))}}
-function applyPlaylistCover(){const backdrop=document.querySelector('.playlist-hero-backdrop'),cover=storage.get(PLAYLIST_COVER_KEY,''),position=playlistCoverPosition();if(!backdrop)return;backdrop.classList.toggle('has-custom-cover',Boolean(cover));backdrop.style.setProperty('--playlist-cover-x',position.x+'%');backdrop.style.setProperty('--playlist-cover-y',position.y+'%');if(cover)backdrop.style.setProperty('--playlist-cover-image',`url("${String(cover).replace(/"/g,'%22')}")`);else backdrop.style.removeProperty('--playlist-cover-image')}
-function updatePlaylistCoverPosition(axis,value){const position=playlistCoverPosition();position[axis]=Math.max(0,Math.min(100,Number(value)||0));storage.set(PLAYLIST_COVER_POSITION_KEY,position);applyPlaylistCover();const preview=document.getElementById('profile-cover-preview');if(preview){preview.style.setProperty('--profile-cover-x',position.x+'%');preview.style.setProperty('--profile-cover-y',position.y+'%');}const output=document.getElementById(`playlist-cover-${axis}-value`);if(output)output.value=Math.round(position[axis])+'%';}
-async function setPlaylistCoverFromFile(file){if(!file||!file.type.startsWith('image/'))return;try{const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();storage.set(PLAYLIST_COVER_KEY,canvas.toDataURL('image/jpeg',.82));storage.set(PLAYLIST_COVER_POSITION_KEY,{x:50,y:38});applyPlaylistCover();showToast('Foto de cabeçalho atualizada.');refreshProfileCoverEditor();}catch(error){showToast('Não foi possível usar esta foto.')}}
-function clearPlaylistCover(){storage.set(PLAYLIST_COVER_KEY,'');storage.set(PLAYLIST_COVER_POSITION_KEY,{x:50,y:38});applyPlaylistCover();showToast('Cabeçalho padrão restaurado.');refreshProfileCoverEditor();}
+function playlistCoverImage(){return profileCover.get().coverImage||'';}
+function playlistCoverPosition(){return profileCover.get().position;}
+function applyPlaylistCover(){const backdrop=document.querySelector('.playlist-hero-backdrop'),cover=playlistCoverImage(),position=playlistCoverPosition();if(!backdrop)return;backdrop.classList.toggle('has-custom-cover',Boolean(cover));backdrop.style.setProperty('--playlist-cover-x',position.x+'%');backdrop.style.setProperty('--playlist-cover-y',position.y+'%');if(cover)backdrop.style.setProperty('--playlist-cover-image',`url("${String(cover).replace(/"/g,'%22')}")`);else backdrop.style.removeProperty('--playlist-cover-image')}
+function updatePlaylistCoverPosition(axis,value){const position=playlistCoverPosition();position[axis]=Math.max(0,Math.min(100,Number(value)||0));if(!profileCover.save(playlistCoverImage(),position)){showToast('Não foi possível salvar o enquadramento neste dispositivo.');return;}applyPlaylistCover();const preview=document.getElementById('profile-cover-preview');if(preview){preview.style.setProperty('--profile-cover-x',position.x+'%');preview.style.setProperty('--profile-cover-y',position.y+'%');}const output=document.getElementById(`playlist-cover-${axis}-value`);if(output)output.value=Math.round(position[axis])+'%';}
+async function setPlaylistCoverFromFile(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  try{
+    const coverOwner=currentAuthState.user?.id||'guest';
+    const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
+    // Photo and framing are one operation. A full browser quota must never
+    // produce a success message or reset the previous photo's position.
+    if(coverOwner!==(currentAuthState.user?.id||'guest'))return;
+    if(!profileCover.save(canvas.toDataURL('image/jpeg',.82),{x:50,y:38})){showToast('Não foi possível salvar a capa neste dispositivo. A foto anterior foi mantida.');return;}
+    applyPlaylistCover();showToast('Foto de cabeçalho atualizada.');refreshProfileCoverEditor();
+  }catch(error){showToast('Não foi possível usar esta foto.');}
+}
+function clearPlaylistCover(){if(!profileCover.save(null,{x:50,y:38})){showToast('Não foi possível remover a capa neste dispositivo.');return;}applyPlaylistCover();showToast('Cabeçalho padrão restaurado.');refreshProfileCoverEditor();}
 let playlistHeroFrame=0;
 function updatePlaylistHero(){
   playlistHeroFrame=0;
@@ -4097,7 +4113,10 @@ function accountProfile(){
   const saved=profiles[profileStorageOwner()]||(registered?profiles[String(registered.id)]:null)||{};
   // MANUTENÇÃO: null salvo é remoção explícita, não autorização para recuperar a foto antiga do Google.
   const hasSavedAvatar=Object.prototype.hasOwnProperty.call(saved,'avatarUrl');
-  const avatar=hasSavedAvatar&&saved.avatarPending?saved.avatarUrl:remote.avatarSet?remote.avatarUrl:registered?.avatarSet?registered.avatarUrl:hasSavedAvatar?saved.avatarUrl:remote.avatarUrl||(!currentAuthState.authenticated?appCurrentUser.avatarUrl:null);
+  // A local user-selected image (or explicit removal) must not be replaced by
+  // Google metadata or an older identity restored during token refresh.
+  const ownSavedAvatar=hasSavedAvatar&&(saved.avatarPending||saved.avatarUrl===null||String(saved.avatarUrl).startsWith('data:image/'));
+  const avatar=ownSavedAvatar?saved.avatarUrl:registered?.avatarSet?registered.avatarUrl:remote.avatarSet?remote.avatarUrl:hasSavedAvatar?saved.avatarUrl:remote.avatarUrl||(!currentAuthState.authenticated?appCurrentUser.avatarUrl:null);
   return {id:remote.id||appCurrentUser.id,name:saved.name||remote.name||appCurrentUser.name||'Você',phone:saved.phone||'',email:saved.email||remote.email||appCurrentUser.email||'',location:typeof saved.location==='string'?saved.location:String(remote.location||''),instruments:normalizeProfileRoles(Array.isArray(saved.instruments)?saved.instruments:remote.instruments),avatarUrl:avatar||null};
 }
 function saveAccountProfile(profile){const profiles=accountProfiles();profiles[profileStorageOwner()]={...profile};return storage.set(ACCOUNT_PROFILES_KEY,profiles);}
@@ -4745,7 +4764,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&tunerContr
 window.addEventListener('pagehide',()=>tunerController.stop());
 let profileCoverDrag=null;
 function profileCoverEditorMarkup(){
-  const cover=storage.get(PLAYLIST_COVER_KEY,''),position=playlistCoverPosition(),image=cover||'assets/playlist-hero-background.png';
+  const cover=playlistCoverImage(),position=playlistCoverPosition(),image=cover||'assets/playlist-hero-background.png';
   return `<section class="profile-cover-section" aria-labelledby="profile-cover-title"><div class="profile-cover-heading"><div><h2 id="profile-cover-title">Foto do cabeçalho</h2><p>${cover?'Arraste a foto com o dedo para ajustar.':'Adicione uma foto para personalizar o primeiro menu.'}</p></div><label for="playlist-cover-input">${cover?'Alterar':'Adicionar'}</label></div><div class="profile-cover-preview${cover?' has-custom-cover':''}" id="profile-cover-preview" role="application" tabindex="0" aria-label="Prévia da foto do cabeçalho. Arraste para ajustar o enquadramento." style="--profile-cover-image:url('${String(image).replace(/'/g,'%27')}');--profile-cover-x:${position.x}%;--profile-cover-y:${position.y}%" onpointerdown="startProfileCoverDrag(event)" onpointermove="moveProfileCoverDrag(event)" onpointerup="endProfileCoverDrag(event)" onpointercancel="endProfileCoverDrag(event)" onkeydown="handleProfileCoverPositionKey(event)"><span>ROUDY</span>${cover?'<small>Arraste para reposicionar</small>':''}</div>${cover?'<button class="profile-cover-remove" type="button" onclick="clearPlaylistCover()">Remover foto do cabeçalho</button>':''}</section>`;
 }
 function refreshProfileCoverEditor(){const current=document.querySelector('.profile-cover-section');if(current)current.outerHTML=profileCoverEditorMarkup();}
@@ -4800,14 +4819,14 @@ openAppSettings=function(){
   body.querySelector('.modal-title')?.remove();
   body.insertAdjacentHTML('afterbegin',accountSubpageHeader(appText('settings'),'cancelAppSettings'));
   body.querySelector('button[onclick="cancelAppSettings()"]')?.remove();
-  const primary=body.querySelector('.btn-primary'),hasCover=Boolean(storage.get(PLAYLIST_COVER_KEY,''));if(!primary)return;
+  const primary=body.querySelector('.btn-primary'),hasCover=Boolean(playlistCoverImage());if(!primary)return;
   primary.insertAdjacentHTML('beforebegin',`<section class="settings-group"><div class="settings-group-title">Aparência</div><div class="settings-row"><div class="settings-row-copy"><strong>Foto de capa</strong><small>${hasCover?'Foto personalizada em uso':'Nenhuma — usando o padrão do ROUDY'}</small></div><div class="profile-photo-actions"><label class="profile-photo-change" for="playlist-cover-input">Escolher foto</label><button class="profile-photo-remove" type="button" onclick="clearPlaylistCover()" ${hasCover?'':'disabled'}>Nenhuma</button></div></div></section>`);
 };
 function settingsUiIcon(kind){const icons={language:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M4.6 7.5c2.1 1 4.6 1.5 7.4 1.5s5.3-.5 7.4-1.5M4.6 16.5c2.1-1 4.6-1.5 7.4-1.5s5.3.5 7.4 1.5M12 3c2.7 2.45 4.1 5.45 4.1 9s-1.4 6.55-4.1 9M12 3C9.3 5.45 7.9 8.45 7.9 12s1.4 6.55 4.1 9"/>',appearance:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.45 2.45 0 1 1 3.75 2.07c-.9.57-1.45 1.05-1.45 2.18M12 17h.01"/>',chord:'<path d="M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z"/><circle cx="7" cy="9" r="1"/><circle cx="10.2" cy="6.8" r="1"/><circle cx="14" cy="6.4" r="1"/><circle cx="17.2" cy="8.4" r="1"/><circle cx="7.6" cy="13" r="1"/><circle cx="10.3" cy="15" r="1"/>',theme:'<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z"/>',contrast:'<circle cx="12" cy="12" r="9"/><path d="M12.5 5.5a6.5 6.5 0 0 1 0 13Z" style="fill:currentColor;stroke:none"/>',eye:'<path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/>',size:'<path d="M3 19 7.5 6 12 19M5 14h5M13 19l3.5-10L20 19M14.5 15h4"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[kind]||icons.help}</svg>`;}
 openAppSettings=function(){document.getElementById('modal-body').innerHTML=`${accountSubpageHeader(appText('settings'),'cancelAppSettings')}<main class="settings-ui-page"><div class="settings-ui-list"><button class="settings-ui-item" type="button" onclick="openLanguageSettings()"><span class="settings-ui-icon">${settingsUiIcon('language')}</span><span class="settings-ui-copy"><strong>Idioma</strong><small>Português Brasileiro</small></span><span class="settings-ui-chevron">›</span></button><button class="settings-ui-item" type="button" onclick="openAppearanceSettings()"><span class="settings-ui-icon">${settingsUiIcon('appearance')}</span><span class="settings-ui-copy"><strong>Aparência e Acessibilidade</strong><small>Tema, contraste, cores, tamanho e capa</small></span><span class="settings-ui-chevron">›</span></button><button class="settings-ui-item" type="button" onclick="openHelpSupport()"><span class="settings-ui-icon">${settingsUiIcon('help')}</span><span class="settings-ui-copy"><strong>Ajuda e Suporte</strong><small>Recuperação, diagnóstico e sincronização</small></span><span class="settings-ui-chevron">›</span></button></div></main>`;setAccountBackChevron();};
 function openLanguageSettings(){const value=loadAppSettings(),languages=[['pt-BR','Português Brasileiro'],['es','Español'],['en','English'],['it','Italiano'],['fr','Français'],['de','Deutsch']];document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Idioma','cancelSettingsSubpage')}<main class="settings-language-page"><input id="setting-language" type="hidden" value="${eventEsc(value.language)}"><section class="language-grid" role="radiogroup" aria-label="Idioma da interface">${languages.map(([code,name])=>`<button class="language-card ${value.language===code?'is-selected':''}" type="button" role="radio" aria-checked="${value.language===code}" data-language="${code}" onclick="selectAppLanguage('${code}')"><span class="language-card-name" lang="${code}">${name}</span><span class="language-card-check" aria-hidden="true">✓</span></button>`).join('')}</section><button class="settings-ui-save" type="button" onclick="saveAppSettings()">Salvar configurações</button></main>`;setAccountBackChevron();}
 function selectAppLanguage(language){const input=document.getElementById('setting-language');if(!input)return;input.value=language;document.querySelectorAll('.language-card,.account-drawer-language-item').forEach(card=>{const selected=card.dataset.language===language;card.classList.toggle('is-selected',selected);card.setAttribute('aria-checked',String(selected));});previewAppSettings();}
-function openAppearanceSettings(){const value=loadAppSettings(),hasCover=Boolean(storage.get(PLAYLIST_COVER_KEY,''));document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Aparência e Acessibilidade','cancelSettingsSubpage')}<section class="settings-group"><div class="settings-row"><div class="settings-row-copy"><strong>Tema da Interface</strong></div><select class="settings-select" id="setting-theme" onchange="previewAppSettings()"><option value="dark" ${value.theme==='dark'?'selected':''}>Escuro</option><option value="light" ${value.theme==='light'?'selected':''}>Claro</option><option value="system" ${value.theme==='system'?'selected':''}>Sistema</option></select></div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div><div class="settings-row"><div class="settings-row-copy"><strong>Foto de capa</strong><small>${hasCover?'Foto personalizada em uso':'Nenhuma — usando o padrão do ROUDY'}</small></div><div class="profile-photo-actions"><label class="profile-photo-change" for="playlist-cover-input">Escolher foto</label><button class="profile-photo-remove" type="button" onclick="clearPlaylistCover()" ${hasCover?'':'disabled'}>Nenhuma</button></div></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button>`;}
+function openAppearanceSettings(){const value=loadAppSettings(),hasCover=Boolean(playlistCoverImage());document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Aparência e Acessibilidade','cancelSettingsSubpage')}<section class="settings-group"><div class="settings-row"><div class="settings-row-copy"><strong>Tema da Interface</strong></div><select class="settings-select" id="setting-theme" onchange="previewAppSettings()"><option value="dark" ${value.theme==='dark'?'selected':''}>Escuro</option><option value="light" ${value.theme==='light'?'selected':''}>Claro</option><option value="system" ${value.theme==='system'?'selected':''}>Sistema</option></select></div><div class="settings-row"><div class="settings-row-copy"><strong>Alto contraste</strong></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Modo para daltônicos</strong></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><div class="settings-row-copy"><strong>Tamanho dos elementos</strong></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div><div class="settings-row"><div class="settings-row-copy"><strong>Foto de capa</strong><small>${hasCover?'Foto personalizada em uso':'Nenhuma — usando o padrão do ROUDY'}</small></div><div class="profile-photo-actions"><label class="profile-photo-change" for="playlist-cover-input">Escolher foto</label><button class="profile-photo-remove" type="button" onclick="clearPlaylistCover()" ${hasCover?'':'disabled'}>Nenhuma</button></div></div></section><button class="btn btn-primary" style="width:100%" type="button" onclick="saveAppSettings()">Salvar configurações</button>`;}
 const openAppearanceSettingsWithChordColor=openAppearanceSettings;
 openAppearanceSettings=function(){const value=loadAppSettings();document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Aparência e Acessibilidade','cancelSettingsSubpage')}<main class="settings-appearance-page"><section class="settings-group"><div class="settings-row"><span class="settings-row-icon">${settingsUiIcon('chord')}</span><div class="settings-row-copy"><strong>Cor da cifra</strong></div><select class="settings-select" id="setting-chord-color" onchange="previewAppSettings()"><option value="orange" ${value.chordColor==='orange'?'selected':''}>Laranja (padrão)</option><option value="white" ${value.chordColor==='white'?'selected':''}>Branco</option><option value="gold" ${value.chordColor==='gold'?'selected':''}>Dourado</option><option value="red" ${value.chordColor==='red'?'selected':''}>Vermelho</option><option value="pink" ${value.chordColor==='pink'?'selected':''}>Rosa</option><option value="yellow" ${value.chordColor==='yellow'?'selected':''}>Amarelo</option><option value="coral" ${value.chordColor==='coral'?'selected':''}>Coral</option><option value="green" ${value.chordColor==='green'?'selected':''}>Verde</option><option value="blue" ${value.chordColor==='blue'?'selected':''}>Azul</option><option value="purple" ${value.chordColor==='purple'?'selected':''}>Roxo</option></select></div><div class="settings-row"><span class="settings-row-icon">${settingsUiIcon('theme')}</span><div class="settings-row-copy"><strong>Tema da Interface</strong></div><select class="settings-select" id="setting-theme" onchange="previewAppSettings()"><option value="dark" ${value.theme==='dark'?'selected':''}>Escuro</option><option value="light" ${value.theme==='light'?'selected':''}>Claro</option><option value="system" ${value.theme==='system'?'selected':''}>Sistema</option></select></div><div class="settings-group-title">Acessibilidade</div><div class="settings-row"><span class="settings-row-icon">${settingsUiIcon('contrast')}</span><div class="settings-row-copy"><strong>Alto contraste</strong></div><label class="settings-toggle"><input id="setting-high-contrast" type="checkbox" ${value.highContrast?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><span class="settings-row-icon">${settingsUiIcon('eye')}</span><div class="settings-row-copy"><strong>Modo para daltônicos</strong></div><label class="settings-toggle"><input id="setting-color-blind" type="checkbox" ${value.colorBlind?'checked':''} onchange="previewAppSettings()"><span></span></label></div><div class="settings-row"><span class="settings-row-icon">${settingsUiIcon('size')}</span><div class="settings-row-copy"><strong>Tamanho dos elementos</strong></div><select class="settings-select" id="setting-scale" onchange="previewAppSettings()">${[100,110,120,130,140].map(scale=>`<option value="${scale}" ${value.scale===scale?'selected':''}>${scale}%</option>`).join('')}</select></div></section><button class="settings-ui-save" type="button" onclick="saveAppSettings()">Salvar configurações</button></main>`;const color=document.getElementById('setting-chord-color');if(color)color.value=value.chordColor;setAccountBackChevron();};
 const openAppearanceSettingsWithAssistantVoice=openAppearanceSettings;
@@ -4834,6 +4853,7 @@ async function loginAppAccount(){try{await appAuth.signInWithGoogle();return {ok
 function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
 function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
 async function logoutAppAccount(){
+  if(!await profileCover.flush()){appAlert('Sua capa está salva neste aparelho, mas ainda não foi confirmada na conta. Verifique a conexão antes de sair.');return;}
   if(!currentAuthState.authenticated){try{await appAuth.signOut();}catch(_){}closeModal();return;}
   if(navigator.onLine===false){appAlert('Você está sem internet.\n\nConecte-se antes de sair, para que suas músicas e eventos fiquem salvos na sua conta.');return;}
   showToast('Salvando tudo na sua conta antes de sair…');
@@ -5284,11 +5304,11 @@ function getRoudyNotificationItems(){
     if(!eventModel.canAccess(event,actorId))continue;
     const readNotices=eventNoticeReadIds(event.id);
     for(const notice of Array.isArray(event.notifications)?event.notifications:[]){if(!eventNoticeTargetsUser(notice,actorId))continue;feed.push({id:`event:${event.id}:${notice.id}`,kind:'event',eventId:event.id,title:notice.actorName||'ROUDY',summary:`${notice.summary||'atualizou o evento'} · ${event.title}`,createdAt:notice.createdAt||event.updatedAt||new Date(0).toISOString(),actorId:notice.actorId||'',actorName:notice.actorName||'ROUDY',unread:!readNotices.has(String(notice.id))});}
-    const values=Array.isArray(messages?.[String(event.id)])?messages[String(event.id)]:[],unreadCount=eventChat.unreadCount(event.id);
+    const values=Array.isArray(messages?.[String(event.id)])?messages[String(event.id)]:[];
     for(const message of values){
       if(String(message?.sender?.id||'')===actorId)continue;
       const summary=message.type==='poll'?(message.poll?.question||'Criou uma enquete'):message.type==='system'?(message.content||'Atualizou o evento'):(message.content||'Enviou uma mensagem');
-      feed.push({id:`message:${event.id}:${message.id}`,kind:'message',eventId:event.id,title:message.sender?.name||event.title,summary,createdAt:message.createdAt||new Date(0).toISOString(),senderId:message.sender?.id||'',senderName:message.sender?.name||'',avatarUrl:message.sender?.avatarUrl||null,unread:unreadCount>0});
+      feed.push({id:`message:${event.id}:${message.id}`,kind:'message',eventId:event.id,title:message.sender?.name||event.title,summary,createdAt:message.createdAt||new Date(0).toISOString(),senderId:message.sender?.id||'',senderName:message.sender?.name||'',avatarUrl:message.sender?.avatarUrl||null,unread:eventChat.isUnread(event.id,message)});
     }
   }
   return feed;
@@ -5985,7 +6005,7 @@ async function setEventChatCustomBackground(file){if(!file||!file.type.startsWit
 function clearEventChatCustomBackground(){if(!currentSdId)return;if(eventChatBackground()==='custom')selectEventChatBackground('pattern');const values=storage.get(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{});delete values[String(currentSdId)];storage.set(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,values);showToast('Foto de fundo removida.');openChatAppearance();}
 function openChatAppearance(){const selected=eventChatBackground(),customImage=eventChatCustomBackground(),themes=[['pattern','Cabos ROUDY'],['black','Preto'],['blue','Azul profundo'],['warm','Quente'],['graphite','Grafite']];document.getElementById('modal-body').innerHTML=`<div class="modal-title">Fundo do chat</div><p class="event-scope-note">Escolha o fundo deste evento. O padrão do ROUDY é Cabos ROUDY.</p><div class="chat-appearance-options" role="radiogroup" aria-label="Fundo do chat">${themes.map(([value,label])=>`<button type="button" class="chat-appearance-option${selected===value?' is-selected':''}" data-theme="${value}" role="radio" aria-checked="${selected===value}" onclick="selectEventChatBackground('${value}')">${label}</button>`).join('')}${customImage?`<button type="button" class="chat-appearance-option chat-appearance-option--custom${selected==='custom'?' is-selected':''}" data-theme="custom" role="radio" aria-checked="${selected==='custom'}" style="--chat-custom-preview:url(${customImage})" onclick="selectEventChatBackground('custom')">Minha foto</button>`:''}<label class="chat-appearance-upload"><input type="file" accept="image/*" onchange="setEventChatCustomBackground(this.files[0])"><span>${customImage?'Trocar foto':'Adicionar foto'}</span><small>JPG, PNG ou imagem da galeria</small></label></div>${customImage?'<button class="chat-appearance-remove" type="button" onclick="clearEventChatCustomBackground()">Remover minha foto</button>':''}<button class="btn btn-outline" style="width:100%;margin-top:14px" type="button" onclick="closeModal()">Concluir</button>`;document.getElementById('modal-overlay').style.display='flex';}
 async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);}catch(error){showToast('⚠️ '+error.message);}eventChat.markRead(event.id);renderEventChatButton(event);chatReplyTo=null;chatLimit=40;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=event.members.length+' participante(s)';applyEventChatBackground();document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
-function closeEventChat(){closeEventChatContext();document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
+function closeEventChat(){eventChatAudio.cancel();closeEventChatContext();document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
 let eventMemberProfileFromChat=false;
 function eventMemberProfileMonth(value){return new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(value));}
 function openEventMemberProfile(memberId,fromChat=false){
@@ -6035,6 +6055,7 @@ function renderEventChatMessages(scrollEnd){
   let all=[];try{all=eventChat.list(event.id,10000);}catch(error){target.textContent=error.message;return;}const hiddenIds=eventChatHiddenIds(event.id);all=all.filter(message=>!hiddenIds.has(String(message.id)));target.textContent='';
   if(all.length>chatLimit)target.appendChild(eventChatButton('Carregar mensagens anteriores',()=>{chatLimit+=40;renderEventChatMessages(false);},'event-chat-load'));
   const visible=all.slice(-chatLimit),byId=new Map(all.map(message=>[String(message.id),message])),participantColors=eventChatParticipantColorMap(event,all);
+  eventChatAudio.syncMessages(visible);
   visible.forEach((message,index)=>{
     const previous=visible[index-1],next=visible[index+1];
     if(eventChatNeedsTimeDivider(message,previous,index)){const divider=document.createElement('time');divider.className='event-chat-time-divider';divider.dateTime=message.createdAt;divider.textContent=new Date(message.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});target.appendChild(divider);}
@@ -6047,6 +6068,7 @@ function renderEventChatMessages(scrollEnd){
       if(message.replyTo&&byId.has(String(message.replyTo))){const original=byId.get(String(message.replyTo)),context=document.createElement('div'),label=document.createElement('span'),quote=document.createElement('span'),replyMine=String(original.sender.id)===String(appCurrentUser.id),sourceColor=participantColors.get(String(original.sender.id))||(replyMine?'#0789E7':'#FF8A70');context.className='event-message-reply-context'+(replyMine?' is-own-source':'');context.style.setProperty('--event-reply-author-color',sourceColor);label.className='event-message-reply-label';label.textContent=replyMine?'Você':original.sender.name;quote.className='event-message-reply-quote';quote.textContent=original.content||original.poll&&original.poll.question||'Mensagem';context.append(label,quote);bubble.appendChild(context);}
       if(message.type==='poll')renderPollMessage(bubble,event.id,message);
       else if(message.type==='song'&&!message.deleted)renderEventChatSong(bubble,message);
+      else if(message.type==='audio'&&!message.deleted)eventChatAudio.render(bubble,message);
       else{const content=document.createElement('div');content.className='event-message-content';content.textContent=message.deleted?'Mensagem excluída':message.content+(message.editedAt?' (editada)':'');bubble.appendChild(content);}
       if(!message.deleted){const reactions=document.createElement('div');reactions.className='event-message-reactions';Object.entries(message.reactions||{}).forEach(([emoji,voters])=>{const count=(voters||[]).length;if(count){const chip=eventChatButton(emoji+(count>1?' '+count:''),()=>eventChat.react(event.id,message.id,emoji),'event-reaction');chip.setAttribute('aria-label',`${emoji}, ${count} ${count===1?'reação':'reações'}`);if((voters||[]).includes(appCurrentUser.id))chip.classList.add('active');reactions.appendChild(chip);}});stack.appendChild(bubble);stack.appendChild(reactions);installEventMessageContext(row,bubble,message);}
     }
@@ -6066,9 +6088,9 @@ function renderPollMessage(bubble,eventId,message){
   if(message.poll.showVoters!==false){const view=document.createElement('button');view.type='button';view.className='event-poll-view-votes';view.textContent='Ver votos';view.addEventListener('click',eventClick=>{eventClick.stopPropagation();openEventPollVotes(eventId,message.id);});bubble.appendChild(view);}
 }
 function openEventPollVotes(eventId,messageId){const event=findEvent(eventId),message=eventChat.list(eventId,10000).find(item=>String(item.id)===String(messageId));if(!event||message?.type!=='poll')return;closeEventChatContext();const votes=message.poll.votes||{},options=message.poll.options.map(option=>{const voterIds=votes[option.id]||[],voters=voterIds.map(id=>eventPollMember(event,id));return `<section class="event-poll-results-option"><header><strong>${eventEsc(option.label)}</strong><span>${voters.length} ${voters.length===1?'voto':'votos'}</span></header>${voters.length?`<div class="event-poll-results-voters">${voters.map(member=>`<button type="button" onclick="closeModal();openEventMemberProfile('${eventEsc(member.id)}',true)">${eventPollVoterAvatar(member,'event-poll-results-avatar')}<strong>${eventEsc(String(member.id)===String(appCurrentUser.id)?'Você':member.name)}</strong></button>`).join('')}</div>`:''}</section>`;}).join('');const overlay=document.getElementById('modal-overlay');overlay.classList.add('event-poll-results-overlay');document.getElementById('modal-body').innerHTML=`<section class="event-poll-results" role="dialog" aria-modal="true" aria-labelledby="event-poll-results-title"><header class="event-poll-results-header"><button type="button" onclick="closeModal()">Fechar</button><h2 id="event-poll-results-title">Votos da enquete</h2><span></span></header><main><h3>${eventEsc(message.poll.question)}</h3>${options}</main></section>`;overlay.style.display='flex';}
-function sendEventMessage(){const input=document.getElementById('event-chat-input'),event=findEvent(currentSdId);if(!event)return;try{eventChat.sendText(event.id,input.value,chatReplyTo);input.value='';cancelChatReply();}catch(error){showToast(error.message);}}
+function sendEventMessage(){const input=document.getElementById('event-chat-input'),event=findEvent(currentSdId);if(!event)return;try{eventChat.sendText(event.id,input.value,chatReplyTo);input.value='';input.dispatchEvent(new Event('input'));cancelChatReply();}catch(error){showToast(error.message);}}
 function handleChatKey(event){if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendEventMessage();}}
-function insertChatEmoji(){const input=document.getElementById('event-chat-input');input.value+=' 🙏';input.focus();}
+function insertChatEmoji(){const input=document.getElementById('event-chat-input');input.value+=' 🙏';input.dispatchEvent(new Event('input'));input.focus();}
 function replyEventMessage(messageId){closeEventChatContext();chatReplyTo=messageId;const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(messageId)),preview=document.getElementById('event-chat-reply'),text=message&&message.content||message&&message.poll&&message.poll.question||'Mensagem';preview.hidden=false;preview.innerHTML=`<div><strong>Respondendo a ${eventEsc(message&&message.sender.name||'mensagem')}</strong><span>${eventEsc(text.slice(0,110))}</span></div><button type="button" onclick="cancelChatReply()" aria-label="Cancelar resposta">×</button>`;requestAnimationFrame(()=>document.getElementById('event-chat-input').focus());}
 function cancelChatReply(){chatReplyTo=null;const preview=document.getElementById('event-chat-reply');preview.hidden=true;preview.textContent='';}
 function editChatMessage(message){const content=appPrompt('Editar mensagem:',message.content);if(content!=null){eventChat.edit(currentSdId,message.id,content);renderEventChatMessages(false);}}
@@ -6173,6 +6195,7 @@ if(ambienteLocalTeste&&typeof demoLibrary.testSong==='function'){
 medleyBlocos=medleyRepository.load(null);
 setlists=eventRepository.load(setlists,appIdentity);
 eventChat.initialize({getEvent:findEvent,getCurrentUser:()=>appCurrentUser});
+eventChatAudio.initialize({getEvent:()=>findEvent(currentSdId),onMessage:message=>eventChat.receiveAudio(message)});
 eventChat.subscribe(eventId=>{
   const chat=document.getElementById('event-chat-view');
   if(!chat.hidden&&(!eventId||String(eventId)===String(currentSdId))){try{eventChat.markRead(currentSdId);}catch(error){}}
@@ -6181,6 +6204,7 @@ eventChat.subscribe(eventId=>{
   if(document.getElementById('view-sd').style.display==='flex'&&eventId&&String(eventId)===String(currentSdId)) openSD(currentSdId,{preserveScroll:true,refreshChat:false});
 });
 renderMusicas();
+profileCover.subscribe(()=>applyPlaylistCover());
 applyPlaylistCover();
 if(document.getElementById('event-current-user-id'))document.getElementById('event-current-user-id').textContent='Seu ID: '+appCurrentUser.id;
 renderAccountButton();renderBandToolbar();
