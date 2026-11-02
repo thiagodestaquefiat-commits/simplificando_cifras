@@ -5863,7 +5863,7 @@ function openSD(id,options={}){
   const eventMetaItem=(_field,label,icon,value,secondary='')=>{const content=`<i class="event-meta-icon">${icon}</i><small>${label}</small><span class="${value?'':'event-meta-empty-value'}">${eventEsc(value||'—')}</span>${secondary?`<em>${eventEsc(secondary)}</em>`:''}`;return `<div class="event-meta-item">${content}</div>`};
   const eventMeta=`<div class="event-meta-card">${eventMetaItem('date','Data',metaIcons.date,event.date?eventDisplayDate(event.date):'',eventWeekday)}${eventMetaItem('time','Horário',metaIcons.time,event.time)}${eventMetaItem('location','Local',metaIcons.place,event.location)}${eventMetaItem('description','Informações',metaIcons.info,event.description)}</div>`;
   const adminChips=canShared?`<button type="button" class="event-reference-chip" onclick="openEventAddSongs('${eventEsc(event.id)}')"><span aria-hidden="true">＋</span><span>Música</span></button><button type="button" class="event-reference-chip" onclick="openEventOrderSheet('${eventEsc(event.id)}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h11M8 12h11M8 17h11M4 7h.01M4 12h.01M4 17h.01"></path></svg><span>Ordenar</span></button><button type="button" class="event-reference-chip" onclick="openEventInfoSheet('${eventEsc(event.id)}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"></path></svg><span>Editar</span></button><button type="button" class="event-reference-chip event-reference-chip--more" onclick="openEventMoreActions()" aria-label="Mais opções"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button>`:'';
-  const referenceActions=`<div class="event-reference-actions"><div class="event-reference-utilities"><button type="button" class="event-reference-icon" onclick="scrollEventMembers()" aria-label="Ver participantes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.5-4 2.4-6 5.5-6s5 2 5.5 6M17 9a2.5 2.5 0 0 1 0 5M16.5 14.5c2.5.2 3.8 1.7 4 4.5"></path></svg></button><button type="button" class="event-reference-icon" onclick="openEventChat()" aria-label="Abrir chat do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button><button type="button" class="event-reference-icon" onclick="sharePlaylist('${eventEsc(event.id)}')" aria-label="Compartilhar evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"></path></svg></button><button type="button" class="event-reference-icon event-reference-icon--more" onclick="openEventMoreActions()" aria-label="Mais ações do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button></div><button type="button" class="event-stage-entry event-stage-entry--origin" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div><div class="event-reference-admin" aria-label="Ações do evento"><div class="event-reference-admin-chips">${adminChips}</div></div>`;
+  const referenceActions=`<div class="event-reference-actions"><div class="event-reference-utilities"><button type="button" class="event-reference-icon" onclick="scrollEventMembers()" aria-label="Ver participantes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.5-4 2.4-6 5.5-6s5 2 5.5 6M17 9a2.5 2.5 0 0 1 0 5M16.5 14.5c2.5.2 3.8 1.7 4 4.5"></path></svg></button><button type="button" class="event-reference-icon" onclick="openEventChat()" aria-label="Abrir chat do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button><button type="button" class="event-reference-icon" onclick="sharePlaylist('${eventEsc(event.id)}')" aria-label="Compartilhar evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"></path></svg></button><button type="button" class="event-reference-icon event-reference-icon--more" onclick="openEventMoreActions()" aria-label="Mais ações do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button></div><button type="button" class="event-stage-entry event-stage-entry--origin" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${canShared?'<div class="event-reference-admin-surface" aria-hidden="true"></div>':''}<div class="event-reference-admin" aria-label="Ações do evento"><div class="event-reference-admin-chips">${adminChips}</div></div>`;
   const emptyRepertoire=canShared?'<div class="event-repertoire-empty-state"><button class="event-repertoire-primary-add" type="button" onclick="openEventAddSongs('+attrJs(event.id)+')"><span aria-hidden="true">＋</span>Adicionar músicas</button></div>'+eventSuggestionMarkup(event):'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música adicionada</p></div>';
   const repertoireContent=rows?`<div class="event-section-title event-section-title--repertoire">Repertório oficial do evento</div><div class="event-repertoire-list">${rows}</div>${eventClosingSuggestionsMarkup(event,availableItems,canShared)}`:emptyRepertoire;
   eventDetailContent.innerHTML=`${eventMeta}${referenceActions}<div id="event-detail-map" class="event-map-preview" hidden></div>${repertoireContent}${eventParticipantsMarkup(event)}`;
@@ -6700,7 +6700,26 @@ if ('serviceWorker' in navigator) {
 #roudy-search-for-you .roudy-search-for-you-rail{margin-top:20px}
 /* Permite que a fileira sticky dos chips fique acima do fundo esfumado do header. */
 #view-sd>.detail-body{z-index:auto}
-#view-sd .event-reference-admin{z-index:12}
+#view-sd .event-reference-admin{
+  z-index:12;
+  background:var(--ui-background,#0b0b0c)!important;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+/* Camadas independentes: superfície (7), cabeçalho/esfumado (8), chips (12).
+   A margem negativa sobrepõe as duas barras sem acrescentar espaço ao fluxo. */
+#view-sd .event-reference-admin-surface{
+  position:sticky;
+  top:var(--event-header-height,60px);
+  z-index:7;
+  height:54px;
+  margin:0 -10px -54px;
+  background:var(--ui-background,#0b0b0c);
+  pointer-events:none;
+}
+#view-sd .event-reference-admin-surface+.event-reference-admin{background:transparent!important}
+#view-sd .event-reference-chip{background:var(--ui-control,#242426)}
 /* Mesmo acabamento da Home: só a camada de fundo esmaece; os controles ficam íntegros. */
 #view-sd>.detail-header{
   background:transparent!important;
@@ -6712,8 +6731,8 @@ if ('serviceWorker' in navigator) {
   inset:0 0 -18px!important;
   backdrop-filter:blur(var(--event-header-blur)) saturate(145%);
   -webkit-backdrop-filter:blur(var(--event-header-blur)) saturate(145%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 18px),transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 18px),transparent 100%);
 }
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{
   inset:-14px calc(var(--roudy-search-inline) * -1) -32px;
