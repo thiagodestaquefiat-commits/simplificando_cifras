@@ -1,3 +1,8 @@
+.event-share-card .event-share-brand{position:relative;display:block;height:11px;color:var(--event-share-signature)}
+.event-share-card .event-share-brand::before,.event-share-card .event-share-signature{width:24px;height:17px;background:var(--event-share-signature);-webkit-mask:url('../assets/icons/roudy-rd-premium.svg') center/contain no-repeat;mask:url('../assets/icons/roudy-rd-premium.svg') center/contain no-repeat}
+.event-share-card .event-share-brand::before{content:"";position:absolute;left:0;bottom:0}
+.event-share-card footer{height:11px;min-height:11px;color:var(--event-share-signature)}
+.event-share-card .event-share-signature{display:block;position:absolute;right:28px;bottom:24px}
 .event-share-card::before,.event-share-card::after{width:138%;height:96%;filter:blur(58px);opacity:.58}
 .event-share-card--v0{background:linear-gradient(145deg,#071a36,#06101f 48%,#020406)}
 .event-share-card--v0::before{background:radial-gradient(circle,rgba(20,112,255,.7),transparent 70%)}

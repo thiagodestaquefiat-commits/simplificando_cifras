@@ -25,7 +25,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
    assert.deepEqual(roles,['Vocal','Backing Vocal','Guitarra','Violão','Baixo','Bateria','Teclado','Ukulele','Violino']);
    for(const role of ['Liderança','Outra','Percussão','Outros','Áudio','Viola Caipira','Cavaco'])assert.ok(!roles.includes(role),role+' não aparece no seletor');
    assert.equal(await page.evaluate(()=>getEventInviteRole('role-event')),'Vocal','valor enviado acompanha a opção inicial visível');
-   await select.selectOption('Guitarra');assert.match(await select.locator('option:checked').innerText(),/Convidar como guitarrista/);
+   await select.selectOption('Guitarra');assert.equal(await select.locator('option:checked').innerText(),'Guitarrista');
+   assert.equal(await page.locator('#event-invite-role-name').innerText(),'Guitarrista');
    const screenshotDir=process.env.SCREENSHOT_DIR||path.join(os.tmpdir(),'roudy-tests');fs.mkdirSync(screenshotDir,{recursive:true});
    await page.locator('.event-action-sheet').screenshot({path:path.join(screenshotDir,`roudy-invite-role-${width}.png`)});
    assert.ok(await page.locator('.event-invite-role').evaluate(n=>n.scrollWidth<=n.clientWidth),'seletor cabe na tela');

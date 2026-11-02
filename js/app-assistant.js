@@ -361,7 +361,7 @@
       startTuner:()=>global.toggleTunerMicrophone(),selectTunerString:index=>global.selectTunerString(index),tunerString:()=>tunerSelectedIndex,
       instrument:()=>currentInstrument,setInstrument:value=>{global.setInstrument(value);global.updateDetailSaveButton();},
       songViewAvailable:value=>value==='tablature'?SONG_EXTRA_VIEWS.includes('tablature')&&!stageMode:value==='lyrics'?!stageMode:true,
-      songView:()=>stageMode?currentSongView:currentSongPage===0?'summary':currentSongPage===1?'full':currentSongPage===2?'lyrics':SONG_EXTRA_VIEWS[currentSongPage-3]||'full',
+      songView:()=>stageMode?currentSongView:currentSongPage===0?'full':currentSongPage===1?'summary':currentSongPage===2?'lyrics':SONG_EXTRA_VIEWS[currentSongPage-3]||'full',
       setSongView:value=>{if(value==='lyrics')global.setSongPage(2);else global.setSongView(value);global.updateDetailSaveButton();},
       nextSong:delta=>navigationContext.peek(delta),stepSong:delta=>global.navigateSong(delta),
       songFont:()=>detailStageFont,setSongFont:value=>{detailStageFont=value;global.applyStageFont(value);global.updateDetailSaveButton();},

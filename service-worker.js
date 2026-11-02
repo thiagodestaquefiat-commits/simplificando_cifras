@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v719-chat-playlist-covers";
+const CACHE_NAME = "simplificando-cifras-v720-chat-invites-study-order";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -47,8 +47,12 @@ const CACHE_NAME = "simplificando-cifras-v719-chat-playlist-covers";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "./css/event-share-variants.css?v=5",
-  "./js/event-detail-refactor.css?v=133",
+  "./css/event-share-variants.css?v=6",
+  "./js/event-detail-refactor.css?v=134",
+  "./assets/chat-wallpaper-roudy-revised.svg",
+  "./assets/icons/roudy-rd-premium.svg",
+  "./assets/chat-wallpaper-roudy-art.svg",
+  "./assets/icons/icone-fone-adicionar-polido.svg",
   "./js/event-detail-refactor.css?v=55",
   "./assets/icons/icone-ajuste-vertical.svg",
   "./assets/icons/icone-qrcode-roudy.svg",
@@ -109,7 +113,7 @@ const ASSETS = [
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
   "./js/app-assistant.js?v=32",
-  "./js/app-assistant.js?v=33",
+  "./js/app-assistant.js?v=34",
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
   "./css/topbar-labels.css?v=10",
@@ -226,7 +230,7 @@ const ASSETS = [
   "./js/event-collaboration-client.js?v=12",
   "./js/event-collaboration-client.js?v=13",
   "./js/event-collaboration-client.js?v=14",
-  "./js/event-share.js?v=4",
+  "./js/event-share.js?v=5",
   "./js/event-user-invites.js?v=1",
   "./js/event-user-invites.css?v=1",
   "./js/event-user-invites.js?v=2",
@@ -304,7 +308,7 @@ const ASSETS = [
   "./js/event-offline.js?v=2",
   "./js/context-intelligence.js?v=4",
   "./js/preparation-receipts.js?v=1",
-  "./js/contextual-copy.js?v=4",
+  "./js/contextual-copy.js?v=5",
   "./js/context-delivery.js?v=2",
   "./js/context-acknowledgements.js?v=1",
   "./js/context-history.js?v=2",

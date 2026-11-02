@@ -67,7 +67,7 @@
       generic: Object.freeze(['Preparação feita. Agora é palco.'])
     }),
     CONTINUE_STUDY: Object.freeze({
-      generic: Object.freeze([variant('{songTitle} perguntou por você.', F, 'personificacao'), variant('Eu guardei seu lugar em {songTitle}. De nada.', F, 'roadie-humor'), variant('Onde estávamos? Em {songTitle}.', F, 'pergunta-revelacao'), variant('Sua última música continua aqui: {songTitle}.', D, 'continuidade-neutra')])
+      generic: Object.freeze([variant('{songTitle}', D, 'continuidade-neutra')])
     }),
     RECOGNIZE_PREPARATION: Object.freeze({
       complete: Object.freeze([variant('Repertório de {eventName} inteiro revisado. Temos um profissional aqui.', F, 'conquista-celebracao'), variant('Preparação confirmada em {eventName}. O palco que lute.', O, 'conquista-humor'), variant('Todas as músicas de {eventName} foram revisadas. Isso merece aplausos.', F, 'conquista-celebracao'), variant('Repertório em dia. Meu trabalho de roadie ficou mais fácil.', F, 'roadie-humor')])

@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=133">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=134">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
 <link rel="stylesheet" href="js/profile-qr.css?v=2">
 <link rel="stylesheet" href="js/event-chat-song.css?v=6">
@@ -1093,6 +1093,18 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
   #view-detail.stage-mode .stage-execution-step{width:28px!important;height:28px!important;background:#25262a!important;font-size:14px!important;font-weight:600!important}
   #view-detail.stage-mode .stage-execution-toggle,#view-detail.stage-mode .stage-execution-toggle.is-paused{width:36px!important;height:36px!important;background:#25262a!important}
 }
+/* Reutiliza o ícone de paleta da ação "Cor da cifra" no acesso ao estilo do chat. */
+.event-chat-group-menu button[onclick="openEventChatGroupStyle()"] i > svg { display: none; }
+.event-chat-group-menu button[onclick="openEventChatGroupStyle()"] i::before {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=17">
@@ -1102,7 +1114,36 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/search-menu.css?v=20">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
-<link rel="stylesheet" href="css/event-share-variants.css?v=5">
+<link rel="stylesheet" href="css/event-share-variants.css?v=6">
+  <style id="chat-background-picker-styles">
+    /* Miniaturas do seletor de fundo do chat. */
+    .chat-background-picker-page .chat-background-actions{margin-bottom:42px}
+    .chat-background-picker-page .chat-style-section{margin-bottom:40px}
+    .chat-background-wallpaper-grid{display:grid;padding:0 20px;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .chat-background-wallpaper-carousel{display:flex;gap:14px;overflow-x:auto;padding:0 20px 4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .chat-background-wallpaper-carousel::-webkit-scrollbar{display:none}
+    .chat-background-wallpaper-carousel .chat-background-wallpaper{flex:0 0 clamp(104px,31vw,142px);scroll-snap-align:start}
+    .chat-background-wallpaper{position:relative;display:block;aspect-ratio:9/14;padding:0;overflow:hidden;border:0;border-radius:18px;background-color:#18181a!important;background-image:var(--wallpaper-image,none)!important;background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;-webkit-appearance:none;appearance:none;cursor:pointer;isolation:isolate}
+    .chat-background-wallpaper::after{position:absolute;inset:0;border:2px solid transparent;border-radius:inherit;content:"";pointer-events:none}
+    .chat-background-wallpaper.is-selected::after{border:4px solid #f5f5f7}
+    .chat-background-wallpaper em{position:absolute;right:50%;bottom:24px;z-index:1;display:none;width:38px;height:38px;place-items:center;transform:translateX(50%);border-radius:50%;background:#fff;color:#151519;font:900 22px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;font-style:normal}
+    .chat-background-wallpaper.is-selected em{display:grid}
+    .chat-background-wallpaper .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .chat-background-actions .chat-background-color-orb{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#22b8ff,#326ae8 48%,#a273ff);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+    .chat-background-actions .chat-style-quick-icon--gallery{display:grid;place-items:center;width:48px;height:48px;color:var(--roudy-electric-blue,#168fe7);background:transparent!important;box-shadow:none!important}
+    .chat-background-actions .chat-style-quick-icon--gallery svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .chat-background-actions .chat-background-ai-icon{color:var(--roudy-electric-blue,#168fe7);font-size:42px}
+    .chat-style-beta{display:inline-flex;align-items:center;margin-left:6px;padding:3px 6px;border-radius:999px;background:rgba(22,143,231,.18);color:#62aeff;font:800 10px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;letter-spacing:.04em;vertical-align:middle}
+    .chat-background-actions>label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:144px;border-radius:16px;background:#171719;color:#f5f5f7;font:700 17px/1.15 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;cursor:pointer}
+    .chat-background-actions>label input{display:none}
+    .chat-background-color{display:block;aspect-ratio:9/14;background-color:var(--chat-picker-color,#17181b)!important;background-image:none!important;color:transparent;font-size:0}
+    .chat-background-color>span{display:none}
+    .chat-background-color[data-theme="black"]{background-color:#000!important}
+    .chat-background-color[data-theme="blue"]{background-image:linear-gradient(180deg,#071526,#02070e)!important}
+    .chat-background-color[data-theme="warm"]{background-image:linear-gradient(180deg,#17120e,#070604)!important}
+    .chat-background-color[data-theme="graphite"]{background-image:linear-gradient(180deg,#17181b,#08090b)!important}
+    @media(max-width:390px){.chat-background-wallpaper-grid{gap:12px;padding-inline:16px}.chat-background-wallpaper-carousel{gap:12px;padding-inline:16px}.chat-background-wallpaper{border-radius:15px}}
+  </style>
 </head>
 <body>
 <section class="login-gate" id="login-gate" aria-label="Acesso ao ROUDY">
@@ -1305,10 +1346,10 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       </section>
     </div>
     <nav class="song-page-indicator" id="song-page-indicator" aria-label="Visualização da música">
-      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 3 — Resumo harmônico"></button>
-      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 3 — Letra e cifra" aria-current="page"></button>
+      <button class="song-page-dot" type="button" data-song-page="0" onclick="setSongPage(0,{source:'indicator'})" aria-label="Página 1 de 3 — Letra e cifra" aria-current="page"></button>
+      <button class="song-page-dot" type="button" data-song-page="1" onclick="setSongPage(1,{source:'indicator'})" aria-label="Página 2 de 3 — Resumo harmônico"></button>
       <button class="song-page-dot" type="button" data-song-page="2" onclick="setSongPage(2,{source:'indicator'})" aria-label="Página 3 de 3 — Letra"></button>
-      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 2 de 3 — Letra e cifra</span>
+      <span class="song-page-status" id="song-page-status" role="status" aria-live="polite">Página 1 de 3 — Letra e cifra</span>
     </nav>
     <input type="file" id="sheet-music-input" hidden onchange="handleSheetMusicFile(this)">
     <div class="detail-body" id="detail-content"></div>
@@ -1430,9 +1471,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
 <script src="js/event-collaboration-client.js?v=19"></script>
-<script src="js/event-share.js?v=4"></script>
+<script src="js/event-share.js?v=5"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
-<script src="js/contextual-copy.js?v=4"></script>
+<script src="js/contextual-copy.js?v=5"></script>
 <script src="js/context-delivery.js?v=2"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/context-history.js?v=2"></script>
@@ -1451,7 +1492,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-memory.js?v=2"></script>
 <script src="js/assistant-dialogue.js?v=4"></script>
 <script src="js/assistant-sequences.js?v=2"></script>
-<script src="js/app-assistant.js?v=33"></script>
+<script src="js/app-assistant.js?v=34"></script>
  <script src="js/event-user-invites.js?v=10"></script>
  <script src="js/event-qr-scanner.js?v=2"></script>
 <script>
@@ -1524,7 +1565,7 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',1800);
 }
 // ── STATE ─────────────────────────────────────────────────────────────
-let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=1, currentLocationAutocomplete=null, tablatureFontSize=13;
+let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=0, currentLocationAutocomplete=null, tablatureFontSize=13;
 let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
 let detailEventContext=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
@@ -2122,7 +2163,7 @@ const INSTRUMENTS=instrumentDefinitions.all.map(instrument=>({id:instrument.id,l
 function instrumentIconMarkup(inst){
   if(inst.id==='guitar') return `<span class="instrument-single-icon instrument-guitar-icon" aria-hidden="true">${musicalRoleIcon('Guitarra')}</span>`;
   if(inst.id==='ukulele') return '<span class="instrument-ukulele-icon" aria-hidden="true"></span>';
-  const icons={keyboard:'<img class="instrument-keyboard-icon" src="assets/keyboard-icon.svg" alt="">',cavaquinho:'<svg viewBox="0 0 32 32"><path d="M18 3v16M15 3h6M16 7h4M14 18c-5 1-7 8-2 11 5 3 11-1 10-6-.4-2.5-2.1-4.2-4-5"/><circle cx="17.5" cy="23" r="2"/></svg>','viola-caipira-cebolao-e':'<svg viewBox="0 0 32 32"><path d="M18 2v17M15 2h6M16 6h4M14 18c-5 1-7 8-2 11 5 3 11-1 10-6-.4-2.5-2.1-4.2-4-5"/><circle cx="17.5" cy="23" r="2"/><path d="M23 5l5 5M22 8l3-3"/></svg>'};
+const icons={keyboard:'<img class="instrument-keyboard-icon" src="assets/keyboard-icon.svg" alt="">',cavaquinho:'<svg viewBox="0 0 32 32"><rect x="13.5" y="2" width="5" height="6" rx="1"/><path d="M14.5 8v7c-2-2-5-1.5-5 1 0 1.2.8 2.2 1.3 2.8C6 22 7 29.5 16 29.5S26 22 21.2 18.8c.5-.6 1.3-1.6 1.3-2.8 0-2.5-3-3-5-1V8M11.5 3.5h2M18.5 3.5h2M11.5 6.5h2M18.5 6.5h2M12.5 26h7"/><circle cx="16" cy="21" r="2.3"/><path d="M15.5 9v9M16.5 9v9" stroke-width=".65"/></svg>','viola-caipira-cebolao-e':'<svg viewBox="0 0 32 32"><rect x="13" y="1.5" width="6" height="8" rx="1"/><path d="M14.5 9.5v5c-3-2.5-6-1.2-6 1.5 0 1.4 1 2.7 1.7 3.4-5.5 4.3-3 11.1 5.8 11.1s11.3-6.8 5.8-11.1c.7-.7 1.7-2 1.7-3.4 0-2.7-3-4-6-1.5v-5M11 3h2M19 3h2M11 5.5h2M19 5.5h2M11 8h2M19 8h2M12 27h8"/><circle cx="16" cy="22" r="2.5"/><path d="M15 10v9M16 10v9M17 10v9" stroke-width=".6"/></svg>'};
   return `<span class="instrument-vector-icon" aria-hidden="true">${icons[inst.id]||icons.cavaquinho}</span>`;
 }
 
@@ -2673,20 +2714,20 @@ async function removeSheetMusic(){
   if(!homePlaylists.isCollaborativeContext(detailPlaylistContext))sheetMusic.discard(previous);renderDetail();setSongView('sheet');showToast('Partitura removida');
 }
 function adjustTablatureSize(delta){tablatureFontSize=Math.max(9,Math.min(22,tablatureFontSize+(delta<0?-1:1)));document.querySelector('.tablature-view')?.style.setProperty('--tablature-font-size',tablatureFontSize+'px');updateDetailSaveButton();}
-// Páginas depois de Resumo / Letra e cifra / Letra: Partitura (sempre, para adicionar ali) e Tablaturas.
+// Páginas depois de Letra e cifra / Resumo / Letra: Partitura (sempre, para adicionar ali) e Tablaturas.
 let SONG_EXTRA_VIEWS=[];
-function songViewForPage(index){return index===0?'summary':index<=2?'full':SONG_EXTRA_VIEWS[index-3]||'full';}
+function songViewForPage(index){return index===1?'summary':index<=2?'full':SONG_EXTRA_VIEWS[index-3]||'full';}
 function setSongView(view){
   const extra=SONG_EXTRA_VIEWS.indexOf(view);
   currentSongView=extra>=0?view:view==='full'?'full':'summary';
-  if(!stageMode)setSongPage(extra>=0?3+extra:view==='full'?1:0,{source:'legacy'});
+  if(!stageMode)setSongPage(extra>=0?3+extra:view==='full'?0:1,{source:'legacy'});
   else renderDetail();
 }
 
-const SONG_PAGE_LABELS=['Resumo harmônico','Letra e cifra','Letra'];
+const SONG_PAGE_LABELS=['Letra e cifra','Resumo harmônico','Letra'];
 let SONG_LAST_PAGE=SONG_PAGE_LABELS.length-1;
-function songPageStorageKey(songId=currentDetailId){return `sc_song_content_view_v1:${appCurrentUser?.id||'local'}:${String(songId??'')}`}
-function loadSongPage(songId=currentDetailId){const saved=Number(storage.get(songPageStorageKey(songId),1));return Number.isInteger(saved)&&saved>=0&&saved<=SONG_LAST_PAGE?saved:1}
+function songPageStorageKey(songId=currentDetailId){return `sc_song_content_view_v2:${appCurrentUser?.id||'local'}:${String(songId??'')}`}
+function loadSongPage(songId=currentDetailId){const saved=storage.get(songPageStorageKey(songId),null);if(saved!==null){const index=Number(saved);return Number.isInteger(index)&&index>=0&&index<=SONG_LAST_PAGE?index:0;}const legacy=storage.get(songPageStorageKey(songId).replace('_v2:','_v1:'),null);if(legacy===null)return 0;const index=Number(legacy);return index===0?1:index===1?0:Number.isInteger(index)&&index>=2&&index<=SONG_LAST_PAGE?index:0;}
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
@@ -2773,7 +2814,7 @@ function renderDetail(preparedSong=null,preparedSummary=null){
   const sheet=currentSheetMusic(source);
   SONG_EXTRA_VIEWS=['sheet',...(visibleTablature?['tablature']:[])];
   SONG_LAST_PAGE=2+SONG_EXTRA_VIEWS.length;SONG_PAGE_LABELS.splice(3,Infinity,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?'Partitura':'Tablaturas'));
-  if(currentSongPage>SONG_LAST_PAGE){currentSongPage=1;currentSongView='full';}
+  if(currentSongPage>SONG_LAST_PAGE){currentSongPage=0;currentSongView='full';}
   const indicator=document.getElementById('song-page-indicator');indicator.querySelectorAll('[data-song-page]').forEach(dot=>{if(Number(dot.dataset.songPage)>=3)dot.remove();});
   SONG_EXTRA_VIEWS.forEach((view,offset)=>indicator.querySelector('.song-page-status').insertAdjacentHTML('beforebegin',view==='sheet'
     ?`<button class="song-page-dot" type="button" data-song-page="${3+offset}" onclick="setSongView('sheet')" aria-label="Partitura"></button>`
@@ -2813,7 +2854,7 @@ function renderDetail(preparedSong=null,preparedSummary=null){
     :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
   // Modo Palco limpo (Thiago, 12/10): mesma cifra da tela de estudo, sem as caixas do palco antigo.
-  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[summaryHtml,combinedHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'summary':index===1?'combined':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[combinedHtml,summaryHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'combined':index===1?'summary':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
   if(sheet)paintSheetMusic(sheet);
@@ -2872,7 +2913,7 @@ function openDetail(id,options={}){
     currentSongPage=loadSongPage(nid);
     const eventViewPage={summary:0,combined:1,lyrics:2,chords:1}[contextualSong?.view];
     if(Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
-    currentSongView=currentSongPage===0?'summary':'full';
+    currentSongView=songViewForPage(currentSongPage);
   }
   const preparedSong=tablature.prepareSong(m),summary=songFormat.harmonicSummary(preparedSong);
   currentInstrument=instrumentDefinitions.normalizeId(summary.instrument||instrumentDefinitions.defaultId);
@@ -5398,7 +5439,26 @@ function getEventInviteRole(eventId){
 }
 function selectEventInviteRole(role){
   if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.busy)return;
-  if(eventInviteRoles().includes(role))eventInviteSelection.role=role;
+  if(!eventInviteRoles().includes(role))return;
+  eventInviteSelection.role=role;
+  const icon=document.getElementById('event-invite-role-icon'),name=document.getElementById('event-invite-role-name');
+  if(icon)icon.innerHTML=eventInviteRoleIcon(role);
+  if(name)name.textContent=eventInviteRoleDisplayName(role);
+}
+function eventInviteRoleDisplayName(role){const label=eventInviteRoleLabel(role),name=label.charAt(0).toLocaleUpperCase('pt-BR')+label.slice(1);return role==='Violão'?name+' (violão)':role==='Violino'?name+' (violino)':name;}
+function eventInviteRoleIcon(role){
+  const paths={
+    'Guitarra':'<path d="M10 10V3h4v7l2-2 2 3-2 3 2 3c0 3-2.5 5-6 5s-6-2-6-5l2-3-2-3 2-3 2 2ZM12 5v13M9 18h6M9 4h1M14 4h1M9 7h1M14 7h1"/>',
+    'Violão':'<path d="M11 3h2v8c1-2 4-1 4 1 0 1-.5 2-1 2.5 2 1 3 3 2 5S14 22 12 22s-5-.5-6-2.5 0-4 2-5C7.5 14 7 13 7 12c0-2 3-3 4-1V3ZM10 19h4M10 4h1M13 4h1M10 7h1M13 7h1"/><circle cx="12" cy="15" r="1.5"/>',
+    'Baixo':'<path d="M11 2h2v11c1-2 3-3 4-5l1 5-2 3c3 4 1 6-4 6s-7-2-4-6l-2-3 1-5c1 2 3 3 4 5V2ZM12 4v15M9 19h6M9 3h2M13 5h2M9 7h2M13 9h2"/>',
+    'Vocal':'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/>',
+    'Backing Vocal':'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6M3 6v4M21 6v4"/>',
+    'Bateria':'<ellipse cx="12" cy="10" rx="8" ry="3"/><path d="M4 10v7c0 4 16 4 16 0v-7M8 13v6M16 13v6M5 3l6 4M19 3l-6 4"/>',
+    'Teclado':'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7.5 6v12M12 6v12M16.5 6v12M6 6v6M10.5 6v6M15 6v6M19.5 6v6"/>',
+    'Violino':'<path d="M9 2h3v7c3-2 5 2 2 3 2 1 2 3 0 4 3 1 2 5-2 5H9c-4 0-5-4-2-5-2-1-2-3 0-4-3-1-1-5 2-3V2ZM10.5 4v14M8 18h5M17 3l3 18M9 4H7M12 6h2"/>',
+    'Ukulele':'<path d="M10.5 2h3v7.5c2.8-1.5 4.8 1.3 3.3 3.5 3.8 4.2 1.2 8.5-4.8 8.5S3.4 17.2 7.2 13c-1.5-2.2.5-5 3.3-3.5V2ZM12 5v8M9.5 18.5h5M9 3h1.5M13.5 3H15M9 6h1.5M13.5 6H15"/><circle cx="12" cy="15" r="1.7"/>'
+  };
+  return '<svg viewBox="0 0 24 24">'+(paths[role]||'<path d="M9 18V5l11-2v13M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>')+'</svg>';
 }
 function openEventInviteSheet(eventId){
   const event=findEvent(eventId),actor=event&&eventPermissionActor(event);
@@ -5406,7 +5466,7 @@ function openEventInviteSheet(eventId){
   if(!eventInviteSelection||eventInviteSelection.owner!==eventInviteOwner()||eventInviteSelection.eventId!==String(eventId))eventInviteSelection={owner:eventInviteOwner(),eventId:String(eventId),role:eventInviteRoles()[0],busy:false};
   if(eventInviteSelection.busy)return;
   const layer=ensureEventActionLayer(),shareData=eventShareData(event),role=getEventInviteRole(event.id);
-  layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><label class="event-invite-primary event-invite-role"><span class="event-invite-check" aria-hidden="true">✓</span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>Convidar como ${eventEsc(eventInviteRoleLabel(value))}</option>`).join('')}</select><span class="event-invite-role-chevron" aria-hidden="true">⌄</span></label><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action event-invite-action--qr" onclick="closeEventActionLayer();eventQrScanner.open(${attrJs(event.id)},{role:getEventInviteRole(${attrJs(event.id)})})"><i><img src="assets/icons/icone-qrcode-roudy.svg" alt="" aria-hidden="true"></i><span>Escanear QR</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
+layer.querySelector('.event-action-sheet').innerHTML=`<div class="event-action-handle" aria-hidden="true"></div><div class="event-invite-sheet"><section class="event-invite-preview">${roudyEventShare.cardMarkup(shareData)}</section><section class="event-invite-share"><h3>Adicionar pessoa ao evento</h3><label class="event-invite-role"><span class="event-invite-role-icon" id="event-invite-role-icon" aria-hidden="true">${eventInviteRoleIcon(role)}</span><span class="event-invite-role-name" id="event-invite-role-name">${eventEsc(eventInviteRoleDisplayName(role))}</span><span class="event-invite-role-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></span><select id="event-invite-role" aria-label="Convidar como" onchange="selectEventInviteRole(this.value)">${eventInviteRoles().map(value=>`<option value="${eventEsc(value)}" ${role===value?'selected':''}>${eventEsc(eventInviteRoleDisplayName(value))}</option>`).join('')}</select></label><div class="event-invite-actions"><button type="button" class="event-invite-action" onclick="openEventMemberSearch(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></i><span>Buscar</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><path d="M9 15 15 9M7.5 11.5l-2 2a3.5 3.5 0 0 0 5 5l2-2M16.5 12.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg></i><span>Compartilhar</span></button><button type="button" class="event-invite-action event-invite-action--qr" onclick="closeEventActionLayer();eventQrScanner.open(${attrJs(event.id)},{role:getEventInviteRole(${attrJs(event.id)})})"><i><img src="assets/icons/icone-qrcode-roudy.svg" alt="" aria-hidden="true"></i><span>Escanear QR</span></button><button type="button" class="event-invite-action" onclick="shareEventMemberInvitation(${attrJs(event.id)})"><i><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></i><span>Mais</span></button></div><p id="event-invite-status" class="event-invite-status" role="status" aria-live="polite"></p></section></div>`;
   requestAnimationFrame(()=>layer.classList.add('is-open'));
 }
 function openEventMemberSearch(eventId){
@@ -6218,7 +6278,7 @@ function eventChatAttachmentAction(kind,label){return `<button type="button" cla
 function openEventChatAttachments({reset=false}={}){const event=findEvent(currentSdId);if(!event)return;const tray=ensureEventChatAttachmentTray(),grid=tray.querySelector('#event-chat-attachment-grid'),trigger=document.querySelector('.event-chat-emoji');if(!tray.hidden&&!reset){closeEventChatAttachments();return;}grid.innerHTML=eventChatAttachmentAction('song','Música')+eventChatAttachmentAction('playlist','Playlist')+eventChatAttachmentAction('image','Foto')+eventChatAttachmentAction('camera','Câmera')+eventChatAttachmentAction('file','Documento')+eventChatAttachmentAction('poll','Enquete')+eventChatAttachmentAction('event','Evento');tray.hidden=false;requestAnimationFrame(()=>tray.classList.add('is-open'));if(trigger){trigger.setAttribute('aria-pressed','true');trigger.setAttribute('aria-label','Fechar compartilhamentos');trigger.innerHTML=eventChatComposerIcon(true);}}
 function eventChatPickerRows(kind){const event=findEvent(currentSdId);if(kind==='song'){return musicas.slice().sort((a,b)=>String(a.title).localeCompare(String(b.title),'pt')).slice(0,80).map(song=>`<button type="button" class="event-chat-attachment-row" onclick="shareEventChatSong('${eventEsc(song.id)}')"><i>${eventChatAttachmentIcon('song')}</i><span><strong>${eventEsc(song.title)}</strong><small>${eventEsc(song.artist||'Música ROUDY')}</small></span></button>`).join('')||'<p class="event-chat-attachment-empty">Nenhuma música disponível na sua playlist.</p>';}if(kind==='playlist'){const lists=userPlaylists?.list(appCurrentUser.id)||[];return lists.map(list=>`<button type="button" class="event-chat-attachment-row" onclick="shareEventChatPlaylist('${eventEsc(list.id)}')"><i>${eventChatAttachmentIcon('playlist')}</i><span><strong>${eventEsc(list.name)}</strong><small>${list.items.length} ${list.items.length===1?'música':'músicas'}</small></span></button>`).join('')||'<p class="event-chat-attachment-empty">Você ainda não criou playlists.</p>';}if(kind==='event'){return setlists.filter(item=>String(item.id)!==String(event?.id)&&eventModel.canAccess(item,appCurrentUser.id)).map(item=>`<button type="button" class="event-chat-attachment-row" onclick="shareEventChatEvent('${eventEsc(item.id)}')"><i>${eventChatAttachmentIcon('event')}</i><span><strong>${eventEsc(item.title)}</strong><small>${eventEsc([eventDisplayDate(item.date),item.time].filter(Boolean).join(' · ')||'Data a definir')}</small></span></button>`).join('')||'<p class="event-chat-attachment-empty">Não há outro evento disponível para compartilhar.</p>';}return '';}
 function openEventChatAttachmentPicker(kind){if(kind==='song'){openEventChatSongSheet();return;}if(kind==='playlist'){openEventChatPlaylistSheet();return;}if(kind==='event'){openEventChatEventSheet();return;}if(kind==='file'){openEventChatFileSheet();return;}if(kind==='poll'){closeEventChatAttachments({focus:false});openPollModal();return;}if(kind==='image'||kind==='camera'){const input=document.createElement('input');input.type='file';input.accept='image/*';if(kind==='camera')input.capture='environment';input.addEventListener('change',()=>shareEventChatPhoto(input.files?.[0]),{once:true});input.click();return;}const tray=ensureEventChatAttachmentTray(),grid=tray.querySelector('#event-chat-attachment-grid');grid.innerHTML=`<div class="event-chat-attachment-picker-heading"><button type="button" class="event-chat-attachment-back" onclick="openEventChatAttachments({reset:true})">‹ Voltar</button><strong>Compartilhar no chat</strong><button type="button" class="event-chat-attachment-close" onclick="closeEventChatAttachments()" aria-label="Fechar">${eventChatAttachmentIcon('close')}</button></div><div class="event-chat-attachment-list">${eventChatPickerRows(kind)}</div>`;grid.querySelector('.event-chat-attachment-back')?.focus({preventScroll:true});}
-function openEventChatFileSheet(){closeEventChatAttachments({focus:false});eventAdminSheetState={type:'chat-file'};showEventAdminSheet(`<section class="event-chat-file-sheet"><header><span></span><h2>Selecionar um documento</h2><button type="button" onclick="closeEventAdminSheet()" aria-label="Fechar">${eventChatAttachmentIcon('close')}</button></header><p>Envie arquivos de até 900 KB.</p><div class="event-chat-file-actions"><button type="button" onclick="eventChatChooseFile('files')"><span>Selecionar desde Arquivos</span>${eventChatAttachmentIcon('file')}</button><button type="button" onclick="eventChatChooseFile('media')"><span>Selecionar foto ou vídeo</span>${eventChatAttachmentIcon('image')}</button><button type="button" onclick="eventChatChooseFile('scan')"><span>Escanear documento</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8"/></svg></button></div></section>`,'Selecionar um documento');}
+function openEventChatFileSheet(){closeEventChatAttachments({focus:false});eventAdminSheetState={type:'chat-file'};showEventAdminSheet(`<section class="event-chat-file-sheet"><header><span></span><h2>Selecionar um documento</h2><button type="button" onclick="closeEventAdminSheet()" aria-label="Fechar">${eventChatAttachmentIcon('close')}</button></header><p>Envie arquivos de até 900 KB.</p><div class="event-chat-file-actions"><button type="button" onclick="eventChatChooseFile('files')"><span>Selecionar desde Arquivos</span>${eventChatAttachmentIcon('file')}</button><button type="button" onclick="eventChatChooseFile('scan')"><span>Escanear documento</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8"/></svg></button></div></section>`,'Selecionar um documento');}
 function eventChatChooseFile(mode){const input=document.createElement('input');input.type='file';if(mode==='media')input.accept='image/*,video/*';if(mode==='scan'){input.accept='image/*';input.capture='environment';}input.addEventListener('change',()=>{const file=input.files?.[0];if(!file)return;closeEventAdminSheet();shareEventChatFile(file);});input.click();}
 function openEventChatSongSheet(){const event=findEvent(currentSdId);if(!event)return;closeEventChatAttachments({focus:false});eventAdminSheetState={type:'chat-song',eventId:String(event.id),query:'',filter:'playlist'};showEventAdminSheet(`${eventAdminHeader('Adicionar música')}<div class="event-admin-add-filters" id="event-chat-song-filters" role="group" aria-label="Origem das músicas"><span class="event-admin-add-filter-indicator" aria-hidden="true"></span><button type="button" data-chat-song-filter="playlist" aria-pressed="true" onclick="setEventChatSongsFilter('playlist')">Todas</button><button type="button" data-chat-song-filter="recent" aria-pressed="false" onclick="setEventChatSongsFilter('recent')">Recentes</button><button type="button" data-chat-song-filter="repertoires" aria-pressed="false" onclick="setEventChatSongsFilter('repertoires')">Repertórios</button><button type="button" data-chat-song-filter="playlists" aria-pressed="false" onclick="setEventChatSongsFilter('playlists')">Playlists</button></div><div class="event-admin-song-list" id="event-chat-song-list"></div><label class="event-admin-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><input id="event-chat-song-search-input" type="search" placeholder="Buscar música, artista..." aria-label="Buscar música para compartilhar" oninput="filterEventChatSongs(this.value)"></label>`,'Adicionar música ao chat');renderEventChatSongs();requestAnimationFrame(()=>{updateEventChatSongFilterIndicator(false);document.getElementById('event-chat-song-search-input')?.focus({preventScroll:true})});}
 function filterEventChatSongs(value){if(eventAdminSheetState?.type!=='chat-song')return;eventAdminSheetState.query=String(value||'').trim().toLocaleLowerCase('pt-BR');renderEventChatSongs();}
@@ -6438,6 +6498,156 @@ youtubePlayerUI.initialize({
   renderSongs:renderMusicas,
   showToast
 });
+
+// Fundos do chat: a escolha é local a cada conversa, como os demais ajustes de estilo.
+const EVENT_CHAT_WALLPAPERS=[
+  ['roudy-collage','Notas em papel','assets/chat-wallpaper-collage.png'],
+  ['roudy-worship','Adoração','assets/chat-wallpaper-worship.png'],
+  ['roudy-sky','Céu azul','assets/chat-wallpaper-sky.png'],
+  ['roudy-dj','Som ao vivo','assets/chat-wallpaper-roudy-revised.svg'],
+  ['roudy-staff','Partitura','assets/chat-wallpaper-staff.png'],
+  ['roudy-teal','Luz teal','assets/chat-wallpaper-teal.png'],
+  ['roudy-guitar','Violão','assets/chat-wallpaper-guitar.png'],
+  ['roudy-shapes','Formas ROUDY','assets/chat-wallpaper-shapes.png'],
+  ['roudy-art','Arte ROUDY','assets/chat-wallpaper-roudy-art.svg']
+];
+const EVENT_CHAT_BACKGROUND_HISTORY_KEY='sc_event_chat_background_history_v1';
+// Combinações editoriais: as cores são as mesmas da paleta e das referências do chat.
+const EVENT_CHAT_STYLE_PRESETS=Object.freeze([
+  {id:'guitar-brown',label:'Violão e marrom escuro',background:'roudy-guitar',bubble:'#4B3D2E'},
+  {id:'beatles-petrol',label:'Beatles e azul-petróleo escuro',background:'roudy-teal',bubble:'#075B56'},
+  {id:'paper-graphite',label:'Notas em papel e cinza escuro',background:'roudy-collage',bubble:'#3D3F44'},
+  {id:'lion-blue',label:'Leão e azul',background:'roudy-sky',bubble:'#0D5F89'},
+  {id:'worship-purple',label:'Mãos para cima e roxo escuro',background:'roudy-worship',bubble:'#393071'},
+  {id:'shapes-green',label:'Palhetas e verde escuro',background:'roudy-shapes',bubble:'#3C5225'},
+  {id:'graphite-orange',label:'Degradê cinza e laranja escuro',background:'graphite',bubble:'#7B4211'},
+  {id:'blue-slate',label:'Degradê azul e azul claro escurecido',background:'blue',bubble:'#2B455B'}
+].map(Object.freeze));
+function eventChatBackgroundImage(background,image=''){
+  const wallpaper=eventChatWallpaperSrc(background);
+  if(background==='pattern')return "linear-gradient(rgba(0,0,0,.26),rgba(0,0,0,.26)),url('assets/chat-cables-background.png')";
+  if(background==='custom'&&image)return `linear-gradient(rgba(0,0,0,.3),rgba(0,0,0,.3)),url(${JSON.stringify(image)})`;
+  if(wallpaper)return `linear-gradient(rgba(0,0,0,.24),rgba(0,0,0,.24)),url('${wallpaper}')`;
+  return {blue:'linear-gradient(180deg,var(--roudy-navy,#052044),var(--ui-black,#000))',warm:'linear-gradient(180deg,var(--roudy-gold-shadow,#3C2C0A),var(--ui-black,#000))',graphite:'linear-gradient(180deg,var(--roudy-dark,#191A1C),var(--ui-black,#000))'}[background]||'none';
+}
+function eventChatStylePresetsMarkup(){
+  const background=eventChatBackground(),bubble=eventChatBubbleColor();
+  return `<section class="chat-style-section"><h3>Combinações do ROUDY</h3><div class="chat-style-presets-grid" role="group" aria-label="Combinações de fundo e balões">${EVENT_CHAT_STYLE_PRESETS.map(preset=>{
+    const selected=background===preset.background&&bubble===preset.bubble;
+    return `<button type="button" class="chat-style-preset${selected?' is-selected':''}" data-style-preset="${preset.id}" aria-label="${eventEsc(preset.label)}" aria-pressed="${selected}" style="background-image:${eventChatBackgroundImage(preset.background)};--preset-bubble:${preset.bubble}" onclick="selectEventChatStylePreset('${preset.id}')"><span class="chat-style-preset-bubbles" aria-hidden="true"><i></i><b></b></span><em aria-hidden="true">✓</em></button>`;
+  }).join('')}</div></section>`;
+}
+function selectEventChatStylePreset(id){
+  const preset=EVENT_CHAT_STYLE_PRESETS.find(value=>value.id===id);
+  if(!currentSdId||!preset)return;
+  const values=storage.get(EVENT_CHAT_BUBBLE_COLOR_KEY,{});
+  storage.set(EVENT_CHAT_BUBBLE_COLOR_KEY,{...(values&&typeof values==='object'?values:{}),[String(currentSdId)]:preset.bubble});
+  selectEventChatBackground(preset.background);
+  openChatAppearance();
+}
+EVENT_CHAT_WALLPAPERS.forEach(([id])=>{if(!EVENT_CHAT_BACKGROUNDS.includes(id))EVENT_CHAT_BACKGROUNDS.push(id);});
+function eventChatWallpaperSrc(value){const wallpaper=EVENT_CHAT_WALLPAPERS.find(([id])=>id===value);return wallpaper?wallpaper[2]:'';}
+function eventChatWallpaperLabel(value){const wallpaper=EVENT_CHAT_WALLPAPERS.find(([id])=>id===value);return wallpaper?wallpaper[1]:'';}
+function eventChatBackgroundHistory(){
+  const saved=storage.get(EVENT_CHAT_BACKGROUND_HISTORY_KEY,[]);
+  const history=Array.isArray(saved)?saved.filter(item=>item&&typeof item==='object'&&(item.kind==='wallpaper'||item.kind==='custom')):[];
+  // Inclui escolhas já persistidas antes de o histórico existir, sem tratar sugestões como uso.
+  const selections=storage.get(EVENT_CHAT_BACKGROUND_KEY,{}),customs=storage.get(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{});
+  if(selections&&typeof selections==='object')Object.entries(selections).forEach(([eventId,value])=>{
+    const entry=value==='custom'&&customs&&customs[eventId]?{kind:'custom',eventId,label:'Foto da galeria'}:eventChatWallpaperSrc(value)?{kind:'wallpaper',id:value,label:eventChatWallpaperLabel(value)}:null;
+    if(!entry)return;
+    const key=entry.kind==='custom'?`custom:${entry.eventId}`:`wallpaper:${entry.id}`;
+    if(!history.some(item=>(item.kind==='custom'?`custom:${item.eventId}`:`wallpaper:${item.id}`)===key))history.push(entry);
+  });
+  return history.slice(0,12);
+}
+function rememberEventChatBackground(value){
+  if(!currentSdId)return;
+  let entry;
+  if(value==='custom'){
+    if(!eventChatCustomBackground())return;
+    entry={kind:'custom',eventId:String(currentSdId),label:'Foto da galeria'};
+  }else{
+    const src=eventChatWallpaperSrc(value);if(!src)return;
+    entry={kind:'wallpaper',id:value,label:eventChatWallpaperLabel(value)};
+  }
+  const key=entry.kind==='custom'?`custom:${entry.eventId}`:`wallpaper:${entry.id}`;
+  const history=eventChatBackgroundHistory().filter(item=>(item.kind==='custom'?`custom:${item.eventId}`:`wallpaper:${item.id}`)!==key);
+  storage.set(EVENT_CHAT_BACKGROUND_HISTORY_KEY,[entry,...history].slice(0,12));
+}
+function selectEventChatBackground(value){
+  if(!EVENT_CHAT_BACKGROUNDS.includes(value)||!currentSdId||value==='custom'&&!eventChatCustomBackground())return;
+  const values=storage.get(EVENT_CHAT_BACKGROUND_KEY,{});
+  storage.set(EVENT_CHAT_BACKGROUND_KEY,{...(values&&typeof values==='object'?values:{}),[String(currentSdId)]:value});
+  rememberEventChatBackground(value);
+  applyEventChatBackground();
+  document.querySelectorAll('.chat-appearance-page [data-theme]').forEach(button=>{
+    const selected=button.dataset.theme===value;
+    button.classList.toggle('is-selected',selected);
+    button.setAttribute('aria-checked',String(selected));
+  });
+}
+function selectEventChatBackgroundFromHistory(index){
+  const entry=eventChatBackgroundHistory()[Number(index)];if(!entry||!currentSdId)return;
+  if(entry.kind==='wallpaper'){selectEventChatBackground(entry.id);return;}
+  const image=eventChatCustomBackground(entry.eventId);if(!image){showToast('Esta foto não está mais disponível neste dispositivo.');openEventChatBackgrounds();return;}
+  const values=storage.get(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{});
+  storage.set(EVENT_CHAT_CUSTOM_BACKGROUND_KEY,{...(values&&typeof values==='object'?values:{}),[String(currentSdId)]:image});
+  selectEventChatBackground('custom');
+}
+function applyEventChatBackground(){
+  const chat=document.getElementById('event-chat-view');if(!chat)return;
+  let background=eventChatBackground(),image=eventChatCustomBackground();if(background==='custom'&&!image)background='pattern';
+  const wallpaper=eventChatWallpaperSrc(background);
+  chat.dataset.chatBackground=background;chat.style.setProperty('--event-chat-own-bubble',eventChatBubbleColor());
+  chat.style.backgroundImage=eventChatBackgroundImage(background,image);
+  chat.style.backgroundPosition=['pattern','custom'].includes(background)||wallpaper?'center':'';
+  chat.style.backgroundSize=['pattern','custom'].includes(background)||wallpaper?'cover':'';
+}
+function openEventChatBackgroundColors(){
+  const colors=[['black','Preto','#090a0c'],['blue','Azul profundo','#09294f'],['warm','Quente','#40231b'],['graphite','Grafite','#141518']],selected=eventChatBackground();
+  const cards=colors.map(([id,label,color])=>`<button type="button" class="chat-background-wallpaper chat-background-color ${selected===id?'is-selected':''}" data-theme="${id}" style="--chat-picker-color:${color}" role="radio" aria-label="${eventEsc(label)}" aria-checked="${selected===id}" onclick="selectEventChatBackground('${id}')"><em aria-hidden="true">✓</em></button>`).join('');
+  document.getElementById('modal-body').innerHTML=`<section class="chat-appearance-page chat-background-picker-page" aria-label="Cores do fundo"><header class="chat-appearance-header"><button type="button" onclick="openEventChatBackgrounds()" aria-label="Voltar">‹</button><h2>Cor</h2><button type="button" onclick="closeModal()" aria-label="Fechar">•••</button></header><section class="chat-style-section"><h3>Cores</h3><div class="chat-background-wallpaper-grid" role="radiogroup" aria-label="Cores de fundo">${cards}</div></section></section>`;document.getElementById('modal-overlay').style.display='flex';
+}
+function openEventChatBackgrounds(){
+  const selected=eventChatBackground(),history=eventChatBackgroundHistory();
+  const wallpaperCard=([id,label,src])=>`<button type="button" class="chat-background-wallpaper ${selected===id?'is-selected':''}" data-theme="${id}" style="--wallpaper-image:url('${eventEsc(src)}')" role="radio" aria-label="${eventEsc(label)}" aria-checked="${selected===id}" onclick="selectEventChatBackground('${id}')"><em aria-hidden="true">✓</em></button>`;
+  const historyCards=history.map((entry,index)=>{
+    const isCustom=entry.kind==='custom',src=isCustom?eventChatCustomBackground(entry.eventId):eventChatWallpaperSrc(entry.id),isActive=isCustom?selected==='custom'&&String(entry.eventId)===String(currentSdId):selected===entry.id;
+    if(!src)return '';
+    return `<button type="button" class="chat-background-wallpaper ${isActive?'is-selected':''}" data-theme="${isCustom?'custom':entry.id}" style="--wallpaper-image:url('${eventEsc(src)}')" role="radio" aria-label="${eventEsc(entry.label||'Fundo usado')}" aria-checked="${isActive}" onclick="selectEventChatBackgroundFromHistory(${index})"><em aria-hidden="true">✓</em></button>`;
+  }).join('');
+  const historySection=historyCards?`<section class="chat-style-section"><h3>Destacados</h3><div class="chat-background-wallpaper-carousel" role="radiogroup" aria-label="Fundos usados por você">${historyCards}</div></section>`:'';
+document.getElementById('modal-body').innerHTML=`<section class="chat-appearance-page chat-background-picker-page" aria-label="Fundo do chat"><header class="chat-appearance-header"><button type="button" onclick="openChatAppearance()" aria-label="Voltar">‹</button><h2>Fundo</h2><button type="button" onclick="openEventChatStyleMenu(this, 'background')" aria-label="Mais opções do fundo" aria-haspopup="menu" aria-expanded="false">•••</button></header><div class="chat-style-quick-actions chat-background-actions"><label><span class="chat-style-quick-icon chat-style-quick-icon--gallery">${eventChatAttachmentIcon('image')}</span><span>Fotos</span><input type="file" accept="image/*" onchange="setEventChatCustomBackground(this.files[0])"></label><button type="button" onclick="openEventChatBackgroundColors()"><span class="chat-style-quick-icon chat-background-color-orb"></span><span>Cor</span></button></div>${historySection}<section class="chat-style-section"><h3>Sugestões do ROUDY</h3><div class="chat-background-wallpaper-grid" role="radiogroup" aria-label="Sugestões de fundos ROUDY">${EVENT_CHAT_WALLPAPERS.map(wallpaperCard).join('')}</div></section></section>`;document.getElementById('modal-overlay').style.display='flex';
+}
+function eventChatBackgroundPreviewMarkup(){const background=eventChatBackground(),customImage=eventChatCustomBackground(),wallpaper=eventChatWallpaperSrc(background),source=background==='custom'?customImage:background==='pattern'?'assets/chat-cables-background.png':wallpaper,style=source?` style="background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2)),url('${eventEsc(source)}')"`:'';return `<span class="chat-style-quick-icon chat-style-quick-icon--background chat-style-quick-icon--background-${eventEsc(background)}"${style} aria-hidden="true"></span>`;}
+function openChatAppearance(){
+document.getElementById('modal-body').innerHTML=`<section class="chat-appearance-page" aria-label="Estilo do chat"><header class="chat-appearance-header"><button type="button" onclick="closeModal()" aria-label="Voltar">‹</button><h2>Estilo do chat</h2><button type="button" onclick="openEventChatStyleMenu(this)" aria-label="Mais opções do estilo" aria-haspopup="menu" aria-expanded="false">•••</button></header><div class="chat-style-quick-actions"><button type="button" onclick="openEventChatBubbleColors()"><span class="chat-style-quick-icon chat-style-quick-icon--bubble">●</span><span>Balões</span></button><button type="button" onclick="openEventChatBackgrounds()">${eventChatBackgroundPreviewMarkup()}<span>Fundo</span></button></div>${eventChatStylePresetsMarkup()}</section>`;document.getElementById('modal-overlay').style.display='flex';
+}
+function openEventChatStyleMenu(trigger, scope='style'){
+  const previous=document.getElementById('chat-style-reset-overlay');
+  if(previous){previous.remove();trigger.setAttribute('aria-expanded','false');return;}
+  const overlay=document.createElement('div');
+  overlay.id='chat-style-reset-overlay';overlay.className='chat-style-reset-overlay';
+  overlay.innerHTML='<div class="chat-style-reset-menu" role="menu" aria-label="Opções do estilo"><button type="button" role="menuitem"><span>Restabelecer estilo</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-5 4 5 4M5 7h7a8 8 0 1 1-8 9"/></svg></button></div>';
+  const menu=overlay.firstElementChild,rect=trigger.getBoundingClientRect();
+  const width=Math.min(360,window.innerWidth-32);
+  menu.style.width=width+'px';menu.style.left=Math.max(16,Math.min(rect.right-width,window.innerWidth-width-16))+'px';
+  menu.style.top=Math.min(rect.bottom+12,window.innerHeight-88)+'px';
+  const close=()=>{overlay.remove();trigger.setAttribute('aria-expanded','false');trigger.focus();};
+  overlay.onclick=event=>{if(event.target===overlay)close();};
+  overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();close();}};
+  menu.querySelector('button').onclick=()=>{
+    if(!currentSdId)return close();
+    for(const key of (scope==='background'?[EVENT_CHAT_BACKGROUND_KEY]:[EVENT_CHAT_BACKGROUND_KEY,EVENT_CHAT_BUBBLE_COLOR_KEY])){
+      const values=storage.get(key,{});const next={...(values&&typeof values==='object'?values:{})};
+      delete next[String(currentSdId)];storage.set(key,next);
+    }
+    close();applyEventChatBackground();renderEventChatMessages();
+    if(scope==='background')openEventChatBackgrounds();else openChatAppearance();
+  };
+  document.body.appendChild(overlay);trigger.setAttribute('aria-expanded','true');menu.querySelector('button').focus();
+}
 </script>
 <script src="js/search-menu.js?v=12"></script>
 <script>
@@ -6467,5 +6677,289 @@ if ('serviceWorker' in navigator) {
 <script>try{homePlaylists.setView('home',{keepScroll:true});homePlaylists.checkSharedLink();userPlaylists.subscribe(()=>{if(homePlaylists.view==='home')homePlaylists.renderHome();});}catch(error){console.error(error);}</script>
   <button class="app-assistant-launch app-assistant-floating" id="app-assistant-floating" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy" hidden><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span id="assistant-message" class="is-visually-hidden" aria-live="polite"></span>
+<style id="event-chat-polish-v2">
+.chat-appearance-page .chat-style-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.chat-style-presets-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:0 20px}
+.chat-style-preset{position:relative;display:block;min-width:0;aspect-ratio:9/14;padding:0;overflow:hidden;border:0;border-radius:18px;background-color:#000;background-position:center;background-size:cover;background-repeat:no-repeat;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chat-style-preset::after{position:absolute;inset:0;border:4px solid transparent;border-radius:inherit;content:'';pointer-events:none}
+.chat-style-preset.is-selected::after{border-color:#f5f5f7}
+.chat-style-preset:focus-visible{outline:3px solid #0789e7;outline-offset:3px}
+.chat-style-preset:active{opacity:.85}
+.chat-style-preset-bubbles{position:absolute;inset:0;pointer-events:none}
+.chat-style-preset-bubbles i,.chat-style-preset-bubbles b{position:absolute;display:block;width:51%;height:16%;border-radius:999px}
+.chat-style-preset-bubbles i{top:31%;left:12%;border-bottom-left-radius:3px;background:#252526}
+.chat-style-preset-bubbles b{top:53%;right:12%;border-bottom-right-radius:3px;background:var(--preset-bubble)}
+.chat-style-preset-bubbles i::after,.chat-style-preset-bubbles b::after{position:absolute;bottom:0;width:8px;height:9px;background:inherit;content:''}
+.chat-style-preset-bubbles i::after{left:-3px;clip-path:polygon(100% 0,100% 100%,0 100%)}
+.chat-style-preset-bubbles b::after{right:-3px;clip-path:polygon(0 0,100% 100%,0 100%)}
+.chat-style-preset em{position:absolute;bottom:12%;left:50%;display:none;width:30px;height:30px;place-items:center;border-radius:50%;background:#fff;color:#151519;font:800 20px/1 Inter,sans-serif;font-style:normal;transform:translateX(-50%)}
+.chat-style-preset.is-selected em{display:grid}
+@media(max-width:390px){.chat-style-presets-grid{gap:12px;padding-inline:16px}.chat-style-preset{border-radius:15px}}
+#roudy-search-for-you{margin-top:0;padding-top:24px;padding-bottom:8px}
+#roudy-search-for-you .roudy-search-for-you-heading .roudy-search-section-title{margin:0}
+#roudy-search-for-you .roudy-search-for-you-rail{margin-top:20px}
+/* Permite que a fileira sticky dos chips fique acima do fundo esfumado do header. */
+#view-sd>.detail-body{z-index:auto}
+#view-sd .event-reference-admin{z-index:12}
+/* Mesmo acabamento da Home: só a camada de fundo esmaece; os controles ficam íntegros. */
+#view-sd>.detail-header{
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  overflow:visible;
+}
+#view-sd>.detail-header::before{
+  inset:0 0 -18px!important;
+  backdrop-filter:blur(var(--event-header-blur)) saturate(145%);
+  -webkit-backdrop-filter:blur(var(--event-header-blur)) saturate(145%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
+}
+.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{
+  inset:-14px calc(var(--roudy-search-inline) * -1) -32px;
+  pointer-events:none;
+  backdrop-filter:blur(calc(var(--roudy-search-header-progress) * 18px)) saturate(145%);
+  -webkit-backdrop-filter:blur(calc(var(--roudy-search-header-progress) * 18px)) saturate(145%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
+}
+/* Tipografia de interface da Partitura; o papel e os glifos musicais não são afetados. */
+#detail-content .song-page .sheet-music-empty,
+#detail-content .song-page .sheet-music-empty-copy,
+#detail-content .song-page .sheet-music-empty-copy strong,
+#detail-content .song-page .sheet-music-empty-copy p,
+#detail-content .song-page .sheet-music-view .btn,
+#detail-content .song-page .sheet-music-view .tablature-note,
+#detail-content .song-page .sheet-music-toolbar,
+#detail-content .song-page .sheet-music-toolbar strong,
+#detail-content .song-page .sheet-music-name,
+#detail-content .song-page .sheet-music-toolbar button,
+#detail-content .song-page .sheet-music-status{
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  letter-spacing:normal;
+}
+/* Uma grade única nos dois estados: só a região 5–6 troca de conteúdo. */
+#song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr)) 36px}
+#song-controls .song-control-strip>.song-control-cell{grid-row:1}
+#song-controls .song-control-bpm{grid-column:5}
+#song-controls .song-control-meter{grid-column:6}
+#song-controls .song-control-disclosure{grid-column:7}
+#song-controls .song-control-live-speed{grid-column:5 / 7;grid-row:1;min-width:0;gap:0}
+#song-controls .song-control-live-speed button{flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;padding:0}
+#song-controls .song-control-live-speed output{min-width:0;flex:1;white-space:nowrap}
+@media(max-width:520px){
+  #song-controls.is-scrolling .song-control-live-speed{display:grid;grid-template-columns:repeat(2,minmax(44px,1fr));grid-template-rows:28px 44px;align-content:center;justify-items:center}
+  #song-controls .song-control-live-speed output{grid-column:1 / 3;grid-row:1}
+  #song-controls .song-control-live-speed button:first-child{grid-column:1;grid-row:2}
+  #song-controls .song-control-live-speed button:last-child{grid-column:2;grid-row:2}
+}
+@media(max-width:430px){#song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr)) 44px}}
+#event-chat-event-list .event-chat-event-picker-row {
+  grid-template-columns:48px minmax(0,1fr) 48px;
+  min-width:0;
+}
+#event-chat-event-list .event-chat-event-picker-avatar {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  box-sizing:border-box; width:48px; height:48px; min-width:48px; max-width:48px;
+  min-height:48px; max-height:48px; overflow:hidden; border-radius:50%;
+  background:#111216; line-height:1; text-align:center;
+}
+#event-chat-event-list .event-chat-event-picker-avatar > img,
+.event-chat-event-share-avatar.has-event-photo > img {
+  display:block; width:100% !important; height:100% !important;
+  min-width:0 !important; min-height:0 !important; max-width:100% !important; max-height:100% !important;
+  object-fit:cover; flex:none;
+}
+.chat-style-quick-actions .chat-background-ai-icon {
+  display:flex !important; align-items:center; justify-content:center;
+  width:32px !important; height:32px !important; margin:0 auto 8px !important;
+  color:var(--roudy-electric-blue,#168fe7) !important; font-size:0 !important;
+}
+.chat-style-quick-actions .chat-background-ai-icon svg {
+  display:block; width:32px !important; height:32px !important;
+  fill:none !important; stroke:currentColor !important; stroke-width:1.8;
+  stroke-linejoin:round; stroke-linecap:round;
+}
+.chat-style-reset-overlay { position:fixed; inset:0; z-index:100100; background:transparent; }
+.chat-style-reset-menu { position:absolute; box-sizing:border-box; margin:0; padding:0; border:0; border-radius:20px; background:#252526; color:#f5f5f5; box-shadow:0 12px 30px #0003; overflow:hidden; animation:chat-style-menu-in .15s ease-out; }
+.chat-style-reset-menu button { display:flex; align-items:center; justify-content:space-between; gap:20px; width:100%; min-height:68px; padding:18px 22px; border:0; border-radius:inherit; background:transparent; color:inherit; font:400 20px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; text-align:left; cursor:pointer; }
+.chat-style-reset-menu button:active { background:#ffffff12; }
+.chat-style-reset-menu svg { width:28px; height:28px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+@keyframes chat-style-menu-in { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .chat-style-reset-menu { animation:none; } }
+.event-chat-group-menu-actions button[onclick="openEventChatGroupMemberEditor()"] > i {
+  background: currentColor;
+  -webkit-mask: url('assets/icons/icone-fone-adicionar-polido.svg') center / contain no-repeat;
+  mask: url('assets/icons/icone-fone-adicionar-polido.svg') center / contain no-repeat;
+}
+.event-chat-group-menu-actions button[onclick="openEventChatGroupMemberEditor()"] > i > svg { visibility: hidden; }
+/* Ajustes locais do chat: os cartões de Estilo mostram uma prévia fiel, sem alterar o restante da interface. */
+.chat-style-quick-actions button { overflow: visible !important; }
+.chat-style-quick-icon--bubble {
+  position: relative !important;
+  display: block !important;
+  width: 30px !important;
+  height: 23px !important;
+  margin: 0 auto 8px !important;
+  border-radius: 14px 14px 14px 5px !important;
+  background: #04488f !important;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+.chat-style-quick-icon--bubble::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: #04488f;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.chat-style-quick-icon--background {
+  display: block !important;
+  width: 28px !important;
+  height: 40px !important;
+  margin: 0 auto 6px !important;
+  border-radius: 7px !important;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.14) inset !important;
+}
+.event-chat-event-avatar.has-event-photo,
+.event-chat-group-menu-avatar.has-event-photo { overflow: hidden; background: none; }
+.event-chat-event-avatar.has-event-photo img,
+.event-chat-group-menu-avatar.has-event-photo img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
+#event-chat-photo-viewer { position: fixed; inset: 0; z-index: 10020; display: none; flex-direction: column; background: #000; color: #fff; }
+#event-chat-photo-viewer.is-open { display: flex; }
+#event-chat-photo-viewer header { height: max(64px, env(safe-area-inset-top)); padding: env(safe-area-inset-top) 18px 0; display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 8px; }
+#event-chat-photo-viewer header strong { text-align: center; font-size: 20px; }
+#event-chat-photo-viewer button { border: 0; background: transparent; color: #fff; font: inherit; font-weight: 700; padding: 10px; }
+#event-chat-photo-viewer .event-photo-viewer-image { flex: 1; min-height: 0; display: grid; place-items: center; }
+#event-chat-photo-viewer .event-photo-viewer-image img { width: 100%; max-height: 78vh; object-fit: contain; }
+#event-chat-photo-viewer .event-photo-viewer-share { position: absolute; right: 16px; top: calc(env(safe-area-inset-top) + 58px); width: 212px; border-radius: 18px; overflow: hidden; background: #2b2b2d; box-shadow: 0 12px 36px rgba(0,0,0,.5); }
+#event-chat-photo-viewer .event-photo-viewer-share[hidden] { display: none; }
+#event-chat-photo-viewer .event-photo-viewer-share button { display: flex; width: 100%; justify-content: space-between; padding: 16px 18px; font-weight: 500; }
+#event-chat-photo-viewer .event-photo-viewer-icon{display:block;width:24px;height:24px;flex:0 0 24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#event-chat-photo-viewer header>span{display:flex;align-items:center;gap:12px}
+#event-chat-photo-viewer header>span>button{display:grid;min-width:44px;min-height:44px;place-items:center}
+#event-chat-photo-viewer .event-photo-viewer-share button{align-items:center;gap:16px}
+#event-chat-photo-viewer .event-photo-viewer-share button+button{border-top:1px solid rgba(255,255,255,.12)}
+#event-chat-photo-actions { position: absolute; inset: auto 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: #1c1c1e; transform: translateY(110%); transition: transform .22s ease; }
+#event-chat-photo-actions.is-open { transform: translateY(0); }
+#event-chat-photo-actions h2 { margin: 0 0 16px; font-size: 20px; }
+#event-chat-photo-actions button { display: flex; width: 100%; justify-content: space-between; padding: 17px 14px; border-bottom: 1px solid rgba(255,255,255,.12); font-weight: 500; }
+#event-chat-photo-actions button{align-items:center;gap:16px;min-height:52px}
+#event-chat-photo-viewer header>button{display:grid;min-width:44px;min-height:44px;place-items:center}
+#event-chat-photo-actions .danger { color: #ff696d; }
+</style>
+<script id="event-chat-polish-v2-script">
+(() => {
+  const photoOverridesKey = 'sc_event_chat_photo_overrides_v1';
+  const photoFor = (event) => {
+    const overrides = storage.get(photoOverridesKey, {}) || {};
+    const values = [overrides[String(event?.id || '')], event?.coverImage, event?.imageUrl, event?.image, event?.photoUrl, event?.photo, event?.cover, event?.avatarUrl];
+    return values.map(value => String(value || '').trim()).find(Boolean) || '';
+  };
+  const oldAvatar = window.eventChatEventAvatarMarkup;
+  window.eventChatEventAvatarMarkup = function(event) {
+    const source = photoFor(event);
+    return source ? `<img src="${eventEsc(source)}" alt="">` : oldAvatar(event);
+  };
+  const oldArtwork = window.eventChatEventArtwork;
+  window.eventChatEventArtwork = function(event, className = 'event-chat-event-artwork') {
+    const source = photoFor(event);
+    return `<span class="${className}${source ? ' has-image' : ''}${source ? ' has-event-photo' : ''}" aria-hidden="true">${source ? `<img src="${eventEsc(source)}" alt="">` : eventChatEventAvatarMarkup(event)}</span>`;
+  };
+  window.renderEventChatEventAvatar = function(event) {
+    const target = document.getElementById('event-chat-event-avatar');
+    if (!target) return;
+    const source = photoFor(event);
+    target.classList.toggle('has-event-photo', Boolean(source));
+    target.innerHTML = eventChatEventAvatarMarkup(event);
+  };
+  const originalGroupMenu = window.openEventChatGroupMenu;
+  window.openEventChatGroupMenu = function() {
+    originalGroupMenu();
+    const event = findEvent(currentSdId);
+    const target = document.getElementById('event-chat-group-menu-avatar');
+    if (event && target) {
+      const source = photoFor(event);
+      target.classList.toggle('has-event-photo', Boolean(source));
+      target.innerHTML = eventChatEventAvatarMarkup(event);
+    }
+  };
+  function viewer() { return document.getElementById('event-chat-photo-viewer'); }
+  function eventPhotoViewerIcon(name){
+    if(name==='edit'||name==='trash')return eventSongMenuIcon(name).replace('<svg ','<svg class="event-photo-viewer-icon" ');
+    if(name==='camera'||name==='image')return eventChatAttachmentIcon(name).replace('<svg ','<svg class="event-photo-viewer-icon" ');
+    const paths={
+      back:'<path d="m15 18-6-6 6-6"/>',
+      edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z"/><path d="m14.5 5.5 4 4M17 3l1-1a1.4 1.4 0 0 1 2 0l2 2a1.4 1.4 0 0 1 0 2l-1 1"/>',
+      share:'<path d="M12 15V2m-4 4 4-4 4 4M8 9H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-3"/>',
+      save:'<path d="M12 2v13m-4-4 4 4 4-4M8 7H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3"/>',
+      copy:'<path d="M9 2h6l6 6v10a2 2 0 0 1-2 2h-2M15 2v6h6"/><path d="M5 6h6l6 6v10H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm6 0v6h6"/>'
+    };
+    return `<svg class="event-photo-viewer-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
+  }
+  window.openEventChatPhotoViewer = function(event) {
+    if (!event) return;
+    let source = photoFor(event);
+    if (!source) {
+      const avatar = document.createElement('div');
+      avatar.innerHTML = oldAvatar(event);
+      const day = avatar.querySelector('b')?.textContent || '';
+      const weekday = avatar.querySelector('small')?.textContent || '';
+      const content = day ? `<text x="160" y="170" text-anchor="middle" fill="#f5f5f5" font-family="sans-serif" font-size="112" font-weight="700">${eventEsc(day)}</text><text x="160" y="244" text-anchor="middle" fill="#a1a1aa" font-family="sans-serif" font-size="34" font-weight="700">${eventEsc(weekday)}</text>` : '<g fill="none" stroke="#f5f5f5" stroke-width="12"><rect x="74" y="84" width="172" height="164" rx="20"/><path d="M112 62v48M208 62v48M74 136h172"/></g>';
+      source = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><rect width="320" height="320" fill="#101114"/>${content}</svg>`);
+    }
+    let panel = viewer();
+    if (!panel) {
+      document.body.insertAdjacentHTML('beforeend', `<section id="event-chat-photo-viewer" aria-modal="true" role="dialog"><header><button type="button" onclick="closeEventChatPhotoViewer()" aria-label="Voltar">${eventPhotoViewerIcon('back')}</button><strong>Foto do evento</strong><span><button type="button" onclick="openEventChatPhotoActions()" aria-label="Editar foto">${eventPhotoViewerIcon('edit')}</button><button type="button" onclick="toggleEventChatPhotoShare()" aria-label="Compartilhar">${eventPhotoViewerIcon('share')}</button></span></header><div class="event-photo-viewer-image"><img id="event-chat-photo-viewer-image" alt="Foto do evento"></div><div class="event-photo-viewer-share" id="event-chat-photo-viewer-share" hidden><button type="button" onclick="downloadEventChatPhoto()">Salvar imagem ${eventPhotoViewerIcon('save')}</button><button type="button" onclick="copyEventChatPhoto()">Copiar ${eventPhotoViewerIcon('copy')}</button></div><div id="event-chat-photo-actions"><h2>Editar foto do evento</h2><button type="button" onclick="document.getElementById('event-chat-photo-camera-input').click()">Tirar foto ${eventPhotoViewerIcon('camera')}</button><button type="button" onclick="document.getElementById('event-chat-photo-gallery-input').click()">Selecionar foto ${eventPhotoViewerIcon('image')}</button><button type="button" class="danger" onclick="removeEventChatPhoto()">Restabelecer foto ${eventPhotoViewerIcon('trash')}</button></div><input id="event-chat-photo-gallery-input" type="file" accept="image/*" hidden><input id="event-chat-photo-camera-input" type="file" accept="image/*" capture="environment" hidden></section>`);
+      panel = viewer();
+      ['event-chat-photo-gallery-input','event-chat-photo-camera-input'].forEach(id => document.getElementById(id).addEventListener('change', handleEventChatPhotoChange));
+    }
+    panel.dataset.eventId = String(event.id);
+    document.getElementById('event-chat-photo-viewer-image').src = source;
+    panel.classList.add('is-open');
+  };
+  window.closeEventChatPhotoViewer = function() { const panel = viewer(); if (panel) panel.classList.remove('is-open'); };
+  window.toggleEventChatPhotoShare = function() { const menu = document.getElementById('event-chat-photo-viewer-share'); if (menu) menu.hidden = !menu.hidden; };
+  window.openEventChatPhotoActions = function() { document.getElementById('event-chat-photo-actions')?.classList.add('is-open'); };
+  window.downloadEventChatPhoto = function() { const image = document.getElementById('event-chat-photo-viewer-image'); const a = document.createElement('a'); a.href = image.src; a.download = 'foto-do-evento'; a.click(); };
+  window.copyEventChatPhoto = async function() { try { await navigator.clipboard.writeText(document.getElementById('event-chat-photo-viewer-image').src); showToast('Link da foto copiado.'); } catch (_) { showToast('Não foi possível copiar a foto.'); } };
+  function handleEventChatPhotoChange(inputEvent) {
+    const file = inputEvent.target.files?.[0], panel = viewer();
+    if (!file || !panel) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const overrides = storage.get(photoOverridesKey, {}) || {};
+      overrides[panel.dataset.eventId] = reader.result;
+      storage.set(photoOverridesKey, overrides);
+      document.getElementById('event-chat-photo-viewer-image').src = reader.result;
+      document.getElementById('event-chat-photo-actions')?.classList.remove('is-open');
+      const event = findEvent(panel.dataset.eventId);
+      if (event) renderEventChatEventAvatar(event);
+    };
+    reader.readAsDataURL(file);
+  }
+  window.removeEventChatPhoto = function() {
+    const panel = viewer(), overrides = storage.get(photoOverridesKey, {}) || {};
+    if (!panel) return;
+    delete overrides[panel.dataset.eventId]; storage.set(photoOverridesKey, overrides);
+    document.getElementById('event-chat-photo-actions')?.classList.remove('is-open');
+    closeEventChatPhotoViewer();
+    const event = findEvent(panel.dataset.eventId); if (event) renderEventChatEventAvatar(event);
+  };
+  document.addEventListener('click', (clickEvent) => {
+    const photoTarget = clickEvent.target.closest('#event-chat-event-avatar, #event-chat-group-menu-avatar');
+    if (!photoTarget) return;
+    const event = findEvent(currentSdId);
+    if (!event) return;
+    clickEvent.preventDefault(); clickEvent.stopPropagation(); clickEvent.stopImmediatePropagation();
+    openEventChatPhotoViewer(event);
+  }, true);
+})();
+</script>
 </body>
 </html>
