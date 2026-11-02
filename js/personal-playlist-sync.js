@@ -270,7 +270,7 @@
     global.addEventListener("online", () => schedule(500));
     global.addEventListener("focus", () => schedule(500));
     global.document?.addEventListener?.("visibilitychange", () => { if (!global.document.hidden) schedule(500); });
-    global.setInterval(() => { if (!global.document?.hidden) schedule(0); }, 60000);
+    global.setInterval(() => { if (!global.document?.hidden) schedule(0); }, 180000); // custo Railway: era 60s; mudança local/foco/visibilidade já sincronizam
     schedule(2500);
   }
 

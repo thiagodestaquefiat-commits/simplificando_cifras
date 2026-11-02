@@ -5837,7 +5837,9 @@ async function refreshOpenEventFromCloud(){
   }catch(error){if(!collaborationAllowsOffline(error))console.warn('Não foi possível atualizar o evento aberto.',error);}
   finally{eventLiveRefreshRunning=false;}
 }
-setInterval(refreshOpenEventFromCloud,3000);
+// Custo Railway: era a cada 3s (≈20 chamadas/min por pessoa com evento aberto). Agora 15s + ao voltar para a aba.
+setInterval(refreshOpenEventFromCloud,15000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshOpenEventFromCloud();});
 function renderEventChatButton(event){
   const button=document.getElementById('event-chat-fab');if(!button)return;
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}

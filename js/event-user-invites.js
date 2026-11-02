@@ -162,5 +162,5 @@ panel.innerHTML=`<h3>Adicionar integrantes</h3><p>Busque cada pessoa da banda e 
   global.eventUserInvites=Object.freeze({openEditor,openSearchSheet,closeSearchSheet,inviteScanned,inviteFromVoice,openInbox,refresh,renderInbox,getPending:()=>inboxOwner===owner()?invitations.slice():[]});
   global.appAuth?.subscribe(()=>{++searchSequence;clearTimeout(debounce);selection=null;refresh();});
   global.addEventListener('focus',()=>refresh());global.addEventListener('online',()=>refresh());
-  setInterval(()=>{if(!document.hidden)refresh();},45000);
+  setInterval(()=>{if(!document.hidden)refresh();},120000); // custo Railway: era 45s; foco/online já atualizam
 })(window);

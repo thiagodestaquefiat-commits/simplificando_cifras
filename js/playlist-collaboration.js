@@ -169,6 +169,6 @@
   global.appAuth?.subscribe?.(() => { generation++; cursor = null; inboxOwner = null; inbox = { invitations: [], notifications: [] }; schedule(); });
   global.addEventListener('online', schedule); global.addEventListener('focus', schedule);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
-  setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+  setInterval(() => { if (!document.hidden) refresh(); }, 60000); // custo Railway: era 15s; foco/visibilidade/online já disparam na hora
   schedule();
 })(window);
