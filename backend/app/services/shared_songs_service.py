@@ -530,8 +530,6 @@ def merge_duplicates(group: list[SharedSong]) -> SharedSong:
             else:
                 report.song_id = keeper.id
         db.session.flush()
-        from .song_classifier import merge_profiles
-        merge_profiles(keeper.id, extra.id)
         db.session.delete(extra)
     db.session.flush()
     return keeper
