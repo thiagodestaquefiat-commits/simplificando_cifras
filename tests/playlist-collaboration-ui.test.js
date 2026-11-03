@@ -3,6 +3,7 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const { spawn } = require('node:child_process');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
+const artifacts=process.env.ROUDY_TEST_ARTIFACTS||path.join(root,'artifacts');
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname, file = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
   if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return res.writeHead(404).end();
@@ -11,7 +12,7 @@ const server = http.createServer((req, res) => {
 });
 (async () => {
   let browser;
-  const backend = spawn(path.join(root, 'backend/.venv/Scripts/python.exe'), ['-B', '-u', 'tests/playlist-collaboration-server.py'], { cwd: root, windowsHide: true, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
+  const backend = spawn(process.env.ROUDY_TEST_PYTHON || path.join(root, 'backend/.venv/Scripts/python.exe'), ['-B', '-u', 'tests/playlist-collaboration-server.py'], { cwd: root, windowsHide: true, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
   try {
     const fixture = await new Promise((resolve, reject) => {
       let stdout = '', stderr = ''; const timeout = setTimeout(() => reject(new Error('Backend fixture timeout: ' + stderr)), 20000);
@@ -50,10 +51,10 @@ const server = http.createServer((req, res) => {
       homePlaylists.open(p.id); return p.id;
     });
     await ana.getByRole('button', { name: 'Adicionar pessoa à playlist' }).click();
-    fs.mkdirSync(path.join(root, 'artifacts'), { recursive: true });
-    await ana.screenshot({ path: path.join(root, 'artifacts/playlist-invite-actions-mobile.png') });
+    fs.mkdirSync(artifacts, { recursive: true });
+    await ana.screenshot({ path: path.join(artifacts,'playlist-invite-actions-mobile.png') });
     await ana.locator('[data-playlist-search]').click();
-    await ana.screenshot({ path: path.join(root, 'artifacts/playlist-invite-search-mobile.png') });
+    await ana.screenshot({ path: path.join(artifacts,'playlist-invite-search-mobile.png') });
     await ana.getByRole('searchbox', { name: 'Buscar por nome ou nome de usuário' }).fill('@bruno');
     await ana.locator('[data-playlist-user]').first().waitFor({ timeout: 6000 }).catch(async error => { throw new Error((await ana.locator('#playlist-invite-status').textContent()) + ' | ' + errors.join('; ') + ' | ' + error.message); });
     await ana.locator('[data-playlist-user]').first().click();
@@ -61,7 +62,7 @@ const server = http.createServer((req, res) => {
       window.originalPlaylistCollaboration=playlistCollaboration;
       window.playlistCollaboration={...playlistCollaboration,invite:async()=>{throw new Error('Falha de conexão no teste.');}};
     });
-    await ana.screenshot({path:path.join(root,'artifacts/playlist-invite-profile-compact.png')});
+    await ana.screenshot({path:path.join(artifacts,'playlist-invite-profile-compact.png')});
     assert.equal(await ana.locator('.playlist-invite-profile').count(),1,'perfil usa a confirmação compacta dedicada');
     await ana.getByRole('button', { name: 'Enviar convite', exact: true }).click();
     await ana.getByText('Falha de conexão no teste.', { exact: true }).waitFor();
@@ -116,8 +117,8 @@ const server = http.createServer((req, res) => {
     assert.equal(await ana.evaluate(() => JSON.stringify(musicas)), before, 'inline content edits remain in the shared playlist');
     assert.equal(await carol.evaluate(() => musicas.length), count);
     await carol.evaluate(() => closeDetail());
-    fs.mkdirSync(path.join(root, 'artifacts'), { recursive: true });
-    await carol.screenshot({ path: path.join(root, 'artifacts/playlist-collaborators-mobile.png') });
+    fs.mkdirSync(artifacts, { recursive: true });
+    await carol.screenshot({ path: path.join(artifacts,'playlist-collaborators-mobile.png') });
     await carol.evaluate(async () => { userPlaylists.remove(homePlaylists.ownerId, homePlaylists.currentPlaylistId); await playlistCollaboration.flush(); });
     await ana.evaluate(() => playlistCollaboration.refresh(true));
     assert.equal(await ana.evaluate(id => userPlaylists.get(homePlaylists.ownerId, id), playlistId), null);

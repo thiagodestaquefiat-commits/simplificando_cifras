@@ -1,4 +1,6 @@
 from .profile_avatar import ProfileAvatar
+from .profile_cover import ProfileCover
+from .event_audio import EventAudio
 from .profile_instrument import ProfileInstrument
 from .vocal_key_memory import VocalKeyMemory
 from .playlist_collaboration import CollaborativePlaylist, PlaylistMember, PlaylistInvite, PlaylistOperation, PlaylistNotification

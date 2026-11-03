@@ -57,11 +57,11 @@
     return (playlist?.items || []).map(itemSong).filter(Boolean);
   }
 
-  function artwork(_name, coverImage = null, songs = []) {
-    if (coverImage) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(coverImage)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`;
+  function artwork(_name, coverImage = null, songs = [], frameClass = "home-playlist-art") {
+    if (coverImage) return global.roudyListLoading?.artwork({ artworkUrl: coverImage }, { frameClass: `${frameClass} has-image` }) || `<span class="${frameClass} has-image" aria-hidden="true"><img src="${esc(coverImage)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`;
     const urls = global.songArtwork?.collectDistinct(songs, 4) || [];
-    if (!urls.length) return `<span class="home-playlist-art has-image" aria-hidden="true"><img src="${esc(global.songArtwork?.DEFAULT_ARTWORK || "assets/icons/roudy-icon-v4-192.png")}" alt="" loading="lazy" decoding="async"></span>`;
-    return `<span class="home-playlist-art has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)">`).join("")}</span>`;
+    if (!urls.length) return global.roudyListLoading?.artwork(null, { frameClass: `${frameClass} has-image` }) || `<span class="${frameClass} has-image" aria-hidden="true"></span>`;
+    return `<span class="${frameClass} has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<span><img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="songArtwork.handleImageError(this)"></span>`).join("")}</span>`;
   }
 
   function applyPlaylistBackdrop(target, coverImage, songs) {
@@ -891,7 +891,7 @@
   }
 
   global.homePlaylists = Object.freeze({
-    PREFIX, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
+    PREFIX, artwork, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
     create, closeCreate, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
     openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
