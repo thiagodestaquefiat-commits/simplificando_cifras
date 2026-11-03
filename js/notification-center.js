@@ -8,20 +8,23 @@
   const scopedValues=state=>scopes().flatMap(value=>Array.isArray(state[value])?state[value]:[]).filter(id=>typeof id==='string');
   const seen=()=>new Set(scopedValues(readState()));
   const dismissed=()=>new Set(scopedValues(dismissedState()));
+  const isDismissed=id=>dismissed().has(String(id));
   const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))];
   const items=()=>{
     const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
     const hidden=dismissed();
-    return (Array.isArray(values)?values:[]).filter(item=>!hidden.has(String(item.id))).slice().sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0)||String(a.id).localeCompare(String(b.id)));
+    return [...new Map((Array.isArray(values)?values:[]).filter(item=>!hidden.has(String(item.id))).map(item=>[String(item.id),item])).values()].sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0)||String(a.id).localeCompare(String(b.id)));
   };
   function initials(value){const word=String(value||'ROUDY').trim().split(/\s+/)[0];return Array.from(word)[0]?.toLocaleUpperCase('pt-BR')||'R';}
   function period(value){const date=new Date(value),now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),now.getDate()),day=new Date(date.getFullYear(),date.getMonth(),date.getDate()),distance=Math.floor((start-day)/86400000);if(distance<=0)return 'Hoje';if(distance===1)return 'Ontem';if(distance<7)return 'Últimos 7 dias';return 'Anteriores';}
   function relativeDate(value){const date=new Date(value),seconds=Math.max(0,Math.floor((Date.now()-date.getTime())/1000));if(!Number.isFinite(seconds))return '';if(seconds<60)return 'agora';if(seconds<3600)return Math.floor(seconds/60)+' min';if(seconds<86400)return Math.floor(seconds/3600)+' h';if(seconds<604800)return Math.floor(seconds/86400)+' d';return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','');}
-  function saveScoped(stateKey,state,values){const merged=[...new Set(values)].slice(-1000),next={...state};scopes().forEach(value=>{next[value]=merged;});return global.storage.set(stateKey,next)!==false;}
+  // Never evict acknowledged IDs while their source history still exists:
+  // a truncated read/dismiss ledger makes old notices reappear after refresh.
+  function saveScoped(stateKey,state,values){const merged=[...new Set(values.map(String))],next={...state};scopes().forEach(value=>{next[value]=merged;});return global.storage.set(stateKey,next)!==false;}
   function saveRead(ids){return saveScoped(key,readState(),[...seen(),...ids]);}
   function dismiss(id){
     const value=String(id||'');if(!value)return false;
-    const all=dismissedState(),next=[...new Set([...dismissed(),value])].slice(-500);
+    const all=dismissedState(),next=[...new Set([...dismissed(),value])];
     if(!saveScoped(dismissedKey,all,next)){global.showToast('Não foi possível excluir a notificação neste dispositivo.');return false;}
     saveRead([value]);update();return true;
   }
@@ -52,6 +55,7 @@
     global.eventUserInvites?.renderInbox?.();
     global.playlistInvites?.renderInbox?.();
     el('notification-mark-all').disabled=!pending().some(i=>!read.has('invite:'+i.id))&&!feed.some(i=>i.unread&&!read.has(i.id));
+    el('notification-clear-all').disabled=!feed.length;
   }
   function installSwipe(target){
     let gesture=null,openRow=null;
@@ -65,20 +69,34 @@
   }
   function formatDate(value){const date=new Date(value);return Number.isFinite(date.getTime())?date.toLocaleString():'';}
   function markAll(){
-    const feed=items();if(!saveRead([...feed.map(i=>i.id),...pending().map(i=>'invite:'+i.id)])){global.showToast('Não foi possível registrar a leitura neste dispositivo.');return;}
-    feed.forEach(i=>i.kind==='playlist'?global.playlistCollaboration.readNotice(i).catch(()=>{}):global.readRoudyNotification?.(i));update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
+    const feed=items(),read=seen();if(!saveRead([...feed.map(i=>i.id),...pending().map(i=>'invite:'+i.id)])){global.showToast('Não foi possível registrar a leitura neste dispositivo.');return;}
+    // A conversation/event read marker acknowledges its entire current source.
+    // Write once per source, not once for every historical message.
+    const sources=new Set();
+    feed.filter(i=>i.unread&&!read.has(String(i.id))).forEach(i=>{
+      if(i.kind==='playlist'){global.playlistCollaboration.readNotice(i).catch(()=>{});return;}
+      const source=i.kind+':'+i.eventId;if(!sources.has(source)){sources.add(source);global.readRoudyNotification?.(i);}
+    });update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
   }
   function markChatRead(eventId){saveRead(items().filter(i=>i.kind==='message'&&String(i.eventId)===String(eventId)).map(i=>i.id));update();}
+  function clearAll(){
+    const ids=items().map(i=>String(i.id));
+    if(!saveScoped(dismissedKey,dismissedState(),[...dismissed(),...ids])){global.showToast('Não foi possível limpar as notificações neste dispositivo.');return;}
+    update();global.showToast('Histórico de notificações limpo.');
+  }
   function open(){
     global.closeModal();
     el('modal-overlay').classList.add('notification-center-overlay');
     el('modal-body').innerHTML='<section class="notification-center-page"><header class="notification-center-header"><button id="notification-center-close" class="notification-center-back" type="button" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>Notificações</h1><button id="notification-mark-all" class="notification-mark-all" type="button">Ler todas</button></header><main class="notification-center-content"><section class="notification-invitations"><h2 class="notification-period">Convites</h2><div id="user-invitations-status" role="status" aria-live="polite"></div><div id="user-invitations-list"></div></section><div id="roudy-notification-items"></div></main></section>';
+    const toolbar=document.createElement('div');toolbar.className='notification-center-tools';
+    const clearButton=document.createElement('button');clearButton.id='notification-clear-all';clearButton.className='notification-clear-all';clearButton.type='button';clearButton.textContent='Limpar histórico';clearButton.addEventListener('click',clearAll);toolbar.appendChild(clearButton);
+    el('modal-body').querySelector('.notification-center-header').after(toolbar);
     const playlistInvitations=document.createElement('div');playlistInvitations.id='playlist-invitations-list';el('user-invitations-list').after(playlistInvitations);
     el('notification-mark-all').addEventListener('click',markAll);el('notification-center-close').addEventListener('click',global.closeModal);
     el('modal-overlay').style.display='flex';update();global.eventUserInvites?.refresh?.(true);
     global.playlistCollaboration?.refresh(true);
   }
-  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss});
+  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss,isDismissed});
   global.appAuth?.subscribe?.(()=>{if(el('roudy-notification-items'))global.closeModal();update();});
   global.addEventListener('storage',()=>update());
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',update,{once:true});else update();
