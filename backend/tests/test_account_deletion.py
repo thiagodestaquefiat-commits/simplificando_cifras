@@ -77,3 +77,24 @@ def test_deleting_twice_is_harmless(client):
     token = register(client, "twice-user", "Pessoa")
     assert delete(client, token).status_code == 200
     assert delete(client, token).status_code == 401
+
+
+def test_supabase_login_is_deleted_with_new_or_legacy_key(app, monkeypatch):
+    from app.services import account_deletion
+    sent = []
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+
+    monkeypatch.setattr(account_deletion, "urlopen", lambda request, timeout: sent.append(request) or Response())
+    with app.app_context():
+        app.config.update(SUPABASE_URL="https://proj.supabase.co", SUPABASE_SERVICE_ROLE_KEY="")
+        assert account_deletion.delete_supabase_user("abc") is False, "sem chave não tenta"
+        app.config["SUPABASE_SERVICE_ROLE_KEY"] = "sb_secret_novo"
+        assert account_deletion.delete_supabase_user("abc") is True
+        assert sent[-1].full_url == "https://proj.supabase.co/auth/v1/admin/users/abc" and sent[-1].get_method() == "DELETE"
+        assert sent[-1].get_header("Apikey") == "sb_secret_novo" and sent[-1].get_header("Authorization") is None
+        app.config["SUPABASE_SERVICE_ROLE_KEY"] = "eyJ.legacy.jwt"
+        assert account_deletion.delete_supabase_user("abc") is True
+        assert sent[-1].get_header("Authorization") == "Bearer eyJ.legacy.jwt"

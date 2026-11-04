@@ -119,13 +119,19 @@ def delete_account_data(user_id: str) -> dict:
 
 
 def delete_supabase_user(subject: str | None) -> bool:
-    """Apaga o login no Supabase (precisa de SUPABASE_SERVICE_ROLE_KEY, só no servidor). False se não deu."""
+    """Apaga o login no Supabase (precisa de SUPABASE_SERVICE_ROLE_KEY, só no servidor). False se não deu.
+
+    Aceita a chave secreta nova (sb_secret_...) ou a service_role antiga (desativada pelo Supabase em 2027).
+    """
     url = str(current_app.config.get("SUPABASE_URL") or "").rstrip("/")
     key = str(current_app.config.get("SUPABASE_SERVICE_ROLE_KEY") or "").strip()
     if not subject or not url or not key:
         return False
-    request = Request(f"{url}/auth/v1/admin/users/{subject}", method="DELETE",
-                      headers={"apikey": key, "Authorization": f"Bearer {key}", "Accept": "application/json"})
+    headers = {"apikey": key, "Accept": "application/json"}
+    if not key.startswith("sb_"):
+        # Chave antiga (service_role, um JWT) também vai como Bearer. A nova (sb_secret_...) vai só no apikey.
+        headers["Authorization"] = f"Bearer {key}"
+    request = Request(f"{url}/auth/v1/admin/users/{subject}", method="DELETE", headers=headers)
     try:
         with urlopen(request, timeout=float(current_app.config.get("SUPABASE_AUTH_TIMEOUT_SECONDS", 6))):
             return True
