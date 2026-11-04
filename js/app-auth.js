@@ -200,6 +200,24 @@
     return getState();
   }
 
+  // Excluir conta (Play Store/LGPD): o servidor apaga os dados e o login; aqui só encerra a sessão local.
+  async function deleteAccount(confirmation) {
+    if (!client || !session || !session.access_token) throw new Error("Entre na sua conta para excluí-la.");
+    if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para excluir a conta.");
+    const response = await withTimeout(global.fetch(global.apiConfig.accountEndpoint(), {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+      body: JSON.stringify({ confirm: String(confirmation || "") })
+    }), "A exclusão demorou demais. Verifique a internet e tente de novo.", 30000);
+    let body = null;
+    try { body = await response.json(); } catch (_error) { body = null; }
+    if (!response.ok) throw new Error(body?.erro?.mensagem || "Não foi possível excluir a conta agora.");
+    try { await client.auth.signOut({ scope: "local" }); } catch (_error) { /* o login pode já ter sido apagado */ }
+    session = null;
+    emit();
+    return body || { deleted: true };
+  }
+
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
@@ -256,5 +274,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, sendEmailCode, verifyEmailCode, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, sendEmailCode, verifyEmailCode, deleteAccount, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

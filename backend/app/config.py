@@ -64,6 +64,8 @@ class Config:
 
     SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
     SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+    # Só no servidor (nunca no app): permite apagar o login no Supabase quando a pessoa exclui a conta.
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     SUPABASE_AUTH_TIMEOUT_SECONDS = float(os.getenv("SUPABASE_AUTH_TIMEOUT_SECONDS", "6"))
     AUTH_CONFIG_RATE_LIMIT = os.getenv("AUTH_CONFIG_RATE_LIMIT", "60 per minute")
 

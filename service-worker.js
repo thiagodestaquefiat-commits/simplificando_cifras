@@ -342,9 +342,11 @@ self.addEventListener("fetch", (event) => {
   if (/^\/api\/collaboration\/(?:me\/cover(?:\/|$)|events\/[^/]+\/messages\/[^/]+\/audio(?:\/|$))/.test(requestUrl.pathname)) return;
 
   if (event.request.mode === "navigate") {
+    // Só a página do app vira a cópia offline; Termos, Privacidade e Excluir conta são páginas à parte.
+    const appShell = /^\/(?:index\.html)?$/.test(requestUrl.pathname);
     event.respondWith(
       fetch(event.request).then((response) => {
-        if (response && response.status === 200) {
+        if (appShell && response && response.status === 200) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
         }
