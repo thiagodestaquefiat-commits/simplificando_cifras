@@ -299,11 +299,10 @@
       ranges.style.setProperty("--loop-start", `${start / duration * 100}%`);
       ranges.style.setProperty("--loop-end", `${end / duration * 100}%`);
       if (source && global.youtubePlayer.getSegmentLoop()) {
-        global.youtubePlayer.clearSegmentLoop();
-        repeatAction.classList.remove("is-active");
-        toggle.classList.remove("is-active");
-        toggle.setAttribute("aria-label", "Ativar repetição do trecho");
-        status.textContent = "Player pronto";
+        // Editing the boundaries updates the active loop; only another press
+        // on the repeat button (or leaving this video) should turn it off.
+        global.youtubePlayer.setSegmentLoop(start, end);
+        status.textContent = `Repetindo ${formatTime(start)}–${formatTime(end)}`;
       }
     };
     startInput.addEventListener("input", () => update(startInput));

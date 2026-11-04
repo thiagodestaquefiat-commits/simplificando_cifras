@@ -59,7 +59,7 @@
     return allMessages()[String(eventId)] || [];
   }
   async function createRemote(message) {
-    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll, song: message.song }) });
+    const saved = await request(message.eventId, "", { method: "POST", body: JSON.stringify({ clientId: message.id, type: message.type, content: message.content, replyTo: message.replyTo, poll: message.poll, song: message.song, attachment: message.attachment }) });
     write(message.eventId, (values) => values.map((value) => String(value.id) === String(message.id) ? saved : value));
     if (global.syncRealtime) global.syncRealtime.publishChat(message.eventId);
     return saved;
@@ -136,6 +136,16 @@
     createRemote(message).catch(() => {});
     return message;
   }
+  function sendAttachment(eventId, type, attachment, replyTo) {
+    const allowed = new Set(["playlist", "event", "image", "file"]);
+    if (!allowed.has(type) || !attachment || typeof attachment !== "object") throw new Error("Anexo inválido.");
+    const title = String(attachment.title || (type === "image" ? "Foto" : type === "file" ? "Arquivo" : "Compartilhamento") || "").trim();
+    if (!title) throw new Error("O anexo precisa de um título.");
+    const message = { ...baseMessage(eventId, type), content: title.slice(0, 500), attachment, replyTo: replyTo || null };
+    write(eventId, (values) => [...values, message]);
+    createRemote(message).catch(() => {});
+    return message;
+  }
   function updateOwn(eventId, messageId, updater) {
     const user = currentUser();
     write(eventId, (values) => values.map((message) => {
@@ -176,12 +186,20 @@
     read[String(eventId)] = new Date().toISOString();
     global.storage.set(READ_KEY, read);
   }
-  function unreadCount(eventId) {
+  function isUnread(eventId, message) {
     const readAt = global.storage.get(READ_KEY, {})[String(eventId)] || "";
     const user = currentUser();
-    return (allMessages()[String(eventId)] || []).filter((message) => message.createdAt > readAt && String(message.sender.id) !== String(user.id)).length;
+    return message.createdAt > readAt && String(message.sender?.id) !== String(user.id);
+  }
+  function unreadCount(eventId) {
+    return (allMessages()[String(eventId)] || []).filter(message => isUnread(eventId, message)).length;
   }
   function subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); }
+  function receiveAudio(message){
+    assertAccess(message.eventId);
+    write(message.eventId,values=>[...values.filter(item=>String(item.id)!==String(message.id)),message]);
+    global.syncRealtime?.publishChat(message.eventId);
+  }
   function initialize(options) {
     context = { ...context, ...(options || {}) };
     if ("BroadcastChannel" in global && !channel) {
@@ -192,5 +210,5 @@
     global.addEventListener("online", () => Object.keys(allMessages()).forEach((eventId) => flush(eventId)));
   }
 
-  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, createPoll, edit, remove, react, vote, markRead, unreadCount, subscribe });
+  global.eventChat = Object.freeze({ initialize, refresh, list, sendText, sendSystem, sendSong, sendAttachment, createPoll, edit, remove, react, vote, markRead, isUnread, unreadCount, receiveAudio, subscribe });
 })(window);

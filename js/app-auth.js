@@ -45,6 +45,15 @@
   function getState() {
     const user = session && session.user;
     const metadata = user && user.user_metadata || {};
+    // The provider picture is only the initial fallback. Restore the selected
+    // photo by the authenticated subject, never by the previous active user.
+    let savedAvatar,hasSavedAvatar=false;
+    if(user){
+      try{
+        const profile=JSON.parse(global.localStorage.getItem('sc_account_profiles_v1')||'{}')?.[String(user.id)];
+        if(profile&&Object.prototype.hasOwnProperty.call(profile,'avatarUrl')&&(profile.avatarUrl===null||String(profile.avatarUrl).startsWith('data:image/'))){savedAvatar=profile.avatarUrl;hasSavedAvatar=true;}
+      }catch(_error){}
+    }
     return {
       enabled: Boolean(config.enabled),
       authenticated: Boolean(user),
@@ -53,8 +62,8 @@
         id: String(user.id),
         name: String(metadata.full_name || metadata.name || user.email || "Usuário"),
         email: String(user.email || ""),
-        avatarUrl: profileAvatars.has(String(user.id)) ? profileAvatars.get(String(user.id)) : metadata.avatar_url || metadata.picture || null,
-        avatarSet: profileAvatars.has(String(user.id)),
+        avatarUrl: profileAvatars.has(String(user.id)) ? profileAvatars.get(String(user.id)) : hasSavedAvatar ? savedAvatar : metadata.avatar_url || metadata.picture || null,
+        avatarSet: profileAvatars.has(String(user.id)) || hasSavedAvatar,
         location: String(metadata.location || '').trim().slice(0,120),
         instruments: Array.isArray(metadata.instruments)?metadata.instruments.filter(value=>typeof value==='string'&&value.length<=40).slice(0,20):[],
         role: "Liderança"

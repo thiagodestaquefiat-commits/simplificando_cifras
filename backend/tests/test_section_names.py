@@ -24,6 +24,14 @@ def test_lyric_name_is_not_duplicated_when_already_first_line():
     assert s.sections[0].nome is None and len(s.sections[0].linhas) == 1
 
 
+def test_unknown_structured_title_follows_approved_main_rule():
+    s = sheet([{"nome": "Momento espontâneo", "linhas": [line("Uma letra", "C")]}])
+    fix_sheet_section_names(s)
+    assert s.sections[0].nome is None
+    assert [row.letra for row in s.sections[0].linhas] == ["Momento espontâneo", "Uma letra"]
+    assert s.sections[0].linhas[1].acordes[0].acorde == "C"
+
+
 def test_real_section_names_are_kept():
     s = sheet([{"nome": "Refrão", "linhas": [line("Meus pés", "G")]},
                {"nome": "[Primeira Parte]", "linhas": [line("Tu me chamas", "D")]}])
@@ -43,4 +51,3 @@ def test_section_vocabulary():
         assert is_section_name(name), name
     for lyric in ["Oceanos onde os pés podem falhar", "Final feliz da minha história", "Tu és fiel"]:
         assert not is_section_name(lyric), lyric
-
