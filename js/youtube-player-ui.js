@@ -255,7 +255,7 @@
     panel.setAttribute("aria-label", "Selecionar trecho para repetir");
     const header = global.document.createElement("div");
     header.className = "youtube-repeat-header";
-    const toggle = button("↶", "youtube-repeat-toggle", () => {
+    const toggle = button("↶", "youtube-repeat-toggle", (event) => {
       if (global.youtubePlayer.getSegmentLoop()) {
         global.youtubePlayer.clearSegmentLoop();
         repeatAction.classList.remove("is-active");
@@ -264,7 +264,7 @@
         status.textContent = "Player pronto";
       } else {
         try {
-          global.youtubePlayer.setSegmentLoop(start, end);
+          global.youtubePlayer.setSegmentLoop(start, end, { deliberate: Boolean(event?.isTrusted) });
           repeatAction.classList.add("is-active");
           toggle.classList.add("is-active");
           toggle.setAttribute("aria-label", "Desativar repetição do trecho");
@@ -289,7 +289,7 @@
     [startInput, endInput].forEach((input) => { input.type = "range"; input.min = "0"; input.max = String(Math.floor(duration)); input.step = "1"; });
     startInput.value = String(Math.floor(start));
     endInput.value = String(Math.ceil(end));
-    const update = (source) => {
+    const update = (source, event) => {
       start = Number(startInput.value);
       end = Number(endInput.value);
       if (source === startInput && start >= end) startInput.value = String(start = Math.max(0, end - 1));
@@ -301,12 +301,12 @@
       if (source && global.youtubePlayer.getSegmentLoop()) {
         // Editing the boundaries updates the active loop; only another press
         // on the repeat button (or leaving this video) should turn it off.
-        global.youtubePlayer.setSegmentLoop(start, end);
+        global.youtubePlayer.setSegmentLoop(start, end, { deliberate: Boolean(event?.isTrusted) });
         status.textContent = `Repetindo ${formatTime(start)}–${formatTime(end)}`;
       }
     };
-    startInput.addEventListener("input", () => update(startInput));
-    endInput.addEventListener("input", () => update(endInput));
+    startInput.addEventListener("input", event => update(startInput, event));
+    endInput.addEventListener("input", event => update(endInput, event));
     ranges.append(startInput, endInput);
     timeline.append(startLabel, ranges, endLabel);
     panel.append(header, timeline);

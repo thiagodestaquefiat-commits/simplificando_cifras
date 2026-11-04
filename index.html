@@ -1432,15 +1432,16 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=22"></script>
 <script src="js/event-model.js?v=8"></script>
-<script src="js/context-intelligence.js?v=4"></script>
+<script src="js/study-evidence.js?v=1"></script>
+<script src="js/context-intelligence.js?v=5"></script>
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
 <script src="js/event-chat-audio.js?v=2"></script>
 <script src="js/event-chat.js?v=8"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
-<script src="js/youtube-player.js?v=9"></script>
-<script src="js/youtube-player-ui.js?v=24"></script>
+<script src="js/youtube-player.js?v=10"></script>
+<script src="js/youtube-player-ui.js?v=25"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1476,10 +1477,10 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-collaboration-client.js?v=19"></script>
 <script src="js/event-share.js?v=5"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
-<script src="js/contextual-copy.js?v=5"></script>
+<script src="js/contextual-copy.js?v=6"></script>
 <script src="js/context-delivery.js?v=2"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
-<script src="js/context-history.js?v=2"></script>
+<script src="js/context-history.js?v=3"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=18"></script>
 <script src="js/summary-organizer.js?v=4"></script>
@@ -2418,19 +2419,20 @@ async function deleteInlineBlock(songId,index,kind,button){
   }
   closeInlineBlockDeleteConfirm();return commitInlineSongEdit(song,candidate,'✅ Bloco excluído');
 }
-function cancelInlineBlockEdit(){closeInlineBlockDeleteConfirm();renderDetail()}
+function cancelInlineBlockEdit(){window.studyPreparation?.cancelEdit();closeInlineBlockDeleteConfirm();renderDetail()}
 // Grava a música editada no lugar certo: na variante do evento (como o editor completo faz) ou na
 // biblioteca — e, se a música veio de uma playlist, atualiza também a cópia aberta na tela.
 async function commitInlineSongEdit(song,candidate,message){
+  const studyAttempt=window.studyPreparation?.editAttempt(song,candidate);
   if(homePlaylists.isCollaborativeContext(detailPlaylistContext)){
     if(!homePlaylists.saveItemSong(detailPlaylistContext,candidate)){showToast('Não foi possível guardar a alteração nesta playlist.');return false;}
     currentDetailSongOverride={...candidate,playbackSettings:currentDetailSongOverride?.playbackSettings};
-    renderDetail();showToast(message+' na playlist compartilhada');return true;
+    window.studyPreparation?.editCommitted(studyAttempt);renderDetail();showToast(message+' na playlist compartilhada');return true;
   }
   if(detailEventContext&&currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id)){
     const result=await saveContextEventSong({...detailEventContext},eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:songFormat.parseCapo(candidate.capo)}}));
     if(result?.ok===false){showToast('⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
-    renderDetail();showToast(message);return true;
+    window.studyPreparation?.editCommitted(studyAttempt);renderDetail();showToast(message);return true;
   }
   const library=musicas.find(item=>String(item.id)===String(song.id));
   if(!library){showToast('⚠️ Esta música não está na sua biblioteca. Reabra a música e tente de novo.');return false;}
@@ -2438,7 +2440,7 @@ async function commitInlineSongEdit(song,candidate,message){
   const result=songRepository.update(musicas,library.id,{...content,id:library.id,playbackSettings:library.playbackSettings});
   if(!commitSongs(result.songs)){renderDetail();return false;}
   if(currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id))currentDetailSongOverride={...result.song,playbackSettings:currentDetailSongOverride.playbackSettings};
-  renderMusicas();renderDetail();showToast(message);return true;
+  window.studyPreparation?.editCommitted(studyAttempt);renderMusicas();renderDetail();showToast(message);return true;
 }
 function saveInlineBlockEdit(songId,index,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
@@ -2890,6 +2892,7 @@ function updatePlaylistNavigation(){
 
 var detailPlaylistContext=null;
 function openDetail(id,options={}){
+  window.studyPreparation?.end();
   flushDetailAutoSave();detailEventContext=null;detailPlaylistContext=options.userPlaylistItem||null;
   if(options.playlistContext){
     navigationContext.setPlaylist(options.playlistContext.playlistId,options.playlistContext.songIds,options.playlistContext.currentIndex);
@@ -2949,6 +2952,7 @@ function openDetail(id,options={}){
   vd.style.display='flex'; vd.style.zIndex='20';
   if(stageMode)youtubePlayerUI.hide();else youtubePlayerUI.showSong(m);
   toggleSongControls(false);closeSongQuickPicker();setSongScrolling(false);renderSongReviewControl();maybeShowSongScaleHint();
+  window.studyPreparation?.beginCurrent();
 }
 
 function openDetailFromPlaylist(playlistId,index){
@@ -3018,6 +3022,7 @@ function measureStageHeader(){
 }
 new ResizeObserver(measureStageHeader).observe(document.getElementById('stage-performance-header'));
 async function enterStageMode(){
+  window.studyPreparation?.end();
   const vd=document.getElementById('view-detail');if(!vd)return;
   if(stageMode)return;
   const eventView=document.getElementById('view-sd');
@@ -3061,11 +3066,11 @@ async function exitStageMode(restorePlayer=true){
   document.getElementById('stage-quick-panel').hidden=true;renderDetail();updatePlaylistNavigation();const currentSong=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId));if(restorePlayer&&currentSong)youtubePlayerUI.showSong(currentSong);
 }
 
-function toggleStageModeBtn(){if(stageMode)exitStageMode();else enterStageMode();}
+function toggleStageModeBtn(){if(stageMode){exitStageMode();window.studyPreparation?.beginCurrent();}else enterStageMode();}
 
 function closeDetail(){
   flushDetailAutoSave();
-  stopSmartScroll();closeSongQuickPicker();flushDetailAutoSave();
+  stopSmartScroll();window.studyPreparation?.end();closeSongQuickPicker();flushDetailAutoSave();
   detailEditBaseline=null;detailEditOwner=null;detailEventContext=null;
   if(stageMode)exitStageMode(false);else stopAutoScroll();
   studyMetronome.stop();
@@ -4332,7 +4337,7 @@ function homeCardPreviewModel(){
 function resolveHomeCardContext(now=new Date()){
   const preview=homeCardPreviewModel();if(preview)return preview;
   try{
-    const result=roudyContextIntelligence.evaluate({now,user:appCurrentUser,bands:appBands,events:setlists,activity:storage.get(HOME_CARD_LAST_SONG_KEY,null),preferences:{stageModeAvailable:true}},{acknowledgedFingerprints:contextAcknowledgements.fingerprints(appCurrentUser.id),history:contextHistory.list(appCurrentUser.id)});
+    const result=roudyContextIntelligence.evaluate({now,user:appCurrentUser,bands:appBands,events:setlists,activity:storage.get(HOME_CARD_LAST_SONG_KEY,null),preferences:{stageModeAvailable:true},dedication:window.studyPreparation?.input()},{acknowledgedFingerprints:contextAcknowledgements.fingerprints(appCurrentUser.id),history:contextHistory.list(appCurrentUser.id)});
     const history=contextHistory.list(appCurrentUser.id),delivery=contextDelivery.select(result.nextBestAction,{events:setlists,history});
     if(delivery.surface==='HOME'&&delivery.copy){
       const action=delivery.action,copy=delivery.copy;
@@ -4376,12 +4381,14 @@ function activateHomeCardAction(action){
 }
 function dispatchContextEvent(type,action){document.dispatchEvent(new CustomEvent(type,{detail:{fingerprint:action?.fingerprint||null,actionType:action?.actionType||null,eventId:action?.eventId||null}}))}
 function markContextActionPresented(action,copy){
+  if(window.studyEvidence?.isRecognition(action)){window.studyPreparation?.presented(action,copy);return;}
   const homeVisible=document.getElementById('tab-musicas')?.getAttribute('aria-selected')==='true'&&document.getElementById('view-detail')?.style.display!=='flex'&&document.getElementById('view-sd')?.style.display!=='flex';if(!homeVisible)return;
   const fingerprint=String(action?.fingerprint||'');if(!fingerprint||presentedContextFingerprints.has(fingerprint))return;
   presentedContextFingerprints.add(fingerprint);contextHistory.presented(action,appCurrentUser.id,null,copy);dispatchContextEvent('context_action_presented',action);
 }
 function openContextualAction(action){
   if(!action)return;contextHistory.opened(action,appCurrentUser.id);dispatchContextEvent('context_action_opened',action);
+  if(window.studyEvidence?.isRecognition(action)){if(action.destination.view==='event'){switchTab('setlists');openSD(action.eventId);}else openDetail(action.songId);return;}
   if(action.actionType==='REVIEW_CHANGED_SONG'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
   if(action.actionType==='CHECK_EVENT_CHANGES'){switchTab('setlists');openSD(action.eventId);setTimeout(openEventNotifications,0);return;}
   if(['START_PREPARATION','CONTINUE_PREPARATION'].includes(action.actionType)){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=Math.max(0,items.findIndex(item=>item.preparation?.state!=='READY'));if(event&&items[index])openDetailFromPlaylist(event.id,index);else if(event){switchTab('setlists');openSD(event.id)}return;}
@@ -4391,6 +4398,7 @@ function openContextualAction(action){
 }
 async function acknowledgeContextualAction(action){
   if(!action)return;
+  if(window.studyEvidence?.isRecognition(action)){await window.studyPreparation?.dismiss();return;}
   const value=contextAcknowledgements.acknowledgeLocal(action,appCurrentUser.id);dispatchContextEvent('context_action_acknowledged',action);renderContextualHomeCard();
   try{await contextAcknowledgements.syncOne(value)}catch(error){if(navigator.onLine)console.warn('Acknowledgement aguardando sincronização.',error)}
 }
@@ -4399,6 +4407,7 @@ function renderContextualHomeCard(){
   const normal=document.getElementById('playlist-ai-normal'),search=document.getElementById('playlist-ai-search-mode');
   if(!normal||!search||!search.hidden)return;
   const model=resolveHomeCardContext();
+  if(window.studyEvidence?.isRecognition(model.contextAction)&&!window.studyPreparation?.canPresent(model.contextAction)){window.studyPreparation?.requestPresentation(model.contextAction);return;}
   // Desempenho: se o card já mostra exatamente este conteúdo, não recria botões nem reinicia a animação.
   let signature='';try{signature=JSON.stringify(model);}catch(_error){signature='';}
   if(signature&&signature===homeCardRenderSignature&&normal.isConnected&&document.getElementById('playlist-context-actions')?.childElementCount){if(model.contextAction)markContextActionPresented(model.contextAction,model.contextCopy);return;}
@@ -4938,6 +4947,10 @@ const openAppearanceSettingsWithAssistantVoice=openAppearanceSettings;
 openAppearanceSettings=function(){openAppearanceSettingsWithAssistantVoice();const save=document.querySelector('.settings-appearance-page .settings-ui-save'),group=document.querySelector('.settings-appearance-page .settings-group');if(!save||!group)return;group.insertAdjacentHTML('beforeend',`<button class="settings-row settings-row--link" type="button" onclick="applyAppSettings(loadAppSettings());window.assistantVoice?.open()"><span class="settings-row-copy"><strong>Voz do assistente</strong><small>${eventEsc(window.assistantVoice?assistantVoice.summary():'Indisponível')}</small></span><span class="account-menu-arrow" aria-hidden="true">›</span></button>`);};
 const openAccountDrawerAppearanceSettingsWithAssistantVoice=openAccountDrawerAppearanceSettings;
 openAccountDrawerAppearanceSettings=function(){openAccountDrawerAppearanceSettingsWithAssistantVoice();const save=document.querySelector('.account-drawer-settings-save');if(!save)return;save.insertAdjacentHTML('beforebegin',`<button class="account-drawer-settings-item" type="button" onclick="closeAccountDrawer();applyAppSettings(loadAppSettings());window.assistantVoice?.open()"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Voz do assistente</strong><small>${eventEsc(window.assistantVoice?assistantVoice.summary():'Indisponível')}</small></span><span class="account-drawer-settings-chevron">›</span></button>`);};
+const openAppearanceWithStudyPreferences=openAppearanceSettings;
+openAppearanceSettings=function(){openAppearanceWithStudyPreferences();document.querySelector('.settings-appearance-page .settings-ui-save')?.insertAdjacentHTML('beforebegin',window.studyPreparation?.preferencesMarkup()||'');};
+const openDrawerAppearanceWithStudyPreferences=openAccountDrawerAppearanceSettings;
+openAccountDrawerAppearanceSettings=function(){openDrawerAppearanceWithStudyPreferences();document.querySelector('.account-drawer-settings-save')?.insertAdjacentHTML('beforebegin',window.studyPreparation?.preferencesMarkup()||'');};
 function openHelpSupport(){document.getElementById('modal-body').innerHTML=`${accountSubpageHeader('Ajuda e Suporte','openAppSettings')}<div class="account-menu"><button class="account-menu-button" type="button" onclick="openLibrarySync('openHelpSupport')"><span class="account-menu-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-menu-arrow">›</span></button></div>`;}
 function cancelSettingsSubpage(){applyAppSettings(loadAppSettings());openAppSettings();}
 function saveAppSettings(){const value=settingsFromForm();storage.set(APP_SETTINGS_KEY,value);applyAppSettings(value);showToast('✅ Configurações salvas.');openAccountModal();}
@@ -7059,5 +7072,7 @@ if ('serviceWorker' in navigator) {
   }, true);
 })();
 </script>
+<script src="js/study-dedication-preview.js?v=1"></script>
+<script src="js/study-preparation.js?v=1"></script>
 </body>
 </html>
