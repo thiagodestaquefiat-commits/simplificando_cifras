@@ -38,3 +38,25 @@
 .event-audio-progress::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:12px;border:0;border-radius:50%;background:#fff}
 .event-audio-progress::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff}
 .event-audio-duration{grid-column:3;grid-row:2;color:rgba(255,255,255,.7);font-size:12px}
+.event-audio-avatar{overflow:visible}
+.event-audio-avatar img{border-radius:50%}
+.event-audio-avatar-mic{position:absolute;right:-5px;bottom:-3px;display:grid;place-items:center;width:18px;height:25px;color:#d6e2ef;filter:drop-shadow(0 1px 1px #252526)}
+.event-audio-avatar-mic svg{width:18px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+#event-chat-view .event-audio-tools.is-recording>span::after{height:28px;background-image:var(--voice-wave,none);background-size:100% 28px;background-repeat:no-repeat;background-position:center}
+/* Recording replaces the text composer, retaining its measured geometry. */
+#event-chat-view:has(.event-audio-tools.is-recording) .event-chat-composer{visibility:hidden;pointer-events:none}
+#event-chat-view .event-audio-tools.is-recording{bottom:0;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+#event-chat-view:has(.event-audio-tools.is-recording) .event-chat-attachment-tray{visibility:hidden;pointer-events:none}
+#event-chat-view.has-audio-status:has(.event-audio-tools.is-recording) .event-chat-messages{padding-bottom:calc(var(--event-chat-audio-tools-height) + 8px)}
+
+#event-chat-view .event-audio-tools.is-sending{display:none}
+.event-audio-hold-hint,.event-audio-lock-hint{display:none!important}
+#event-chat-view .event-audio-tools.is-holding{right:72px;grid-template-columns:auto minmax(0,1fr);min-height:70px;align-items:center;gap:12px;padding:12px 0 12px 16px;overflow:visible}
+#event-chat-view .event-audio-tools.is-holding>span[role="status"]{grid-column:1;font-size:18px;white-space:nowrap}
+#event-chat-view .event-audio-tools.is-holding>span[role="status"]::after{display:none}
+#event-chat-view .event-audio-tools.is-holding>button{display:none!important}
+#event-chat-view .event-audio-tools.is-holding .event-audio-hold-hint{display:block!important;grid-column:2;font-size:13px;color:#a1a1aa;white-space:nowrap}
+#event-chat-view .event-audio-tools.is-holding .event-audio-lock-hint{position:absolute;display:grid!important;place-items:center;right:-60px;bottom:70px;width:44px;height:90px;border-radius:24px;background:#252526;color:#a1a1aa}
+.event-audio-lock-hint svg{width:26px;height:40px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#event-chat-view:has(.event-audio-tools.is-holding) .event-chat-composer{background:transparent;border:0}
+#event-chat-view:has(.event-audio-tools.is-holding) .event-chat-mic{visibility:visible;pointer-events:auto;position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:6}

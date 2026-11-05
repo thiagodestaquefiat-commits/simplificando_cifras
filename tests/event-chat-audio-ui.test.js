@@ -17,7 +17,7 @@ try{
   await page.evaluate(async({token,event})=>{window.appAuth={getState:()=>({authenticated:true,user:{id:'test-ana'}}),getAccessToken:()=>token};currentAuthState=appAuth.getState();appCurrentUser={id:'test-ana',name:'Ana',role:'Vocal'};setlists=[eventModel.create(event)];currentSdId=event.id;await openEventChat();},{token:fixture.tokens['test-ana'],event});
   const mic=page.getByRole('button',{name:'Gravar áudio'});
   async function hold(){await mic.hover();await page.mouse.down();await page.waitForFunction(()=>document.querySelector('.event-chat-mic.is-recording'));await page.waitForTimeout(650);}
-  await hold();await page.mouse.up();await page.getByRole('button',{name:'Enviar áudio',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.event-audio-message').length===1);
+  await hold();await page.mouse.up();await page.waitForFunction(()=>document.querySelectorAll('.event-audio-message').length===1);
   assert.equal(posts,1);
   await page.waitForFunction(()=>document.querySelector('.event-audio-tools [role="status"]').textContent==='');
   assert.equal(await page.locator('.event-audio-tools').isVisible(),false,'sucesso não deixa mensagem ou faixa vazia no compositor');
@@ -28,7 +28,7 @@ try{
   const audioSrc=await page.locator('.event-audio-message audio').getAttribute('src');await page.evaluate(()=>renderEventChatMessages(false));
   assert.equal(await page.locator('.event-audio-message audio').getAttribute('src'),audioSrc,'atualização do histórico preserva o mesmo player');
   await hold();const box=await mic.boundingBox();await page.mouse.move(box.x-100,box.y);await page.mouse.up();await page.waitForTimeout(350);assert.equal(posts,1,'arrastar cancela sem enviar');
-  fail=true;await hold();await page.mouse.up();await page.getByRole('button',{name:'Enviar áudio',exact:true}).click();await page.getByRole('button',{name:'Enviar áudio',exact:true}).waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('.event-audio-tools')?.textContent.includes('preservada'));
+  fail=true;await hold();await page.mouse.up();await page.getByRole('button',{name:'Enviar áudio',exact:true}).waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('.event-audio-tools')?.textContent.includes('preservada'));
   assert.equal(posts,2);
   await page.setViewportSize({width:390,height:430});
   const composer=page.locator('.event-chat-composer'),tools=page.locator('.event-audio-tools');
