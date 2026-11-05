@@ -1,8 +1,10 @@
 // Private voice notes: no audio/base64 in localStorage, JWTs or public URLs.
 (function(global){
   'use strict';
+  const icons={play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M6 3v18l15-9Z"/></svg>',pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 8v8m6-8v8"/></svg>',send:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M3 3 22 12 3 21l3-8 10-1-10-1Z"/></svg>',trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/></svg>'};
+  const formatTime=value=>Math.floor(Math.max(0,value)/60)+':'+String(Math.floor(Math.max(0,value))%60).padStart(2,'0');
   const MAX=3*1024*1024,SECONDS=90;
-  let options,button,status,retry,discard,recording=null,busy=false,finalizing=false,dbPromise,screenScope='',playGeneration=0;
+  let options,button,status,retry,discard,pauseControl,tools,recording=null,busy=false,finalizing=false,dbPromise,screenScope='',playGeneration=0;
   const players=new Set(),urls=new Set(),rendered=new Map();
   const auth=()=>global.appAuth?.getState?.();
   const scope=()=>{const event=options?.getEvent(),user=auth()?.user;return auth()?.authenticated&&event&&user?{owner:String(user.id),event:String(event.id),key:String(user.id)+'|'+String(event.id)}:null;};
@@ -16,10 +18,10 @@
   async function draft(action,key,value){
     const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction('drafts',action==='get'?'readonly':'readwrite'),store=tx.objectStore('drafts');const req=action==='get'?store.get(key):action==='put'?store.put(value,key):store.delete(key);tx.oncomplete=()=>resolve(req.result);tx.onerror=tx.onabort=()=>reject(new Error('Não foi possível guardar a gravação neste aparelho.'));});
   }
-  function release(state){clearInterval(state.clock);clearTimeout(state.limit);state.stream?.getTracks().forEach(track=>track.stop());button?.classList.remove('is-recording');}
+  function release(state){clearInterval(state.clock);clearTimeout(state.limit);state.stream?.getTracks().forEach(track=>track.stop());button?.classList.remove('is-recording');tools?.classList.remove('is-recording');if(pauseControl)pauseControl.hidden=true;}
   function stop(cancelled=false){
     const state=recording;if(!state)return;recording=null;state.cancelled=cancelled||!same(state.scope);
-    if(state.recorder?.state==='recording')state.recorder.stop();else{release(state);notice('');}
+    if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop();else{release(state);notice('');}
   }
   function stopPlayback(){++playGeneration;players.forEach(player=>{player.pause();player.removeAttribute('src');player.load();});players.clear();urls.forEach(url=>URL.revokeObjectURL(url));urls.clear();rendered.clear();}
   function syncMessages(messages){
@@ -63,42 +65,50 @@
       recorder.onerror=()=>{stop(true);notice('Falha ao gravar. Tente novamente.');};
       recorder.onstop=async()=>{
         release(state);if(!same(current))return;if(state.cancelled){notice('Gravação cancelada.');return;}
-        const duration=(performance.now()-state.started)/1000,blob=new Blob(state.chunks,{type:recorder.mimeType});
+        const duration=(performance.now()-state.started-(state.pausedMs||0)-(state.pausedAt?performance.now()-state.pausedAt:0))/1000,blob=new Blob(state.chunks,{type:recorder.mimeType});
         if(duration<.4||!blob.size||blob.size>MAX){notice('Gravação muito curta ou maior que o limite.');return;}
         finalizing=true;
-        try{await draft('put',current.key,{id:crypto.randomUUID(),blob});if(same(current)){await refresh();await send();}}
+        try{await draft('put',current.key,{id:crypto.randomUUID(),blob});if(same(current)){await refresh();if(state.sendAfter)await send();}}
         catch(error){if(same(current))notice(error.message);}
         finally{finalizing=false;}
       };
-      recorder.start(250);button.classList.add('is-recording');
-      const tick=()=>{if(!same(current)){stop(true);return;}notice('Gravando '+Math.floor((performance.now()-state.started)/1000)+'s · solte para enviar · arraste para cancelar');};tick();state.clock=setInterval(tick,500);state.limit=setTimeout(()=>stop(),SECONDS*1000);
+      recorder.start(250);button.classList.add('is-recording');tools.classList.add('is-recording');pauseControl.hidden=false;retry.hidden=discard.hidden=false;pauseControl.innerHTML=icons.pause;pauseControl.setAttribute('aria-label','Pausar gravação');
+      const tick=()=>{if(!same(current)){stop(true);return;}notice(formatTime((performance.now()-state.started-(state.pausedMs||0)-(state.pausedAt?performance.now()-state.pausedAt:0))/1000));};tick();state.clock=setInterval(tick,500);state.limit=setTimeout(()=>stop(),SECONDS*1000);
     }catch(error){if(recording===state)recording=null;release(state);if(same(current))notice(error.name==='NotAllowedError'?'Permita o microfone para gravar áudio.':error.message);}
   }
   function render(bubble,message){
     const cached=rendered.get(String(message.id));if(cached){bubble.appendChild(cached.box);return;}
     const box=document.createElement('div');box.className='event-audio-message';
-    const play=document.createElement('button');play.type='button';play.className='event-audio-play';play.textContent='▶';play.setAttribute('aria-label','Reproduzir mensagem de áudio');
-    const wave=document.createElement('span');wave.className='event-audio-wave';wave.setAttribute('aria-hidden','true');wave.textContent='▂▅▃▇▅▂▆▃▅▇▂▅▃';
-    const label=document.createElement('span');label.className='event-audio-duration';const seconds=Math.round(message.audio?.duration||0);label.textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
-    const player=document.createElement('audio');player.controls=true;player.preload='none';player.hidden=true;player.setAttribute('aria-label','Mensagem de áudio de '+message.sender.name);
+    const avatar=document.createElement('span');avatar.className='event-audio-avatar';avatar.textContent=String(message.sender?.name||'?').slice(0,1);
+    const photo=String(message.sender?.avatarUrl||'');if(/^(https?:|data:image\/|blob:)/i.test(photo)){const image=document.createElement('img');image.src=photo;image.alt='';image.onerror=()=>image.remove();avatar.append(image);}
+    const play=document.createElement('button');play.type='button';play.className='event-audio-play';play.innerHTML=icons.play;play.setAttribute('aria-label','Reproduzir mensagem de áudio');
+    const progress=document.createElement('input');progress.type='range';progress.className='event-audio-progress';progress.min='0';progress.max=String(message.audio?.duration||1);progress.step='.1';progress.value='0';progress.disabled=true;progress.setAttribute('aria-label','Posição do áudio');
+    const label=document.createElement('span');label.className='event-audio-duration';label.textContent=formatTime(message.audio?.duration||0);
+    const player=document.createElement('audio');player.preload='none';player.hidden=true;player.setAttribute('aria-label','Mensagem de áudio de '+message.sender.name);
     play.onclick=async()=>{
       const current=scope(),generation=playGeneration;if(!current||String(message.eventId)!==current.event)return;
+      if(player.src){if(player.paused){try{await player.play();}catch(error){notice(error.message);}}else player.pause();return;}
       play.disabled=true;
       try{
         const response=await fetch(global.apiConfig.collaborationEndpoint('/events/'+encodeURIComponent(message.eventId)+'/messages/'+encodeURIComponent(message.id)+'/audio'),{headers:{Authorization:'Bearer '+global.appAuth.getAccessToken()},cache:'no-store'});
         if(!response.ok)throw new Error('Áudio indisponível ou sem permissão.');const blob=await response.blob();
         if(!same(current)||generation!==playGeneration||!box.isConnected)return;
-        const url=URL.createObjectURL(blob);urls.add(url);player.src=url;player.hidden=false;play.hidden=wave.hidden=true;players.add(player);await player.play();
+        const url=URL.createObjectURL(blob);urls.add(url);player.src=url;players.add(player);await player.play();
       }catch(error){if(same(current))global.showToast(error.message);}finally{play.disabled=false;}
     };
-    player.onplay=()=>players.forEach(other=>{if(other!==player)other.pause();});box.append(play,wave,label,player);bubble.appendChild(box);rendered.set(String(message.id),{box,player});
+    player.onplay=()=>{players.forEach(other=>{if(other!==player)other.pause();});play.innerHTML=icons.pause;play.setAttribute('aria-label','Pausar mensagem de áudio');};
+    player.onpause=player.onended=()=>{play.innerHTML=icons.play;play.setAttribute('aria-label','Reproduzir mensagem de áudio');};
+    player.onloadedmetadata=()=>{if(Number.isFinite(player.duration)){progress.max=String(player.duration);progress.disabled=false;label.textContent=formatTime(player.duration);}};
+    player.ontimeupdate=()=>{progress.value=String(player.currentTime);label.textContent=formatTime(player.currentTime);};
+    progress.oninput=()=>{if(Number.isFinite(player.duration))player.currentTime=Math.min(player.duration,Number(progress.value));};
+    box.append(avatar,play,progress,label,player);bubble.appendChild(box);rendered.set(String(message.id),{box,player});
   }
   function initialize(value){
     options=value;const composer=document.querySelector('.event-chat-composer');
-    button=document.createElement('button');button.type='button';button.className='event-chat-mic';button.setAttribute('aria-label','Segure para gravar áudio');button.title='Segure para gravar; solte para enviar';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4m-3 0h6"/></svg>';composer.appendChild(button);
-    const tools=document.createElement('div');tools.className='event-audio-tools';status=document.createElement('span');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-    retry=document.createElement('button');retry.type='button';retry.textContent='Enviar áudio';retry.hidden=true;retry.onclick=send;
-    discard=document.createElement('button');discard.type='button';discard.textContent='Descartar';discard.hidden=true;discard.onclick=async()=>{const current=scope();if(!current||busy)return;try{await draft('delete',current.key);if(same(current)){notice('');await refresh();}}catch(error){if(same(current))notice(error.message);}};tools.append(status,retry,discard);composer.before(tools);
+    button=document.createElement('button');button.type='button';button.className='event-chat-mic';button.setAttribute('aria-label','Gravar áudio');button.title='Gravar áudio';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4m-3 0h6"/></svg>';composer.appendChild(button);
+    tools=document.createElement('div');tools.className='event-audio-tools';status=document.createElement('span');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+    retry=document.createElement('button');retry.type='button';retry.innerHTML=icons.send;retry.setAttribute('aria-label','Enviar áudio');retry.hidden=true;retry.onclick=()=>{if(recording){recording.sendAfter=true;stop();}else send();};
+    discard=document.createElement('button');discard.type='button';discard.innerHTML=icons.trash;discard.setAttribute('aria-label','Descartar');discard.hidden=true;discard.onclick=async()=>{if(recording){stop(true);retry.hidden=discard.hidden=true;notice('');return;}const current=scope();if(!current||busy)return;try{await draft('delete',current.key);if(same(current)){notice('');await refresh();}}catch(error){if(same(current))notice(error.message);}};pauseControl=document.createElement('button');pauseControl.type='button';pauseControl.className='event-audio-pause';pauseControl.hidden=true;pauseControl.onclick=()=>{const state=recording;if(!state?.recorder)return;if(state.recorder.state==='recording'){state.recorder.pause();state.pausedAt=performance.now();pauseControl.innerHTML=icons.play;pauseControl.setAttribute('aria-label','Retomar gravação');}else if(state.recorder.state==='paused'){state.recorder.resume();state.pausedMs=(state.pausedMs||0)+performance.now()-state.pausedAt;state.pausedAt=null;pauseControl.innerHTML=icons.pause;pauseControl.setAttribute('aria-label','Pausar gravação');}};tools.append(status,discard,pauseControl,retry);composer.before(tools);
     // Preview 123 uses an absolute composer above the attachment tray. Reserve
     // recording/retry space in that same geometry, including keyboard resizes.
     const chat=document.getElementById('event-chat-view');
@@ -110,9 +120,10 @@
     };
     const geometry=new ResizeObserver(measure);geometry.observe(composer);geometry.observe(tools);
     button.onpointerdown=begin;button.oncontextmenu=e=>e.preventDefault();
-    document.addEventListener('pointerup',()=>stop());document.addEventListener('pointercancel',()=>stop(true));
+    // Recording remains open until the explicit send/discard action.
+    document.addEventListener('pointercancel',()=>stop(true));
     document.addEventListener('pointermove',e=>{if(recording&&(e.clientX<recording.x-70||e.clientY<recording.y-90))stop(true);});
-    button.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat)begin(e);if(e.key==='Escape')stop(true);};button.onkeyup=e=>{if(e.key===' '||e.key==='Enter')stop();};
+    button.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat)begin(e);if(e.key==='Escape')stop(true);};button.onkeyup=e=>{if(e.key===' '||e.key==='Enter')e.preventDefault();};
     const input=document.getElementById('event-chat-input'),textSend=composer.querySelector('.event-chat-send');const update=()=>{button.hidden=!!input.value.trim();textSend.hidden=!button.hidden;};input.addEventListener('input',update);update();
     new MutationObserver(()=>{
       const next=active()?scope()?.key||'':'';

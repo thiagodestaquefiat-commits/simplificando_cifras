@@ -25,4 +25,9 @@
 .medley-sheet .medley-search svg{position:static;display:block;flex:0 0 20px;width:20px;height:20px;transform:none;stroke:#a1a1aa;stroke-linecap:round;stroke-linejoin:round}
 .medley-sheet .medley-search input{display:block;min-width:0;width:100%;height:48px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#f5f5f7;font:400 16px/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;box-shadow:none;appearance:none;-webkit-appearance:none}
 .medley-sheet .medley-search input::placeholder{color:#a1a1aa;opacity:1}
-.medley-sheet .medley-search:focus-within{outline:2px solid var(--roudy-electric-blue,#0789e7);outline-offset:2px}
+.medley-sheet .medley-search:focus-within{outline:0}
+
+.medley-sheet .medley-search input::-webkit-search-cancel-button{-webkit-appearance:none;width:16px;height:16px;cursor:pointer;background:#a1a1aa;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* Song selection is a plain list, without an enclosing card. */
+.medley-sheet .medley-choice-list:has([onclick^="selectMedleySong"]){border:0;border-radius:0;background:transparent}
