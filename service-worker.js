@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v728-audio-alinhamento";
+const CACHE_NAME = "simplificando-cifras-v729-audio-fluido";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -311,8 +311,8 @@ const ASSETS = [
   "./assets/icons/roudy-icon-v4-maskable-512.png?v=15",
   "./assets/qr-contribuicao.png?v=1",
   "./assets/playlist-hero-background.png",
-  "./css/event-chat-audio.css?v=4",
-  "./js/event-chat-audio.js?v=5",
+  "./css/event-chat-audio.css?v=5",
+  "./js/event-chat-audio.js?v=6",
   "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=31",

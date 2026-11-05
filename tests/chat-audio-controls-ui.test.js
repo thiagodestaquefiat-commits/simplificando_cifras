@@ -6,12 +6,13 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
   await page.evaluate(()=>{
     window.appAuth={getState:()=>({authenticated:true,user:{id:'audio-test'}}),getAccessToken:()=> 'fixture',subscribe:()=>{}};window.showToast=()=>{};window.apiConfig={collaborationEndpoint:p=>p};window.sent=0;window.fail=false;window.stopped=0;
     Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>({getTracks:()=>[{stop(){stopped++;}}]})},configurable:true});
+    window.AudioContext=class{createAnalyser(){return{fftSize:256,getByteTimeDomainData(data){data.fill(180)}}}createMediaStreamSource(){return{connect(){},disconnect(){}}}resume(){return Promise.resolve()}close(){return Promise.resolve()}};
     window.MediaRecorder=class{static isTypeSupported(){return true}constructor(){this.state='inactive';this.mimeType='audio/webm'}start(){this.state='recording'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';this.ondataavailable({data:new Blob(['fixture'],{type:this.mimeType})});setTimeout(()=>this.onstop(),0)}};
     window.fetch=async()=>{sent++;return{ok:!fail,json:async()=>fail?{erro:{mensagem:'Falha simulada'}}:{id:'voice-'+sent,eventId:'event',type:'audio',sender:{name:'Ana'},audio:{duration:1}}}};
   });
   await page.addScriptTag({path:path.resolve('js/event-chat-audio.js')});await page.evaluate(()=>eventChatAudio.initialize({getEvent:()=>({id:'event'}),onMessage:m=>eventChatAudio.render(document.querySelector('.event-chat-messages'),m)}));
   await page.getByRole('button',{name:'Gravar áudio',exact:true}).press('Space');await page.waitForSelector('.event-audio-tools.is-recording');await page.waitForTimeout(450);
-  assert.equal(await page.evaluate(()=>sent),0,'release never sends without explicit action');
+  assert.equal(await page.evaluate(()=>sent),0,'release never sends without explicit action');assert.ok(await page.locator('.event-audio-live-wave').isVisible());assert.ok(await page.locator('.event-audio-live-wave').evaluate(c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data.some(n=>n>0)),'live signal produces actual painted bars');
   await page.getByRole('button',{name:'Pausar gravação'}).click();await page.getByRole('button',{name:'Retomar gravação'}).click();
   await page.getByRole('button',{name:'Enviar áudio',exact:true}).click();await page.waitForSelector('.event-audio-message');assert.equal(await page.evaluate(()=>sent),1);
   assert.equal(await page.locator('.event-audio-message audio').isVisible(),false);assert.equal(await page.locator('.event-audio-progress').count(),1);
