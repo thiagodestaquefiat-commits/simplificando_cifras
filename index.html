@@ -2998,7 +2998,9 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-var STAGE_CLEAN=false;
+// Modo Palco limpo (decisão do Thiago, 12/10; reforçada em 05/11): a mesma cifra da tela de estudo —
+// mesmo resumo, Letra + Cifras e Letra, na página em que a pessoa estava. Não voltar para false.
+var STAGE_CLEAN=true;
 let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
@@ -3028,7 +3030,8 @@ async function enterStageMode(){
   studyMetronome.stop();
   document.getElementById('study-metronome').hidden=true;
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
-  currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
+  // Palco limpo abre na mesma página do estudo; só o palco antigo escolhia a visão pela preferência.
+  if(!STAGE_CLEAN)currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
   const packData=stageContextData();
   if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
   stageMode=true;stageExecutionStarted=false;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
