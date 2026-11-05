@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v724-dedicacao-experimental";
+const CACHE_NAME = "simplificando-cifras-v725-ajustes-mobile";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -245,7 +245,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=5",
-  "./js/medley-editor.css?v=30",
+  "./js/medley-editor.css?v=31",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
   "./assets/keyboard-icon.svg",
@@ -313,10 +313,10 @@ const ASSETS = [
   "./assets/playlist-hero-background.png",
   "./css/event-chat-audio.css?v=1",
   "./js/event-chat-audio.js?v=2",
-  "./js/profile-cover.js?v=1",
+  "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=31",
-  "./css/search-menu.css?v=20",
+  "./css/search-menu.css?v=21",
   "./js/search-menu.js?v=12"
 ];
 
