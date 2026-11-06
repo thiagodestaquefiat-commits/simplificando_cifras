@@ -237,7 +237,6 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 #event-chat-view .event-chat-appearance-open,#event-chat-view .event-chat-poll-open{color:var(--text-primary)}
 #event-chat-view .event-message-bubble{background:var(--ui-control);color:var(--text-primary)}
 #event-chat-view .event-message.mine .event-message-bubble,
-#event-chat-view .event-message.mine .event-message-content,
 #event-chat-view .event-chat-emoji,#event-chat-view .event-chat-send{background:var(--roudy-electric-blue);color:var(--text-primary)}
 #event-chat-view .event-message-author{color:var(--roudy-electric-blue)}
 #event-chat-view .event-message-time{color:var(--text-tertiary)}
@@ -333,3 +332,6 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 /* #E8896B intentionally remains owned by chords and musical content. */
 .assistant-command:focus{border-color:rgba(148,163,184,.24);box-shadow:none}
 .chat-appearance-option.chat-appearance-option--custom{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),var(--chat-custom-preview);background-position:center;background-size:cover}
+
+/* Message text shares its bubble surface, including custom bubble colors. */
+#event-chat-view .event-message.mine .event-message-content{background:transparent;color:inherit}

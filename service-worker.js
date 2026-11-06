@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v722-integracao-foto-menus";
+const CACHE_NAME = "simplificando-cifras-v729-audio-fluido";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -132,7 +132,7 @@ const ASSETS = [
   "./js/assistant-action-manager.js?v=1",
   "./js/assistant-action-runtime.js?v=1",
   "./js/app-assistant.js?v=23",
-  "./js/youtube-player-ui.js?v=24",
+  "./js/youtube-player-ui.js?v=25",
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
   "./js/tuner.js?v=5",
@@ -152,7 +152,7 @@ const ASSETS = [
   "./js/youtube-api.js?v=8",
   "./js/youtube-song-linker.js?v=2",
   "./js/spotify-player-ui.js?v=23",
-  "./js/youtube-player.js?v=9",
+  "./js/youtube-player.js?v=10",
   "./js/tablature.js?v=2",
   "./js/song-model.js?v=8",
   "./js/song-artwork.js?v=2",
@@ -245,7 +245,7 @@ const ASSETS = [
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
   "./js/song-lyrics-typography.css?v=5",
-  "./js/medley-editor.css?v=30",
+  "./js/medley-editor.css?v=32",
   "./assets/empty-medley-disc.svg",
   "./assets/empty-events-calendar.svg",
   "./assets/keyboard-icon.svg",
@@ -269,12 +269,15 @@ const ASSETS = [
   "./js/stage-offline.js?v=1",
   "./js/stage-offline.js?v=2",
   "./js/event-offline.js?v=2",
-  "./js/context-intelligence.js?v=4",
+  "./js/study-evidence.js?v=1",
+  "./js/study-dedication-preview.js?v=1",
+  "./js/study-preparation.js?v=1",
+  "./js/context-intelligence.js?v=5",
   "./js/preparation-receipts.js?v=1",
-  "./js/contextual-copy.js?v=5",
+  "./js/contextual-copy.js?v=6",
   "./js/context-delivery.js?v=2",
   "./js/context-acknowledgements.js?v=1",
-  "./js/context-history.js?v=2",
+  "./js/context-history.js?v=3",
   "./js/study-metronome.js?v=2",
   "./js/study-metronome.js?v=3",
   "./js/study-metronome.js?v=4",
@@ -294,7 +297,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
-  "./css/roudy-color-system-preview.css?v=17",
+  "./css/roudy-color-system-preview.css?v=18",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
   "./assets/icons/roudy-rd-premium.svg?v=1",
@@ -308,12 +311,12 @@ const ASSETS = [
   "./assets/icons/roudy-icon-v4-maskable-512.png?v=15",
   "./assets/qr-contribuicao.png?v=1",
   "./assets/playlist-hero-background.png",
-  "./css/event-chat-audio.css?v=1",
-  "./js/event-chat-audio.js?v=2",
-  "./js/profile-cover.js?v=1",
+  "./css/event-chat-audio.css?v=5",
+  "./js/event-chat-audio.js?v=6",
+  "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=31",
-  "./css/search-menu.css?v=20",
+  "./css/search-menu.css?v=21",
   "./js/search-menu.js?v=12"
 ];
 
