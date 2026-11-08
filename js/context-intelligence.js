@@ -62,7 +62,7 @@
         songId: value.songId == null ? null : String(value.songId),
         order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
         official: value.shared && typeof value.shared === 'object' ? { ...value.shared } : {},
-        status: text(value.status), accessible: value.accessible !== false,
+        status: text(value.status), accessible: value.accessible !== false, updatedAt: text(value.updatedAt),
         personal: personal && typeof personal === 'object' ? { ...personal } : null,
         preparation: value.preparation && typeof value.preparation === 'object' ? { ...value.preparation } : null
       };
@@ -181,6 +181,7 @@
     }).sort((left, right) => (timestamp(left.startsAt) || Infinity) - (timestamp(right.startsAt) || Infinity));
     return {
       version: 1, generatedAt: now.toISOString(), user: { id: user.id, name: text(user.name), role: text(user.role) },
+      dedication: source.dedication || null,
       events, activity: source.activity && typeof source.activity === 'object' ? { ...source.activity } : null,
       preferences: source.preferences && typeof source.preferences === 'object' ? { ...source.preferences } : {},
       missingData: [...new Set(events.flatMap(event => event.preparation.missingData))]
@@ -426,6 +427,11 @@
         if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
       }
     }
+    if (snapshot.dedication && global.studyEvidence) {
+      for (const candidate of global.studyEvidence.candidates({ ...snapshot.dedication, events: snapshot.events, userId: snapshot.user.id, now: timestamp(snapshot.generatedAt) })) {
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+      }
+    }
     const unique = new Map();
     for (const candidate of candidates) if (!unique.has(candidate.fingerprint)) unique.set(candidate.fingerprint, candidate);
     return [...unique.values()].sort((left, right) =>
@@ -444,7 +450,7 @@
   }
   function nextBestAction(snapshot, rankedSignals, options) {
     const candidates = buildCandidates(snapshot, rankedSignals, options);
-    const winner = candidates.find(candidate => PRIORITY_ORDER[candidate.priority] >= PRIORITY_ORDER[PRIORITIES.MEDIUM]);
+    const winner = candidates.find(candidate => PRIORITY_ORDER[candidate.priority] >= PRIORITY_ORDER[PRIORITIES.MEDIUM]) || candidates.find(candidate => candidate.localOnly && global.studyEvidence?.isRecognition(candidate));
     if (!winner) {
       const reasonCode = noneReason(snapshot, candidates);
       return {

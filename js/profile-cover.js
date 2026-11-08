@@ -50,10 +50,9 @@
       if(owner()===id)notify();return;
     }
     if(local.version!=null&&local.version!==remote.version){
-      if(owner()===id)global.showToast?.('A capa mudou em outro aparelho. Sua alteração local foi preservada; escolha a foto novamente para confirmar.');
       // Preserve local content while giving a subsequent explicit selection the
       // current server base version. Do not silently overwrite either image.
-      persist(id,{...local,version:remote.version,conflict:true});return;
+      persist(id,{...local,version:remote.version,conflict:true});if(owner()===id)notify();return;
     }
     if(local.conflict)return;
     const sent=local;
@@ -74,7 +73,7 @@
     const id=owner(),token=global.appAuth?.getAccessToken?.();get();
     if(id==='guest'||!token||global.navigator?.onLine===false)return Promise.resolve();
     if(flights.has(id))return flights.get(id);
-    const flight=run(id,token).catch(error=>{if(owner()===id&&records()[id]?.pending)global.showToast?.(error.message);}).finally(()=>flights.delete(id));
+    const flight=run(id,token).catch(error=>{if(owner()===id&&records()[id]?.pending)notify();}).finally(()=>flights.delete(id));
     flights.set(id,flight);return flight;
   }
   async function flush(){clearTimeout(timer);await refresh();return owner()==='guest'||!get().pending;}
