@@ -4,6 +4,7 @@
   "private": true,
   "description": "PWA para organizar, estudar e apresentar repertórios musicais.",
   "scripts": {
+    "test:support": "node tests/bug-report-menu.test.js && node tests/bug-report-form-ui.test.js && node tests/support-attachment-ui.test.js",
     "test:chat-audio": "node tests/event-chat.test.js && node tests/event-chat-audio-ui.test.js",
     "test:profile-cover": "node tests/profile-cover.test.js && node tests/profile-cover-cloud-ui.test.js",
     "test:playlists": "node tests/user-playlists.test.js && node tests/playlist-collaboration.test.js && node tests/playlist-collaboration-ui.test.js",

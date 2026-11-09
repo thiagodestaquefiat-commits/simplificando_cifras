@@ -27,6 +27,10 @@ def _database_uri(value: str) -> str:
 
 
 class Config:
+    BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+    BUG_REPORT_SENDER_EMAIL = os.getenv('BUG_REPORT_SENDER_EMAIL', '')
+    BUG_REPORT_SENDER_NAME = os.getenv('BUG_REPORT_SENDER_NAME', 'ROUDY — Suporte')
+    BUG_REPORT_RECIPIENT_EMAIL = os.getenv('BUG_REPORT_RECIPIENT_EMAIL', '')
     PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "https://simplificandocifras.netlify.app/").rstrip("/") + "/"
     JSON_SORT_KEYS = False
     MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", str(10 * 1024 * 1024)))

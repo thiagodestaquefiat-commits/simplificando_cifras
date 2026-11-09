@@ -8,7 +8,7 @@ try{
   const context=await browser.newContext({serviceWorkers:'block',viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];let fail=false,posts=0;
   page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({contentType:'text/css',body:''}));
   await page.route('**/api/**',async route=>{const request=route.request(),url=new URL(request.url());if(url.pathname.startsWith('/api/collaboration/events')){
-    if(url.pathname.endsWith('/messages/audio')&&request.method()==='POST'){posts++;if(fail)return route.fulfill({status:503,json:{erro:{mensagem:'Conexão indisponível no teste.'}}});}
+    if(url.pathname.endsWith('/messages/audio')&&request.method()==='POST'){posts++;if(fail)return route.fulfill({status:503,contentType:'text/html',body:'<html>Gateway unavailable</html>'});}
     const result=await context.request.fetch(`http://127.0.0.1:${fixture.port}${url.pathname}${url.search}`,{method:request.method(),headers:request.headers(),data:request.postDataBuffer()||undefined});return route.fulfill({status:result.status(),headers:result.headers(),body:await result.body()});
   }return route.fulfill({status:200,json:{}});});
   const created=await context.request.post(`http://127.0.0.1:${fixture.port}/api/collaboration/events`,{headers:{Authorization:'Bearer '+fixture.tokens['test-ana']},data:{id:'audio-test',title:'Ensaio de domingo',leaderId:'test-ana',members:[{id:'test-ana',name:'Ana',role:'Vocal'},{id:'test-bruno',name:'Bruno',role:'Guitarra'}],repertoire:[]}});
@@ -27,6 +27,9 @@ try{
   await page.waitForFunction(()=>{const a=document.querySelector('.event-audio-message audio');return a.readyState>=2&&a.currentTime>0&&!a.error;});
   const audioSrc=await page.locator('.event-audio-message audio').getAttribute('src');await page.evaluate(()=>renderEventChatMessages(false));
   assert.equal(await page.locator('.event-audio-message audio').getAttribute('src'),audioSrc,'atualização do histórico preserva o mesmo player');
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+  await page.getByRole('button',{name:'Reproduzir mensagem de áudio'}).click();
+  await page.waitForFunction(()=>document.querySelector('.event-audio-message audio')?.src.startsWith('blob:'));
   await hold();const box=await mic.boundingBox();await page.mouse.move(box.x-100,box.y);await page.mouse.up();await page.waitForTimeout(350);assert.equal(posts,1,'arrastar cancela sem enviar');
   fail=true;await hold();await page.mouse.up();await page.getByRole('button',{name:'Enviar áudio',exact:true}).waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('.event-audio-tools')?.textContent.includes('preservada'));
   assert.equal(posts,2);fail=false;await page.getByRole('button',{name:'Enviar áudio',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.event-audio-message').length===2);

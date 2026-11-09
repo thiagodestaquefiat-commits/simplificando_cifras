@@ -9,6 +9,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>ROUDY</title>
 <link rel="stylesheet" href="css/event-chat-audio.css?v=1">
+<link rel="stylesheet" href="css/bug-report.css?v=1">
 <meta name="theme-color" content="#0B0B0C">
 <meta name="description" content="ROUDY — Menos papel, menos distração, mais música.">
 <meta name="application-name" content="ROUDY">
@@ -1387,7 +1388,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
 <script src="js/event-chat.js?v=7"></script>
-<script src="js/event-chat-audio.js?v=2"></script>
+<script src="js/event-chat-audio.js?v=3"></script>
+<script src="js/support-attachment.js?v=1"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=9"></script>
@@ -4487,7 +4489,55 @@ function closeAccountDrawer(){document.getElementById('account-drawer-layer')?.c
 function openAccountDrawerDestination(destination){if(destination==='settings'){openAccountDrawerSettings();return;}closeAccountDrawer();document.getElementById('modal-overlay').style.display='flex';if(destination==='profile')openProfileSettings();else if(destination==='tuner')openTuner();else if(destination==='metronome')openToolsMetronome();else if(destination==='contribution')openRoudyContribution();else if(destination==='organize-summaries')openSummaryOrganizer();}
 function accountDrawerSettingsHeader(title,backAction='openAccountModal'){return `<header class="account-drawer-subheader"><button type="button" aria-label="Voltar" onclick="${backAction}()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><h2>${eventEsc(title)}</h2></header>`;}
 function openAccountDrawerSettings(){const drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Configurações e privacidade')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerLanguageSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('language')}</span><span class="account-drawer-settings-copy"><strong>Idioma</strong><small>Português Brasileiro</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerAppearanceSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('appearance')}</span><span class="account-drawer-settings-copy"><strong>Aparência e Acessibilidade</strong><small>Tema, contraste, cores, tamanho e capa</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerHelpSupport()"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Ajuda e Suporte</strong><small>Recuperação, diagnóstico e sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;drawer.scrollTop=0;}
-function openAccountDrawerHelpSupport(){librarySyncInDrawer=false;document.getElementById('modal-overlay').style.display='none';document.body.setAttribute('data-account-menu-open','true');const layer=ensureAccountDrawer(),drawer=layer.querySelector('.account-drawer');layer.classList.add('is-open');drawer.innerHTML=`${accountDrawerSettingsHeader('Ajuda e Suporte','openAccountDrawerSettings')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="showToast('O canal de suporte e feedback estará disponível em breve.')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7.5 9h9M7.5 13h6"/></svg></span><span class="account-drawer-settings-copy"><strong>Fale conosco</strong><small>Suporte e feedback</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openLibrarySync('openAccountDrawerHelpSupport')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6M4.5 11.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6"/></svg></span><span class="account-drawer-settings-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;drawer.scrollTop=0;}
+function openAccountDrawerHelpSupport(){librarySyncInDrawer=false;document.getElementById('modal-overlay').style.display='none';document.body.setAttribute('data-account-menu-open','true');const layer=ensureAccountDrawer(),drawer=layer.querySelector('.account-drawer');layer.classList.add('is-open');drawer.innerHTML=`${accountDrawerSettingsHeader('Ajuda e Suporte','openAccountDrawerSettings')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="showToast('O canal de suporte e feedback estará disponível em breve.')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7.5 9h9M7.5 13h6"/></svg></span><span class="account-drawer-settings-copy"><strong>Fale conosco</strong><small>Suporte e feedback</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openLibrarySync('openAccountDrawerHelpSupport')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6M4.5 11.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6"/></svg></span><span class="account-drawer-settings-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;appendBugReportMenuItem(drawer);drawer.scrollTop=0;}
+// Support intake uses the authenticated backend, never a browser-side Brevo key.
+function openBugReportForm(){
+  const owner=appAuth.getState().user?.id;
+  if(!appAuth.getState().authenticated||!owner){showToast('Entre na sua conta para relatar um bug.');return;}
+  const drawer=ensureAccountDrawer().querySelector('.account-drawer');
+  drawer.innerHTML=`<section class="bug-report-screen">${accountDrawerSettingsHeader('Relatar bugs','openAccountDrawerHelpSupport')}<main class="account-drawer-settings account-drawer-settings--form bug-report-content"><form id="bug-report-form"><div class="bug-report-intro"><span class="bug-report-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M8 9h8M8 13h5"/></svg></span><label class="bug-report-title" for="bug-description">Descreva o problema</label><p>Seu relato ajuda a melhorar o ROUDY.</p></div><textarea class="form-input" id="bug-description" required minlength="10" maxlength="4000" rows="6" aria-describedby="bug-description-help bug-report-privacy" placeholder="O que aconteceu por aí?"></textarea><div id="bug-description-help"><strong class="bug-report-guide-title">Como podemos entender melhor?</strong><ol class="bug-report-guide-list"><li>Conte em qual tela estava e o que tentou fazer.</li><li>Explique, na ordem, onde tocou ou clicou até o problema aparecer.</li><li>Diga o que aconteceu e o que esperava que acontecesse.</li></ol><p class="bug-report-example"><span>Por exemplo</span>“Abri as notificações e toquei em Ler todas, mas o número no sino não sumiu.”</p></div><p class="bug-report-privacy" id="bug-report-privacy">Enviado ao suporte do ROUDY. Não inclua senhas, códigos de acesso ou dados pessoais desnecessários. Nenhum diagnóstico é anexado automaticamente.</p><button class="account-drawer-settings-save" type="submit">Enviar relato</button><p id="bug-report-status" role="status" aria-live="polite"></p></form></main></section>`;
+  drawer.scrollTop=0;
+  const form=document.getElementById('bug-report-form'),status=document.getElementById('bug-report-status'),button=form.querySelector('button[type="submit"]'),attachment=window.supportAttachment.create(form);
+  let clientId=null,signature=null,busy=false,unconfirmed=false;
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();if(busy||!form.reportValidity())return;
+    if(attachment.processing){status.textContent='Aguarde a preparação da imagem antes de enviar.';return;}
+    if(appAuth.getState().user?.id!==owner){status.textContent='Sua conta mudou. Abra o formulário novamente.';return;}
+    const description=form.querySelector('#bug-description').value.trim();
+    if(description.length<10){status.textContent='Descreva o problema com pelo menos 10 caracteres.';return;}
+    const content=JSON.stringify([description,attachment.identity]);if(signature!==content){clientId=crypto.randomUUID();signature=content;}
+    busy=true;button.disabled=true;attachment.lock(true);form.querySelector('#bug-description').disabled=true;status.textContent='Enviando…';
+    let safeToEdit=false;
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);
+    try{
+      const headers={Authorization:'Bearer '+appAuth.getAccessToken()};let body;
+      if(attachment.blob){body=new FormData();body.append('clientId',clientId);body.append('description',description);body.append('image',attachment.blob,attachment.blob.type==='image/png'?'print.png':'print.jpg');}
+      else{headers['Content-Type']='application/json';body=JSON.stringify({clientId,description});}
+      const response=await fetch(apiConfig.collaborationEndpoint('/bug-reports'),{method:'POST',headers,body,signal:controller.signal});
+      safeToEdit=!unconfirmed&&[400,401,403,413,429].includes(response.status);
+      const data=await response.json().catch(()=>null);
+      if(!response.ok)throw new Error(data?.erro?.mensagem||(response.status===429?'Aguarde antes de tentar novamente.':response.status===401?'Sua sessão expirou. Entre novamente na sua conta.':'Não foi possível confirmar o envio agora.'));
+      if(!data||typeof data.id!=='string'||typeof data.emailStatus!=='string')throw new Error('Não foi possível confirmar o envio agora.');
+      if(appAuth.getState().user?.id!==owner||!form.isConnected)return;
+      if(['uncertain','sending'].includes(data.emailStatus)){
+        status.textContent='Protocolo: '+data.id+' — Não foi possível confirmar o encaminhamento. Para evitar duplicatas, não envie novamente; o suporte precisa verificar este protocolo.';
+        button.textContent='Verificação pendente';return;
+      }
+      if(data.emailStatus!=='accepted'){safeToEdit=['retry','not_configured','failed'].includes(data.emailStatus);throw new Error('Relato salvo (protocolo '+data.id+'), mas o e-mail não foi encaminhado.');}
+      form.querySelectorAll('textarea').forEach(input=>input.disabled=true);
+      status.textContent='Relato encaminhado ao suporte. Protocolo: '+data.id;
+      button.hidden=true;
+    }catch(error){if(form.isConnected&&appAuth.getState().user?.id===owner){unconfirmed=!safeToEdit;status.textContent=(error.name==='AbortError'?'O envio demorou demais.':error.message)+' O texto continua aqui; tente novamente.'+(safeToEdit?' Você também pode remover a imagem e enviar somente o texto.':' Para evitar duplicatas, mantivemos o relato sem alterações até confirmar o resultado.');button.disabled=false;attachment.lock(!safeToEdit);form.querySelector('#bug-description').disabled=!safeToEdit;}}
+    finally{clearTimeout(timeout);busy=false;}
+  });
+}
+function appendBugReportMenuItem(drawer){
+  const link=document.createElement("button");
+  link.className="account-drawer-settings-item";link.type='button';link.onclick=openBugReportForm;
+  link.style.textDecoration="none";
+link.innerHTML=`<span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="14" rx="5"/><path d="M9 7V5a3 3 0 0 1 6 0v2M3 10h4m10 0h4M3 15h4m10 0h4M5 21l3-3m8 0 3 3M12 8v12"/></svg></span><span class="account-drawer-settings-copy"><strong>Relatar bugs</strong><small>Informar um problema no aplicativo</small></span><span class="account-drawer-settings-chevron">›</span>`;
+  drawer.querySelector(".account-drawer-settings").appendChild(link);
+}
 function openAccountDrawerLanguageSettings(){const value=loadAppSettings(),languages=[['pt-BR','Português Brasileiro'],['es','Español'],['en','English'],['it','Italiano'],['fr','Français'],['de','Deutsch']],drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Idioma','openAccountDrawerSettings')}<main class="account-drawer-settings account-drawer-settings--form"><input id="setting-language" type="hidden" value="${eventEsc(value.language)}"><section class="account-drawer-language" role="radiogroup" aria-label="Idioma da interface">${languages.map(([code,name])=>`<button class="account-drawer-language-item ${value.language===code?'is-selected':''}" type="button" role="radio" aria-checked="${value.language===code}" data-language="${code}" onclick="selectAppLanguage('${code}')"><span lang="${code}">${name}</span><span class="account-drawer-language-check" aria-hidden="true">✓</span></button>`).join('')}</section><button class="account-drawer-settings-save" type="button" onclick="saveAccountDrawerSettings()">Salvar configurações</button></main>`;drawer.scrollTop=0;}
 function chordColorValue(value){return CHORD_COLOR_OPTIONS[value]||CHORD_COLOR_OPTIONS.orange;}
 function chordColorPickerMarkup(selected){const colors=[['orange','Laranja (padrão)'],['white','Branco'],['gold','Dourado'],['red','Vermelho'],['pink','Rosa'],['yellow','Amarelo'],['coral','Coral'],['green','Verde'],['blue','Azul'],['purple','Roxo']].map(([value,label])=>[value,label,CHORD_COLOR_OPTIONS[value]]);return `<input id="setting-chord-color" type="hidden" value="${eventEsc(selected)}"><div class="account-drawer-color-picker" role="radiogroup" aria-label="Cor da cifra" hidden>${colors.map(([value,label,color])=>`<button type="button" role="radio" aria-checked="${selected===value}" class="account-drawer-color-option ${selected===value?'is-selected':''}" data-color-value="${value}" onclick="selectChordColor('${value}',this)"><i style="--choice-color:${color}" aria-hidden="true"></i><span>${label}</span><b aria-hidden="true">✓</b></button>`).join('')}</div>`;}
@@ -5290,9 +5340,10 @@ function eventNoticeTargetsUser(notice,userId=appCurrentUser?.id){
   const actorId=String(notice?.actorId||'').trim(),recipientId=String(userId||'').trim();
   return !actorId||!recipientId||actorId!==recipientId;
 }
-function eventUnreadNotices(event){const read=eventNoticeReadIds(event.id);return (Array.isArray(event?.notifications)?event.notifications:[]).filter(notice=>eventNoticeTargetsUser(notice)&&!read.has(String(notice.id)));}
+function eventUnreadNotices(event){const read=eventNoticeReadIds(event.id);return (Array.isArray(event?.notifications)?event.notifications:[]).filter(notice=>eventNoticeTargetsUser(notice)&&!read.has(String(notice.id))&&!window.notificationCenter?.isAcknowledged(`event:${event.id}:${notice.id}`));}
 function markEventNoticesRead(event){
-  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),next={...(state||{})},ids=[...new Set([...eventNoticeReadIds(event.id),...(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id))])].slice(-50);
+  // Keep acknowledgements for the entire retained history, not just its last 50 entries.
+  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),next={...(state||{})},ids=[...new Set([...eventNoticeReadIds(event.id),...(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id))])];
   roudyNotificationScopes().forEach(userId=>{const userState={...(next[userId]||{})};userState[String(event.id)]=ids;next[userId]=userState;});
   storage.set(EVENT_NOTICE_READ_KEY,next);
 }
@@ -5333,7 +5384,7 @@ function eventNoticePeriod(value){const date=new Date(value),now=new Date(),toda
 function eventNoticeRelativeTime(value){const date=new Date(value),seconds=Math.max(0,Math.floor((Date.now()-date.getTime())/1000));if(!Number.isFinite(seconds))return '';if(seconds<60)return 'agora';if(seconds<3600)return Math.floor(seconds/60)+' min';if(seconds<86400)return Math.floor(seconds/3600)+' h';if(seconds<604800)return Math.floor(seconds/86400)+' d';return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','');}
 function openEventNotifications(){
   const event=findEvent(currentSdId);if(!event)return;
-  markEventNoticesRead(event);renderEventNoticeButton(event);
+  markEventNoticesRead(event);renderEventNoticeButton(event);window.notificationCenter?.update();
   closeModal();const overlay=document.getElementById('modal-overlay');overlay.classList.add('notification-center-overlay');let activePeriod='';
   const notices=(Array.isArray(event.notifications)?event.notifications:[]).slice().reverse().map(notice=>{const period=eventNoticePeriod(notice.createdAt),heading=period!==activePeriod?`<h2 class="notification-period">${period}</h2>`:'';activePeriod=period;const name=notice.actorName||'ROUDY',palette=eventAvatarPaletteClass(notice.actorId||name);return `${heading}<article class="notification-row notification-row-static"><span class="notification-avatar ${palette}">${eventEsc(eventInitials(name))}</span><span class="notification-copy"><strong>${eventEsc(name)}</strong><span> ${eventEsc(notice.summary)} <time datetime="${eventEsc(notice.createdAt)}">${eventEsc(eventNoticeRelativeTime(notice.createdAt))}</time></span><small>${eventEsc(event.title)}</small></span></article>`;}).join('');
   document.getElementById('modal-body').innerHTML=`<section class="notification-center-page"><header class="notification-center-header"><button class="notification-center-back" type="button" onclick="closeModal()" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>${eventEsc(event.title)}</h1><span></span></header><main class="notification-center-content">${notices||'<div class="event-notification-empty">Nenhuma alteração registrada neste evento.</div>'}</main></section>`;

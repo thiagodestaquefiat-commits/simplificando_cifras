@@ -9,6 +9,7 @@
   const seen=()=>new Set(scopedValues(readState()));
   const dismissed=()=>new Set(scopedValues(dismissedState()));
   const isDismissed=id=>dismissed().has(String(id));
+  const isAcknowledged=id=>seen().has(String(id))||isDismissed(id);
   const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))].filter(item=>!isDismissed('invite:'+item.id));
   const items=()=>{
     const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
@@ -30,7 +31,7 @@
   }
   function update(){
     const button=el('user-invitations-button');if(!button)return;
-    const read=seen(),count=pending().filter(i=>!read.has('invite:'+i.id)).length+items().filter(i=>i.unread&&!read.has(i.id)).length;
+    const read=seen(),count=pending().filter(i=>!read.has('invite:'+i.id)).length+items().filter(i=>i.unread&&!read.has(String(i.id))).length;
     if(!button.querySelector('svg'))button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 15 18 15 18 8Z"></path><path d="M9.5 20h5"></path></svg>';
     button.hidden=false;button.querySelector('.event-notification-badge')?.remove();
     if(count){const badge=document.createElement('span');badge.className='event-notification-badge';badge.textContent=count>99?'99+':String(count);button.appendChild(badge);}
@@ -97,7 +98,7 @@
     el('modal-overlay').style.display='flex';update();global.eventUserInvites?.refresh?.(true);
     global.playlistCollaboration?.refresh(true);
   }
-  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss,isDismissed});
+  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss,isDismissed,isAcknowledged});
   global.appAuth?.subscribe?.(()=>{if(el('roudy-notification-items'))global.closeModal();update();});
   global.addEventListener('storage',()=>update());
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',update,{once:true});else update();

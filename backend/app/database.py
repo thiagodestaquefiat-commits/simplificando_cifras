@@ -63,6 +63,11 @@ def ensure_additive_collaboration_columns() -> None:
     with db.engine.begin() as connection:
         inspector = inspect(connection)
         tables = set(inspector.get_table_names())
+        # Widen legacy MySQL audio storage only; never recreate or shrink the table.
+        if connection.dialect.name in {"mysql", "mariadb"} and "event_audio" in tables:
+            audio_column = next((column for column in inspector.get_columns("event_audio") if column["name"] == "data"), None)
+            if audio_column and type(audio_column["type"]).__name__.upper() == "BLOB":
+                connection.execute(text("ALTER TABLE event_audio MODIFY COLUMN data MEDIUMBLOB NOT NULL"))
         for table_name, definitions in ADDITIVE_COLLABORATION_COLUMNS.items():
             if table_name not in tables:
                 continue

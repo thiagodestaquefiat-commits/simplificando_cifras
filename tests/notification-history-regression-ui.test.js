@@ -19,6 +19,21 @@ const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://local
     return getRoudyNotificationItems().filter(i=>i.unread).map(i=>i.id);
   });
   assert.deepEqual(unread,['message:history-test:new'],'uma mensagem nova não reativa 1200 mensagens antigas');
+  const eventRead=await page.evaluate(()=>{
+    const event=setlists[0];
+    event.notifications=Array.from({length:80},(_,i)=>({id:'change-'+i,actorId:'other',actorName:'Outro',summary:'Alterou o evento',createdAt:'2026-01-01T00:00:00Z'}));
+    eventChat.markRead(event.id);
+    notificationCenter.markChatRead(event.id);
+    markEventNoticesRead(event);
+    const afterRead=eventUnreadNotices(event).length;
+    event.notifications.push({id:'latest-change',actorId:'other',actorName:'Outro',summary:'Nova alteração',createdAt:new Date().toISOString()});
+    const afterNew=eventUnreadNotices(event).map(n=>n.id);
+    notificationCenter.dismiss('event:'+event.id+':latest-change');
+    const afterDismiss=eventUnreadNotices(event).length;
+    currentSdId=event.id;openEventNotifications();
+    return {afterRead,afterNew,afterDismiss,badge:!!document.querySelector('#user-invitations-button .event-notification-badge')};
+  });
+  assert.deepEqual(eventRead,{afterRead:0,afterNew:['latest-change'],afterDismiss:0,badge:false},'histórico do evento, central e sino mantêm a mesma leitura');
   await page.evaluate(()=>{
     window.testFeed=Array.from({length:1300},(_,i)=>({id:'notice-'+i,kind:'event',eventId:'absent',title:'Outro',summary:'Ajustou a música',createdAt:'2026-01-01T00:00:00Z',unread:true}));
     window.getRoudyNotificationItems=()=>testFeed;

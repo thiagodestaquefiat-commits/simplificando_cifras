@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v653-main-integrated-audio";
+const CACHE_NAME = "simplificando-cifras-v655-event-audio-repair";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -278,8 +278,11 @@ const ASSETS = [
   "./js/event-chat.js?v=2",
   "./js/event-chat.js?v=3",
   "./js/event-chat.js?v=7",
-  "./js/event-chat-audio.js?v=2",
+  "./js/event-chat-audio.js?v=3",
   "./css/event-chat-audio.css?v=1",
+  "./css/bug-report.css?v=1",
+  "./js/support-attachment.js?v=1",
+  "./assets/support-instruments.svg",
   "./js/event-chat-song.css?v=1",
   "./js/account-contribution.css?v=13",
   "./js/account-settings-ui.css?v=2",
