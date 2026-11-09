@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path'),{spawn}=require('node:child_process');
 const {chromium}=require('playwright');const root=path.resolve(__dirname,'..');
 const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,p==='/'?'index.html':decodeURIComponent(p.slice(1)));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())return res.writeHead(404).end();res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml'}[path.extname(file)]||'application/octet-stream')+'; charset=utf-8'});fs.createReadStream(file).pipe(res);});
-(async()=>{let browser;const backend=spawn(path.join(root,'backend/.venv/Scripts/python.exe'),['-B','-u','tests/playlist-collaboration-server.py'],{cwd:root,windowsHide:true,env:{...process.env,PYTHONIOENCODING:'utf-8'}});
+(async()=>{let browser;const backend=spawn(process.env.ROUDY_TEST_PYTHON||path.join(root,'backend/.venv/Scripts/python.exe'),['-B','-u','tests/playlist-collaboration-server.py'],{cwd:root,windowsHide:true,env:{...process.env,PYTHONIOENCODING:'utf-8'}});
 try{
   const fixture=await new Promise((resolve,reject)=>{let output='',errors='';const t=setTimeout(()=>reject(new Error(errors)),20000);backend.stdout.on('data',v=>{output+=v;for(const line of output.split('\n'))if(line.startsWith('{"port"')){clearTimeout(t);resolve(JSON.parse(line));return;}});backend.stderr.on('data',v=>errors+=v);backend.on('error',reject);});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
@@ -24,6 +24,13 @@ try{
   const second=await device('test-ana');
   assert.equal(await second.evaluate(()=>playlistCoverImage()),saved.coverImage,'segundo navegador sem cache recupera a foto do banco real');
   assert.deepEqual(await second.evaluate(()=>playlistCoverPosition()),{x:0,y:100});
+  await first.route('**/api/collaboration/me/cover',r=>r.fulfill({status:503,json:{erro:{mensagem:'Offline no teste'}}}));
+  const blocked=await first.evaluate(async()=>{
+    window.coverLogoutWarnings=[];window.coverSignOutCalls=0;window.appAlert=text=>coverLogoutWarnings.push(text);appAuth.signOut=async()=>coverSignOutCalls++;
+    profileCover.save(playlistCoverImage(),{x:1,y:100});await logoutAppAccount();
+    return {pending:profileCover.get().pending,logoutCalls:coverSignOutCalls,warnings:coverLogoutWarnings};
+  });
+  assert.equal(blocked.pending,true);assert.equal(blocked.logoutCalls,0,'logout aguarda sincronização da capa');assert.ok(blocked.warnings.some(text=>text.includes('ainda não foi confirmada')));
   const other=await device('test-bruno');assert.equal(await other.evaluate(()=>playlistCoverImage()),'','outro usuário não vê a capa');
   await first.evaluate(()=>{coverSession={authenticated:false,user:null};applyPlaylistCover();});
   assert.equal(await first.evaluate(()=>playlistCoverImage()),'','logout remove a capa da tela sem apagá-la da conta');

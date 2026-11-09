@@ -102,10 +102,12 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.profile_cover import blueprint as profile_cover_blueprint
     from .routes.event_audio import blueprint as event_audio_blueprint
     from .routes.bug_reports import blueprint as bug_reports_blueprint
+    from .routes.account import blueprint as account_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
     app.register_blueprint(events_blueprint)
+    app.register_blueprint(account_blueprint)
     app.register_blueprint(assistant_blueprint)
     app.register_blueprint(locations_blueprint)
     app.register_blueprint(auth_blueprint)

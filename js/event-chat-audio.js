@@ -115,6 +115,16 @@
     const tools=document.createElement('div');tools.className='event-audio-tools';status=document.createElement('span');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
     retry=document.createElement('button');retry.type='button';retry.textContent='Enviar áudio';retry.hidden=true;retry.onclick=send;
     discard=document.createElement('button');discard.type='button';discard.textContent='Descartar';discard.hidden=true;discard.onclick=async()=>{const current=scope();if(!current||busy)return;try{await draft('delete',current.key);if(same(current)){notice('');await refresh();}}catch(error){if(same(current))notice(error.message);}};tools.append(status,retry,discard);composer.before(tools);
+    // Preview 123 uses an absolute composer above the attachment tray. Reserve
+    // recording/retry space in that same geometry, including keyboard resizes.
+    const chat=document.getElementById('event-chat-view');
+    const measure=()=>{
+      chat.style.setProperty('--event-chat-composer-height',composer.getBoundingClientRect().height+'px');
+      const height=tools.getBoundingClientRect().height;
+      chat.style.setProperty('--event-chat-audio-tools-height',height+'px');
+      chat.classList.toggle('has-audio-status',height>0);
+    };
+    const geometry=new ResizeObserver(measure);geometry.observe(composer);geometry.observe(tools);
     button.onpointerdown=begin;button.oncontextmenu=e=>e.preventDefault();
     const recordingPointer=e=>recording&&recording.pointerId===e.pointerId;
     document.addEventListener('pointerup',e=>{if(recordingPointer(e))stop();});document.addEventListener('pointercancel',e=>{if(recordingPointer(e))stop(true);});

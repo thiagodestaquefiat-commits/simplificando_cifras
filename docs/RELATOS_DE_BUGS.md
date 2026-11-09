@@ -55,6 +55,8 @@ Fechar/recarregar antes de confirmação perde o rascunho e a imagem. Para tenta
 posterior, anexar novamente em novo formulário. Não reenviar automaticamente resultado
 incerto; pode haver e-mail já encaminhado. Mensagem na interface deixa isso explícito.
 O texto já confirmado no banco não é apagado quando o usuário fecha a tela.
+Excluir a conta remove os relatos e metadados dela no banco do ROUDY, sem afetar
+outras contas. A operação não apaga cópias já encaminhadas ao Brevo/Gmail.
 Ainda não há painel administrativo; investigar protocolos por acesso privado ao banco/Brevo.
 
 ## Railway

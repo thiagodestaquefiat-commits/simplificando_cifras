@@ -6,7 +6,7 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/api/**',r=>r.fulfill({json:{enabled:false,songs:[],events:[],bands:[]}}));
   await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
-  await page.goto('http://127.0.0.1:4173/?foto-perfil-teste=1');await page.waitForFunction(()=>loginGateAuthReady);
+  await page.goto(new URL('?foto-perfil-teste=1',process.env.ROUDY_TEST_URL||'http://127.0.0.1:4173/').href);await page.waitForFunction(()=>loginGateAuthReady);
   await page.evaluate(()=>{continueWithoutLogin();openProfileSettings();});
   const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=64;c.height=64;c.getContext('2d').fillRect(0,0,64,64);return c.toDataURL('image/png').split(',')[1];});
   await page.locator('#profile-photo-input').setInputFiles({name:'foto.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});

@@ -1,5 +1,5 @@
-// MANUTENÇÃO: Sessão Google via Supabase Auth: inicialização, renovação e notificações de identidade.
-// MANUTENÇÃO: O aplicativo recebe tokens de sessão, nunca a senha do Google.
+// MANUTENÇÃO: Sessão via Supabase Auth (Google ou código por e-mail): inicialização, renovação e notificações de identidade.
+// MANUTENÇÃO: O aplicativo recebe tokens de sessão, nunca senhas.
 // MANUTENÇÃO: Logout com escopo local encerra esta sessão sem desconectar os outros aparelhos.
 (function (global) {
   "use strict";
@@ -166,6 +166,58 @@
     if (result.error) throw result.error;
   }
 
+  // Login por e-mail com código de 6 dígitos (qualquer provedor: Outlook, Hotmail, Yahoo...).
+  // Código em vez de link: o link mágico abre no navegador e não no app instalado (PWA/APK/iPhone).
+  // O backend identifica a pessoa pelo id do Supabase, então nenhuma rota do servidor muda.
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function normalizeEmail(value) {
+    const email = String(value || "").trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(email) || email.length > 254) throw new Error("Digite um e-mail válido.");
+    return email;
+  }
+
+  async function sendEmailCode(value) {
+    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    const email = normalizeEmail(value);
+    const result = await withTimeout(client.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }), "O envio do código demorou demais. Tente novamente.", 15000);
+    if (result.error) {
+      if (Number(result.error.status) === 429) throw new Error("Muitos pedidos de código. Aguarde um minuto e tente de novo.");
+      throw new Error("Não foi possível enviar o código para este e-mail.");
+    }
+    return { email };
+  }
+
+  async function verifyEmailCode(value, code) {
+    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    const email = normalizeEmail(value);
+    const token = String(code || "").replace(/\D/g, "");
+    if (token.length < 6 || token.length > 10) throw new Error("Digite o código que chegou no seu e-mail.");
+    const result = await withTimeout(client.auth.verifyOtp({ email, token, type: "email" }), "A confirmação do código demorou demais. Tente novamente.", 15000);
+    if (result.error) throw new Error("Código inválido ou expirado. Peça um novo código.");
+    session = result.data && result.data.session || session;
+    offlineSession = false;
+    emit();
+    return getState();
+  }
+
+  // Excluir conta (Play Store/LGPD): o servidor apaga os dados e o login; aqui só encerra a sessão local.
+  async function deleteAccount(confirmation) {
+    if (!client || !session || !session.access_token) throw new Error("Entre na sua conta para excluí-la.");
+    if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para excluir a conta.");
+    const response = await withTimeout(global.fetch(global.apiConfig.accountEndpoint(), {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+      body: JSON.stringify({ confirm: String(confirmation || "") })
+    }), "A exclusão demorou demais. Verifique a internet e tente de novo.", 30000);
+    let body = null;
+    try { body = await response.json(); } catch (_error) { body = null; }
+    if (!response.ok) throw new Error(body?.erro?.mensagem || "Não foi possível excluir a conta agora.");
+    try { await client.auth.signOut({ scope: "local" }); } catch (_error) { /* o login pode já ter sido apagado */ }
+    session = null;
+    emit();
+    return body || { deleted: true };
+  }
+
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
@@ -222,5 +274,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, sendEmailCode, verifyEmailCode, deleteAccount, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

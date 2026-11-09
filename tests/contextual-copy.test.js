@@ -107,8 +107,13 @@ assert.ok(alternative, 'fingerprints diferentes podem escolher variantes diferen
 
 const firstContinuation = copy.resolve(action('CONTINUE_STUDY', { repertoireItemId: 'item-1', fingerprint: 'editorial-1' }), { events });
 const secondContinuation = copy.resolve(action('CONTINUE_STUDY', { repertoireItemId: 'item-1', fingerprint: 'editorial-2' }), { events, history: [{ presentedAt: '2026-10-05T12:00:00Z', variantId: firstContinuation.variantId, editorialStructure: firstContinuation.editorialStructure }] });
-assert.notEqual(secondContinuation.variantId, firstContinuation.variantId, 'histórico editorial evita repetir a mesma formulação');
-assert.notEqual(secondContinuation.editorialStructure, firstContinuation.editorialStructure, 'histórico editorial varia a estrutura, não só sinônimos');
+assert.equal(firstContinuation.text, 'A Alegria', 'continuidade exibe somente o nome da música');
+assert.equal(secondContinuation.text, 'A Alegria', 'histórico não adiciona frases redundantes');
+assert.equal(firstContinuation.kicker, 'CONTINUE DE ONDE PAROU');
+assert.equal(firstContinuation.actionLabel, 'Continuar estudando', 'CTA existente preservado');
+const nextPreparation = copy.resolve(action('CONTINUE_PREPARATION', { fingerprint: 'same-fingerprint', evidence: { pendingCount: 3 } }), { events, history: [{ presentedAt: '2026-10-05T12:00:00Z', variantId: stableA.variantId, editorialStructure: stableA.editorialStructure }] });
+assert.notEqual(stableA.variantId, nextPreparation.variantId, 'histórico editorial evita repetição nos incentivos');
+assert.notEqual(stableA.editorialStructure, nextPreparation.editorialStructure, 'incentivos variam a estrutura');
 
 const incomplete = copy.resolve(action('START_PREPARATION', { eventId: 'missing', fingerprint: 'missing', evidence: {} }), { events });
 assert.doesNotMatch(incomplete.text, /undefined|null|\[object Object\]|0 músicas/);
@@ -118,6 +123,7 @@ const immutableAction = action('START_PREPARATION', { destination, evidence: { p
 copy.resolve(immutableAction, { events });
 assert.deepEqual(immutableAction.destination, destination, 'copy não altera destination');
 assert.equal(copy.resolve(immutableAction, { events }).usedLlm, false);
+assert.equal(copy.normalizeTerminology('Show hoje e SHOW amanhã.'), 'Apresentação hoje e APRESENTAÇÃO amanhã.', 'a linguagem contextual veta “show”');
 assert.equal(global.contextAcknowledgements, undefined, 'resolver não cria acknowledgement');
 assert.equal(global.preparationReceipts, undefined, 'resolver não cria receipt');
 assert.doesNotMatch(require('node:fs').readFileSync('js/contextual-copy.js', 'utf8'), /fetch\(|XMLHttpRequest|WebSocket|Math\.random|openai|prompt/i, 'copy é local, offline e determinística');
