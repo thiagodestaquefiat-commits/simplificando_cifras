@@ -82,3 +82,24 @@ def test_pra_onde_ele_for_morada():
 def test_single_block_already_in_standard_is_kept():
     result = saved("Uma volta", [("C#m A E B", 4, "Ouço um barulho diferente")])
     assert not summary_off_standard(result)
+
+
+def test_pra_onde_ele_for_morada_complete():
+    """Prints de 10/11/2026: "Parte 3 de 3 - 2x" também é rótulo de tablatura; linha com (2x) escrito
+    repete inteira (F9 G Am7 Em F9 G 2x não vira F9 G Am7 Em 4x)."""
+    assert organized("Pra Onde Ele For", [
+        ("C E7 Am7 G F9", None, "Ele abriu mão de Sua glória"), ("C E7 Am7 G F7M", None, "Ele me deu um destino"),
+        ("Dm7 C/E", None, "Parte 1 de 3"), ("F9 C/E", None, "Parte 2 de 3"), ("F9", None, "Parte 3 de 3"),
+        ("Dm7 C/E F9 C/E", 2, "Pôs um anel em meu dedo"), ("F7M Am7", None, "E eu me despedi"),
+        ("Am7 Em7", 4, "Se eu não tenho"), ("F9 G", None, "Parte 1 de 2"), ("Am7 Em", None, "Parte 2 de 2"),
+        ("F9 G", 2, "Parte 3 de 3 - 2x"), ("F9 G Am7 Em F9 G", 2, "Sou, sou totalmente Teu"),
+        ("Am7 C C/E Dm7 E7 Em Em7", None, None), ("F7M F9 G G4", None, None),
+    ]) == [
+        ("C E7 Am7 G F9 (2x)", "Ele abriu mão de Sua glória"),
+        ("Dm7 C/E F9 C/E (2x)", "Pôs um anel em meu dedo"),
+        ("F7M Am7", "E eu me despedi"),
+        ("Am7 Em7 (4x)", "Se eu não tenho"),
+        ("F9 G Am7 Em F9 G (2x)", "Sou, sou totalmente Teu"),
+        ("Am7 C C/E Dm7 E7 Em Em7", None),
+        ("F7M F9 G G4", None),
+    ]

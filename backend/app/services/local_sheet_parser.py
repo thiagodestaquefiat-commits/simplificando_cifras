@@ -330,7 +330,7 @@ __all__ = ["parse_chord_sheet", "normalize_chord"]
 #  7. frase-gancho: a primeira frase cantada onde a volta entra; "Parte 1 de 3" (tablatura) e
 #     número de página do PDF não são frase.
 # ---------------------------------------------------------------------------------------------
-_TAB_PHRASE_RE = re.compile(r"^\s*parte\s+\d+\s+de\s+\d+\s*:?\s*$", re.IGNORECASE)
+_TAB_PHRASE_RE = re.compile(r"^\s*parte\s+\d+\s+de\s+\d+\s*:?\s*(?:[-–(]?\s*\d{1,2}\s*x\s*\)?)?\s*$", re.IGNORECASE)
 
 
 def _simple_list(seq: list[str]) -> list[str]:
@@ -346,12 +346,18 @@ def _closed(seq: list[str]) -> list[str]:
     return seq
 
 
-def _turns_of(seq: list[str]) -> tuple[list[str], int, bool]:
-    """(volta, voltas, é laço). Aceita meia volta no fim e 1 acorde de saída depois de 2+ voltas."""
+def _turns_of(seq: list[str], partial: bool = True) -> tuple[list[str], int, bool]:
+    """(volta, voltas, é laço). Aceita meia volta no fim e 1 acorde de saída depois de 2+ voltas.
+
+    partial=False: a linha já tem (2x) escrito, então é ela inteira que repete; só vale laço de
+    voltas inteiras (F9 G Am7 Em F9 G (2x) continua assim, não vira F9 G Am7 Em 4x).
+    """
     loop = _loop(seq)
+    if loop and not partial and len(seq) % len(loop[0]):
+        loop = None
     if loop:
         return loop[0], loop[1], True
-    if len(seq) > 4:
+    if partial and len(seq) > 4:
         loop = _loop(seq[:-1])
         if loop and (len(seq) - 1) >= 2 * len(loop[0]):
             return loop[0], loop[1], True
@@ -413,7 +419,7 @@ def apply_summary_rule(units: list[tuple[list[str], int | None, str | None]]) ->
             size = len(hit["acordes"])
             merge(hit, phrase, max(1, round(len(seq) / size)) * times, len(seq) % size == 0)
             continue
-        loop, turns, is_loop = _turns_of(seq)
+        loop, turns, is_loop = _turns_of(seq, partial=times == 1)
         turns *= times
         key = _rotation_key(loop)
         hit = next((group for group in groups if group["key"] == key), None)
