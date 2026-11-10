@@ -1521,11 +1521,13 @@ const ALL_CHORDS = ['C#m','Dbm','D#m','Ebm','F#m','Gbm','G#m','Abm','A#m','Bbm',
                     'C#','Db','D#','Eb','F#','Gb','G#','Ab','A#','Bb',
                     'Cm','Dm','Em','Fm','Gm','Am','Bm','C','D','E','F','G','A','B'];
 
+// Grafia mais usada no Brasil: C#m em vez de Dbm, F#m em vez de Gbm (Eb, Ab e Bb continuam como vierem).
+const PREFERRED_ROOT={Db:'C#',Gb:'F#'};
 function noteIdx(n){let i=SHARP.indexOf(n);return i===-1?FLAT.indexOf(n):i;}
 function shiftNote(n,s){
   const i=noteIdx(n); if(i===-1) return n;
-  const ni=((i+s)%12+12)%12;
-  return FLAT.includes(n)?FLAT[ni]:SHARP[ni];
+  const ni=((i+s)%12+12)%12,shifted=FLAT.includes(n)?FLAT[ni]:SHARP[ni];
+  return PREFERRED_ROOT[shifted]||shifted;
 }
 function shiftToken(tok,s){
   for(const cn of ALL_CHORDS){
@@ -1541,7 +1543,7 @@ function shiftToken(tok,s){
   return tok;
 }
 function shiftText(text,s){
-  if(!s) return text;
+  if(!s&&!/[DG]b/.test(String(text||''))) return text;
   return text.split('\n').map(line=>
     line.replace(/[A-G][#b]?[a-z0-9#()\/]*/g,tok=>{
       for(const cn of ALL_CHORDS){if(tok.startsWith(cn)) return shiftToken(tok,s);}

@@ -328,8 +328,8 @@ def test_catalog_summary_off_roudy_standard_is_rebuilt_from_saved_sheet():
     blocks = [(b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
     assert blocks == [
         (None, ["Am", "F", "Dm"], 2),
-        ("Linha inventada um do verso", ["Am", "F", "Dm"], None),
-        ("Frase inventada do refrão", ["Am", "Am7", "G6/A", "Dm9/A"], None),
+        ("Linha inventada um do verso", ["Am", "F", "Dm"], 2),
+        ("Frase inventada do refrão", ["Am", "Am7", "G6/A", "Dm9/A"], 2),
     ], blocks
     assert result.tom == "C" and result.fullChordSheet.content.strip() == sheet.strip()
 

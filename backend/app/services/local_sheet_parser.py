@@ -88,25 +88,7 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     start_section(None)
 
     sections = [section for section in sections if not section["tab"] and section["linhas"]][:_MAX_SECTIONS]
-    blocos = []
-    seen = set()
-    last_identity = None
-    for name, lyric, chords in _stanzas(sections):
-        progression, repetitions = _condense(chords)
-        # Padrão ROUDY: frase-guia curta + progressão de uma volta. Estrofe repetida em seguida vira (2x);
-        # a mesma parte mais adiante na música aparece uma vez só.
-        phrase = _guide_phrase(lyric)
-        identity = ("frase", phrase.casefold()) if phrase else ("acordes", (name or "").casefold(), tuple(progression))
-        if identity == last_identity and blocos:
-            blocos[-1]["repeticoes"] = min((blocos[-1]["repeticoes"] or 1) + (repetitions or 1), 99)
-            continue
-        last_identity = identity
-        if identity in seen:
-            continue
-        seen.add(identity)
-        blocos.append({"acordes": progression[:_MAX_CHORDS],
-                       "repeticoes": repetitions if lyric is None else None,
-                       "fraseGuia": phrase, "secao": name})
+    blocos = _summary_blocks(_stanzas(sections))
     if not blocos:
         return None
     first_chord = blocos[0]["acordes"][0]
@@ -132,14 +114,14 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     })
 
 
-def _stanzas(sections: list[dict]) -> list[tuple[str | None, str | None, list[str]]]:
-    """(seção, primeira letra, acordes) de cada estrofe com acordes.
+def _stanzas(sections: list[dict]) -> list[tuple[int, str | None, str | None, list[str]]]:
+    """(índice da seção, seção, primeira letra, acordes) de cada estrofe com acordes.
 
     Linhas de letra sem acorde que vêm antes (ex.: "A minha alma tá armada..." seguida de linha em
     branco) entram na estrofe seguinte e viram a frase-guia dela.
     """
     result = []
-    for section in sections:
+    for section_index, section in enumerate(sections):
         carry: list[str] = []
         groups: dict[int, list[dict]] = {}
         for line in section["linhas"]:
@@ -152,8 +134,109 @@ def _stanzas(sections: list[dict]) -> list[tuple[str | None, str | None, list[st
                 continue
             lyric = next(iter(carry + lyrics), None)
             carry = []
-            result.append((section["nome"], lyric, chords))
+            result.append((section_index, section["nome"], lyric, chords))
     return result
+
+
+def _dedupe(chords: list[str]) -> list[str]:
+    return [chord for index, chord in enumerate(chords) if index == 0 or chord != chords[index - 1]]
+
+
+def _loop(sequence: list[str]) -> tuple[list[str], int] | None:
+    """Menor volta que explica a sequência inteira e quantas voltas ela dá (meia volta arredonda pra cima).
+
+    A B C#m B A B -> (A B C#m B, 2): o fim pode ser uma volta incompleta, desde que haja pelo menos
+    uma volta e meia — senão é só uma progressão que termina parecida com o começo.
+    """
+    size = len(sequence)
+    for period in range(1, size):
+        if period * 3 > size * 2:
+            break
+        if all(sequence[index] == sequence[index % period] for index in range(size)):
+            return sequence[:period], (size + period // 2) // period
+    return None
+
+
+def _phrase_key(phrase: str | None) -> str | None:
+    return phrase.casefold() if phrase else None
+
+
+def _summary_blocks(stanzas: list[tuple[int, str | None, str | None, list[str]]]) -> list[dict]:
+    """Junta as estrofes em blocos do resumo ROUDY: frase-guia + uma volta + quantas voltas.
+
+    - estrofes seguidas da mesma seção que continuam a mesma volta viram um bloco só, mesmo quando a
+      cifra quebra a parte com linha em branco (ou quebra de página do PDF);
+    - a seção seguinte também entra no bloco quando continua exatamente a mesma volta
+      (Pré-Refrão 1 + Pré-Refrão 2 com A B C#m B);
+    - uma seção que repete uma parte já resumida (Segunda Parte, refrão de novo) não entra outra vez,
+      e não soma voltas no bloco anterior;
+    - trecho instrumental com uma volta que já está no resumo não vira bloco novo.
+    """
+    blocks: list[dict] = []
+    seen: set[str] = set()
+    current: dict | None = None
+    skipping = False
+    previous_section = None
+
+    def close():
+        nonlocal current
+        if current is None:
+            return
+        seen.update(current["phrases"])
+        loop = _loop(current["sequence"])
+        if loop:
+            chords, turns = loop
+        else:
+            chords, turns = _condense(current["sequence"])[0], 1
+        blocks.append({"acordes": chords[:_MAX_CHORDS], "repeticoes": turns if turns > 1 else None,
+                       "fraseGuia": current["phrase"], "secao": current["section"]})
+        current = None
+
+    def cycle_of(sequence):
+        loop = _loop(sequence)
+        return loop[0] if loop else sequence
+
+    for section_index, name, lyric, chords in stanzas:
+        phrase = _guide_phrase(lyric)
+        key = _phrase_key(phrase)
+        sequence = _dedupe(chords)
+        new_section = section_index != previous_section
+        previous_section = section_index
+        known = bool(key) and (key in seen or (current is not None and key in current["phrases"]))
+        if new_section:
+            skipping = known
+        elif key and key in seen:
+            skipping = True
+        if skipping:
+            if key and not known:
+                skipping = False
+            else:
+                close()
+                continue
+        known_loops = [block["acordes"] for block in blocks]
+        if current is not None:
+            known_loops.append(cycle_of(current["sequence"]))
+        if key is None and cycle_of(sequence) in known_loops:
+            close()
+            continue
+        if current is not None:
+            combined = _dedupe(current["sequence"] + sequence)
+            loop = _loop(combined)
+            if new_section:
+                fits = (loop is not None and current["phrase"] is not None and key is not None
+                        and loop[0] == cycle_of(current["sequence"]))
+            else:
+                fits = loop is not None
+            if fits:
+                current["sequence"] = combined
+                if key:
+                    current["phrases"].add(key)
+                    current["phrase"] = current["phrase"] or phrase
+                continue
+            close()
+        current = {"sequence": sequence, "phrase": phrase, "section": name, "phrases": {key} if key else set()}
+    close()
+    return blocks
 
 
 _MAX_PROGRESSION = 8

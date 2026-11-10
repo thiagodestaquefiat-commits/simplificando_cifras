@@ -397,7 +397,8 @@ class IaService:
         except ProviderError as error:
             raise ApiError(error.code, error.public_message, error.status_code) from error
 
-        normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
+        normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text,
+                                        trusted_repetitions=result is local_result)
         if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             formatted_text = None

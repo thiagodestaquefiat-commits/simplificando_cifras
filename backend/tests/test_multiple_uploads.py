@@ -105,5 +105,5 @@ def test_mixed_service_does_not_validate_images_against_partial_text():
         def generate(self,*args,**kwargs):return result
     bundle=extract([file(b'Db','z.txt','text/plain'),file()])
     output=IaService(Stub()).generate(ResumoHarmonicoRequest(tipo='arquivo'),bundle)
-    assert output.harmonicSummary.blocos[0].acordes==['Db','B4','Gb/Bb']
+    assert output.harmonicSummary.blocos[0].acordes==['C#','B4','F#/Bb']
     assert output.fullChordSheet.content!='[reconstruir]'
