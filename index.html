@@ -2268,6 +2268,8 @@ function renderLyricsReadingText(text){
   }).join('');
 }
 
+// Trechos de tablatura do Cifra Club ("Parte 1 de 3", "E|--3--1--|") não são letra: a página Letra pula.
+function isTablatureMarkerLine(value){const text=String(value||'').trim();return /^parte\s+\d+\s+de\s+\d+\s*:?$/i.test(text)||/^[A-Ga-g][#b]?\s*\|/.test(text)||/^[|\-0-9hpbr\/\\~x() ]{6,}$/i.test(text)&&/-{3,}/.test(text);}
 function renderLyricsReadingRows(content){
   const rows=[],pendingTitles=[];
   String(content||'').replace(/\r\n?/g,'\n').split('\n').forEach(raw=>{
@@ -2277,6 +2279,8 @@ function renderLyricsReadingRows(content){
       return;
     }
     if(isChordLine(text))return;
+    // O título acima de um trecho de tablatura ("Dedilhado - Segunda Parte") é da tablatura: some junto.
+    if(isTablatureMarkerLine(text)){pendingTitles.splice(0);return;}
     const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
     if(tagged&&(!tagged[2].trim()||isChordLine(tagged[2]))){
       pendingTitles.splice(0,pendingTitles.length,renderSongSectionHeading(tagged[1],'song-lyrics-section-title'));
@@ -2659,6 +2663,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
         });
         if(contentMode==='combined'&&chordLine&&line.letra){const pair=renderChordLyricPair(rawChordLine,line.letra,totalShift);if(pair)return pair;}
         const chords=chordLine&&contentMode!=='lyrics'?renderSmartFullChordLine(chordLine):'';
+        if(contentMode==='lyrics'&&isTablatureMarkerLine(line.letra))return '';
         const lyric=line.letra&&contentMode!=='chords'?(contentMode==='lyrics'?renderLyricsReadingText(line.letra):renderMusicalText(line.letra,totalShift,true)):'';
         return chords+lyric;
       }).join('');
