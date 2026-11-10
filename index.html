@@ -38,7 +38,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=15">
+<link rel="stylesheet" href="css/song-reading.css?v=16">
 <link rel="stylesheet" href="css/topbar-labels.css?v=14">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -2610,6 +2610,37 @@ function renderSmartFullChordLine(chordLine){
   return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${repeat}" data-smart-chords="${eventEsc(normalized)}"><div class="full-chord-line is-chord">${renderSmartChordTokens(chordLine)}</div></div>`;
 }
 
+// Acorde preso à letra: cada pedaço da letra leva o acorde que fica em cima dele. Com zoom (ou tela
+// estreita) a linha quebra entre palavras e o acorde vai junto — nunca fica sozinho na linha de cima.
+function renderChordLyricPair(rawChordLine,lyric,totalShift){
+  const chordText=String(rawChordLine||''),text=String(lyric||'').trimEnd(),indent=text.length-text.trimStart().length,words=text.slice(indent);
+  // Acorde escrito em cima do espaço antes da palavra encosta na palavra (não abre buraco na letra).
+  const snap=pos=>{if(pos>=words.length||!/\s/.test(words[pos]))return pos;const next=words.slice(pos).search(/\S/);return next<0?pos:pos+next;};
+  const chords=[...chordText.matchAll(/\S+/g)].map(match=>({pos:snap(Math.max(0,match.index-indent)),chord:shiftText(match[0],totalShift)}));
+  if(!chords.length||!words.trim())return null;
+  // Cortes: onde cai um acorde e onde começa cada palavra.
+  const cuts=new Set([0]);
+  chords.forEach(item=>{if(item.pos<words.length)cuts.add(item.pos);});
+  words.replace(/\s+/g,(spaces,index)=>{if(index+spaces.length<words.length)cuts.add(index+spaces.length);return spaces;});
+  const sorted=[...cuts].sort((a,b)=>a-b),segments=sorted.map((start,index)=>({start,lyric:words.slice(start,sorted[index+1]??words.length),chords:[]}));
+  chords.forEach(item=>{
+    if(item.pos>=words.length){segments.push({start:item.pos,lyric:'',chords:[item.chord],tail:true});return;}
+    const owner=[...segments].reverse().find(segment=>!segment.tail&&segment.start<=item.pos);
+    owner.chords.push(item.chord);
+  });
+  // Unidade = palavra inteira (com os acordes dela); a quebra só acontece entre unidades.
+  const units=[];
+  segments.forEach(segment=>{
+    const last=units[units.length-1];
+    if(!last||segment.tail||/\s$/.test(last[last.length-1].lyric)||last[last.length-1].tail)units.push([segment]);
+    else last.push(segment);
+  });
+  const chordHtml=list=>list.length?list.map(chord=>`<span class="smart-chord-token" data-smart-chord-token="${eventEsc(chord)}">${eventEsc(chord)}</span>`).join(' '):'&nbsp;';
+  const html=units.map(unit=>`<span class="cp-unit">${unit.map(segment=>`<span class="cp-seg${segment.chords.length?' has-chord':''}"><span class="full-chord-line is-chord cp-chord">${chordHtml(segment.chords)}</span><span class="full-chord-line cp-lyric">${segment.lyric?eventEsc(segment.lyric):'&nbsp;'}</span></span>`).join('')}</span>`).join('');
+  const normalized=chords.map(item=>item.chord).join(' ');
+  return `<div class="smart-scroll-line chord-pair-line" data-smart-line data-smart-repeat="${smartScroll.repeatCount(chordText)}" data-smart-chords="${eventEsc(normalized)}"><div class="chord-pair">${html}</div></div>`;
+}
+
 function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
   if(!sheet?.content&&!Array.isArray(sheet?.sections)) return '';
   if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
@@ -2619,12 +2650,14 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
       const heading=!name?'':isChordLine(name)?renderMusicalText(name,totalShift,true):SHEET_SECTION_LINE.test(name)?renderSongSectionHeading(name.replace(/:$/,''),contentMode==='lyrics'?'song-lyrics-section-title':''):(contentMode==='chords'||name.localeCompare(firstLyric,'pt-BR',{sensitivity:'base'})===0?'':`<div class="full-chord-line">${eventEsc(name)}</div>`);
       const lines=(section.linhas||[]).map(line=>{
         const ordered=[...(line.acordes||[])].sort((a,b)=>a.posicao-b.posicao);
-        let chordLine='';
+        let chordLine='',rawChordLine='';
         ordered.forEach(item=>{
           const chord=shiftText(item.acorde,totalShift);
           const position=Math.max(chordLine.length,Number(item.posicao)||0);
           chordLine+=' '.repeat(position-chordLine.length)+chord;
+          rawChordLine+=' '.repeat(Math.max(0,position-rawChordLine.length))+item.acorde;
         });
+        if(contentMode==='combined'&&chordLine&&line.letra){const pair=renderChordLyricPair(rawChordLine,line.letra,totalShift);if(pair)return pair;}
         const chords=chordLine&&contentMode!=='lyrics'?renderSmartFullChordLine(chordLine):'';
         const lyric=line.letra&&contentMode!=='chords'?(contentMode==='lyrics'?renderLyricsReadingText(line.letra):renderMusicalText(line.letra,totalShift,true)):'';
         return chords+lyric;
@@ -2634,10 +2667,21 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     }).join('');
     if(contentMode!=='lyrics'||structured)return `<article class="full-chord-sheet full-chord-sheet-sections">${structured}</article>`;
   }
-  const renderRows=content=>String(content||'').replace(/\r\n?/g,'\n').split('\n').map(raw=>{
+  const renderRows=content=>{const rows=String(content||'').replace(/\r\n?/g,'\n').split('\n');let skip=-1;return rows.map((raw,rowIndex)=>{
+    if(rowIndex===skip)return '';
     const text=songFormat.cleanSheetLine(raw).trimEnd();
     if(!text.trim()) return contentMode==='chords'?'':contentMode==='lyrics'?'<div class="song-lyrics-stanza-break" aria-hidden="true"></div>':'<div class="full-chord-line">&nbsp;</div>';
-    if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
+    if(isChordLine(text)){
+      if(contentMode==='combined'){
+        // Linha de acordes + linha de letra logo abaixo: renderiza juntas para o acorde acompanhar a letra no zoom.
+        const next=songFormat.cleanSheetLine(rows[rowIndex+1]??'').trimEnd();
+        if(next.trim()&&!isChordLine(next)&&!SHEET_SECTION_LINE.test(next)&&!/^\s*\[[^\]]{1,60}\]/.test(next)){
+          const pair=renderChordLyricPair(text,next,totalShift);
+          if(pair){skip=rowIndex+1;return pair;}
+        }
+      }
+      return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
+    }
     // "[Intro] C7M  D9  Bm7": título da seção + linha de acordes.
     const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
     if(tagged&&tagged[2].trim()&&isChordLine(tagged[2])){
@@ -2647,7 +2691,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
     return section?renderSongSectionHeading(text,contentMode==='lyrics'?'song-lyrics-section-title':''):`<div class="full-chord-line${contentMode==='lyrics'?' song-lyrics-verse':''}">${eventEsc(text)}</div>`;
-  }).join('');
+  }).join('');};
   const chunks=splitFullSheetSections(sheet),sections=chunks.map((chunk,index)=>{
     const rows=contentMode==='lyrics'?renderLyricsReadingRows(chunk):renderRows(chunk);
     if(contentMode==='lyrics'&&!rows.includes('song-lyrics-verse'))return '';
