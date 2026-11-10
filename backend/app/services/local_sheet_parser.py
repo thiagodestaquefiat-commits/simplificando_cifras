@@ -14,6 +14,10 @@ from .harmonic_normalizer import is_section_name, normalize_chord, split_chord_t
 _SECTION_RE = re.compile(r"^\s*\[([^\]]{1,60})\]\s*(.*)$")
 _TAB_LINE_RE = re.compile(r"^\s*[A-Ga-g][#b]?\s*\|")
 _REPEAT_RE = re.compile(r"^\(?\s*\d{1,2}\s*[xX]\s*\)?$")
+# Cifra Club rotula os trechos de tablatura assim ("Parte 1 de 3"): é riff, não letra nem parte da música.
+_TAB_PART_RE = re.compile(r"^\s*parte\s+\d+\s+de\s+\d+\s*:?\s*$", re.IGNORECASE)
+_ROOT_RE = re.compile(r"^([A-G])([#b]?)(m(?!aj))?")
+_SHARP_OF = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
 _MAX_BLOCOS = 40
 _MAX_SECTIONS = 80
 _MAX_CHORDS = 64
@@ -46,6 +50,7 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     current = {"nome": None, "linhas": [], "tab": False}
     pending_chords: list[tuple[str, int]] | None = None
     stanza = 0  # estrofes (separadas por linha em branco) viram blocos próprios no resumo
+    in_tab_part = False  # dentro de um "Parte 1 de 3" (riff em tablatura) até a próxima linha em branco
 
     def flush_pending():
         nonlocal pending_chords
@@ -66,6 +71,7 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
         line = raw_line.rstrip()
         header = _SECTION_RE.match(line)
         if header:
+            in_tab_part = False
             start_section(header.group(1).strip())
             line = " " * (len(line) - len(header.group(2))) + header.group(2) if header.group(2).strip() else ""
         elif is_section_name(line):
@@ -75,8 +81,13 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
         if not line.strip():
             flush_pending()
             stanza += 1
+            in_tab_part = False
             continue
-        if current["tab"] or _TAB_LINE_RE.match(line):
+        if _TAB_PART_RE.match(line):
+            flush_pending()
+            in_tab_part = True
+            continue
+        if current["tab"] or in_tab_part or _TAB_LINE_RE.match(line):
             continue
         chords = _chords_in_line(line)
         if chords:
@@ -142,6 +153,19 @@ def _dedupe(chords: list[str]) -> list[str]:
     return [chord for index, chord in enumerate(chords) if index == 0 or chord != chords[index - 1]]
 
 
+def _simple(chord: str) -> str:
+    """Forma simples do acorde para comparar voltas: F9 = F7M = F, Am7 = Am, C/E = C, Db = C#."""
+    match = _ROOT_RE.match(chord or "")
+    if not match:
+        return chord
+    root = match.group(1) + match.group(2)
+    return _SHARP_OF.get(root, root) + ("m" if match.group(3) else "")
+
+
+def _same(a: list[str], b: list[str]) -> bool:
+    return len(a) == len(b) and all(_simple(x) == _simple(y) for x, y in zip(a, b))
+
+
 def _loop(sequence: list[str]) -> tuple[list[str], int] | None:
     """Menor volta que explica a sequência inteira e quantas voltas ela dá (meia volta arredonda pra cima).
 
@@ -152,7 +176,7 @@ def _loop(sequence: list[str]) -> tuple[list[str], int] | None:
     for period in range(1, size):
         if period * 3 > size * 2:
             break
-        if all(sequence[index] == sequence[index % period] for index in range(size)):
+        if all(_simple(sequence[index]) == _simple(sequence[index % period]) for index in range(size)):
             return sequence[:period], (size + period // 2) // period
     return None
 
@@ -216,15 +240,18 @@ def _summary_blocks(stanzas: list[tuple[int, str | None, str | None, list[str]]]
         known_loops = [block["acordes"] for block in blocks]
         if current is not None:
             known_loops.append(cycle_of(current["sequence"]))
-        if key is None and cycle_of(sequence) in known_loops:
+        if key is None and any(_same(cycle_of(sequence), loop) for loop in known_loops):
             close()
             continue
         if current is not None:
             combined = _dedupe(current["sequence"] + sequence)
             loop = _loop(combined)
             if new_section:
-                fits = (loop is not None and current["phrase"] is not None and key is not None
-                        and loop[0] == cycle_of(current["sequence"]))
+                # Mesma volta continuando na seção seguinte vira um bloco só: Pré-Refrão 1 + 2,
+                # ou a Intro instrumental que já é a volta da primeira parte.
+                fits = (loop is not None and key is not None
+                        and _same(loop[0], cycle_of(current["sequence"]))
+                        and (current["phrase"] is not None or _same(cycle_of(sequence), loop[0])))
             else:
                 fits = loop is not None
             if fits:
