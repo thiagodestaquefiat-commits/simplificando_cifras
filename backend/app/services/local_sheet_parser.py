@@ -99,7 +99,8 @@ def parse_chord_sheet(text: str, titulo: str | None, artista: str | None,
     start_section(None)
 
     sections = [section for section in sections if not section["tab"] and section["linhas"]][:_MAX_SECTIONS]
-    blocos = _summary_blocks(_stanzas(sections))
+    blocos = apply_summary_rule([(block["acordes"], block["repeticoes"], block["fraseGuia"])
+                                 for block in _summary_blocks(_stanzas(sections))])
     if not blocos:
         return None
     first_chord = blocos[0]["acordes"][0]
@@ -314,3 +315,124 @@ def _shift(chords: list[tuple[str, int]] | None, lyric_line: str) -> list[tuple[
 
 
 __all__ = ["parse_chord_sheet", "normalize_chord"]
+
+
+# ---------------------------------------------------------------------------------------------
+# Regra do resumo ROUDY (aprovada por Thiago em 10/11/2026, "simplificando cifras"):
+# o resumo é feito de VOLTAS, não de linhas da cifra.
+#  1. cada linha do resumo é uma volta diferente da música, na ordem em que aparece;
+#  2. a mesma volta começando em outro acorde (Em C D G = G Em C D) é a mesma volta;
+#  3. variação do acorde não cria volta nova (F9 = F7M = F, Am7 = Am, C/E = C);
+#  4. cada volta aparece uma vez só: refrão de novo, Segunda Parte igual, Intro/Solo/Final que
+#     repetem uma volta já mostrada, ou um pedaço de uma volta maior já mostrada, não entram;
+#  5. música de uma volta só = uma linha só, sem contagem e sem frase (Last Kiss: G Em C D);
+#  6. contagem só quando a volta repete seguida na mesma parte;
+#  7. frase-gancho: a primeira frase cantada onde a volta entra; "Parte 1 de 3" (tablatura) e
+#     número de página do PDF não são frase.
+# ---------------------------------------------------------------------------------------------
+_TAB_PHRASE_RE = re.compile(r"^\s*parte\s+\d+\s+de\s+\d+\s*:?\s*$", re.IGNORECASE)
+
+
+def _simple_list(seq: list[str]) -> list[str]:
+    return [_simple(chord) for chord in seq]
+
+
+def _closed(seq: list[str]) -> list[str]:
+    """"G Em C D G": voltou pro acorde de partida = fechou a volta, não é volta nova."""
+    seq = _dedupe(seq)
+    simple = _simple_list(seq)
+    if len(seq) > 2 and simple[-1] == simple[0] and simple[0] not in simple[1:-1]:
+        return seq[:-1]
+    return seq
+
+
+def _turns_of(seq: list[str]) -> tuple[list[str], int, bool]:
+    """(volta, voltas, é laço). Aceita meia volta no fim e 1 acorde de saída depois de 2+ voltas."""
+    loop = _loop(seq)
+    if loop:
+        return loop[0], loop[1], True
+    if len(seq) > 4:
+        loop = _loop(seq[:-1])
+        if loop and (len(seq) - 1) >= 2 * len(loop[0]):
+            return loop[0], loop[1], True
+    return seq, 1, False
+
+
+def _rotation_key(chords: list[str]) -> tuple[str, ...]:
+    simple = _simple_list(chords)
+    return min(tuple(simple[index:] + simple[:index]) for index in range(len(simple)))
+
+
+def _follows(seq: list[str], loop: list[str]) -> bool:
+    """seq é a volta (de qualquer ponto de partida) tocada 1 vez ou mais, podendo parar no meio."""
+    s, l = _simple_list(seq), _simple_list(loop)
+    if len(s) < len(l):
+        return False
+    return any(all(s[i] == l[(start + i) % len(l)] for i in range(len(s))) for start in range(len(l)))
+
+
+def _fragment(small: list[str], big: list[str]) -> bool:
+    """small é um pedaço contínuo de big tocada em volta."""
+    s, b = _simple_list(small), _simple_list(big)
+    if len(s) >= len(b):
+        return False
+    tripled = b * 3
+    return any(tripled[i:i + len(s)] == s for i in range(len(b)))
+
+
+def _clean_phrase(phrase: str | None) -> str | None:
+    text = (phrase or "").strip()
+    if not text or _TAB_PHRASE_RE.match(text) or len(re.findall(r"[^\W\d_]", text)) < 3:
+        return None
+    return text
+
+
+def apply_summary_rule(units: list[tuple[list[str], int | None, str | None]]) -> list[dict]:
+    """[(acordes, repetições, frase)] na ordem da música -> blocos do resumo pela regra ROUDY."""
+    groups: list[dict] = []
+    last: dict | None = None
+
+    def merge(group: dict, phrase: str | None, turns: int, whole: bool) -> None:
+        nonlocal last
+        # linha de uma volta só logo depois da mesma volta = a mesma parte continuando (soma).
+        if whole and turns == 1 and group is last and group["fraseGuia"] is not None:
+            group["repeticoes"] = (group["repeticoes"] or 1) + 1
+        elif group["fraseGuia"] is None and phrase:
+            group["fraseGuia"], group["repeticoes"] = phrase, turns
+        last = group
+
+    for chords, repetitions, phrase in units:
+        seq = _closed([chord for chord in chords if chord])
+        if not seq:
+            continue
+        phrase = _clean_phrase(phrase)
+        times = repetitions if repetitions and repetitions > 1 else 1
+        # 1) uma volta já mostrada tocada de novo (mesmo com um pedaço a mais no fim)
+        hit = next((group for group in groups if _follows(seq, group["acordes"])), None)
+        if hit is not None:
+            size = len(hit["acordes"])
+            merge(hit, phrase, max(1, round(len(seq) / size)) * times, len(seq) % size == 0)
+            continue
+        loop, turns, is_loop = _turns_of(seq)
+        turns *= times
+        key = _rotation_key(loop)
+        hit = next((group for group in groups if group["key"] == key), None)
+        exact = hit is not None
+        # 2) laço que é só um pedaço de uma volta maior já mostrada (D A E9 G em A E9 Bm7 D A E9 G D)
+        if hit is None and is_loop:
+            hit = next((group for group in groups if _fragment(loop, group["acordes"])), None)
+        if hit is not None:
+            merge(hit, phrase, turns, exact)
+            continue
+        groups.append({"acordes": loop, "key": key, "fraseGuia": phrase, "repeticoes": turns})
+        last = groups[-1]
+
+    # trecho curto (1-2 acordes, sem frase) que já cabe dentro de outra volta não vira linha
+    kept = [group for group in groups
+            if not (len(set(_simple_list(group["acordes"]))) <= 2 and group["fraseGuia"] is None
+                    and any(other is not group and _fragment(group["acordes"], other["acordes"]) for other in groups))]
+    if len(kept) == 1 and len(units) > 1:  # várias linhas que eram a mesma volta: música de uma volta só
+        kept[0]["fraseGuia"] = kept[0]["repeticoes"] = None
+    return [{"acordes": group["acordes"][:_MAX_CHORDS],
+             "repeticoes": group["repeticoes"] if group["repeticoes"] and group["repeticoes"] > 1 else None,
+             "fraseGuia": group["fraseGuia"], "secao": None} for group in kept]

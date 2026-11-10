@@ -100,9 +100,8 @@ def test_summary_follows_roudy_standard_for_real_sheet():
     assert summary == [
         (None, "Um menino nasceu", ["C", "G4", "Am"], 6),  # Intro (2) + 4 linhas com a mesma volta: uma linha só
         (None, "E o Seu nome é", ["F7M", "Am", "Dm", "F7M", "Am", "G"], None),
-        (None, "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-        # o [Solo] repete a volta do refrão: não vira bloco novo
-        (None, "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        # "Santo, Santo, Santo" é a mesma volta logo em seguida: soma (2x); o [Solo] também não vira bloco
+        (None, "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], 2),
     ], "padrão ROUDY: sem nomes de seção, só acordes e frases-gancho"
     assert (result.tom, result.capotraste) == ("D", 2)
 
@@ -304,10 +303,10 @@ Linha final
     blocks = [(b.fraseGuia, b.acordes, b.repeticoes)
               for b in parse_chord_sheet(sheet, "Minha Alma", "O Rappa", key="Am").harmonicSummary.blocos]
     assert blocks == [
-        ("Linha sem acorde que", ["Am", "F", "Dm", "Am"], None),
-        ("Começo da segunda parte", ["F", "Dm", "Am"], 2),
+        # regra de voltas: "Am F Dm Am" volta pro Am = Am F Dm; "F Dm Am" é a mesma volta começando no F
+        ("Linha sem acorde que", ["Am", "F", "Dm"], None),
         ("Grades do refrão", ["Am7", "G6/A", "Am", "Am7", "Dm9/A"], None),
-        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A", "Am"], None),
+        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A"], None),
     ], blocks
     assert all(not (b[0] or "").endswith(":") for b in blocks), "nome de parte nunca vira frase"
 

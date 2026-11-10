@@ -1,7 +1,7 @@
 """Caso real (30/10/2026): resumo de "Ainda que a figueira" bagunçado; "Teu Amor Não Falha" já estava certo."""
 from app.schemas.resumo_harmonico import ResumoHarmonicoResponse
 from app.services.harmonic_normalizer import ensure_client_chords
-from app.services.ia_service import summary_off_standard
+from app.services.ia_service import roudy_summary, summary_off_standard
 
 
 def response(blocks, title="Música"):
@@ -45,10 +45,11 @@ def test_figueira_is_detected_and_condensed():
     ]
 
 
-def test_teu_amor_nao_falha_stays_as_is():
+def test_teu_amor_nao_falha_only_loses_the_repeated_intro():
+    """Regra de voltas: a Intro (Am F C G 2x, sem frase) é a mesma volta do verso e entra nele."""
     original = response(TEU_AMOR, "Teu Amor Não Falha")
-    assert not summary_off_standard(original)
-    assert lines(ensure_client_chords(original)) == [(c + (f" ({r}x)" if r else ""), p) for c, r, p in TEU_AMOR]
+    assert summary_off_standard(original)
+    assert lines(ensure_client_chords(roudy_summary(original))) == [(c + (f" ({r}x)" if r else ""), p) for c, r, p in TEU_AMOR[1:]]
 
 
 def test_same_phrase_with_other_chords_is_kept():

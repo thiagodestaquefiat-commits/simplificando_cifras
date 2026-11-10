@@ -193,7 +193,8 @@
   // Devolve só as músicas que mudariam: [{ song, blocos }]. onProgress(feitas, total).
   async function analyze(songs, options) {
     const settings = options || {};
-    const candidates = (songs || []).filter(offStandard);
+    // Regra de voltas (10/11/2026): quem decide é o servidor; manda toda música com mais de uma linha no resumo.
+    const candidates = (songs || []).filter((song) => summaryLines(song).length > 1 || offStandard(song));
     const changes = [];
     for (let start = 0; start < candidates.length; start += BATCH) {
       const batch = candidates.slice(start, start + BATCH);
