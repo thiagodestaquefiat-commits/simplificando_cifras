@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v728-puxar-atualizar";
+const CACHE_NAME = "simplificando-cifras-v729-puxar-atualizar-evento";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -317,7 +317,7 @@ const ASSETS = [
   "./css/search-menu.css?v=20",
   "./js/search-menu.js?v=12",
   "./js/android-back.js?v=2",
-  "./js/pull-refresh.js?v=1"
+  "./js/pull-refresh.js?v=2"
 ];
 
 self.addEventListener("install", (event) => {
