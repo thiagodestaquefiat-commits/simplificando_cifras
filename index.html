@@ -3112,13 +3112,16 @@ async function enterStageMode(){
 // palco). Voltou para a lista ou o app foi para segundo plano: o celular volta a apagar normalmente.
 let songWakeLock=null,songWakeLockPending=false;
 function songScreenOpen(){const vd=document.getElementById('view-detail');return Boolean(vd&&vd.style.display!=='none'&&getComputedStyle(vd).display!=='none');}
+// Decidido em 12/11/2026: com o ROUDY aberto na frente, a tela fica sempre acesa (afinador, metrônomo,
+// listas, música, palco) — antes era só com uma música aberta.
+function appScreenOpen(){return document.visibilityState==='visible';}
 async function syncSongWakeLock(){
-  const want=songScreenOpen()&&document.visibilityState==='visible';
+  const want=appScreenOpen();
   if(want&&!songWakeLock&&!songWakeLockPending&&navigator.wakeLock?.request){
     songWakeLockPending=true;
     try{
       const sentinel=await navigator.wakeLock.request('screen');
-      if(!songScreenOpen()){try{await sentinel.release();}catch(_){}}
+      if(!appScreenOpen()){try{await sentinel.release();}catch(_){}}
       else{songWakeLock=sentinel;sentinel.addEventListener('release',()=>{if(songWakeLock===sentinel)songWakeLock=null;});}
     }catch(_){}finally{songWakeLockPending=false;}
   }else if(!want&&songWakeLock){const sentinel=songWakeLock;songWakeLock=null;try{await sentinel.release();}catch(_){}}
@@ -3128,7 +3131,8 @@ function setupSongWakeLock(){
   new MutationObserver(()=>syncSongWakeLock()).observe(vd,{attributes:true,attributeFilter:['style','class']});
   document.addEventListener('visibilitychange',()=>syncSongWakeLock());
   // Alguns navegadores (Safari) só liberam a tela acesa depois de um toque: tenta de novo no toque.
-  document.addEventListener('pointerdown',()=>{if(!songWakeLock&&songScreenOpen())syncSongWakeLock();},{passive:true});
+  document.addEventListener('pointerdown',()=>{if(!songWakeLock&&appScreenOpen())syncSongWakeLock();},{passive:true});
+  window.addEventListener('focus',()=>syncSongWakeLock());
   syncSongWakeLock();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupSongWakeLock);else setupSongWakeLock();
