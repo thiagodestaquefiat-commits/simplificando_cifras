@@ -2969,9 +2969,13 @@ function openDetail(id,options={}){
   const context=navigationContext.get();
   document.getElementById('btn-palco').hidden=!(context&&(findEvent(context.playlistId)||String(context.playlistId).startsWith('upl:')));
   if(!stageMode){
+    // A página que a pessoa deixou na música (Resumo, Letra e cifra...) sempre vale. A visão sugerida
+    // pelo evento/playlist só entra quando ela ainda não escolheu nada nessa música.
+    // Ordem atual das páginas: 0 Letra e cifra, 1 Resumo harmônico, 2 Letra.
+    const savedSongPage=storage.get(songPageStorageKey(nid),null);
     currentSongPage=loadSongPage(nid);
-    const eventViewPage={summary:0,combined:1,lyrics:2,chords:1}[contextualSong?.view];
-    if(Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
+    const eventViewPage={summary:1,combined:0,lyrics:2,chords:0}[contextualSong?.view];
+    if(savedSongPage===null&&Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
     currentSongView=songViewForPage(currentSongPage);
   }
   const preparedSong=tablature.prepareSong(m),summary=songFormat.harmonicSummary(preparedSong);
