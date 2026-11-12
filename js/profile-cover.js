@@ -4,6 +4,9 @@
   'use strict';
   const KEY='sc_profile_covers_v1',listeners=new Set(),flights=new Map();
   let timer;
+  // Aviso na tela só logo depois de a pessoa escolher a foto; tentativas em segundo plano (ao voltar
+  // para o app, ficar online...) ficam em silêncio — antes o aviso aparecia toda vez.
+  let userSavedAt=0;
   const auth=()=>global.appAuth?.getState?.();
   const owner=()=>auth()?.authenticated?String(auth().user.id):'guest';
   const records=()=>global.storage.get(KEY,{})||{};
@@ -28,7 +31,7 @@
     const id=owner(),previous=get();
     const value={coverImage:coverImage||null,position:position(nextPosition),pending:id!=='guest',version:previous.version,revision:Date.now()+':'+Math.random()};
     if(!persist(id,value))return false;
-    notify();schedule();return true;
+    userSavedAt=Date.now();notify();schedule();return true;
   }
   async function run(id,token){
     const url=global.apiConfig.collaborationEndpoint('/me/cover');
@@ -44,6 +47,7 @@
       if(!persist(id,{...remote,pending:false,revision:'server:'+remote.version}))throw new Error('Não foi possível guardar a capa neste aparelho.');
       if(owner()===id)notify();return;
     }
+    if(local?.rejected)return; // foto recusada: fica só neste aparelho até a pessoa escolher outra
     if(!local?.pending){
       if(local?.revision!==snapshot?.revision)return;
       if(!persist(id,{...remote,pending:false,revision:'server:'+remote.version}))throw new Error('Não foi possível guardar a capa neste aparelho.');
@@ -63,6 +67,12 @@
       persist(id,{...records()[id],...(Number.isInteger(body?.cover?.version)?{version:body.cover.version}:{}),conflict:true});
       throw new Error('A capa foi alterada em outro aparelho. Sua foto local foi preservada.');
     }
+    if(saved.status===400||saved.status===413){
+      // Foto recusada pelo servidor (grande demais ou inválida): não adianta tentar de novo a cada
+      // abertura do app. Continua aparecendo neste aparelho; escolher outra foto tenta de novo.
+      persist(id,{...records()[id],pending:false,rejected:true});
+      throw new Error('Não foi possível enviar essa foto para a conta. Ela continua neste aparelho; escolha uma foto menor para salvar na conta.');
+    }
     if(!saved.ok)throw new Error('A capa continua salva neste aparelho e aguarda envio para a conta.');
     const result=await saved.json();local=records()[id];
     if(local?.revision===sent.revision){
@@ -74,7 +84,10 @@
     const id=owner(),token=global.appAuth?.getAccessToken?.();get();
     if(id==='guest'||!token||global.navigator?.onLine===false)return Promise.resolve();
     if(flights.has(id))return flights.get(id);
-    const flight=run(id,token).catch(error=>{if(owner()===id&&records()[id]?.pending)global.showToast?.(error.message);}).finally(()=>flights.delete(id));
+    const flight=run(id,token).catch(error=>{
+      const justSaved=Date.now()-userSavedAt<15000;
+      if(owner()===id&&justSaved)global.showToast?.(error.message);else console.info('[capa]',error.message);
+    }).finally(()=>flights.delete(id));
     flights.set(id,flight);return flight;
   }
   async function flush(){clearTimeout(timer);await refresh();return owner()==='guest'||!get().pending;}

@@ -311,7 +311,7 @@ const ASSETS = [
   "./assets/playlist-hero-background.png",
   "./css/event-chat-audio.css?v=1",
   "./js/event-chat-audio.js?v=2",
-  "./js/profile-cover.js?v=1",
+  "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=31",
   "./css/search-menu.css?v=20",
