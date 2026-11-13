@@ -745,6 +745,7 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 .inline-block-textarea:focus{border-color:rgba(111,166,238,.5);box-shadow:0 0 0 3px rgba(76,142,229,.1),inset 0 1px 3px rgba(0,0,0,.2)}
 .inline-block-actions{display:flex;margin-top:12px;align-items:center;justify-content:flex-end;gap:8px}.inline-block-actions .inline-block-delete{min-width:0;margin-right:auto;padding-inline:10px;border-color:transparent;background:transparent;color:#e66b68}.inline-block-action-group{display:flex;align-items:center;gap:8px}
 .inline-block-actions button{display:inline-flex;min-width:82px;min-height:40px;padding:0 15px;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(194,205,220,.13);border-radius:999px;background:#292c31;color:#e2e5e9;font-family:"SF Pro Text",-apple-system,BlinkMacSystemFont,sans-serif!important;font-size:13px!important;font-weight:650!important;line-height:1!important;letter-spacing:-.01em;white-space:nowrap;cursor:pointer}.inline-block-actions button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inline-block-insert{display:flex;margin-top:10px;gap:8px;flex-wrap:wrap}.inline-block-insert button{min-height:40px;padding:0 13px;border:1px dashed rgba(194,205,220,.22);border-radius:999px;background:transparent;color:#c5d0de;font-family:"SF Pro Text",-apple-system,BlinkMacSystemFont,sans-serif!important;font-size:13px!important;font-weight:600!important;line-height:1!important}.inline-block-insert button:active{transform:scale(.97)}
 .inline-block-actions button.primary{border-color:#287be8;background:#287be8;color:#fff;box-shadow:none}
 .inline-block-actions button:active{transform:scale(.97)}
 .inline-delete-confirm-layer{position:fixed;z-index:420;inset:0;display:flex;padding:18px;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7)}.inline-delete-confirm{width:min(100%,430px);padding:22px 20px calc(18px + env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.08);border-radius:24px;background:#1c1d20;color:#f5f5f7;box-shadow:0 -16px 42px rgba(0,0,0,.38)}.inline-delete-confirm h2{margin:0;font-size:19px;letter-spacing:-.02em}.inline-delete-confirm p{margin:8px 0 20px;color:#a8abb1;font-size:13px;line-height:1.45}.inline-delete-confirm-actions{display:flex;justify-content:flex-end;gap:9px}.inline-delete-confirm-actions button{min-height:42px;padding:0 17px;border:0;border-radius:999px;background:#2a2c31;color:#f3f4f6;font:650 13px/1 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.inline-delete-confirm-actions .danger{background:rgba(229,72,77,.16);color:#ff7470}@media(max-width:374px){.inline-block-actions{align-items:stretch}.inline-block-actions .inline-block-delete{padding-inline:6px}.inline-block-action-group{gap:6px}.inline-block-actions button{min-width:72px;padding-inline:11px}}
@@ -2381,6 +2382,41 @@ function inlineBlockActionMarkup(songId,index,kind,saveHandler,saveLabel='Salvar
   return `<div class="inline-block-actions"><button type="button" class="inline-block-delete" onclick="event.stopPropagation();openInlineBlockDeleteConfirm('${eventEsc(String(songId))}',${index},'${kind}')">${trash}<span>Excluir</span></button><div class="inline-block-action-group"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();${saveHandler}">${check}<span>${saveLabel}</span></button></div></div>`;
 }
 
+// Resumo harmônico: inserir um bloco novo antes ou depois do bloco que está em edição.
+function inlineBlockInsertMarkup(songId,index){
+  const id=eventEsc(String(songId));
+  return `<div class="inline-block-insert" role="group" aria-label="Adicionar bloco"><button type="button" onclick="event.stopPropagation();openInlineNewBlock('${id}',${index},'above',this)">＋ Adicionar acima</button><button type="button" onclick="event.stopPropagation();openInlineNewBlock('${id}',${index},'below',this)">＋ Adicionar abaixo</button></div>`;
+}
+function openInlineNewBlock(songId,index,position,button){
+  const card=button?.closest('[data-inline-editing]');
+  if(card){
+    const original=card.dataset.inlineOriginal,current=JSON.stringify([card.querySelector('.inline-block-chords')?.value??'',card.querySelector('.inline-block-lyrics')?.value??'']);
+    // Não descarta sem aviso o que a pessoa já mudou neste bloco.
+    if(original&&original!==current){showToast('⚠️ Salve ou cancele este bloco antes de adicionar outro.');return;}
+  }
+  renderDetail();
+  const target=[...document.querySelectorAll('#view-detail [data-long-press-edit]')].find(el=>el.dataset.longPressEdit===String(songId)&&el.dataset.editSection===String(index));
+  if(!target){showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');return;}
+  const insertAt=position==='above'?index:index+1,id=eventEsc(String(songId)),check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+  const draft=document.createElement('div');draft.className=target.className;draft.dataset.inlineEditing='true';draft.dataset.inlineNew='true';
+  // No resumo a letra vai na linha de baixo dos acordes, no mesmo campo (como nos blocos existentes).
+  draft.innerHTML=`<label class="inline-block-label" for="inline-new-chords">Bloco novo — cifras e letra</label><textarea class="inline-block-textarea inline-block-chords" id="inline-new-chords" placeholder="C#m  B  A  F#m\nComo em Gales Tu fez"></textarea><div class="inline-block-actions"><div class="inline-block-action-group"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineNewBlock('${id}',${insertAt},this)">${check}<span>Adicionar</span></button></div></div>`;
+  target.insertAdjacentElement(position==='above'?'beforebegin':'afterend',draft);
+  draft.scrollIntoView({block:'center',behavior:'smooth'});
+  draft.querySelector('textarea')?.focus({preventScroll:true});
+}
+function saveInlineNewBlock(songId,insertAt,button){
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const chords=card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),lyrics='';
+  if(!chords){showToast('⚠️ Adicione pelo menos um acorde');return;}
+  const model=songFormat.fromLegacy(song);if(insertAt<0||insertAt>model.sections.length){showToast('⚠️ A música mudou. Reabra e tente de novo.');renderDetail();return;}
+  const parsed=songFormat.fromLegacy({blocos:[{l:lyrics,c:chords}]}).sections[0];
+  if(!parsed){showToast('⚠️ Não foi possível entender esse bloco.');return;}
+  const sections=[...model.sections];sections.splice(insertAt,0,parsed);
+  const candidate=songFormat.toLegacy(songFormat.normalize({...model,sections}),song);
+  button.disabled=true;
+  return commitInlineSongEdit(song,candidate,'✅ Bloco adicionado');
+}
 function beginInlineBlockEdit(target){
   if(!target||target.dataset.inlineEditing==='true'||stageMode)return;
   const songId=target.dataset.longPressEdit,section=target.dataset.editSection;
@@ -2402,7 +2438,8 @@ function beginInlineBlockEdit(target){
     const index=Number(section),current=inlineEditSection(song,index);if(!current){renderDetail();return;}
     const block=inlineSectionToBlock(current);
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
-    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockInsertMarkup(songId,index)}${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+    target.dataset.inlineOriginal=JSON.stringify([block.c,block.l]);
   }
   target.querySelector('textarea')?.focus();
 }
