@@ -2437,7 +2437,7 @@ async function commitInlineSongEdit(song,candidate,message){
   }
   if(detailEventContext&&currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id)){
     const result=await saveContextEventSong({...detailEventContext},eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:songFormat.parseCapo(candidate.capo)}}));
-    if(result?.ok===false){showToast('⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
+    if(result?.ok===false){showToast(result.message||'⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
     renderDetail();showToast(message);return true;
   }
   const library=musicas.find(item=>String(item.id)===String(song.id));
@@ -5241,17 +5241,20 @@ function eventSongCopy(song,state=song.playbackSettings||{}){
 function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),chordSheetKey:model.originalKey,notes,songData:data};}
 // MANUTENÇÃO: O contexto captura proprietário/evento/item; revalidá-lo evita aplicar resposta tardia em outra conta.
 async function saveContextEventSong(context,data,options={}){
-  if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return {ok:false};}
-  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));if(!item||!eventModel.canAccess(event,owner))return {ok:false};
+  if(context.ownerId!==appCurrentUser.id){const message='⚠️ A conta mudou. Reabra a música.';showToast(message);return {ok:false,message};}
+  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));
+  // Sem estes avisos a tela só mostrava "Não foi possível salvar" e não havia como saber o motivo.
+  if(!item){const message='⚠️ Esta música mudou no evento. Volte ao evento, reabra a música e tente de novo.';showToast(message);return {ok:false,message};}
+  if(!eventModel.canAccess(event,owner)){const message='⚠️ Sua conta não aparece neste evento. Saia, entre de novo na conta e tente outra vez.';showToast(message);return {ok:false,message};}
   const originalDraft=detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId?JSON.stringify(detailEditableState()):null;
   const originalSimpleEditor=simpleReviewDraft,originalEventEditor=eventSongEditDraft,originalModalOpen=document.getElementById('modal-overlay').style.display==='flex';
   const modalValues=()=>JSON.stringify([...document.querySelectorAll('#modal-body input,#modal-body textarea,#modal-body select')].map(input=>[input.id,input.value]));
   const originalModalChild=originalModalOpen?document.getElementById('modal-body').firstElementChild:null,originalModalValues=originalModalOpen?modalValues():null;
   let pendingSync=event.remoteVersion==null;
   const changes=eventEditFromSong(data,item.personalEdits[owner]?.notes||item.shared.notes||'');
-  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return {ok:false};}pendingSync=true;updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
+  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){const message='⚠️ '+error.message;showToast(message);return {ok:false,message};}pendingSync=true;updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
   if(owner!==appCurrentUser.id)return {ok:false};
-  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){showToast('⚠️ Não foi possível salvar no evento.');return {ok:false};}setlists=events;
+  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){const message='⚠️ Não foi possível guardar o evento neste aparelho (memória do navegador cheia?).';showToast(message);return {ok:false,message};}setlists=events;
   const editorUnchanged=originalSimpleEditor===simpleReviewDraft&&originalEventEditor===eventSongEditDraft&&originalModalOpen===(document.getElementById('modal-overlay').style.display==='flex')&&(!originalModalOpen||(originalModalChild===document.getElementById('modal-body').firstElementChild&&originalModalValues===modalValues()));
   if(detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId&&editorUnchanged&&originalDraft===JSON.stringify(detailEditableState())){
     currentDetailSongOverride=eventSongVariant(updated,updated.repertoire.find(i=>String(i.id)===String(item.id)),owner);
