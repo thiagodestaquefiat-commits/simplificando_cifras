@@ -10,7 +10,8 @@
   const dismissed=()=>new Set(scopedValues(dismissedState()));
   const isDismissed=id=>dismissed().has(String(id));
   const isAcknowledged=id=>seen().has(String(id))||isDismissed(id);
-  const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))].filter(item=>!isDismissed('invite:'+item.id));
+  // Pending invitations are actions, not history. Ignore legacy dismissals for them.
+  const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))];
   const items=()=>{
     const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
     const hidden=dismissed();
@@ -56,7 +57,7 @@
     global.eventUserInvites?.renderInbox?.();
     global.playlistInvites?.renderInbox?.();
     el('notification-mark-all').disabled=!pending().some(i=>!read.has('invite:'+i.id))&&!feed.some(i=>i.unread&&!read.has(i.id));
-    el('notification-clear-all').disabled=!pending().length&&!feed.length;
+    el('notification-clear-all').disabled=!feed.length;
   }
   function installSwipe(target){
     let gesture=null,openRow=null;
@@ -80,18 +81,18 @@
     });update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
   }
   function markChatRead(eventId){saveRead(items().filter(i=>i.kind==='message'&&String(i.eventId)===String(eventId)).map(i=>i.id));update();}
-  function clearAll(){
-    const feed=items(),invitations=pending();
-    const ids=[...feed.map(i=>String(i.id)),...invitations.map(i=>'invite:'+i.id)];
+  function clearHistory(){
+    const ids=items().map(i=>String(i.id));
+    if(!ids.length)return;
     if(!saveScoped(dismissedKey,dismissedState(),[...dismissed(),...ids])){global.showToast('Não foi possível limpar as notificações neste dispositivo.');return;}
-    update();global.showToast('Notificações limpas.');
+    update();global.showToast('Histórico de notificações limpo.');
   }
   function open(){
     global.closeModal();
     el('modal-overlay').classList.add('notification-center-overlay');
     el('modal-body').innerHTML='<section class="notification-center-page"><header class="notification-center-header"><button id="notification-center-close" class="notification-center-back" type="button" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>Notificações</h1><button id="notification-mark-all" class="notification-mark-all" type="button">Ler todas</button></header><main class="notification-center-content"><section class="notification-invitations"><h2 class="notification-period">Convites</h2><div id="user-invitations-status" role="status" aria-live="polite"></div><div id="user-invitations-list"></div></section><div id="roudy-notification-items"></div></main></section>';
     const toolbar=document.createElement('div');toolbar.className='notification-center-tools';
-    const clearButton=document.createElement('button');clearButton.id='notification-clear-all';clearButton.className='notification-clear-all';clearButton.type='button';clearButton.textContent='Limpar tudo';clearButton.addEventListener('click',clearAll);toolbar.appendChild(clearButton);
+    const clearButton=document.createElement('button');clearButton.id='notification-clear-all';clearButton.className='notification-clear-all';clearButton.type='button';clearButton.textContent='Limpar histórico';clearButton.addEventListener('click',clearHistory);toolbar.appendChild(clearButton);
     el('modal-body').querySelector('.notification-center-header').after(toolbar);
     const playlistInvitations=document.createElement('div');playlistInvitations.id='playlist-invitations-list';el('user-invitations-list').after(playlistInvitations);
     el('notification-mark-all').addEventListener('click',markAll);el('notification-center-close').addEventListener('click',global.closeModal);

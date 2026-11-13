@@ -43,8 +43,9 @@ const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://local
   assert.equal(await page.locator('#user-invitations-button .event-notification-badge').count(),0,'ler todas preserva mais de mil IDs');
   await page.evaluate(()=>{testFeed.push({...testFeed[0],id:'notice-new'});notificationCenter.update();});
   assert.equal(await page.locator('#user-invitations-button .event-notification-badge').textContent(),'1','apenas a alteração nova volta ao contador');
-  await page.getByRole('button',{name:'Limpar tudo',exact:true}).click();
-  assert.equal(await page.locator('.notification-row').count(),0,'limpar tudo esvazia o histórico, inclusive avisos já lidos');
+  const clearHistory=page.getByRole('button',{name:'Limpar histórico',exact:true});
+  await clearHistory.click();
+  assert.equal(await page.locator('.notification-row').count(),0,'limpar histórico oculta avisos lidos e não lidos');
   await page.evaluate(()=>notificationCenter.update());
   assert.equal(await page.locator('.notification-row').count(),0,'atualização não restaura avisos limpos');
   assert.equal(await page.locator('#user-invitations-button .event-notification-badge').count(),0);
@@ -54,24 +55,53 @@ const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://local
     window.originalStorage=storage;
     window.storage={...storage,set:(key,value)=>key==='sc_notification_center_dismissed_v1'?false:originalStorage.set(key,value)};
   });
-  await page.getByRole('button',{name:'Limpar tudo',exact:true}).click();
+  await clearHistory.click();
   assert.equal(await page.locator('.notification-row').count(),1,'falha de gravação não finge que a limpeza funcionou');
-  await page.evaluate(()=>{
+  await page.evaluate(async()=>{
     window.storage=originalStorage;
     window.originalPlaylistApi=playlistCollaboration;
-    window.testInvitations=[{id:'pending-clear-test',playlistName:'Compartilhada',inviter:{name:'Outro'}}];
+    window.originalAuth=appAuth;
+    window.originalEventApi=eventCollaboration;
+    window.originalNotificationScopes=getRoudyNotificationScopes;
+    const scopes=getRoudyNotificationScopes();
+    window.getRoudyNotificationScopes=()=>scopes;
+    const state={authenticated:true,user:{id:'history-test-user',name:'Pessoa de teste'}};
+    window.appAuth={...appAuth,getState:()=>state};
+    window.eventCollaboration={...eventCollaboration,listInvitations:async()=>({invitations:[{id:'pending-event-test',eventTitle:'Ensaio de sábado',role:'Guitarra',inviter:{name:'Marina'}}]}),respondInvitation:()=>{throw new Error('A limpeza não deve responder a convites.');}};
+    window.testInvitations=[{id:'pending-clear-test',playlistName:'Repertório acústico',inviter:{name:'Rafael'}}];
     window.playlistCollaboration={...playlistCollaboration,getInbox:()=>({notifications:[],invitations:testInvitations})};
-    notificationCenter.update();
+    const key='sc_notification_center_dismissed_v1',legacy=storage.get(key,{});
+    for(const scope of scopes)legacy[scope]=[...(legacy[scope]||[]),'invite:pending-event-test','invite:playlist-invite:pending-clear-test'];
+    storage.set(key,legacy);
+    testFeed.at(-1).title='Equipe de louvor';testFeed.at(-1).summary='Atualizou o repertório do próximo ensaio.';testFeed.at(-1).createdAt=new Date().toISOString();
+    await eventUserInvites.refresh();
   });
-  assert.equal(await page.locator('#playlist-invitations-list .user-invite-panel').count(),1);
-  await page.getByRole('button',{name:'Limpar tudo',exact:true}).click();
+  const inviteCards=page.locator('.notification-invitations .user-invite-panel');
+  assert.equal(await inviteCards.count(),2,'convites ainda pendentes e ocultados pela versão anterior voltam a aparecer');
+  assert.equal(await page.locator('#user-invitations-button .event-notification-badge').textContent(),'3');
+  async function screenshot(name){
+    if(!process.env.NOTIFICATION_SCREENSHOT_DIR)return;
+    await page.waitForFunction(()=>{const toast=document.getElementById('toast');return !toast||getComputedStyle(toast).opacity==='0';});
+    await page.screenshot({path:path.join(process.env.NOTIFICATION_SCREENSHOT_DIR,name)});
+  }
+  await screenshot('notificacoes-limpar-historico.png');
+  await clearHistory.click();
   await page.evaluate(()=>notificationCenter.update());
-  assert.equal(await page.locator('#playlist-invitations-list .user-invite-panel').count(),0,'limpeza oculta também o cartão de convite');
-  assert.equal(await page.evaluate(()=>testInvitations.length),1,'limpeza não aceita nem rejeita o convite');
+  assert.equal(await page.locator('.notification-row').count(),0);
+  assert.equal(await inviteCards.count(),2,'limpar histórico mantém os convites de evento e de playlist');
+  assert.equal(await page.getByRole('button',{name:'Aceitar',exact:true}).count(),2);
+  assert.equal(await page.getByRole('button',{name:'Rejeitar',exact:true}).count(),2);
+  assert.equal(await page.locator('#user-invitations-button .event-notification-badge').textContent(),'2','convites não lidos continuam no sino');
+  assert.equal(await clearHistory.isDisabled(),true,'somente convites não habilitam a limpeza');
+  await screenshot('notificacoes-historico-limpo.png');
+  await page.getByRole('button',{name:'Ler todas',exact:true}).click();
+  assert.equal(await page.locator('#user-invitations-button .event-notification-badge').count(),0);
+  assert.equal(await inviteCards.count(),2,'ler todas também preserva os convites');
   const isolated=await page.evaluate(()=>{
     const original=getRoudyNotificationScopes;window.getRoudyNotificationScopes=()=>['another-account'];
     const hidden=notificationCenter.isDismissed('notice-0');window.getRoudyNotificationScopes=original;
-    window.playlistCollaboration=originalPlaylistApi;return hidden;
+    window.playlistCollaboration=originalPlaylistApi;window.appAuth=originalAuth;window.eventCollaboration=originalEventApi;
+    window.getRoudyNotificationScopes=originalNotificationScopes;return hidden;
   });
   assert.equal(isolated,false,'limpeza de uma conta não oculta notificações de outra');
   await page.reload({waitUntil:'domcontentloaded'});

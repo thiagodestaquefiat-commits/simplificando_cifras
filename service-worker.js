@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v723-main-integrated-support-audio";
+const CACHE_NAME = "simplificando-cifras-v724-notification-history";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -75,12 +75,12 @@ const ASSETS = [
   "./css/home-playlists.css?v=30",
   "./js/home-playlists.js?v=26",
   "./js/user-playlists.js?v=6",
-  "./js/notification-center.js?v=7",
+  "./js/notification-center.js?v=8",
   "./js/playlist-collaboration.js?v=1",
   "./js/personal-playlist-sync.js?v=3",
-  "./js/playlist-invites.js?v=6",
+  "./js/playlist-invites.js?v=7",
   "./js/event-model.js?v=8",
-  "./js/event-user-invites.js?v=11",
+  "./js/event-user-invites.js?v=12",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
@@ -233,7 +233,7 @@ const ASSETS = [
   "./assets/chat-cables-background.png",
   "./js/ui-i18n.js?v=10",
   "./js/ui-i18n.js?v=12",
-  "./js/ui-i18n.js?v=14",
+  "./js/ui-i18n.js?v=15",
   "./js/tuner.js?v=2",
   "./js/tuner.js?v=3",
   "./js/chord-audio.js?v=1",
