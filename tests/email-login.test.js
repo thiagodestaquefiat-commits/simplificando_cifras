@@ -40,7 +40,9 @@ function harness(options = {}) {
 
 (async () => {
   const { window, calls } = harness();
-  await assert.rejects(window.appAuth.sendEmailCode("x@y.z"), /configurado/, "sem inicializar não envia");
+  await window.appAuth.sendEmailCode("x@y.test");
+  assert.equal(calls.otp.length,1,"o botão prepara o login mesmo sem inicialização anterior");
+  calls.otp.length=0;
   await window.appAuth.initialize();
 
   await assert.rejects(window.appAuth.sendEmailCode("sem-arroba"), /e-mail válido/);

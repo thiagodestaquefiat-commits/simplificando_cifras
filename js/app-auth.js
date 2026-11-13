@@ -7,6 +7,8 @@
   let client = null;
   let session = null;
   let initializationPromise = null;
+  let sdkPromise = null;
+  let googleSignInPromise = null;
   let callbackExchangeAttempted = false;
   let offlineSession = false;
   let authSubscription = null;
@@ -85,14 +87,24 @@
 
   function loadSdk() {
     if (global.supabase && global.supabase.createClient) return Promise.resolve();
-    return new Promise((resolve, reject) => {
+    if (sdkPromise) return sdkPromise;
+    sdkPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
+      let timer;
+      const finish = error => {
+        global.clearTimeout(timer);
+        script.onload = script.onerror = null;
+        if (error) { script.remove?.(); reject(error); } else resolve();
+      };
       script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
       script.async = true;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("Não foi possível carregar o serviço de login."));
+      script.onload = () => finish(global.supabase?.createClient ? null : new Error("Não foi possível carregar o serviço de login."));
+      script.onerror = () => finish(new Error("Não foi possível carregar o serviço de login."));
+      // Um download lento no celular não deve bloquear todas as tentativas seguintes.
+      timer = global.setTimeout(() => finish(new Error("O serviço de login demorou demais para carregar.")), 15000);
       document.head.appendChild(script);
-    });
+    }).finally(() => { sdkPromise = null; });
+    return sdkPromise;
   }
 
   function sessionStorageKey(){return config.supabaseUrl?'sb-'+new URL(config.supabaseUrl).hostname.split('.')[0]+'-auth-token':null;}
@@ -105,7 +117,8 @@
   }
   async function initializeOnce(forceRefresh, initialCallbackCode) {
     try {
-      const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
+      let cached = null;
+      try { cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null"); } catch (_) { /* Cache indisponível não impede consultar a configuração pública. */ }
       if (!forceRefresh && cached && cached.enabled) config = cached;
       else {
         if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para verificar o login.");
@@ -113,11 +126,12 @@
         const response = await withTimeout(global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" }, ...(controller ? { signal: controller.signal } : {}) }), "A verificação do login demorou demais.").catch((error) => { controller?.abort(); throw error; });
         if (!response.ok) throw new Error("Configuração de login indisponível.");
         config = await response.json();
-        if (config.enabled && global.localStorage) global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        if (config.enabled && global.localStorage) { try { global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (_) { /* Cache é opcional para iniciar um login online. */ } }
       }
+      config = { ...config, error: null };
       if (!config.enabled) { emit(); return getState(); }
       if(global.navigator?.onLine===false){restoreOfflineSession();return getState();}
-      await withTimeout(loadSdk(), "O serviço de login demorou demais para carregar.");
+      await loadSdk();
       const code = initialCallbackCode;
       if (!client) {
         client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
@@ -159,11 +173,26 @@
     return initializationPromise;
   }
 
-  async function signInWithGoogle() {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
-    const redirectTo = `${new URL(global.location.href).origin}/`;
-    const result = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
-    if (result.error) throw result.error;
+  async function ensureLoginReady() {
+    if (global.navigator?.onLine === false) throw new Error("Conecte-se à internet para entrar na sua conta.");
+    // initialize() compartilha a preparação em andamento e permite uma nova tentativa
+    // após falha. Nunca interpretar cliente ausente como configuração inexistente.
+    if (!client) await initialize();
+    if (!client) {
+      if (config.error) throw new Error("Não foi possível preparar o login. Verifique sua conexão e tente novamente.");
+      throw new Error("O login ainda não foi configurado pela equipe.");
+    }
+  }
+
+  function signInWithGoogle() {
+    if (googleSignInPromise) return googleSignInPromise;
+    googleSignInPromise = (async () => {
+      await ensureLoginReady();
+      const redirectTo = `${new URL(global.location.href).origin}/`;
+      const result = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (result.error) throw result.error;
+    })().finally(() => { googleSignInPromise = null; });
+    return googleSignInPromise;
   }
 
   // Login por e-mail com código de 6 dígitos (qualquer provedor: Outlook, Hotmail, Yahoo...).
@@ -177,7 +206,7 @@
   }
 
   async function sendEmailCode(value) {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    await ensureLoginReady();
     const email = normalizeEmail(value);
     const result = await withTimeout(client.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }), "O envio do código demorou demais. Tente novamente.", 15000);
     if (result.error) {
@@ -188,7 +217,7 @@
   }
 
   async function verifyEmailCode(value, code) {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    await ensureLoginReady();
     const email = normalizeEmail(value);
     const token = String(code || "").replace(/\D/g, "");
     if (token.length < 6 || token.length > 10) throw new Error("Digite o código que chegou no seu e-mail.");
