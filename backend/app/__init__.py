@@ -84,7 +84,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     def health():
         return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY")),
                         "deepseekConfigured": bool(app.config.get("DEEPSEEK_API_KEY")),
-                        "appVersion": "v168-resumo-organizado"})
+                        "appVersion": "v169-resumo-por-voltas"})
 
     from .routes.events import blueprint as events_blueprint
     from .routes.assistant import blueprint as assistant_blueprint

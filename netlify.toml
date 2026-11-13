@@ -1,0 +1,7 @@
+# Economia de créditos do Netlify: não faz build quando o commit só mexe em coisas que não vão
+# para o site — o backend roda no Railway; testes, docs e .md não mudam o app.
+# Só a regra de ignorar fica aqui; o resto das configurações de build continua no painel do Netlify.
+# (exit 0 = pular o build; exit 1 = fazer o build)
+[build]
+  # Branch que não é a main (ex.: pacote-pendente, guardado antes de subir) nunca gera build.
+  ignore = "if [ \"$CONTEXT\" = \"branch-deploy\" ]; then exit 0; fi; git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)backend' ':(exclude)tests' ':(exclude)docs' ':(exclude)*.md'"

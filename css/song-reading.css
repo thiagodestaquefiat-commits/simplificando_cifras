@@ -116,3 +116,10 @@
 #view-detail.stage-clean .song-controls.is-scrolling .song-control-strip{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(112px,1.6fr)!important}
 
 /* Modo palco: Resumo / Letra e cifra / Letra com as mesmas bolinhas e o mesmo arrastar do estudo (Thiago, 13/10). */
+/* Acorde preso à letra (renderChordLyricPair): a linha quebra entre palavras e cada acorde vai junto
+   com o pedaço de letra embaixo dele, em qualquer zoom e no Modo Palco. */
+#view-detail #detail-content .chord-pair{display:block;margin:0;white-space:normal}
+#view-detail #detail-content .chord-pair .cp-unit{display:inline-flex;align-items:flex-start;white-space:nowrap;vertical-align:top}
+#view-detail #detail-content .chord-pair .cp-seg{display:inline-flex;flex-direction:column;align-items:flex-start}
+#view-detail #detail-content .chord-pair .full-chord-line{display:block;margin:0!important;white-space:pre!important}
+#view-detail #detail-content .chord-pair .cp-seg.has-chord .cp-chord{padding-right:.4em}

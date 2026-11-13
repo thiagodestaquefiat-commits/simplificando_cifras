@@ -11,7 +11,7 @@ from ..schemas.resumo_harmonico import CifraCompleta, ResumoHarmonicoRequest, Re
 from .harmonic_normalizer import (block_needs_condensing, ensure_client_chords, has_repeated_block_loop, has_repeated_phrase, has_rotated_loops,
                                   is_section_name, normalize_response, render_full_chord_sheet)
 from .content_extractor import clean_musical_text
-from .local_sheet_parser import parse_chord_sheet
+from .local_sheet_parser import apply_summary_rule, parse_chord_sheet
 from .key_inference import infer_key, transpose_note
 from .web_search import find_chord_sheet, search_chord_context
 from .providers import DeepSeekProvider, ProviderError, ProviderRefusal
@@ -113,6 +113,18 @@ def _user_web_quota(limit: str):
     return _UserWebQuota(item)
 
 
+def _rule_blocks(blocks) -> list[tuple]:
+    rebuilt = apply_summary_rule([(list(block.acordes), block.repeticoes, block.fraseGuia) for block in blocks])
+    return [(block["acordes"], block["repeticoes"], block["fraseGuia"]) for block in rebuilt]
+
+
+def _follows_rule(blocks) -> bool:
+    """O resumo já está como a regra ROUDY de voltas deixaria (nada a juntar nem a tirar)."""
+    current = [(list(block.acordes), block.repeticoes if block.repeticoes and block.repeticoes > 1 else None, block.fraseGuia)
+               for block in blocks]
+    return _rule_blocks(blocks) == current
+
+
 def summary_off_standard(result: ResumoHarmonicoResponse) -> bool:
     """Resumo fora do padrão ROUDY (frase-guia + uma volta dos acordes + repetições).
 
@@ -133,7 +145,11 @@ def summary_off_standard(result: ResumoHarmonicoResponse) -> bool:
         return True
     if has_rotated_loops(blocks):  # G Em C D | Em C D G Em C D: a mesma volta quebrada pela letra
         return True
-    return not any(block.fraseGuia for block in blocks)
+    if not _follows_rule(blocks):  # regra de voltas (10/11/2026): cada volta uma vez, "Parte 1 de 3" não é frase
+        return True
+    # sem nenhuma frase: só é problema com mais de uma volta, ou quando há Letra + Cifras para remontar
+    sheet = result.fullChordSheet
+    return not any(block.fraseGuia for block in blocks) and (len(blocks) > 1 or bool(sheet and (sheet.content or "").strip()))
 
 
 def roudy_summary(result: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
@@ -142,16 +158,26 @@ def roudy_summary(result: ResumoHarmonicoResponse) -> ResumoHarmonicoResponse:
     Sem IA e sem ScraperAPI: usa o mesmo montador local da cifra do Cifra Club. Tom, capo e a
     Letra + Cifras continuam os da música; só o resumo é refeito (na resposta, nada muda no banco).
     """
+    if not summary_off_standard(result):
+        return result
     sheet = result.fullChordSheet
-    if not sheet or not (sheet.content or "").strip() or not summary_off_standard(result):
-        return result
-    try:
-        rebuilt = parse_chord_sheet(sheet.content, result.titulo, result.artista, key=result.tom)
-    except Exception:  # noqa: BLE001 - remontar é melhoria; o resumo original continua valendo
-        logger.warning("roudy_summary_rebuild_failed", exc_info=True)
-        return result
-    if rebuilt is None or not any(block.fraseGuia for block in rebuilt.harmonicSummary.blocos):
-        return result
+    rebuilt = None
+    if sheet and (sheet.content or "").strip():
+        try:
+            rebuilt = parse_chord_sheet(sheet.content, result.titulo, result.artista, key=result.tom)
+        except Exception:  # noqa: BLE001 - remontar é melhoria; o resumo original continua valendo
+            logger.warning("roudy_summary_rebuild_failed", exc_info=True)
+        if rebuilt is not None and not rebuilt.harmonicSummary.blocos:
+            rebuilt = None
+    if rebuilt is None:
+        # Sem Letra + Cifras (ou sem dar pra remontar): aplica a regra de voltas no resumo salvo.
+        blocks = apply_summary_rule([(list(block.acordes), block.repeticoes, block.fraseGuia)
+                                     for block in result.harmonicSummary.blocos])
+        if not blocks:
+            return result
+        fixed = result.model_copy(deep=True)
+        fixed.harmonicSummary = fixed.harmonicSummary.model_validate({"blocos": blocks})
+        return fixed
     fixed = result.model_copy(deep=True)
     fixed.harmonicSummary = rebuilt.harmonicSummary
     logger.info("roudy_summary_rebuilt titulo=%r blocos=%d", result.titulo, len(fixed.harmonicSummary.blocos))
@@ -397,7 +423,8 @@ class IaService:
         except ProviderError as error:
             raise ApiError(error.code, error.public_message, error.status_code) from error
 
-        normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text)
+        normalized = normalize_response(result, "online" if has_online_source else payload.tipo, source_text=source_text,
+                                        trusted_repetitions=result is local_result)
         if source_text:
             source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
             formatted_text = None

@@ -44,7 +44,7 @@ def test_song_without_sheet_and_short_lines_is_not_changed(client):
     response = client.post("/api/resumo-harmonico/organizar", headers=auth_headers(client), json={"musicas": [{
         "id": "sem-letra", "titulo": "Só resumo", "tom": "G", "blocos": [{"acordes": ["G", "D", "Em", "C"]}]}]})
     result = response.get_json()["resultados"][0]
-    assert result["changed"] is False and result["motivo"] == "sem_letra_cifra"
+    assert result["changed"] is False and result["motivo"] == "ja_no_padrao"  # uma volta só, sem frase: é o padrão
 
 
 def test_bad_song_does_not_break_the_others(client):

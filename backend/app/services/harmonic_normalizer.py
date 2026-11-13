@@ -96,8 +96,13 @@ def client_suffix(suffix: str) -> str | None:
     return base
 
 
+# Grafia mais usada no Brasil: C#m em vez de Dbm, F#m em vez de Gbm. Eb, Ab e Bb continuam como vierem.
+PREFERRED_ROOTS = {"Db": "C#", "Gb": "F#"}
+
+
 def _shown_root(value: str) -> str:
-    return value[0].upper() + value[1:]
+    normalized = value[0].upper() + value[1:]
+    return PREFERRED_ROOTS.get(normalized, normalized)
 
 
 def _canonical_root(value: str) -> str:
@@ -437,7 +442,10 @@ def _clean_trailing_diagram_sections(sheet) -> None:
     ]
 
 
-def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source_text: str | None = None) -> ResumoHarmonicoResponse:
+def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source_text: str | None = None,
+                       trusted_repetitions: bool = False) -> ResumoHarmonicoResponse:
+    """trusted_repetitions: o resumo foi montado localmente da própria cifra (sem IA); as voltas
+    contadas lá valem mesmo quando a parte atravessa linhas em branco ou quebras de página."""
     normalized = result.model_copy(deep=True)
     if source_text is not None:
         source_text = clean_musical_text(source_text, (normalized.titulo, normalized.artista))
@@ -516,7 +524,7 @@ def normalize_response(result: ResumoHarmonicoResponse, source_type: str, source
         local_repetitions, next_cursor = _local_repeat_evidence(records, trecho, local_cursor)
         if trecho.repeticoes == 1:
             trecho.repeticoes = None
-        elif trecho.repeticoes and (source_text is not None or id(trecho) not in derived_repetitions):
+        elif trecho.repeticoes and not trusted_repetitions and (source_text is not None or id(trecho) not in derived_repetitions):
             locally_proven = source_text is None and local_repetitions == trecho.repeticoes
             explicitly_proven = _local_explicit_repeat(source_text, trecho, trecho.repeticoes)
             if source_text is not None:

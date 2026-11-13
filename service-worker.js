@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v724-notification-history";
+const CACHE_NAME = "simplificando-cifras-v731-main-integrated-notifications-audio";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -104,6 +104,7 @@ const ASSETS = [
   "./css/song-reading.css?v=12",
   "./css/song-reading.css?v=13",
   "./css/song-reading.css?v=15",
+  "./css/song-reading.css?v=16",
   "./js/ai/ai-harmonic-summary.js?v=21",
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
@@ -298,7 +299,7 @@ const ASSETS = [
   "./js/ai/api-config.js?v=7",
   "./js/song-reports.js?v=1",
   "./js/ai/harmonic-summary-client.js?v=18",
-  "./js/summary-organizer.js?v=4",
+  "./js/summary-organizer.js?v=5",
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
@@ -318,11 +319,13 @@ const ASSETS = [
   "./assets/playlist-hero-background.png",
   "./css/event-chat-audio.css?v=1",
   "./js/event-chat-audio.js?v=3",
-  "./js/profile-cover.js?v=1",
+  "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=31",
   "./css/search-menu.css?v=20",
-  "./js/search-menu.js?v=12"
+  "./js/search-menu.js?v=12",
+  "./js/android-back.js?v=3",
+  "./js/pull-refresh.js?v=2"
 ];
 
 self.addEventListener("install", (event) => {
