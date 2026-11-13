@@ -5236,13 +5236,21 @@ function transposeEventChordText(value,semitones){
 }
 // O tom-alvo pode mudar automaticamente; este campo descreve o tom REAL do texto salvo.
 function eventChordSheetAtKey(edit,key){return transposeEventChordText(edit?.chordSheet,eventKeyShift(edit?.chordSheetKey||edit?.key,key));}
+function eventShiftSections(sections,shift){
+  if(!shift)return sections;
+  return sections.map(section=>({...section,lines:section.lines.map(line=>{let cursor=-1;return {...line,chords:line.chords.map(c=>{const chord=shiftText(c.chord,shift),position=Math.max(c.position,cursor+1);cursor=position+chord.length;return {...c,chord,position};})};})}));
+}
 function eventSongModel(song,edit,fallbackEdit){
   const base=songFormat.fromLegacy(edit?.songData||fallbackEdit?.songData||song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
   const sourceKey=primary.chordSheet?(primary.chordSheetKey||primary.key):fallback.chordSheet?(fallback.chordSheetKey||fallback.key):base.originalKey;
   const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
-  const fullShift=eventKeyShift(base.originalKey,key),sections=songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
+  // O texto guarda a letra antes dos acordes; remontar os blocos por ele grudava a letra no acorde
+  // errado quando havia uma linha só de acordes antes (ex.: "G A 3x" / "E7" / letra). Quando o texto
+  // é o mesmo dos blocos salvos (songData), usa os blocos salvos, só transpostos para o tom.
+  const sourceText=String(primary.chordSheet||fallback.chordSheet||'').trim(),structured=base.sections.length&&(!sourceText||sourceText===songFormat.simpleText(base).trim());
+  const fullShift=eventKeyShift(base.originalKey,key),sections=structured?eventShiftSections(base.sections,eventKeyShift(sourceKey,key)):songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
   const fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
