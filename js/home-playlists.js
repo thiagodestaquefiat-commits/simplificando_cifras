@@ -854,27 +854,56 @@
     return clean(song.title) + "|" + clean(song.artist);
   }
 
+  // Deslocamento que leva as cifras de "from" para a forma (tom real + capo) de "to".
+  function shapeShift(from, to) {
+    const capo = (value) => Number(global.songFormat.parseCapo(value && value.capo)) || 0;
+    return ((global.eventKeyShift(from.key || from.originalKey, to.key || to.originalKey) - (capo(to) - capo(from))) % 12 + 12) % 12;
+  }
+  // Só preenche o que falta na música de quem recebe (nunca sobrescreve o que ela já tem).
+  function fillMissingFromReceived(song, received) {
+    if (song.fullChordSheet?.content || !received?.fullChordSheet?.content) return song;
+    const shift = shapeShift(received, song), sheet = received.fullChordSheet;
+    return { ...song, fullChordSheet: { ...sheet, content: global.transposeEventChordText(sheet.content, shift), sections: shift ? [] : (sheet.sections || []) }, updatedAt: new Date().toISOString() };
+  }
+  // O tom da playlist vinha como semitons sobre a música de quem enviou; aplicado na cópia de
+  // quem recebe (que pode estar em outro tom) a música tocava fora do tom combinado.
+  function playbackForExistingSong(song, received, playback) {
+    const senderKey = received.key || received.originalKey, ownKey = song.key || song.originalKey;
+    if (!senderKey || !ownKey) return playback;
+    const target = global.shiftText(senderKey, Number(playback.semitones) || 0);
+    let semitones = global.eventKeyShift(ownKey, target);
+    if (semitones > 6) semitones -= 12;
+    return { ...playback, semitones };
+  }
+
   // Salva na conta de quem recebeu: reaproveita músicas iguais da biblioteca e adiciona só as que faltam.
-  function saveReceived() {
-    const data = receivedPlaylist;
+  function saveReceived() { saveReceivedFrom(receivedPlaylist); }
+  function saveReceivedFrom(data) {
     if (!data) return;
     const byIdentity = new Map(musicas.map((song) => [identity(song), song]));
-    const newSongs = [];
+    const newSongs = [], completed = new Map();
     const items = data.items.map((item) => {
-      let song = byIdentity.get(identity(item.song));
+      let song = byIdentity.get(identity(item.song)), playback = item.playback || {};
       if (!song) {
         song = global.songModel.create({ ...item.song, id: "shared_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8), librarySync: undefined, playbackSettings: undefined });
         byIdentity.set(identity(song), song);
         newSongs.push(song);
+      } else {
+        // A música já existia na biblioteca de quem recebe (muitas vezes a do catálogo, só com o resumo).
+        // Antes a versão completa enviada era descartada e o "Completar cifra" aparecia de novo.
+        const filled = fillMissingFromReceived(song, item.song);
+        if (filled !== song) { completed.set(song.id, filled); byIdentity.set(identity(filled), filled); song = filled; }
+        playback = playbackForExistingSong(song, item.song, playback);
       }
-      return { songId: song.id, playback: item.playback || {}, notes: item.notes || "" };
+      return { songId: song.id, playback, notes: item.notes || "" };
     });
-    if (newSongs.length && !global.commitSongs([...musicas, ...newSongs])) { toast("⚠️ Não foi possível salvar as músicas desta playlist."); return; }
+    const library = completed.size ? musicas.map((song) => completed.get(song.id) || song) : musicas;
+    if ((newSongs.length || completed.size) && !global.commitSongs([...library, ...newSongs])) { toast("⚠️ Não foi possível salvar as músicas desta playlist."); return; }
     const playlist = global.userPlaylists.create(owner(), data.name, items, { description: data.description, sharedFrom: data.id });
     global.closeEventAdminSheet();
     receivedPlaylist = null;
     if (!playlist) { toast("⚠️ Não foi possível salvar a playlist."); return; }
-    toast(newSongs.length ? `Playlist salva. ${newSongs.length} ${newSongs.length === 1 ? "música nova entrou" : "músicas novas entraram"} na sua biblioteca.` : "Playlist salva na sua conta.");
+    toast((newSongs.length ? `Playlist salva. ${newSongs.length} ${newSongs.length === 1 ? "música nova entrou" : "músicas novas entraram"} na sua biblioteca.` : "Playlist salva na sua conta.") + (completed.size ? ` ${completed.size} ${completed.size === 1 ? "música ganhou" : "músicas ganharam"} a Letra + Cifras.` : ""));
     global.switchTab && global.switchTab("musicas");
     open(playlist.id);
   }
@@ -893,7 +922,7 @@
   global.homePlaylists = Object.freeze({
     PREFIX, artwork, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
     create, closeCreate, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
-    openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
+    openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, saveReceivedFrom, checkSharedLink,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
     isCollaborativeContext, saveItemSong,
     get ownerId() { return owner(); }, get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }
