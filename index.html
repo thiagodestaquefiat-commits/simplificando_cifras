@@ -1603,9 +1603,9 @@ async function saveDetailChanges(options={}){
     // Só tom e capotraste (escolha consciente) viram versão pessoal quando ainda não existe uma.
     const event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));
     const hasPersonal=Boolean(item)&&eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id)?.effective.scope==='personal';
-    const toneChanged=Number(state.semitones)!==Number(detailEditBaseline.semitones)||Number(state.capo)!==Number(detailEditBaseline.capo);
+    const toneChanged=Number(state.semitones)!==Number(detailEditBaseline.semitones);
     if(!hasPersonal&&!toneChanged){detailEditBaseline=state;return {ok:true,skipped:true};}
-    return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},state),options):{ok:false};}
+    return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},{...state,capo:storedCapo}),options):{ok:false};}
   if(detailPlaylistContext&&window.homePlaylists){const state=detailEditableState();if(!homePlaylists.saveItemPlayback(detailPlaylistContext,state))return {ok:false};
     if(currentDetailSongOverride)currentDetailSongOverride={...currentDetailSongOverride,playbackSettings:{...(currentDetailSongOverride.playbackSettings||{}),...state,video:undefined}};
     detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();if(!options.quiet&&!options.silent)showToast('✅ Tom salvo nesta playlist');return {ok:true,scope:'user-playlist'};}
@@ -2215,9 +2215,16 @@ function setInstrument(inst){
 }
 
 let selectedCapo=0, storedCapo=0;
+// Capotraste é escolha de cada músico (violão usa, baixo e teclado não): no evento ele fica só
+// neste aparelho, por pessoa e por música do evento. O tom e o resumo continuam sendo da banda.
+const EVENT_CAPO_PREFS_KEY='sc_event_capo_prefs_v1';
+function eventCapoPrefKey(context){return context?[String(appCurrentUser?.id||''),String(context.eventId),String(context.itemId)].join('|'):'';}
+function readEventCapoPref(context){const value=(storage.get(EVENT_CAPO_PREFS_KEY,{})||{})[eventCapoPrefKey(context)];return Number.isInteger(value)?value:null;}
+function writeEventCapoPref(context,capo){const key=eventCapoPrefKey(context);if(!key)return;const prefs={...(storage.get(EVENT_CAPO_PREFS_KEY,{})||{}),[key]:capo};storage.set(EVENT_CAPO_PREFS_KEY,prefs);}
 
 function selectCapo(n){
   selectedCapo=Math.max(0,Math.min(12,Math.trunc(Number(n)||0)));
+  if(detailEventContext)writeEventCapoPref(detailEventContext,selectedCapo);
   const view=document.getElementById('view-detail'),position=view?.scrollTop;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
@@ -3033,9 +3040,9 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
-  document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
+  document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
   const lbl=document.getElementById('inst-label');
   const instrumentInfo=instrumentDefinitions.get(currentInstrument);
@@ -5312,7 +5319,7 @@ async function saveContextEventSong(context,data,options={}){
     currentDetailSongOverride=eventSongVariant(updated,updated.repertoire.find(i=>String(i.id)===String(item.id)),owner);
     // A variante recém-salva já contém tom e capo aplicados. Zerar o deslocamento evita
     // transpor a mesma cópia novamente ao reabrir o Estudo ou o Modo Palco pelo evento.
-    storedCapo=songFormat.harmonicSummary(currentDetailSongOverride).capo;selectedCapo=storedCapo;currentSemitones=0;
+    storedCapo=songFormat.harmonicSummary(currentDetailSongOverride).capo;selectedCapo=readEventCapoPref(detailEventContext)??0;currentSemitones=0;
     detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));
     if(!options.quiet){closeModal();openDetailFromEventItem(event.id,item.id);}
   }
