@@ -52,6 +52,15 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   assert.equal(await page.evaluate(isPinned),true);
   assert.equal(await page.locator('#song-control-panel').isVisible(),true);
   await page.evaluate(()=>stopAutoScroll());
+  const scrollBefore=await page.locator('#view-detail').evaluate(view=>view.scrollTop);
+  await page.locator('#inst-btn').click();
+  const sheet=page.getByRole('dialog',{name:'Instrumentos'});
+  await sheet.waitFor({state:'visible'});
+  const sheetBottom=await sheet.locator(':scope > div').evaluate(panel=>panel.getBoundingClientRect().bottom);
+  assert.equal(sheetBottom,844,'seletor acompanha a janela mesmo com a cifra rolada');
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({state:'hidden'});
+  assert.equal(await page.locator('#view-detail').evaluate(view=>view.scrollTop),scrollBefore);
   assert.deepEqual(errors,[]);console.log('song-quick-picker-ui.test.js: OK (controls, manual scroll and auto-scroll)');
   await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1);});

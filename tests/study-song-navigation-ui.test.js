@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
  try{for(const width of [375,390,430,820]){
-  const page=await browser.newPage({viewport:{width,height:844},serviceWorkers:'block'});
+  const page=await browser.newPage({viewport:{width,height:844},hasTouch:true,serviceWorkers:'block'});
   await page.route('**/api/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{}'}));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>typeof openDetail==='function');
@@ -52,6 +52,24 @@ const {chromium}=require('playwright');
   assert.equal(await ordered(),true,'os controles do vídeo têm áreas distintas');
   await next.click();
   assert.equal(await page.locator('#study-song-position').textContent(),'3 de 3');
+  await page.evaluate(()=>{
+    closeDetail();
+    const playlist=userPlaylists.create(homePlaylists.ownerId,'Navegação por toque',musicas.map(song=>({songId:song.id})));
+    homePlaylists.open(playlist.id);
+    homePlaylists.openSong(playlist.items[0].id);
+  });
+  await next.tap();
+  assert.equal(await page.locator('#study-song-position').textContent(),'2 de 3');
+  await prev.tap();
+  assert.equal(await page.locator('#study-song-position').textContent(),'1 de 3');
+  await page.evaluate(()=>{
+    const detail=document.getElementById('view-detail');
+    detail.lastElementChild.insertAdjacentHTML('afterend','<div style="flex:0 0 2400px"></div>');
+    detail.scrollTop=800;
+  });
+  await next.tap();
+  assert.equal(await page.locator('#study-song-position').textContent(),'2 de 3');
+  assert.equal(await page.locator('#song-control-panel').isHidden(),true);
   await page.close();
  }}finally{await browser.close();}
  console.log('study-song-navigation-ui.test.js: OK (first/middle/last/isolated, 375/390/430/820px)');

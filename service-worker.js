@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v763-shortcut-outline-desktop";
+const CACHE_NAME = "simplificando-cifras-v765-study-playlist-taps";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -47,7 +47,7 @@ const CACHE_NAME = "simplificando-cifras-v763-shortcut-outline-desktop";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "css/study-song-navigation.css?v=5",
+  "css/study-song-navigation.css?v=6",
   "./css/event-share-variants.css?v=6",
   "./js/event-detail-refactor.css?v=137",
   "./assets/chat-wallpaper-roudy-revised.svg",

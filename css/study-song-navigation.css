@@ -39,3 +39,9 @@
 }
 
 .study-song-current-number{color:#0789e7}
+
+/* Keep the sticky controls and scrolling content below the header's hit area. */
+#view-detail:not(.stage-mode) > .detail-header{
+  flex-shrink:0;
+  z-index:6;
+}

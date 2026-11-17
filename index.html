@@ -826,6 +826,22 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 .add-song-event-backdrop{position:fixed;z-index:121;inset:0;border:0;background:rgba(0,0,0,.54);opacity:0;pointer-events:none;transition:opacity 180ms ease;-webkit-tap-highlight-color:transparent}.add-song-event-backdrop.is-open{opacity:1;pointer-events:auto}.add-song-event-sheet{position:fixed;z-index:122;right:0;bottom:0;left:0;display:flex;width:min(100%,520px);max-height:min(72dvh,680px);margin-inline:auto;overflow:hidden;flex-direction:column;border-radius:22px 22px 0 0;background:#1d1d20;color:#f5f5f7;box-shadow:0 -12px 40px rgba(0,0,0,.36);transform:translate3d(0,105%,0);transition:transform 320ms cubic-bezier(.2,.82,.24,1);will-change:transform}.add-song-event-sheet.is-open{transform:translate3d(0,var(--add-event-sheet-y,0),0)}.add-song-event-sheet.is-dragging{transition:none}.add-song-event-header{display:grid;min-height:60px;padding:8px 12px 7px 20px;grid-template-columns:minmax(0,1fr) 44px;align-items:center;border-bottom:1px solid rgba(255,255,255,.09);touch-action:none}.add-song-event-heading{min-width:0}.add-song-event-heading strong,.add-song-event-heading span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.add-song-event-heading strong{font:700 17px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",sans-serif;letter-spacing:-.015em}.add-song-event-heading span{margin-top:3px;color:#a8a8ae;font-size:11px}.add-song-event-close{display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#f5f5f7;cursor:pointer}.add-song-event-close svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}.add-song-event-close:active{background:rgba(255,255,255,.09)}.add-song-event-list{min-height:0;padding:8px 0 calc(16px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}.add-song-event-row{display:grid;width:100%;min-height:64px;padding:7px 18px;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:12px;border:0;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.add-song-event-row:hover,.add-song-event-row:focus-visible{background:rgba(255,255,255,.055);outline:0}.add-song-event-row:active:not(:disabled){background:rgba(255,255,255,.1)}.add-song-event-row:disabled{cursor:default}.add-song-event-art{display:grid;width:48px;height:48px;place-items:center;border-radius:6px;background:#292a2f;color:#d9dbe1}.add-song-event-art svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.add-song-event-copy{min-width:0}.add-song-event-copy strong,.add-song-event-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.add-song-event-copy strong{font-size:13px;font-weight:650}.add-song-event-copy small{margin-top:4px;color:#a1a1a8;font-size:11px}.add-song-event-state{display:flex;min-width:28px;align-items:center;justify-content:flex-end;color:#a7a7ad;font-size:11px;gap:6px}.add-song-event-state svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.add-song-event-empty{padding:34px 22px calc(34px + env(safe-area-inset-bottom));color:#a1a1a8;font-size:13px;text-align:center}@media(prefers-reduced-motion:reduce){.add-song-event-backdrop,.add-song-event-sheet{transition:none}}
 .add-song-event-backdrop{transition:opacity 150ms cubic-bezier(.4,0,1,1)}.add-song-event-backdrop.is-open{transition-duration:230ms;transition-timing-function:cubic-bezier(.2,.7,.2,1)}.add-song-event-sheet{transition:transform 180ms cubic-bezier(.4,0,1,1)}.add-song-event-sheet.is-open{transition-duration:255ms;transition-timing-function:cubic-bezier(.2,.78,.2,1)}@media(max-width:600px){.add-song-event-sheet{min-height:46dvh}}@media(prefers-reduced-motion:reduce){.add-song-event-backdrop,.add-song-event-sheet{transition:none}}
 @media(prefers-reduced-motion:reduce){#pane-musicas .music-swipe,.song-options-backdrop,.song-options-sheet{transition:none}}
+#inst-modal{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--text);
+}
+#inst-modal[open]{display:flex;align-items:flex-end;justify-content:center}
+#inst-modal::backdrop{background:rgba(0,0,0,.7)}
+#inst-modal > div{max-height:100%;overflow-y:auto}
 .song-controls{border:0;background:#111111}
 .song-controls.is-expanded{height:auto;min-height:68px;margin-inline:0;border:0;border-radius:0;background:transparent}
 .song-controls.is-expanded .song-control-strip{border-bottom:0;background:#111111}
@@ -1115,7 +1131,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <link rel="stylesheet" href="css/search-menu.css?v=39">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
-<link rel="stylesheet" href="css/study-song-navigation.css?v=5">
+<link rel="stylesheet" href="css/study-song-navigation.css?v=6">
 <link rel="stylesheet" href="css/event-share-variants.css?v=6">
   <style id="chat-background-picker-styles">
     /* Miniaturas do seletor de fundo do chat. */
@@ -1310,15 +1326,15 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     </div>
 
     <!-- MODAL DE INSTRUMENTOS -->
-    <div id="inst-modal" onclick="closeInstModal(event)" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:40;align-items:flex-end;justify-content:center;">
+    <dialog id="inst-modal" aria-labelledby="inst-modal-title" onclick="closeInstModal(event)">
       <div onclick="event.stopPropagation()" style="background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:24px;border-top:1px solid var(--border);">
         <div style="padding:16px 20px 8px;display:flex;align-items:center;gap:10px;">
           <button type="button" onclick="closeInstModal()" aria-label="Voltar" style="display:grid;width:36px;height:36px;padding:0;place-items:center;border:0;background:transparent;color:var(--text);cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
-          <span style="font-size:16px;font-weight:700;">Instrumentos</span>
+          <span id="inst-modal-title" style="font-size:16px;font-weight:700;">Instrumentos</span>
         </div>
         <div id="inst-list"></div>
       </div>
-    </div>
+    </dialog>
     <section class="song-controls" id="song-controls" aria-label="Controles da música">
       <div class="song-control-strip">
         <button type="button" class="song-control-cell" onclick="toggleSongControls(true)" aria-controls="song-control-panel" aria-expanded="false"><span class="song-control-value" id="song-control-key">—</span><span class="song-control-label">Tom</span></button>
@@ -2196,18 +2212,19 @@ function openInstModal(){
       <span class="instrument-option-name">${inst.label}<small class="instrument-option-tuning">${inst.tuning}</small></span>
       <span class="instrument-option-check${currentInstrument===inst.id?' is-selected':''}" aria-hidden="true">${currentInstrument===inst.id?'✓':''}</span>
     </div>`).join('');
-  document.getElementById('inst-modal').style.display='flex';
+  const modal=document.getElementById('inst-modal');
+  if(!modal.open)modal.showModal();
 }
 
 function closeInstModal(e){
-  if(!e||e.target===document.getElementById('inst-modal'))
-    document.getElementById('inst-modal').style.display='none';
+  const modal=document.getElementById('inst-modal');
+  if(modal.open&&(!e||e.target===modal))modal.close();
 }
 
 function setInstrument(inst){
   currentInstrument=instrumentDefinitions.normalizeId(inst);
   storage.set(SK_INSTRUMENT,currentInstrument);
-  document.getElementById('inst-modal').style.display='none';
+  closeInstModal();
   const info=INSTRUMENTS.find(x=>x.id===currentInstrument)||INSTRUMENTS[0];
   const lbl=document.getElementById('inst-label');
   if(lbl) lbl.innerHTML=instrumentIconMarkup(info)+'<span>'+eventEsc(info.shortName||info.label.split(' ')[0])+'</span>';
@@ -2558,8 +2575,10 @@ function saveInlineCombinedSectionEdit(songId,index,button){
   document.addEventListener('gesturechange',blockWebKitGesture,{passive:false});
   document.addEventListener('touchstart',event=>{if(event.touches.length>1){multiTouchActive=true;if(!isSongScaleTarget(event.target))event.preventDefault();}},{passive:false});
   document.addEventListener('touchend',event=>{if(multiTouchActive){if(event.touches.length===0)multiTouchActive=false;lastTouchEnd=0;return;}const now=Date.now();
-    const isStudyPanelTrigger=event.target instanceof Element&&event.target.closest('#song-controls button[aria-controls="song-control-panel"]');
-    if(now-lastTouchEnd<300&&!isStudyPanelTrigger)event.preventDefault();
+    const studyButton=event.target instanceof Element&&event.target.closest(
+      '#song-controls button[aria-controls="song-control-panel"], #detail-nav-toolbar .study-song-skip'
+    );
+    if(now-lastTouchEnd<300&&!studyButton)event.preventDefault();
     lastTouchEnd=now;},{passive:false});
 })();
 
@@ -3100,6 +3119,7 @@ async function exitStageMode(restorePlayer=true){
 function toggleStageModeBtn(){if(stageMode){exitStageMode();window.studyPreparation?.beginCurrent();}else enterStageMode();}
 
 function closeDetail(){
+  closeInstModal();
   flushDetailAutoSave();
   stopSmartScroll();window.studyPreparation?.end();closeSongQuickPicker();flushDetailAutoSave();
   detailEditBaseline=null;detailEditOwner=null;detailEventContext=null;
