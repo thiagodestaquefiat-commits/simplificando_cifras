@@ -27,3 +27,5 @@
 #view-main[data-active-tab="medley"] .topbar-search-action,#view-main[data-active-tab="medley"] .topbar-events-action,#view-main[data-active-tab="medley"] .topbar-account-wrap{translate:0 1px}
 #view-main .events-more-action{width:44px;height:44px;flex-basis:44px}
 @media(max-width:380px){#view-main .topbar-normal>.topbar-info .topbar-title{font-size:19px}}
+
+#view-main[data-active-tab="medley"] .topbar-search-action{display:none!important}

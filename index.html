@@ -30,16 +30,17 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=135">
-<link rel="stylesheet" href="js/event-qr-scanner.css?v=1">
-<link rel="stylesheet" href="js/profile-qr.css?v=2">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=137">
+<link rel="stylesheet" href="js/event-qr-scanner.css?v=2">
+<link rel="stylesheet" href="js/profile-qr.css?v=4">
+<link rel="stylesheet" href="css/qr-stage-light.css?v=1">
 <link rel="stylesheet" href="js/event-chat-song.css?v=6">
 <link rel="stylesheet" href="js/account-contribution.css?v=13">
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
 <link rel="stylesheet" href="css/song-reading.css?v=15">
-<link rel="stylesheet" href="css/topbar-labels.css?v=14">
+<link rel="stylesheet" href="css/topbar-labels.css?v=15">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@600;700;800&display=swap');
@@ -944,8 +945,6 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap,#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-key-badge{opacity:var(--video-header-progress);transform:translate3d(0,calc((1 - var(--video-header-progress))*5px),0);pointer-events:none;will-change:opacity,transform}
 #view-detail:not(.stage-mode).video-study-expanded:not(.video-header-compact)>.detail-header .detail-palco-btn{visibility:hidden;opacity:0;pointer-events:none}
 #view-detail:not(.stage-mode).video-study-expanded.video-header-compact>.detail-header .detail-palco-btn{visibility:visible;opacity:1;pointer-events:auto}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap{grid-column:2/4;padding-right:6px;text-align:left}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-capo{text-align:left}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;z-index:31;top:7px;left:6px;width:44px;height:44px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn svg{width:18px;height:18px}
 #view-detail:not(.stage-mode)>.detail-header,#view-detail:not(.stage-mode).video-study-expanded>.detail-header{pointer-events:auto}
@@ -1001,7 +1000,7 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 .topbar-search-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
 .topbar-search-tool{display:grid;width:32px;height:32px;flex:0 0 32px;padding:0;place-items:center;border:0;border-radius:50%;background:#242427;color:#f3f3f5}.topbar-search-tool svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.topbar-search-tool.waveform svg{width:18px;height:18px;stroke-width:2}.topbar-search-tool[type=button]{cursor:pointer;-webkit-tap-highlight-color:transparent}.topbar-search-tool[type=button]:active{transform:scale(.9)}.topbar-search-tool.listening{background:color-mix(in srgb,var(--roudy-electric-blue) 22%,transparent);color:var(--roudy-electric-blue);animation:topbar-voice-pulse 1.1s ease-in-out infinite}@keyframes topbar-voice-pulse{50%{transform:scale(1.12)}}@media(prefers-reduced-motion:reduce){.topbar-search-tool{transition:none}.topbar-search-tool.listening{animation:none}}
 .topbar-search-back:focus,.topbar-search-back:focus-visible,.topbar-search-clear:focus,.topbar-search-clear:focus-visible,.topbar-search-input:focus,.topbar-search-input:focus-visible{outline:none!important;box-shadow:none!important}
-.playlist-search-recents{position:absolute;z-index:20;top:100%;right:0;left:0;min-height:calc(100dvh - 70px);padding:6px 14px 14px;border:0;background:#000;color:#fff}.playlist-search-recents[hidden]{display:none}.playlist-search-recents-title{display:flex;min-height:30px;align-items:center;justify-content:space-between;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-recents-clear{border:0;background:transparent;color:#0a84ff;font:600 11px/1 inherit;cursor:pointer}.playlist-search-recent{display:grid;width:100%;min-height:48px;padding:0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:30px minmax(0,1fr) 22px;align-items:center;gap:10px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-recent svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-recent>svg{color:#d8d8dc}.playlist-search-recent span{overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}.playlist-search-recent .playlist-search-recent-arrow{width:18px;height:18px;color:#b5b5ba}
+.playlist-search-recents{position:absolute;z-index:20;top:100%;right:0;left:0;min-height:calc(100dvh - 70px);padding:6px 14px 14px;border:0;background:#000;color:#fff}.playlist-search-recents[hidden]{display:none}.home-playlist-search-intro{display:flex;min-height:min(420px,calc(100dvh - 220px));padding:28px 12px;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:10px}.home-playlist-search-intro strong{font-size:23px;line-height:1.25;font-weight:700;letter-spacing:-.025em}.home-playlist-search-intro p{margin:0;color:#a1a1a6;font-size:15px;line-height:1.5}.playlist-search-recents-title{display:flex;min-height:30px;align-items:center;justify-content:space-between;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-recents-clear{border:0;background:transparent;color:#0a84ff;font:600 11px/1 inherit;cursor:pointer}.playlist-search-recent{display:grid;width:100%;min-height:48px;padding:0;border:0;border-bottom:1px solid rgba(255,255,255,.065);grid-template-columns:30px minmax(0,1fr) 22px;align-items:center;gap:10px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-recent svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-recent>svg{color:#d8d8dc}.playlist-search-recent span{overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}.playlist-search-recent .playlist-search-recent-arrow{width:18px;height:18px;color:#b5b5ba}
 .playlist-search-results-label{min-height:34px;padding-top:7px;color:#8e8e93;font-size:11px;font-weight:600}.playlist-search-result-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-result{display:grid;width:100%;min-height:58px;padding:5px 0;border:0;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:11px;background:transparent;color:#f5f5f7;text-align:left;cursor:pointer}.playlist-search-result-art{display:grid;width:42px;height:42px;place-items:center;border-radius:5px;background:#1c1c1e;color:#d8d8dc}.playlist-search-result-art svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.playlist-search-result-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-result-copy strong,.playlist-search-result-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-search-result-copy strong{font-size:14px;font-weight:650}.playlist-search-result-copy small{color:#9b9ba1;font-size:12px}.playlist-search-result-more{display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;background:transparent;color:#b5b5ba;cursor:pointer}.playlist-search-result-more svg{width:20px;height:20px;fill:currentColor}.playlist-search-no-results{padding:28px 0;color:#8e8e93;text-align:center;font-size:13px}
 .playlist-search-online{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}@media(min-width:900px){.detail-view.detail-view{box-shadow:0 0 0 100vmax rgba(0,0,0,.78)!important}}.complete-sheet-notice{display:grid;gap:10px;margin:4px 0 18px;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03)}.complete-sheet-notice p{margin:0;color:var(--text-secondary,#a1a1a6);font-size:13px}.complete-sheet-notice .btn{width:100%;min-height:44px}.playlist-search-fallback-actions{display:flex;gap:8px;margin-top:10px}.playlist-search-fallback-actions .btn{flex:1;min-height:40px;font-size:13px}.playlist-search-online-status{min-height:48px;padding:15px 0;color:#8e8e93;font-size:12px}.search-limit-notice-title,.search-limit-notice-body{display:block}.search-limit-notice-title{color:var(--text-primary,#f5f5f7);font-size:inherit}.search-limit-notice-body{margin-top:4px;color:var(--text-secondary,#a1a1a6);font-size:inherit;font-weight:400}.playlist-search-online-row{display:grid;min-height:62px;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.065)}.playlist-search-online-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.playlist-search-online-copy strong{overflow:hidden;font-size:14px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.playlist-search-online-copy small{display:-webkit-box;overflow:hidden;color:#9b9ba1;font-size:12px;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:2}.playlist-search-online-source{display:none}
 .roudy-artwork-placeholder{position:relative;display:grid;overflow:hidden;flex:none;place-items:center;background:#202124;color:#a8abb2;isolation:isolate}.roudy-artwork-note{position:absolute;z-index:0;width:48%;height:48%;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}.roudy-artwork-image{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s ease}.roudy-artwork-placeholder.is-loaded .roudy-artwork-image{opacity:1}.roudy-artwork-placeholder.is-loaded .roudy-artwork-note{opacity:0}.roudy-list-skeleton{display:grid;width:100%;gap:0}.roudy-list-skeleton-row{display:grid;min-height:62px;padding:7px 0;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:12px}.roudy-list-skeleton-art{width:48px;height:48px;border-radius:6px;background:#202124}.roudy-list-skeleton-copy{display:grid;gap:8px}.roudy-list-skeleton-copy i{display:block;width:min(48%,240px);height:13px;border-radius:4px;background:#202124}.roudy-list-skeleton-copy i+ i{width:min(84%,520px);height:10px}.roudy-search-local-art .roudy-artwork-placeholder{width:46px;height:46px;border-radius:8px}.playlist-search-result-art .roudy-artwork-placeholder{width:42px;height:42px;border-radius:5px}.roudy-search-resume-icon .roudy-artwork-placeholder{width:100%;height:100%;border-radius:inherit}@media(prefers-reduced-motion:reduce){.roudy-artwork-image{transition:none}}
@@ -1109,13 +1108,14 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 }
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
-<link rel="stylesheet" href="css/roudy-color-system-preview.css?v=18">
+<link rel="stylesheet" href="css/roudy-color-system-preview.css?v=20">
 <link rel="stylesheet" href="js/medley-editor.css?v=32">
 <link rel="stylesheet" href="css/responsive.css?v=1">
-<link rel="stylesheet" href="css/home-playlists.css?v=31">
-<link rel="stylesheet" href="css/search-menu.css?v=21">
+<link rel="stylesheet" href="css/home-playlists.css?v=32">
+<link rel="stylesheet" href="css/search-menu.css?v=39">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
+<link rel="stylesheet" href="css/study-song-navigation.css?v=5">
 <link rel="stylesheet" href="css/event-share-variants.css?v=6">
   <style id="chat-background-picker-styles">
     /* Miniaturas do seletor de fundo do chat. */
@@ -1171,7 +1171,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="topbar-search-mode" id="topbar-search-mode" role="search" hidden>
         <button class="topbar-search-back" type="button" onclick="closePlaylistSearch()" aria-label="Fechar busca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>
         <div class="topbar-search-field">
-          <input class="topbar-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar músicas, artistas..." id="search-music" oninput="handlePlaylistSearchInput()" onkeydown="handlePlaylistSearchKeydown(event)" aria-label="Buscar músicas e artistas">
+          <input class="topbar-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="O que você quer tocar?" id="search-music" oninput="handlePlaylistSearchInput()" onkeydown="handlePlaylistSearchKeydown(event)" aria-label="Buscar músicas e artistas">
           <button class="topbar-search-clear" id="playlist-search-clear" type="button" onclick="clearPlaylistSearch()" aria-label="Limpar busca" hidden>×</button>
         </div>
         <button class="topbar-search-tool" id="playlist-voice-search" type="button" onclick="togglePlaylistVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg></button>
@@ -1180,7 +1180,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="topbar-search-mode" id="home-playlist-search-mode" role="search" hidden>
         <button class="topbar-search-back" type="button" onclick="closeHomePlaylistSearch()" aria-label="Fechar busca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg></button>
         <div class="topbar-search-field">
-          <input class="topbar-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar suas playlists" id="home-playlist-search-input" oninput="renderHomePlaylistSearch()" aria-label="Buscar suas playlists">
+          <input class="topbar-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Busque na Sua Biblioteca" id="home-playlist-search-input" oninput="renderHomePlaylistSearch()" aria-label="Buscar suas playlists">
         </div>
         <div class="playlist-search-recents home-playlist-search-results" id="home-playlist-search-results" hidden></div>
       </div>
@@ -1249,11 +1249,11 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="roudy-search-title-row"><div class="roudy-search-identity"><button class="roudy-search-avatar" id="roudy-search-avatar" type="button" onclick="openAccountModal()" aria-label="Abrir menu do perfil">R</button><h1 class="roudy-search-title">Buscar</h1></div></div>
       <button type="button" class="roudy-search-camera" onclick="roudyCamera.open()" aria-label="Fotografar ou importar uma cifra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 6 9.5 4.5h5L15.8 6H18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2.2Z"></path><circle cx="12" cy="13" r="3.5"></circle><circle cx="17.5" cy="9.5" r=".7" fill="currentColor" stroke="none"></circle></svg></button>
       <button class="roudy-search-compact-title" type="button" onclick="roudySearchMenu.expandHeaderSearch()" aria-label="Abrir busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m15 15 4.5 4.5"></path></svg><span>Buscar</span></button>
-      <div class="roudy-search-form" role="search"><label class="roudy-search-field"><input class="roudy-search-input" id="roudy-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar músicas, artistas..." aria-label="Buscar músicas e artistas" onfocus="roudySearchMenu.activate()" oninput="roudySearchMenu.input()"><button class="roudy-search-clear" id="roudy-search-clear" type="button" onclick="roudySearchMenu.clear()" aria-label="Limpar busca" hidden>×</button></label><button class="roudy-search-voice" id="roudy-search-voice" type="button" onclick="toggleRoudySearchVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="roudy-search-cancel" type="button" onclick="roudySearchMenu.cancel()">Cancelar</button></div>
+      <div class="roudy-search-form" role="search"><label class="roudy-search-field"><svg class="roudy-search-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input class="roudy-search-input" id="roudy-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="O que você quer tocar?" aria-label="Buscar músicas e artistas" onfocus="roudySearchMenu.activate()" oninput="roudySearchMenu.input()"><button class="roudy-search-clear" id="roudy-search-clear" type="button" onclick="roudySearchMenu.clear()" aria-label="Limpar busca" hidden>×</button></label><button class="roudy-search-voice" id="roudy-search-voice" type="button" onclick="toggleRoudySearchVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="roudy-search-cancel" type="button" onclick="roudySearchMenu.cancel()">Cancelar</button></div>
     </header>
     <main class="roudy-search-scroll">
-      <section class="roudy-search-landing" id="roudy-search-landing"><h2 class="roudy-search-section-title">Explorar no ROUDY</h2><div class="roudy-search-explore"><button class="roudy-search-shortcut roudy-search-shortcut--music" type="button" onclick="roudySearchMenu.shortcut('music')" aria-label="Explorar músicas"><img src="assets/search/musicas.svg?v=2" alt=""><span class="roudy-search-card-copy"><strong>Músicas</strong><small>Encontre e estude novas músicas.</small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--events" type="button" onclick="roudySearchMenu.shortcut('events')" aria-label="Abrir eventos"><img src="assets/search/eventos.svg?v=2" alt=""><span class="roudy-search-card-copy"><strong>Eventos</strong><small id="roudy-search-events-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--playlists" type="button" onclick="roudySearchMenu.shortcut('playlist')" aria-label="Abrir playlists"><img src="assets/search/playlists.svg?v=2" alt=""><span class="roudy-search-card-copy"><strong>Playlists</strong><small id="roudy-search-playlists-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--medley" type="button" onclick="roudySearchMenu.shortcut('medley')" aria-label="Abrir Medley"><img src="assets/search/medley.svg" alt=""><span class="roudy-search-card-copy"><strong>Medley</strong><small id="roudy-search-medley-meta"></small></span></button></div><section id="roudy-search-resume" hidden></section></section>
-      <section class="roudy-search-active" id="roudy-search-active" hidden><div class="roudy-search-filters" role="group" aria-label="Filtrar resultados"><button class="roudy-search-filter" type="button" data-search-filter="all" aria-pressed="true" onclick="roudySearchMenu.setFilter('all')">Todas</button><button class="roudy-search-filter" type="button" data-search-filter="playlist" aria-pressed="false" onclick="roudySearchMenu.setFilter('playlist')">Minha playlist</button><button class="roudy-search-filter" type="button" data-search-filter="external" aria-pressed="false" onclick="roudySearchMenu.setFilter('external')">Outras músicas</button></div><div id="roudy-search-results"></div></section>
+      <section class="roudy-search-landing" id="roudy-search-landing"><h2 class="roudy-search-section-title">Explorar no ROUDY</h2><div class="roudy-search-explore"><button class="roudy-search-shortcut roudy-search-shortcut--music" type="button" onclick="roudySearchMenu.shortcut('music')" aria-label="Explorar músicas"><span class="roudy-search-shortcut-art"><img src="assets/search/musicas.svg?v=6" alt=""></span><span class="roudy-search-shortcut-caption"><small>Encontre e estude novas músicas.</small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--playlists" type="button" onclick="roudySearchMenu.shortcut('playlist')" aria-label="Abrir playlists"><span class="roudy-search-shortcut-art"><img src="assets/search/playlists.svg?v=4" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-playlists-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--medley" type="button" onclick="roudySearchMenu.shortcut('medley')" aria-label="Abrir Medley"><span class="roudy-search-shortcut-art"><img src="assets/search/medley.svg?v=6" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-medley-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--events" type="button" onclick="roudySearchMenu.shortcut('events')" aria-label="Abrir eventos"><span class="roudy-search-shortcut-art"><img src="assets/search/eventos.svg?v=3" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-events-meta"></small></span></button></div><section id="roudy-search-resume" hidden></section></section>
+      <section class="roudy-search-active" id="roudy-search-active" hidden><div id="roudy-search-feedback" class="roudy-search-feedback" role="status" aria-live="polite"></div><div id="roudy-search-suggestions" aria-label="Sugestões de pesquisa"></div><div id="roudy-search-results" aria-label="Músicas encontradas"></div></section>
       <section id="roudy-search-for-you" hidden></section>
     </main>
   </section>
@@ -1262,9 +1262,16 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
   <div class="detail-view" id="view-detail">
     <div class="detail-header">
       <button class="back-btn" id="study-back-button" type="button" onclick="closeStudyView(event)" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button>
-      <div class="detail-title-wrap">
-        <div class="detail-title" id="detail-title"></div>
-        <div class="detail-capo" id="detail-artist-label"></div>
+      <div class="study-song-navigation" id="detail-nav-toolbar" aria-label="Navegação do repertório">
+        <button type="button" class="study-song-skip" id="btn-previous-song" onclick="navigateSong(-1)" aria-label="Música anterior" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="3" height="14" rx=".7"/><path d="M19.5 5.2 8.5 12l11 6.8V5.2Z"/></svg></button>
+        <div class="detail-title-wrap">
+          <div class="detail-title" id="detail-title"></div>
+          <div class="study-song-meta">
+            <span id="detail-artist-label"></span>
+            <span class="study-song-position" id="study-song-position" hidden></span>
+          </div>
+        </div>
+        <button type="button" class="study-song-skip" id="btn-next-song" onclick="navigateSong(1)" aria-label="Próxima música" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.2 15.5 12l-11 6.8V5.2Z"/><rect x="17" y="5" width="3" height="14" rx=".7"/></svg></button>
       </div>
       <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
@@ -1314,12 +1321,12 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     </div>
     <section class="song-controls" id="song-controls" aria-label="Controles da música">
       <div class="song-control-strip">
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-key">—</output><span class="song-control-label">Tom</span></div>
-        <div class="song-control-cell"><output class="song-control-value" id="song-control-capo">—</output><span class="song-control-label">Capotraste<wbr>/Casa</span></div>
+        <button type="button" class="song-control-cell" onclick="toggleSongControls(true)" aria-controls="song-control-panel" aria-expanded="false"><span class="song-control-value" id="song-control-key">—</span><span class="song-control-label">Tom</span></button>
+        <button type="button" class="song-control-cell" onclick="toggleSongControls(true)" aria-controls="song-control-panel" aria-expanded="false"><span class="song-control-value" id="song-control-capo">—</span><span class="song-control-label">Capotraste<wbr>/Casa</span></button>
         <button type="button" class="song-control-cell song-control-scroll" id="btn-scroll" onclick="toggleAutoScroll()" aria-label="Iniciar rolagem automática"><span class="song-control-value" aria-hidden="true"><svg class="song-play-icon" viewBox="0 0 24 24"><path d="M7.6 4.8Q6 3.9 6 5.8v12.4q0 1.9 1.6 1l10.9-6.1q1.7-1.1 0-2.2L7.6 4.8Z"/></svg><svg class="song-pause-icon" viewBox="0 0 24 24"><rect x="6.5" y="4" width="4.5" height="16" rx="1.35"/><rect x="14.5" y="4" width="4.5" height="16" rx="1.35"/></svg></span><span class="song-control-label">Rolagem</span></button>
         <button type="button" class="song-control-cell song-control-smart" id="btn-smart-scroll" onclick="toggleSmartScroll()" aria-label="Iniciar rolagem inteligente (Beta)" aria-pressed="false" aria-describedby="smart-scroll-status" title="Rolagem inteligente (Beta)"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="8" rx="2"/><rect x="17" y="12" width="4" height="8" rx="2"/></svg></span><span class="song-control-label">Rolagem inteligente</span><span class="smart-scroll-beta">BETA</span></button>
-        <div class="song-control-cell song-control-bpm"><output class="song-control-value" id="song-control-bpm">72</output><span class="song-control-label">BPM</span></div>
-        <div class="song-control-cell song-control-meter"><output class="song-control-value" id="song-control-meter">4/4</output><span class="song-control-label">Compasso</span></div>
+        <button type="button" class="song-control-cell song-control-bpm" onclick="toggleSongControls(true)" aria-controls="song-control-panel" aria-expanded="false"><span class="song-control-value" id="song-control-bpm">72</span><span class="song-control-label">BPM</span></button>
+        <button type="button" class="song-control-cell song-control-meter" onclick="toggleSongControls(true)" aria-controls="song-control-panel" aria-expanded="false"><span class="song-control-value" id="song-control-meter">4/4</span><span class="song-control-label">Compasso</span></button>
         <div class="song-control-live-speed" role="group" aria-label="Velocidade da rolagem"><button type="button" data-scroll-step="-1" onclick="adjustStageScrollSpeed(-1)" aria-label="Diminuir velocidade da rolagem">−</button><output class="scroll-speed-value" aria-live="polite">0,50x</output><button type="button" data-scroll-step="1" onclick="adjustStageScrollSpeed(1)" aria-label="Aumentar velocidade da rolagem">+</button></div>
         <button type="button" class="song-control-cell song-control-disclosure" id="song-controls-toggle" onclick="toggleSongControls()" aria-expanded="false" aria-controls="song-control-panel" aria-label="Mostrar controles musicais"><span class="song-control-value" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 9.5 5 5 5-5"/></svg></span><span class="is-visually-hidden">Controles</span></button>
       </div>
@@ -1336,10 +1343,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
     </section>
     <section class="song-review-control" id="song-review-control" aria-label="Estado da preparação" hidden><button type="button" class="song-review-action" id="song-review-action" onclick="confirmCurrentSongPreparation()"></button></section>
     <div class="song-scale-feedback" id="song-scale-feedback" role="status" aria-live="polite">100%</div>
-    <div class="stage-toolbar" id="detail-nav-toolbar" aria-label="Controles de apresentação">
-      <button class="stage-btn" id="btn-previous-song" onclick="navigateSong(-1)" title="Música anterior" hidden>← Anterior</button>
-      <button class="stage-btn" id="btn-next-song" onclick="navigateSong(1)" title="Próxima música" hidden>Próxima →</button>
-    </div>
     <div class="stage-quick-panel" id="stage-quick-panel" hidden onclick="closeStageQuickPanel(event)">
       <section class="stage-quick-sheet" onclick="event.stopPropagation()">
         <div class="stage-quick-header"><strong>Repertório</strong><button type="button" class="stage-nav-icon" onclick="closeStageQuickPanel()" aria-label="Fechar repertório">×</button></div>
@@ -1441,7 +1444,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=10"></script>
-<script src="js/youtube-player-ui.js?v=25"></script>
+<script src="js/youtube-player-ui.js?v=26"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1498,13 +1501,13 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/assistant-sequences.js?v=2"></script>
 <script src="js/app-assistant.js?v=34"></script>
  <script src="js/event-user-invites.js?v=10"></script>
- <script src="js/event-qr-scanner.js?v=2"></script>
+ <script src="js/event-qr-scanner.js?v=3"></script>
 <script>
 // Bibliotecas de QR Code carregam sob demanda.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
- <script src="js/profile-qr.js?v=4"></script>
+ <script src="js/profile-qr.js?v=6"></script>
  <script src="js/notification-center.js?v=7"></script>
 <script src="js/user-playlists.js?v=6"></script>
 <script src="js/song-share.js?v=1"></script>
@@ -1643,9 +1646,21 @@ function adjustSongTextScale(delta){applySongTextScale(songTextScale+delta);docu
 function showSongScaleFeedback(clientX=innerWidth/2,clientY=Math.min(innerHeight-88,innerHeight*.72)){
   const feedback=document.getElementById('song-scale-feedback');feedback.textContent=Math.round(songTextScale*100)+'%';feedback.style.left=Math.max(42,Math.min(innerWidth-42,clientX))+'px';feedback.style.top=Math.max(78,Math.min(innerHeight-78,clientY-48))+'px';feedback.classList.add('is-visible');clearTimeout(songScaleFeedbackTimer);songScaleFeedbackTimer=setTimeout(()=>feedback.classList.remove('is-visible'),700);
 }
+const studyHeader=document.querySelector('#view-detail > .detail-header');
+const studyControlStrip=document.querySelector('#song-controls > .song-control-strip');
+const studyControlsObserver=new ResizeObserver(entries=>{
+  const view=document.getElementById('view-detail');
+  for(const {target} of entries){
+    const property=target===studyHeader?'--study-header-height':'--study-strip-height';
+    view.style.setProperty(property,target.getBoundingClientRect().height+'px');
+  }
+});
+studyControlsObserver.observe(studyHeader);
+studyControlsObserver.observe(studyControlStrip);
+
 function toggleSongControls(force){
   const controls=document.getElementById('song-controls'),panel=document.getElementById('song-control-panel'),button=document.getElementById('song-controls-toggle'),expanded=typeof force==='boolean'?force:panel.hidden;
-  panel.hidden=!expanded;controls.classList.toggle('is-expanded',expanded);button.setAttribute('aria-expanded',String(expanded));button.setAttribute('aria-label',expanded?'Ocultar controles musicais':'Mostrar controles musicais');if(expanded)requestAnimationFrame(()=>syncStudyMeterWheel(true));
+  panel.hidden=!expanded;controls.classList.toggle('is-expanded',expanded);controls.querySelectorAll('button[aria-controls="song-control-panel"]').forEach(trigger=>trigger.setAttribute('aria-expanded',String(expanded)));button.setAttribute('aria-label',expanded?'Ocultar controles musicais':'Mostrar controles musicais');if(expanded)requestAnimationFrame(()=>syncStudyMeterWheel(true));
 }
 let preferredStudyMeter='4/4';
 function updateSongControls(summaryOverride=null){
@@ -1762,7 +1777,7 @@ function settleStudyMeterWheel(){const wheel=document.getElementById('song-meter
 const songMeterWheel=document.getElementById('song-meter-wheel');songMeterWheel.addEventListener('scroll',()=>{if(!meterWheelFrame)meterWheelFrame=requestAnimationFrame(()=>{meterWheelFrame=null;updateStudyMeterWheelDepth()});clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,140)},{passive:true});songMeterWheel.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...songMeterWheel.querySelectorAll('[data-meter]')],current=Math.max(0,buttons.findIndex(button=>button.dataset.meter===preferredStudyMeter)),next=Math.max(0,Math.min(buttons.length-1,current+(event.key==='ArrowRight'?1:-1)));selectStudyMeter(buttons[next].dataset.meter)});
 let songMeterDrag=null,suppressSongMeterClick=false;songMeterWheel.addEventListener('pointerdown',event=>{if(event.button!==0)return;songMeterDrag={id:event.pointerId,x:event.clientX,left:songMeterWheel.scrollLeft,moved:false};songMeterWheel.setPointerCapture?.(event.pointerId);songMeterWheel.classList.add('is-dragging')});songMeterWheel.addEventListener('pointermove',event=>{if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const delta=event.clientX-songMeterDrag.x;if(Math.abs(delta)>3)songMeterDrag.moved=true;songMeterWheel.scrollLeft=songMeterDrag.left-delta;if(songMeterDrag.moved)event.preventDefault()});function finishSongMeterDrag(event){if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const moved=songMeterDrag.moved;songMeterDrag=null;songMeterWheel.classList.remove('is-dragging');songMeterWheel.releasePointerCapture?.(event.pointerId);if(moved){suppressSongMeterClick=true;setTimeout(()=>{suppressSongMeterClick=false},0);event.preventDefault();clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,80)}}songMeterWheel.addEventListener('pointerup',finishSongMeterDrag);songMeterWheel.addEventListener('pointercancel',finishSongMeterDrag);songMeterWheel.addEventListener('click',event=>{if(!suppressSongMeterClick)return;event.preventDefault();event.stopPropagation()},true);
 function setSongScrolling(active){
-  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
+  const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){if(stageMode)toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
 }
 const songScrollPlayButton=document.getElementById('btn-scroll');
 function showSongScrollPressedState(){songScrollPlayButton.classList.remove('is-pressed');void songScrollPlayButton.offsetWidth;songScrollPlayButton.classList.add('is-pressed')}
@@ -2542,7 +2557,10 @@ function saveInlineCombinedSectionEdit(songId,index,button){
   document.addEventListener('gesturestart',blockWebKitGesture,{passive:false});
   document.addEventListener('gesturechange',blockWebKitGesture,{passive:false});
   document.addEventListener('touchstart',event=>{if(event.touches.length>1){multiTouchActive=true;if(!isSongScaleTarget(event.target))event.preventDefault();}},{passive:false});
-  document.addEventListener('touchend',event=>{if(multiTouchActive){if(event.touches.length===0)multiTouchActive=false;lastTouchEnd=0;return;}const now=Date.now();if(now-lastTouchEnd<300)event.preventDefault();lastTouchEnd=now;},{passive:false});
+  document.addEventListener('touchend',event=>{if(multiTouchActive){if(event.touches.length===0)multiTouchActive=false;lastTouchEnd=0;return;}const now=Date.now();
+    const isStudyPanelTrigger=event.target instanceof Element&&event.target.closest('#song-controls button[aria-controls="song-control-panel"]');
+    if(now-lastTouchEnd<300&&!isStudyPanelTrigger)event.preventDefault();
+    lastTouchEnd=now;},{passive:false});
 })();
 
 (()=>{
@@ -2881,6 +2899,18 @@ function updatePlaylistNavigation(){
   const previousButton=document.getElementById('btn-previous-song');
   const nextButton=document.getElementById('btn-next-song');
   if(!previousButton||!nextButton) return;
+  const context=navigationContext.get();
+  const position=document.getElementById('study-song-position');
+  const navigation=document.getElementById('detail-nav-toolbar');
+  navigation.classList.toggle('has-repertoire',availability.active);
+  position.hidden=!availability.active;
+  position.replaceChildren();
+  if(context){
+    const current=document.createElement('span');
+    current.className='study-song-current-number';
+    current.textContent=String(context.currentIndex+1);
+    position.append(current,` de ${context.songIds.length}`);
+  }
   previousButton.hidden=!availability.active;
   nextButton.hidden=!availability.active;
   previousButton.disabled=!availability.canPrevious;
@@ -3164,7 +3194,6 @@ function toggleAutoScroll(){if(scrollTimer!==null){if(stageMode)pauseAutoScroll(
 function startAutoScroll(){
   stopSmartScroll();
   const vd=document.getElementById('view-detail'),btn=document.getElementById('btn-scroll');
-  toggleSongControls(false);
   if(!stageMode)studyMetronome.start();
   if(stageMode)stageExecutionStarted=true;
   setSongScrolling(true);if(btn)btn.classList.add('active');
@@ -3370,9 +3399,10 @@ function renderHomePlaylistSearch(){
   const input=document.getElementById('home-playlist-search-input');
   if(!panel||!input)return;
   const query=String(input.value||'').trim().toLocaleLowerCase('pt-BR');
-  const playlists=homePlaylistSearchItems().filter(playlist=>String(playlist?.name||'').toLocaleLowerCase('pt-BR').includes(query));
   panel.hidden=false;
-  panel.innerHTML=`<div class="playlist-search-results-label">Suas playlists</div>${playlists.length?playlists.map(playlist=>{const items=Array.isArray(playlist.items)?playlist.items:[];const label=items.length===1?'1 música':`${items.length} músicas`;return `<div class="playlist-search-result-row"><button type="button" class="playlist-search-result" onclick="openHomePlaylistSearchResult(${attrJs(playlist.id)})">${homePlaylistSearchArtwork(playlist)}<span class="playlist-search-result-copy"><strong>${eventEsc(playlist.name||'Playlist sem nome')}</strong><small>${label}</small></span></button></div>`}).join(''):`<div class="playlist-search-no-results">${query?'Nenhuma playlist encontrada.':'Você ainda não criou playlists.'}</div>`}`;
+  if(!query){panel.innerHTML='<div class="home-playlist-search-intro"><strong>Encontre seus favoritos</strong><p>Busque tudo que você salvou ou criou.</p></div>';return;}
+  const playlists=homePlaylistSearchItems().filter(playlist=>String(playlist?.name||'').toLocaleLowerCase('pt-BR').includes(query));
+  panel.innerHTML=`${playlists.length?playlists.map(playlist=>{const items=Array.isArray(playlist.items)?playlist.items:[];const label=items.length===1?'1 música':`${items.length} músicas`;return `<div class="playlist-search-result-row"><button type="button" class="playlist-search-result" onclick="openHomePlaylistSearchResult(${attrJs(playlist.id)})">${homePlaylistSearchArtwork(playlist)}<span class="playlist-search-result-copy"><strong>${eventEsc(playlist.name||'Playlist sem nome')}</strong><small>${label}</small></span></button></div>`}).join(''):`<div class="playlist-search-no-results">${query?'Nenhuma playlist encontrada.':'Você ainda não criou playlists.'}</div>`}`;
 }
 function openHomePlaylistSearch(){
   if(currentTab!=='musicas')switchTab('musicas');
@@ -3826,6 +3856,21 @@ function openAiDraft(model,sourceSong){const context=sourceSong?._eventEditConte
 // Restaurado do main (perdido na integração): música encontrada pela busca abre para o usuário
 // ver e confirmar. Nada entra na playlist até Salvar.
 function reviewSearchedSong(model){try{closePlaylistSearch();}catch(_){}try{aiHarmonicSummary.close();}catch(_){}openAiDraft(model,null);}
+// Search saves to the personal library; playlist snapshots do not determine membership.
+window.searchLibraryBridge={
+  songs:()=>musicas,
+  owner:()=>currentAuthState.authenticated?songRepository.getActiveOwnerId():null,
+  get client(){return harmonicSummaryClient;},
+  instrument:()=>currentInstrument||'guitar',
+  toSong:model=>songFormat.toLegacy(model),
+  createSong:input=>songModel.create(input),
+  newId:()=>window.crypto.randomUUID(),
+  confirmed:song=>Boolean(song.librarySync?.serverVersion&&song.librarySync?.syncedAt&&!song.librarySync?.conflict),
+  persist:next=>{if(!songRepository.save(next))return false;musicas=next;renderMusicas();return true;},
+  sync:()=>librarySync.syncNow(),
+  openSong:song=>{roudySearchMenu.close();setTimeout(()=>openDetail(song.id),230);},
+  openDraft:model=>{roudySearchMenu.close();setTimeout(()=>reviewSearchedSong(model),230);}
+};
 function playlistContainsSong(input){try{return Boolean(songModel.findDuplicate(musicas,songModel.create(input)))}catch(_){return false}}
 async function saveSimpleSongReview(){
   if(!simpleReviewDraft) return;
@@ -4592,7 +4637,6 @@ async function openAccountModal(){
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('tuner')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v8a4 4 0 0 0 8 0V3M12 15v6M5 8c-2 2-2 5 0 7M19 8c2 2 2 5 0 7"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('tuner'))}</strong><small>${eventEsc(appText('tunerHelp'))}</small></span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('metronome')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3 18H6L9 3Z"/><path d="M12 6v9l4-3"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('metronome'))}</strong><small>${eventEsc(appText('metronomeHelp'))}</small></span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('settings')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3.2 9.7 1.5h4.6l.5 1.7c.5.2 1 .4 1.5.7l1.6-.8 3.2 3.2-.8 1.6c.3.5.5 1 .7 1.5l1.7.5v4.6l-1.7.5c-.2.5-.4 1-.7 1.5l.8 1.6-3.2 3.2-1.6-.8c-.5.3-1 .5-1.5.7l-.5 1.7H9.7l-.5-1.7c-.5-.2-1-.4-1.5-.7l-1.6.8-3.2-3.2.8-1.6c-.3-.5-.5-1-.7-1.5l-1.7-.5V9.9L3 9.4c.2-.5.4-1 .7-1.5l-.8-1.6 3.2-3.2 1.6.8c.5-.3 1-.5 1.5-.7Z"/><circle cx="12" cy="12" r="3.5"/></svg></span><span class="account-drawer-label"><strong>Configurações e privacidade</strong><small>${eventEsc(appText('settingsHelp'))}</small></span></button>
-      <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('organize-summaries')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h7"/><path d="m16 16 2 2 4-4"/></svg></span><span>Organizar resumos</span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('contribution')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.3A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.3C20 15.4 12 20 12 20Z"/></svg></span><span class="account-drawer-label"><strong>Contribua com o ROUDY</strong><small>Ajude a manter o projeto vivo</small></span></button>
     </nav><div class="account-drawer-section-line"></div>
     ${currentAuthState.authenticated?`<div class="account-drawer-sync" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><i class="account-sync-dot" aria-hidden="true"></i><span>${eventEsc(sync.text)}</span></div><button class="account-drawer-item account-drawer-item--danger" type="button" onclick="closeAccountDrawer();logoutAppAccount()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('logout'))}</strong></span></button>`:currentAuthState.enabled?`<button class="account-drawer-item" type="button" onclick="closeAccountDrawer();loginAppAccount()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M16 12H6"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('login'))}</strong><small>Ative a sincronização automática</small></span></button>`:`<div class="account-drawer-sync"><i aria-hidden="true"></i><span>${eventEsc(mode)}</span></div>`}`;
@@ -6173,7 +6217,7 @@ function openEventChatGroupStyle(){closeEventChatGroupMenu();openChatAppearance(
 function toggleEventChatGroupMute(){if(!currentSdId)return;const values=storage.get(EVENT_CHAT_MUTE_KEY,{}),id=String(currentSdId),muted=!values[id];if(muted)values[id]=true;else delete values[id];storage.set(EVENT_CHAT_MUTE_KEY,values);document.getElementById('event-chat-group-mute-label').textContent=muted?'Ativar notificações':'Silenciar notificações';showToast(muted?'Notificações deste evento silenciadas.':'Notificações deste evento ativadas.');}
 function openEventChatGroupInfo(){closeEventChatGroupMenu();closeEventChat();}
 async function openEventChat(){const event=findEvent(currentSdId);if(!event)return;try{if(currentAuthState.authenticated)await eventChat.refresh(event.id);}catch(error){showToast('⚠️ '+error.message);}eventChat.markRead(event.id);renderEventChatButton(event);chatReplyTo=null;chatLimit=40;eventChatSearchQuery='';const search=document.getElementById('event-chat-search');if(search)search.hidden=true;document.getElementById('event-chat-title').textContent=event.title;document.getElementById('event-chat-subtitle').textContent=(event.members||[]).map(member=>member.name).filter(Boolean).join(', ')||'Sem participantes';renderEventChatEventAvatar(event);applyEventChatBackground();document.getElementById('event-chat-view').hidden=false;renderEventChatMessages(true);}
-function closeEventChat(){eventChatAudio.cancel();closeEventChatContext();const search=document.getElementById('event-chat-search');if(search)search.hidden=true;eventChatSearchQuery='';document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
+function closeEventChat(){window.eventChatSelection?.cancel();eventChatAudio.cancel();closeEventChatContext();const search=document.getElementById('event-chat-search');if(search)search.hidden=true;eventChatSearchQuery='';document.getElementById('event-chat-view').hidden=true;chatReplyTo=null;if(currentSdId)openSD(currentSdId);}
 let eventMemberProfileFromChat=false;
 function eventMemberProfileMonth(value){return new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(value));}
 function eventMemberCommonHistory(memberId){
@@ -6290,17 +6334,17 @@ function renderEventChatMessages(scrollEnd){
     if(message.type==='system'){const content=document.createElement('div');content.className='event-system-message';content.textContent=message.content;stack.appendChild(content);}
     else{
       if(!mine&&!groupedPrevious){const author=document.createElement('span');author.className='event-message-author';author.textContent=message.sender.name;bubble.appendChild(author);}
-      if(message.replyTo&&byId.has(String(message.replyTo))){const original=byId.get(String(message.replyTo)),context=document.createElement('div'),label=document.createElement('span'),quote=document.createElement('span'),replyMine=String(original.sender.id)===String(appCurrentUser.id),sourceColor=participantColors.get(String(original.sender.id))||(replyMine?'#0789E7':'#FF8A70');context.className='event-message-reply-context'+(replyMine?' is-own-source':'');context.style.setProperty('--event-reply-author-color',sourceColor);label.className='event-message-reply-label';label.textContent=replyMine?'Você':original.sender.name;quote.className='event-message-reply-quote';quote.textContent=original.content||original.poll&&original.poll.question||'Mensagem';context.append(label,quote);bubble.appendChild(context);}
-      if(message.type==='poll')renderPollMessage(bubble,event.id,message);
+      if(!message.deleted&&message.replyTo&&byId.has(String(message.replyTo))){const original=byId.get(String(message.replyTo)),context=document.createElement('div'),label=document.createElement('span'),quote=document.createElement('span'),replyMine=String(original.sender.id)===String(appCurrentUser.id),sourceColor=participantColors.get(String(original.sender.id))||(replyMine?'#0789E7':'#FF8A70');context.className='event-message-reply-context'+(replyMine?' is-own-source':'');context.style.setProperty('--event-reply-author-color',sourceColor);label.className='event-message-reply-label';label.textContent=replyMine?'Você':original.sender.name;quote.className='event-message-reply-quote';quote.textContent=original.content||original.poll&&original.poll.question||'Mensagem';context.append(label,quote);bubble.appendChild(context);}
+      if(message.type==='poll'&&!message.deleted)renderPollMessage(bubble,event.id,message);
       else if(message.type==='song'&&!message.deleted)renderEventChatSong(bubble,message);
       else if(message.type==='audio'&&!message.deleted)eventChatAudio.render(bubble,message);
       else if(['playlist','event','image'].includes(message.type)&&!message.deleted)renderEventChatAttachment(bubble,message);
-      else{const content=document.createElement('div');content.className='event-message-content';content.textContent=message.deleted?'Mensagem excluída':message.content+(message.editedAt?' (editada)':'');bubble.appendChild(content);}
+      else{const content=document.createElement('div');content.className='event-message-content'+(message.deleted?' event-message-deleted':'');if(message.deleted){content.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>';const label=document.createElement('span');label.textContent=mine?'Você apagou esta mensagem.':'Esta mensagem foi apagada.';content.appendChild(label);}else content.textContent=message.content+(message.editedAt?' (editada)':'');bubble.appendChild(content);}
       if(!message.deleted){const reactions=document.createElement('div');reactions.className='event-message-reactions';Object.entries(message.reactions||{}).forEach(([emoji,voters])=>{const count=(voters||[]).length;if(count){const chip=eventChatButton(emoji+(count>1?' '+count:''),()=>eventChat.react(event.id,message.id,emoji),'event-reaction');chip.setAttribute('aria-label',`${emoji}, ${count} ${count===1?'reação':'reações'}`);if((voters||[]).includes(appCurrentUser.id))chip.classList.add('active');reactions.appendChild(chip);}});stack.appendChild(bubble);stack.appendChild(reactions);installEventMessageContext(row,bubble,message);}
     }
     if(message.type!=='system'){const time=document.createElement('span'),timeLabel=new Date(message.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});time.className='event-message-time';time.textContent=timeLabel;if(mine)appendEventChatReceipt(time,message);time.setAttribute('aria-label',mine?'Enviada às '+timeLabel:'Enviada às '+timeLabel);bubble.appendChild(time);if(!stack.contains(bubble))stack.appendChild(bubble);}row.appendChild(stack);target.appendChild(row);
   });
-  eventChat.markRead(event.id);window.notificationCenter?.markChatRead(event.id);if(scrollEnd)requestAnimationFrame(()=>{target.scrollTop=target.scrollHeight;});
+  window.eventChatSelection?.refresh();eventChat.markRead(event.id);window.notificationCenter?.markChatRead(event.id);if(scrollEnd)requestAnimationFrame(()=>{target.scrollTop=target.scrollHeight;});
 }
 function eventChatReceiptState(message){
   if(message?.pending)return 'pending';
@@ -6372,12 +6416,35 @@ function renderPinnedEventMessage(){const banner=document.getElementById('event-
 function togglePinnedEventMessage(messageId){const all=storage.get(EVENT_CHAT_PINNED_KEY,{}),key=String(currentSdId),current=String(all?.[key]||'');if(current===String(messageId))delete all[key];else all[key]=String(messageId);storage.set(EVENT_CHAT_PINNED_KEY,all);closeEventChatContext();renderPinnedEventMessage();showToast(current===String(messageId)?'Mensagem desafixada.':'Mensagem fixada.');}
 function openPinnedEventMessage(){const id=eventChatPinnedId(),row=[...document.querySelectorAll('#event-chat-messages .event-message')].find(item=>item.dataset.messageId===id);if(!row){chatLimit=10000;renderEventChatMessages(false);requestAnimationFrame(()=>{const target=[...document.querySelectorAll('#event-chat-messages .event-message')].find(item=>item.dataset.messageId===id);target?.scrollIntoView({block:'center',behavior:'smooth'});});return;}row.scrollIntoView({block:'center',behavior:'smooth'});row.classList.add('is-pinned-target');setTimeout(()=>row.classList.remove('is-pinned-target'),1200);}
 function hideEventMessageForMe(messageId){const all=storage.get(EVENT_CHAT_HIDDEN_KEY,{}),key=String(currentSdId),ids=new Set(all[key]||[]);ids.add(String(messageId));storage.set(EVENT_CHAT_HIDDEN_KEY,{...all,[key]:[...ids]});closeEventChatContext();renderEventChatMessages(false);showToast('Mensagem apagada somente para você neste dispositivo');}
-function closeEventChatContext(){const layer=document.getElementById('event-chat-context');if(!layer)return;layer.hidden=true;layer.setAttribute('aria-hidden','true');layer.textContent='';document.getElementById('event-chat-view')?.classList.remove('is-context-open');document.querySelectorAll('.event-message.is-context-target').forEach(row=>row.classList.remove('is-context-target'));eventChatContextMessageId=null;}
+function closeEventChatContext(){const layer=document.getElementById('event-chat-context');if(!layer)return;layer.hidden=true;layer.setAttribute('aria-hidden','true');layer.textContent='';document.getElementById('event-chat-view')?.classList.remove('is-context-open');document.querySelectorAll('.event-message.is-context-target').forEach(row=>{row.classList.remove('is-context-target');row.style.removeProperty('transform');row.style.removeProperty('max-height');row.style.removeProperty('overflow');});eventChatContextMessageId=null;}
 function reactFromEventChatContext(emoji){if(!eventChatContextMessageId)return;eventChat.react(currentSdId,eventChatContextMessageId,emoji);closeEventChatContext();}
-function openEventChatReactionPicker(){const bar=document.querySelector('.event-chat-context-reactions');if(!bar)return;bar.innerHTML=['❤️','😂','😮','😢','😡','👍','🙏','👏','🔥','🎉'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('');bar.classList.add('is-expanded');}
-function confirmDeleteEventMessageForEveryone(){const menu=document.querySelector('.event-chat-context-menu');if(!menu)return;menu.innerHTML=`<p>Apagar esta mensagem para todos?</p><button type="button" class="event-chat-context-danger" onclick="deleteEventMessageForEveryone()">Confirmar exclusão</button><button type="button" onclick="closeEventChatContext()">Cancelar</button>`;}
+function openEventChatReactionPicker(){const bar=document.querySelector('.event-chat-context-reactions');if(!bar)return;bar.innerHTML=['❤️','😂','😮','😢','😡','👍','🙏','👏','🔥','🎉'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('');bar.classList.add('is-expanded');const row=document.querySelector('.event-message.is-context-target');if(row){row.style.removeProperty('transform');row.style.removeProperty('max-height');row.style.removeProperty('overflow');positionEventChatContext(row,row.querySelector('.event-message-bubble'));}}
+function beginEventChatDeleteSelection(){const id=eventChatContextMessageId;closeEventChatContext();window.eventChatSelection?.start(id);}
+function confirmDeleteEventMessageForEveryone(){beginEventChatDeleteSelection();}
+window.eventChatSelectionContext={
+ eventId:()=>currentSdId,userId:()=>appCurrentUser.id,
+ messages:()=>eventChat.list(currentSdId,10000),
+ remove:id=>eventChat.remove(currentSdId,id),
+ hide:ids=>{const all=storage.get(EVENT_CHAT_HIDDEN_KEY,{}),key=String(currentSdId),hidden=new Set(all[key]||[]);ids.forEach(id=>hidden.add(String(id)));return storage.set(EVENT_CHAT_HIDDEN_KEY,{...all,[key]:[...hidden]});},
+ restore:ids=>{const all=storage.get(EVENT_CHAT_HIDDEN_KEY,{}),key=String(currentSdId),restore=new Set(ids.map(String));return storage.set(EVENT_CHAT_HIDDEN_KEY,{...all,[key]:(all[key]||[]).filter(id=>!restore.has(String(id)))});},
+ render:()=>renderEventChatMessages(false),
+ prepare:()=>{eventChatAudio.cancel();closeEventChatAttachments({focus:false});closeEventChatGroupMenu();document.getElementById('event-chat-input')?.blur();},
+ notify:text=>showToast(text)
+};
 function deleteEventMessageForEveryone(){const message=eventChat.list(currentSdId,10000).find(value=>String(value.id)===String(eventChatContextMessageId));if(!message)return closeEventChatContext();eventChat.remove(currentSdId,message.id);closeEventChatContext();}
-function openEventChatContext(message,row,bubble){if(message.deleted||message.type==='system')return;closeEventChatContext();eventChatContextMessageId=message.id;row.classList.add('is-context-target');const layer=document.getElementById('event-chat-context'),mine=String(message.sender.id)===String(appCurrentUser.id),pinned=eventChatPinnedId()===String(message.id),rect=bubble.getBoundingClientRect(),view=document.getElementById('event-chat-view').getBoundingClientRect();layer.innerHTML=`<button type="button" class="event-chat-context-backdrop" onclick="closeEventChatContext()" aria-label="Fechar ações"></button><div class="event-chat-context-stack${mine?' is-mine':''}" role="dialog" aria-label="Ações da mensagem"><div class="event-chat-context-reactions" aria-label="Reações">${['❤️','😂','😮','😢','😡','👍'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('')}<button type="button" onclick="openEventChatReactionPicker()" aria-label="Mais reações">＋</button></div><i class="event-chat-context-anchor-gap" aria-hidden="true"></i><div class="event-chat-context-menu"><button type="button" onclick="replyEventMessage('${eventEsc(message.id)}')">Responder</button><button type="button" onclick="togglePinnedEventMessage('${eventEsc(message.id)}')">${pinned?'Desafixar':'Fixar'}</button><button type="button" onclick="hideEventMessageForMe('${eventEsc(message.id)}')">Apagar para mim</button>${mine?`<button type="button" class="event-chat-context-danger" onclick="confirmDeleteEventMessageForEveryone()">Apagar para todos</button>`:''}</div></div>`;layer.hidden=false;layer.setAttribute('aria-hidden','false');document.getElementById('event-chat-view').classList.add('is-context-open');const stack=layer.querySelector('.event-chat-context-stack'),preferred=Math.max(view.top+12,Math.min(rect.top-76,view.bottom-390)),stackWidth=Math.min(320,view.width-28),ideal=mine?rect.right-view.left-stackWidth:rect.left-view.left,left=Math.max(14,Math.min(ideal,view.width-stackWidth-14));stack.style.top=`${preferred-view.top}px`;stack.style.left=`${left}px`;stack.style.setProperty('--event-chat-context-anchor-height',`${Math.ceil(rect.height+12)}px`);stack.querySelector('button')?.focus();}
+function openEventChatContext(message,row,bubble){if(message.deleted||message.type==='system')return;closeEventChatContext();eventChatContextMessageId=message.id;row.classList.add('is-context-target');const layer=document.getElementById('event-chat-context'),mine=String(message.sender.id)===String(appCurrentUser.id),pinned=eventChatPinnedId()===String(message.id),rect=bubble.getBoundingClientRect(),view=document.getElementById('event-chat-view').getBoundingClientRect();layer.innerHTML=`<button type="button" class="event-chat-context-backdrop" onclick="closeEventChatContext()" aria-label="Fechar ações"></button><div class="event-chat-context-stack${mine?' is-mine':''}" role="dialog" aria-label="Ações da mensagem"><div class="event-chat-context-reactions" aria-label="Reações">${['❤️','😂','😮','😢','😡','👍'].map(emoji=>`<button type="button" onclick="reactFromEventChatContext('${emoji}')" aria-label="Reagir com ${emoji}">${emoji}</button>`).join('')}<button type="button" onclick="openEventChatReactionPicker()" aria-label="Mais reações">＋</button></div><i class="event-chat-context-anchor-gap" aria-hidden="true"></i><div class="event-chat-context-menu"><button type="button" onclick="replyEventMessage('${eventEsc(message.id)}')">Responder</button><button type="button" onclick="togglePinnedEventMessage('${eventEsc(message.id)}')">${pinned?'Desafixar':'Fixar'}</button><button type="button" class="event-chat-context-danger event-chat-delete-action" onclick="beginEventChatDeleteSelection()"><span>Apagar</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button></div></div>`;layer.hidden=false;layer.setAttribute('aria-hidden','false');document.getElementById('event-chat-view').classList.add('is-context-open');positionEventChatContext(row,bubble);layer.querySelector('button[aria-label="Mais reações"]')?.focus({preventScroll:true});}
+function positionEventChatContext(row,bubble){
+ const layer=document.getElementById('event-chat-context'),stack=layer?.querySelector('.event-chat-context-stack');if(!stack||!row?.isConnected)return;
+ const root=document.getElementById('event-chat-view'),view=root.getBoundingClientRect(),header=root.querySelector('.event-chat-header').getBoundingClientRect(),rect=bubble.getBoundingClientRect(),bar=stack.querySelector('.event-chat-context-reactions'),menu=stack.querySelector('.event-chat-context-menu');
+ const width=Math.min(320,view.width-28),left=Math.max(14,Math.min(rect.right-view.left-width,view.width-width-14));
+ stack.style.top='0';stack.style.left='0';stack.style.width='100%';stack.style.height='100%';
+ for(const element of [bar,menu]){element.style.width=width+'px';element.style.left=left+'px';}
+ const barHeight=bar.getBoundingClientRect().height,menuHeight=menu.getBoundingClientRect().height,topLimit=Math.max(12,header.bottom-view.top+10),maxPreview=Math.max(48,view.height-topLimit-barHeight-menuHeight-48),previewHeight=Math.min(rect.height,maxPreview);
+ const minimum=topLimit+barHeight+10,maximum=Math.max(minimum,view.height-menuHeight-previewHeight-24),anchor=Math.max(minimum,Math.min(rect.top-view.top,maximum));
+ const offset=anchor-(rect.top-view.top);row.style.transform='translateY('+offset+'px)';row.style.maxHeight=previewHeight+'px';row.style.setProperty('overflow','hidden','important');
+ bar.style.top=(anchor-barHeight-10)+'px';menu.style.top=(anchor+previewHeight+10)+'px';
+}
+
 function installEventMessageContext(row,bubble,message){row.tabIndex=0;row.setAttribute('aria-label','Mensagem de '+message.sender.name+'. Pressione Enter para ações.');const start=()=>{clearTimeout(eventChatLongPressTimer);eventChatLongPressTimer=setTimeout(()=>openEventChatContext(message,row,bubble),430);};const cancel=()=>clearTimeout(eventChatLongPressTimer);bubble.addEventListener('pointerdown',start);bubble.addEventListener('pointerup',cancel);bubble.addEventListener('pointercancel',cancel);bubble.addEventListener('pointermove',cancel);bubble.addEventListener('contextmenu',event=>{event.preventDefault();openEventChatContext(message,row,bubble);});row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10')){event.preventDefault();openEventChatContext(message,row,bubble);}});}
 function eventPollOptionRow(){const row=document.createElement('div'),input=document.createElement('input');row.className='event-poll-compose-option';input.className='event-poll-option-input';input.type='text';input.placeholder='Adicionar';input.maxLength=120;input.setAttribute('aria-label','Opção da enquete');input.addEventListener('input',eventPollComposerChanged);input.addEventListener('keydown',event=>{if(event.key!=='Enter')return;event.preventDefault();const inputs=[...document.querySelectorAll('.event-poll-option-input')],index=inputs.indexOf(input);if(input.value.trim()&&index===inputs.length-1)appendEventPollOption();requestAnimationFrame(()=>[...document.querySelectorAll('.event-poll-option-input')][index+1]?.focus());});row.appendChild(input);return row;}
 function appendEventPollOption(){const list=document.getElementById('event-poll-options');if(!list)return;list.appendChild(eventPollOptionRow());updateEventPollSubmit();}
@@ -6483,7 +6550,7 @@ let accountAuthGeneration=0;
 appAuth.subscribe(async state=>{
   const accountGeneration=++accountAuthGeneration;
   const previousAuthState=currentAuthState;
-  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){automaticEventOffline.clear();closeModal();}
+  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){automaticEventOffline.clear();closeModal();window.roudySearchMenu?.resetAccount();window.eventChatSelection?.cancel();}
   const signedOutOwnerId=previousAuthState.authenticated&&!state.authenticated?String(appCurrentUser.id||''):'';
   if(previousAuthState.authenticated&&state.authenticated&&previousAuthState.user?.id!==state.user?.id){
     setlists=eventRepository.deactivateOwner(setlists);stashMedleyForOwner(appCurrentUser.id);
@@ -6711,7 +6778,9 @@ function openEventChatStyleMenu(trigger, scope='style'){
   document.body.appendChild(overlay);trigger.setAttribute('aria-expanded','true');menu.querySelector('button').focus();
 }
 </script>
-<script src="js/search-menu.js?v=12"></script>
+<script src="js/event-chat-selection.js?v=4"></script>
+<script src="js/song-search.js?v=1"></script>
+<script src="js/search-menu.js?v=19"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -6820,8 +6889,18 @@ if ('serviceWorker' in navigator) {
   letter-spacing:normal;
 }
 /* Uma grade única nos dois estados: só a região 5–6 troca de conteúdo. */
+#view-detail:not(.stage-mode)>#song-controls{
+  position:sticky;
+  top:var(--study-header-height,58px);
+  z-index:4;
+}
+#view-detail:not(.stage-mode) #song-control-panel{
+  max-height:max(0px, calc(100dvh - var(--study-header-height,58px) - var(--study-strip-height,74px) - 6rem));
+  overflow-y:auto;
+}
 #song-controls .song-control-strip{grid-template-columns:repeat(6,minmax(0,1fr)) 36px}
 #song-controls .song-control-strip>.song-control-cell{grid-row:1}
+#song-controls button[aria-controls="song-control-panel"]{touch-action:manipulation}
 #song-controls .song-control-bpm{grid-column:5}
 #song-controls .song-control-meter{grid-column:6}
 #song-controls .song-control-disclosure{grid-column:7}

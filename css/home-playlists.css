@@ -239,3 +239,11 @@
 
 @media (min-width:760px){.home-playlists-list{padding-right:20px;padding-left:20px}.home-playlist-row{max-width:760px}.home-playlist-detail-hero{padding-top:34px}.home-playlist-cover{width:220px}}
 @media (prefers-reduced-motion:reduce){.home-playlist-create,.home-playlist-action-layer,.home-playlist-action-scrim,.home-playlist-action-sheet{transition:none}.home-playlist-create-submit:active{transform:none}}
+
+/* Home playlist search: cover-led rows without dividers, matching the reference spacing. */
+.home-playlist-search-results .playlist-search-result-row{display:block;border:0}
+.home-playlist-search-results .playlist-search-result{min-height:80px;padding:8px 0;grid-template-columns:64px minmax(0,1fr);gap:12px}
+.home-playlist-search-results .playlist-search-result-art{width:64px;height:64px;border-radius:5px}
+.home-playlist-search-results .playlist-search-result-copy{gap:5px}
+.home-playlist-search-results .playlist-search-result-copy strong{font-size:18px;line-height:1.25;font-weight:500}
+.home-playlist-search-results .playlist-search-result-copy small{font-size:15px;line-height:1.3;font-weight:400}

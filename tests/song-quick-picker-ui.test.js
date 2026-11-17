@@ -7,7 +7,7 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>typeof continueWithoutLogin==='function'&&window.loginGateAuthReady!==undefined).catch(()=>{});
+  await page.waitForFunction(()=>typeof continueWithoutLogin==='function').catch(()=>{});
   await page.evaluate(()=>{try{continueWithoutLogin();}catch(e){};musicas.push({id:'t1',title:'É Ele',artist:'Drops INA',key:'A',blocos:[{l:'Letra',c:'A F#m D E'}]});openDetail('t1');});
   await page.waitForTimeout(600);
     const read=()=>page.evaluate(()=>({key:document.getElementById('song-control-key').textContent,capo:selectedCapo,semi:currentSemitones,bpm:studyMetronome.getBpm(),meter:studyMetronome.getMeter(),speed:scrollSpeed}));
@@ -16,6 +16,15 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   assert.equal(await page.locator('[data-song-picker]').count(),0,'indicadores da barra não abrem sheets separados');
   assert.equal(await page.locator('#song-control-panel').isHidden(),true,'painel começa recolhido');
   assert.equal(await page.locator('#inst-btn').isHidden(),true,'instrumento acompanha o painel recolhido');
+  for(const field of ['key','capo','bpm','meter']){
+    const trigger=page.locator(`button:has(> #song-control-${field})`);
+    await trigger.tap();
+    await page.locator('#song-control-panel').waitFor({state:'visible',timeout:3500});
+    assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+    await page.locator('#song-controls-toggle').click();
+    assert.equal(await page.locator('#song-control-panel').isHidden(),true);
+    assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+  }
   await page.locator('#song-controls-toggle').click();await page.waitForTimeout(250);
   assert.equal(await page.locator('#song-control-panel').isVisible(),true,'chevron abre o painel completo');
   assert.equal(await page.locator('#song-control-panel #inst-btn').isVisible(),true,'instrumento voltou ao painel expansível');
@@ -24,8 +33,25 @@ const server=http.createServer((req,res)=>{const url=decodeURIComponent(req.url.
   await page.locator('#metronome-plus').click();
   await page.locator('#song-meter-wheel [data-meter="6/8"]').click();
   await page.waitForTimeout(500);
-  assert.deepEqual(await read(),{key:'A#',capo:1,semi:1,bpm:73,meter:'6/8',speed:30});
+  assert.deepEqual(await read(),{key:'Bb',capo:1,semi:1,bpm:73,meter:'6/8',speed:30});
   await page.waitForTimeout(900);const saved=await page.evaluate(()=>musicas.find(s=>s.id==='t1').playbackSettings);assert.deepEqual([saved.semitones,saved.capo,saved.bpm,saved.meter,saved.scrollSpeed],[1,1,73,'6/8',30],'controles do painel continuam salvando');
-  assert.deepEqual(errors,[]);console.log('song-quick-picker-ui.test.js: OK (painel expansível único, instrumento e controles)');
+  await page.evaluate(()=>{
+    openDetail('t1');
+    document.getElementById('view-detail').lastElementChild.insertAdjacentHTML('afterend','<div style="flex:0 0 2400px"></div>');
+    toggleSongControls(true);
+    document.getElementById('view-detail').scrollTop=600;
+  });
+  const isPinned=()=>{
+    const header=document.querySelector('#view-detail > .detail-header').getBoundingClientRect();
+    const controls=document.getElementById('song-controls').getBoundingClientRect();
+    return Math.abs(header.bottom-controls.top)<2;
+  };
+  await page.waitForFunction(isPinned);
+  await page.evaluate(()=>startAutoScroll());
+  await page.waitForFunction(()=>document.getElementById('view-detail').scrollTop>600);
+  assert.equal(await page.evaluate(isPinned),true);
+  assert.equal(await page.locator('#song-control-panel').isVisible(),true);
+  await page.evaluate(()=>stopAutoScroll());
+  assert.deepEqual(errors,[]);console.log('song-quick-picker-ui.test.js: OK (controls, manual scroll and auto-scroll)');
   await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1);});

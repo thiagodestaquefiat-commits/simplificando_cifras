@@ -83,7 +83,7 @@
       recorder.ondataavailable=e=>{if(e.data.size){state.chunks.push(e.data);state.bytes+=e.data.size;if(state.bytes>MAX){notice('Limite de tamanho excedido. Gravação descartada.');stop(true);}}};
       recorder.onerror=()=>{stop(true);notice('Falha ao gravar. Tente novamente.');};
       recorder.onstop=async()=>{
-        release(state);if(!same(current))return;if(state.cancelled){notice('Gravação cancelada.');return;}
+        release(state);if(!same(current))return;if(state.cancelled){retry.hidden=discard.hidden=true;notice('');return;}
         const duration=(performance.now()-state.started-(state.pausedMs||0)-(state.pausedAt?performance.now()-state.pausedAt:0))/1000,blob=new Blob(state.chunks,{type:recorder.mimeType});
         if(duration<.4||!blob.size||blob.size>MAX){notice('Gravação muito curta ou maior que o limite.');return;}
         finalizing=true;

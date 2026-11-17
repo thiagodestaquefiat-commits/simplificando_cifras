@@ -63,7 +63,7 @@
 
 /* Hold mode: one baseline for microphone, elapsed time and cancellation hint. */
 #event-chat-view .event-audio-tools.is-holding{right:0;box-sizing:border-box;min-height:70px;grid-template-columns:22px max-content minmax(0,1fr) 44px;grid-template-rows:44px;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:#252526}
-#event-chat-view .event-audio-tools.is-holding::before{content:'';grid-column:1;grid-row:1;width:20px;height:28px;align-self:center;background:#ff5b72;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='3' width='6' height='12' rx='3'/%3E%3Cpath d='M6 11a6 6 0 0 0 12 0M12 17v4m-3 0h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
+#event-chat-view .event-audio-tools.is-holding::before{content:'';grid-column:1;grid-row:1;width:20px;height:28px;align-self:center;background:#ff5b72;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='3' width='6' height='12' rx='3' fill='black' stroke='none'/%3E%3Cpath d='M6 11a6 6 0 0 0 12 0M12 17v4m-3 0h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
 #event-chat-view .event-audio-tools.is-holding>span[role="status"]{grid-column:2;grid-row:1;align-self:center;line-height:1;font-size:20px;font-weight:400;padding:0}
 #event-chat-view .event-audio-tools.is-holding .event-audio-hold-hint{grid-column:3;grid-row:1;align-self:center;padding:0;min-width:0;line-height:1.2;font-size:13px;text-align:center}
 #event-chat-view:has(.event-audio-tools.is-holding) .event-chat-mic.is-recording{background:transparent;box-shadow:none;color:#ff5b72}
@@ -90,6 +90,8 @@
 @media(prefers-reduced-motion:reduce){#event-chat-view .event-audio-tools.is-holding::before{animation:none;opacity:1}}
 @keyframes event-audio-cancel-shimmer{0%,15%{background-position:150% 0}85%,100%{background-position:-150% 0}}
 @supports ((background-clip:text) or (-webkit-background-clip:text)){
-  #event-chat-view .event-audio-tools.is-holding .event-audio-hold-hint{background-image:linear-gradient(105deg,#929299 0%,#929299 40%,#0789e7 50%,#929299 60%,#929299 100%);background-size:250% 100%;background-repeat:no-repeat;background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:event-audio-cancel-shimmer 2.5s ease-in-out infinite}
+  #event-chat-view .event-audio-tools.is-holding .event-audio-hold-hint{background-image:linear-gradient(105deg,#929299 0%,#929299 40%,#0789e7 50%,#929299 60%,#929299 100%);background-color:#929299;background-size:250% 100%;background-repeat:no-repeat;background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:event-audio-cancel-shimmer 2.5s ease-in-out infinite}
 }
 @media(prefers-reduced-motion:reduce){#event-chat-view .event-audio-tools.is-holding .event-audio-hold-hint{animation:none;background:none;color:#a1a1aa;-webkit-text-fill-color:#a1a1aa}}
+
+#event-chat-view:has(.event-audio-tools.is-holding) .event-chat-mic.is-recording svg rect{fill:currentColor;stroke:none}

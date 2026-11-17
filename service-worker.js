@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v729-audio-fluido";
+const CACHE_NAME = "simplificando-cifras-v763-shortcut-outline-desktop";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -47,8 +47,9 @@ const CACHE_NAME = "simplificando-cifras-v729-audio-fluido";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
+  "css/study-song-navigation.css?v=5",
   "./css/event-share-variants.css?v=6",
-  "./js/event-detail-refactor.css?v=135",
+  "./js/event-detail-refactor.css?v=137",
   "./assets/chat-wallpaper-roudy-revised.svg",
   "./assets/icons/roudy-rd-premium.svg",
   "./assets/chat-wallpaper-roudy-art.svg",
@@ -63,10 +64,10 @@ const ASSETS = [
   "./css/song-section-heading.css?v=1",
   "./js/search-menu.js?v=11",
   "./js/list-loading.js?v=1",
-  "./assets/search/musicas.svg?v=2",
-  "./assets/search/eventos.svg?v=2",
-  "./assets/search/playlists.svg?v=2",
-  "./assets/search/medley.svg",
+  "./assets/search/musicas.svg?v=6",
+  "./assets/search/eventos.svg?v=3",
+  "./assets/search/playlists.svg?v=4",
+  "./assets/search/medley.svg?v=6",
   "./css/home-playlists.css?v=30",
   "./js/home-playlists.js?v=26",
   "./js/user-playlists.js?v=6",
@@ -80,11 +81,12 @@ const ASSETS = [
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
   "./js/app-auth.js?v=17",
-  "./js/event-qr-scanner.js?v=2",
-  "./js/event-qr-scanner.css?v=1",
+  "./js/event-qr-scanner.js?v=3",
+  "./js/event-qr-scanner.css?v=2",
   "./js/vendor/jsqr.min.js?v=1",
-  "./js/profile-qr.js?v=4",
-  "./js/profile-qr.css?v=2",
+  "./js/profile-qr.js?v=6",
+  "./js/profile-qr.css?v=4",
+  "./css/qr-stage-light.css?v=1",
   "./js/account-drawer.css?v=17",
   "./js/account-profile.css?v=4",
   "./css/home-playlists.css?v=1",
@@ -109,7 +111,7 @@ const ASSETS = [
   "./css/topbar-labels.css?v=10",
   "./css/topbar-labels.css?v=12",
   "./css/topbar-labels.css?v=13",
-  "./css/topbar-labels.css?v=14",
+  "./css/topbar-labels.css?v=15",
   "./js/ai/ai-harmonic-summary.js?v=19",
   "./js/assistant-language.js?v=1",
   "./js/assistant-actions.js?v=5",
@@ -132,7 +134,7 @@ const ASSETS = [
   "./js/assistant-action-manager.js?v=1",
   "./js/assistant-action-runtime.js?v=1",
   "./js/app-assistant.js?v=23",
-  "./js/youtube-player-ui.js?v=25",
+  "./js/youtube-player-ui.js?v=26",
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
   "./js/tuner.js?v=5",
@@ -297,7 +299,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
-  "./css/roudy-color-system-preview.css?v=18",
+  "./css/roudy-color-system-preview.css?v=20",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
   "./assets/icons/roudy-rd-premium.svg?v=1",
@@ -315,9 +317,11 @@ const ASSETS = [
   "./js/event-chat-audio.js?v=6",
   "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
-  "./css/home-playlists.css?v=31",
-  "./css/search-menu.css?v=21",
-  "./js/search-menu.js?v=12"
+  "./css/home-playlists.css?v=32",
+  "./css/search-menu.css?v=39",
+  "./js/event-chat-selection.js?v=4",
+  "./js/song-search.js?v=1",
+  "./js/search-menu.js?v=19"
 ];
 
 self.addEventListener("install", (event) => {

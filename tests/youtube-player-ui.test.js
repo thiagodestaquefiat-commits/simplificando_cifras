@@ -62,9 +62,8 @@ const server = http.createServer((request, response) => {
     assert.equal(await page.locator(".chord-line").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as cifras devem usar a escala musical base");
     assert.equal(await page.locator(".letra-linha").first().evaluate((node) => getComputedStyle(node).fontSize), "18px", "as letras devem usar a escala musical base");
     assert.equal(await player.evaluate((node) => getComputedStyle(node).position), "relative", "o player deve sair naturalmente da viewport durante a leitura");
-    assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).count(), 0);
 
-    await page.getByRole("button", { name: "Abrir vídeo de Bondade de Deus" }).click();
     await page.locator("#youtube-iframe-player").waitFor({ state: "visible" });
     const stageButton = page.locator("#btn-palco");
     await stageButton.evaluate((node) => { node.hidden = false; });
