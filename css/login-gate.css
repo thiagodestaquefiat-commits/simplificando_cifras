@@ -46,3 +46,6 @@
 .login-people span:nth-child(13){left:36.111%;top:92.391%;width:21.825%;filter:blur(.6px)}
 .login-people span:nth-child(14){left:60.714%;top:75.544%;width:21.825%;filter:blur(.6px)}
 .login-people span:nth-child(15){left:85.317%;top:92.391%;width:21.825%;filter:blur(.6px)}
+
+.login-gate .login-enter-button{border:0;background:transparent;font-weight:650}
+.login-gate .login-guest-link{min-height:44px;padding:8px;border:0;background:transparent;color:var(--text-secondary,#a1a1a6);font-size:12px;font-weight:400}

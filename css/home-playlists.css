@@ -361,3 +361,8 @@
 .playlist-share-status{margin:0 24px;color:var(--text-secondary);font-size:13px;line-height:1.4}
 .playlist-share-status:empty{display:none}
 .playlist-share-status input{width:100%;padding:10px;background:var(--ui-control);border:0;color:var(--text-primary)}
+
+/* Artwork frames retain their own layout inside the repertoire heading. */
+.is-repertoire-picker .add-song-event-heading .event-song-artwork-frame{display:grid;position:relative;flex:0 0 52px;width:52px;height:52px;margin:0;overflow:hidden;border:0;border-radius:7px;background:#202124}
+.is-repertoire-picker .add-song-event-heading .event-song-artwork-frame .roudy-artwork-placeholder{position:relative;display:grid;width:100%;height:100%;margin:0;place-items:center}
+.is-repertoire-picker .add-song-event-heading .event-song-artwork-frame .roudy-artwork-note{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}

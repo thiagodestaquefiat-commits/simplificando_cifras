@@ -166,10 +166,10 @@
     if (result.error) throw result.error;
   }
 
-  async function signInWithEmail(email) {
+  async function signInWithEmail(email, {shouldCreateUser = true} = {}) {
     if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
     const emailRedirectTo = new URL(global.location.href).origin + "/";
-    const result = await client.auth.signInWithOtp({email,options:{emailRedirectTo}});
+    const result = await client.auth.signInWithOtp({email,options:{emailRedirectTo,shouldCreateUser}});
     if (result.error) throw new Error("Não foi possível enviar o link de acesso. Confira o e-mail e tente novamente.");
   }
 

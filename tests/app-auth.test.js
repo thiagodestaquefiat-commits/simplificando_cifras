@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, "..", "js/app-auth.js"), 
 function createAuthHarness(options = {}) {
   const storage = options.storage || new Map();
   const listeners = [];
-  const calls = { exchange: [], oauth: [], updateUser: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
+  const calls = { exchange: [], oauth: [], otp: [], updateUser: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
   const user = { id: "user-1", email: "musico@example.com", user_metadata: { full_name: "Músico" } };
   const exchangedSession = { access_token: "access-token", user };
   let currentSession = options.initialSession || null;
@@ -23,6 +23,7 @@ function createAuthHarness(options = {}) {
       return { data: { session: currentSession }, error: null };
     },
     onAuthStateChange(listener) { listeners.push(listener); return { data: { subscription: { unsubscribe() {} } } }; },
+    async signInWithOtp(payload) { calls.otp.push(payload); return { error: null }; },
     async signInWithOAuth(payload) { calls.oauth.push(payload); return { error: null }; },
     async updateUser(attributes) { calls.updateUser.push(attributes);currentSession={...currentSession,user:{...currentSession.user,email:attributes.email||currentSession.user.email,user_metadata:{...currentSession.user.user_metadata,...attributes.data}}};return {data:{user:currentSession.user},error:null}; },
     async signOut(options) { calls.signOut += 1; calls.signOutOptions=options; currentSession = null; listeners.forEach((listener) => listener("SIGNED_OUT", null)); return { error: null }; }
@@ -135,6 +136,12 @@ function createAuthHarness(options = {}) {
   await preview.window.appAuth.signInWithGoogle();
   assert.equal(preview.calls.oauth[0].options.redirectTo, "https://deploy-preview-29--simplificandocifras.netlify.app/");
   assert.equal(preview.calls.oauth[0].options.scopes, undefined, "não deve solicitar scopes adicionais");
+
+  await preview.window.appAuth.signInWithEmail("novo@example.com", {shouldCreateUser:true});
+  await preview.window.appAuth.signInWithEmail("existente@example.com", {shouldCreateUser:false});
+  assert.equal(preview.calls.otp[0].options.shouldCreateUser,true,"criar conta habilita cadastro pelo link de e-mail");
+  assert.equal(preview.calls.otp[1].options.shouldCreateUser,false,"entrar não cria conta implicitamente");
+  assert.equal(preview.calls.otp[0].options.emailRedirectTo,"https://deploy-preview-29--simplificandocifras.netlify.app/");
 
   const reloaded = createAuthHarness({ initialSession: { access_token: "persisted", user: callback.user } });
   const reloadState = await reloaded.window.appAuth.initialize();
