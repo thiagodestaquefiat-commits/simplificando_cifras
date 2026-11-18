@@ -66,6 +66,16 @@
       ]),
       generic: Object.freeze(['Preparação feita. Agora é palco.'])
     }),
+    RESUME_AFTER_INACTIVITY: Object.freeze({
+      generic: Object.freeze([
+        variant('Será que você ainda lembra aquele refrão?', F, 'retomada-pergunta'),
+        variant('Bora tirar a poeira desses acordes?', F, 'retomada-convite'),
+        variant('Sumiu do ensaio? Bora voltar!', F, 'retomada-conversa'),
+        variant('Seu repertório perguntou por você.', F, 'retomada-personificacao'),
+        variant('Seu violão está com saudade. A gente também.', F, 'retomada-saudade'),
+        variant('Faz um tempinho que não damos play nos estudos, hein?', F, 'retomada-conversa')
+      ])
+    }),
     CONTINUE_STUDY: Object.freeze({
       generic: Object.freeze([variant('{songTitle}', D, 'continuidade-neutra')])
     }),
@@ -92,6 +102,7 @@
   });
 
   const ACTION_META = Object.freeze({
+    RESUME_AFTER_INACTIVITY: Object.freeze({ kicker: 'DE VOLTA AOS ESTUDOS', actionLabel: 'Retomar estudos' }),
     RECOGNIZE_SONG_DEDICATION: Object.freeze({ kicker: 'PARCERIA MUSICAL', actionLabel: 'Abrir música' }),
     RECOGNIZE_CONSISTENCY: Object.freeze({ kicker: 'DE VOLTA À MÚSICA', actionLabel: 'Abrir música' }),
     RECOGNIZE_REPERTOIRE_DEDICATION: Object.freeze({ kicker: 'ATENÇÃO AO REPERTÓRIO', actionLabel: 'Ver repertório' }),
@@ -163,7 +174,7 @@
       if (types.includes('SONG_REMOVED')) return 'removed';
       return 'generic';
     }
-    if (action.actionType === 'CONTINUE_STUDY') return 'generic';
+    if (['CONTINUE_STUDY', 'RESUME_AFTER_INACTIVITY'].includes(action.actionType)) return 'generic';
     if (action.actionType === 'RECOGNIZE_PREPARATION') return variables.readyCount != null && variables.totalCount === variables.readyCount ? 'complete' : null;
     if (action.actionType === 'OPEN_UPCOMING_EVENT') {
       if (variables.repertoireCount === 0) return 'empty';

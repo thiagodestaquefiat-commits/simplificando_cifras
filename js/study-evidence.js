@@ -1,7 +1,7 @@
 // Private, bounded preparation evidence. No media, musical content or gesture log.
 (function (global) {
   'use strict';
-  const CONFIG = Object.freeze({ loopPasses: 3, loopSeconds: 60, editSpanMs: 30000, readingSpanMs: 90000, separationMs: 900000, cooldownMs: 72 * 3600000, songWindowMs: 14 * 86400000, consistencyWindowMs: 7 * 86400000, retentionMs: 90 * 86400000, maxSessions: 600, checkpointMs: 15000, reservationMs: 30000 });
+  const CONFIG = Object.freeze({ inactivityMs: 7 * 86400000, loopPasses: 3, loopSeconds: 60, editSpanMs: 30000, readingSpanMs: 90000, separationMs: 900000, cooldownMs: 72 * 3600000, songWindowMs: 14 * 86400000, consistencyWindowMs: 7 * 86400000, retentionMs: 90 * 86400000, maxSessions: 600, checkpointMs: 15000, reservationMs: 30000 });
   const ACTIONS = Object.freeze(['RECOGNIZE_SONG_DEDICATION', 'RECOGNIZE_CONSISTENCY', 'RECOGNIZE_REPERTOIRE_DEDICATION']);
   const isRecognition = action => ACTIONS.includes(action?.actionType);
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -90,6 +90,22 @@
       if (left) add(ACTIONS[2], [left, right], { view: 'event', eventId: event.id }, event.id);
     }
     return result;
+  }
+  // Inactivity concerns recorded study on this device, never event readiness.
+  function inactivityCandidate(input, options = {}) {
+    const config = { ...CONFIG, ...options }, state = input.state, now = Number(input.now);
+    if (!input.userId || !state?.enabled || state.userId !== String(input.userId) || !Number.isFinite(now)) return null;
+    const latest = (state.sessions || []).filter(s => Number.isFinite(s.lastEvidenceAt) && s.lastEvidenceAt <= now && s.qualifiedAt <= now)
+      .sort((a, b) => b.lastEvidenceAt - a.lastEvidenceAt)[0];
+    if (!latest || now - latest.lastEvidenceAt < config.inactivityMs || now - latest.lastEvidenceAt >= config.retentionMs) return null;
+    const song = (input.songs || []).find(song => identity(song) === latest.songKey && song.accessible !== false && !/^(deleted|removed|archived|hidden|inaccessible)$/.test(song.status || ''));
+    if (!song) return null;
+    return { actionType: 'RESUME_AFTER_INACTIVITY', category: 'inactivity', deliveryClass: 'optional', priority: 'MEDIUM', localOnly: true,
+      eventId: null, songId: song.id, destination: { view: 'song', songId: song.id },
+      fingerprint: ['inactivity', input.userId, latest.id, latest.lastEvidenceAt].join(':'),
+      expiresAt: new Date(latest.lastEvidenceAt + config.retentionMs).toISOString(),
+      evidence: { lastStudyAt: new Date(latest.lastEvidenceAt).toISOString(), inactiveDays: Math.floor((now - latest.lastEvidenceAt) / 86400000), songTitle: String(song.title || '') },
+      because: ['recorded-study-inactivity', 'inactivity-is-not-preparation-state'] };
   }
   function create(options = {}) {
     const config = Object.freeze({ ...CONFIG, ...options.config }), store = options.store || indexedStore(), clock = options.now || Date.now;
@@ -203,6 +219,6 @@
     async function release(grant) { if (grant) await update(grant.owner, value => { if (value.reservation?.token === grant.token) value.reservation = null; return value; }); }
     return Object.freeze({ config, useUser, begin, end, armLoop, loopPass, editStart, editInput, editSaved, cancelEdit, reading, setEnabled, clear, snapshot, refresh, reserve, consume, release, activeToken: () => active?.token || null, flush: () => serial, available: () => available });
   }
-  global.studyEvidence = Object.freeze({ CONFIG, ACTIONS, isRecognition, identity, dayKey, indexedStore, createLoopObserver, candidates, create });
+  global.studyEvidence = Object.freeze({ CONFIG, ACTIONS, isRecognition, identity, dayKey, indexedStore, createLoopObserver, candidates, inactivityCandidate, create });
   if (typeof module !== 'undefined') module.exports = global.studyEvidence;
 })(typeof window !== 'undefined' ? window : globalThis);
