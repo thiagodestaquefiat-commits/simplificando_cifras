@@ -164,3 +164,9 @@ Validation: Chrome suite checks the actual scroll-content/header colors differ, 
 The panel-derived opaque ring incorrectly tinted white artwork pink/blue. Replaced it with a thinner 1.5px center-excluding ring using only translucent white light and black shade. Thus the actual image/panel pixels show through without importing the footer hue into the artwork. External elevation remains; no second contour or surface fill. No changes to layout, assets, blur or text.
 
 Validation: Chrome suite confirms identical neutral translucent edge treatment across four differently colored panels, equal RGB channels, opacity below 40%, preserved geometry and routes. Visual inspection confirms no pink edge over the white artwork. Applies the user's explicit correction to the previously approved border treatment.
+
+## Search header contact-shadow correction
+
+Measured supplied screenshots before changing CSS. Reference neutral-row medians: header 18/18/18 at y90–96; shadow 12/12/12 at y100; return to 18/18/18 by y114. Previous ROUDY capture instead had a uniformly darker header (11/11/12) and lighter content (17/17/18), so the visual separation came from different surfaces.
+
+Corrected active header and content to the same token-derived tone. Only the 16px region below the header gets a black contact-shadow falloff: 34%,25%,12%,4%,0 opacity at 0%,15%,40%,70%,100%. No divider border, input ring, or shadow inside the header. Test updated to require equal actual header/content colors and the external edge; responsive search suite passes.

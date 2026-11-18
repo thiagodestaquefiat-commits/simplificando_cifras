@@ -126,7 +126,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
       const shadow=getComputedStyle(header,'::after'),root=header.closest('.roudy-search');
       return {height:shadow.height,pointer:shadow.pointerEvents,gradient:shadow.backgroundImage,headerBackground:getComputedStyle(header).backgroundColor,contentBackground:getComputedStyle(root.querySelector('.roudy-search-scroll')).backgroundColor};
     });
-    assert.equal(edge.height,'12px');assert.equal(edge.pointer,'none');assert.ok(edge.gradient.includes('linear-gradient'));assert.notEqual(edge.headerBackground,edge.contentBackground);
+    assert.equal(edge.height,'16px');assert.equal(edge.pointer,'none');assert.ok(edge.gradient.includes('linear-gradient'));assert.equal(edge.headerBackground,edge.contentBackground);
 
     assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).outlineStyle),'none');
     assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).boxShadow),'none');
