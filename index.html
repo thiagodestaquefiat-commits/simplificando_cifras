@@ -999,7 +999,7 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-detail:not(.stage-mode) .youtube-song-result-more{display:grid;width:28px;flex:0 0 28px;place-items:center;color:#d8dce2;font-size:21px}
 @media(max-width:430px){#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-actions{gap:6px;padding-inline:8px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action{padding-inline:10px;font-size:9px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action span:last-child{display:none}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="repeat"] span:last-child,#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="floating"] span:last-child{display:inline}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="close"]{padding:0}}
 @media(prefers-reduced-motion:reduce){#view-detail:not(.stage-mode).video-study-expanded>.detail-header{scroll-behavior:auto}}
-@media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px minmax(0,1fr) 20px}#pane-setlists .event-date strong{font-size:21px;font-weight:var(--weight-title)}#pane-setlists .sl-sub{font-size:8px}}
+@media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px 1px minmax(0,1fr) 20px;column-gap:8px}#pane-setlists .event-date strong{font-size:21px;font-weight:var(--weight-title)}#pane-setlists .sl-sub{font-size:8px}}
 #pane-musicas>.youtube-panel,#pane-musicas>#youtube-results{display:none!important}
 #view-main>.topbar{min-height:62px;padding:10px 18px;gap:6px;background:#030405;border-bottom-color:rgba(190,200,214,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
 #view-main .topbar-info{padding-right:8px}#view-main .topbar-title{font-size:17px;font-weight:800;letter-spacing:1.2px;line-height:1.05}#view-main .topbar-sub{margin-top:4px;color:#8f98a5;font-size:10px;font-weight:550;line-height:1}
@@ -1122,6 +1122,12 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
 }
+/* Event anatomy is stable at every breakpoint, including a visible divider. */
+#pane-setlists .event-date{grid-column:1;grid-row:1;min-width:0}
+#pane-setlists .event-date-divider{grid-column:2;grid-row:1}
+#pane-setlists .sl-info{grid-column:3;grid-row:1;min-width:0;max-width:100%}
+#pane-setlists .event-disclosure{grid-column:4;grid-row:1;min-width:0;max-width:100%}
+#pane-setlists .event-card-unread{position:absolute}
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=4">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=25">
