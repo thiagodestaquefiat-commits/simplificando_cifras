@@ -44,6 +44,8 @@
       medley:libraryLabel(medleys.length,'medley','medleys'),
       events:eventLabel
     };
+    const medleyHint=el('roudy-search-medley-hint');
+    if(medleyHint)medleyHint.textContent=medleys.length?'Crie seu próximo':labels.medley==='0 medleys'?'Crie seu primeiro':'Explore seus medleys';
     for(const [key,label] of Object.entries(labels)){
       const target=el(`roudy-search-${key}-meta`);
       if(target&&target.textContent!==label)target.textContent=label;

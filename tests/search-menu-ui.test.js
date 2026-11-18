@@ -134,6 +134,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   });
   const cardDetails=()=>page.locator('.roudy-search-shortcut-copy small span').allTextContents();
   assert.deepEqual(await cardDetails(),['2 músicas','1 playlist','1 medley','Próximo: 24 nov. · 19h30']);
+  assert.equal(await page.locator('#roudy-search-medley-hint').textContent(),'Crie seu próximo');
   await page.screenshot({path:path.join(shots,'roudy-explorar-cards.png'),fullPage:false});
   await page.evaluate(()=>{
     musicas=[];setlists=[];
@@ -142,6 +143,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     roudySearchMenu.refreshCards();
   });
   assert.deepEqual(await cardDetails(),['0 músicas','0 playlists','0 medleys','Nenhum próximo evento']);
+  assert.equal(await page.locator('#roudy-search-medley-hint').textContent(),'Crie seu primeiro');
   await page.evaluate(()=>{
     const original=window.originalCardData;
     musicas=original.musicas;setlists=original.setlists;

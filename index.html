@@ -1307,7 +1307,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
             <span class="roudy-search-shortcut-art"><strong class="roudy-search-shortcut-signature"><span class="roudy-search-shortcut-rd" aria-hidden="true"></span><span>Medleys</span></strong></span>
             <span class="roudy-search-shortcut-copy">
               <small><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M6.5 12a5.5 5.5 0 0 1 5.5-5.5M17.5 12a5.5 5.5 0 0 1-5.5 5.5"/></svg><span id="roudy-search-medley-meta">Carregando…</span></small>
-              <span class="roudy-search-shortcut-hint">Crie seu primeiro</span>
+              <span id="roudy-search-medley-hint" class="roudy-search-shortcut-hint">Explore seus medleys</span>
             </span>
           </button>
           <button data-keep-colors class="roudy-search-shortcut roudy-search-shortcut--events" type="button" onclick="roudySearchMenu.shortcut('events')" aria-label="Abrir eventos" aria-describedby="roudy-search-events-meta">
@@ -6928,7 +6928,7 @@ function openEventChatStyleMenu(trigger, scope='style'){
 </script>
 <script src="js/event-chat-selection.js?v=4"></script>
 <script src="js/song-search.js?v=2"></script>
-<script src="js/search-menu.js?v=24"></script>
+<script src="js/search-menu.js?v=25"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
