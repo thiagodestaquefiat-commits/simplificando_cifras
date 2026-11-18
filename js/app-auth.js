@@ -176,7 +176,7 @@
   async function signInWithPassword(email, password) {
     if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
     const result = await withTimeout(client.auth.signInWithPassword({ email: String(email || '').trim(), password }), "A conexão demorou. Tente novamente.");
-    if (result.error || !result.data?.session?.user) throw new Error("Não foi possível entrar. Confira o e-mail e a senha ou use Entrar sem senha.");
+    if (result.error || !result.data?.session?.user) throw new Error("Não foi possível entrar. Confira o e-mail e a senha e tente novamente.");
     session = result.data.session; offlineSession = false; emit();
     return getState();
   }

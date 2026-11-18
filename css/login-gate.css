@@ -52,7 +52,7 @@
 .login-gate .login-guest-link{min-height:44px;padding:8px;border:0;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:400}
 
 /* Dedicated sign-in page uses canonical ROUDY text, surface and action roles. */
-.login-gate-card[hidden],.login-signin-page[hidden],.login-saved-account[hidden],.login-gate .login-signin-other[hidden],#login-signin-password-field[hidden]{display:none}
+.login-gate .login-signin-passwordless[hidden],.login-gate-card[hidden],.login-signin-page[hidden],.login-saved-account[hidden],.login-gate .login-signin-other[hidden],#login-signin-password-field[hidden]{display:none}
 .login-gate[data-page="signin"]{background:var(--ui-background)}
 .login-signin-page{flex:none;width:min(100%,430px);min-height:100svh;padding:0 24px max(28px,env(safe-area-inset-bottom));color:var(--text-primary);font-family:var(--font-ui)}
 .login-signin-header{display:flex;min-height:76px;padding-top:env(safe-area-inset-top);align-items:center}

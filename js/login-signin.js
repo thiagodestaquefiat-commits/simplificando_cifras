@@ -1,6 +1,8 @@
 (function(global){
   'use strict';
   const KEY='sc_remembered_login_v1',el=id=>document.getElementById(id);
+  const developerPreview=/^(localhost|127\.0\.0\.1|deploy-preview-\d+--simplificandocifras\.netlify\.app)$/.test(global.location?.hostname||'');
+  el('login-signin-passwordless').hidden=!developerPreview;
   let mode='password',pending=false,generation=0;
   const safeAvatar=value=>typeof value==='string'&&(/^(data:image\/(png|jpeg|webp|gif|avif);base64,)/i.test(value)||/^https:\/\//i.test(value))?value:null;
   function read(){try{const value=JSON.parse(localStorage.getItem(KEY)||'null');return value&&value.id&&typeof value.email==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)?value:null;}catch(_){return null;}}
@@ -60,6 +62,6 @@
   }
   el('login-signin-form').addEventListener('input',update);
   el('login-signin-form').addEventListener('change',update);
-  global.roudySignIn=Object.freeze({open,back,other,togglePassword,submit,passwordless(){if(!pending)setMode(mode==='password'?'email':'password');}});
+  global.roudySignIn=Object.freeze({open,back,other,togglePassword,submit,passwordless(){if(developerPreview&&!pending)setMode(mode==='password'?'email':'password');}});
   global.appAuth.subscribe(state=>{remember(state);if(state.authenticated)el('login-signin-password').value='';});
 })(window);

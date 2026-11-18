@@ -14,3 +14,13 @@ listener({authenticated:false});assert.equal(JSON.parse(saved.get('sc_remembered
 listener({authenticated:true,user:{id:'b',email:'b@example.com'}});
 assert.equal(JSON.parse(saved.get('sc_remembered_login_v1')).id,'b','troca de conta substitui a identificação lembrada');
 console.log('login-signin.test.js: OK');
+
+for(const [host,allowed] of [['simplificandocifras.netlify.app',false],['roudysite.com',false],['deploy-preview-127--simplificandocifras.netlify.app',true],['localhost',true],['127.0.0.1',true],['deploy-preview-1--other.netlify.app',false]]){
+  const elements=new Map();
+  const doc={getElementById(id){if(!elements.has(id))elements.set(id,{value:'',validity:{valid:true},addEventListener(){},setAttribute(){}});return elements.get(id);},querySelector(){return {setAttribute(){}}}};
+  const win={location:{hostname:host,search:'?preview=1'},appAuth:{subscribe(){}}};
+  vm.runInNewContext(source,{window:win,document:doc,localStorage});
+  assert.equal(elements.get('login-signin-passwordless').hidden,!allowed,host);
+  win.roudySignIn.passwordless();
+  assert.equal(elements.get('login-signin-title')?.textContent,allowed?'Entrar sem senha':undefined,'somente hosts de desenvolvimento ativam a ação');
+}
