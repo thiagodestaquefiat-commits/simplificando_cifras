@@ -55,3 +55,7 @@ Design inference: A arte pode reaproveitar os símbolos já aprovados em escala 
 ROUDY-specific decision: Nota musical de música aprovada, símbolo de playlist aprovado, disco de medley e calendário de evento. Manter cores das categorias, assinatura RD + nome e frases no rodapé.
 
 Implementation: SVG decorativo acima da assinatura, sem nomes duplicados nem novas ações. Validado visualmente no Chrome e pela suíte search-menu-ui em seis larguras.
+
+## Original album artwork
+
+A pedido do usuário, os símbolos ampliados foram substituídos pelas quatro artes originais (silhueta da banda, composição clara, ondas azuis e instrumentos). As versões album preservam a imagem incorporada e removem apenas o recorte arredondado interno, pois o card externo já recorta as bordas. Assinatura e textos continuam separados. Inferência de design: identificar a categoria pela arte familiar preserva a identidade visual do ROUDY; a referência HIG Icons consultada acima informa clareza, sem prescrever capas de álbum. Validado visualmente e pela suíte de navegação responsiva.
