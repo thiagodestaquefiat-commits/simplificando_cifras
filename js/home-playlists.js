@@ -64,6 +64,10 @@
     return `<span class="${frameClass} has-mosaic home-playlist-mosaic--${urls.length}" aria-hidden="true">${urls.map((url) => `<span class="is-loading" data-roudy-artwork-frame><img src="${esc(url)}" alt="" loading="lazy" decoding="async" data-roudy-artwork-image onload="roudyListLoading.settle(this,true)" onerror="roudyListLoading.settle(this,false)"></span>`).join("")}</span>`;
   }
 
+  function artworkForPlaylist(playlist, frameClass = "home-playlist-art") {
+    return artwork(playlist?.name || '', playlist?.coverImage || null, playlistSongs(playlist), frameClass);
+  }
+
   function applyPlaylistBackdrop(target, coverImage, songs) {
     const urls = coverImage ? [coverImage] : (global.songArtwork?.collectDistinct(songs, 4) || []);
     target.classList.toggle("has-cover", Boolean(urls.length));
@@ -1138,7 +1142,7 @@
   }
 
   global.homePlaylists = Object.freeze({
-    PREFIX, artwork, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
+    PREFIX, artwork, artworkForPlaylist, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
     create, closeCreate, confirmCreate, renameCurrent,  playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
     openAddSongs, filterAdd, addSong, chooseForSong, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
