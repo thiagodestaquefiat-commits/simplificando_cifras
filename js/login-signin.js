@@ -52,7 +52,7 @@
     event.preventDefault();const form=event.currentTarget;if(pending||!form.reportValidity())return;
     const current=++generation,usedMode=mode,email=el('login-signin-email').value.trim();pending=true;update();el('login-signin-submit').textContent=usedMode==='password'?'Entrando…':'Enviando…';el('login-signin-feedback').textContent='';
     try{
-      if(usedMode==='password')await global.appAuth.signInWithPassword(email,el('login-signin-password').value);
+      if(usedMode==='password'){await global.appAuth.signInWithPassword(email,el('login-signin-password').value);if(typeof global.continueWithoutLogin==='function')global.continueWithoutLogin();}
       else await global.appAuth.signInWithEmail(email,{shouldCreateUser:false});
       if(current!==generation)return;
       el('login-signin-password').value='';

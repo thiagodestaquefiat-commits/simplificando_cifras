@@ -24,7 +24,9 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     await page.goto(`https://${host}/${query}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>loginGateAuthReady);
     assert.equal(await page.locator('#login-gate').isHidden(),hidden,JSON.stringify({width,query}));
-    assert.equal(await page.evaluate(()=>appAuth.getState().authenticated),false,'atalho entra como convidado, sem fabricar sessão');
+    assert.equal(await page.evaluate(()=>appAuth.getState().authenticated),false,'não fabrica sessão');
+    await page.evaluate(()=>renderLoginGate({authenticated:true}));
+    assert.equal(await page.locator('#login-gate').isHidden(),query!=='?testLogin=1','link de teste permite ver o login mesmo com sessão salva');
   }
   assert.deepEqual(errors,[]);
   console.log('mobile-preview-login-ui.test.js: OK');

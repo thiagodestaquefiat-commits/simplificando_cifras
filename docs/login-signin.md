@@ -39,3 +39,7 @@ Browser autofill was painting a pale blue surface outside the ROUDY palette. Log
 On this site's deploy-preview-N host, viewports up to 767px skip the welcome gate and use the existing guest path. Existing signed-in sessions are preserved. Production, other hosts and desktop previews keep their prior behavior. Add testLogin=1 to a preview URL to test welcome/sign-in explicitly. No synthetic authenticated state or server permissions are introduced.
 
 Validation: Chrome serves the actual repository at a simulated preview origin and tests mobile direct entry, desktop welcome and explicit mobile login mode. Existing login-entry responsive suite and index-syntax also pass.
+
+## Mobile login restored (user correction)
+
+The mobile guest bypass was a misunderstanding and has been removed. Mobile previews now display the login gate normally. Explicit testLogin=1 is limited to this site's previews/local development and also allows inspecting the login UI while a session is already saved, without signing out. Continue without login dismisses this test view; successful password authentication also dismisses it. Production behavior is unchanged. Browser test checks anonymous mobile/desktop and explicit test view with a simulated saved session.
