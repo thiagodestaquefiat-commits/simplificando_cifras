@@ -8,9 +8,11 @@
 .roudy-search:not(.is-active) .roudy-search-scroll{background:#0b0b0c}
 .roudy-search-explore{
   display:grid;
-  max-width:650px;
+  --explore-gap:clamp(8px,3.2vw,14px);
+  width:min(100%,420px,calc(60vw + var(--explore-gap)));
+  margin-inline:auto;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:clamp(8px,1.8vw,13px);
+  gap:var(--explore-gap);
 }
 .roudy-search-shortcut{
   position:relative;
@@ -19,7 +21,7 @@
   padding:0;
   overflow:hidden;
   border:0;
-  border-radius:12.1667% / 13.9847%;
+  border-radius:17%;
   background:#242426;
   color:#fff;
   text-align:left;
@@ -28,13 +30,13 @@
 .roudy-search-shortcut:focus-visible{outline:2px solid #0789e7;outline-offset:2px}
 .roudy-search-shortcut-art{
   display:block;
-  aspect-ratio:600 / 522;
+  aspect-ratio:1;
 }
 .roudy-search-shortcut-art img{
   display:block;
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
 }
 .roudy-search-shortcut--playlists{background:#ddd;color:#131315}
 .roudy-search-shortcut--medley{background:#071560}
@@ -112,9 +114,10 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-header{padding:max(24px,env(safe-area-inset-top)) var(--roudy-search-inline) 14px}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-title-row{min-height:58px;max-height:58px;overflow:visible;opacity:calc(1 - var(--roudy-search-header-progress));pointer-events:none;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-form{position:relative;z-index:1;max-height:none;margin-top:13px;overflow:visible;opacity:1;pointer-events:auto;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
-.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{position:absolute;z-index:-1;inset:-14px calc(var(--roudy-search-inline) * -1) -72px;background:linear-gradient(to bottom,#0b0b0c calc(100% - 48px),rgba(11,11,12,0));pointer-events:none;content:""}
+.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{position:absolute;z-index:-1;inset:-14px calc(var(--roudy-search-inline) * -1) -52px;background:linear-gradient(to bottom,#0b0b0c calc(100% - 36px),rgba(11,11,12,0));pointer-events:none;content:""}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-camera{opacity:calc(1 - var(--roudy-search-header-progress));pointer-events:none;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
-.roudy-search.is-active .roudy-search-scroll{padding-top:calc(max(12px,env(safe-area-inset-top)) + 79px)}
+.roudy-search.is-active .roudy-search-header{position:relative;background:#030405}
+.roudy-search.is-active .roudy-search-scroll{padding-top:8px}
 @media(max-width:430px){.roudy-search{--roudy-search-inline:15px}}
 
 /* Match the established crop used by event and chat artwork, inside this list only. */
@@ -139,10 +142,10 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
 .roudy-search-song-copy strong{font-size:16px;line-height:1.3;font-weight:650}
 .roudy-search-song-copy small{font-size:13px;line-height:1.3;color:#a1a1a6}
 .roudy-search-save{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:10px;border:0;background:transparent;color:#a1a1a6;cursor:pointer}
-.roudy-search-save svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.roudy-search-save svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .roudy-search-save[data-state=saved]{color:#0789e7;opacity:1}
 .roudy-search-save[data-state=saved] circle{fill:currentColor;stroke:none}
-.roudy-search-save[data-state=saved] path{stroke:#fff}
+.roudy-search-save[data-state=saved] path{stroke:#030405}
 .roudy-search-save.is-saving svg{animation:roudy-search-saving .9s linear infinite}
 .roudy-search-save.is-saving path{display:none}
 .roudy-search-save.is-saving circle{stroke-dasharray:35 22}

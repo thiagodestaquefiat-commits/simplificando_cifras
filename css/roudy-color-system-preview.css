@@ -350,3 +350,17 @@ body:has(#event-chat-view.is-context-open) .app-assistant-floating{display:none!
 
 /* Subtle glass on message actions only; reaction bar retains its current surface. */
 #event-chat-context .event-chat-context-menu{background:rgba(43,43,45,.72);backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+
+/* Contextual action sheets share label and icon colors. */
+:is(.song-options-action,.event-action-item,.event-song-menu-item,.event-song-menu-group button,.home-playlist-context-actions button,.home-playlist-cover-options button,.home-playlist-menu button,.event-chat-group-menu-actions button,#event-chat-photo-actions button,#event-chat-context .event-chat-context-menu button):not(:disabled){
+  color:var(--sheet-action-danger,#fff);
+  font-weight:400;
+}
+:is(.song-options-action,.event-action-item,.event-song-menu-item,.event-song-menu-group button,.home-playlist-context-actions button,.home-playlist-cover-options button,.home-playlist-menu button,.event-chat-group-menu-actions button,#event-chat-photo-actions button,#event-chat-context .event-chat-context-menu button):not(:disabled) :is(svg,i):not(.is-pinned){
+  color:var(--sheet-action-danger,#b3b3b3);
+}
+:is(.song-options-action--danger,.event-action-item--danger,.event-song-menu-item--danger,.event-song-menu-group .event-song-menu-danger,.home-playlist-context-actions .is-danger,.home-playlist-menu .is-danger,#event-chat-context .event-chat-context-danger,#event-chat-photo-actions .danger):not(:disabled){
+  --sheet-action-danger:var(--semantic-danger);
+}
+:is(.event-action-item--danger,.event-song-menu-item--danger) > span{color:var(--semantic-danger)}
+:is(.event-action-item,.event-song-menu-item):not(:disabled) svg{stroke:currentColor}

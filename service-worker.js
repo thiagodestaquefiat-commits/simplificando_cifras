@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v787-repertoire-no-divider";
+const CACHE_NAME = "simplificando-cifras-v864-gray-song-note";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -48,8 +48,8 @@ const CACHE_NAME = "simplificando-cifras-v787-repertoire-no-divider";
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
   "css/study-song-navigation.css?v=9",
-  "./css/event-share-variants.css?v=6",
-  "./js/event-detail-refactor.css?v=140",
+  "./css/event-share-variants.css?v=7",
+  "./js/event-detail-refactor.css?v=145",
   "./assets/chat-wallpaper-roudy-revised.svg",
   "./assets/icons/roudy-rd-premium.svg",
   "./assets/chat-wallpaper-roudy-art.svg",
@@ -63,25 +63,27 @@ const ASSETS = [
   "./css/stage-mode-reference.css?v=19",
   "./css/song-section-heading.css?v=1",
   "./js/search-menu.js?v=11",
-  "./js/list-loading.js?v=1",
+  "./js/list-loading.js?v=2",
   "./assets/search/musicas.svg?v=7",
   "./assets/search/eventos.svg?v=4",
   "./assets/search/playlists.svg?v=5",
   "./assets/search/medley.svg?v=7",
   "./assets/search/rd.svg",
+  "./assets/search/nota_musical_suave.svg",
+  "./assets/search/nota_musical_vermelha_suave.svg",
   "./css/home-playlists.css?v=30",
-  "./js/home-playlists.js?v=26",
-  "./js/user-playlists.js?v=6",
+  "./js/home-playlists.js?v=40",
+  "./js/user-playlists.js?v=7",
   "./js/notification-center.js?v=7",
-  "./js/playlist-collaboration.js?v=1",
-  "./js/personal-playlist-sync.js?v=3",
+  "./js/playlist-collaboration.js?v=2",
+  "./js/personal-playlist-sync.js?v=4",
   "./js/playlist-invites.js?v=5",
   "./js/event-model.js?v=8",
   "./js/event-user-invites.js?v=10",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
-  "./js/app-auth.js?v=17",
+  "./js/app-auth.js?v=18",
   "./js/event-qr-scanner.js?v=3",
   "./js/event-qr-scanner.css?v=2",
   "./js/vendor/jsqr.min.js?v=1",
@@ -172,6 +174,12 @@ const ASSETS = [
   "./js/assistant-voice.js?v=3",
   "./",
   "./index.html",
+  "./css/login-gate.css?v=15",
+  "./css/study-song-navigation.css?v=9",
+  "./js/list-loading.js?v=8",
+  "./js/home-playlists.js?v=41",
+  "./js/search-menu.js?v=22",
+
   "./js/storage.js",
   "./js/storage.js?v=3",
   "./js/tablature.js?v=1",
@@ -208,7 +216,7 @@ const ASSETS = [
   "./js/event-collaboration-client.js?v=12",
   "./js/event-collaboration-client.js?v=13",
   "./js/event-collaboration-client.js?v=14",
-  "./js/event-share.js?v=5",
+  "./js/event-share.js?v=6",
   "./js/event-user-invites.js?v=1",
   "./js/event-user-invites.css?v=1",
   "./js/event-user-invites.js?v=2",
@@ -300,7 +308,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
-  "./css/roudy-color-system-preview.css?v=21",
+  "./css/roudy-color-system-preview.css?v=24",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
   "./assets/icons/roudy-rd-premium.svg?v=1",
@@ -318,11 +326,31 @@ const ASSETS = [
   "./js/event-chat-audio.js?v=6",
   "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
-  "./css/home-playlists.css?v=32",
-  "./css/search-menu.css?v=52",
+  "./css/home-playlists.css?v=45",
+  "./css/login-gate.css?v=7",
+  "./assets/login/musicians-1.png",
+  "./assets/login/musicians-2.png",
+  "./assets/login/musicians-3.png",
+  "./assets/login/musicians-4.png",
+  "./assets/login/musicians-5.png",
+  "./assets/login/musicians-6.png",
+  "./assets/login/musicians-7.png",
+  "./assets/login/portrait-1.png",
+  "./assets/login/portrait-2.png",
+  "./assets/login/drummer-original.png",
+  "./assets/login/portrait-3.png",
+  "./assets/login/portrait-4.png",
+  "./assets/login/portrait-5.png",
+  "./assets/login/musician-medley.png",
+  "./assets/login/musician-live.png",
+  "./assets/login/musician-piano.png",
+  "./assets/login/musician-bass.png",
+
+
+  "./css/search-menu.css?v=56",
   "./js/event-chat-selection.js?v=4",
-  "./js/song-search.js?v=1",
-  "./js/search-menu.js?v=20"
+  "./js/song-search.js?v=2",
+  "./js/search-menu.js?v=21"
 ];
 
 self.addEventListener("install", (event) => {

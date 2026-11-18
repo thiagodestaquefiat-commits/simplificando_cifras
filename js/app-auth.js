@@ -166,6 +166,13 @@
     if (result.error) throw result.error;
   }
 
+  async function signInWithEmail(email) {
+    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    const emailRedirectTo = new URL(global.location.href).origin + "/";
+    const result = await client.auth.signInWithOtp({email,options:{emailRedirectTo}});
+    if (result.error) throw new Error("Não foi possível enviar o link de acesso. Confira o e-mail e tente novamente.");
+  }
+
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
@@ -222,5 +229,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

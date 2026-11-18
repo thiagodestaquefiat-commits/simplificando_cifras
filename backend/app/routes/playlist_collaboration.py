@@ -21,7 +21,7 @@ from ..models.playlist_collaboration import CollaborativePlaylist as Playlist, P
 from ..services.collaboration_auth import authenticated, token_digest
 
 blueprint = Blueprint("playlist_collaboration", __name__, url_prefix="/api/collaborative-playlists")
-FIELDS = ("name", "description", "coverImage")
+FIELDS = ("name", "description", "coverImage", "visibility")
 ITEM_FIELDS = ("song", "playback", "notes")
 SONG_FIELDS = {"id", "title", "artist", "key", "originalKey", "capo", "blocos", "sections", "summary", "fullChordSheet", "editorData", "tablature", "tablatures", "tuning", "instrument", "bpm", "meter", "youtubeUrl", "video", "artworkUrl", "coverUrl", "sheetMusic", "playbackSettings", "chordSheet"}
 SONG_FIELDS.update({"youtubeVideoId", "youtubeThumbnailUrl", "youtubeChannelTitle", "sourceInfo"})
@@ -43,7 +43,7 @@ def clean(value):
     cover = value.get("coverImage")
     if cover is not None and (not isinstance(cover, str) or not cover.startswith("data:image/") or len(cover) > 1_000_000):
         raise ApiError("playlist_invalida", "A capa da playlist é inválida.")
-    result = {"name": value["name"].strip()[:120], "description": str(value.get("description") or "")[:300], "coverImage": cover, "items": []}
+    result = {"name": value["name"].strip()[:120], "description": str(value.get("description") or "")[:300], "visibility": "public" if value.get("visibility") == "public" else "private", "coverImage": cover, "items": []}
     ids = set()
     for item in items:
         if not isinstance(item, dict) or not isinstance(item.get("id"), str) or not 1 <= len(item["id"]) <= 160 or item["id"] in ids:

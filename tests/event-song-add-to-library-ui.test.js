@@ -26,7 +26,9 @@ const server = http.createServer((req, res) => {
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
   try {
     await page.waitForFunction(() => typeof window.eventSongMenuAddPlaylist === "function" && window.eventModel && window.homePlaylists);
-    const first = await page.evaluate(() => {
+    await page.getByRole("button",{name:"Continuar sem login"}).click();
+    const first = await page.evaluate(async () => {
+      await userPlaylists.ready;
       const uid = String(appCurrentUser.id);
       const event = eventModel.create({
         id: "event_guest", title: "Culto", leaderId: "lider-1", remoteVersion: 2, syncState: "synced", pendingShared: false,
@@ -36,10 +38,17 @@ const server = http.createServer((req, res) => {
             fullChordSheet: { visibility: "private", source: "web_source", content: "[Primeira Parte]\nC7M\nEu poderia estar", sections: [] } } } }]
       });
       setlists = [event]; eventRepository.save(setlists);
+      userPlaylists.create(uid,"Louvor");
+      userPlaylists.create(uid,"Ensaio");
       const before = musicas.filter((song) => song.title === "Me Atraiu").length;
       eventSongMenuState = { eventId: "event_guest", itemId: "rep_1", trigger: null };
       eventSongMenuAddPlaylist();
       const saved = musicas.filter((song) => song.title === "Me Atraiu");
+      const canvas=document.createElement("canvas");
+      canvas.width=canvas.height=48;
+      const context=canvas.getContext("2d");
+      context.fillStyle="#268fd0";context.fillRect(0,0,48,48);
+      saved[0].artworkUrl=canvas.toDataURL();
       return { before, count: saved.length, song: saved[0] && { title: saved[0].title, artist: saved[0].artist, blocos: saved[0].blocos, full: saved[0].fullChordSheet?.content || "" },
         stored: songRepository.load().some((song) => song.title === "Me Atraiu") };
     });
@@ -49,7 +58,25 @@ const server = http.createServer((req, res) => {
     assert.match(first.song.blocos.map((block) => block.c).join(" "), /C7M\s+D9\s+Bm7/, "com os acordes do evento");
     assert.match(first.song.full, /Eu poderia estar/, "com a letra e cifra");
     assert.ok(first.stored, "fica salva no aparelho (e entra na sincronização da conta)");
-    await page.getByText("＋ Nova playlist").waitFor({ timeout: 5000 });
+    await page.getByRole("button",{name:"Nova playlist"}).waitFor({ timeout: 5000 });
+    const picker = page.locator(".playlist-picker");
+    await picker.getByRole("searchbox").fill("Louvor");
+    assert.equal(await picker.locator("[data-playlist-target]").count(),1);
+    const louvor=picker.getByRole("button",{name:/Louvor/});
+    assert.equal(await louvor.locator(".home-playlist-art img").count(),0);
+    const preview=await louvor.evaluate(row=>{
+      row.click();
+      const animation=row.getAnimations().find(value=>value.id==="playlist-picker-press");
+      return {count:row.querySelector("small").textContent,artwork:!!row.querySelector(".home-playlist-art img"),duration:animation?.effect.getTiming().duration};
+    });
+    assert.deepEqual(preview,{count:"1 música",artwork:true,duration:200});
+    await picker.getByRole("searchbox").fill("");
+    await picker.getByRole("combobox").selectOption("name");
+    await picker.getByRole("button",{name:/Ensaio/}).click();
+    assert.equal(await picker.locator('[aria-pressed="true"]').count(),2);
+    assert.deepEqual(await page.evaluate(()=>userPlaylists.list(homePlaylists.ownerId).map(list=>list.items.length)),[0,0]);
+    await picker.locator("footer").getByRole("button",{name:"Adicionar"}).click();
+    assert.deepEqual(await page.evaluate(()=>userPlaylists.list(homePlaylists.ownerId).map(list=>list.items.length)),[1,1]);
     const second = await page.evaluate(() => {
       closeEventAdminSheet?.();
       eventSongMenuState = { eventId: "event_guest", itemId: "rep_1", trigger: null };
@@ -57,6 +84,38 @@ const server = http.createServer((req, res) => {
       return musicas.filter((song) => song.title === "Me Atraiu").length;
     });
     assert.equal(second, 1, "tocar de novo não duplica");
+    await picker.getByRole("heading",{name:"Salva em"}).waitFor();
+    assert.equal(await picker.locator("[data-picker-saved] .playlist-picker-row").count(),2);
+    const savedRow=picker.getByRole("button",{name:/Ensaio/});
+    await savedRow.click();
+    assert.equal(await savedRow.getAttribute("aria-pressed"),"false");
+    assert.equal(await savedRow.locator("small").textContent(),"0 músicas");
+    assert.equal(await page.evaluate(()=>userPlaylists.list(homePlaylists.ownerId).find(list=>list.name==="Ensaio").items.length),1);
+    await picker.getByRole("button",{name:"Cancelar"}).click();
+    await page.evaluate(()=>homePlaylists.chooseForSong(musicas.find(song=>song.title==="Me Atraiu").id));
+    assert.equal(await savedRow.getAttribute("aria-pressed"),"true");
+    await savedRow.click();
+    await picker.locator("footer").getByRole("button",{name:"Salvar alterações"}).click();
+    const afterRemoval=await page.evaluate(()=>({
+      lists:Object.fromEntries(userPlaylists.list(homePlaylists.ownerId).map(list=>[list.name,list.items.length])),
+      library:musicas.filter(song=>song.title==="Me Atraiu").length,
+    }));
+    assert.deepEqual(afterRemoval,{lists:{Louvor:1,Ensaio:0},library:1});
+    const colors=await page.evaluate(()=>{
+      closeEventAdminSheet();
+      const playlist=userPlaylists.list(homePlaylists.ownerId).find(list=>list.items.length);
+      homePlaylists.open(playlist.id);
+      homePlaylists.itemMenu(playlist.items[0].id);
+      return [...document.querySelectorAll('.home-playlist-menu button')].map(button=>[
+        getComputedStyle(button).color,getComputedStyle(button.querySelector('svg')).stroke
+      ]);
+    });
+    assert.deepEqual(colors,[
+      ['rgb(255, 255, 255)','rgb(179, 179, 179)'],
+      ['rgb(255, 255, 255)','rgb(179, 179, 179)'],
+      ['rgb(240, 100, 100)','rgb(240, 100, 100)'],
+      ['rgb(255, 255, 255)','rgb(179, 179, 179)']
+    ]);
     console.log("event-song-add-to-library-ui.test.js: OK (convidado salva a música do evento na biblioteca e escolhe a playlist; sem duplicar)");
   } finally {
     await browser.close(); server.close();

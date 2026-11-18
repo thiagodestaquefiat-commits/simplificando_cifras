@@ -76,7 +76,11 @@
     }
     async function open(item){const account=owner(),song=find(item);if(song)return deps.openSong(song);const resolved=await resolve(item);if(account!==owner())return;return deps.openDraft(resolved.model);}
     function suggestions(items,query){const q=normalize(query),seen=new Set();return items.flatMap(item=>[item.title,item.artist?`${item.title} — ${item.artist}`:'']).filter(value=>{const normalized=normalize(value);if(!normalized||!normalized.includes(q)||normalized===q||seen.has(normalized))return false;seen.add(normalized);return true;}).slice(0,4);}
-    return Object.freeze({search,add,open,state,suggestions});
+    function remove(item){
+      const song=item.kind==='local'?deps.songs().find(value=>String(value.id)===String(item.id)):find(item);
+      return Boolean(song&&deps.remove(song));
+    }
+    return Object.freeze({search,add,remove,open,state,suggestions});
   }
   global.songSearch=Object.freeze({create,same,unique,normalize});
 })(window);

@@ -66,6 +66,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     assert.deepEqual(await appearance(),['6px','rgb(65, 64, 71)']);
   }
   await page.setViewportSize({width:390,height:844});
+  await page.setViewportSize({width:390,height:600});
   const scroller=page.locator('.roudy-search-scroll');
   await scroller.evaluate(node=>{node.scrollTop=140});
   await page.waitForFunction(()=>document.querySelector('#roudy-search').classList.contains('is-header-compact'));
@@ -73,11 +74,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     const style=getComputedStyle(form,'::before');
     return {bottom:style.bottom,mask:style.maskImage,gradient:style.backgroundImage};
   });
-  assert.equal(fade.bottom,'-72px');
+  assert.equal(fade.bottom,'-52px');
   assert.equal(fade.mask,'none');
   assert.match(fade.gradient,/rgb\(11, 11, 12\)/);
   await scroller.evaluate(node=>{node.scrollTop=0});
   await page.waitForFunction(()=>!document.querySelector('#roudy-search').classList.contains('is-header-compact'));
+  await page.setViewportSize({width:390,height:844});
   const mobileCards=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const {x,y,width,height}=card.querySelector('.roudy-search-shortcut-art').getBoundingClientRect();
     return {label:card.getAttribute('aria-label'),x,y,width,height};
@@ -87,6 +89,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(mobileCards[2].y,mobileCards[3].y);
   assert.ok(mobileCards[0].y<mobileCards[2].y);
   assert.ok(mobileCards.every(card=>card.width===mobileCards[0].width&&card.height===mobileCards[0].height));
+  assert.ok(mobileCards.every(card=>Math.abs(card.width-117)<1&&Math.abs(card.height-card.width)<1));
   for(const element of ['strong','small span']){
     const typography=await page.locator('.roudy-search-shortcut-copy '+element).evaluateAll(nodes=>nodes.map(node=>{
       const {fontFamily,fontSize,fontWeight,lineHeight,letterSpacing}=getComputedStyle(node);
@@ -146,6 +149,20 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('[data-playlist-online-results]').count(),0,'não carrega catálogo externo sem consulta');
   await page.evaluate(()=>{window.searchTestSongs=musicas;musicas=Array.from({length:107},(_,index)=>({id:'account-test-'+index,title:'Canção '+String(index+1).padStart(3,'0'),artist:'Artista de teste',key:'G'}));roudySearchMenu.setFilter('all');});
   assert.equal(await page.locator('.roudy-search-song-row').count(),107,'a listagem inicial não deve parar em 30 músicas');
+  const activeScroll=await page.locator('.roudy-search-scroll').evaluate(scroller=>{
+    const header=document.querySelector('.roudy-search-header');
+    scroller.scrollTop=60;
+    const headerBounds=header.getBoundingClientRect();
+    const scrollBounds=scroller.getBoundingClientRect();
+    const coveredByResult=[.2,.5,.8].some(fraction=>
+      document.elementFromPoint(headerBounds.left+headerBounds.width*fraction,headerBounds.bottom-2)?.closest('.roudy-search-song-row'));
+    const result={top:scrollBounds.top,bottom:headerBounds.bottom,scroll:scroller.scrollTop,coveredByResult};
+    scroller.scrollTop=0;
+    return result;
+  });
+  assert.ok(activeScroll.scroll>0);
+  assert.ok(activeScroll.top>=activeScroll.bottom);
+  assert.equal(activeScroll.coveredByResult,false);
   await page.locator('#roudy-search-input').fill('107');await page.waitForTimeout(180);
   assert.equal(await page.locator('.roudy-search-song-row').count(),1,'digitação continua filtrando a biblioteca');
   await page.locator('#roudy-search-input').fill('');await page.waitForTimeout(180);
@@ -160,6 +177,11 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('[data-playlist-online-results]').count(),0,'resultados não criam uma segunda lista técnica');
   const firstResult=page.locator('.roudy-search-song-row').first();
   await firstResult.locator('.roudy-search-local-more').click();
+  const actionColors=await page.locator('.song-options-action[onclick="openAddSongToUserPlaylist()"]').evaluate(button=>({
+    label:getComputedStyle(button).color,
+    icon:getComputedStyle(button.querySelector('svg')).stroke,
+  }));
+  assert.deepEqual(actionColors,{label:'rgb(255, 255, 255)',icon:'rgb(179, 179, 179)'});
   assert.equal(await page.getByText('Adicionar ao repertório',{exact:true}).count()>0,true,'três pontos mantêm as ações existentes');
   await page.evaluate(()=>closeSongOptions());
   await page.screenshot({path:path.join(shots,'roudy-buscar-mobile-resultados.png'),fullPage:false});

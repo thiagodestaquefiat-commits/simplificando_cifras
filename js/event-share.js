@@ -11,7 +11,8 @@
     Object.freeze({signature:'#E3D8FF',base:['#302510','#181207','#050402'],primary:'rgba(229,166,45,.45)',secondary:'rgba(198,83,48,.25)',accent:'#f5d78c',blue:[.18,.12],warm:[.86,.68]}),
     Object.freeze({signature:'#D7F76B',base:['#251531','#120b1a','#050307'],primary:'rgba(205,75,190,.43)',secondary:'rgba(82,108,235,.28)',accent:'#e4b7df',blue:[.84,.62],warm:[.14,.10]}),
     Object.freeze({signature:'#FFD17A',base:['#102d3b','#071820','#020608'],primary:'rgba(33,173,210,.48)',secondary:'rgba(105,207,112,.22)',accent:'#9edeea',blue:[.12,.76],warm:[.84,.14]}),
-    Object.freeze({signature:'#B6F4FF',base:['#151515','#09090b','#020202'],primary:'rgba(255,250,232,.38)',secondary:'rgba(255,218,142,.2)',accent:'#f4e4bd',blue:[.12,.10],warm:[.88,.18]})
+    Object.freeze({signature:'#B6F4FF',base:['#151515','#09090b','#020202'],primary:'rgba(255,250,232,.38)',secondary:'rgba(255,218,142,.2)',accent:'#f4e4bd',blue:[.12,.10],warm:[.88,.18]}),
+    Object.freeze({signature:'#D3E2E4',base:['#43585B','#233D44','#0B1013'],primary:'rgba(80,122,129,.58)',secondary:'rgba(150,163,167,.30)',accent:'#B6D4DA',blue:[.18,.10],warm:[.88,.18]})
   ]);
   const clean=value=>String(value==null?'':value).trim();
   const SIGNATURE_NEUTRALS=Object.freeze({light:'#FFFFFF',dark:'#020811'});

@@ -42,6 +42,16 @@ const server = http.createServer((request, response) => {
   const metrics=await page.locator('#roudy-search').evaluate(root=>({width:root.clientWidth,scroll:root.scrollWidth,touch:[...root.querySelectorAll('.roudy-search-save,.roudy-search-song-open,.roudy-search-clear,.roudy-search-cancel')].filter(e=>e.getBoundingClientRect().height).map(e=>e.getBoundingClientRect().height)}));
   assert.ok(metrics.scroll<=metrics.width,`${width}: horizontal overflow`);assert.ok(metrics.touch.every(h=>h>=44));
   if(width===390&&process.env.REVIEW_SCREENSHOT)await page.screenshot({path:process.env.REVIEW_SCREENSHOT});
+  assert.equal(await button.locator('svg').evaluate(svg=>svg.getBoundingClientRect().width),20);
+  assert.equal(await button.locator('path').evaluate(check=>getComputedStyle(check).stroke),'rgb(3, 4, 5)');
+  page.once('dialog',dialog=>dialog.dismiss());
+  await button.click();
+  assert.equal(await button.getAttribute('data-state'),'saved');
+  page.once('dialog',dialog=>dialog.accept());
+  await button.click();
+  await page.waitForFunction(()=>document.querySelector('.roudy-search-save')?.dataset.state==='new');
+  assert.equal(await page.evaluate(()=>musicas.length),0);
+  assert.equal(await page.evaluate(()=>window.__opens),1,'removing does not open the song');
   await page.locator('#roudy-search-clear').click();assert.equal(await input.inputValue(),'');
   await input.fill('Nenhum');
   await page.evaluate(()=>{window.harmonicSummaryClient.catalogVersions=async()=>[];window.harmonicSummaryClient.searchSources=async()=>[];roudySearchMenu.input();});
