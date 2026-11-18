@@ -274,6 +274,24 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     await page.getByRole('button',{name:label,exact:true}).click();
     await page.waitForFunction(expected=>currentTab===expected,tab);
   }
+  for(const mode of ['primary','home','legacy','rapid']){
+    await page.evaluate(mode=>{
+      switchTab('musicas');
+      if(mode==='home')openHomePlaylistSearch();
+      else if(mode==='legacy')openPlaylistSearch();
+      else if(mode==='rapid'){openPrimarySearchTab();switchTab('setlists');}
+      else openPrimarySearchTab();
+    },mode);
+    await page.locator('#tab-setlists').click();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('#roudy-search').evaluate(n=>n.hidden&&!n.classList.contains('is-open')),true,mode+': search overlay closes');
+    assert.equal(await page.locator('#home-playlist-search-mode').evaluate(n=>n.hidden),true,mode+': home search closes');
+    assert.equal(await page.locator('#topbar-search-mode').evaluate(n=>n.hidden),true,mode+': legacy search closes');
+    assert.equal(await page.locator('#tab-setlists').getAttribute('aria-selected'),'true');
+  }
+  await page.evaluate(()=>{openPrimarySearchTab();roudySearchMenu.close();openPrimarySearchTab();});
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('#roudy-search').evaluate(n=>!n.hidden&&n.classList.contains('is-open')),true,'reopening search cancels delayed close');
   assert.deepEqual(errors,[]);
   console.log('search-menu-ui.test.js: OK');
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});

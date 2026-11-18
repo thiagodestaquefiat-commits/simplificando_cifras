@@ -3579,8 +3579,14 @@ function tocarMedley(){
 
 // ── SWITCH TAB (atualizado) ───────────────────────────────────────────
 function switchTab(tab){
-  if(primarySearchTabActive&&tab!=='search'){primarySearchTabActive=false;roudySearchMenu.close()}
-  if(tab!=='musicas'&&playlistSearchMode)closePlaylistSearch();
+  if(tab!=='search'){
+    primarySearchTabActive=false;
+    if(!document.getElementById('roudy-search')?.hidden)roudySearchMenu.close({immediate:true});
+  }
+  if(tab!=='musicas'){
+    if(!document.getElementById('home-playlist-search-mode')?.hidden)closeHomePlaylistSearch();
+    if(playlistSearchMode||!document.getElementById('topbar-search-mode')?.hidden)closePlaylistSearch();
+  }
   currentTab=tab;
   const eventFilters=document.querySelector('.event-filter-segments');if(eventFilters)eventFilters.hidden=tab!=='setlists';
   const mainView=document.getElementById('view-main');
@@ -7223,7 +7229,7 @@ function openEventChatStyleMenu(trigger, scope='style'){
 </script>
 <script src="js/event-chat-selection.js?v=4"></script>
 <script src="js/song-search.js?v=2"></script>
-<script src="js/search-menu.js?v=25"></script>
+<script src="js/search-menu.js?v=26"></script>
 <script src="js/android-back.js?v=4"></script>
 <script src="js/pull-refresh.js?v=3"></script>
 <script>
