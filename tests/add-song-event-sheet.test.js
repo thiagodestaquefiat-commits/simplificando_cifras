@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const html = fs.readFileSync('index.html', 'utf8');
-const flow = html.slice(html.indexOf('let addSongEventSheetSongId'), html.indexOf('function deleteMusica'));
+const flow = html.slice(html.indexOf('let addSongEventSheetSong='), html.indexOf('function deleteMusica'));
 
 assert.match(html, /class="song-options-action song-options-save" onclick="openAddSongToRepertoire\(\)"/, 'menu contextual dos três pontos permanece como gatilho');
 assert.match(flow, /function ensureAddSongEventSheet\(\)/);

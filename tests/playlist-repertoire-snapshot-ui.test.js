@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..'),shots=path.join(require('node:os').tmpdir(),'roudy-event-spacing');
+const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'};
+const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,pathname==='/'?'index.html':decodeURIComponent(pathname.slice(1)));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())return res.writeHead(404).end();res.writeHead(200,{'Content-Type':(types[path.extname(file)]||'application/octet-stream')+'; charset=utf-8'});fs.createReadStream(file).pipe(res)});
+(async()=>{let browser;try{
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  fs.mkdirSync(shots,{recursive:true});
+  browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,serviceWorkers:'block'}),page=await context.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({contentType:'text/css',body:''}));
+  await page.route('**/api/**',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+  await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'Continuar sem login'}).click();
+  await page.evaluate(()=>{
+    appCurrentUser={id:'snapshot-user',name:'Teste',role:'Liderança'};
+    musicas=[];
+    setlists=[eventModel.create({id:'snapshot-event',title:'Próximo evento',date:'2099-11-24',leaderId:'snapshot-user',members:[{id:'snapshot-user',name:'Teste'}],repertoire:[]})];
+    userPlaylists.replace('snapshot-user',{id:'snapshot-playlist',name:'Playlist compartilhada',items:[{id:'snapshot-item',songId:'snapshot-only',song:{id:'snapshot-only',title:'Só na playlist',artist:'Artista',key:'G',blocos:[{l:'Intro',c:'G C D'}]},playback:{semitones:2,capo:0}}]});
+    homePlaylists.open('snapshot-playlist');homePlaylists.itemMenu('snapshot-item');
+  });
+  await page.getByRole('button',{name:'Adicionar ao repertório',exact:true}).click();
+  await page.locator('[data-repertoire-options] button').filter({hasText:'Próximo evento'}).click();
+  const saved=await page.evaluate(()=>findEvent('snapshot-event').repertoire[0]);
+  assert.equal(saved.songId,'snapshot-only');assert.equal(saved.shared.key,'A');assert.equal(saved.shared.songData.title,'Só na playlist');
+  assert.equal(await page.evaluate(()=>musicas.length),0,'adding snapshot must not change personal library');
+  await page.evaluate(()=>{closeAddSongEventSheet();document.getElementById('view-detail').style.display='flex';openInstModal();});
+  const back=page.locator('#inst-modal button[aria-label="Voltar"]');
+  await back.focus();assert.equal(await back.evaluate(n=>getComputedStyle(n).outlineStyle),'none','instrument back arrow has no focus frame');
+  await back.click();assert.equal(await page.locator('#inst-modal').evaluate(n=>n.open),false);
+  assert.deepEqual(errors,[]);
+  console.log('playlist-repertoire-snapshot-ui: OK (shared snapshot, upcoming event, playlist key, no library mutation)');
+}finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});

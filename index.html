@@ -41,7 +41,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 
-<link rel="stylesheet" href="css/song-reading.css?v=17">
+<link rel="stylesheet" href="css/song-reading.css?v=18">
 <link rel="stylesheet" href="css/topbar-labels.css?v=16">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -4246,7 +4246,7 @@ function shareSongToEventChatFromOptions(){
   const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
   const returnFocus=songOptionsTrigger;closeSongOptions({restoreFocus:false,onClosed:()=>showAddSongEventSheet(song,returnFocus,'chat')});
 }
-let addSongEventSheetSongId=null,addSongEventReturnFocus=null,addSongEventCloseTimer=0,addSongEventDrag=null,addSongEventSheetMode='repertoire';
+let addSongEventSheetSong=null,addSongEventSheetSongId=null,addSongEventReturnFocus=null,addSongEventCloseTimer=0,addSongEventDrag=null,addSongEventSheetMode='repertoire';
 function ensureAddSongEventSheet(){
   let sheet=document.getElementById('add-song-event-sheet');if(sheet)return sheet;
   document.body.insertAdjacentHTML('beforeend',`<button type="button" class="add-song-event-backdrop" id="add-song-event-backdrop" onclick="closeAddSongEventSheet()" aria-label="Fechar seleção de repertório"></button><section class="add-song-event-sheet" id="add-song-event-sheet" role="dialog" aria-modal="true" aria-labelledby="add-song-event-title"><header class="add-song-event-header" id="add-song-event-drag-handle"><div class="add-song-event-heading"><strong id="add-song-event-title">Adicionar ao repertório</strong><span id="add-song-event-song"></span></div><button type="button" class="add-song-event-close" id="add-song-event-close" onclick="closeAddSongEventSheet()" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Cancelar</span></button></header><div class="add-song-event-list" id="add-song-event-list"></div></section>`);
@@ -4258,8 +4258,9 @@ function ensureAddSongEventSheet(){
   handle.addEventListener('pointerup',pointer=>finish(pointer));handle.addEventListener('pointercancel',pointer=>finish(pointer,true));
   return sheet;
 }
+function addSongEventSource(songId){return addSongEventSheetSong&&String(addSongEventSheetSong.id)===String(songId)?addSongEventSheetSong:[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(songId));}
 function renderAddSongEventSheet(){
-  const song=[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(addSongEventSheetSongId)),list=document.getElementById('add-song-event-list');if(!song||!list)return;
+  const song=addSongEventSource(addSongEventSheetSongId),list=document.getElementById('add-song-event-list');if(!song||!list)return;
   const chatMode=addSongEventSheetMode==='chat';
   document.getElementById('add-song-event-title').textContent=chatMode?'Compartilhar no chat':'Adicionar ao repertório';
   const songHeading=document.getElementById('add-song-event-song');
@@ -4307,7 +4308,7 @@ function renderAddSongEventSheet(){
   }
 }
 function showAddSongEventSheet(song,returnFocus,mode='repertoire'){
-  const sheet=ensureAddSongEventSheet();clearTimeout(addSongEventCloseTimer);addSongEventSheetSongId=song.id;addSongEventReturnFocus=returnFocus||null;addSongEventSheetMode=mode;sheet.classList.toggle('is-repertoire-picker',mode==='repertoire');sheet.classList.toggle('playlist-picker',mode==='repertoire');sheet.querySelector('.add-song-event-close').setAttribute('aria-label',mode==='repertoire'?'Cancelar':'Fechar');renderAddSongEventSheet();sheet.style.setProperty('--add-event-sheet-y','0px');document.getElementById('add-song-event-backdrop').classList.add('is-open');void sheet.offsetWidth;requestAnimationFrame(()=>{sheet.classList.add('is-open');document.getElementById('add-song-event-close').focus({preventScroll:true})});
+  const sheet=ensureAddSongEventSheet();clearTimeout(addSongEventCloseTimer);addSongEventSheetSong=JSON.parse(JSON.stringify(song));addSongEventSheetSongId=song.id;addSongEventReturnFocus=returnFocus||null;addSongEventSheetMode=mode;sheet.classList.toggle('is-repertoire-picker',mode==='repertoire');sheet.classList.toggle('playlist-picker',mode==='repertoire');sheet.querySelector('.add-song-event-close').setAttribute('aria-label',mode==='repertoire'?'Cancelar':'Fechar');renderAddSongEventSheet();sheet.style.setProperty('--add-event-sheet-y','0px');document.getElementById('add-song-event-backdrop').classList.add('is-open');void sheet.offsetWidth;requestAnimationFrame(()=>{sheet.classList.add('is-open');document.getElementById('add-song-event-close').focus({preventScroll:true})});
 }
 function closeAddSongEventSheet({restoreFocus=true,onClosed=null}={}){
   const sheet=document.getElementById('add-song-event-sheet'),backdrop=document.getElementById('add-song-event-backdrop'),returnFocus=addSongEventReturnFocus;if(!sheet)return;
@@ -4322,11 +4323,11 @@ function openAddSongToRepertoire(){
   const returnFocus=songOptionsTrigger;closeSongOptions({restoreFocus:false,onClosed:()=>showAddSongEventSheet(song,returnFocus)});
 }
 function openNewRepertoireForSong(songId){
-  const song=musicas.find(item=>String(item.id)===String(songId));if(!song)return;
-  closeAddSongEventSheet({restoreFocus:false,onClosed:()=>openNewEventCreateSheet(song.id)});
+  const song=addSongEventSource(songId);if(!song)return;
+  closeAddSongEventSheet({restoreFocus:false,onClosed:()=>openNewEventCreateSheet(song.id,song)});
 }
 function addSongToEvent(eventId,songId,trigger){
-  const event=findEvent(eventId),song=[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(songId));if(!event||!song)return;
+  const event=findEvent(eventId),song=addSongEventSource(songId);if(!event||!song)return;
   if(event.repertoire.some(item=>String(item.songId)===String(song.id))){showToast('A música já está neste repertório.');return}
   const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   const repertoire=[...event.repertoire,repertoireItem];
@@ -5562,8 +5563,9 @@ async function saveContextEventSong(context,data,options={}){
   updateDetailSaveButton();return {ok:true,scope:'event-personal',pendingSync};
 }
 
-let pendingNewEventSongId=null;
-function openNewEventCreateSheet(songId=null){
+let pendingNewEventSongId=null,pendingNewEventSong=null;
+function openNewEventCreateSheet(songId=null,song=null){
+  pendingNewEventSong=song?JSON.parse(JSON.stringify(song)):null;
   pendingNewEventSongId=songId==null?null:String(songId);
   eventAdminSheetState={type:'create'};
   showEventAdminSheet(`${eventAdminHeader('Novo evento')}<form class="event-create-sheet" onsubmit="event.preventDefault();createNewEventFromSheet()"><label for="event-create-title"><span>Nome do evento</span><input id="event-create-title" maxlength="160" autocomplete="off" placeholder="Ex.: Culto de Jovens"></label><div class="event-create-grid"><label for="event-create-date"><span>Data</span><input id="event-create-date" type="date"></label><label for="event-create-time"><span>Horário</span><input id="event-create-time" type="time"></label></div><label for="event-create-location"><span>Local</span><input id="event-create-location" maxlength="120" autocomplete="off" placeholder="Adicionar local"></label><label for="event-create-description"><span>Informações</span><textarea id="event-create-description" maxlength="500" rows="5" placeholder="Adicionar informações"></textarea></label><button class="event-create-submit" type="submit">Criar evento</button><p class="event-create-error" id="event-create-error" role="alert" aria-live="polite"></p></form>`,'Criar novo evento');
@@ -5575,7 +5577,7 @@ async function createNewEventFromSheet(){
   if(button)button.disabled=true;if(errorTarget)errorTarget.textContent='';
   const member={...appCurrentUser,role:'Liderança',isCurrentUser:true,isLeader:true};
   const date=document.getElementById('event-create-date')?.value||'',time=document.getElementById('event-create-time')?.value||'',location=document.getElementById('event-create-location')?.value.trim().slice(0,120)||'',description=document.getElementById('event-create-description')?.value.trim().slice(0,500)||'';
-  const pendingSong=musicas.find(song=>String(song.id)===String(pendingNewEventSongId));
+  const pendingSong=pendingNewEventSong||musicas.find(song=>String(song.id)===String(pendingNewEventSongId));
   const initialRepertoire=pendingSong?[{id:'rep_'+Date.now(),songId:pendingSong.id,order:0,shared:eventEditFromSong(eventSongCopy(pendingSong)),personalEdits:{}}]:[];
   let candidate=eventModel.create({id:'event_'+Date.now(),title:title.slice(0,160),date,time,location,description,bandId:null,repertoire:initialRepertoire,members:[member],leaderId:appCurrentUser.id,syncState:'pending',pendingShared:true});
   candidate=eventModel.withSharedChange(candidate,appCurrentUser,'event.created','Criou o evento');
