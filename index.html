@@ -4344,7 +4344,7 @@ function addSongToEvent(eventId,songId,trigger){
   if(exists){
     const updated=eventModel.withSharedChange(eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.songId)!==String(song.id)).map((item,order)=>({...item,order})),syncState:'pending',pendingShared:true}),actor,'repertoire.song.removed',`removeu ${song.title} do repertório oficial`);
     const next=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(next)){showToast('Não foi possível remover a música.');return;}
-    setlists=next;renderSetlists();if(trigger){trigger.disabled=false;trigger.classList.remove('is-selected');trigger.setAttribute('aria-pressed','false');const icon=trigger.querySelector('.playlist-picker-status');if(icon)icon.innerHTML='<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>';const caption=trigger.querySelector('small');if(caption)caption.textContent='Adicionar ao repertório';}return;
+    setlists=next;renderSetlists();if(trigger){trigger.disabled=false;trigger.classList.remove('is-selected');trigger.setAttribute('aria-pressed','false');const icon=trigger.querySelector('.playlist-picker-status');if(icon)icon.innerHTML='<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>';const caption=trigger.querySelector('.add-song-event-copy>small');if(caption)caption.textContent=[eventDisplayDate(event.date),event.time].filter(Boolean).join(' · ');trigger.setAttribute('aria-label',`Adicionar ${song.title} a ${event.title}`);}return;
   }
   const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   const repertoire=[...event.repertoire,repertoireItem];
@@ -4355,7 +4355,7 @@ function addSongToEvent(eventId,songId,trigger){
   setlists=nextEvents;renderSetlists();
   const icon=trigger?.querySelector('.playlist-picker-status');
   if(icon){
-    trigger.disabled=false;trigger.setAttribute('aria-pressed','true');
+    trigger.disabled=false;trigger.setAttribute('aria-pressed','true');trigger.setAttribute('aria-label',`Remover ${song.title} de ${event.title}`);const caption=trigger.querySelector('.add-song-event-copy>small');if(caption)caption.textContent='Já adicionada';
     trigger.classList.add('is-selected');
     icon.innerHTML='<circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-7"/>';
   }

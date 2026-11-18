@@ -24,7 +24,10 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.locator('[data-repertoire-options] button').filter({hasText:'Próximo evento'}).click();
   const saved=await page.evaluate(()=>findEvent('snapshot-event').repertoire[0]);
   const toggle=page.locator('#add-song-event-list .add-song-event-row').filter({hasText:'Próximo evento'});
+  const artworkBefore=await toggle.locator('.add-song-event-art').innerHTML();
   await toggle.click();assert.equal(await page.evaluate(()=>findEvent('snapshot-event').repertoire.length),0,'second click removes song');
+  assert.equal(await toggle.locator('.add-song-event-art').innerHTML(),artworkBefore,'removal never changes event thumbnail');
+  assert.notEqual(await toggle.locator('.add-song-event-copy>small').textContent(),'Já adicionada');
   await toggle.click();assert.equal(await page.evaluate(()=>findEvent('snapshot-event').repertoire.length),1,'third click adds again');
   await page.evaluate(()=>renderAddSongEventSheet());
   await page.locator('#add-song-event-list .add-song-event-row').filter({hasText:'Próximo evento'}).click();
