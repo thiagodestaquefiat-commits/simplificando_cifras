@@ -37,7 +37,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 <link rel="stylesheet" href="css/roudy-forms.css?v=9">
-<link rel="stylesheet" href="css/song-reading.css?v=16">
+<link rel="stylesheet" href="css/song-reading.css?v=17">
 <link rel="stylesheet" href="css/topbar-labels.css?v=14">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -684,8 +684,13 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 /* Barra de ferramentas da música (Tom, Capotraste, Rolagem, BPM...) fica fixa logo abaixo do cabeçalho;
    a letra rola por baixo dela (pedido da equipe, 18/11). Fica acima do vídeo quando ele sai da tela,
    e o miniplayer do YouTube desce para não cobrir a barra. */
-#view-detail>#song-controls{position:sticky;top:58px;z-index:9}
-#view-detail>.youtube-player-shell.is-floating{top:calc(58px + 87px)!important}
+#view-detail>#song-controls{position:sticky;top:var(--sticky-header-h,58px);z-index:9}
+/* Anterior/Próxima também ficam fixos, logo abaixo da barra de ferramentas. No Modo Palco ficam menores. */
+#view-detail>#detail-nav-toolbar{position:sticky;top:calc(var(--sticky-header-h,58px) + var(--sticky-controls-h,77px));z-index:8}
+#view-detail.stage-clean>#detail-nav-toolbar{padding:5px 14px;gap:8px}
+#view-detail.stage-clean>#detail-nav-toolbar .stage-btn{min-height:30px;padding:4px 10px;font-size:12px;border-radius:9px}
+#view-detail{scroll-padding-top:var(--sticky-total,0px)}
+#view-detail>.youtube-player-shell.is-floating{top:calc(var(--sticky-total,135px) + 10px)!important}
 #view-detail:not(.stage-mode)>.youtube-player-shell.is-search{margin:0;padding:17px 22px 15px;border:0;border-top:1px solid rgba(255,255,255,.08);border-radius:0;background:#000;box-shadow:none}
 #view-detail:not(.stage-mode) .youtube-player-heading{margin-bottom:3px;color:#aeb6c1;font-size:9px;letter-spacing:.07em}
 #view-detail:not(.stage-mode) .youtube-player-help{margin-bottom:7px;color:#777f8b;font-size:10px}
@@ -1438,7 +1443,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/ui-i18n.js?v=15"></script>
 <script src="js/tuner.js?v=5"></script>
 <script src="js/chord-audio.js?v=2"></script>
-<script src="js/smart-scroll.js?v=7"></script>
+<script src="js/smart-scroll.js?v=8"></script>
 <script src="js/sync-realtime.js?v=2"></script>
 <script src="js/event-collaboration-client.js?v=21"></script>
 <script src="js/event-share.js?v=5"></script>
@@ -6774,6 +6779,15 @@ appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthRea
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 window.addEventListener('online',()=>{if(!currentAuthState.authenticated)return;contextAcknowledgements.flush(appCurrentUser.id).then(()=>renderContextualHomeCard()).catch(()=>{});});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
+// Barras fixas da música (cabeçalho, ferramentas, Anterior/Próxima): mede a altura de cada uma para
+// empilhar sem sobrepor, inclusive quando o painel ⌄ abre ou um botão some.
+(function measureSongStickyBars(){
+  const vd=document.getElementById('view-detail');if(!vd||!window.ResizeObserver)return;
+  const parts=[['--sticky-header-h',()=>vd.querySelector(':scope>.detail-header')],['--sticky-controls-h',()=>document.getElementById('song-controls')],['--sticky-nav-h',()=>document.getElementById('detail-nav-toolbar')]];
+  let last='';
+  const update=()=>{let total=0;const values=parts.map(([name,get])=>{const el=get(),h=el&&el.getClientRects().length?Math.round(el.offsetHeight):0;total+=h;return [name,h];});const key=values.map(v=>v[1]).join(',');if(key===last)return;last=key;values.forEach(([name,h])=>vd.style.setProperty(name,h+'px'));vd.style.setProperty('--sticky-total',total+'px');};
+  const observer=new ResizeObserver(update);parts.forEach(([,get])=>{const el=get();if(el)observer.observe(el);});update();
+})();
 checkShareParam();
 youtubeUI.initialize({
   getSongs:()=>musicas,

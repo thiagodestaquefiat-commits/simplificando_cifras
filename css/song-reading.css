@@ -75,10 +75,10 @@
 /* Cabeçalho da música: botão Modo Palco + assistente sem quebrar a linha. */
 #view-detail>.detail-header:has(#btn-palco:not([hidden])){grid-template-columns:40px minmax(0,1fr) auto 44px!important;column-gap:8px}
 /* Modo Palco limpo (Thiago, 12/10): mesma tela da música, sem vídeo nem diagramas.
-   Fica: título, Sair do Palco, ferramentas, Marcar como preparado, Anterior/Próxima e a cifra. */
+   Fica: título, Sair do Palco, ferramentas, Marcar como preparado, Anterior/Próxima e a cifra.
+   Anterior/Próxima voltam a aparecer no palco, menores e fixos no topo (Thiago, 18/11). */
 #view-detail.stage-clean #stage-quick-panel,
 #view-detail.stage-clean #song-review-control,
-#view-detail.stage-clean #detail-nav-toolbar,
 #view-detail.stage-clean .youtube-player-shell,
 #view-detail.stage-clean #study-music-panel,
 #view-detail.stage-clean #song-scale-feedback{display:none!important}

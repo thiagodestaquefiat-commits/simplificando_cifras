@@ -80,7 +80,9 @@
       const target=Array.from(blocks())[blockIndex];if(!target)return;
       programmaticUntil=performance.now()+1600;
       const relativeTop=target.getBoundingClientRect().top-container.getBoundingClientRect().top;
-      const readingOffset=Math.min(150,Math.max(72,container.clientHeight*.22));
+      // As barras fixas do topo (cabeçalho, ferramentas, Anterior/Próxima) cobrem parte da tela: o trecho atual fica logo abaixo delas.
+      const stickyTop=parseFloat(global.getComputedStyle?.(container).getPropertyValue('--sticky-total'))||0;
+      const readingOffset=Math.max(Math.min(150,Math.max(72,container.clientHeight*.22)),stickyTop+16);
       const top=container.scrollTop+relativeTop-readingOffset;
       container.scrollTo({top:allowBackward?Math.max(0,top):Math.max(container.scrollTop+56,top),behavior:'smooth'});
     }
