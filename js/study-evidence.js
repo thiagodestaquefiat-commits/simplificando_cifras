@@ -1,7 +1,7 @@
 // Private, bounded preparation evidence. No media, musical content or gesture log.
 (function (global) {
   'use strict';
-  const CONFIG = Object.freeze({ inactivityMs: 7 * 86400000, loopPasses: 3, loopSeconds: 60, editSpanMs: 30000, readingSpanMs: 90000, separationMs: 900000, cooldownMs: 72 * 3600000, songWindowMs: 14 * 86400000, consistencyWindowMs: 7 * 86400000, retentionMs: 90 * 86400000, maxSessions: 600, checkpointMs: 15000, reservationMs: 30000 });
+  const CONFIG = Object.freeze({ inactivityMs: 5 * 86400000, loopPasses: 3, loopSeconds: 60, editSpanMs: 30000, readingSpanMs: 90000, separationMs: 900000, cooldownMs: 72 * 3600000, songWindowMs: 14 * 86400000, consistencyWindowMs: 7 * 86400000, retentionMs: 90 * 86400000, maxSessions: 600, checkpointMs: 15000, reservationMs: 30000 });
   const ACTIONS = Object.freeze(['RECOGNIZE_SONG_DEDICATION', 'RECOGNIZE_CONSISTENCY', 'RECOGNIZE_REPERTOIRE_DEDICATION']);
   const isRecognition = action => ACTIONS.includes(action?.actionType);
   const clone = value => JSON.parse(JSON.stringify(value));

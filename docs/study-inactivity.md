@@ -2,7 +2,7 @@
 
 Os seis textos fornecidos pelo usuário pertencem a RESUME_AFTER_INACTIVITY. OPEN_UPCOMING_EVENT continua baseado na data real, músicas existentes e estado explícito de preparação. Inatividade nunca altera esse estado.
 
-Padrão inicial: sete dias completos desde lastEvidenceAt da última sessão qualificada registrada neste aparelho, respeitando a preferência existente de registros privados. Sem registro, outra conta, música indisponível, dados futuros ou além da retenção de 90 dias: nenhum convite. Nova atividade qualificada cancela a elegibilidade. O botão Retomar estudos abre a música correspondente; Agora não descarta essa ocorrência apenas localmente. O histórico limita reapresentações a sete dias. Eventos e ações operacionais existentes vencem o desempate. Não são criadas notificações push.
+Intervalo escolhido pelo usuário: cinco dias completos desde lastEvidenceAt da última sessão qualificada registrada neste aparelho, respeitando a preferência existente de registros privados. Sem registro, outra conta, música indisponível, dados futuros ou além da retenção de 90 dias: nenhum convite. Nova atividade qualificada cancela a elegibilidade. O botão Retomar estudos abre a música correspondente; Agora não descarta essa ocorrência apenas localmente. O histórico limita reapresentações a sete dias. Eventos e ações operacionais existentes vencem o desempate. Não são criadas notificações push.
 
 ## APPLE DESIGN RESEARCH
 
@@ -14,7 +14,7 @@ Apple explicit guidance: Conteúdo conciso e informativo; evitar avisos repetido
 
 Design inference: Esses princípios também ajudam a limitar um card contextual dentro do app; a Apple não determina um intervalo de inatividade para o ROUDY.
 
-ROUDY-specific decision: Usar as seis frases aprovadas, sete dias como padrão inicial, evidência privada existente e categoria separada dos eventos. Preservar prioridade operacional e preparação desconhecida.
+ROUDY-specific decision: Usar as seis frases aprovadas, cinco dias de inatividade conforme escolha do usuário, evidência privada existente e categoria separada dos eventos. Preservar prioridade operacional e preparação desconhecida.
 
 Implementation: study-evidence gera o candidato; context-intelligence aplica prioridade e histórico; contextual-copy fornece texto e CTA; index abre a música; descarte local não envia evidência ao servidor.
 

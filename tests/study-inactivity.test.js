@@ -3,14 +3,14 @@ const assert = require('node:assert/strict');
 const evidence = require('../js/study-evidence.js');
 const copy = require('../js/contextual-copy.js');
 const DAY = 86400000, now = Date.parse('2026-11-18T12:00:00Z');
-function input(days = 7) {
+function input(days = 5) {
   return { now, userId: 'u', songs: [{ id: 's', title: 'Música' }], state: { userId: 'u', enabled: true, sessions: [{ id: 'session', songKey: 's', qualifiedAt: now - days * DAY, lastEvidenceAt: now - days * DAY, consumedAt: now - DAY }] } };
 }
-test('inactivity uses recorded evidence at seven days, regardless of consumed recognition', () => {
-  assert.equal(evidence.inactivityCandidate(input(6.999)), null);
+test('inactivity uses recorded evidence at five days, regardless of consumed recognition', () => {
+  assert.equal(evidence.inactivityCandidate(input(4.999)), null);
   const action = evidence.inactivityCandidate(input());
   assert.equal(action.actionType, 'RESUME_AFTER_INACTIVITY');
-  assert.equal(action.evidence.inactiveDays, 7);
+  assert.equal(action.evidence.inactiveDays, 5);
   assert.deepEqual(action.destination, { view: 'song', songId: 's' });
   assert.equal(action.evidence.preparationState, undefined);
 });
