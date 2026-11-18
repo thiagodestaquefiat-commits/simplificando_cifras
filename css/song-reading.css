@@ -86,8 +86,9 @@
 #view-detail.stage-clean .song-controls{display:block!important}
 #view-detail.stage-clean .song-controls .song-control-strip{display:grid!important}
 #view-detail.stage-clean .detail-palco-btn.active{background:#fff!important;color:#000!important;border-color:#fff!important}
-/* Palco limpo: só a navegação discreta do palco antigo (‹ e "Próxima: música ›" no cantinho). */
-#view-detail.stage-clean .stage-performance-header{display:flex!important;position:static;align-items:center;justify-content:space-between;min-height:0;padding:4px 10px 2px;margin:0;background:transparent;border:0;box-shadow:none}
+/* Palco limpo: a faixa de navegação do palco antigo (⏮, "Próxima: música", ⏭ e o aviso de velocidade) sai.
+   Anterior/Próxima ficam fixos no topo e a velocidade está na barra de ferramentas (Thiago, 18/11). */
+#view-detail.stage-clean .stage-performance-header{display:none!important}
 #view-detail.stage-clean .stage-performance-header .stage-heading,
 #view-detail.stage-clean .stage-performance-header .stage-capo-controls,
 #view-detail.stage-clean .stage-performance-header .stage-scroll-speed,

@@ -106,6 +106,7 @@ const ASSETS = [
   "./css/song-reading.css?v=12",
   "./css/song-reading.css?v=13",
   "./css/song-reading.css?v=15",
+  "./css/song-reading.css?v=18",
   "./css/song-reading.css?v=17",
   "./css/song-reading.css?v=16",
   "./js/ai/ai-harmonic-summary.js?v=21",
