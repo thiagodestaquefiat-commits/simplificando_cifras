@@ -58,14 +58,14 @@ const server = http.createServer((request, response) => {
       await page.locator('.event-song-edit').click();
       await page.getByRole('button',{name:'Editar na versão da banda'}).click();
       await page.locator('#event-song-edit-key').fill('Db');
-      await page.locator('#event-song-edit-capo').fill('2');
+      assert.equal(await page.locator('#event-song-edit-capo-row').isVisible(),false,'a versão da banda não tem capotraste: é escolha de cada músico');
       await page.locator('#event-song-edit-text').fill('Db Gb Ab\nUma letra revisada');
       await page.locator('#event-song-edit-notes').fill('Entrada revisada');
       await page.locator('#event-song-edit-save').click();
       await page.locator('#event-song-edit-layer').waitFor({state:'attached'});
       await page.waitForFunction(() => document.getElementById('event-song-edit-layer')?.getAttribute('aria-hidden') === 'true');
       assert.equal(await page.locator('#event-song-edit-layer').getAttribute('aria-hidden'),'true');
-      assert.deepEqual(await page.evaluate(() => ({capo:findEvent('event-key').repertoire[0].shared.capo,notes:findEvent('event-key').repertoire[0].shared.notes,chordSheet:findEvent('event-key').repertoire[0].shared.chordSheet})),{capo:'2',notes:'Entrada revisada',chordSheet:'Db Gb Ab\nUma letra revisada'});
+      assert.deepEqual(await page.evaluate(() => ({capo:findEvent('event-key').repertoire[0].shared.capo,notes:findEvent('event-key').repertoire[0].shared.notes,chordSheet:findEvent('event-key').repertoire[0].shared.chordSheet})),{capo:'',notes:'Entrada revisada',chordSheet:'Db Gb Ab\nUma letra revisada'});
       const variant=await page.evaluate(() => eventSongVariant(findEvent('event-key'),findEvent('event-key').repertoire[0],appCurrentUser.id));
       assert.equal(variant.key,'Db');
       assert.match(variant.blocos[0].c,/Db\s+Gb\s+Ab/);
