@@ -38,6 +38,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
   assert.equal(await page.locator('.roudy-search-shortcut-art > img').count(),4);
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
+  const artwork=await page.locator('.roudy-search-shortcut-art').evaluateAll(nodes=>nodes.map(node=>{
+    const bounds=node.getBoundingClientRect(),signature=node.querySelector('.roudy-search-shortcut-signature').getBoundingClientRect(),image=node.querySelector('img');
+    return {size:parseFloat(getComputedStyle(node.querySelector('.roudy-search-shortcut-signature')).fontSize)/bounds.width,center:(signature.top+signature.height/2-bounds.top)/bounds.height,fade:getComputedStyle(image).maskImage.includes('linear-gradient'),fullHeight:Math.abs(image.getBoundingClientRect().height-bounds.height)<1};
+  }));
+  assert.ok(artwork.every(value=>Math.abs(value.size-.075)<.002&&Math.abs(value.center-.84)<.02&&value.fade&&value.fullHeight),'arte contínua com assinatura dimensionada e posicionada pela proporção da referência');
+
   assert.deepEqual(await page.locator('.roudy-search-shortcut-hint').allTextContents(),['Prontas para praticar','Organize suas músicas','Crie seu primeiro','Ver repertório']);
   for(const width of [320,375,390,430,1107,1440]){
     await page.setViewportSize({width,height:844});
