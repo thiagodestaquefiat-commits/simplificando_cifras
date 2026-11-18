@@ -76,6 +76,7 @@ const ASSETS = [
   "./assets/search/playlists.svg?v=2",
   "./assets/search/medley.svg",
   "./css/home-playlists.css?v=30",
+  "./js/home-playlists.js?v=30",
   "./js/home-playlists.js?v=29",
   "./js/home-playlists.js?v=28",
   "./js/home-playlists.js?v=27",

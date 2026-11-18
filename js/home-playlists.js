@@ -918,21 +918,41 @@
     open(playlist.id);
   }
 
+  // Link de playlist aberto sem estar logado: a tela de login cobria a playlist e o login com o Google
+  // volta para a página inicial sem o link. A playlist fica guardada e abre depois do login
+  // (ou ao tocar em "Continuar sem login"). Vale por 1 dia.
+  const PENDING_SHARED_KEY = "roudy_pending_shared_playlist";
+  function loginGateVisible() {
+    const gate = document.getElementById("login-gate");
+    return Boolean(gate) && !gate.hidden && global.getComputedStyle(gate).display !== "none";
+  }
+  function openPendingSharedPlaylist() {
+    let pending = null;
+    try { pending = JSON.parse(global.localStorage.getItem(PENDING_SHARED_KEY) || "null"); } catch (_error) { pending = null; }
+    if (!pending || !pending.id) return false;
+    if (!(Date.now() - Number(pending.at || 0) < 24 * 60 * 60 * 1000)) { try { global.localStorage.removeItem(PENDING_SHARED_KEY); } catch (_error) {} return false; }
+    if (loginGateVisible()) return false;
+    try { global.localStorage.removeItem(PENDING_SHARED_KEY); } catch (_error) {}
+    openReceived(String(pending.id));
+    return true;
+  }
   function checkSharedLink() {
     try {
       const url = new URL(global.location.href);
       const sharedId = url.searchParams.get("playlist");
-      if (!sharedId) return;
-      url.searchParams.delete("playlist");
-      global.history.replaceState(global.history.state, "", url.toString());
-      openReceived(sharedId);
+      if (sharedId) {
+        url.searchParams.delete("playlist");
+        global.history.replaceState(global.history.state, "", url.toString());
+        try { global.localStorage.setItem(PENDING_SHARED_KEY, JSON.stringify({ id: sharedId, at: Date.now() })); } catch (_error) { openReceived(sharedId); return; }
+      }
+      openPendingSharedPlaylist();
     } catch (_error) {}
   }
 
   global.homePlaylists = Object.freeze({
     PREFIX, artwork, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
     create, closeCreate, confirmCreate, renameCurrent, confirmRename, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
-    openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, saveReceivedFrom, checkSharedLink,
+    openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, saveReceivedFrom, checkSharedLink, openPendingSharedPlaylist,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
     isCollaborativeContext, saveItemSong,
     setProvisionalOwner,

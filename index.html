@@ -1483,7 +1483,7 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
  <script src="js/notification-center.js?v=8"></script>
 <script src="js/user-playlists.js?v=6"></script>
 <script src="js/song-share.js?v=2"></script>
-<script src="js/home-playlists.js?v=29"></script>
+<script src="js/home-playlists.js?v=30"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
@@ -5124,7 +5124,7 @@ function openGuestLibraryImportPrompt({count=0,userId=null}={}){
 async function confirmGuestLibraryImport(button){if(button)button.disabled=true;try{showToast('Sincronizando músicas locais…');await librarySync.migrateLegacy();closeModal();showToast('✅ Músicas adicionadas à sua conta.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível adicionar as músicas agora.'));}}
 async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;try{await librarySync.declineMigration();closeModal();showToast('As músicas locais continuam salvas neste dispositivo.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível carregar sua conta.'));}}
 function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if(state.authenticated||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
-function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
+function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();window.homePlaylists?.openPendingSharedPlaylist?.();}
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();return {ok:true};}catch(error){showToast('⚠️ '+error.message);return {ok:false,message:error.message};}}
 // Login por e-mail com código (Supabase OTP). Etapa 1: e-mail. Etapa 2: código de 6 dígitos.
 function showEmailLogin(container,trigger){if(!container)return;if(trigger)trigger.hidden=true;container.hidden=false;renderEmailLoginStep(container,'email','');}
@@ -6738,7 +6738,7 @@ appAuth.subscribe(async state=>{
     // e inicia a reconciliação na nuvem sem esperar eventos, convites e contexto terminarem.
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     rememberCachedAccountOwner(state.user.id,appCurrentUser.id);homePlaylists.setProvisionalOwner(null);
-    renderAccountButton();homePlaylists.renderHome();
+    renderAccountButton();homePlaylists.renderHome();homePlaylists.openPendingSharedPlaylist?.();
     personalPlaylistSync.schedule(0);
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
@@ -6774,7 +6774,7 @@ function forgetCachedAccountOwner(){try{localStorage.removeItem(CACHED_ACCOUNT_O
 function cachedAccountOwner(){try{const cached=JSON.parse(localStorage.getItem(CACHED_ACCOUNT_OWNER_KEY)||'null');return cached?.authUserId&&cached?.ownerId?cached:null;}catch(_){return null;}}
 function showCachedAccountPlaylists(){try{const cached=cachedAccountOwner(),loginUser=savedLoginUserId();if(cached?.ownerId&&loginUser&&cached.authUserId===loginUser&&!currentAuthState.authenticated)homePlaylists.setProvisionalOwner(cached.ownerId);}catch(_){}}
 showCachedAccountPlaylists();
-appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
+appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);if(!state?.authenticated)homePlaylists.openPendingSharedPlaylist?.();automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 window.addEventListener('online',()=>{if(!currentAuthState.authenticated)return;contextAcknowledgements.flush(appCurrentUser.id).then(()=>renderContextualHomeCard()).catch(()=>{});});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
