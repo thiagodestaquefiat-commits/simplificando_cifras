@@ -29,6 +29,10 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   const back=page.locator('#inst-modal button[aria-label="Voltar"]');
   await back.focus();assert.equal(await back.evaluate(n=>getComputedStyle(n).outlineStyle),'none','instrument back arrow has no focus frame');
   await back.click();assert.equal(await page.locator('#inst-modal').evaluate(n=>n.open),false);
+  await page.evaluate(()=>{document.getElementById('view-detail').style.display='none';homePlaylists.renameCurrent();});
+  const cover=await page.locator('.playlist-details-cover').boundingBox(),art=await page.locator('.playlist-details-cover .home-playlist-art').boundingBox();
+  assert.equal(cover.width,cover.height,'cover frame stays square beside tall fields');
+  assert.equal(cover.height,art.height,'frame matches artwork height');assert.equal(cover.width,art.width);
   assert.deepEqual(errors,[]);
   console.log('playlist-repertoire-snapshot-ui: OK (shared snapshot, upcoming event, playlist key, no library mutation)');
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});
