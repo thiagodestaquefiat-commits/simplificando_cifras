@@ -36,7 +36,7 @@
 <link rel="stylesheet" href="js/account-contribution.css?v=13">
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
-<link rel="stylesheet" href="css/roudy-forms.css?v=9">
+<link rel="stylesheet" href="css/roudy-forms.css?v=10">
 <link rel="stylesheet" href="css/song-reading.css?v=18">
 <link rel="stylesheet" href="css/topbar-labels.css?v=14">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
@@ -872,7 +872,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 #pane-setlists .sl-title{color:#f5f6f8;font-size:14px;font-weight:700}#pane-setlists .sl-location{margin-top:5px;color:#c1c6ce;font-size:12px;font-weight:500}#pane-setlists .sl-sub{margin-top:4px;color:#aeb5bf;font-size:11px;font-weight:500}
 #pane-setlists .event-disclosure{display:grid;place-items:center;color:#aab3be;font-size:27px;font-weight:300}
 #pane-setlists .event-card-unread{position:absolute;z-index:2;top:8px;right:9px;display:grid;min-width:18px;height:18px;padding:0 5px;place-items:center;border-radius:9px;background:#397edc;color:#fff;font-size:9px;font-weight:800}
-#view-main:has(#tab-setlists.active)>.fab{width:56px;height:56px;border:1px solid rgba(255,255,255,.72);background:#f4f6f9;color:#11161c;box-shadow:inset 0 1px 0 #fff,0 8px 24px rgba(0,0,0,.42);font-size:30px}
+#view-main[data-active-tab="setlists"]>.fab{width:56px;height:56px;border:1px solid rgba(255,255,255,.72);background:#f4f6f9;color:#11161c;box-shadow:inset 0 1px 0 #fff,0 8px 24px rgba(0,0,0,.42);font-size:30px}
 /* EVENTS — compact library hierarchy */
 #view-main[data-active-tab="setlists"]>.topbar{min-height:82px;padding:22px 16px 10px;align-items:flex-end;background:#030405;border:0}#view-main[data-active-tab="setlists"] .topbar-normal{align-items:flex-end}#view-main[data-active-tab="setlists"] .topbar-info{align-self:flex-end}#view-main[data-active-tab="setlists"] .topbar-title{font:750 29px/1.05 -apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif;letter-spacing:-.035em}#view-main[data-active-tab="setlists"] .topbar-search-action,#view-main[data-active-tab="setlists"] .topbar-camera-action,#view-main[data-active-tab="setlists"] .topbar-events-action,#view-main[data-active-tab="setlists"] .app-account-btn{margin-bottom:-4px}
 #view-main[data-active-tab="setlists"] .topbar-search-action,#view-main[data-active-tab="setlists"] .topbar-cover-action,#view-main[data-active-tab="setlists"] .topbar-camera-action{display:none}
@@ -982,7 +982,7 @@ button.song-control-cell{cursor:pointer}.song-control-cell+.song-control-cell{bo
 .tab-bar,html[data-ui-scale] .tab-bar{position:fixed;z-index:15;right:0;bottom:0;left:0;width:100%;height:calc(49px + env(safe-area-inset-bottom));min-height:0;margin:0;padding:0 0 env(safe-area-inset-bottom);grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;overflow:visible;border:0;border-radius:0;background-color:rgba(18,18,18,.75);box-shadow:none;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transform:none;isolation:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif}
 .tab-bar .tab-indicator{display:none}.tab-bar .tab,html[data-ui-scale] .tab-bar .tab{display:flex;width:100%;height:49px;min-height:49px;padding:4px 0 2px;align-items:center;justify-content:flex-start;flex-direction:column;gap:1px;border:0;border-radius:0;background:transparent;color:#8e8e93;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif;font-size:10px;font-weight:500;letter-spacing:0;line-height:12px;text-shadow:none;transition:none;-webkit-tap-highlight-color:transparent}.tab-bar .tab::before{display:none}.tab-bar .tab:hover{color:#8e8e93}.tab-bar .tab.active,.tab-bar .tab.active:hover,html[data-ui-scale] .tab-bar .tab.active{color:#0a84ff!important;background:transparent;text-shadow:none}.tab-bar .tab:focus,.tab-bar .tab:focus-visible{outline:none!important;box-shadow:none!important}.tab-icon{display:block;width:25px;height:25px;flex:0 0 25px;margin:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.tab-icon .tab-icon-filled{display:none;fill:currentColor;stroke:none}.tab-bar .tab.active .tab-icon{stroke-width:1.8}.tab-bar .tab.active .tab-icon .tab-icon-outline{display:none}.tab-bar .tab.active .tab-icon .tab-icon-filled{display:block}
 #tab-search{touch-action:manipulation}#tab-search .tab-icon,#tab-search .tab-icon *{pointer-events:none}#tab-search:active,#tab-search.active{color:#0789E7!important}#tab-search.active .tab-icon-filled{display:block;fill:#0789E7}
-#view-main>.fab,#view-main:has(#tab-setlists.active)>.fab{bottom:calc(61px + env(safe-area-inset-bottom))}
+#view-main>.fab,#view-main[data-active-tab="setlists"]>.fab{bottom:calc(61px + env(safe-area-inset-bottom))}
 #view-main{padding-bottom:0}
 #pane-musicas>.content,#pane-setlists>.content,#pane-medley>.content{padding-bottom:calc(57px + env(safe-area-inset-bottom))}
 .playlist-search-empty{display:flex;min-height:180px;padding:32px 20px;align-items:center;justify-content:center;flex-direction:column;text-align:center}.playlist-search-empty strong{color:#e7ebf0;font-size:15px}.playlist-search-empty span{margin-top:6px;color:#838c98;font-size:13px}
@@ -1466,7 +1466,7 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
 // Assistente de voz: carrega depois que o app abre, ou na hora se a pessoa tocar nele,
 // para não pesar na abertura. Os arquivos continuam no cache offline.
 (function(){
-  const files=["js/assistant-intent-catalog.js?v=1","js/assistant-intent-client.js?v=1","js/assistant-voice.js?v=4","js/assistant-language.js?v=1","js/assistant-actions.js?v=9","js/assistant-action-manager.js?v=5","js/assistant-action-runtime.js?v=6","js/assistant-memory.js?v=2","js/assistant-dialogue.js?v=4","js/assistant-sequences.js?v=2","js/app-assistant.js?v=35"];
+  const files=["js/assistant-intent-catalog.js?v=1","js/assistant-intent-client.js?v=1","js/assistant-voice.js?v=4","js/assistant-language.js?v=1","js/assistant-actions.js?v=9","js/assistant-action-manager.js?v=5","js/assistant-action-runtime.js?v=6","js/assistant-memory.js?v=2","js/assistant-dialogue.js?v=4","js/assistant-sequences.js?v=2","js/app-assistant.js?v=36"];
   let loading=null;
   function load(){
     if(!loading)loading=files.reduce((chain,src)=>chain.then(()=>window.roudyLoadScript(src)),Promise.resolve()).catch(error=>{loading=null;throw error;});
