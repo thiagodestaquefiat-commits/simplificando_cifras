@@ -20,7 +20,6 @@ function response(status, body) { return { ok: status >= 200 && status < 300, st
 global.fetch = async (url) => {
   calls.push(url);
   if (url.endsWith("/events/event-1/version")) {
-    if (mode === "antigo") return response(404, null);
     if (mode === "offline") throw new Error("sem rede");
     return response(200, { id: "event-1", remoteVersion: version });
   }
@@ -39,16 +38,19 @@ require("../js/event-collaboration-client.js");
   assert.equal(await client.getEventVersion("event-gone"), null);
   assert.equal(await client.getEventVersion("event-1"), 5);
 
-  // Sem internet: o erro sobe, como antes, para o app tratar como offline.
+  // Servidor antigo ou navegador bloqueando (o fetch falha): devolve null para o app
+  // usar o caminho completo, e não pergunta de novo por 5 minutos.
   mode = "offline";
-  await assert.rejects(() => client.getEventVersion("event-1"), (error) => error.offline === true);
-
-  // Servidor antigo, sem o endereço novo: devolve null e para de tentar.
-  mode = "antigo";
   assert.equal(await client.getEventVersion("event-1"), null);
   const before = calls.length;
   assert.equal(await client.getEventVersion("event-1"), null);
-  assert.equal(calls.length, before, "depois de saber que o servidor é antigo, não pergunta de novo");
+  assert.equal(calls.length, before, "depois de uma falha, espera antes de perguntar de novo");
+
+  const realNow = Date.now;
+  Date.now = () => realNow() + 6 * 60 * 1000;
+  mode = "novo";
+  assert.equal(await client.getEventVersion("event-1"), 5, "depois de 5 minutos volta a usar a pergunta leve");
+  Date.now = realNow;
 
   console.log("event-version-poll.test.js: OK");
 })().catch((error) => { console.error(error); process.exit(1); });

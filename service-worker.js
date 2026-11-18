@@ -83,6 +83,7 @@ const ASSETS = [
   "./js/playlist-invites.js?v=7",
   "./js/event-model.js?v=9",
   "./js/event-user-invites.js?v=12",
+  "./js/event-collaboration-client.js?v=21",
   "./js/event-collaboration-client.js?v=20",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-user-invites.js?v=9",

@@ -233,18 +233,18 @@
     return fromRemote(await request("/events/" + encodeURIComponent(eventId), { method: "GET" }));
   }
 
-  // Evento aberto: pergunta só a versão. Se o servidor ainda não tiver esse
-  // endereço (versão antiga), devolve null e o app usa o caminho completo de antes.
-  let eventVersionEndpointMissing = false;
+  // Evento aberto: pergunta só a versão. Se a pergunta leve falhar por qualquer
+  // motivo (servidor antigo sem esse endereço, navegador bloqueando, sem rede),
+  // devolve null e o app usa o caminho completo de antes; tenta de novo em 5 min.
+  let eventVersionRetryAt = 0;
   async function getEventVersion(eventId) {
-    if (eventVersionEndpointMissing) return null;
+    if (Date.now() < eventVersionRetryAt) return null;
     try {
       const body = await request("/events/" + encodeURIComponent(eventId) + "/version", { method: "GET" });
       const version = Number(body && body.remoteVersion);
       return Number.isFinite(version) ? version : null;
     } catch (error) {
-      if (error && error.offline) throw error;
-      if (error && (error.status === 404 && error.code !== "evento_nao_encontrado" || error.status === 405)) eventVersionEndpointMissing = true;
+      if (!(error && error.code === "evento_nao_encontrado")) eventVersionRetryAt = Date.now() + 5 * 60 * 1000;
       return null;
     }
   }
