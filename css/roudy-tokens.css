@@ -1,0 +1,53 @@
+/* Canonical ROUDY roles. Component files own geometry and explicit states. */
+:root{
+  --font-ui:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-heading:Manrope,var(--font-ui);
+  --weight-body:400;
+  --weight-control:600;
+  --weight-title:700;
+  --weight-page-title:800;
+  --roudy-electric-blue:#0789E7;
+  --roudy-deep-blue:#07599E;
+  --roudy-navy:#052044;
+  --roudy-dark:#191A1C;
+  --roudy-stage-gold:#D6A83A;
+  --roudy-deep-gold:#806018;
+  --roudy-gold-shadow:#3C2C0A;
+  --ui-black:#000000;
+  --ui-background:#0B0B0C;
+  --ui-surface:#191A1C;
+  --ui-control:#242426;
+  --ui-control-active:#343438;
+  --ui-search-rest:#414047;
+  --ui-artwork:#202124;
+  --icon-placeholder:#505156;
+  --ui-separator:rgba(255,255,255,.10);
+  --text-primary:#F5F5F7;
+  --text-secondary:#A1A1A6;
+  --text-tertiary:#6E6E73;
+  --icon-action:#B3B3B3;
+  --semantic-success:#31C98B;
+  --semantic-danger:#F06464;
+  --roudy-blue-soft:rgba(7,137,231,.16);
+  --roudy-blue-line:rgba(7,137,231,.38);
+  --roudy-gold-soft:rgba(214,168,58,.16);
+  --shadow:0 18px 50px rgba(0,0,0,.48);
+  --chord-color:#E8896B;
+  --music-accent:#E8896B;
+
+  /* Compatibility names reference roles; they never define another palette. */
+  --bg:var(--ui-background);
+  --bg2:var(--ui-surface);
+  --bg3:var(--ui-control);
+  --surface:var(--ui-surface);
+  --surface-hover:var(--ui-control-active);
+  --accent:var(--roudy-electric-blue);
+  --accent-hover:var(--roudy-deep-blue);
+  --accent2:var(--roudy-blue-soft);
+  --text:var(--text-primary);
+  --text2:var(--text-secondary);
+  --border:var(--ui-separator);
+  --success:var(--semantic-success);
+  --success-soft:rgba(49,201,139,.14);
+  --danger:var(--semantic-danger);
+}

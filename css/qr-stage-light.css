@@ -2,7 +2,7 @@
 .profile-qr-view.is-scanning{inset:0;left:0;width:100%;max-width:none;height:100dvh;transform:none;box-shadow:none;background:#050505}
 .profile-qr-view.is-scanning>.profile-qr-header,.profile-qr-view.is-scanning>.profile-qr-tabs{display:none}
 .profile-qr-view.is-scanning .profile-qr-panels{height:100%;flex:1}
-.roudy-stage-scanner{isolation:isolate;background:#050505;color:#fff;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif}
+.roudy-stage-scanner{isolation:isolate;background:#050505;color:#fff;font-family:var(--font-ui)}
 .event-qr-scanner.roudy-stage-scanner{display:block;height:100dvh;max-width:none}
 .event-qr-scanner.roudy-stage-scanner[hidden]{display:none}
 .roudy-stage-scanner .event-qr-viewfinder{position:absolute;inset:0;width:100%;height:100%}

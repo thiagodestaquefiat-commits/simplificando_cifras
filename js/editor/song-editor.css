@@ -1,4 +1,4 @@
-.song-editor-overlay{position:fixed;inset:0;z-index:80;background:#07111f;color:#f8fafc;display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.song-editor-overlay{position:fixed;inset:0;z-index:80;background:#07111f;color:#f8fafc;display:flex;flex-direction:column;font-family:var(--font-ui);overflow:hidden}
 .song-editor-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#0b1728;border-bottom:1px solid rgba(148,163,184,.15)}
 .song-editor-header h2{font-size:17px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song-editor-close,.se-btn{border:1px solid rgba(148,163,184,.22);background:#111f33;color:#f8fafc;border-radius:10px;min-height:40px;padding:8px 12px;cursor:pointer;font-weight:700}.se-btn-primary{background:#2563eb;border-color:#2563eb}.se-btn-danger{color:#fca5a5;border-color:rgba(248,113,113,.45)}
 .song-editor-tabs{display:flex;padding:8px 12px;gap:8px;background:#0b1728;border-bottom:1px solid rgba(148,163,184,.15)}.song-editor-tabs button{flex:1}.song-editor-tabs .active{color:#fff;background:#2563eb;border-color:#2563eb}

@@ -2,7 +2,7 @@
 .modal:has(.account-contribution-page){width:100%;max-width:720px;height:100dvh;max-height:none;margin:0 auto;padding:0;overflow:hidden;border:0;border-radius:0;background:#050505;box-shadow:none}
 .modal:has(.account-contribution-page) .modal-handle{display:none}
 .modal:has(.account-contribution-page) #modal-body{height:100%}
-.account-contribution-page{position:relative;display:flex;height:100%;min-height:0;overflow:hidden;flex-direction:column;background:#07090c url("../assets/chat-cables-background.png") center/cover fixed;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;isolation:isolate}
+.account-contribution-page{position:relative;display:flex;height:100%;min-height:0;overflow:hidden;flex-direction:column;background:#07090c url("../assets/chat-cables-background.png") center/cover fixed;color:#f5f7fb;font-family:var(--font-ui);isolation:isolate}
 .account-contribution-page::before{position:absolute;z-index:-1;inset:0;background:linear-gradient(180deg,rgba(5,5,5,.66),rgba(2,2,2,.84));content:""}
 .account-contribution-page .profile-modal-header{display:grid;min-height:64px;padding:calc(8px + env(safe-area-inset-top)) 18px 4px;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;background:transparent}
 .account-contribution-page .profile-modal-header::after{width:40px;height:40px;content:""}

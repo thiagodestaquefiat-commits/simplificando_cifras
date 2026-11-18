@@ -59,7 +59,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     });
     assert.deepEqual(await appearance(),['6px','rgb(65, 64, 71)']);
     await page.locator('#roudy-search-input').click();
-    assert.deepEqual(await appearance(),['999px','rgb(43, 42, 48)']);
+    assert.deepEqual(await appearance(),['999px','rgb(36, 36, 38)']);
     assert.equal(await field.evaluate(node=>getComputedStyle(node).height),'36px');
     assert.equal(await field.locator('.roudy-search-field-icon').isVisible(),false);
     await page.getByRole('button',{name:'Cancelar',exact:true}).click();
@@ -97,7 +97,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     }));
     assert.equal(typography.length,4);
     for(const [index,style] of typography.entries()){
-      const expectedWeight=element==='small span'&&index===1?'700':typography[0].fontWeight;
+      const expectedWeight=element==='small span'?'400':'700';
       assert.deepEqual(style,{...typography[0],fontWeight:expectedWeight});
     }
   }
@@ -181,7 +181,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     label:getComputedStyle(button).color,
     icon:getComputedStyle(button.querySelector('svg')).stroke,
   }));
-  assert.deepEqual(actionColors,{label:'rgb(255, 255, 255)',icon:'rgb(179, 179, 179)'});
+  assert.deepEqual(actionColors,{label:'rgb(245, 245, 247)',icon:'rgb(179, 179, 179)'});
   assert.equal(await page.getByText('Adicionar ao repertório',{exact:true}).count()>0,true,'três pontos mantêm as ações existentes');
   await page.evaluate(()=>closeSongOptions());
   await page.screenshot({path:path.join(shots,'roudy-buscar-mobile-resultados.png'),fullPage:false});

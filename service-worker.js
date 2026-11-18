@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v866-search-lens-center";
+const CACHE_NAME = "simplificando-cifras-v867-shared-design-roles";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -174,6 +174,27 @@ const ASSETS = [
   "./js/assistant-voice.js?v=3",
   "./",
   "./index.html",
+  "./js/list-loading.js?v=9",
+  "./css/roudy-tokens.css?v=1",
+  "./js/editor/song-editor.css?v=2",
+  "./js/ai/ai-harmonic-summary.css?v=10",
+  "./js/account-tools.css?v=4",
+  "./js/account-profile.css?v=5",
+  "./js/event-detail-refactor.css?v=146",
+  "./js/event-qr-scanner.css?v=3",
+  "./css/qr-stage-light.css?v=2",
+  "./js/event-chat-song.css?v=7",
+  "./js/account-contribution.css?v=14",
+  "./css/topbar-labels.css?v=16",
+  "./css/editorial-typography.css?v=4",
+  "./css/roudy-color-system-preview.css?v=25",
+  "./css/roudy-forms.css?v=10",
+  "./js/medley-editor.css?v=33",
+  "./css/home-playlists.css?v=47",
+  "./css/login-gate.css?v=17",
+  "./css/search-menu.css?v=57",
+  "./css/study-song-navigation.css?v=10",
+
   "./css/home-playlists.css?v=46",
   "./css/login-gate.css?v=16",
   "./js/app-auth.js?v=19",

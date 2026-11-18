@@ -1,45 +1,4 @@
-/* ROUDY color-system preview
-   Visual-only evaluation layer. No component geometry or behavior lives here. */
-:root{
-  --roudy-electric-blue:#0789E7;
-  --roudy-deep-blue:#07599E;
-  --roudy-navy:#052044;
-  --roudy-dark:#191A1C;
-  --roudy-stage-gold:#D6A83A;
-  --roudy-deep-gold:#806018;
-  --roudy-gold-shadow:#3C2C0A;
-  --ui-black:#000000;
-  --ui-background:#0B0B0C;
-  --ui-surface:#191A1C;
-  --ui-control:#242426;
-  --ui-control-active:#343438;
-  --ui-separator:rgba(255,255,255,.10);
-  --text-primary:#F5F5F7;
-  --text-secondary:#A1A1A6;
-  --text-tertiary:#6E6E73;
-  --semantic-success:#31C98B;
-  --semantic-danger:#F06464;
-  --roudy-blue-soft:rgba(7,137,231,.16);
-  --roudy-blue-line:rgba(7,137,231,.38);
-  --roudy-gold-soft:rgba(214,168,58,.16);
-
-  /* Compatibility aliases while the preview is evaluated. */
-  --bg:var(--ui-background);
-  --bg2:var(--ui-surface);
-  --bg3:var(--ui-control);
-  --surface:var(--ui-surface);
-  --surface-hover:var(--ui-control-active);
-  --accent:var(--roudy-electric-blue);
-  --accent-hover:var(--roudy-deep-blue);
-  --accent2:var(--roudy-blue-soft);
-  --text:var(--text-primary);
-  --text2:var(--text-secondary);
-  --border:var(--ui-separator);
-  --success:var(--semantic-success);
-  --success-soft:rgba(49,201,139,.14);
-  --danger:var(--semantic-danger);
-}
-
+/* ROUDY semantic component colors. Values live in roudy-tokens.css. */
 html,body,.app,#view-main,#pane-setlists,#pane-medley{
   background:var(--ui-background);
   color:var(--text-primary);
@@ -57,10 +16,10 @@ html,body,.app,#view-main,#pane-setlists,#pane-medley{
 .topbar-title,.playlist-library-title{color:var(--text-primary)}
 .topbar-sub,#count-label,.event-month-heading{color:var(--text-tertiary)}
 .tab-bar .tab,
-.tab-bar .tab:hover{color:var(--text-tertiary)}
+.tab-bar .tab:hover{color:var(--text-secondary)}
 .tab-bar .tab.active,
 .tab-bar .tab.active:hover,
-html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!important}
+html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)}
 .topbar-search-action,.topbar-camera-action,.topbar-events-action,.events-more-action{
   color:var(--text-primary);
 }
@@ -192,7 +151,7 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 .event-song-edit-view-options button[aria-checked="true"]{background:var(--roudy-electric-blue);color:var(--text-primary)}
 
 /* Common elevated surfaces, forms and controls */
-.modal,.account-drawer,.settings-subpage,.profile-settings-page,
+.modal:not(:has(.form-group)),.account-drawer,.settings-subpage,.profile-settings-page,
 .event-people-search-sheet,.event-member-profile-sheet,.chat-appearance-sheet{
   border-color:var(--ui-separator);
   background:var(--ui-surface);
@@ -286,7 +245,6 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 .song-editor-tab,.song-editor-action{border-color:var(--ui-separator);background:var(--ui-control);color:var(--text-secondary)}
 .song-editor-tab.active,.song-editor-action.primary{border-color:var(--roudy-electric-blue);background:var(--roudy-electric-blue);color:var(--text-primary)}
 .song-editor-input,.song-editor-textarea{border-color:var(--ui-separator);background:var(--ui-control);color:var(--text-primary)}
-.ai-summary-dialog{border-color:var(--ui-separator);background:var(--ui-surface);color:var(--text-primary)}
 .ai-summary-intro,.ai-summary-text-hint{color:var(--text-secondary)}
 .ai-summary-label,.ai-summary-help{color:var(--text-primary)}
 .ai-summary-input,.ai-summary-capo-option,.ai-summary-search-form,.ai-summary-text-form{border-color:var(--ui-separator);background:var(--ui-control);color:var(--text-primary)}
@@ -353,11 +311,11 @@ body:has(#event-chat-view.is-context-open) .app-assistant-floating{display:none!
 
 /* Contextual action sheets share label and icon colors. */
 :is(.song-options-action,.event-action-item,.event-song-menu-item,.event-song-menu-group button,.home-playlist-context-actions button,.home-playlist-cover-options button,.home-playlist-menu button,.event-chat-group-menu-actions button,#event-chat-photo-actions button,#event-chat-context .event-chat-context-menu button):not(:disabled){
-  color:var(--sheet-action-danger,#fff);
-  font-weight:400;
+  color:var(--sheet-action-danger,var(--text-primary));
+  font-weight:var(--weight-control);
 }
 :is(.song-options-action,.event-action-item,.event-song-menu-item,.event-song-menu-group button,.home-playlist-context-actions button,.home-playlist-cover-options button,.home-playlist-menu button,.event-chat-group-menu-actions button,#event-chat-photo-actions button,#event-chat-context .event-chat-context-menu button):not(:disabled) :is(svg,i):not(.is-pinned){
-  color:var(--sheet-action-danger,#b3b3b3);
+  color:var(--sheet-action-danger,var(--icon-action));
 }
 :is(.song-options-action--danger,.event-action-item--danger,.event-song-menu-item--danger,.event-song-menu-group .event-song-menu-danger,.home-playlist-context-actions .is-danger,.home-playlist-menu .is-danger,#event-chat-context .event-chat-context-danger,#event-chat-photo-actions .danger):not(:disabled){
   --sheet-action-danger:var(--semantic-danger);

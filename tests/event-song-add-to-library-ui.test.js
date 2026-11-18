@@ -111,10 +111,10 @@ const server = http.createServer((req, res) => {
       ]);
     });
     assert.deepEqual(colors,[
-      ['rgb(255, 255, 255)','rgb(179, 179, 179)'],
-      ['rgb(255, 255, 255)','rgb(179, 179, 179)'],
+      ['rgb(245, 245, 247)','rgb(179, 179, 179)'],
+      ['rgb(245, 245, 247)','rgb(179, 179, 179)'],
       ['rgb(240, 100, 100)','rgb(240, 100, 100)'],
-      ['rgb(255, 255, 255)','rgb(179, 179, 179)']
+      ['rgb(245, 245, 247)','rgb(179, 179, 179)']
     ]);
     console.log("event-song-add-to-library-ui.test.js: OK (convidado salva a música do evento na biblioteca e escolhe a playlist; sem duplicar)");
   } finally {

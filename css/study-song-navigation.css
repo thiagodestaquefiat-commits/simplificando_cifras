@@ -7,9 +7,9 @@
   justify-content:center;
   gap:4px;
   margin-top:2px;
-  color:#a1a1aa;
+  color:var(--text-secondary);
   font-size:12px;
-  font-weight:400;
+  font-weight:var(--weight-body);
   line-height:15px;
   white-space:nowrap;
 }
@@ -25,7 +25,7 @@
 .study-song-skip svg{display:block;width:20px;height:20px;fill:currentColor}
 .study-song-skip:disabled{opacity:.28;cursor:default}
 .study-song-skip:active:not(:disabled){opacity:.55}
-.study-song-skip:focus-visible{outline:2px solid #a1a1aa;outline-offset:-3px;border-radius:6px}
+.study-song-skip:focus-visible{outline:2px solid var(--text-secondary);outline-offset:-3px;border-radius:6px}
 .study-song-skip[hidden],.study-song-position[hidden]{display:none}
 
 .study-song-current-number{color:#0789e7}
