@@ -80,3 +80,14 @@
 .login-saved-identity>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font:var(--weight-body) 13px/1.3 var(--font-ui)}
 .login-gate .login-signin-other{min-height:44px;margin:0 0 18px auto;padding:8px 0;border:0;border-radius:0;color:var(--roudy-electric-blue);font-size:13px}
 @media(max-width:350px){.login-signin-page{padding-inline:20px}.login-gate .login-signin-page h1{font-size:26px}}
+
+/* Browser autofill keeps the canonical field surface instead of its pale tint. */
+.login-gate{color-scheme:dark}
+.login-gate input:is(:autofill,:-webkit-autofill){
+  -webkit-text-fill-color:var(--text-primary);
+  caret-color:var(--roudy-electric-blue);
+  box-shadow:inset 0 0 0 1000px var(--ui-control);
+}
+.login-gate input:is(:autofill,:-webkit-autofill):focus{
+  box-shadow:inset 0 0 0 1000px var(--ui-control),0 0 0 1px var(--roudy-electric-blue);
+}

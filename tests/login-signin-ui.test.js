@@ -26,6 +26,16 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.evaluate(()=>{window.loginCalls=[];window.appAuth={...appAuth,signInWithPassword:async(email,password)=>{loginCalls.push({kind:'password',email,password});throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');},signInWithEmail:async(email,options)=>{loginCalls.push({kind:'email',email,options});}};});
   const submit=page.locator('#login-signin-submit');assert.equal(await submit.isDisabled(),true);
   await page.locator('#login-signin-email').fill('musico@example.com');
+  const cdp=await page.context().newCDPSession(page);await cdp.send('DOM.enable');await cdp.send('CSS.enable');
+  const doc=await cdp.send('DOM.getDocument');
+  const emailNode=await cdp.send('DOM.querySelector',{nodeId:doc.root.nodeId,selector:'#login-signin-email'});
+  await cdp.send('CSS.forcePseudoState',{nodeId:emailNode.nodeId,forcedPseudoClasses:['autofill']});
+  const autofill=await page.locator('#login-signin-email').evaluate(node=>({active:node.matches(':autofill'),text:getComputedStyle(node).webkitTextFillColor,surface:getComputedStyle(node).boxShadow}));
+  assert.equal(autofill.active,true,'estado real de autofill do Chrome');
+  assert.equal(autofill.text,'rgb(245, 245, 247)');
+  assert.match(autofill.surface,/rgb\(36, 36, 38\).*1000px.*inset/);
+  await cdp.send('CSS.forcePseudoState',{nodeId:emailNode.nodeId,forcedPseudoClasses:[]});await cdp.detach();
+
   await page.locator('#login-signin-password').fill('password-for-test');
   assert.equal(await submit.isEnabled(),true);
   await page.getByRole('button',{name:'Mostrar senha',exact:true}).click();

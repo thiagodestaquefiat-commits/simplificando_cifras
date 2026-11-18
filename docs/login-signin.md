@@ -29,3 +29,7 @@ Validation: password API success/error/unconfigured provider; existing Google/PK
 The Entrar sem senha shortcut starts hidden in HTML/CSS and is shown only on localhost, 127.0.0.1 and deploy-preview-N--simplificandocifras.netlify.app. Its public UI action also checks this host gate; query parameters cannot enable it in production. Password error copy no longer references the hidden shortcut. Existing welcome Google/email/signup flows are unchanged.
 
 Tests cover production host, custom production domain, preview host, both local hosts and an unrelated Netlify preview, plus the existing sign-in browser flow. This controls UI availability; it does not alter Supabase authentication settings.
+
+## Autofill palette correction
+
+Browser autofill was painting a pale blue surface outside the ROUDY palette. Login fields now use dark color-scheme and native :autofill / :-webkit-autofill styles: inset control-surface fill, canonical primary text, blue caret and retained focus ring. Applied to email-link and dedicated sign-in fields. No authentication behavior changed. Chrome test forces the actual autofill pseudo-state and verifies dark surface plus primary text; existing password/email sign-in flow remains passing.
