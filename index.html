@@ -1645,7 +1645,7 @@ const SONG_PICKERS={
 let songQuickPicker=null,sqpSettleTimer=0;
 function applySongScrollSpeedValue(value){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(Number(value));
-  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  const saved=rememberScrollSpeedChoice(scrollSpeed);
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();updateDetailSaveButton();
 }
@@ -2180,6 +2180,13 @@ const EVENT_CAPO_PREFS_KEY='sc_event_capo_prefs_v1';
 function eventCapoPrefKey(context){return context?[String(appCurrentUser?.id||''),String(context.eventId),String(context.itemId)].join('|'):'';}
 function readEventCapoPref(context){const value=(storage.get(EVENT_CAPO_PREFS_KEY,{})||{})[eventCapoPrefKey(context)];return Number.isInteger(value)?value:null;}
 function writeEventCapoPref(context,capo){const key=eventCapoPrefKey(context);if(!key)return;const prefs={...(storage.get(EVENT_CAPO_PREFS_KEY,{})||{}),[key]:capo};storage.set(EVENT_CAPO_PREFS_KEY,prefs);}
+// Velocidade da rolagem também é escolha de cada músico: no evento fica neste aparelho, por pessoa e
+// por música do evento (não muda a versão da banda). Fora do evento continua salva na própria música.
+const EVENT_SCROLL_PREFS_KEY='sc_event_scroll_prefs_v1';
+function readEventScrollPref(context){const value=(storage.get(EVENT_SCROLL_PREFS_KEY,{})||{})[eventCapoPrefKey(context)];return Number.isFinite(value)?stagePreferences.normalizeScrollSpeed(value):null;}
+function writeEventScrollPref(context,speed){const key=eventCapoPrefKey(context);if(!key)return;const prefs={...(storage.get(EVENT_SCROLL_PREFS_KEY,{})||{}),[key]:speed};storage.set(EVENT_SCROLL_PREFS_KEY,prefs);}
+// A última velocidade escolhida vale como ponto de partida para músicas sem velocidade própria.
+function rememberScrollSpeedChoice(speed){const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:speed});if(detailEventContext)writeEventScrollPref(detailEventContext,speed);return saved;}
 
 function selectCapo(n){
   selectedCapo=Math.max(0,Math.min(12,Math.trunc(Number(n)||0)));
@@ -2999,7 +3006,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=detailEventContext?(readEventScrollPref(detailEventContext)??scrollSpeed):(saved.scrollSpeed??scrollSpeed);currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -3293,13 +3300,13 @@ function showStageScrollSpeedFeedback(){
 }
 function setSongScrollSpeed(value){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(Number(value));
-  const saved=stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  const saved=rememberScrollSpeedChoice(scrollSpeed);
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();showStageScrollSpeedFeedback();revealStageControls();
 }
 function adjustStageScrollSpeed(delta){
   scrollSpeed=stagePreferences.normalizeScrollSpeed(scrollSpeed+(delta<0?-3:3));
-  const saved=detailEditBaseline?{autoScrollSpeed:scrollSpeed}:stagePreferences.save(appCurrentUser.id,{...stagePreferences.load(appCurrentUser.id),autoScrollSpeed:scrollSpeed});
+  const saved=rememberScrollSpeedChoice(scrollSpeed);
   if(activeStagePreferences)activeStagePreferences={...activeStagePreferences,autoScrollSpeed:saved.autoScrollSpeed};
   updateScrollSpeedControls();showStageScrollSpeedFeedback();revealStageControls();
   updateDetailSaveButton();
