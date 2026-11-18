@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v884-event-footer-spacing";
+const CACHE_NAME = "simplificando-cifras-v885-login-enter-visible";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -203,7 +203,7 @@ const ASSETS = [
   "./css/roudy-forms.css?v=10",
   "./js/medley-editor.css?v=33",
   "./css/home-playlists.css?v=47",
-  "./css/login-gate.css?v=17",
+  "./css/login-gate.css?v=18",
   "./css/search-menu.css?v=57",
   "./css/study-song-navigation.css?v=10",
 
