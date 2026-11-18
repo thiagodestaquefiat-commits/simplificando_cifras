@@ -1435,7 +1435,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=7"></script>
+<script src="js/ai/api-config.js?v=8"></script>
 <script src="js/song-reports.js?v=1"></script>
 <script src="js/app-auth.js?v=18"></script>
 <script src="js/profile-cover.js?v=2"></script>
@@ -1482,12 +1482,12 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
 </script>
  <script src="js/notification-center.js?v=8"></script>
 <script src="js/user-playlists.js?v=6"></script>
-<script src="js/song-share.js?v=1"></script>
-<script src="js/home-playlists.js?v=28"></script>
+<script src="js/song-share.js?v=2"></script>
+<script src="js/home-playlists.js?v=29"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
-<script src="js/playlist-invites.js?v=8"></script>
+<script src="js/playlist-invites.js?v=9"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -5411,7 +5411,7 @@ function openAddSetlist(prefill){
       const saved=await window.saveSetlist({keepOpen:true});
       if(!saved||saved.remoteVersion==null){showToast('⚠️ Salve o evento na nuvem antes de convidar.');return;}
       const invitation=await eventCollaboration.createInvitation(saved.id,name,role);
-      const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+      const link=apiConfig.withPreviewApi(new URL(location.pathname,location.origin));link.hash='convite='+encodeURIComponent(invitation.token);
       const text=`Você foi convidado(a) para ${invitation.eventTitle} como ${role} (${name}). Abra o link e entre com sua conta para participar.`;
       document.getElementById('event-member-name').value='';
       if(navigator.share){try{await navigator.share({title:'Convite para '+invitation.eventTitle,text,url:link.href});return;}catch(error){if(error.name==='AbortError'){showToast('Convite criado. Toque em Convidar Integrante para gerar outro link.');return;}}}
@@ -5756,7 +5756,7 @@ async function shareEventMemberInvitation(eventId){
     // MANUTENÇÃO: Link de convite autenticado, com função no servidor; não compartilhar uma simples cópia do evento.
     const invitation=await eventCollaboration.createInvitation(event.id,'',role);
     if(!valid())return;
-    const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+    const link=apiConfig.withPreviewApi(new URL(location.pathname,location.origin));link.hash='convite='+encodeURIComponent(invitation.token);
     const text=`Você foi convidado(a) para ${invitation.eventTitle||event.title} como ${eventInviteRoleLabel(role)}. Abra o link e entre com sua conta para participar.`;
     if(navigator.share){try{await navigator.share({title:'Convite para '+event.title,text,url:link.href});if(valid())closeEventActionLayer();return;}catch(error){if(error?.name==='AbortError')throw error;if(!valid())return;}}
     if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text+'\n'+link.href);if(valid()){if(status)status.textContent='Convite copiado para compartilhar.';showToast('Link do convite copiado.');}}

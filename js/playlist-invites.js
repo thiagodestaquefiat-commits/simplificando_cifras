@@ -53,7 +53,7 @@
     try {
       const invitation = await api().invite(id);
       if (captured !== account() || gen !== sequence) return;
-      const url = new URL(location.href); url.search = ''; url.hash = ''; url.searchParams.set('playlistInvite', invitation.token);
+      const url = new URL(location.href); url.search = ''; url.hash = ''; url.searchParams.set('playlistInvite', invitation.token); global.apiConfig?.withPreviewApi?.(url);
       const title = global.userPlaylists.get(owner(), id).name;
       if (!copyOnly && navigator.share) await navigator.share({ title, text: 'Colabore comigo nesta playlist do ROUDY:', url: url.toString() });
       else {

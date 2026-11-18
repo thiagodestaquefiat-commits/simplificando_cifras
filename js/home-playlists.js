@@ -831,6 +831,7 @@
       url.search = "";
       url.hash = "";
       url.searchParams.set("playlist", body.id);
+      global.apiConfig?.withPreviewApi?.(url);
       const text = `Playlist “${playlist.name}” no ROUDY — abra e salve na sua conta:`;
       if (global.navigator.share) await global.navigator.share({ title: playlist.name, text, url: url.toString() }).catch(() => {});
       else if (global.navigator.clipboard) { await global.navigator.clipboard.writeText(text + " " + url.toString()); toast("Link copiado."); }
