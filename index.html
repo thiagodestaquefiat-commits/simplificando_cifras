@@ -681,6 +681,11 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
    Usa o mesmo fundo sólido de quem desliga transparências no celular. Ao parar a rolagem, o vidro volta. */
 #view-detail.is-auto-scrolling>.detail-header,#view-detail.is-auto-scrolling>.detail-header .back-btn{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #view-detail.is-auto-scrolling:not(.stage-mode):not(.video-study-expanded)>.detail-header{background:#080a0d!important}
+/* Barra de ferramentas da música (Tom, Capotraste, Rolagem, BPM...) fica fixa logo abaixo do cabeçalho;
+   a letra rola por baixo dela (pedido da equipe, 18/11). Fica acima do vídeo quando ele sai da tela,
+   e o miniplayer do YouTube desce para não cobrir a barra. */
+#view-detail>#song-controls{position:sticky;top:58px;z-index:9}
+#view-detail>.youtube-player-shell.is-floating{top:calc(58px + 87px)!important}
 #view-detail:not(.stage-mode)>.youtube-player-shell.is-search{margin:0;padding:17px 22px 15px;border:0;border-top:1px solid rgba(255,255,255,.08);border-radius:0;background:#000;box-shadow:none}
 #view-detail:not(.stage-mode) .youtube-player-heading{margin-bottom:3px;color:#aeb6c1;font-size:9px;letter-spacing:.07em}
 #view-detail:not(.stage-mode) .youtube-player-help{margin-bottom:7px;color:#777f8b;font-size:10px}
