@@ -79,14 +79,14 @@
   position:absolute;
   right:6%;
   bottom:0;
-  height:18%;
+  height:12%;
   left:6%;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:.26em;
   color:color-mix(in srgb,var(--text-primary) 80%,var(--text-secondary));
-  font:var(--weight-title) 10.5cqw/1 var(--font-ui);
+  font:var(--weight-title) 7.5cqw/1 var(--font-ui);
   z-index:1;
   filter:none;
   letter-spacing:-.045em;
@@ -95,8 +95,8 @@
 .roudy-search-shortcut-signature>span:last-child{color:inherit}
 .roudy-search-shortcut-rd{
   display:block;
-  width:1.45em;
-  height:.98em;
+  width:1.12em;
+  height:.78em;
   flex:none;
   background:currentColor;
   -webkit-mask:url('../assets/search/rd.svg') center/contain no-repeat;

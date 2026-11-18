@@ -65,7 +65,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     const bounds=node.getBoundingClientRect(),signature=node.querySelector('.roudy-search-shortcut-signature').getBoundingClientRect(),image=node.querySelector('img');
     return {size:parseFloat(getComputedStyle(node.querySelector('.roudy-search-shortcut-signature')).fontSize)/bounds.width,center:(signature.top+signature.height/2-bounds.top)/bounds.height,fade:getComputedStyle(node.querySelector('.roudy-search-shortcut-blur')).maskImage.includes('linear-gradient'),fullHeight:Math.abs(image.getBoundingClientRect().height-bounds.height)<1};
   }));
-  assert.ok(artwork.every(value=>Math.abs(value.size-.105)<.002&&Math.abs(value.center-.91)<.02&&value.fade&&value.fullHeight),'arte contínua com assinatura dimensionada e posicionada pela proporção da referência');
+  assert.ok(artwork.every(value=>Math.abs(value.size-.075)<.002&&Math.abs(value.center-.94)<.02&&value.fade&&value.fullHeight),'arte contínua com assinatura dimensionada e posicionada pela proporção da referência');
   const layers=await page.locator('.roudy-search-shortcut-art').evaluateAll(nodes=>nodes.map(node=>{
     const image=node.querySelector('.roudy-search-shortcut-graphic'),blur=node.querySelector('.roudy-search-shortcut-blur img'),fusion=node.querySelector('.roudy-search-shortcut-fusion'),panel=node.nextElementSibling;
     const a=image.getBoundingClientRect(),b=blur.getBoundingClientRect();
@@ -155,7 +155,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     const signature=card.querySelector('.roudy-search-shortcut-signature'),meta=card.querySelector('.roudy-search-shortcut-copy small'),rd=card.querySelector('.roudy-search-shortcut-rd');
     return {ratio:parseFloat(getComputedStyle(signature).fontSize)/parseFloat(getComputedStyle(meta).fontSize),filter:getComputedStyle(signature).filter,rdWidth:rd.getBoundingClientRect().width,rdHeight:rd.getBoundingClientRect().height};
   }));
-  assert.ok(hierarchy.every(value=>value.ratio>1.4&&value.filter==='none'&&value.rdWidth>20&&value.rdHeight>14),'assinatura maior que metadados e monograma sem filtro');
+  assert.ok(hierarchy.every(value=>value.ratio>1&&value.ratio<1.2&&value.filter==='none'&&value.rdWidth>14&&value.rdHeight>10),'assinatura no tamanho anterior e monograma vetorial sem filtro');
   const signatureSvg=fs.readFileSync(path.join(root,'assets/search/rd.svg'),'utf8');
   assert.doesNotMatch(signatureSvg,/<image|<filter/,'monograma usa apenas caminhos vetoriais, sem imagem raster ou filtro embutido');
 
