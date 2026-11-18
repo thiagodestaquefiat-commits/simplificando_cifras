@@ -15,10 +15,11 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.getByRole('button',{name:'Continuar sem login'}).click();
   for(const width of [320,390,768,1366]){
     await page.setViewportSize({width,height:844});
-    await page.evaluate(()=>{openDetail(musicas[0].id);toggleStageModeBtn();});
+    await page.evaluate(()=>{const songs=musicas.slice(0,2);setlists=[eventModel.create({id:'stage-approved-event',title:'Referência Palco',leaderId:appCurrentUser.id,members:[appCurrentUser],repertoire:songs.map((song,index)=>({id:'stage-ref-'+index,songId:song.id,shared:eventEditFromSong(eventSongCopy(song))}))})];openDetailFromEventItem('stage-approved-event','stage-ref-0');toggleStageModeBtn();});
     assert.equal(await page.locator('#view-detail').evaluate(n=>n.classList.contains('stage-mode')),true);
     assert.equal(await page.locator('#song-controls').isVisible(),false,'study expandable toolbar absent in stage');
     assert.equal(await page.locator('.stage-performance-header').isVisible(),true,'approved performance header visible');
+    if(width===390)await page.screenshot({path:'C:/Users/geinu/.codex/visualizations/2026/09/21/01a0c55e-a330-7600-879e-ea2dcc48d4c2/palco-restaurado-mobile.png'});
     await page.evaluate(()=>{toggleStageModeBtn();closeDetail();});
   }
   assert.deepEqual(errors,[]);console.log('stage-approved-layout-ui: OK (no study toolbar, performance header on mobile/desktop)');
