@@ -486,3 +486,6 @@ body:has(#event-chat-view.is-selecting-messages) .app-assistant-floating{display
 body:has(#event-chat-view .event-chat-delete-undo) .app-assistant-floating{display:none!important}
 
 #view-sd .event-empty-note{display:grid;place-items:center;margin:0 auto 12px;color:var(--icon-placeholder)}
+
+/* Keep short/empty event gestures from chaining into the events page behind it. */
+#view-sd{overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
