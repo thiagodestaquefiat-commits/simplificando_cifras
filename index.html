@@ -3299,7 +3299,7 @@ async function enterStageMode(){
   if(activeStagePreferences.fullscreen&&vd.requestFullscreen){try{await vd.requestFullscreen({navigationUI:'hide'});}catch(error){}}
   if(activeStagePreferences.wakeLock)await acquireStageWakeLock();
   if(activeStagePreferences.autoScroll)startAutoScroll();
-  revealStageControls();if(!STAGE_CLEAN)showToast('🎤 Modo Palco preparado');
+  revealStageControls();
 }
 
 // Tela acesa enquanto uma música estiver aberta, no estudo e no Palco (Thiago, 06/11/2026).
