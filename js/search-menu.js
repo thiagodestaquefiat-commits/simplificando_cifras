@@ -6,17 +6,6 @@
   function songs(){return Array.isArray(global.musicas)?global.musicas:(typeof musicas!=='undefined'&&Array.isArray(musicas)?musicas:[])}
   function recentSongs(){const profile=typeof global.accountProfile==='function'?global.accountProfile():global.appCurrentUser||{},userId=String(profile.id||'local'),stored=global.storage?.get?.('sc_recent_opened_songs_v1',{}),entries=stored&&typeof stored==='object'&&!Array.isArray(stored)&&Array.isArray(stored[userId])?stored[userId]:[],legacy=global.storage?.get?.('sc_home_last_opened_song_v1',null),ordered=entries.length?entries:legacy?[legacy]:[],seen=new Set();return ordered.map(entry=>songs().find(song=>String(song.id)===String(entry?.songId))).filter(song=>{if(!song||seen.has(String(song.id)))return false;seen.add(String(song.id));return true}).slice(0,5)}
   function icon(){return '<svg viewBox="0 0 402 327" aria-hidden="true"><path style="fill:currentColor;stroke:none" d="M 139 71 C 135 72 132 76 132 82 L 132 224 C 132 231 123 233 113 236 C 89 241 70 253 69 271 C 67 290 81 304 99 305 C 119 307 138 294 145 276 C 148 269 149 264 149 256 L 149 140 C 149 133 152 132 158 130 L 260 110 C 264 109 266 112 266 117 L 266 194 C 266 201 264 205 255 207 C 224 211 203 226 202 245 C 200 264 214 278 237 278 C 259 278 277 261 281 241 C 282 236 282 230 282 223 L 282 50 C 282 44 278 42 272 43 Z"/></svg>'}
-  // Editorial words fit the actual loaded face, including the offline fallback.
-  function fitEditorialWords(){
-    if(el('roudy-search')?.hidden)return;
-    document.querySelectorAll('.roudy-search-shortcut-word').forEach(word=>{
-      word.style.removeProperty('font-size');
-      if(!word.clientWidth)return;
-      const range=document.createRange();range.selectNodeContents(word);
-      const width=range.getBoundingClientRect().width;
-      if(width>word.clientWidth-2)word.style.fontSize=(parseFloat(getComputedStyle(word).fontSize)*(word.clientWidth-2)/width)+'px';
-    });
-  }
   function nextEvent(){const now=new Date(),values=Array.isArray(global.setlists)?global.setlists:(typeof setlists!=='undefined'?setlists:[]);return values.filter(item=>item?.date).map(item=>({item,date:new Date(`${item.date}T${item.time||'23:59'}`)})).filter(value=>Number.isFinite(value.date.getTime())&&value.date>=now).sort((a,b)=>a.date-b.date)[0]?.item||null}
   function renderIdentity(){const target=el('roudy-search-avatar');if(!target)return;const profile=typeof global.accountProfile==='function'?global.accountProfile():global.appCurrentUser||{};target.className='roudy-search-avatar'+(profile.avatarUrl?' has-image':` roudy-avatar-fallback ${global.eventAvatarPaletteClass?.(profile.id||profile.name)||''}`);target.innerHTML=profile.avatarUrl?`<img src="${global.eventEsc(profile.avatarUrl)}" alt="">`:global.eventEsc(global.eventInitials?.(profile.name)||String(profile.name||'R').slice(0,1).toUpperCase())}
   const cardEventDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'short'});
@@ -129,7 +118,7 @@
   function renderLanding(){renderIdentity();renderCardMeta();const target=el('roudy-search-resume'),recent=recentSongs();if(!target)return;target.hidden=!recent.length;if(recent.length){target.innerHTML=`<h2 class="roudy-search-section-title">Continue de onde parou</h2>${recent.map(song=>{const art=global.roudyListLoading?.artwork(song,{frameClass:'roudy-search-resume-art'})||icon();return `<button type="button" class="roudy-search-resume" data-search-song="${global.eventEsc(song.id)}"><span class="roudy-search-resume-icon">${art}</span><span class="roudy-search-resume-copy"><strong>${global.eventEsc(song.title)}</strong><small>${global.eventEsc(song.artist||'Artista não informado')}</small></span><span class="roudy-search-resume-go" aria-hidden="true">›</span></button>`}).join('')}`}renderForYou(recent)}
   function updateHeaderCompact(){headerFrame=0;const root=el('roudy-search'),scroller=root?.querySelector('.roudy-search-scroll');if(!root||!scroller)return;const active=root.classList.contains('is-active'),progress=active?1:Math.min(1,Math.max(0,scroller.scrollTop/82));root.style.setProperty('--roudy-search-header-progress',progress.toFixed(3));root.classList.toggle('is-header-compact',root.classList.contains('is-open')&&!active&&progress>0)}
   function scheduleHeaderCompact(){if(!headerFrame)headerFrame=requestAnimationFrame(updateHeaderCompact)}
-  function setActive(active,{focus=false}={}){const root=el('roudy-search');if(!root)return;root.classList.toggle('is-active',active);if(!active)requestAnimationFrame(fitEditorialWords);el('roudy-search-landing').hidden=active;el('roudy-search-active').hidden=!active;scheduleHeaderCompact();if(active){renderResults();if(focus)requestAnimationFrame(()=>el('roudy-search-input')?.focus({preventScroll:true}))}}
+  function setActive(active,{focus=false}={}){const root=el('roudy-search');if(!root)return;root.classList.toggle('is-active',active);el('roudy-search-landing').hidden=active;el('roudy-search-active').hidden=!active;scheduleHeaderCompact();if(active){renderResults();if(focus)requestAnimationFrame(()=>el('roudy-search-input')?.focus({preventScroll:true}))}}
   function expandHeaderSearch(){const root=el('roudy-search'),scroller=root?.querySelector('.roudy-search-scroll');if(!root)return;root.classList.remove('is-header-compact');scroller?.scrollTo({top:0,behavior:'smooth'});requestAnimationFrame(()=>el('roudy-search-input')?.focus({preventScroll:true}))}
   function open(){const root=el('roudy-search');if(!root)return;returnScroll=window.scrollY;global.setPlaylistSearchMode?.(true);root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));document.body.dataset.searchOpen='';document.documentElement.classList.add('roudy-search-open');renderLanding();setActive(false);el('roudy-search-input').value='';root.querySelector('.roudy-search-scroll')?.scrollTo({top:0});updateClear();scheduleHeaderCompact()}
   function close(){const root=el('roudy-search');if(!root)return;clearTimeout(timer);requestId++;controller?.abort();global.schedulePlaylistOnlineSearch?.('');global.setPlaylistSearchMode?.(false);el('roudy-search-input')?.blur();root.classList.remove('is-open','is-active','is-header-compact');document.body.removeAttribute('data-search-open');document.documentElement.classList.remove('roudy-search-open');setTimeout(()=>{root.hidden=true;window.scrollTo(0,returnScroll);global.restorePrimarySearchTab?.()},220)}
@@ -188,9 +177,6 @@
   el('roudy-search')?.querySelector('.roudy-search-scroll')?.addEventListener('scroll',scheduleHeaderCompact,{passive:true});
   function resetAccount(){requestId++;controller?.abort();searchService=null;el('roudy-search-results')?.replaceChildren();el('roudy-search-suggestions')?.replaceChildren();if(el('roudy-search')?.classList.contains('is-open'))close()}
   global.roudySearchMenu=Object.freeze({open,close,activate,cancel,setFilter,input,clear,shortcut,expandHeaderSearch,resetAccount,refreshCards:renderCardMeta});
-  global.addEventListener('resize',()=>requestAnimationFrame(fitEditorialWords),{passive:true});
-  document.fonts?.ready.then(fitEditorialWords);
-  document.fonts?.addEventListener?.('loadingdone',fitEditorialWords);
   global.userPlaylists?.subscribe?.(renderCardMeta);
   global.userPlaylists?.ready.then(()=>{cardPlaylistsReady=true;renderCardMeta()});
 })(window);

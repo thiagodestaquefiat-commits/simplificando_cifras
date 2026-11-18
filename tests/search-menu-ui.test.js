@@ -35,9 +35,11 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.evaluate(()=>{musicas=window.originalCoverTestSongs;delete window.originalCoverTestSongs;roudySearchMenu.open()});
   await page.waitForTimeout(300);
   assert.equal(await page.locator('.roudy-search-shortcut').count(),4);
+  assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
+  assert.deepEqual(await page.locator('.roudy-search-shortcut-hint').allTextContents(),['Prontas para praticar','Organize suas músicas','Crie seu primeiro','Ver repertório']);
   for(const width of [320,375,390,430,1107,1440]){
     await page.setViewportSize({width,height:844});
-    await page.waitForFunction(()=>[...document.querySelectorAll('.roudy-search-shortcut-word')].every(word=>word.scrollWidth<=word.clientWidth+1));
+
     const geometry=await page.locator('.roudy-search-explore').evaluate(grid=>({
       horizontalOverflow:grid.scrollWidth>grid.clientWidth,
       contained:[...grid.children].every(card=>{
@@ -46,10 +48,10 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
         const copy=card.querySelector('.roudy-search-shortcut-copy');
         const text=copy.getBoundingClientRect();
         const signature=card.querySelector('.roudy-search-shortcut-signature'),brand=signature.getBoundingClientRect();
-        const word=card.querySelector('.roudy-search-shortcut-word');
+
         return art.left>=bounds.left-1&&art.right<=bounds.right+1&&art.top>=bounds.top-1&&art.bottom<=bounds.bottom+1&&
           text.left>=bounds.left-1&&text.right<=bounds.right+1&&text.top>=art.bottom-1&&text.bottom<=bounds.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&
-          brand.left>=art.left&&brand.right<=art.right&&brand.bottom<=art.bottom&&signature.scrollWidth<=signature.clientWidth+1&&word.scrollWidth<=word.clientWidth+1;
+          brand.left>=art.left&&brand.right<=art.right&&brand.bottom<=art.bottom&&signature.scrollWidth<=signature.clientWidth+1;
       })
     }));
     assert.deepEqual(geometry,{horizontalOverflow:false,contained:true},`atalhos contidos em ${width}px`);
