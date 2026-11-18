@@ -1443,6 +1443,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/tuner.js?v=5"></script>
 <script src="js/chord-audio.js?v=2"></script>
 <script src="js/smart-scroll.js?v=8"></script>
+<script src="js/scroll-diagnostics.js?v=1"></script>
 <script src="js/sync-realtime.js?v=2"></script>
 <script src="js/event-collaboration-client.js?v=21"></script>
 <script src="js/event-share.js?v=5"></script>
@@ -1746,7 +1747,7 @@ function settleStudyMeterWheel(){const wheel=document.getElementById('song-meter
 const songMeterWheel=document.getElementById('song-meter-wheel');songMeterWheel.addEventListener('scroll',()=>{if(!meterWheelFrame)meterWheelFrame=requestAnimationFrame(()=>{meterWheelFrame=null;updateStudyMeterWheelDepth()});clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,140)},{passive:true});songMeterWheel.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...songMeterWheel.querySelectorAll('[data-meter]')],current=Math.max(0,buttons.findIndex(button=>button.dataset.meter===preferredStudyMeter)),next=Math.max(0,Math.min(buttons.length-1,current+(event.key==='ArrowRight'?1:-1)));selectStudyMeter(buttons[next].dataset.meter)});
 let songMeterDrag=null,suppressSongMeterClick=false;songMeterWheel.addEventListener('pointerdown',event=>{if(event.button!==0)return;songMeterDrag={id:event.pointerId,x:event.clientX,left:songMeterWheel.scrollLeft,moved:false};songMeterWheel.setPointerCapture?.(event.pointerId);songMeterWheel.classList.add('is-dragging')});songMeterWheel.addEventListener('pointermove',event=>{if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const delta=event.clientX-songMeterDrag.x;if(Math.abs(delta)>3)songMeterDrag.moved=true;songMeterWheel.scrollLeft=songMeterDrag.left-delta;if(songMeterDrag.moved)event.preventDefault()});function finishSongMeterDrag(event){if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const moved=songMeterDrag.moved;songMeterDrag=null;songMeterWheel.classList.remove('is-dragging');songMeterWheel.releasePointerCapture?.(event.pointerId);if(moved){suppressSongMeterClick=true;setTimeout(()=>{suppressSongMeterClick=false},0);event.preventDefault();clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,80)}}songMeterWheel.addEventListener('pointerup',finishSongMeterDrag);songMeterWheel.addEventListener('pointercancel',finishSongMeterDrag);songMeterWheel.addEventListener('click',event=>{if(!suppressSongMeterClick)return;event.preventDefault();event.stopPropagation()},true);
 function setSongScrolling(active){
-  document.getElementById('view-detail')?.classList.toggle('is-auto-scrolling',Boolean(active));
+  document.getElementById('view-detail')?.classList.toggle('is-auto-scrolling',Boolean(active));window.roudyScrollDiag?.toggle(Boolean(active));
   const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
 }
 const songScrollPlayButton=document.getElementById('btn-scroll');

@@ -150,6 +150,7 @@ const ASSETS = [
   "./js/youtube-player-ui.js?v=25",
   "./js/youtube-player-ui.js?v=24",
   "./js/smart-scroll.js?v=8",
+  "./js/scroll-diagnostics.js?v=1",
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
   "./js/tuner.js?v=5",
