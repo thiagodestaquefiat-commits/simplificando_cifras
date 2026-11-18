@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v737-sem-spotify-qr-mapa";
+const CACHE_NAME = "simplificando-cifras-v738-playlist-recebida";
 // Compatibility marker: simplificando-cifras-v736-caminho-do-culto
 const NAVIGATION_TIMEOUT_MS = 3000;
 // Compatibility marker: simplificando-cifras-v735-capo-pessoal
@@ -214,6 +214,7 @@ const ASSETS = [
   "./js/app-assistant.js?v=19",
   "./js/app-assistant.js?v=20",
   "./js/library-sync.js?v=22",
+  "./js/library-sync.js?v=23",
   "./js/library-sync-policy.js?v=1",
   "./js/library-recovery.js?v=2",
   "./js/event-model.js?v=5",

@@ -1403,7 +1403,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/medley-repository.js?v=2"></script>
 <script src="js/song-repository.js?v=18"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
-<script src="js/library-sync.js?v=22"></script>
+<script src="js/library-sync.js?v=23"></script>
 <script src="js/event-model.js?v=9"></script>
 <script src="js/context-intelligence.js?v=4"></script>
 <script src="js/event-repository.js?v=10"></script>
@@ -6739,7 +6739,7 @@ appAuth.subscribe(async state=>{
     // e inicia a reconciliação na nuvem sem esperar eventos, convites e contexto terminarem.
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
     rememberCachedAccountOwner(state.user.id,appCurrentUser.id);homePlaylists.setProvisionalOwner(null);
-    renderAccountButton();homePlaylists.renderHome();homePlaylists.openPendingSharedPlaylist?.();
+    renderAccountButton();homePlaylists.renderHome();try{homePlaylists.openPendingSharedPlaylist?.();}catch(error){console.warn('[conta] playlist compartilhada fica para depois',error);}
     personalPlaylistSync.schedule(0);
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;

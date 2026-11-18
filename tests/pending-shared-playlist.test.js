@@ -7,5 +7,5 @@ assert.match(src, /if \(loginGateVisible\(\)\) return false;/, "não abre escond
 assert.match(src, /24 \* 60 \* 60 \* 1000/, "a playlist pendente vale por 1 dia");
 const html = fs.readFileSync("index.html", "utf8");
 assert.match(html, /function continueWithoutLogin\(\)\{loginGatePassed=true;renderLoginGate\(\);window\.homePlaylists\?\.openPendingSharedPlaylist\?\.\(\);\}/, "abre ao continuar sem login");
-assert.match(html, /homePlaylists\.renderHome\(\);homePlaylists\.openPendingSharedPlaylist\?\.\(\);/, "abre depois que a conta é confirmada");
+assert.match(html, /homePlaylists\.renderHome\(\);try\{homePlaylists\.openPendingSharedPlaylist\?\.\(\);\}catch/, "abre depois que a conta é confirmada");
 console.log("pending-shared-playlist.test.js: OK");
