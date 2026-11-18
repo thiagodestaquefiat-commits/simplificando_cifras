@@ -38,16 +38,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
   assert.equal(await page.locator('.roudy-search-shortcut-art > img').count(),4);
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
+  await page.waitForFunction(()=>[...document.querySelectorAll('.roudy-search-shortcut')].every(card=>card.dataset.bevelReady==='true'));
   const frames=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const outer=getComputedStyle(card,'::before'),inner=getComputedStyle(card,'::after'),style=getComputedStyle(card);
-    return {outer:outer.content,inner:inner.borderTopWidth,highlight:inner.backgroundImage,mask:inner.maskComposite,thickness:inner.paddingTop,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,elevation:style.boxShadow,radius:parseFloat(style.borderTopLeftRadius),layoutBorder:style.borderTopWidth};
+    return {outer:outer.content,border:inner.borderTopWidth,image:inner.backgroundImage,mask:inner.maskImage,pointerEvents:inner.pointerEvents,shadow:inner.boxShadow,cardShadow:style.boxShadow,radius:parseFloat(style.borderTopLeftRadius),width:style.getPropertyValue('--card-bevel-width')};
   }));
-  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.inner==='0px'&&value.highlight.includes('linear-gradient')&&value.mask.includes('exclude')&&value.thickness==='1.5px'&&value.inset==='0px'&&Math.abs(value.curve)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow==='none'&&!value.elevation.includes('inset')&&value.elevation.includes('18px')&&value.radius>=12&&value.layoutBorder==='0px'),'frame único com nuances restrito ao perímetro, sem alterar a superfície ou a geometria');
-
-  assert.ok(frames.every(value=>value.highlight===frames[0].highlight),'as bordas não herdam rosa/azul do painel');
-  for(const color of frames[0].highlight.matchAll(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/g)){
-    assert.equal(color[1],color[2]);assert.equal(color[2],color[3]);assert.ok(Number(color[4])<.4,'luz e sombra neutras e translúcidas');
-  }
+  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.border==='0px'&&value.image.includes('data:image/png')&&value.mask==='none'&&value.pointerEvents==='none'&&value.shadow==='none'&&value.cardShadow==='none'&&value.radius>=12&&value.width==='5px'),'bevel géométrico sem borda, máscara de anel ou sombras empilhadas');
   const firstFrame=page.locator('.roudy-search-shortcut').first();
   for(const reduced of ['no-preference','reduce']){
     await page.emulateMedia({reducedMotion:reduced});
