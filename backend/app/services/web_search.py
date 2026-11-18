@@ -525,15 +525,11 @@ def _pick_cifraclub_doc(docs: list, titulo: str, artista: str | None) -> dict | 
     return (main or exact or matches)[0]
 
 
-def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=None) -> SiteSearchResult:
-    """Busca a música na pesquisa interna do Cifra Club (a mesma da caixa de busca do site).
-
-    Responde em milissegundos com o endereço exato (artista/música) e funciona só com o nome da
-    música. Tenta direto e, se a rede bloquear, pelo ScraperAPI (sem render).
-    """
+def cifraclub_search_documents(titulo: str, artista: str | None = None, http_client=None) -> list | None:
+    """Search metadata only; no sheet downloads or model generation while typing."""
     query = " ".join(part for part in (titulo, artista) if part).strip()
     if not query:
-        return SiteSearchResult(ok=False)
+        return []
     url = f"{CIFRACLUB_SEARCH_URL}?q={quote_plus(query)}"
     body = None
     started = time.monotonic()
@@ -553,7 +549,7 @@ def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=N
         except Exception as error:  # noqa: BLE001 - a busca é um atalho; sem ela segue o fluxo antigo
             logger.warning("cifraclub_search_proxy_failed=%s", error.__class__.__name__)
     if body is None:
-        return SiteSearchResult(ok=False)
+        return None
     try:
         text = body.strip()
         if not text.startswith("{"):  # JSONP: callback({...})
@@ -561,6 +557,22 @@ def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=N
         docs = (json.loads(text).get("response") or {}).get("docs") or []
     except (ValueError, AttributeError):
         logger.warning("cifraclub_search_invalid_json")
+        return None
+    return docs if isinstance(docs, list) else None
+
+
+def cifraclub_site_search(titulo: str, artista: str | None = None, http_client=None) -> SiteSearchResult:
+    """Busca a música na pesquisa interna do Cifra Club (a mesma da caixa de busca do site).
+
+    Responde em milissegundos com o endereço exato (artista/música) e funciona só com o nome da
+    música. Tenta direto e, se a rede bloquear, pelo ScraperAPI (sem render).
+    """
+    query = " ".join(part for part in (titulo, artista) if part).strip()
+    if not query:
+        return SiteSearchResult(ok=False)
+    started = time.monotonic()
+    docs = cifraclub_search_documents(titulo, artista, http_client)
+    if docs is None:
         return SiteSearchResult(ok=False)
     doc = _pick_cifraclub_doc(docs, titulo, artista)
     logger.info("cifraclub_search query=%r docs=%d match=%s after=%.2fs", query, len(docs),

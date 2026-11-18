@@ -72,7 +72,16 @@ def _identity(value: str | None) -> str:
 
 
 def _score(query_title: str, query_artist: str | None, candidate: MusicSourceCandidate) -> float:
-    title_score = SequenceMatcher(None, _identity(query_title), _identity(candidate.title)).ratio()
+    query, title = _identity(query_title), _identity(candidate.title)
+    if not query_artist and candidate.artist:
+        artist = _identity(candidate.artist)
+        if artist:
+            without_artist = re.sub(r"\b" + re.escape(artist) + r"\b", "", query).strip()
+            if without_artist:
+                query = re.sub(r"\s+", " ", without_artist)
+    title_score = SequenceMatcher(None, query, title).ratio()
+    if len(query) >= 3 and title.startswith(query):
+        title_score = max(title_score, 0.86)
     if title_score < 0.6:
         return 0.0
     if query_artist:

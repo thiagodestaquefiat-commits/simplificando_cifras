@@ -47,9 +47,11 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
         timeout_seconds=app.config.get("YOUTUBE_TIMEOUT_SECONDS", 8),
         cache_ttl_seconds=app.config.get("YOUTUBE_CACHE_TTL_SECONDS", 86_400),
     )
-    # Providers externos só entram aqui após contrato/API e allowlist aprovados.
+    # Reuse the online source already used by the acquisition pipeline.
+    from .services.cifraclub_provider import CifraClubMusicSourceProvider
+    music_providers = [CifraClubMusicSourceProvider(scraper_api_key=app.config.get("SCRAPER_API_KEY", ""))] if app.config.get("SCRAPER_ENABLED", True) else []
     app.extensions["music_source_registry"] = AuthorizedMusicSourceRegistry(
-        [],
+        music_providers,
         min_score=app.config.get("MUSIC_SOURCE_MIN_SCORE", 0.62),
         max_results=app.config.get("MUSIC_SOURCE_MAX_RESULTS", 8),
         max_content_chars=app.config.get("MAX_TEXT_LENGTH", 50_000),
