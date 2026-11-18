@@ -18,6 +18,9 @@
   --shortcut-accent:#0789e7;
   --shortcut-label:#07599e;
   --shortcut-footer:#546a79;
+  --card-panel-color:var(--shortcut-footer);
+  --card-blur-strength:8px;
+  --card-transition-height:30%;
   position:relative;
   display:grid;
   grid-template-rows:auto 1fr;
@@ -35,12 +38,21 @@
 .roudy-search-shortcut--medley{--shortcut-accent:#0952eb;--shortcut-label:#0644b9;--shortcut-footer:#4b617e}
 .roudy-search-shortcut--events{--shortcut-accent:#e81a32;--shortcut-label:#b5112a;--shortcut-footer:#7c555d}
 .roudy-search-shortcut:focus-visible{outline:2px solid var(--roudy-electric-blue);outline-offset:3px}
-.roudy-search-shortcut-art{position:relative;display:block;aspect-ratio:3/2;background:#f5f5f7;container-type:inline-size}
-/* Original category artwork returns as album-style covers above the signature. */
-.roudy-search-shortcut-graphic{
-  position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;
-  -webkit-mask-image:linear-gradient(to bottom,#000 42%,rgba(0,0,0,.9) 52%,rgba(0,0,0,.35) 65%,transparent 77%);
-  mask-image:linear-gradient(to bottom,#000 42%,rgba(0,0,0,.9) 52%,rgba(0,0,0,.35) 65%,transparent 77%);
+.roudy-search-shortcut-art{position:relative;display:block;aspect-ratio:3/2;background:var(--card-panel-color);container-type:inline-size;overflow:hidden;isolation:isolate}
+/* All image layers share the exact same box and crop. Only the lower 30% blends. */
+.roudy-search-shortcut-graphic,
+.roudy-search-shortcut-blur img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+}
+.roudy-search-shortcut-blur{
+  position:absolute;inset:0;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,transparent calc(100% - var(--card-transition-height)),#000 96%);
+  mask-image:linear-gradient(to bottom,transparent calc(100% - var(--card-transition-height)),#000 96%);
+}
+.roudy-search-shortcut-blur img{filter:blur(var(--card-blur-strength))}
+.roudy-search-shortcut-fusion{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent calc(100% - var(--card-transition-height)),var(--card-panel-color) 100%);
 }
 .roudy-search-shortcut-signature{
   position:absolute;
@@ -78,14 +90,9 @@
   row-gap:4px;
   padding:9px 8%;
   align-items:center;
-  background:var(--shortcut-footer);
+  background:var(--card-panel-color);
   color:#fff;
   font-family:var(--font-ui);
-}
-.roudy-search-shortcut-copy::before{
-  content:"";position:absolute;left:0;right:0;bottom:100%;height:18px;
-  background:linear-gradient(to bottom,transparent,var(--shortcut-footer));
-  pointer-events:none;
 }
 .roudy-search-shortcut-copy small{
   display:flex;

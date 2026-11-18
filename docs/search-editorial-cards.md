@@ -59,3 +59,25 @@ Implementation: SVG decorativo acima da assinatura, sem nomes duplicados nem nov
 ## Original album artwork
 
 A pedido do usuário, os símbolos ampliados foram substituídos pelas quatro artes originais (silhueta da banda, composição clara, ondas azuis e instrumentos). As versões album preservam a imagem incorporada e removem apenas o recorte arredondado interno, pois o card externo já recorta as bordas. Assinatura e textos continuam separados. Inferência de design: identificar a categoria pela arte familiar preserva a identidade visual do ROUDY; a referência HIG Icons consultada acima informa clareza, sem prescrever capas de álbum. Validado visualmente e pela suíte de navegação responsiva.
+
+## Progressive image blur (replaces white fade)
+
+Only the transition treatment changed. Original assets, crop, signature, type, card dimensions, corner radius, spacing, metadata, panel colors and play controls remain unchanged.
+
+Layers: original sharp image; same-source duplicate with exactly matching object-fit/object-position and box, blurred at 8px and progressively revealed in the last 30%; transparent-to-panel-color fusion above both. The art clips the blur overflow. The opaque footer and signature remain outside the filtered layers. Removed the old white image mask and footer overlap gradient. No render JavaScript or dependencies.
+
+Adjustments: --card-panel-color aliases the existing per-category footer color; --card-blur-strength defaults to 8px; --card-transition-height defaults to 30%.
+
+APPLE DESIGN RESEARCH
+
+Question: Como aplicar o acabamento solicitado sem desfocar textos e controles?
+
+Sources consulted: Apple HIG Typography, Ensuring legibility (Apple Docs search + read, design/human-interface-guidelines/typography).
+
+Apple explicit guidance: Testar legibilidade em diferentes contextos e considerar contraste quando o texto fica difícil de ler.
+
+Design inference: Limitar filtros às imagens mantém a nitidez da assinatura e dos controles. A Apple não prescreve esta receita CSS nem valores de blur.
+
+ROUDY-specific decision: Implementar exatamente as três camadas solicitadas, preservar o desenho e usar a cor existente de cada painel.
+
+Implementation: index.html adiciona camadas decorativas; search-menu.css compõe máscara/blur/fusão; service-worker.js atualiza o cache; search-menu-ui verifica fonte idêntica, enquadramento, original sem filtro, blur limitado, ausência do pseudo-elemento branco, geometria em seis larguras e navegação existente.
