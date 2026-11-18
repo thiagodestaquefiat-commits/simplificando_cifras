@@ -36,6 +36,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.waitForTimeout(300);
   assert.equal(await page.locator('.roudy-search-shortcut').count(),4);
   assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
+  assert.equal(await page.locator('.roudy-search-shortcut-art > svg').count(),4);
   assert.deepEqual(await page.locator('.roudy-search-shortcut-hint').allTextContents(),['Prontas para praticar','Organize suas músicas','Crie seu primeiro','Ver repertório']);
   for(const width of [320,375,390,430,1107,1440]){
     await page.setViewportSize({width,height:844});

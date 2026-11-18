@@ -39,3 +39,19 @@ The footer palettes are intentionally darker than the large reference cards beca
 **ROUDY-specific decision:** Original RD signature in place of the reference brand symbol, ROUDY destination names in the signature row, light typographic artwork and muted footer palettes. Each card opens its existing destination rather than introducing playback behavior.
 
 **Implementation:** Replaced the four Search card presentations and validated their containment and existing navigation.
+
+## Category artwork update
+
+APPLE DESIGN RESEARCH
+
+Question: Como preencher o topo dos cards com uma identificação gráfica sem repetir o nome da categoria?
+
+Sources consulted: Apple HIG Icons, design/human-interface-guidelines/icons (search + read).
+
+Apple explicit guidance: Formas simples e reconhecíveis; metáforas relacionadas ao conteúdo; consistência de peso e detalhe.
+
+Design inference: A arte pode reaproveitar os símbolos já aprovados em escala maior, separada da assinatura de marca.
+
+ROUDY-specific decision: Nota musical de música aprovada, símbolo de playlist aprovado, disco de medley e calendário de evento. Manter cores das categorias, assinatura RD + nome e frases no rodapé.
+
+Implementation: SVG decorativo acima da assinatura, sem nomes duplicados nem novas ações. Validado visualmente no Chrome e pela suíte search-menu-ui em seis larguras.
