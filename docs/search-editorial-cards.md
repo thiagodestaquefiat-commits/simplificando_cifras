@@ -132,3 +132,9 @@ Design inference: Um monograma em caminhos vetoriais evita reamostrar imagem emb
 ROUDY-specific decision: Reutilizar RD vetorial existente e aumentar somente a assinatura, mantendo as demais camadas.
 Implementation: CSS compartilhado, versão/cache e testes.
 Validation: search-menu-ui confere path-only SVG sem image/filter, filtro none da assinatura, proporção de tamanho maior que metadados, contenção nos cantos, seis larguras, reduced motion e navegação. Inspeção visual dos quatro cards.
+
+## Revised edge to match supplied card reference
+
+The user rejected the detached 3px inner frame. Replaced it with a continuous 1px edge highlight, using a masked CSS gradient whose center is fully excluded; no gradient paints the content surface. The short inner shade is attached at 1px from the edge rather than outlining a separate rectangle. Original radius, image, composition, dimensions and interaction remain unchanged. Outer shadow stays short. This mechanically follows the new reference; prior HIG Materials research remains applicable without implying Apple prescribes these values.
+
+Validation: Chrome search-menu suite checks center-excluding mask, continuous contour, attached radius, geometry and all four routes across six widths, including reduced motion. Visual inspection confirmed removal of the detached inner frame.

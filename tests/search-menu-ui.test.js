@@ -40,9 +40,9 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
   const frames=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const outer=getComputedStyle(card,'::before'),inner=getComputedStyle(card,'::after'),style=getComputedStyle(card);
-    return {outer:outer.borderTopWidth,inner:inner.borderTopWidth,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,layoutBorder:style.borderTopWidth};
+    return {outer:outer.borderTopWidth,inner:inner.borderTopWidth,highlight:outer.backgroundImage,mask:outer.maskComposite,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,layoutBorder:style.borderTopWidth};
   }));
-  assert.ok(frames.every(value=>value.outer==='1px'&&value.inner==='1px'&&value.inset==='3px'&&Math.abs(value.curve-3)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow.includes('inset')&&value.layoutBorder==='0px'),'moldura dupla acompanha o raio sem mudar geometria nem bloquear cliques');
+  assert.ok(frames.every(value=>value.outer==='0px'&&value.inner==='0px'&&value.highlight.includes('linear-gradient')&&value.mask.includes('exclude')&&value.inset==='1px'&&Math.abs(value.curve-1)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow.includes('inset')&&value.layoutBorder==='0px'),'aro contínuo acompanha o raio, centro mascarado e sombra junto à extremidade sem alterar geometria ou cliques');
   const firstFrame=page.locator('.roudy-search-shortcut').first();
   for(const reduced of ['no-preference','reduce']){
     await page.emulateMedia({reducedMotion:reduced});

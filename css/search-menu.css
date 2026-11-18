@@ -34,21 +34,26 @@
   overflow:hidden;
   border:0;
   border-radius:var(--card-radius);
-  box-shadow:0 2px 6px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.22);
+  box-shadow:0 2px 6px rgba(0,0,0,.24),0 0 0 1px rgba(0,0,0,.55);
   transition:transform 150ms ease,opacity 150ms ease;
   background:var(--card-panel-color);
   color:#424247;
   text-align:left;
   cursor:pointer;
 }
-/* Edge-only overlays preserve the content box and wrap the complete card. */
+/* A continuous edge highlight and attached inner shade; no detached inset frame. */
 .roudy-search-shortcut::before,
 .roudy-search-shortcut::after{content:"";position:absolute;box-sizing:border-box;pointer-events:none}
-.roudy-search-shortcut::before{inset:0;z-index:2;border:1px solid rgba(0,0,0,.36);border-radius:inherit}
+.roudy-search-shortcut::before{
+  inset:0;z-index:3;padding:1px;border-radius:inherit;
+  background:linear-gradient(150deg,rgba(200,218,230,.62),rgba(115,143,159,.36) 25%,rgba(19,28,36,.88) 55%,rgba(165,188,204,.38));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
 .roudy-search-shortcut::after{
-  inset:3px;z-index:3;border:1px solid rgba(220,230,245,.13);
-  border-radius:calc(var(--card-radius) - 3px);
-  box-shadow:inset 0 2px 3px rgba(0,0,0,.20),inset 1px 0 2px rgba(0,0,0,.10),inset 0 -1px 0 rgba(255,255,255,.05);
+  inset:1px;z-index:2;border-radius:calc(var(--card-radius) - 1px);
+  box-shadow:inset 0 0 0 1px rgba(13,21,29,.5),inset 0 2px 4px rgba(0,0,0,.24),inset 1px 0 3px rgba(0,0,0,.14),inset 0 -1px 1px rgba(200,218,230,.10);
 }
 .roudy-search-shortcut--playlists{--shortcut-accent:#e62c8b;--shortcut-label:#9d1f5c;--shortcut-footer:#795665}
 .roudy-search-shortcut--medley{--shortcut-accent:#0952eb;--shortcut-label:#0644b9;--shortcut-footer:#4b617e}
