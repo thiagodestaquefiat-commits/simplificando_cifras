@@ -150,7 +150,7 @@
       const paint=()=>{const state=service().state(item);add.dataset.state=state;add.disabled=false;add.setAttribute('aria-label',state==='saved'?'Remover '+item.title+' da biblioteca':state==='pending'?'Confirmar '+item.title+' na conta':'Adicionar '+item.title+' à biblioteca');add.innerHTML=state==='saved'?'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7 12 3 3 7-7"/></svg>':state==='pending'?'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg>'};paint();
       add.onclick=async()=>{
         if(add.dataset.state==='saved'){
-          if(service().remove(item))renderResults();
+          if(service().remove(item))paint();
           return;
         }
         const owner=global.searchLibraryBridge.owner();add.disabled=true;add.setAttribute('aria-busy','true');add.classList.add('is-saving');try{await service().add(item);if(owner===global.searchLibraryBridge.owner())feedback('Música salva na sua biblioteca.')}catch(error){if(owner===global.searchLibraryBridge.owner())feedback(error.message||'Não foi possível salvar. Tente novamente.')}finally{add.removeAttribute('aria-busy');add.classList.remove('is-saving');paint()}};

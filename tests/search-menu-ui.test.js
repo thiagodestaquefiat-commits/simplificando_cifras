@@ -292,6 +292,21 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.evaluate(()=>{openPrimarySearchTab();roudySearchMenu.close();openPrimarySearchTab();});
   await page.waitForTimeout(300);
   assert.equal(await page.locator('#roudy-search').evaluate(n=>!n.hidden&&n.classList.contains('is-open')),true,'reopening search cancels delayed close');
+  await page.evaluate(()=>{
+    roudySearchMenu.resetAccount();
+    const item={id:'retain-result',title:'Resultado persistente',artist:'Artista',kind:'local',librarySync:{serverVersion:1,syncedAt:'2026-11-18'}};
+    window.retainedSearchItems=[item];
+    searchLibraryBridge.songs=()=>retainedSearchItems;
+    searchLibraryBridge.owner=()=> 'test-owner';
+    searchLibraryBridge.confirmed=()=>true;
+    searchLibraryBridge.remove=song=>{retainedSearchItems=retainedSearchItems.filter(value=>value.id!==song.id);return true;};
+    musicas=retainedSearchItems;roudySearchMenu.open();roudySearchMenu.activate();
+  });
+  const retained=page.locator('.roudy-search-song-row').filter({hasText:'Resultado persistente'});
+  await retained.locator('.roudy-search-save[data-state="saved"]').click();
+  assert.equal(await retained.count(),1,'removed song remains a search result');
+  assert.equal(await retained.locator('.roudy-search-save').getAttribute('data-state'),'new');
+  assert.equal(await retained.locator('.roudy-search-save').getAttribute('aria-label'),'Adicionar Resultado persistente à biblioteca');
   assert.deepEqual(errors,[]);
   console.log('search-menu-ui.test.js: OK');
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});
