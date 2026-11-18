@@ -4118,7 +4118,6 @@ window.searchLibraryBridge={
   persist:next=>{if(!songRepository.save(next))return false;musicas=next;renderMusicas();return true;},
   sync:()=>librarySync.syncNow(),
   remove:song=>{
-    if(!appConfirm('Remover esta música da sua biblioteca?'))return false;
     deleteMusica(song.id);
     return !musicas.some(value=>String(value.id)===String(song.id));
   },
