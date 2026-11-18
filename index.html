@@ -1547,7 +1547,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-collaboration-client.js?v=19"></script>
 <script src="js/event-share.js?v=6"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
-<script src="js/contextual-copy.js?v=6"></script>
+<script src="js/contextual-copy.js?v=7"></script>
 <script src="js/context-delivery.js?v=2"></script>
 <script src="js/context-acknowledgements.js?v=1"></script>
 <script src="js/context-history.js?v=3"></script>
@@ -4565,7 +4565,7 @@ function openContextualAction(action){
   if(action.actionType==='CHECK_EVENT_CHANGES'){switchTab('setlists');openSD(action.eventId);setTimeout(openEventNotifications,0);return;}
   if(['START_PREPARATION','CONTINUE_PREPARATION'].includes(action.actionType)){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=Math.max(0,items.findIndex(item=>item.preparation?.state!=='READY'));if(event&&items[index])openDetailFromPlaylist(event.id,index);else if(event){switchTab('setlists');openSD(event.id)}return;}
   if(action.actionType==='CONTINUE_STUDY'){const event=findEvent(action.eventId),items=event?.repertoire.filter(item=>eventSongSource(event,item))||[],index=items.findIndex(item=>String(item.id)===String(action.repertoireItemId));if(index>=0)openDetailFromPlaylist(event.id,index);return;}
-  if(['OPEN_UPCOMING_EVENT','RECOGNIZE_PREPARATION'].includes(action.actionType)){switchTab('setlists');openSD(action.eventId);return;}
+  if(['OPEN_UPCOMING_EVENT','RECOGNIZE_PREPARATION'].includes(action.actionType)){switchTab('setlists');openSD(action.eventId);const event=findEvent(action.eventId);if(action.actionType==='OPEN_UPCOMING_EVENT'&&event&&event.repertoire.length===0)openEventAddSongs(event.id);return;}
   if(action.actionType==='ENTER_STAGE_MODE'){openStageFromEvent(action.eventId);}
 }
 async function acknowledgeContextualAction(action){

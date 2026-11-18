@@ -76,7 +76,7 @@
       complete: Object.freeze([variant('Repertório de {eventName} inteiro revisado. Temos um profissional aqui.', F, 'conquista-celebracao'), variant('Preparação confirmada em {eventName}. O palco que lute.', O, 'conquista-humor'), variant('Todas as músicas de {eventName} foram revisadas. Isso merece aplausos.', F, 'conquista-celebracao'), variant('Repertório em dia. Meu trabalho de roadie ficou mais fácil.', F, 'roadie-humor')])
     }),
     OPEN_UPCOMING_EVENT: Object.freeze({
-      empty: Object.freeze([variant('{eventName} está chegando e ainda não tem repertório associado.', D, 'fato-acao'), variant('{eventName} já está no calendário e ainda não tem repertório. As músicas não chegaram aos bastidores.', F, 'bastidores-fato')]),
+      empty: Object.freeze([variant('“{eventName}” está esperando as primeiras músicas!', F, 'personificacao-fato'), variant('Vamos dar som a esse repertório “{eventName}”?', F, 'bastidores-convite'), variant('Adicione músicas ao repertório de “{eventName}”.', D, 'fato-acao')]),
       todayUnknown: Object.freeze([variant('É hoje: {eventName}. Abra o repertório para a conferência do dia.', D, 'dia-evento-neutro'), variant('Hoje tem {eventName}. Eu trouxe o repertório; você traz a música.', F, 'cumplicidade')]),
       tomorrowReady: Object.freeze([variant('{eventName} é amanhã e o repertório está revisado.', F, 'fato-reconhecimento'), variant('Amanhã tem {eventName}. Preparação confirmada; agora é confiar no ensaio.', F, 'conquista-convite')]),
       tomorrowPending: Object.freeze([variant('{eventName} é amanhã. Há revisões pendentes no repertório.', D, 'fato-acao')]),
@@ -228,7 +228,7 @@
     return Object.freeze({
       messageKey, variantId, tone: 'roudy-contextual', variables: Object.freeze({ ...variables }),
       editorialFamily: family, intensity: selected.value.intensity, editorialStructure: selected.value.structure,
-      text: normalizeTerminology(interpolate(selected.value.text, variables)), kicker: meta.kicker, actionLabel: meta.actionLabel,
+      text: normalizeTerminology(interpolate(selected.value.text, variables)), kicker: meta.kicker, actionLabel: action.actionType === 'OPEN_UPCOMING_EVENT' && family === 'empty' ? 'Adicionar músicas' : meta.actionLabel,
       usedLlm: false
     });
   }
