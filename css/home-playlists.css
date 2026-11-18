@@ -335,7 +335,7 @@
 @media(prefers-reduced-motion:reduce){[data-roudy-artwork-frame].is-loading::after{animation:none;transform:none}}
 .playlist-details-editor{padding:0 16px 16px;overflow:auto}
 .playlist-details-fields{display:grid;grid-template-columns:90px minmax(0,1fr);gap:14px;margin-bottom:20px}
-.playlist-details-cover{padding:0;border:0;border-radius:8px;overflow:hidden;background:var(--ui-control)}
+.playlist-details-cover{display:block;align-self:start;width:90px;height:90px;min-height:0;aspect-ratio:1;padding:0;border:0;border-radius:8px;overflow:hidden;background:var(--ui-control)}
 .playlist-details-cover .home-playlist-art{width:90px;height:90px;border-radius:8px}
 .playlist-details-fields>div{display:flex;min-width:0;flex-direction:column;gap:10px}
 .playlist-details-fields input,.playlist-details-fields textarea{width:100%;min-width:0;padding:10px;border:0;border-radius:6px;background:var(--ui-control);color:var(--text-primary);font:400 16px/1.35 var(--font-ui)}

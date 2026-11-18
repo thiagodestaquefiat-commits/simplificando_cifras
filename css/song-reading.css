@@ -123,3 +123,6 @@
 #view-detail #detail-content .chord-pair .cp-seg{display:inline-flex;flex-direction:column;align-items:flex-start}
 #view-detail #detail-content .chord-pair .full-chord-line{display:block;margin:0!important;white-space:pre!important}
 #view-detail #detail-content .chord-pair .cp-seg.has-chord .cp-chord{padding-right:.4em}
+
+/* Instrument back arrow remains unframed, including initial dialog focus. */
+#inst-modal button[aria-label="Voltar"]:focus{outline:none;box-shadow:none}

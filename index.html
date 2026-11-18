@@ -41,7 +41,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 
-<link rel="stylesheet" href="css/song-reading.css?v=17">
+<link rel="stylesheet" href="css/song-reading.css?v=18">
 <link rel="stylesheet" href="css/topbar-labels.css?v=16">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -999,7 +999,7 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-detail:not(.stage-mode) .youtube-song-result-more{display:grid;width:28px;flex:0 0 28px;place-items:center;color:#d8dce2;font-size:21px}
 @media(max-width:430px){#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-actions{gap:6px;padding-inline:8px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action{padding-inline:10px;font-size:9px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action span:last-child{display:none}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="repeat"] span:last-child,#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="floating"] span:last-child{display:inline}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="close"]{padding:0}}
 @media(prefers-reduced-motion:reduce){#view-detail:not(.stage-mode).video-study-expanded>.detail-header{scroll-behavior:auto}}
-@media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px 1px minmax(0,1fr) 20px}#pane-setlists .event-date strong{font-size:21px;font-weight:var(--weight-title)}#pane-setlists .sl-sub{font-size:8px}}
+@media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px 1px minmax(0,1fr) 20px;column-gap:8px}#pane-setlists .event-date strong{font-size:21px;font-weight:var(--weight-title)}#pane-setlists .sl-sub{font-size:8px}}
 #pane-musicas>.youtube-panel,#pane-musicas>#youtube-results{display:none!important}
 #view-main>.topbar{min-height:62px;padding:10px 18px;gap:6px;background:#030405;border-bottom-color:rgba(190,200,214,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
 #view-main .topbar-info{padding-right:8px}#view-main .topbar-title{font-size:17px;font-weight:800;letter-spacing:1.2px;line-height:1.05}#view-main .topbar-sub{margin-top:4px;color:#8f98a5;font-size:10px;font-weight:550;line-height:1}
@@ -1122,16 +1122,22 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.75c-5.25 0-9.5 3.76-9.5 8.4S6.75 20 12 20h1.05a1.8 1.8 0 0 0 0-3.6h-.55a1.65 1.65 0 0 1 0-3.3h4.55c2.46 0 4.45-1.73 4.45-3.86 0-3.58-4.25-6.49-9.5-6.49Z'/%3E%3Ccircle cx='7' cy='9' r='1'/%3E%3Ccircle cx='10.2' cy='6.8' r='1'/%3E%3Ccircle cx='14' cy='6.4' r='1'/%3E%3Ccircle cx='17.2' cy='8.4' r='1'/%3E%3Ccircle cx='7.6' cy='13' r='1'/%3E%3Ccircle cx='10.3' cy='15' r='1'/%3E%3C/svg%3E") center / contain no-repeat;
 }
+/* Event anatomy is stable at every breakpoint, including a visible divider. */
+#pane-setlists .event-date{grid-column:1;grid-row:1;min-width:0}
+#pane-setlists .event-date-divider{grid-column:2;grid-row:1}
+#pane-setlists .sl-info{grid-column:3;grid-row:1;min-width:0;max-width:100%}
+#pane-setlists .event-disclosure{grid-column:4;grid-row:1;min-width:0;max-width:100%}
+#pane-setlists .event-card-unread{position:absolute}
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=4">
 <link rel="stylesheet" href="css/roudy-color-system-preview.css?v=25">
 <link rel="stylesheet" href="css/roudy-forms.css?v=10">
 <link rel="stylesheet" href="js/medley-editor.css?v=33">
 <link rel="stylesheet" href="css/responsive.css?v=1">
-<link rel="stylesheet" href="css/home-playlists.css?v=47">
+<link rel="stylesheet" href="css/home-playlists.css?v=48">
 <link rel="stylesheet" href="css/login-gate.css?v=22">
-<link rel="stylesheet" href="css/search-menu.css?v=84">
-<link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
+<link rel="stylesheet" href="css/search-menu.css?v=85">
+<link rel="stylesheet" href="css/stage-mode-reference.css?v=20">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
 <link rel="stylesheet" href="css/study-song-navigation.css?v=10">
 <link rel="stylesheet" href="css/event-share-variants.css?v=7">
@@ -3242,9 +3248,8 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-// Modo Palco limpo (decisão do Thiago, 12/10; reforçada em 05/11): a mesma cifra da tela de estudo —
-// mesmo resumo, Letra + Cifras e Letra, na página em que a pessoa estava. Não voltar para false.
-var STAGE_CLEAN=true;
+// Modo Palco aprovado no preview, preservando controles e apresentação próprios.
+var STAGE_CLEAN=false;
 let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
@@ -3294,7 +3299,7 @@ async function enterStageMode(){
   if(activeStagePreferences.fullscreen&&vd.requestFullscreen){try{await vd.requestFullscreen({navigationUI:'hide'});}catch(error){}}
   if(activeStagePreferences.wakeLock)await acquireStageWakeLock();
   if(activeStagePreferences.autoScroll)startAutoScroll();
-  revealStageControls();if(!STAGE_CLEAN)showToast('🎤 Modo Palco preparado');
+  revealStageControls();
 }
 
 // Tela acesa enquanto uma música estiver aberta, no estudo e no Palco (Thiago, 06/11/2026).
@@ -3579,8 +3584,14 @@ function tocarMedley(){
 
 // ── SWITCH TAB (atualizado) ───────────────────────────────────────────
 function switchTab(tab){
-  if(primarySearchTabActive&&tab!=='search'){primarySearchTabActive=false;roudySearchMenu.close()}
-  if(tab!=='musicas'&&playlistSearchMode)closePlaylistSearch();
+  if(tab!=='search'){
+    primarySearchTabActive=false;
+    if(!document.getElementById('roudy-search')?.hidden)roudySearchMenu.close({immediate:true});
+  }
+  if(tab!=='musicas'){
+    if(!document.getElementById('home-playlist-search-mode')?.hidden)closeHomePlaylistSearch();
+    if(playlistSearchMode||!document.getElementById('topbar-search-mode')?.hidden)closePlaylistSearch();
+  }
   currentTab=tab;
   const eventFilters=document.querySelector('.event-filter-segments');if(eventFilters)eventFilters.hidden=tab!=='setlists';
   const mainView=document.getElementById('view-main');
@@ -4112,7 +4123,6 @@ window.searchLibraryBridge={
   persist:next=>{if(!songRepository.save(next))return false;musicas=next;renderMusicas();return true;},
   sync:()=>librarySync.syncNow(),
   remove:song=>{
-    if(!appConfirm('Remover esta música da sua biblioteca?'))return false;
     deleteMusica(song.id);
     return !musicas.some(value=>String(value.id)===String(song.id));
   },
@@ -4246,7 +4256,7 @@ function shareSongToEventChatFromOptions(){
   const song=musicas.find(item=>String(item.id)===String(songOptionsId));if(!song)return;
   const returnFocus=songOptionsTrigger;closeSongOptions({restoreFocus:false,onClosed:()=>showAddSongEventSheet(song,returnFocus,'chat')});
 }
-let addSongEventSheetSongId=null,addSongEventReturnFocus=null,addSongEventCloseTimer=0,addSongEventDrag=null,addSongEventSheetMode='repertoire';
+let addSongEventSheetSong=null,addSongEventSheetSongId=null,addSongEventReturnFocus=null,addSongEventCloseTimer=0,addSongEventDrag=null,addSongEventSheetMode='repertoire';
 function ensureAddSongEventSheet(){
   let sheet=document.getElementById('add-song-event-sheet');if(sheet)return sheet;
   document.body.insertAdjacentHTML('beforeend',`<button type="button" class="add-song-event-backdrop" id="add-song-event-backdrop" onclick="closeAddSongEventSheet()" aria-label="Fechar seleção de repertório"></button><section class="add-song-event-sheet" id="add-song-event-sheet" role="dialog" aria-modal="true" aria-labelledby="add-song-event-title"><header class="add-song-event-header" id="add-song-event-drag-handle"><div class="add-song-event-heading"><strong id="add-song-event-title">Adicionar ao repertório</strong><span id="add-song-event-song"></span></div><button type="button" class="add-song-event-close" id="add-song-event-close" onclick="closeAddSongEventSheet()" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span>Cancelar</span></button></header><div class="add-song-event-list" id="add-song-event-list"></div></section>`);
@@ -4258,8 +4268,9 @@ function ensureAddSongEventSheet(){
   handle.addEventListener('pointerup',pointer=>finish(pointer));handle.addEventListener('pointercancel',pointer=>finish(pointer,true));
   return sheet;
 }
+function addSongEventSource(songId){return addSongEventSheetSong&&String(addSongEventSheetSong.id)===String(songId)?addSongEventSheetSong:[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(songId));}
 function renderAddSongEventSheet(){
-  const song=[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(addSongEventSheetSongId)),list=document.getElementById('add-song-event-list');if(!song||!list)return;
+  const song=addSongEventSource(addSongEventSheetSongId),list=document.getElementById('add-song-event-list');if(!song||!list)return;
   const chatMode=addSongEventSheetMode==='chat';
   document.getElementById('add-song-event-title').textContent=chatMode?'Compartilhar no chat':'Adicionar ao repertório';
   const songHeading=document.getElementById('add-song-event-song');
@@ -4303,11 +4314,11 @@ function renderAddSongEventSheet(){
     const status=chat?'›':exists
       ?'<svg class="playlist-picker-status" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-7"/></svg>'
       :'<svg class="playlist-picker-status" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg>';
-    return `<button type="button" class="add-song-event-row${chat?'':' playlist-picker-row'}${exists?' is-selected':''}" ${exists?'disabled':''} onclick="${action}(${attrJs(event.id)},${attrJs(song.id)}${chat?'':',this'})" aria-label="${eventEsc(chat?`Enviar ${song.title} no chat de ${event.title}`:exists?`${song.title} já está em ${event.title}`:`Adicionar ${song.title} a ${event.title}`)}">${eventChatEventArtwork(event,"add-song-event-art")}<span class="add-song-event-copy${chat?'':' playlist-picker-copy'}"><strong>${eventEsc(event.title)}</strong><small>${eventEsc(secondary)}</small></span>${chat?'<span class="add-song-event-state" aria-hidden="true">›</span>':status}</button>`;
+    return `<button type="button" class="add-song-event-row${chat?'':' playlist-picker-row'}${exists?' is-selected':''}" aria-pressed="${exists}" onclick="${action}(${attrJs(event.id)},${attrJs(song.id)}${chat?'':',this'})" aria-label="${eventEsc(chat?`Enviar ${song.title} no chat de ${event.title}`:exists?`${song.title} já está em ${event.title}`:`Adicionar ${song.title} a ${event.title}`)}">${eventChatEventArtwork(event,"add-song-event-art")}<span class="add-song-event-copy${chat?'':' playlist-picker-copy'}"><strong>${eventEsc(event.title)}</strong><small>${eventEsc(secondary)}</small></span>${chat?'<span class="add-song-event-state" aria-hidden="true">›</span>':status}</button>`;
   }
 }
 function showAddSongEventSheet(song,returnFocus,mode='repertoire'){
-  const sheet=ensureAddSongEventSheet();clearTimeout(addSongEventCloseTimer);addSongEventSheetSongId=song.id;addSongEventReturnFocus=returnFocus||null;addSongEventSheetMode=mode;sheet.classList.toggle('is-repertoire-picker',mode==='repertoire');sheet.classList.toggle('playlist-picker',mode==='repertoire');sheet.querySelector('.add-song-event-close').setAttribute('aria-label',mode==='repertoire'?'Cancelar':'Fechar');renderAddSongEventSheet();sheet.style.setProperty('--add-event-sheet-y','0px');document.getElementById('add-song-event-backdrop').classList.add('is-open');void sheet.offsetWidth;requestAnimationFrame(()=>{sheet.classList.add('is-open');document.getElementById('add-song-event-close').focus({preventScroll:true})});
+  const sheet=ensureAddSongEventSheet();clearTimeout(addSongEventCloseTimer);addSongEventSheetSong=JSON.parse(JSON.stringify(song));addSongEventSheetSongId=song.id;addSongEventReturnFocus=returnFocus||null;addSongEventSheetMode=mode;sheet.classList.toggle('is-repertoire-picker',mode==='repertoire');sheet.classList.toggle('playlist-picker',mode==='repertoire');sheet.querySelector('.add-song-event-close').setAttribute('aria-label',mode==='repertoire'?'Cancelar':'Fechar');renderAddSongEventSheet();sheet.style.setProperty('--add-event-sheet-y','0px');document.getElementById('add-song-event-backdrop').classList.add('is-open');void sheet.offsetWidth;requestAnimationFrame(()=>{sheet.classList.add('is-open');document.getElementById('add-song-event-close').focus({preventScroll:true})});
 }
 function closeAddSongEventSheet({restoreFocus=true,onClosed=null}={}){
   const sheet=document.getElementById('add-song-event-sheet'),backdrop=document.getElementById('add-song-event-backdrop'),returnFocus=addSongEventReturnFocus;if(!sheet)return;
@@ -4322,12 +4333,18 @@ function openAddSongToRepertoire(){
   const returnFocus=songOptionsTrigger;closeSongOptions({restoreFocus:false,onClosed:()=>showAddSongEventSheet(song,returnFocus)});
 }
 function openNewRepertoireForSong(songId){
-  const song=musicas.find(item=>String(item.id)===String(songId));if(!song)return;
-  closeAddSongEventSheet({restoreFocus:false,onClosed:()=>openNewEventCreateSheet(song.id)});
+  const song=addSongEventSource(songId);if(!song)return;
+  closeAddSongEventSheet({restoreFocus:false,onClosed:()=>openNewEventCreateSheet(song.id,song)});
 }
 function addSongToEvent(eventId,songId,trigger){
-  const event=findEvent(eventId),song=[...musicas,...eventChatPreviewSongs].find(item=>String(item.id)===String(songId));if(!event||!song)return;
-  if(event.repertoire.some(item=>String(item.songId)===String(song.id))){showToast('A música já está neste repertório.');return}
+  const event=findEvent(eventId),song=addSongEventSource(songId);if(!event||!song)return;
+  const actor=eventPermissionActor(event);if(!eventModel.canEditShared(event,actor.id))return;
+  const exists=event.repertoire.some(item=>String(item.songId)===String(song.id));
+  if(exists){
+    const updated=eventModel.withSharedChange(eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.songId)!==String(song.id)).map((item,order)=>({...item,order})),syncState:'pending',pendingShared:true}),actor,'repertoire.song.removed',`removeu ${song.title} do repertório oficial`);
+    const next=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(next)){showToast('Não foi possível remover a música.');return;}
+    setlists=next;renderSetlists();if(trigger){trigger.disabled=false;trigger.classList.remove('is-selected');trigger.setAttribute('aria-pressed','false');const icon=trigger.querySelector('.playlist-picker-status');if(icon)icon.innerHTML='<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>';const caption=trigger.querySelector('.add-song-event-copy>small');if(caption)caption.textContent=[eventDisplayDate(event.date),event.time].filter(Boolean).join(' · ');trigger.setAttribute('aria-label',`Adicionar ${song.title} a ${event.title}`);}return;
+  }
   const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   const repertoire=[...event.repertoire,repertoireItem];
   let updated=eventModel.create({...event,repertoire,syncState:'pending',pendingShared:true});
@@ -4337,7 +4354,7 @@ function addSongToEvent(eventId,songId,trigger){
   setlists=nextEvents;renderSetlists();
   const icon=trigger?.querySelector('.playlist-picker-status');
   if(icon){
-    trigger.disabled=true;
+    trigger.disabled=false;trigger.setAttribute('aria-pressed','true');trigger.setAttribute('aria-label',`Remover ${song.title} de ${event.title}`);const caption=trigger.querySelector('.add-song-event-copy>small');if(caption)caption.textContent='Já adicionada';
     trigger.classList.add('is-selected');
     icon.innerHTML='<circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-7"/>';
   }
@@ -5562,8 +5579,9 @@ async function saveContextEventSong(context,data,options={}){
   updateDetailSaveButton();return {ok:true,scope:'event-personal',pendingSync};
 }
 
-let pendingNewEventSongId=null;
-function openNewEventCreateSheet(songId=null){
+let pendingNewEventSongId=null,pendingNewEventSong=null;
+function openNewEventCreateSheet(songId=null,song=null){
+  pendingNewEventSong=song?JSON.parse(JSON.stringify(song)):null;
   pendingNewEventSongId=songId==null?null:String(songId);
   eventAdminSheetState={type:'create'};
   showEventAdminSheet(`${eventAdminHeader('Novo evento')}<form class="event-create-sheet" onsubmit="event.preventDefault();createNewEventFromSheet()"><label for="event-create-title"><span>Nome do evento</span><input id="event-create-title" maxlength="160" autocomplete="off" placeholder="Ex.: Culto de Jovens"></label><div class="event-create-grid"><label for="event-create-date"><span>Data</span><input id="event-create-date" type="date"></label><label for="event-create-time"><span>Horário</span><input id="event-create-time" type="time"></label></div><label for="event-create-location"><span>Local</span><input id="event-create-location" maxlength="120" autocomplete="off" placeholder="Adicionar local"></label><label for="event-create-description"><span>Informações</span><textarea id="event-create-description" maxlength="500" rows="5" placeholder="Adicionar informações"></textarea></label><button class="event-create-submit" type="submit">Criar evento</button><p class="event-create-error" id="event-create-error" role="alert" aria-live="polite"></p></form>`,'Criar novo evento');
@@ -5575,7 +5593,7 @@ async function createNewEventFromSheet(){
   if(button)button.disabled=true;if(errorTarget)errorTarget.textContent='';
   const member={...appCurrentUser,role:'Liderança',isCurrentUser:true,isLeader:true};
   const date=document.getElementById('event-create-date')?.value||'',time=document.getElementById('event-create-time')?.value||'',location=document.getElementById('event-create-location')?.value.trim().slice(0,120)||'',description=document.getElementById('event-create-description')?.value.trim().slice(0,500)||'';
-  const pendingSong=musicas.find(song=>String(song.id)===String(pendingNewEventSongId));
+  const pendingSong=pendingNewEventSong||musicas.find(song=>String(song.id)===String(pendingNewEventSongId));
   const initialRepertoire=pendingSong?[{id:'rep_'+Date.now(),songId:pendingSong.id,order:0,shared:eventEditFromSong(eventSongCopy(pendingSong)),personalEdits:{}}]:[];
   let candidate=eventModel.create({id:'event_'+Date.now(),title:title.slice(0,160),date,time,location,description,bandId:null,repertoire:initialRepertoire,members:[member],leaderId:appCurrentUser.id,syncState:'pending',pendingShared:true});
   candidate=eventModel.withSharedChange(candidate,appCurrentUser,'event.created','Criou o evento');
@@ -6228,21 +6246,24 @@ function renderEventAddSongs(){
   if(state.filter==='playlists'){const lists=(window.userPlaylists?userPlaylists.list(appCurrentUser.id):[]).filter(list=>!query||list.name.toLocaleLowerCase('pt-BR').includes(query));
     target.innerHTML=lists.map(list=>{const missing=homePlaylists.eventItemsFromPlaylist(list,event).length;return `<div class="event-admin-song-row">${homePlaylists.artworkForPlaylist(list)}<span class="event-admin-song-copy"><strong>${eventEsc(list.name)}</strong><small>${missing?`${missing} ${missing===1?'música entra':'músicas entram'} no tom da playlist`:'Todas já estão no repertório'}</small></span><button type="button" class="event-admin-add-button${missing?'':' is-added'}" ${missing?'':'disabled'} onclick="addUserPlaylistToEventSheet(${attrJs(list.id)})" aria-label="Adicionar a playlist ${eventEsc(list.name)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`;}).join('')||'<div class="event-admin-empty">Você ainda não tem playlists. Crie na aba Home.</div>';return;}
   const usage=eventSongUsage(event.id),lastOpened=storage.get(HOME_CARD_LAST_SONG_KEY,null)?.songId;
-  let available=[...musicas].filter(song=>!present.has(String(song.id)));
+  let available=[...musicas].filter(song=>!present.has(String(song.id))||state.added.has(String(song.id)));
   if(state.filter==='recent')available.sort((a,b)=>(String(b.id)===String(lastOpened)?1:0)-(String(a.id)===String(lastOpened)?1:0)||(Date.parse(b.updatedAt||b.createdAt||0)||0)-(Date.parse(a.updatedAt||a.createdAt||0)||0));
   else if(state.filter==='repertoires')available=available.filter(song=>usage.has(String(song.id))).sort((a,b)=>(usage.get(String(b.id))||0)-(usage.get(String(a.id))||0)||String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
   else available.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
   available=available.filter(song=>!query||`${song.title||''} ${song.artist||''}`.toLocaleLowerCase('pt-BR').includes(query));
   const emptyText=query?'Nenhuma música encontrada.':state.filter==='repertoires'?'Nenhuma música de outros repertórios disponível.':'Todas as músicas já estão neste repertório.';
-  target.innerHTML=available.map(song=>`<div class="event-admin-song-row">${eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${eventEsc(song.title)}</strong>${song.artist?`<small>${eventEsc(song.artist)}</small>`:''}</span><button type="button" class="event-admin-add-button" onclick="addSongFromEventSheet(${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`).join('')||`<div class="event-admin-empty">${emptyText}</div>`;
+  target.innerHTML=available.map(song=>`<div class="event-admin-song-row">${eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${eventEsc(song.title)}</strong>${song.artist?`<small>${eventEsc(song.artist)}</small>`:''}</span><button type="button" class="event-admin-add-button${present.has(String(song.id))?' is-added':''}" aria-pressed="${present.has(String(song.id))}" onclick="addSongFromEventSheet(${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`).join('')||`<div class="event-admin-empty">${emptyText}</div>`;
 }
 function addSongFromEventSheet(songId,button){
-  const state=eventAdminSheetState;let event=state&&findEvent(state.eventId);const song=musicas.find(item=>String(item.id)===String(songId));if(!event||!song||event.repertoire.some(item=>String(item.songId)===String(song.id)))return;
-  button.disabled=true;button.classList.add('is-added');button.setAttribute('aria-label',`${song.title} adicionada ao repertório`);
-  const repertoireItem={id:'rep_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
-  event=eventModel.create({...event,repertoire:[...event.repertoire,repertoireItem],syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,eventPermissionActor(event),'repertoire.song.added',`adicionou ${song.title} ao repertório oficial`,{songId:song.id,changeType:'SONG_ADDED',after:{repertoireItemId:repertoireItem.id,songId:song.id}});
-  setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();openSD(event.id);state.added.add(String(song.id));setTimeout(()=>{if(eventAdminSheetState===state)renderEventAddSongs()},360);
+  const state=eventAdminSheetState;const event=state&&findEvent(state.eventId),song=musicas.find(item=>String(item.id)===String(songId));if(!event||!song)return;
+  addSongEventSheetSong=null;
+  addSongToEvent(event.id,song.id);
+  const added=findEvent(event.id).repertoire.some(item=>String(item.songId)===String(song.id));
+  if(added)state.added.add(String(song.id));else state.added.delete(String(song.id));
+  button.disabled=false;button.classList.toggle('is-added',added);button.setAttribute('aria-pressed',String(added));button.setAttribute('aria-label',`${added?'Remover':'Adicionar'} ${song.title} ${added?'do':'ao'} repertório`);
+  openSD(event.id);
 }
+
 function addUserPlaylistToEventSheet(playlistId){
   const state=eventAdminSheetState,eventId=state&&state.eventId;if(!eventId)return;
   const event=homePlaylists.addPlaylistToEvent(playlistId,eventId);if(event)openSD(event.id);
@@ -7224,7 +7245,7 @@ function openEventChatStyleMenu(trigger, scope='style'){
 </script>
 <script src="js/event-chat-selection.js?v=4"></script>
 <script src="js/song-search.js?v=2"></script>
-<script src="js/search-menu.js?v=25"></script>
+<script src="js/search-menu.js?v=27"></script>
 <script src="js/android-back.js?v=4"></script>
 <script src="js/pull-refresh.js?v=3"></script>
 <script>

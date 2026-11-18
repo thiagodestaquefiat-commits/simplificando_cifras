@@ -2,7 +2,7 @@ const NAVIGATION_TIMEOUT_MS = 3000;
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v916-lista-eventos-celular";
+const CACHE_NAME = "simplificando-cifras-v928-stage-no-toast";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -64,10 +64,10 @@ const ASSETS = [
   "./assets/icons/icone-teclado-musical.svg",
   "./assets/icons/icone-check-duplo-roudy.svg",
   "./assets/icons/icone-fone-mais.svg",
-  "./css/search-menu.css?v=84",
-  "./css/stage-mode-reference.css?v=19",
+  "./css/search-menu.css?v=85",
+  "./css/stage-mode-reference.css?v=20",
   "./css/song-section-heading.css?v=1",
-  "./js/search-menu.js?v=25",
+  "./js/search-menu.js?v=27",
   "./js/list-loading.js?v=10",
   "./assets/search/musicas.svg?v=7",
   "./assets/search/eventos.svg?v=4",
@@ -76,7 +76,7 @@ const ASSETS = [
   "./assets/search/rd.svg",
   "./assets/search/nota_musical_suave.svg",
   "./assets/search/nota_musical_vermelha_suave.svg",
-  "./css/home-playlists.css?v=47",
+  "./css/home-playlists.css?v=48",
   "./js/home-playlists.js?v=43",
   "./js/user-playlists.js?v=7",
   "./js/notification-center.js?v=9",
@@ -95,7 +95,7 @@ const ASSETS = [
   "./css/qr-stage-light.css?v=2",
   "./js/account-drawer.css?v=17",
   "./js/account-profile.css?v=5",
-  "./css/song-reading.css?v=17",
+  "./css/song-reading.css?v=18",
   "./js/ai/ai-harmonic-summary.js?v=21",
   "./js/app-assistant.js?v=37",
   "./css/topbar-labels.css?v=16",

@@ -17,7 +17,7 @@
 .roudy-search-shortcut{
   --shortcut-accent:#0789e7;
   --shortcut-label:#07599e;
-  --shortcut-footer:#709092;
+  --shortcut-footer:#627f90;
   --card-panel-color:var(--shortcut-footer);
   --card-blur-strength:8px;
   --card-transition-height:30%;
@@ -47,9 +47,9 @@
   content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
   border:0;border-radius:inherit;background:var(--card-bevel-map,none) center/100% 100% no-repeat;
 }
-.roudy-search-shortcut--playlists{--shortcut-accent:#e62c8b;--shortcut-label:#9d1f5c;--shortcut-footer:#828181}
-.roudy-search-shortcut--medley{--shortcut-accent:#0952eb;--shortcut-label:#0644b9;--shortcut-footer:#9b9760}
-.roudy-search-shortcut--events{--shortcut-accent:#e81a32;--shortcut-label:#b5112a;--shortcut-footer:#818c93}
+.roudy-search-shortcut--playlists{--shortcut-accent:#e62c8b;--shortcut-label:#9d1f5c;--shortcut-footer:#777f88}
+.roudy-search-shortcut--medley{--shortcut-accent:#0952eb;--shortcut-label:#0644b9;--shortcut-footer:#4f7193}
+.roudy-search-shortcut--events{--shortcut-accent:#e81a32;--shortcut-label:#b5112a;--shortcut-footer:#82747f}
 .roudy-search-shortcut:focus-visible{outline:2px solid var(--roudy-electric-blue);outline-offset:3px}
 .roudy-search-shortcut-art{position:relative;display:block;aspect-ratio:3/2;background:var(--card-panel-color);container-type:inline-size;overflow:hidden;isolation:isolate}
 /* All image layers share the exact same box and crop. Only the lower 30% blends. */
