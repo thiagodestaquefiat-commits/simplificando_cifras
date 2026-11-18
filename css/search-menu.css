@@ -2,40 +2,33 @@
    Keep its lower edge flush with the existing tab bar, including safe area. */
 .roudy-search{position:fixed;z-index:14;inset:0 0 calc(49px + env(safe-area-inset-bottom));display:flex;width:min(100%,820px);margin-inline:auto;overflow:hidden;flex-direction:column;background:#030405;color:#f7f7f8;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .16s ease,transform .2s cubic-bezier(.2,.75,.25,1),visibility 0s linear .2s}
 .roudy-search.is-open{opacity:1;visibility:visible;transform:none;transition-delay:0s}.roudy-search-header{padding:max(24px,env(safe-area-inset-top)) 20px 14px;background:#030405}.roudy-search-title-row{display:flex;min-height:58px;align-items:center;justify-content:space-between}.roudy-search-identity{display:flex;min-width:0;align-items:center;gap:10px}.roudy-search-avatar{display:grid;width:36px;height:36px;flex:0 0 36px;overflow:hidden;place-items:center;border-radius:50%;background:#20dd82;color:#07130d;font:500 20px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif}.roudy-search-avatar img{width:100%;height:100%;object-fit:cover}.roudy-search-title{margin:0;font:800 31px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif;letter-spacing:-.04em}.roudy-search-camera{display:grid;width:44px;height:44px;flex:0 0 44px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#d9dfe7;cursor:pointer;transition:background .15s,color .15s,transform .15s}.roudy-search-camera svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.roudy-search-camera:hover{background:rgba(255,255,255,.055);color:#fff}.roudy-search-camera:active{transform:scale(.94)}
-.roudy-search-form{display:flex;margin-top:13px;align-items:center;gap:9px}.roudy-search-field{position:relative;display:flex;min-width:0;height:48px;flex:1;align-items:center;border:0;border-radius:999px;background:#2b2a30;color:#fff}.roudy-search-input{width:100%;min-width:0;height:48px;padding:0 42px 0 17px;border:0;outline:0;background:transparent;color:#fff;font:500 17px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;caret-color:#0789e7}.roudy-search-input::placeholder{color:#aaa8af}.roudy-search-input::-webkit-search-cancel-button{-webkit-appearance:none}.roudy-search-clear{position:absolute;right:7px;display:grid;width:34px;height:34px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#aaa8af;font-size:23px;cursor:pointer}.roudy-search-clear[hidden]{display:none}.roudy-search-voice{display:grid;width:48px;height:48px;flex:0 0 48px;padding:0;place-items:center;border:0;border-radius:50%;background:#29282d;color:#f4f4f6;cursor:pointer}.roudy-search-voice svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}.roudy-search-voice.listening{background:#0789e7}.roudy-search-cancel{display:none;min-height:44px;padding:0;border:0;background:transparent;color:#fff;font:650 14px/1 Inter,sans-serif;cursor:pointer}.roudy-search.is-active .roudy-search-cancel{display:block}.roudy-search.is-active .roudy-search-title-row{display:none}.roudy-search.is-active .roudy-search-header{padding-top:max(12px,env(safe-area-inset-top))}
+.roudy-search-form{display:flex;margin-top:13px;align-items:center;gap:9px}.roudy-search-field{position:relative;display:flex;min-width:0;height:48px;flex:1;align-items:center;border:0;border-radius:999px;background:#2b2a30;color:#fff}.roudy-search-input{width:100%;min-width:0;height:48px;padding:0 42px 0 17px;border:0;outline:0;background:transparent;color:#fff;font:500 17px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;caret-color:#0789e7}.roudy-search-input::placeholder{color:#aaa8af}.roudy-search-input::-webkit-search-cancel-button{-webkit-appearance:none}.roudy-search-clear{position:absolute;right:7px;display:grid;width:34px;height:34px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#aaa8af;font-size:23px;cursor:pointer}.roudy-search-clear[hidden]{display:none}.roudy-search-voice{display:grid;width:48px;height:48px;flex:0 0 48px;padding:0;place-items:center;border:0;border-radius:50%;background:#29282d;color:#f4f4f6;cursor:pointer}.roudy-search-voice svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}.roudy-search-voice.listening{background:#0789e7}.roudy-search-cancel{display:none;min-height:44px;padding:0;border:0;background:transparent;color:#fff;font:400 14px/1 Inter,sans-serif;cursor:pointer}.roudy-search.is-active .roudy-search-cancel{display:block}.roudy-search.is-active .roudy-search-title-row{display:none}.roudy-search.is-active .roudy-search-header{padding-top:max(12px,env(safe-area-inset-top))}
 .roudy-search-scroll{min-height:0;flex:1;padding:4px 20px calc(28px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;background:#030405}.roudy-search-landing[hidden],.roudy-search-active[hidden]{display:none}.roudy-search-section-title{margin:24px 0 20px;font:800 24px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif;letter-spacing:-.035em}
+.roudy-search:not(.is-active),
+.roudy-search:not(.is-active) .roudy-search-scroll{background:#0b0b0c}
 .roudy-search-explore{
-  --shortcut-art-height:clamp(108px, 26vw, 170px);
   display:grid;
+  max-width:650px;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px 12px;
+  gap:clamp(8px,1.8vw,13px);
 }
 .roudy-search-shortcut{
-  display:grid;
-  grid-template-rows:var(--shortcut-art-height) minmax(28px,auto);
-  justify-items:center;
-  align-items:center;
-  min-width:0;
-  padding:0;
-  border:0;
-  background:transparent;
-  color:#fff;
-  cursor:pointer;
-}
-.roudy-search-shortcut-art{
   position:relative;
   display:block;
-  width:min(100%, calc(var(--shortcut-art-height) * var(--art-ratio)));
-  aspect-ratio:var(--art-ratio);
+  min-width:0;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  border-radius:12.1667% / 13.9847%;
+  background:#242426;
+  color:#fff;
+  text-align:left;
+  cursor:pointer;
 }
-.roudy-search-shortcut-art{border-radius:12.1667% / 13.9847%}
-.roudy-search-shortcut-art::after{
-  position:absolute;
-  inset:0;
-  border:1px solid rgba(255,255,255,.65);
-  border-radius:inherit;
-  pointer-events:none;
-  content:"";
+.roudy-search-shortcut:focus-visible{outline:2px solid #0789e7;outline-offset:2px}
+.roudy-search-shortcut-art{
+  display:block;
+  aspect-ratio:600 / 522;
 }
 .roudy-search-shortcut-art img{
   display:block;
@@ -43,12 +36,62 @@
   height:100%;
   object-fit:contain;
 }
-.roudy-search-shortcut--music{--art-ratio:1.1494}
-.roudy-search-shortcut--events{--art-ratio:1.1494}
-.roudy-search-shortcut--playlists{--art-ratio:1.1494}
-.roudy-search-shortcut--medley{--art-ratio:1.1494}
-.roudy-search-shortcut-caption{color:#c0c0c5;font-size:12px;text-align:center}
-.roudy-search-shortcut-caption small{font-size:inherit}
+.roudy-search-shortcut--playlists{background:#ddd;color:#131315}
+.roudy-search-shortcut--medley{background:#071560}
+.roudy-search-shortcut:not(.roudy-search-shortcut--playlists)::before{
+  position:absolute;
+  inset:43% 0 0;
+  background:linear-gradient(to top,rgba(0,0,0,.84),rgba(0,0,0,.57) 53%,transparent);
+  pointer-events:none;
+  content:"";
+}
+.roudy-search-shortcut-copy{
+  position:absolute;
+  inset:auto 7% 8%;
+  display:grid;
+  gap:4px;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif;
+}
+.roudy-search-shortcut-copy strong{
+  display:flex;
+  align-items:baseline;
+  gap:.32em;
+  font-size:clamp(13px,3.9vw,24px);
+  font-weight:800;
+  line-height:1.06;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+}
+.roudy-search-shortcut-rd{
+  width:1.08em;
+  height:.74em;
+  flex:none;
+  background:currentColor;
+  -webkit-mask:url("../assets/search/rd.svg") center / contain no-repeat;
+  mask:url("../assets/search/rd.svg") center / contain no-repeat;
+}
+.roudy-search-shortcut-copy small{
+  display:flex;
+  align-items:flex-start;
+  gap:.4em;
+  color:#e4e4e7;
+  font-size:clamp(11px,3vw,16px);
+  font-weight:600;
+  line-height:1.25;
+  min-height:2.5em;
+}
+.roudy-search-shortcut--playlists small{color:#38383b;font-weight:700}
+.roudy-search-shortcut-copy small svg{
+  width:1em;
+  height:1em;
+  flex:none;
+  margin-top:.1em;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
 .roudy-search-shortcut:active{opacity:.82;transform:scale(.985)}
 .roudy-search-resume{display:grid;width:100%;min-height:72px;padding:8px 0;grid-template-columns:48px minmax(0,1fr) 30px;align-items:center;gap:11px;border:0;border-bottom:1px solid rgba(255,255,255,.09);background:transparent;color:#fff;text-align:left;cursor:pointer}.roudy-search-resume:last-child{border-bottom:0}.roudy-search-resume-icon{display:grid;width:46px;height:46px;overflow:hidden;place-items:center;border-radius:2px;background:#171719}.roudy-search-resume-icon img{width:100%;height:100%;object-fit:cover}.roudy-search-resume-copy{min-width:0}.roudy-search-resume-copy strong,.roudy-search-resume-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roudy-search-resume-copy strong{font-size:14px}.roudy-search-resume-copy small{margin-top:5px;color:#97979e;font-size:11px}.roudy-search-resume-go{display:grid;width:28px;height:38px;place-items:center;color:#e1e1e5;font-size:25px}
 .roudy-search-filters{display:flex;padding:2px 0 8px;gap:8px;overflow-x:auto;scrollbar-width:none}.roudy-search-filters::-webkit-scrollbar{display:none}.roudy-search-filter{min-height:36px;padding:0 15px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:#191a1d;color:#ececef;font:650 12px/1 Inter,sans-serif;white-space:nowrap;cursor:pointer}.roudy-search-filter[aria-pressed=true]{border-color:#0789e7;background:#0789e7;color:#fff}.roudy-search-results-title{margin:18px 0 7px;font:760 18px/1.2 Manrope,Inter,sans-serif}.roudy-search-local-row{display:grid;width:100%;min-height:69px;grid-template-columns:minmax(0,1fr) 44px;align-items:center;border-bottom:1px solid rgba(255,255,255,.075);background:transparent;color:#fff}.roudy-search-local-open{display:grid;min-width:0;min-height:68px;padding:8px 0;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:11px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}.roudy-search-local-art{display:grid;width:46px;height:46px;place-items:center;border-radius:8px;background:#161d27;color:#91bdf5}.roudy-search-local-art svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8}.roudy-search-local-copy{min-width:0}.roudy-search-local-copy strong,.roudy-search-local-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roudy-search-local-copy strong{font-size:14px}.roudy-search-local-copy small{margin-top:4px;color:#979ba2;font-size:11px}.roudy-search-local-meta{display:flex;align-items:center;gap:6px}.roudy-search-key,.roudy-search-owned{padding:4px 7px;border:1px solid rgba(255,255,255,.18);border-radius:999px;color:#c8cbd0;font-size:9px;font-weight:700}.roudy-search-owned{color:#9fc8ff}.roudy-search-local-more{display:grid;width:44px;height:44px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:#b7bac0;cursor:pointer;-webkit-tap-highlight-color:transparent}.roudy-search-local-more svg{width:22px;height:22px;fill:currentColor}.roudy-search-local-more:active{background:rgba(255,255,255,.08)}.roudy-search-local-more:focus-visible{outline:2px solid #0789e7;outline-offset:-2px}.roudy-search .playlist-search-online{margin-top:13px}.roudy-search .playlist-search-results-label{margin:17px 0 7px;color:#fff;font:760 18px/1.2 Manrope,Inter,sans-serif}.roudy-search .playlist-search-online-row{min-height:67px;border-bottom:1px solid rgba(255,255,255,.075)}.roudy-search .playlist-search-online-copy strong{font-size:14px}.roudy-search .playlist-search-online-status{padding:22px 0;color:#92969d}.roudy-search-empty{display:grid;min-height:46dvh;padding:48px 24px;place-content:center;text-align:center}.roudy-search-empty svg{width:70px;height:70px;margin:0 auto 22px;fill:none;stroke:#a2a6ad;stroke-width:1.3}.roudy-search-empty strong{font:780 21px/1.25 Manrope,Inter,sans-serif}.roudy-search-empty span{max-width:330px;margin-top:10px;color:#999da4;font-size:13px;line-height:1.5}.roudy-search-history{display:flex;margin-top:28px;flex-wrap:wrap;justify-content:center;gap:8px}.roudy-search-history button{min-height:36px;padding:0 12px;border:1px solid rgba(7,137,231,.65);border-radius:999px;background:transparent;color:#eef4fb;font:600 11px Inter,sans-serif;cursor:pointer}
@@ -66,11 +109,10 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
 /* The page itself scrolls vertically only. Horizontal rails keep their own
    overflow-x:auto, without making the entire Buscar surface draggable. */
 .roudy-search-scroll{width:100%;max-width:100%;padding:calc(max(24px,env(safe-area-inset-top)) + 137px) var(--roudy-search-inline) calc(28px + env(safe-area-inset-bottom));overflow-x:hidden}
-.roudy-search-explore{max-width:100%}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-header{padding:max(24px,env(safe-area-inset-top)) var(--roudy-search-inline) 14px}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-title-row{min-height:58px;max-height:58px;overflow:visible;opacity:calc(1 - var(--roudy-search-header-progress));pointer-events:none;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-form{position:relative;z-index:1;max-height:none;margin-top:13px;overflow:visible;opacity:1;pointer-events:auto;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
-.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{position:absolute;z-index:-1;inset:-14px calc(var(--roudy-search-inline) * -1);background:#030405;content:""}
+.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{position:absolute;z-index:-1;inset:-14px calc(var(--roudy-search-inline) * -1) -72px;background:linear-gradient(to bottom,#0b0b0c calc(100% - 48px),rgba(11,11,12,0));pointer-events:none;content:""}
 .roudy-search.is-header-compact:not(.is-active) .roudy-search-camera{opacity:calc(1 - var(--roudy-search-header-progress));pointer-events:none;transform:translateY(calc(var(--roudy-search-header-progress) * -82px));transition:none}
 .roudy-search.is-active .roudy-search-scroll{padding-top:calc(max(12px,env(safe-area-inset-top)) + 79px)}
 @media(max-width:430px){.roudy-search{--roudy-search-inline:15px}}
@@ -111,7 +153,15 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
 .roudy-search button:focus-visible{outline:2px solid #a1a1a6;outline-offset:2px}
 .roudy-search-song-open:active,.roudy-search-suggestion:active{opacity:.65}
 @keyframes roudy-search-saving{to{transform:rotate(360deg)}}
-@media(max-width:430px){.roudy-search.is-active .roudy-search-header{padding-inline:16px}.roudy-search.is-active .roudy-search-scroll{padding-inline:16px}.roudy-search.is-active .roudy-search-field{height:44px}.roudy-search.is-active .roudy-search-input{height:44px}.roudy-search.is-active .roudy-search-voice{width:44px;height:44px;flex-basis:44px}.roudy-search-cancel{font-size:15px;font-weight:500}.roudy-search-form{gap:8px}}
+.roudy-search:not(.is-active) .roudy-search-field{border-radius:6px}
+.roudy-search:not(.is-active) :is(.roudy-search-field,.roudy-search-voice:not(.listening)){background:#414047}
+.roudy-search:not(.is-active) .roudy-search-input::placeholder{color:#d0ced4}
+.roudy-search:not(.is-active) .roudy-search-field-icon{stroke:#d0ced4}
+.roudy-search.is-active .roudy-search-field{height:36px}
+.roudy-search.is-active .roudy-search-field-icon{display:none}
+.roudy-search.is-active .roudy-search-input{height:44px;padding-left:14px}
+.roudy-search.is-active .roudy-search-voice{width:44px;height:44px;flex-basis:44px}
+@media(max-width:430px){.roudy-search.is-active .roudy-search-header{padding-inline:16px}.roudy-search.is-active .roudy-search-scroll{padding-inline:16px}.roudy-search-cancel{font-size:15px}.roudy-search-form{gap:8px}}
 @media(prefers-reduced-motion:reduce){.roudy-search-save.is-saving svg{animation:none}}
 
 /* Crop the embedded letterboxing in the recommendation covers, without scaling the placeholder. */
@@ -148,21 +198,3 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
   opacity:.96;
 }
 .roudy-search-cover-light.has-color img{opacity:0}
-
-@media(max-width:600px){
-  .roudy-search-explore{
-    gap:7px 10px;
-    padding-inline:8px;
-  }
-  .roudy-search-shortcut{
-    display:block;
-  }
-  .roudy-search-shortcut-art{
-    width:100%;
-    aspect-ratio:600 / 522;
-    overflow:hidden;
-    border-radius:15%;
-  }
-  .roudy-search-shortcut-art img{object-fit:fill}
-  .roudy-search-shortcut-caption{display:none}
-}

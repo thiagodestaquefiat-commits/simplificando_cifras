@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v765-study-playlist-taps";
+const CACHE_NAME = "simplificando-cifras-v787-repertoire-no-divider";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -47,9 +47,9 @@ const CACHE_NAME = "simplificando-cifras-v765-study-playlist-taps";
 // Compatibility marker: simplificando-cifras-v427-voz-direta
 // Compatibility marker: simplificando-cifras-v480-temas-cores-1012
 const ASSETS = [
-  "css/study-song-navigation.css?v=6",
+  "css/study-song-navigation.css?v=9",
   "./css/event-share-variants.css?v=6",
-  "./js/event-detail-refactor.css?v=137",
+  "./js/event-detail-refactor.css?v=140",
   "./assets/chat-wallpaper-roudy-revised.svg",
   "./assets/icons/roudy-rd-premium.svg",
   "./assets/chat-wallpaper-roudy-art.svg",
@@ -64,10 +64,11 @@ const ASSETS = [
   "./css/song-section-heading.css?v=1",
   "./js/search-menu.js?v=11",
   "./js/list-loading.js?v=1",
-  "./assets/search/musicas.svg?v=6",
-  "./assets/search/eventos.svg?v=3",
-  "./assets/search/playlists.svg?v=4",
-  "./assets/search/medley.svg?v=6",
+  "./assets/search/musicas.svg?v=7",
+  "./assets/search/eventos.svg?v=4",
+  "./assets/search/playlists.svg?v=5",
+  "./assets/search/medley.svg?v=7",
+  "./assets/search/rd.svg",
   "./css/home-playlists.css?v=30",
   "./js/home-playlists.js?v=26",
   "./js/user-playlists.js?v=6",
@@ -134,7 +135,7 @@ const ASSETS = [
   "./js/assistant-action-manager.js?v=1",
   "./js/assistant-action-runtime.js?v=1",
   "./js/app-assistant.js?v=23",
-  "./js/youtube-player-ui.js?v=26",
+  "./js/youtube-player-ui.js?v=27",
   "./js/smart-scroll.js?v=7",
   "./js/tuner.js?v=4",
   "./js/tuner.js?v=5",
@@ -299,7 +300,7 @@ const ASSETS = [
   "./js/ai/ai-harmonic-summary.css?v=8",
   "./js/ai/camera-capture.js?v=6",
   "./css/editorial-typography.css?v=3",
-  "./css/roudy-color-system-preview.css?v=20",
+  "./css/roudy-color-system-preview.css?v=21",
   "./manifest.webmanifest?v=15",
   "./assets/icons/roudy-icon-v4-48.png?v=15",
   "./assets/icons/roudy-rd-premium.svg?v=1",
@@ -318,10 +319,10 @@ const ASSETS = [
   "./js/profile-cover.js?v=2",
   "./js/song-share.js?v=1",
   "./css/home-playlists.css?v=32",
-  "./css/search-menu.css?v=39",
+  "./css/search-menu.css?v=52",
   "./js/event-chat-selection.js?v=4",
   "./js/song-search.js?v=1",
-  "./js/search-menu.js?v=19"
+  "./js/search-menu.js?v=20"
 ];
 
 self.addEventListener("install", (event) => {

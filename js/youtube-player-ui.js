@@ -17,7 +17,6 @@
   let playerNextSibling = null;
   let activePlayerContainer = null;
   let iframeFocusHandler = null;
-  let detailScrollCleanup = null;
   let excludedVideoId = null;
   const CONTROLS_DURATION = 4500;
 
@@ -102,12 +101,9 @@
     if (iframeFocusHandler) global.removeEventListener("blur", iframeFocusHandler);
     iframeFocusHandler = null;
     activePlayerContainer = null;
-    if (detailScrollCleanup) detailScrollCleanup();
-    detailScrollCleanup = null;
     const detail = element("view-detail");
     if (detail) {
-      detail.style.removeProperty("--video-header-progress");
-      detail.classList.remove("video-study-expanded", "video-header-compact");
+      detail.classList.remove("video-study-expanded");
     }
     resetFloating(container);
   }
@@ -118,34 +114,6 @@
     manualMode = true;
     render(message || "Este vídeo não está disponível no player. Buscando outras gravações…");
     global.setTimeout(search, 0);
-  }
-
-  function setupDetailScrollMotion() {
-    const detail = element("view-detail");
-    if (!detail) return;
-    detail.classList.add("video-study-expanded");
-    let frame = 0;
-    const render = () => {
-      frame = 0;
-      const player = element("youtube-song-player");
-      const media = player?.querySelector(".youtube-player-frame") || player;
-      const playerBottom = (player?.offsetTop || 0) + (media?.offsetHeight || 0);
-      const revealStart = Math.max(1, playerBottom - 58);
-      const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
-      detail.style.setProperty("--video-header-progress", progress.toFixed(4));
-      detail.classList.toggle("video-header-compact", progress >= 0.98);
-    };
-    const onScroll = () => {
-      if (!frame) frame = global.requestAnimationFrame(render);
-    };
-    detail.addEventListener("scroll", onScroll, { passive: true });
-    global.addEventListener("resize", onScroll, { passive: true });
-    render();
-    detailScrollCleanup = () => {
-      detail.removeEventListener("scroll", onScroll);
-      global.removeEventListener("resize", onScroll);
-      if (frame) global.cancelAnimationFrame(frame);
-    };
   }
 
   function watchIframeInteraction(container) {
@@ -364,7 +332,7 @@
     container.append(frame, actions, grip, status);
     attachFloatingDrag(container, grip);
     watchIframeInteraction(container);
-    setupDetailScrollMotion();
+    element("view-detail")?.classList.add("video-study-expanded");
     showControls();
     global.requestAnimationFrame(() => {
       if (!frame.isConnected) return;

@@ -3,7 +3,7 @@ const fs = require('node:fs');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
-assert.match(html, />Repertório oficial do evento<\/div>/);
+assert.match(html, />Repertório<\/div>/);
 assert.match(html, /event-section-title--repertoire\{[^}]*color:#f5f6f8[^}]*text-align:left[^}]*text-transform:none/);
 assert.doesNotMatch(html, /Você é o líder: pode editar a versão oficial/);
 assert.doesNotMatch(html, /Você é integrante: pode visualizar a versão oficial/);

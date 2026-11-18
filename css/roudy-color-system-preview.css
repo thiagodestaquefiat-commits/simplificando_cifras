@@ -102,8 +102,8 @@ html[data-ui-scale] .tab-bar .tab.active{color:var(--roudy-electric-blue)!import
 #view-sd .event-reference-admin{background:rgba(11,11,12,.96)}
 #view-sd::before{
   background:
-    radial-gradient(ellipse 68% 86% at 28% -8%,rgba(7,137,231,.34),rgba(7,89,158,.17) 42%,rgba(5,32,68,.08) 65%,transparent 78%),
-    radial-gradient(ellipse 34% 66% at 88% 2%,rgba(214,168,58,.16),rgba(128,96,24,.08) 48%,rgba(60,44,10,.04) 68%,transparent 82%);
+    radial-gradient(ellipse 68% 86% at 28% -8%,color-mix(in srgb,var(--event-light-primary,rgba(7,137,231,.57)) 60%,transparent),color-mix(in srgb,var(--event-light-primary,rgba(7,137,231,.57)) 30%,transparent) 42%,transparent 78%),
+    radial-gradient(ellipse 34% 66% at 88% 2%,color-mix(in srgb,var(--event-light-secondary,rgba(214,168,58,.25)) 64%,transparent),color-mix(in srgb,var(--event-light-secondary,rgba(214,168,58,.25)) 32%,transparent) 48%,transparent 82%);
 }
 #view-sd>.detail-header{background:rgba(11,11,12,var(--event-header-alpha));box-shadow:none}
 #view-sd>.detail-header::before{

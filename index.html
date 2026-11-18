@@ -30,7 +30,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=3">
 <link rel="stylesheet" href="js/account-profile.css?v=4">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=137">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=140">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=2">
 <link rel="stylesheet" href="js/profile-qr.css?v=4">
 <link rel="stylesheet" href="css/qr-stage-light.css?v=1">
@@ -955,17 +955,21 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-sd .event-detail-back svg{width:22px;height:22px}
 @media(prefers-reduced-motion:reduce){#view-sd::before,#view-sd .detail-title-wrap,#view-sd .detail-capo{will-change:auto}}
 /* YOUTUBE STUDY — scroll-scrubbed header and media-native controls */
-#view-detail:not(.stage-mode){--video-header-progress:0;--video-header-height:58px}
-#view-detail:not(.stage-mode).video-study-expanded{--video-header-height:58px}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header{position:sticky;z-index:30;top:0;min-height:58px;height:58px;margin-bottom:-58px;padding-block:8px;overflow:hidden;border:0;box-shadow:none;background:rgba(5,5,6,var(--video-header-progress));backdrop-filter:blur(calc(var(--video-header-progress)*14px));-webkit-backdrop-filter:blur(calc(var(--video-header-progress)*14px));transform:none;transition:none;pointer-events:auto;will-change:background-color,backdrop-filter}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-title-wrap,#view-detail:not(.stage-mode).video-study-expanded>.detail-header .detail-key-badge{opacity:var(--video-header-progress);transform:translate3d(0,calc((1 - var(--video-header-progress))*5px),0);pointer-events:none;will-change:opacity,transform}
-#view-detail:not(.stage-mode).video-study-expanded:not(.video-header-compact)>.detail-header .detail-palco-btn{visibility:hidden;opacity:0;pointer-events:none}
-#view-detail:not(.stage-mode).video-study-expanded.video-header-compact>.detail-header .detail-palco-btn{visibility:visible;opacity:1;pointer-events:auto}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute;z-index:31;top:7px;left:6px;width:44px;height:44px;border-radius:50%;background:rgba(8,8,9,calc(.18 + (var(--video-header-progress)*.62)));color:#fff;pointer-events:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn svg{width:18px;height:18px}
+#view-detail:not(.stage-mode).video-study-expanded>.detail-header{
+  z-index:30;
+  background:rgba(8,10,13,.88);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+@media(prefers-reduced-transparency:reduce){
+  #view-detail:not(.stage-mode).video-study-expanded>.detail-header{
+    background:#080a0d;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+}
 #view-detail:not(.stage-mode)>.detail-header,#view-detail:not(.stage-mode).video-study-expanded>.detail-header{pointer-events:auto}
 #view-detail:not(.stage-mode)>.detail-header .back-btn{position:relative;z-index:4;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-#view-detail:not(.stage-mode).video-study-expanded>.detail-header .back-btn{position:absolute}
 #view-detail:not(.stage-mode).video-study-expanded>.youtube-player-shell.is-expanded{position:relative;z-index:8;top:auto;margin:0 auto;border:0;border-radius:0;background:#000;box-shadow:0 10px 28px rgba(0,0,0,.35)}
 #view-detail:not(.stage-mode) .youtube-player-shell.is-expanded{position:relative;overflow:visible}
 #view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-frame{position:relative;z-index:1;background:#000}
@@ -998,7 +1002,6 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-detail:not(.stage-mode) .youtube-song-result-info span{color:#9299a4;font-size:9px}
 #view-detail:not(.stage-mode) .youtube-song-result-more{display:grid;width:28px;flex:0 0 28px;place-items:center;color:#d8dce2;font-size:21px}
 @media(max-width:430px){#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-actions{gap:6px;padding-inline:8px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action{padding-inline:10px;font-size:9px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action span:last-child{display:none}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="repeat"] span:last-child,#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="floating"] span:last-child{display:inline}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="close"]{padding:0}}
-@media(prefers-reduced-motion:reduce){#view-detail:not(.stage-mode).video-study-expanded>.detail-header{scroll-behavior:auto}}
 @media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px minmax(0,1fr) 20px}#pane-setlists .event-date strong{font-size:21px}#pane-setlists .sl-sub{font-size:8px}}
 #pane-musicas>.youtube-panel,#pane-musicas>#youtube-results{display:none!important}
 #view-main>.topbar{min-height:62px;padding:10px 18px;gap:6px;background:#030405;border-bottom-color:rgba(190,200,214,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -1124,14 +1127,14 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 }
 </style>
 <link rel="stylesheet" href="css/editorial-typography.css?v=3">
-<link rel="stylesheet" href="css/roudy-color-system-preview.css?v=20">
+<link rel="stylesheet" href="css/roudy-color-system-preview.css?v=21">
 <link rel="stylesheet" href="js/medley-editor.css?v=32">
 <link rel="stylesheet" href="css/responsive.css?v=1">
 <link rel="stylesheet" href="css/home-playlists.css?v=32">
-<link rel="stylesheet" href="css/search-menu.css?v=39">
+<link rel="stylesheet" href="css/search-menu.css?v=52">
 <link rel="stylesheet" href="css/stage-mode-reference.css?v=19">
 <link rel="stylesheet" href="css/song-section-heading.css?v=1">
-<link rel="stylesheet" href="css/study-song-navigation.css?v=6">
+<link rel="stylesheet" href="css/study-song-navigation.css?v=9">
 <link rel="stylesheet" href="css/event-share-variants.css?v=6">
   <style id="chat-background-picker-styles">
     /* Miniaturas do seletor de fundo do chat. */
@@ -1268,7 +1271,40 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
       <div class="roudy-search-form" role="search"><label class="roudy-search-field"><svg class="roudy-search-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><input class="roudy-search-input" id="roudy-search-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="O que você quer tocar?" aria-label="Buscar músicas e artistas" onfocus="roudySearchMenu.activate()" oninput="roudySearchMenu.input()"><button class="roudy-search-clear" id="roudy-search-clear" type="button" onclick="roudySearchMenu.clear()" aria-label="Limpar busca" hidden>×</button></label><button class="roudy-search-voice" id="roudy-search-voice" type="button" onclick="toggleRoudySearchVoiceSearch()" aria-label="Buscar por voz" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="roudy-search-cancel" type="button" onclick="roudySearchMenu.cancel()">Cancelar</button></div>
     </header>
     <main class="roudy-search-scroll">
-      <section class="roudy-search-landing" id="roudy-search-landing"><h2 class="roudy-search-section-title">Explorar no ROUDY</h2><div class="roudy-search-explore"><button class="roudy-search-shortcut roudy-search-shortcut--music" type="button" onclick="roudySearchMenu.shortcut('music')" aria-label="Explorar músicas"><span class="roudy-search-shortcut-art"><img src="assets/search/musicas.svg?v=6" alt=""></span><span class="roudy-search-shortcut-caption"><small>Encontre e estude novas músicas.</small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--playlists" type="button" onclick="roudySearchMenu.shortcut('playlist')" aria-label="Abrir playlists"><span class="roudy-search-shortcut-art"><img src="assets/search/playlists.svg?v=4" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-playlists-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--medley" type="button" onclick="roudySearchMenu.shortcut('medley')" aria-label="Abrir Medley"><span class="roudy-search-shortcut-art"><img src="assets/search/medley.svg?v=6" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-medley-meta"></small></span></button><button class="roudy-search-shortcut roudy-search-shortcut--events" type="button" onclick="roudySearchMenu.shortcut('events')" aria-label="Abrir eventos"><span class="roudy-search-shortcut-art"><img src="assets/search/eventos.svg?v=3" alt=""></span><span class="roudy-search-shortcut-caption"><small id="roudy-search-events-meta"></small></span></button></div><section id="roudy-search-resume" hidden></section></section>
+      <section class="roudy-search-landing" id="roudy-search-landing">
+        <h2 class="roudy-search-section-title">Explorar no ROUDY</h2>
+        <div class="roudy-search-explore">
+          <button class="roudy-search-shortcut roudy-search-shortcut--music" type="button" onclick="roudySearchMenu.shortcut('music')" aria-label="Explorar músicas" aria-describedby="roudy-search-music-meta">
+            <span class="roudy-search-shortcut-art"><img src="assets/search/musicas.svg?v=7" alt=""></span>
+            <span class="roudy-search-shortcut-copy">
+              <strong><span class="roudy-search-shortcut-rd" aria-hidden="true"></span>Músicas</strong>
+              <small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12 M9 18a3 2 0 1 1-6 0 3 2 0 1 1 6 0 M20 16a3 2 0 1 1-6 0 3 2 0 1 1 6 0"/></svg><span id="roudy-search-music-meta">Carregando…</span></small>
+            </span>
+          </button>
+          <button class="roudy-search-shortcut roudy-search-shortcut--playlists" type="button" onclick="roudySearchMenu.shortcut('playlist')" aria-label="Abrir playlists" aria-describedby="roudy-search-playlists-meta">
+            <span class="roudy-search-shortcut-art"><img src="assets/search/playlists.svg?v=5" alt=""></span>
+            <span class="roudy-search-shortcut-copy">
+              <strong><span class="roudy-search-shortcut-rd" aria-hidden="true"></span>Playlists</strong>
+              <small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 8 9-5 9 5-9 5z M3 12l9 5 9-5 M3 16l9 5 9-5"/></svg><span id="roudy-search-playlists-meta">Carregando…</span></small>
+            </span>
+          </button>
+          <button class="roudy-search-shortcut roudy-search-shortcut--medley" type="button" onclick="roudySearchMenu.shortcut('medley')" aria-label="Abrir Medley" aria-describedby="roudy-search-medley-meta">
+            <span class="roudy-search-shortcut-art"><img src="assets/search/medley.svg?v=7" alt=""></span>
+            <span class="roudy-search-shortcut-copy">
+              <strong><span class="roudy-search-shortcut-rd" aria-hidden="true"></span>Medleys</strong>
+              <small><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M6.5 12a5.5 5.5 0 0 1 5.5-5.5M17.5 12a5.5 5.5 0 0 1-5.5 5.5"/></svg><span id="roudy-search-medley-meta">Carregando…</span></small>
+            </span>
+          </button>
+          <button class="roudy-search-shortcut roudy-search-shortcut--events" type="button" onclick="roudySearchMenu.shortcut('events')" aria-label="Abrir eventos" aria-describedby="roudy-search-events-meta">
+            <span class="roudy-search-shortcut-art"><img src="assets/search/eventos.svg?v=4" alt=""></span>
+            <span class="roudy-search-shortcut-copy">
+              <strong><span class="roudy-search-shortcut-rd" aria-hidden="true"></span>Eventos</strong>
+              <small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v15H3z M3 10h18 M7 3v5 M17 3v5 M8 14h1m6 0h1m-8 3h1m6 0h1"/></svg><span id="roudy-search-events-meta">Carregando…</span></small>
+            </span>
+          </button>
+        </div>
+        <section id="roudy-search-resume" hidden></section>
+      </section>
       <section class="roudy-search-active" id="roudy-search-active" hidden><div id="roudy-search-feedback" class="roudy-search-feedback" role="status" aria-live="polite"></div><div id="roudy-search-suggestions" aria-label="Sugestões de pesquisa"></div><div id="roudy-search-results" aria-label="Músicas encontradas"></div></section>
       <section id="roudy-search-for-you" hidden></section>
     </main>
@@ -1460,7 +1496,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=10"></script>
-<script src="js/youtube-player-ui.js?v=26"></script>
+<script src="js/youtube-player-ui.js?v=27"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -1805,7 +1841,7 @@ new MutationObserver(updateSongControls).observe(document.getElementById('metron
 document.getElementById('metronome-meter').addEventListener('change',updateSongControls);
 let setlists=[];
 let automaticEventOffline=null;
-let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false;
+let eventMigrationCandidate=false, promptedEventMigrationOwner=null, eventBackgroundSyncReady=false, searchEventListAvailable=false;
 
 const musicasLegadasParaMigracao=[
   {id:1,title:'A alegria',key:'A',capo:'',blocos:[{l:'A alegria',c:'A  D  A  G D\nA  B7  E'},{l:'O sentimento',c:'A  A7  D  F\nA  E  A  E'},{l:'posso pisar numa tropa',c:'A  A7  D  F  (3x)\nA  E  A  E'},{l:'Aleluia',c:'A  D  A\nB7  E'}]},
@@ -3642,6 +3678,7 @@ function playAllPlaylist(){
 }
 
 function renderMusicas(){
+  window.roudySearchMenu?.refreshCards();
   renderContextualHomeCard();
   const q=(document.getElementById('search-music').value||'').toLowerCase();
   const sorted=[...musicas].filter(m=>m.title.toLowerCase().includes(q)||(m.artist||'').toLowerCase().includes(q)||(m.key||'').toLowerCase().includes(q)).sort((a,b)=>a.title.localeCompare(b.title,'pt'));
@@ -5392,6 +5429,7 @@ function setEventListFilter(filter){
 window.addEventListener('resize',()=>{if(eventFilterResizeFrame)cancelAnimationFrame(eventFilterResizeFrame);eventFilterResizeFrame=requestAnimationFrame(()=>{eventFilterResizeFrame=0;updateEventFilterIndicator(false);});},{passive:true});
 initializeEventFilterDrag();
 function renderSetlists(){
+  window.roudySearchMenu?.refreshCards();
   renderContextualHomeCard();
   refreshStageNavigationOrder();
   if(window.syncRealtime)syncRealtime.setEventIds(setlists.map(event=>event.id));
@@ -5440,6 +5478,7 @@ async function syncEventsNow(silent){
     }
     for(const synced of await eventCollaboration.flushPersonalQueue(appCurrentUser))setlists=eventRepository.upsert(setlists,synced).events;
     const remote=await eventCollaboration.listEvents(appCurrentUser);
+    searchEventListAvailable=true;
     // Eventos que eu lidero e que estão no servidor sem a cópia de alguma música: os outros
     // integrantes não têm essa música na biblioteca e viam o evento vazio. Guarda quais itens faltam
     // antes de juntar com o aparelho (que preserva a cópia local e esconderia o problema).
@@ -5954,6 +5993,10 @@ function openSD(id,options={}){
   cleanupEventParticipantsMorph();
   cleanupEventDetailHeaderMotion();
   const event=findEvent(id);if(!event)return;currentSdId=event.id;const eventFilter=document.querySelector('.event-filter-segments');if(eventFilter)eventFilter.hidden=true;
+  const {gradientVariant,GRADIENTS}=window.roudyEventShare;
+  const eventLights=GRADIENTS[gradientVariant(event.id)];
+  eventView.style.setProperty('--event-light-primary',eventLights.primary);
+  eventView.style.setProperty('--event-light-secondary',eventLights.secondary);
   const eventDetailContent=document.getElementById('sd-content'),retainedSuggestionArtwork=preserveEventSuggestionArtwork(eventDetailContent);
   const canShared=eventModel.canEditShared(event,eventPermissionActor(event).id);
   document.getElementById('sd-title').textContent=event.title;
@@ -5984,7 +6027,7 @@ function openSD(id,options={}){
   const adminChips=canShared?`<button type="button" class="event-reference-chip" onclick="openEventAddSongs('${eventEsc(event.id)}')"><span aria-hidden="true">＋</span><span>Música</span></button><button type="button" class="event-reference-chip" onclick="openEventOrderSheet('${eventEsc(event.id)}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h11M8 12h11M8 17h11M4 7h.01M4 12h.01M4 17h.01"></path></svg><span>Ordenar</span></button><button type="button" class="event-reference-chip" onclick="openEventInfoSheet('${eventEsc(event.id)}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10.6-10.6a2.4 2.4 0 0 0-3.4-3.4L4.8 15.6 4 20Z"></path></svg><span>Editar</span></button><button type="button" class="event-reference-chip event-reference-chip--more" onclick="openEventMoreActions()" aria-label="Mais opções"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button>`:'';
   const referenceActions=`<div class="event-reference-actions"><div class="event-reference-utilities"><button type="button" class="event-reference-icon" onclick="scrollEventMembers()" aria-label="Ver participantes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.5-4 2.4-6 5.5-6s5 2 5.5 6M17 9a2.5 2.5 0 0 1 0 5M16.5 14.5c2.5.2 3.8 1.7 4 4.5"></path></svg></button><button type="button" class="event-reference-icon" onclick="openEventChat()" aria-label="Abrir chat do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button><button type="button" class="event-reference-icon" onclick="sharePlaylist('${eventEsc(event.id)}')" aria-label="Compartilhar evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"></path></svg></button><button type="button" class="event-reference-icon event-reference-icon--more" onclick="openEventMoreActions()" aria-label="Mais ações do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button></div><button type="button" class="event-stage-entry event-stage-entry--origin" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${canShared?'<div class="event-reference-admin-surface" aria-hidden="true"></div>':''}<div class="event-reference-admin" aria-label="Ações do evento"><div class="event-reference-admin-chips">${adminChips}</div></div>`;
   const emptyRepertoire=canShared?'<div class="event-repertoire-empty-state"><button class="event-repertoire-primary-add" type="button" onclick="openEventAddSongs('+attrJs(event.id)+')"><span aria-hidden="true">＋</span>Adicionar músicas</button></div>'+eventSuggestionMarkup(event):'<div class="empty-state"><div class="emoji">🎵</div><p>Nenhuma música adicionada</p></div>';
-  const repertoireContent=rows?`<div class="event-section-title event-section-title--repertoire">Repertório oficial do evento</div><div class="event-repertoire-list">${rows}</div>${eventClosingSuggestionsMarkup(event,availableItems,canShared)}`:emptyRepertoire;
+  const repertoireContent=rows?`<div class="event-section-title event-section-title--repertoire">Repertório</div><div class="event-repertoire-list">${rows}</div>${eventClosingSuggestionsMarkup(event,availableItems,canShared)}`:emptyRepertoire;
   eventDetailContent.innerHTML=`${eventMeta}${referenceActions}<div id="event-detail-map" class="event-map-preview" hidden></div>${repertoireContent}${eventParticipantsMarkup(event)}`;
   restoreEventSuggestionArtwork(eventDetailContent,retainedSuggestionArtwork);
   renderEventChatButton(event);
@@ -6570,7 +6613,7 @@ let accountAuthGeneration=0;
 appAuth.subscribe(async state=>{
   const accountGeneration=++accountAuthGeneration;
   const previousAuthState=currentAuthState;
-  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){automaticEventOffline.clear();closeModal();window.roudySearchMenu?.resetAccount();window.eventChatSelection?.cancel();}
+  if((previousAuthState.user?.id||null)!==(state.user?.id||null)){searchEventListAvailable=false;automaticEventOffline.clear();closeModal();window.roudySearchMenu?.resetAccount();window.eventChatSelection?.cancel();}
   const signedOutOwnerId=previousAuthState.authenticated&&!state.authenticated?String(appCurrentUser.id||''):'';
   if(previousAuthState.authenticated&&state.authenticated&&previousAuthState.user?.id!==state.user?.id){
     setlists=eventRepository.deactivateOwner(setlists);stashMedleyForOwner(appCurrentUser.id);
@@ -6608,7 +6651,7 @@ appAuth.subscribe(async state=>{
     if(accountGeneration!==accountAuthGeneration)return;
     const remoteEvents=await eventCollaboration.listEvents(appCurrentUser);
     if(accountGeneration!==accountAuthGeneration)return;
-    setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);
+    setlists=eventRepository.reconcileRemote(setlists,remoteEvents);eventRepository.save(setlists);searchEventListAvailable=true;
     try{await contextAcknowledgements.hydrate(appCurrentUser.id);}catch(error){console.warn('[conta] avisos de preparação ficaram para depois',error);}
     if(acceptedInvitation){await refreshBands(true);switchTab('setlists');closeModal();}
     eventBackgroundSyncReady=true;
@@ -6616,10 +6659,10 @@ appAuth.subscribe(async state=>{
     // Eventos criados enquanto o envio falhou ficavam só neste aparelho até um evento 'online'. Reenvia ao entrar.
     if(!eventMigrationCandidate&&setlists.some(event=>event.syncState==='pending'&&event.pendingShared&&eventModel.isLeader(event,appCurrentUser.id)))setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true);},0);
     if(eventMigrationCandidate&&promptedEventMigrationOwner!==String(appCurrentUser.id)){promptedEventMigrationOwner=String(appCurrentUser.id);setTimeout(()=>migrateLegacyEventsInBackground(),0);}
-  }catch(error){window.__lastAccountError={at:new Date().toISOString(),status:error?.status||null,code:error?.code||null,message:String(error?.message||error).slice(0,300)};console.error('[conta] falha ao consultar a conta',error);if(accountGeneration===accountAuthGeneration)showToast(navigator.onLine===false?'⚠️ Sem internet. Seus eventos serão atualizados quando a conexão voltar.':'⚠️ Não foi possível atualizar seus eventos agora. Tentaremos de novo automaticamente.');setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true).catch?.(()=>{});},15000);}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;automaticEventOffline.schedule();}}
+  }catch(error){window.__lastAccountError={at:new Date().toISOString(),status:error?.status||null,code:error?.code||null,message:String(error?.message||error).slice(0,300)};console.error('[conta] falha ao consultar a conta',error);if(accountGeneration===accountAuthGeneration)showToast(navigator.onLine===false?'⚠️ Sem internet. Seus eventos serão atualizados quando a conexão voltar.':'⚠️ Não foi possível atualizar seus eventos agora. Tentaremos de novo automaticamente.');setTimeout(()=>{if(currentAuthState.authenticated&&accountGeneration===accountAuthGeneration)syncEventsNow(true).catch?.(()=>{});},15000);}finally{if(accountGeneration===accountAuthGeneration){authLinking=false;window.roudySearchMenu?.refreshCards();automaticEventOffline.schedule();}}
 });
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeletedMany:(values,confirmed)=>songRepository.markDeletedMany(values,confirmed),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
-librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.querySelector('[data-library-sync-status]'))renderLibrarySyncPanel(state);});
+librarySync.subscribe(state=>{window.roudySearchMenu?.refreshCards();updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.querySelector('[data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
 appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
@@ -6800,7 +6843,7 @@ function openEventChatStyleMenu(trigger, scope='style'){
 </script>
 <script src="js/event-chat-selection.js?v=4"></script>
 <script src="js/song-search.js?v=1"></script>
-<script src="js/search-menu.js?v=19"></script>
+<script src="js/search-menu.js?v=20"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -6884,14 +6927,6 @@ if ('serviceWorker' in navigator) {
   -webkit-backdrop-filter:blur(var(--event-header-blur)) saturate(145%);
   mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 18px),transparent 100%);
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 18px),transparent 100%);
-}
-.roudy-search.is-header-compact:not(.is-active) .roudy-search-form::before{
-  inset:-14px calc(var(--roudy-search-inline) * -1) -32px;
-  pointer-events:none;
-  backdrop-filter:blur(calc(var(--roudy-search-header-progress) * 18px)) saturate(145%);
-  -webkit-backdrop-filter:blur(calc(var(--roudy-search-header-progress) * 18px)) saturate(145%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 100%);
 }
 /* Tipografia de interface da Partitura; o papel e os glifos musicais não são afetados. */
 #detail-content .song-page .sheet-music-empty,

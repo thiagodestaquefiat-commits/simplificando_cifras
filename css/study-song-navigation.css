@@ -28,20 +28,15 @@
 .study-song-skip:focus-visible{outline:2px solid #a1a1aa;outline-offset:-3px;border-radius:6px}
 .study-song-skip[hidden],.study-song-position[hidden]{display:none}
 
-/* The video header's back button is out of flow. Reserve its column anyway. */
-#view-detail:not(.stage-mode).video-study-expanded > .detail-header .study-song-navigation{
-  grid-column:2;
-  grid-row:1;
-}
-#view-detail:not(.stage-mode).video-study-expanded > .detail-header #song-assistant-launch{
-  grid-column:-2 / -1;
-  grid-row:1;
-}
-
 .study-song-current-number{color:#0789e7}
 
 /* Keep the sticky controls and scrolling content below the header's hit area. */
 #view-detail:not(.stage-mode) > .detail-header{
   flex-shrink:0;
   z-index:6;
+}
+
+#view-detail:not(.stage-mode) > .detail-header .study-song-navigation.has-repertoire{
+  max-width:320px;
+  justify-self:center;
 }

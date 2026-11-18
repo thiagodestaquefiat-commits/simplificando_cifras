@@ -8,7 +8,47 @@
   function icon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>'}
   function nextEvent(){const now=new Date(),values=Array.isArray(global.setlists)?global.setlists:(typeof setlists!=='undefined'?setlists:[]);return values.filter(item=>item?.date).map(item=>({item,date:new Date(`${item.date}T${item.time||'23:59'}`)})).filter(value=>Number.isFinite(value.date.getTime())&&value.date>=now).sort((a,b)=>a.date-b.date)[0]?.item||null}
   function renderIdentity(){const target=el('roudy-search-avatar');if(!target)return;const profile=typeof global.accountProfile==='function'?global.accountProfile():global.appCurrentUser||{};target.className='roudy-search-avatar'+(profile.avatarUrl?' has-image':` roudy-avatar-fallback ${global.eventAvatarPaletteClass?.(profile.id||profile.name)||''}`);target.innerHTML=profile.avatarUrl?`<img src="${global.eventEsc(profile.avatarUrl)}" alt="">`:global.eventEsc(global.eventInitials?.(profile.name)||String(profile.name||'R').slice(0,1).toUpperCase())}
-  function renderCardMeta(){const event=nextEvent(),eventMeta=el('roudy-search-events-meta'),playlistMeta=el('roudy-search-playlists-meta'),medleyMeta=el('roudy-search-medley-meta');if(eventMeta)eventMeta.textContent=event?`Próximo: ${typeof global.eventDisplayDate==='function'?global.eventDisplayDate(event.date):event.date}`:'Nenhum próximo evento';if(playlistMeta)playlistMeta.textContent=`${songs().length} ${songs().length===1?'música salva':'músicas salvas'}`;const blocks=Array.isArray(global.medleyBlocos)?global.medleyBlocos:(typeof medleyBlocos!=='undefined'&&Array.isArray(medleyBlocos)?medleyBlocos:[]);if(medleyMeta)medleyMeta.textContent=blocks.length?'Continuar criação':'Criar novo medley'}
+  const cardEventDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'short'});
+  let cardPlaylistsReady=false;
+  const countLabel=(count,singular,plural)=>`${count} ${count===1?singular:plural}`;
+  function renderCardMeta(){
+    if(el('roudy-search')?.hidden)return;
+    const auth=typeof currentAuthState!=='undefined'?currentAuthState:null;
+    const accountId=auth?.authenticated?String(auth.user?.id||''):'';
+    const sync=typeof librarySync!=='undefined'?librarySync.getStatus():null;
+    const owner=global.homePlaylists?.ownerId;
+    const linking=Boolean(accountId&&typeof authLinking!=='undefined'&&authLinking);
+    const libraryLoading=Boolean(accountId&&(sync?.phase==='syncing'||sync?.phase==='unauthenticated'));
+    const unavailable='Dados indisponíveis';
+    const loading='Carregando…';
+    const library=songs();
+    const medleys=library.filter(song=>normalize(song.artist)==='medley');
+    const playlists=owner&&cardPlaylistsReady?global.userPlaylists?.list?.(owner):null;
+    const created=playlists?.filter(playlist=>!playlist.sharedFrom&&(!playlist.collaboration||
+      playlist.collaboration.members?.some(member=>String(member.id)===accountId&&member.role==='owner')));
+    const libraryLabel=(count,singular,plural)=>count||(!libraryLoading&&sync?.phase!=='error')
+      ?countLabel(count,singular,plural):libraryLoading?loading:unavailable;
+    const eventReady=typeof searchEventListAvailable!=='undefined'&&searchEventListAvailable;
+    const event=(!accountId||eventReady||!linking)?nextEvent():null;
+    let eventLabel='Nenhum próximo evento';
+    if(event){
+      const shortDate=cardEventDate.format(new Date(`${event.date}T12:00:00`)).replace(' de ',' ');
+      const [hour,minute]=String(event.time||'').split(':');
+      eventLabel=`Próximo: ${shortDate}${hour&&minute?` · ${Number(hour)}h${minute==='00'?'':minute}`:''}`;
+    }else if(accountId&&!eventReady){
+      eventLabel=linking?loading:unavailable;
+    }
+    const labels={
+      music:libraryLabel(library.length,'música','músicas'),
+      playlists:linking&&!created?.length?loading:created?countLabel(created.length,'playlist','playlists'):cardPlaylistsReady?unavailable:loading,
+      medley:libraryLabel(medleys.length,'medley','medleys'),
+      events:eventLabel
+    };
+    for(const [key,label] of Object.entries(labels)){
+      const target=el(`roudy-search-${key}-meta`);
+      if(target&&target.textContent!==label)target.textContent=label;
+    }
+  }
   // This rail intentionally contains songs only. Until the product has reliable
   // community-save signals, it prioritizes the next repertoire and then other
   // available songs without presenting either source as a popularity claim.
@@ -131,5 +171,7 @@
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&el('roudy-search')?.classList.contains('is-open')){event.preventDefault();close()}});
   el('roudy-search')?.querySelector('.roudy-search-scroll')?.addEventListener('scroll',scheduleHeaderCompact,{passive:true});
   function resetAccount(){requestId++;controller?.abort();searchService=null;el('roudy-search-results')?.replaceChildren();el('roudy-search-suggestions')?.replaceChildren();if(el('roudy-search')?.classList.contains('is-open'))close()}
-  global.roudySearchMenu=Object.freeze({open,close,activate,cancel,setFilter,input,clear,shortcut,expandHeaderSearch,resetAccount});
+  global.roudySearchMenu=Object.freeze({open,close,activate,cancel,setFilter,input,clear,shortcut,expandHeaderSearch,resetAccount,refreshCards:renderCardMeta});
+  global.userPlaylists?.subscribe?.(renderCardMeta);
+  global.userPlaylists?.ready.then(()=>{cardPlaylistsReady=true;renderCardMeta()});
 })(window);
