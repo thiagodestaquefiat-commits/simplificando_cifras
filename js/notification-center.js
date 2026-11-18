@@ -9,6 +9,8 @@
   const seen=()=>new Set(scopedValues(readState()));
   const dismissed=()=>new Set(scopedValues(dismissedState()));
   const isDismissed=id=>dismissed().has(String(id));
+  const isAcknowledged=id=>seen().has(String(id))||isDismissed(id);
+  // Pending invitations are actions, not history. Ignore legacy dismissals for them.
   const pending=()=>[...(global.eventUserInvites?.getPending?.()||[]),...(global.playlistCollaboration?.getInbox().invitations||[]).map(item=>({...item,id:'playlist-invite:'+item.id}))];
   const items=()=>{
     const values=[...(typeof global.getRoudyNotificationItems==='function'?global.getRoudyNotificationItems():[]),...(global.playlistCollaboration?.getInbox().notifications||[])];
@@ -30,7 +32,7 @@
   }
   function update(){
     const button=el('user-invitations-button');if(!button)return;
-    const read=seen(),count=pending().filter(i=>!read.has('invite:'+i.id)).length+items().filter(i=>i.unread&&!read.has(i.id)).length;
+    const read=seen(),count=pending().filter(i=>!read.has('invite:'+i.id)).length+items().filter(i=>i.unread&&!read.has(String(i.id))).length;
     if(!button.querySelector('svg'))button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 15 18 15 18 8Z"></path><path d="M9.5 20h5"></path></svg>';
     button.hidden=false;button.querySelector('.event-notification-badge')?.remove();
     if(count){const badge=document.createElement('span');badge.className='event-notification-badge';badge.textContent=count>99?'99+':String(count);button.appendChild(badge);}
@@ -79,8 +81,9 @@
     });update();global.showToast('Notificações marcadas como lidas. Os convites continuam aguardando sua resposta.');
   }
   function markChatRead(eventId){saveRead(items().filter(i=>i.kind==='message'&&String(i.eventId)===String(eventId)).map(i=>i.id));update();}
-  function clearAll(){
+  function clearHistory(){
     const ids=items().map(i=>String(i.id));
+    if(!ids.length)return;
     if(!saveScoped(dismissedKey,dismissedState(),[...dismissed(),...ids])){global.showToast('Não foi possível limpar as notificações neste dispositivo.');return;}
     update();global.showToast('Histórico de notificações limpo.');
   }
@@ -89,14 +92,14 @@
     el('modal-overlay').classList.add('notification-center-overlay');
     el('modal-body').innerHTML='<section class="notification-center-page"><header class="notification-center-header"><button id="notification-center-close" class="notification-center-back" type="button" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>Notificações</h1><button id="notification-mark-all" class="notification-mark-all" type="button">Ler todas</button></header><main class="notification-center-content"><section class="notification-invitations"><h2 class="notification-period">Convites</h2><div id="user-invitations-status" role="status" aria-live="polite"></div><div id="user-invitations-list"></div></section><div id="roudy-notification-items"></div></main></section>';
     const toolbar=document.createElement('div');toolbar.className='notification-center-tools';
-    const clearButton=document.createElement('button');clearButton.id='notification-clear-all';clearButton.className='notification-clear-all';clearButton.type='button';clearButton.textContent='Limpar histórico';clearButton.addEventListener('click',clearAll);toolbar.appendChild(clearButton);
+    const clearButton=document.createElement('button');clearButton.id='notification-clear-all';clearButton.className='notification-clear-all';clearButton.type='button';clearButton.textContent='Limpar histórico';clearButton.addEventListener('click',clearHistory);toolbar.appendChild(clearButton);
     el('modal-body').querySelector('.notification-center-header').after(toolbar);
     const playlistInvitations=document.createElement('div');playlistInvitations.id='playlist-invitations-list';el('user-invitations-list').after(playlistInvitations);
     el('notification-mark-all').addEventListener('click',markAll);el('notification-center-close').addEventListener('click',global.closeModal);
     el('modal-overlay').style.display='flex';update();global.eventUserInvites?.refresh?.(true);
     global.playlistCollaboration?.refresh(true);
   }
-  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss,isDismissed});
+  global.notificationCenter=Object.freeze({open,update,markChatRead,dismiss,isDismissed,isAcknowledged});
   global.appAuth?.subscribe?.(()=>{if(el('roudy-notification-items'))global.closeModal();update();});
   global.addEventListener('storage',()=>update());
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',update,{once:true});else update();

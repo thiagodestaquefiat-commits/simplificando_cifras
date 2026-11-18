@@ -27,6 +27,10 @@ def _database_uri(value: str) -> str:
 
 
 class Config:
+    BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+    BUG_REPORT_SENDER_EMAIL = os.getenv('BUG_REPORT_SENDER_EMAIL', '')
+    BUG_REPORT_SENDER_NAME = os.getenv('BUG_REPORT_SENDER_NAME', 'ROUDY — Suporte')
+    BUG_REPORT_RECIPIENT_EMAIL = os.getenv('BUG_REPORT_RECIPIENT_EMAIL', '')
     PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "https://simplificandocifras.netlify.app/").rstrip("/") + "/"
     JSON_SORT_KEYS = False
     MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", str(10 * 1024 * 1024)))
@@ -64,6 +68,9 @@ class Config:
 
     SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
     SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+    # Só no servidor (nunca no app): permite apagar o login no Supabase quando a pessoa exclui a conta.
+    # Use a secret key nova (sb_secret_...); a service_role antiga também funciona até ser desativada.
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     SUPABASE_AUTH_TIMEOUT_SECONDS = float(os.getenv("SUPABASE_AUTH_TIMEOUT_SECONDS", "6"))
     AUTH_CONFIG_RATE_LIMIT = os.getenv("AUTH_CONFIG_RATE_LIMIT", "60 per minute")
 

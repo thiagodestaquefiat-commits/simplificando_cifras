@@ -6,3 +6,5 @@ backend/.pytest_cache/
 *.pyc
 node_modules/
 .pnpm-store/
+
+.venv-integration/

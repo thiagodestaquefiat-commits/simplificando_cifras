@@ -162,15 +162,16 @@ def test_web_scraped_song_goes_to_catalog_with_full_sheet_and_source(client, app
         assert "Fonte: https://www.cifraclub.com.br/luiz-gonzaga/asa-branca/" in stored.song_data["observacoes"]
 
 
-def test_personal_completion_does_not_change_catalog_entry(client, app):
-    """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa."""
+def test_completion_updates_catalog_entry(client, app):
+    """Caso real: música entrou no catálogo só com resumo; ao salvar de novo com a cifra, fica completa
+    (decisão do Thiago, 30/10/2026: toda música completada vai para o catálogo compartilhado)."""
     token = register(client, "shared-upgrade", "U")
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": ai_song()})
     with app.app_context():
         assert SharedSong.query.one().song_data["fullChordSheet"] is None
     client.put("/api/library/songs/up1", headers=auth(token), json={"songData": _with_sheet("web_source")})
     with app.app_context():
-        assert SharedSong.query.one().song_data["fullChordSheet"] is None
+        assert SharedSong.query.one().song_data["fullChordSheet"]["content"] == "G C\nLetra completa da música"
     friend = register(client, "shared-friend", "F")
     found = client.get("/api/shared-songs/search?title=asa%20branca&artist=Luiz%20Gonzaga", headers=auth(friend)).get_json()
     assert found["match"]["title"] == "Asa Branca"
@@ -326,9 +327,8 @@ def test_catalog_summary_off_roudy_standard_is_rebuilt_from_saved_sheet():
         ResumoHarmonicoRequest(tipo="pesquisa", titulo="Minha alma", artista="O Rappa", modoGeracao="conhecimento_modelo"))
     blocks = [(b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
     assert blocks == [
-        (None, ["Am", "F", "Dm"], 2),
-        ("Linha inventada um do verso", ["Am", "F", "Dm"], None),
-        ("Frase inventada do refrão", ["Am", "Am7", "G6/A", "Dm9/A"], None),
+        ("Linha inventada um do verso", ["Am", "F", "Dm"], 4),  # Intro com a mesma volta entra no verso
+        ("Frase inventada do refrão", ["Am", "Am7", "G6/A", "Dm9/A"], 2),
     ], blocks
     assert result.tom == "C" and result.fullChordSheet.content.strip() == sheet.strip()
 

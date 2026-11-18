@@ -74,9 +74,16 @@
     return String(value == null ? "" : value).replace(INVISIBLE_CHARS, "").replace(ODD_SPACES, " ").replace(/\t/g, "    ");
   }
 
+  // Parênteses, colchetes e barras em volta dos acordes ("( C#m A4 E )", "[G D]", "| C | G |")
+  // não fazem a linha virar letra: só contam os acordes. Precisa ter pelo menos um acorde.
+  const CHORD_GROUPING_ONLY = /^[()[\]|]+$/;
+  function chordLineToken(token) {
+    const core = token.replace(/^[([|]+/, "").replace(/[)\]|]+$/, "");
+    return Boolean(core) && Boolean(global.multiInstrumentChordLibrary.parseChord(core));
+  }
   function chordLine(value) {
-    const tokens = repeatFromText(cleanSheetLine(value)).text.trim().split(/\s+/).filter(Boolean);
-    return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token));
+    const tokens = repeatFromText(cleanSheetLine(value)).text.trim().split(/\s+/).filter(Boolean).filter((token) => !CHORD_GROUPING_ONLY.test(token));
+    return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token) || chordLineToken(token));
   }
 
   function chordsFromText(value) {

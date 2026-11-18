@@ -17,8 +17,8 @@ from app.services.harmonic_normalizer import (
         ("B4", "B4"),
         ("A4", "A4"),
         ("B2", "B2"),
-        ("Db", "Db"),
-        ("Gb/Bb", "Gb/Bb"),
+        ("Db", "C#"),  # grafia mais usada: C# em vez de Db
+        ("Gb/Bb", "F#/Bb"),  # F# em vez de Gb; Bb continua
         ("F#m7(11)", "F#m7"),  # extensões entre parênteses não são exibidas
         ("D/F#", "D/F#"),
         ("C7M", "C7M"),

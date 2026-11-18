@@ -166,11 +166,25 @@
     return event.repertoire.find((item) => String(item.id) === String(itemId));
   }
 
+  const BAND_CONTENT_CHANGES = new Set(["STRUCTURE_CHANGED", "KEY_CHANGED", "CAPO_CHANGED"]);
+  function bandChangedAfter(event, item, personalUpdatedAt) {
+    const personalTime = Date.parse(personalUpdatedAt || "");
+    if (!Number.isFinite(personalTime)) return false;
+    const ids = new Set([String(item.songId)]);
+    try { if (global.eventCollaboration) ids.add(String(global.eventCollaboration.toRemoteSongId(item.songId))); } catch (error) {}
+    return (event.notifications || []).some((notice) => BAND_CONTENT_CHANGES.has(notice.changeType) &&
+      notice.songId != null && ids.has(String(notice.songId)) && Date.parse(notice.createdAt || "") > personalTime);
+  }
+
   function effectiveRepertoireItem(event, itemId, userId) {
     const normalized = create(event);
     const item = findRepertoireItem(normalized, itemId);
     if (!item) return null;
-    const personal = item.personalEdits[String(userId)] || null;
+    const stored = item.personalEdits[String(userId)] || null;
+    // "Editar na versão da banda" tem que chegar na banda: se o líder alterou a música (resumo,
+    // tom ou capo) depois da versão pessoal desta pessoa, vale a versão da banda. Se a pessoa
+    // ajustar de novo depois disso, a versão dela volta a valer.
+    const personal = stored && !bandChangedAfter(normalized, item, stored.updatedAt) ? stored : null;
     return {
       ...item,
       effective: {

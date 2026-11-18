@@ -30,13 +30,26 @@
     return `${configuredBaseUrl()}${suffix}`;
   }
 
+  // Links compartilhados de dentro de um preview do Netlify aberto com ?api=producao levam o mesmo
+  // parâmetro; senão quem abre o link cai num servidor de teste que não existe e o login falha.
+  // No app oficial não muda nada.
+  function withPreviewApi(url) {
+    try {
+      const hostname = String(global.location?.hostname || "");
+      if (/^deploy-preview-\d+--simplificandocifras\.netlify\.app$/.test(hostname) && usesProductionApi()) url.searchParams.set("api", "producao");
+    } catch (_) { /* link continua válido sem o parâmetro */ }
+    return url;
+  }
+
   global.apiConfig = Object.freeze({
+    withPreviewApi,
     get API_BASE_URL() { return configuredBaseUrl(); },
     harmonicSummaryEndpoint() { return endpoint("/api/resumo-harmonico"); },
     sharedSongsEndpoint(path) { return endpoint("/api/shared-songs/" + String(path || "").replace(/^\//, "")); },
     musicSourceEndpoint(path) { return endpoint("/api/music-sources" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     authEndpoint(path) { return endpoint("/api/auth" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     locationEndpoint(path) { return endpoint("/api/locations" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
+    accountEndpoint() { return endpoint("/api/account"); },
     collaborationEndpoint(path) { return endpoint("/api/collaboration" + (String(path || "").startsWith("/") ? path : "/" + String(path || ""))); },
     libraryEndpoint(path) { return endpoint("/api/library/songs" + (String(path || "").startsWith("/") ? path : path ? "/" + String(path) : "")); }
   });

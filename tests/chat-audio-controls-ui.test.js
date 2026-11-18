@@ -8,7 +8,7 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
     Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>({getTracks:()=>[{stop(){stopped++;}}]})},configurable:true});
     window.AudioContext=class{createAnalyser(){return{fftSize:256,getByteTimeDomainData(data){data.fill(180)}}}createMediaStreamSource(){return{connect(){},disconnect(){}}}resume(){return Promise.resolve()}close(){return Promise.resolve()}};
     window.MediaRecorder=class{static isTypeSupported(){return true}constructor(){this.state='inactive';this.mimeType='audio/webm'}start(){this.state='recording'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';this.ondataavailable({data:new Blob(['fixture'],{type:this.mimeType})});setTimeout(()=>this.onstop(),0)}};
-    window.fetch=async()=>{sent++;return{ok:!fail,json:async()=>fail?{erro:{mensagem:'Falha simulada'}}:{id:'voice-'+sent,eventId:'event',type:'audio',sender:{name:'Ana'},audio:{duration:1}}}};
+    window.fetch=async(_url,request)=>{sent++;return{ok:!fail,headers:{get:()=>null},json:async()=>fail?{erro:{mensagem:'Falha simulada'}}:{id:request.body.get('clientId'),eventId:'event',type:'audio',sender:{name:'Ana'},audio:{duration:1}}}};
   });
   await page.addScriptTag({path:path.resolve('js/event-chat-audio.js')});await page.evaluate(()=>eventChatAudio.initialize({getEvent:()=>({id:'event'}),onMessage:m=>eventChatAudio.render(document.querySelector('.event-chat-messages'),m)}));
   await page.getByRole('button',{name:'Gravar áudio',exact:true}).press('Space');await page.waitForSelector('.event-audio-tools.is-recording');await page.waitForTimeout(450);

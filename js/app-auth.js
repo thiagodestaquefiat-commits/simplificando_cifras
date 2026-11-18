@@ -1,5 +1,5 @@
-// MANUTENÇÃO: Sessão Google via Supabase Auth: inicialização, renovação e notificações de identidade.
-// MANUTENÇÃO: O aplicativo recebe tokens de sessão, nunca a senha do Google.
+// MANUTENÇÃO: Sessão via Supabase Auth (Google ou código por e-mail): inicialização, renovação e notificações de identidade.
+// MANUTENÇÃO: O aplicativo recebe tokens de sessão, nunca senhas.
 // MANUTENÇÃO: Logout com escopo local encerra esta sessão sem desconectar os outros aparelhos.
 (function (global) {
   "use strict";
@@ -7,6 +7,8 @@
   let client = null;
   let session = null;
   let initializationPromise = null;
+  let sdkPromise = null;
+  let googleSignInPromise = null;
   let callbackExchangeAttempted = false;
   let offlineSession = false;
   let authSubscription = null;
@@ -85,14 +87,24 @@
 
   function loadSdk() {
     if (global.supabase && global.supabase.createClient) return Promise.resolve();
-    return new Promise((resolve, reject) => {
+    if (sdkPromise) return sdkPromise;
+    sdkPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
+      let timer;
+      const finish = error => {
+        global.clearTimeout(timer);
+        script.onload = script.onerror = null;
+        if (error) { script.remove?.(); reject(error); } else resolve();
+      };
       script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
       script.async = true;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("Não foi possível carregar o serviço de login."));
+      script.onload = () => finish(global.supabase?.createClient ? null : new Error("Não foi possível carregar o serviço de login."));
+      script.onerror = () => finish(new Error("Não foi possível carregar o serviço de login."));
+      // Um download lento no celular não deve bloquear todas as tentativas seguintes.
+      timer = global.setTimeout(() => finish(new Error("O serviço de login demorou demais para carregar.")), 15000);
       document.head.appendChild(script);
-    });
+    }).finally(() => { sdkPromise = null; });
+    return sdkPromise;
   }
 
   function sessionStorageKey(){return config.supabaseUrl?'sb-'+new URL(config.supabaseUrl).hostname.split('.')[0]+'-auth-token':null;}
@@ -105,7 +117,8 @@
   }
   async function initializeOnce(forceRefresh, initialCallbackCode) {
     try {
-      const cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null");
+      let cached = null;
+      try { cached = global.localStorage && JSON.parse(global.localStorage.getItem(CONFIG_KEY) || "null"); } catch (_) { /* Cache indisponível não impede consultar a configuração pública. */ }
       if (!forceRefresh && cached && cached.enabled) config = cached;
       else {
         if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para verificar o login.");
@@ -113,11 +126,12 @@
         const response = await withTimeout(global.fetch(global.apiConfig.authEndpoint("/config"), { headers: { Accept: "application/json" }, ...(controller ? { signal: controller.signal } : {}) }), "A verificação do login demorou demais.").catch((error) => { controller?.abort(); throw error; });
         if (!response.ok) throw new Error("Configuração de login indisponível.");
         config = await response.json();
-        if (config.enabled && global.localStorage) global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        if (config.enabled && global.localStorage) { try { global.localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (_) { /* Cache é opcional para iniciar um login online. */ } }
       }
+      config = { ...config, error: null };
       if (!config.enabled) { emit(); return getState(); }
       if(global.navigator?.onLine===false){restoreOfflineSession();return getState();}
-      await withTimeout(loadSdk(), "O serviço de login demorou demais para carregar.");
+      await loadSdk();
       const code = initialCallbackCode;
       if (!client) {
         client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: "pkce" } });
@@ -159,22 +173,89 @@
     return initializationPromise;
   }
 
-  async function signInWithGoogle() {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
-    const redirectTo = `${new URL(global.location.href).origin}/`;
-    const result = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
-    if (result.error) throw result.error;
+  async function ensureLoginReady() {
+    if (global.navigator?.onLine === false) throw new Error("Conecte-se à internet para entrar na sua conta.");
+    // initialize() compartilha a preparação em andamento e permite uma nova tentativa
+    // após falha. Nunca interpretar cliente ausente como configuração inexistente.
+    if (!client) await initialize();
+    if (!client) {
+      if (config.error) throw new Error("Não foi possível preparar o login. Verifique sua conexão e tente novamente.");
+      throw new Error("O login ainda não foi configurado pela equipe.");
+    }
+  }
+
+  function signInWithGoogle() {
+    if (googleSignInPromise) return googleSignInPromise;
+    googleSignInPromise = (async () => {
+      await ensureLoginReady();
+      const redirectTo = `${new URL(global.location.href).origin}/`;
+      const result = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (result.error) throw result.error;
+    })().finally(() => { googleSignInPromise = null; });
+    return googleSignInPromise;
+  }
+
+  // Login por e-mail com código de 6 dígitos (qualquer provedor: Outlook, Hotmail, Yahoo...).
+  // Código em vez de link: o link mágico abre no navegador e não no app instalado (PWA/APK/iPhone).
+  // O backend identifica a pessoa pelo id do Supabase, então nenhuma rota do servidor muda.
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function normalizeEmail(value) {
+    const email = String(value || "").trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(email) || email.length > 254) throw new Error("Digite um e-mail válido.");
+    return email;
+  }
+
+  async function sendEmailCode(value) {
+    await ensureLoginReady();
+    const email = normalizeEmail(value);
+    const result = await withTimeout(client.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }), "O envio do código demorou demais. Tente novamente.", 15000);
+    if (result.error) {
+      if (Number(result.error.status) === 429) throw new Error("Muitos pedidos de código. Aguarde um minuto e tente de novo.");
+      throw new Error("Não foi possível enviar o código para este e-mail.");
+    }
+    return { email };
+  }
+
+  async function verifyEmailCode(value, code) {
+    await ensureLoginReady();
+    const email = normalizeEmail(value);
+    const token = String(code || "").replace(/\D/g, "");
+    if (token.length < 6 || token.length > 10) throw new Error("Digite o código que chegou no seu e-mail.");
+    const result = await withTimeout(client.auth.verifyOtp({ email, token, type: "email" }), "A confirmação do código demorou demais. Tente novamente.", 15000);
+    if (result.error) throw new Error("Código inválido ou expirado. Peça um novo código.");
+    session = result.data && result.data.session || session;
+    offlineSession = false;
+    emit();
+    return getState();
+  }
+
+  // Excluir conta (Play Store/LGPD): o servidor apaga os dados e o login; aqui só encerra a sessão local.
+  async function deleteAccount(confirmation) {
+    if (!client || !session || !session.access_token) throw new Error("Entre na sua conta para excluí-la.");
+    if (global.navigator && global.navigator.onLine === false) throw new Error("Conecte-se à internet para excluir a conta.");
+    const response = await withTimeout(global.fetch(global.apiConfig.accountEndpoint(), {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+      body: JSON.stringify({ confirm: String(confirmation || "") })
+    }), "A exclusão demorou demais. Verifique a internet e tente de novo.", 30000);
+    let body = null;
+    try { body = await response.json(); } catch (_error) { body = null; }
+    if (!response.ok) throw new Error(body?.erro?.mensagem || "Não foi possível excluir a conta agora.");
+    try { await client.auth.signOut({ scope: "local" }); } catch (_error) { /* o login pode já ter sido apagado */ }
+    session = null;
+    emit();
+    return body || { deleted: true };
   }
 
   async function signInWithEmail(email, {shouldCreateUser = true} = {}) {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    await ensureLoginReady();
     const emailRedirectTo = new URL(global.location.href).origin + "/";
     const result = await client.auth.signInWithOtp({email,options:{emailRedirectTo,shouldCreateUser}});
     if (result.error) throw new Error("Não foi possível enviar o link de acesso. Confira o e-mail e tente novamente.");
   }
 
   async function signInWithPassword(email, password) {
-    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    await ensureLoginReady();
     const result = await withTimeout(client.auth.signInWithPassword({ email: String(email || '').trim(), password }), "A conexão demorou. Tente novamente.");
     if (result.error || !result.data?.session?.user) throw new Error("Não foi possível entrar. Confira o e-mail e a senha e tente novamente.");
     session = result.data.session; offlineSession = false; emit();
@@ -237,5 +318,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signInWithPassword, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signInWithPassword, sendEmailCode, verifyEmailCode, deleteAccount, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

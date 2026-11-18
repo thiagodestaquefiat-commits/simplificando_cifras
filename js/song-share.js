@@ -58,6 +58,7 @@
       const api = target.searchParams.get("api"); // previews do Netlify usam ?api=producao
       target.search = "";
       if (api === "producao") target.searchParams.set("api", api);
+      global.apiConfig?.withPreviewApi?.(target);
       target.hash = "";
       target.searchParams.set(PARAM, body.id);
       url = target.toString();

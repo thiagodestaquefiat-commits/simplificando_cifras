@@ -30,8 +30,8 @@ assert.match(loader, /is-loaded/, 'a capa deve aparecer somente após carregar')
 assert.match(loader, /settle\(event\.target, false\)/, 'falha de imagem deve manter o fallback');
 assert.match(search, /roudyListLoading\?\.skeleton\(5\)/, 'a busca assíncrona deve reservar o layout com skeleton');
 assert.match(search, /roudyListLoading\?\.artwork\(song\)/, 'as listas locais devem usar o placeholder de arte');
-assert.match(page, /js\/list-loading\.js\?v=1/, 'o novo módulo deve carregar antes das listas');
+assert.match(page, /js\/list-loading\.js\?v=10/, 'o novo módulo deve carregar antes das listas');
 assert.match(worker, /const CACHE_NAME = "simplificando-cifras-v[0-9]+-[^"]+"/, 'o cache deve invalidar recursos antigos');
-assert.match(worker, /\.\/js\/list-loading\.js\?v=1/, 'o service worker deve pré-cachear o módulo');
+assert.match(worker, /\.\/js\/list-loading\.js\?v=10/, 'o service worker deve pré-cachear o módulo');
 
 console.log('list-loading-source.test.js: OK');

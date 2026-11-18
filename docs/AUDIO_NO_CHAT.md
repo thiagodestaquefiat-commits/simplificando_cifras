@@ -16,3 +16,23 @@
 Requer publicação do frontend e backend, instalação de `av>=16,<18` e banco persistente (não armazenamento efêmero de container). O limite global `MAX_CONTENT_LENGTH` precisa permitir multipart de 3 MB + 64 KB. A configuração padrão suporta isso.
 
 `npm run test:chat-audio` usa microfone sintético do Chrome e Flask/banco isolados reais: grava, envia, transcodifica, reproduz, cancela, testa falha/reenvio e saída. `pytest backend/tests/test_event_audio.py` verifica autorização, conteúdo malformado, idempotência e exclusão privada. Não substitui testes em Android e iPhone reais, permissões de microfone e Safari.
+
+## Reparos de áudios longos
+
+- Mantidos os limites de 90 segundos e 3 MiB. A conversão tolera até 250 ms de
+  diferença no fim da captura (timer/codec), mas grava apenas 90 segundos de PCM;
+  durações acima da tolerância são recusadas. O AAC ainda pode ter padding de frame.
+- MySQL/MariaDB: tabela nova usa MEDIUMBLOB e o ajuste aditivo amplia apenas a
+  coluna legada BLOB. PostgreSQL mantém BYTEA; SQLite mantém LargeBinary.
+  A migração roda na inicialização; testar no banco de homologação e confirmar
+  permissão ALTER e janela adequada antes de publicar. Não há exclusão de dados.
+- Upload: prazo de 120 s no cliente, incluindo leitura da confirmação. Download:
+  prazo de 30 s e cancelamento ao sair do chat/perder foco. Limites de proxy e
+  servidor continuam independentes. Conferir MAX_CONTENT_LENGTH no Railway:
+  para aceitar o teto do recurso, permitir ao menos 3 MiB + 64 KiB de multipart.
+- O rascunho só é removido após resposta válida com o ID e tipo esperados.
+  Erros de armazenamento são registrados com requestId e classe, sem bytes.
+  A gravação acima de 3 MiB é recusada, não truncada em bytes arbitrários.
+- Verificação local: AAC de 80/90 s com salvamento e download, tipos de coluna,
+  migração simulada, rollback, resposta HTML inválida e retomada de reprodução.
+  MySQL/PostgreSQL reais, produção e aparelhos físicos ainda exigem homologação.

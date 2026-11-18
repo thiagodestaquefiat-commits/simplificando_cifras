@@ -14,7 +14,16 @@
   let suppressPlaylistClickId = null;
   let coverCropState = null;
 
-  const owner = () => (typeof appCurrentUser !== "undefined" && appCurrentUser && appCurrentUser.id) || "local";
+  // Ao abrir o app logado, mostra na hora as playlists guardadas da última conta deste aparelho
+  // (só se a sessão salva for da mesma conta), enquanto o login confirma a conta pela internet.
+  let provisionalOwner = null;
+  const owner = () => provisionalOwner || (typeof appCurrentUser !== "undefined" && appCurrentUser && appCurrentUser.id) || "local";
+  function setProvisionalOwner(value) {
+    const next = value ? String(value) : null;
+    if (next === provisionalOwner) return;
+    provisionalOwner = next;
+    if (view === "home") renderHome();
+  }
   const esc = (value) => global.eventEsc(String(value ?? ""));
   const js = (value) => global.attrJs(value);
   const pane = () => document.getElementById("pane-musicas");
@@ -1047,6 +1056,7 @@
           const body=await response.json().catch(()=>null);
           if(!response.ok||!body?.id)throw new Error(body?.erro?.mensagem||"Não foi possível preparar o link.");
           url.searchParams.set("playlist",body.id);
+      global.apiConfig?.withPreviewApi?.(url);
         }
         if(owner()!==account)throw new Error("A conta mudou. Abra o compartilhamento novamente.");
         return {title:playlist.name,text:collaborative?"Colabore comigo nesta playlist do ROUDY:":`Playlist “${playlist.name}” no ROUDY:`,url:url.toString()};
@@ -1105,46 +1115,92 @@
     return clean(song.title) + "|" + clean(song.artist);
   }
 
+  // Deslocamento que leva as cifras de "from" para a forma (tom real + capo) de "to".
+  function shapeShift(from, to) {
+    const capo = (value) => Number(global.songFormat.parseCapo(value && value.capo)) || 0;
+    return ((global.eventKeyShift(from.key || from.originalKey, to.key || to.originalKey) - (capo(to) - capo(from))) % 12 + 12) % 12;
+  }
+  // Só preenche o que falta na música de quem recebe (nunca sobrescreve o que ela já tem).
+  function fillMissingFromReceived(song, received) {
+    if (song.fullChordSheet?.content || !received?.fullChordSheet?.content) return song;
+    const shift = shapeShift(received, song), sheet = received.fullChordSheet;
+    return { ...song, fullChordSheet: { ...sheet, content: global.transposeEventChordText(sheet.content, shift), sections: shift ? [] : (sheet.sections || []) }, updatedAt: new Date().toISOString() };
+  }
+  // O tom da playlist vinha como semitons sobre a música de quem enviou; aplicado na cópia de
+  // quem recebe (que pode estar em outro tom) a música tocava fora do tom combinado.
+  function playbackForExistingSong(song, received, playback) {
+    const senderKey = received.key || received.originalKey, ownKey = song.key || song.originalKey;
+    if (!senderKey || !ownKey) return playback;
+    const target = global.shiftText(senderKey, Number(playback.semitones) || 0);
+    let semitones = global.eventKeyShift(ownKey, target);
+    if (semitones > 6) semitones -= 12;
+    return { ...playback, semitones };
+  }
+
   // Salva na conta de quem recebeu: reaproveita músicas iguais da biblioteca e adiciona só as que faltam.
-  function saveReceived() {
-    const data = receivedPlaylist;
+  function saveReceived() { saveReceivedFrom(receivedPlaylist); }
+  function saveReceivedFrom(data) {
     if (!data) return;
     const byIdentity = new Map(musicas.map((song) => [identity(song), song]));
-    const newSongs = [];
+    const newSongs = [], completed = new Map();
     const items = data.items.map((item) => {
-      let song = byIdentity.get(identity(item.song));
+      let song = byIdentity.get(identity(item.song)), playback = item.playback || {};
       if (!song) {
         song = global.songModel.create({ ...item.song, id: "shared_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8), librarySync: undefined, playbackSettings: undefined });
         byIdentity.set(identity(song), song);
         newSongs.push(song);
+      } else {
+        // A música já existia na biblioteca de quem recebe (muitas vezes a do catálogo, só com o resumo).
+        // Antes a versão completa enviada era descartada e o "Completar cifra" aparecia de novo.
+        const filled = fillMissingFromReceived(song, item.song);
+        if (filled !== song) { completed.set(song.id, filled); byIdentity.set(identity(filled), filled); song = filled; }
+        playback = playbackForExistingSong(song, item.song, playback);
       }
-      return { songId: song.id, playback: item.playback || {}, notes: item.notes || "" };
+      return { songId: song.id, playback, notes: item.notes || "" };
     });
-    if (newSongs.length && !global.commitSongs([...musicas, ...newSongs])) { toast("⚠️ Não foi possível salvar as músicas desta playlist."); return; }
+    const library = completed.size ? musicas.map((song) => completed.get(song.id) || song) : musicas;
+    if ((newSongs.length || completed.size) && !global.commitSongs([...library, ...newSongs])) { toast("⚠️ Não foi possível salvar as músicas desta playlist."); return; }
     const playlist = global.userPlaylists.create(owner(), data.name, items, { description: data.description, sharedFrom: data.id });
     global.closeEventAdminSheet();
     receivedPlaylist = null;
     if (!playlist) { toast("⚠️ Não foi possível salvar a playlist."); return; }
-    toast(newSongs.length ? `Playlist salva. ${newSongs.length} ${newSongs.length === 1 ? "música nova entrou" : "músicas novas entraram"} na sua biblioteca.` : "Playlist salva na sua conta.");
+    toast((newSongs.length ? `Playlist salva. ${newSongs.length} ${newSongs.length === 1 ? "música nova entrou" : "músicas novas entraram"} na sua biblioteca.` : "Playlist salva na sua conta.") + (completed.size ? ` ${completed.size} ${completed.size === 1 ? "música ganhou" : "músicas ganharam"} a Letra + Cifras.` : ""));
     global.switchTab && global.switchTab("musicas");
     open(playlist.id);
   }
 
+  const PENDING_SHARED_KEY = "roudy_pending_shared_playlist";
+  function loginGateVisible() {
+    const gate = document.getElementById("login-gate");
+    return Boolean(gate) && !gate.hidden && global.getComputedStyle(gate).display !== "none";
+  }
+  function openPendingSharedPlaylist() {
+    let pending = null;
+    try { pending = JSON.parse(global.localStorage.getItem(PENDING_SHARED_KEY) || "null"); } catch (_error) { pending = null; }
+    if (!pending || !pending.id) return false;
+    if (!(Date.now() - Number(pending.at || 0) < 24 * 60 * 60 * 1000)) { try { global.localStorage.removeItem(PENDING_SHARED_KEY); } catch (_error) {} return false; }
+    if (loginGateVisible()) return false;
+    try { global.localStorage.removeItem(PENDING_SHARED_KEY); } catch (_error) {}
+    openReceived(String(pending.id));
+    return true;
+  }
   function checkSharedLink() {
     try {
       const url = new URL(global.location.href);
       const sharedId = url.searchParams.get("playlist");
-      if (!sharedId) return;
-      url.searchParams.delete("playlist");
-      global.history.replaceState(global.history.state, "", url.toString());
-      openReceived(sharedId);
+      if (sharedId) {
+        url.searchParams.delete("playlist");
+        global.history.replaceState(global.history.state, "", url.toString());
+        try { global.localStorage.setItem(PENDING_SHARED_KEY, JSON.stringify({ id: sharedId, at: Date.now() })); } catch (_error) { openReceived(sharedId); return; }
+      }
+      openPendingSharedPlaylist();
     } catch (_error) {}
   }
 
   global.homePlaylists = Object.freeze({
     PREFIX, artwork, artworkForPlaylist, setView, libraryVisible, markLibraryDirty, libraryRendered, renderHome, openSortSheet, selectSort, closeActionSheet, open, openLibrary, back, openSong, play, chooseCover, pickCover, coverAiUnavailable, saveCoverCrop, variantForContext, openKeys, shiftKey, saveItemPlayback,
-    create, closeCreate, confirmCreate, renameCurrent,  playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
-    openAddSongs, filterAdd, addSong, chooseForSong, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, checkSharedLink,
+    create, closeCreate, confirmCreate, renameCurrent, playlistMenu, duplicateCurrent, deleteCurrent, openPlaylistContext, togglePinned, deleteFromHome, itemMenu, addItemToRepertoire, shareItem, moveItem, removeItem, editNotes, saveNotes,
+    openAddSongs, filterAdd, addSong, chooseForSong, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, saveReceivedFrom, checkSharedLink, openPendingSharedPlaylist, setProvisionalOwner,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
     isCollaborativeContext, saveItemSong,
     get ownerId() { return owner(); }, get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }

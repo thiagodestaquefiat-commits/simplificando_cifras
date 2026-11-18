@@ -20,7 +20,7 @@ const server = http.createServer((request, response) => {
   try {
     const sw = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
     assert.match(sw, /simplificando-cifras-v582-functional-audit-fixes/);
-    assert.match(sw, /harmonic-summary-client\.js\?v=17/);
+    assert.match(sw, /harmonic-summary-client\.js\?v=18/);
     assert.match(sw, /ai-harmonic-summary\.js\?v=21/);
     assert.doesNotMatch(sw, /harmonic-summary-client\.js\?v=16|ai-harmonic-summary\.js\?v=20/);
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));

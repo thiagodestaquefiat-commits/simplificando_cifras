@@ -63,7 +63,7 @@ def test_preview_does_not_write_and_reports_each_case(client, app):
     assert by_id[ids["messy"]]["status"] == "organizar"
     assert "Primeira linha do verso aqui" in [b["fraseGuia"] for b in by_id[ids["messy"]]["depois"]]
     assert by_id[ids["ok"]]["status"] == "ja_no_padrao"
-    assert by_id[ids["nosheet"]]["status"] == "sem_letra_cifra"
+    assert by_id[ids["nosheet"]]["status"] == "ja_no_padrao"  # uma volta só, sem frase: é o padrão (Last Kiss)
     with app.app_context():
         assert db.session.get(SharedSong, ids["messy"]).song_data["harmonicSummary"]["blocos"][0].get("fraseGuia") is None
 

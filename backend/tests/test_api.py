@@ -78,8 +78,8 @@ def test_text_request_returns_versioned_json(generate, client):
     assert response.status_code == 200
     data = response.get_json()
     assert data["schemaVersion"] == 2
-    assert data["tom"] == "Db"
-    assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["Db", "B4", "Gb/Bb"]
+    assert data["tom"] == "C#"
+    assert data["harmonicSummary"]["blocos"][0]["acordes"] == ["C#", "B4", "F#/Bb"]
     assert data["harmonicSummary"]["blocos"][0]["repeticoes"] is None
     assert data["fullChordSheet"] == {
         "visibility": "private",

@@ -93,12 +93,15 @@ assert.match(html, /assets\/icons\/roudy-icon-v4-48\.png\?v=15/);
 assert.match(html, /function ensureAccountDrawer/);
 assert.match(auth, /async function updateProfile/);
 assert.match(auth, /client\.auth\.updateUser/);
-assert.doesNotMatch(auth, /client\.auth\.signInWithOtp|client\.auth\.verifyOtp/);
+// Código por e-mail existe só no login (sendEmailCode/verifyEmailCode); editar o perfil nunca dispara OTP.
+const profileUpdate = auth.slice(auth.indexOf('async function updateProfile'), auth.indexOf('function subscribe'));
+assert.doesNotMatch(profileUpdate, /signInWithOtp|verifyOtp/);
+assert.match(auth, /async function sendEmailCode[\s\S]*client\.auth\.signInWithOtp/);
 assert.match(html, /id="login-gate"/);
 assert.match(html, /Continuar com Google/);
 assert.match(html, /Continuar sem login/);
 assert.match(html, /function continueWithoutLogin\(\)/);
-assert.match(html, /state\.authenticated\|\|loginGatePassed/);
+assert.match(html, /\(state\.authenticated&&!loginGatePreview\)\|\|loginGatePassed/);
 assert.match(html, /class="account-contribution"/);
 assert.match(html, /assets\/qr-contribuicao\.png\?v=1/);
 assert.match(html, /class="account-contribution-copy"/);

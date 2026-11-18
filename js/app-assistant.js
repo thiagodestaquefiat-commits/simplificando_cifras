@@ -513,7 +513,7 @@
     const stageOpen=songOpen&&element("view-detail")?.classList.contains("stage-mode");
     const secondaryOpen=songOpen||eventOpen||element("event-chat-view")?.hidden===false||overlayOpen||element("inst-modal")?.style.display==="flex";
     const header=element("app-assistant-launch"),floating=element("app-assistant-floating");
-    const floatingHidden=profileOpen||!secondaryOpen||((songOpen&&!stageOpen)||eventOpen);
+    const floatingHidden=profileOpen||overlayOpen||!secondaryOpen||((songOpen&&!stageOpen)||eventOpen);
     if(header&&header.hidden!==profileOpen)header.hidden=profileOpen;
     if(floating&&floating.hidden!==floatingHidden)floating.hidden=floatingHidden;
     [element("song-assistant-launch"),element("event-assistant-launch")].forEach(button=>{if(button&&button.hidden!==profileOpen)button.hidden=profileOpen;});
@@ -568,6 +568,8 @@
     current.onend=()=>{if(recognition!==current)return;recognition=null;captureQuestionId=null;setListening(false);};
     try{current.start();}catch(_error){recognition=null;captureQuestionId=null;setListening(false);message(pendingId!==null?'Toque no assistente novamente para responder à pergunta.':"Não foi possível iniciar o microfone.","error");}
   }
-  if(global.MutationObserver&&global.document.body){const visibilityObserver=new global.MutationObserver(updateLaunchVisibility);visibilityObserver.observe(global.document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style","hidden"]});}updateLaunchVisibility();
+  let visibilityFrame=0;const scheduleLaunchVisibility=()=>{if(visibilityFrame)return;const schedule=global.requestAnimationFrame||(fn=>global.setTimeout(fn,16));visibilityFrame=schedule(()=>{visibilityFrame=0;updateLaunchVisibility();});};
+  // Muitas mudanças de tela seguidas viram uma atualização só por quadro.
+  if(global.MutationObserver&&global.document.body){const visibilityObserver=new global.MutationObserver(scheduleLaunchVisibility);visibilityObserver.observe(global.document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["style","hidden"]});}updateLaunchVisibility();
   global.roudyAssistant=Object.freeze({open,close,listen,run,clean,updateLaunchVisibility,getConversationState:()=>dialogue?.getPending()||null,cancelConversation:close,getLastIntentResult:()=>lastIntentResult,getLastActionResult:()=>getActionManager()?.getLastResult(),getActions:()=>getActionManager()?.getCatalog()||[]});
 })(window);

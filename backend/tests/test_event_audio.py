@@ -69,3 +69,67 @@ def test_duration_checked_on_server():
     from app.services.chat_audio import normalize_audio
     with pytest.raises(ApiError):
         normalize_audio(wav(91))
+
+
+def test_long_audio_and_aac_boundary(client, app):
+    from app.services.chat_audio import normalize_audio
+    import math
+    import struct
+    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 + 65536
+    leader, _, _ = setup(client)
+    for seconds in (80, 90):
+        raw = io.BytesIO()
+        with wave.open(raw, 'wb') as output:
+            output.setparams((1, 2, 8000, 0, 'NONE', ''))
+            second = b''.join(struct.pack('<h', int(9000 * math.sin(2 * math.pi * 440 * i / 8000))) for i in range(8000))
+            output.writeframes(second * seconds)
+        encoded, _ = normalize_audio(raw.getvalue())
+        assert len(encoded) > 65535
+        message_id = str(uuid.uuid4())
+        response = upload(client, leader, message_id, encoded)
+        assert response.status_code == 201, response.json
+        assert response.json['audio']['duration'] == seconds
+        response = client.get(URL+'/'+message_id+'/audio', headers=auth(leader))
+        assert response.status_code == 200 and len(response.data) > 65535
+
+
+def test_schema_storage_dialects():
+    from sqlalchemy.dialects import mysql, postgresql
+    assert EventAudio.data.type.compile(dialect=mysql.dialect()) == 'MEDIUMBLOB'
+    assert EventAudio.data.type.compile(dialect=postgresql.dialect()) == 'BYTEA'
+
+
+def test_audio_migration_only_widens_legacy_blob(monkeypatch):
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+    from sqlalchemy.dialects.mysql import BLOB, MEDIUMBLOB
+    from app import database
+    statements = []
+    connection = SimpleNamespace(dialect=SimpleNamespace(name='mysql'), execute=lambda sql: statements.append(str(sql)))
+    column = {'name': 'data', 'type': BLOB()}
+    inspector = SimpleNamespace(get_table_names=lambda: ['event_audio'], get_columns=lambda _: [column])
+    monkeypatch.setattr(database, 'inspect', lambda _: inspector)
+    monkeypatch.setattr(database, 'db', SimpleNamespace(engine=SimpleNamespace(begin=lambda: nullcontext(connection))))
+    database.ensure_additive_collaboration_columns()
+    assert statements == ['ALTER TABLE event_audio MODIFY COLUMN data MEDIUMBLOB NOT NULL']
+    column['type'] = MEDIUMBLOB()
+    database.ensure_additive_collaboration_columns()
+    connection.dialect.name = 'postgresql'
+    column['type'] = BLOB()
+    database.ensure_additive_collaboration_columns()
+    assert len(statements) == 1
+
+
+def test_storage_error_is_safe_and_rolled_back(client, app, monkeypatch):
+    from sqlalchemy.exc import DataError
+    leader, _, _ = setup(client)
+    message_id = str(uuid.uuid4())
+    def fail():
+        raise DataError('fake write', {'bytes': b'private'}, ValueError('simulated'))
+    monkeypatch.setattr(db.session, 'commit', fail)
+    response = upload(client, leader, message_id)
+    assert response.status_code == 503
+    assert response.json['erro']['codigo'] == 'audio_armazenamento'
+    assert 'private' not in response.get_data(as_text=True)
+    with app.app_context():
+        assert db.session.get(EventAudio, message_id) is None

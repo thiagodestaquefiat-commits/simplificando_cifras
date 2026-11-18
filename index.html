@@ -10,6 +10,7 @@
 <title>ROUDY</title>
 <link rel="stylesheet" href="css/roudy-tokens.css?v=1">
 <link rel="stylesheet" href="css/event-chat-audio.css?v=5">
+<link rel="stylesheet" href="css/bug-report.css?v=2">
 <meta name="theme-color" content="#0B0B0C">
 <meta name="description" content="ROUDY — Menos papel, menos distração, mais música.">
 <meta name="application-name" content="ROUDY">
@@ -40,7 +41,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 
-<link rel="stylesheet" href="css/song-reading.css?v=15">
+<link rel="stylesheet" href="css/song-reading.css?v=17">
 <link rel="stylesheet" href="css/topbar-labels.css?v=16">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -137,22 +138,6 @@ body[data-account-menu-open] .app-assistant-launch{display:none!important}
 .capo-banner.on .capo-toggle::after{left:21px;}
 .capo-banner.off .capo-toggle::after{left:3px;}
 /* SPOTIFY SEARCH */
-.spotify-panel{padding:8px 14px 10px;background:var(--bg2);border-bottom:1px solid var(--border)}
-.spotify-account-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;font-size:11px;color:var(--text2)}
-.spotify-account-row span.connected{color:#86efac}
-.spotify-auth-btn{border:0;background:transparent;color:#1ed760;font:700 11px inherit;cursor:pointer}
-.spotify-search-bar{background:var(--bg3);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px;border:1.5px solid var(--border);transition:border-color .2s}
-.spotify-search-bar:focus-within{border-color:#1ed760}
-.spotify-search-input{flex:1;min-width:0;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;font-family:inherit}
-.spotify-search-input::placeholder{color:var(--text2)}
-.spotify-search-btn,.spotify-add-btn{background:#1db954;border:none;border-radius:8px;color:#07110b;font-size:12px;font-weight:800;padding:7px 12px;cursor:pointer;font-family:inherit;white-space:nowrap}
-.spotify-search-btn:disabled{opacity:.5;cursor:not-allowed}
-.spotify-results{margin:8px 14px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg3);overflow:hidden;max-height:310px;overflow-y:auto}
-.spotify-results-title,.spotify-message{padding:10px 12px;color:var(--text2);font-size:12px}
-.spotify-message.error{color:#fca5a5}.spotify-message.loading{color:#93c5fd}
-.spotify-track{display:flex;align-items:center;gap:10px;padding:9px 10px;border-top:1px solid var(--border)}
-.spotify-track-cover{width:42px;height:42px;border-radius:7px;object-fit:cover;flex-shrink:0}.spotify-track-cover.placeholder{display:grid;place-items:center;background:#17231c;color:#1ed760}
-.spotify-track-info{flex:1;min-width:0}.spotify-track-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spotify-track-sub{margin-top:3px;color:var(--text2);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* YOUTUBE SEARCH */
 .youtube-panel{padding:8px 14px 10px;background:var(--bg2);border-bottom:1px solid var(--border)}
 .youtube-panel-label{display:flex;align-items:center;gap:7px;margin-bottom:7px;color:var(--text2);font-size:11px}.youtube-panel-label strong{color:#ff6b6b;font-weight:var(--weight-title)}.youtube-brand-mark{display:grid;width:20px;height:14px;place-items:center;border-radius:4px;background:#f00;color:#fff;font-size:8px}
@@ -198,7 +183,7 @@ body[data-account-menu-open] .app-assistant-launch{display:none!important}
 body.stage-active #view-sd{display:none!important;}
 .stage-mode #chord-diagrams-section,
 .stage-mode #inst-modal,
-.stage-mode #spotify-song-player,.stage-mode #youtube-song-player{display:none!important;}
+.stage-mode #youtube-song-player{display:none!important;}
 .stage-mode .chord-block{background:transparent;border:none;margin-bottom:8px;}
 .stage-mode .chord-block summary{font-size:20px;padding:6px 0;}
 .stage-mode .chord-line{font-size:var(--stage-chord-size,28px);line-height:2.2;}
@@ -417,7 +402,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visib
 @media(max-width:360px){.event-participants-section .event-member-avatar,.event-participants-section .event-member-card.is-leader .event-member-avatar{width:46px;height:46px;flex-basis:46px}.event-participants-section .event-member-card::after{left:52px}}
 @media(prefers-reduced-motion:reduce){.event-member-card,.event-member-copy,.event-participants-remaining,.event-participants-add{will-change:auto}}
 #view-sd .detail-body{padding-bottom:max(24px,env(safe-area-inset-bottom))}
-.location-combobox{position:relative}.location-status{display:block;min-height:15px;margin-top:5px;color:var(--text2);font-size:9px;line-height:1.4}.location-status.error{color:#fca5a5}.location-results{position:absolute;z-index:18;top:calc(100% - 18px);left:0;right:0;max-height:230px;margin:0;padding:5px;overflow-y:auto;border:1px solid rgba(96,165,250,.28);border-radius:12px;background:#0b192b;box-shadow:0 18px 36px rgba(0,0,0,.38)}.location-results[hidden]{display:none}.location-option{display:flex;width:100%;padding:10px;border:0;border-radius:9px;background:transparent;color:#fff;text-align:left;cursor:pointer;flex-direction:column;gap:3px}.location-option:hover,.location-option[aria-selected="true"]{background:rgba(59,130,246,.18)}.location-option strong{font-size:11px;font-weight:var(--weight-title)}.location-option span{color:#a7b4c7;font-size:9px;line-height:1.4}.event-map-preview[hidden]{display:none}.event-map-card{margin:10px 0 15px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#0b192b}.event-map-card img{display:block;width:100%;height:auto;min-height:180px;max-height:330px;object-fit:cover;background:#132238}.event-map-card.compact img{min-height:130px;max-height:210px}.event-map-card figcaption{display:grid;padding:9px 11px;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}.event-map-card figcaption span{overflow:hidden;color:#dbeafe;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.event-map-card figcaption>a{color:#86efac;font-size:10px;font-weight:800;text-decoration:none}.event-map-card figcaption small{grid-column:1/-1;color:#64748b;font-size:7px}.event-map-card figcaption small a{color:#7c8da5}.event-map-error{padding:24px 14px;color:#94a3b8;font-size:10px;text-align:center}
 .event-map-viewport{position:relative;height:260px;overflow:hidden;background:#132238}.event-map-card.compact .event-map-viewport{height:190px}.event-map-viewport>img{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;object-fit:cover}.event-map-canvas{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s ease}.event-map-card.interactive-ready .event-map-canvas{opacity:1;pointer-events:auto}.event-map-loading{position:absolute;z-index:1;inset:0;display:grid;color:#94a3b8;font-size:10px;place-items:center;background:linear-gradient(110deg,#0e2035,#152b45,#0e2035);background-size:220% 100%;animation:event-map-pulse 1.5s ease infinite}.event-map-loading[hidden],.event-map-recenter[hidden]{display:none}.event-map-recenter{position:absolute;z-index:3;right:10px;bottom:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(7,17,31,.86);color:#fff;font-size:9px;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.25);cursor:pointer}.event-map-recenter:hover{background:#10243d}.event-map-canvas .maplibregl-ctrl-attrib{font-size:8px}.event-map-canvas .maplibregl-ctrl-top-right{top:8px;right:8px}@keyframes event-map-pulse{0%,100%{background-position:0 0}50%{background-position:100% 0}}@media(max-width:520px){.event-map-viewport{height:230px}.event-map-card.compact .event-map-viewport{height:175px}}
 .app-account-btn{display:grid;width:40px;height:40px;flex:0 0 40px;place-items:center;border:1px solid rgba(96,165,250,.25);border-radius:50%;background:#10233a;color:#dbeafe;font-size:10px;font-weight:900;cursor:pointer}.app-account-btn.authenticated{border-color:rgba(34,197,94,.42);background:#0d352e;color:#86efac}.band-toolbar{display:grid;padding:7px 12px;grid-template-columns:minmax(0,1fr) auto;gap:7px;border-bottom:1px solid var(--border);background:rgba(8,20,35,.9)}.band-toolbar select{min-width:0;height:34px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:#10233a;color:#dbeafe;font-size:10px}.band-toolbar button{min-height:34px;padding:0 10px;border:1px solid rgba(96,165,250,.3);border-radius:9px;background:rgba(37,99,235,.1);color:#bfdbfe;font-size:9px;font-weight:var(--weight-control);cursor:pointer}.band-card{margin-bottom:9px;padding:11px;border:1px solid var(--border);border-radius:12px;background:#0d1d30}.band-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}.band-card header strong{font-size:13px;font-weight:var(--weight-title)}.band-card header span{color:#86efac;font-size:8px;font-weight:900;text-transform:uppercase}.band-member-row{display:flex;margin-top:7px;padding-top:7px;align-items:center;gap:7px;border-top:1px solid rgba(148,163,184,.12);font-size:10px}.band-member-row span:first-child{flex:1}.band-member-row small{color:#94a3b8}.band-inline-actions{display:flex;margin-top:9px;gap:6px;flex-wrap:wrap}.band-inline-actions button{min-height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:#132238;color:#cbd5e1;font-size:9px;cursor:pointer}
 .account-summary{display:flex;margin-bottom:14px;padding:12px;align-items:center;gap:11px;border:1px solid var(--border);border-radius:14px;background:rgba(7,17,31,.5)}.account-avatar{display:grid;width:52px;height:52px;flex:0 0 52px;place-items:center;overflow:hidden;border-radius:50%;background:linear-gradient(145deg,#2563eb,#164e63);color:#fff;font-size:15px;font-weight:900}.account-avatar img{width:100%;height:100%;object-fit:cover}.account-summary-info{min-width:0;flex:1}.account-summary-info strong,.account-summary-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-summary-info span{margin-top:3px;color:var(--text2);font-size:10px}.account-menu{display:grid;gap:8px}.account-menu-button{display:grid;width:100%;min-height:52px;padding:8px 11px;grid-template-columns:34px minmax(0,1fr) 18px;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;background:rgba(19,34,56,.74);color:var(--text);text-align:left;cursor:pointer}.account-menu-button:hover{background:rgba(37,99,235,.14)}.account-menu-icon{display:grid;width:32px;height:32px;place-items:center;border-radius:9px;background:rgba(96,165,250,.1);color:#bfdbfe;font-size:16px}.account-menu-copy strong,.account-menu-copy small{display:block}.account-menu-copy strong{font-size:12px;font-weight:var(--weight-title)}.account-menu-copy small{margin-top:2px;color:var(--text2);font-size:9px}.account-menu-arrow{color:#64748b;font-size:16px}.account-sync-badge{display:flex;margin:12px 2px 0;align-items:center;justify-content:center;gap:6px;color:var(--text2);font-size:9px;font-weight:700}.account-sync-dot{width:7px;height:7px;border-radius:50%;background:#f59e0b}.account-sync-badge[data-state="synced"] .account-sync-dot{background:#22c55e}.account-sync-badge[data-state="syncing"] .account-sync-dot{background:#60a5fa;animation:sync-pulse 1s infinite}.account-sync-badge[data-state="offline"] .account-sync-dot{background:#94a3b8}@keyframes sync-pulse{50%{opacity:.35}}.account-logout{width:100%;margin-top:14px;border:1px solid rgba(248,113,113,.32);background:rgba(239,68,68,.12);color:#fca5a5}.profile-photo-editor{display:flex;margin-bottom:14px;align-items:center;gap:12px}.profile-photo-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.profile-photo-change,.profile-photo-remove{display:inline-flex;min-height:36px;padding:0 12px;align-items:center;justify-content:center;border:1px solid rgba(148,163,184,.25);border-radius:10px;background:#132238;color:#dbeafe;font-family:inherit;font-size:10px;font-weight:700;line-height:1;white-space:nowrap;cursor:pointer}.profile-photo-change:hover,.profile-photo-remove:hover{border-color:#60a5fa;background:rgba(37,99,235,.15)}.profile-photo-input{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}.settings-group{margin-bottom:15px}.settings-group-title{margin-bottom:7px;color:#93c5fd;font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}.settings-row{display:flex;min-height:48px;padding:8px 10px;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);background:rgba(7,17,31,.28)}.settings-row:first-of-type{border-radius:11px 11px 0 0}.settings-row:last-of-type{border-bottom:0;border-radius:0 0 11px 11px}.settings-row-copy strong,.settings-row-copy small{display:block}.settings-row-copy strong{font-size:11px;font-weight:var(--weight-title)}.settings-row-copy small{margin-top:2px;color:var(--text2);font-size:8px}.settings-select{max-width:48%;min-height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:#0d1b2e;color:var(--text);font:600 10px inherit}.settings-toggle{position:relative;width:42px;height:24px;flex:0 0 42px}.settings-toggle input{position:absolute;opacity:0}.settings-toggle span{position:absolute;inset:0;border-radius:13px;background:#334155;cursor:pointer;transition:.2s}.settings-toggle span::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}.settings-toggle input:checked+span{background:#2563eb}.settings-toggle input:checked+span::after{transform:translateX(18px)}
@@ -698,7 +682,7 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 #view-detail:not(.stage-mode) .back-btn:hover{background:transparent;opacity:.76}#view-detail:not(.stage-mode) .back-btn:active{transform:scale(.92)}
 #view-detail:not(.stage-mode) .detail-title-wrap{min-width:0;text-align:center}#view-detail:not(.stage-mode) .detail-title{overflow:hidden;color:#f7f8fa;font-size:17px;font-weight:720;letter-spacing:-.3px;text-overflow:ellipsis;white-space:nowrap}#view-detail:not(.stage-mode) .detail-capo{margin-top:2px;color:var(--detail-muted);font-size:11px;text-align:center}#view-detail:not(.stage-mode) .detail-key-badge{justify-self:end}
 #view-detail:not(.stage-mode) .detail-key-badge{min-width:29px;padding:5px 8px;border:1px solid rgba(205,165,84,.33);border-radius:8px;background:rgba(82,58,18,.07);color:#d8c18d;font-size:12px;font-weight:750;text-align:center}
-#view-detail:not(.stage-mode) .study-music-panel{border-bottom:1px solid var(--detail-line);background:rgba(8,10,13,.94)}#view-detail:not(.stage-mode) .chord-section-header{min-height:52px;padding:8px 14px;gap:8px;border-bottom:1px solid var(--detail-line)}
+#view-detail:not(.stage-mode) .study-music-panel{border-bottom:1px solid var(--detail-line);background:rgba(8,10,13,.94)}#view-detail:not(.stage-mode) .chord-section-header{min-height:52px;padding:8px 14px;gap:8px;border-bottom:0}
 #view-detail:not(.stage-mode) #study-music-panel,#view-detail:not(.stage-mode) #chord-diagrams-section,#view-detail:not(.stage-mode) .chord-strip-wrap,#view-detail:not(.stage-mode) .chord-card{background:#000!important}
 #view-detail:not(.stage-mode) .study-panel-toggle,#view-detail:not(.stage-mode) .study-panel-toggle:hover,#view-detail:not(.stage-mode) .study-panel-toggle:focus-visible{width:34px;height:34px;border:0;background:transparent;color:#dce2ea;font-size:18px;box-shadow:none;outline:0}#view-detail:not(.stage-mode) .chord-section-title{color:#a8b0bb;font-size:10px;letter-spacing:.07em}
 #view-detail:not(.stage-mode) .chord-transpose-controls{gap:5px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-label{color:var(--detail-muted);font-size:10px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-semitone{color:#9ca5b1;font-size:11px}#view-detail:not(.stage-mode) .chord-transpose-controls .transpose-key{color:var(--detail-accent);font-weight:800}
@@ -738,6 +722,7 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
 .inline-block-textarea:focus{border-color:rgba(111,166,238,.5);box-shadow:0 0 0 3px rgba(76,142,229,.1),inset 0 1px 3px rgba(0,0,0,.2)}
 .inline-block-actions{display:flex;margin-top:12px;align-items:center;justify-content:flex-end;gap:8px}.inline-block-actions .inline-block-delete{min-width:0;margin-right:auto;padding-inline:10px;border-color:transparent;background:transparent;color:#e66b68}.inline-block-action-group{display:flex;align-items:center;gap:8px}
 .inline-block-actions button{display:inline-flex;min-width:82px;min-height:40px;padding:0 15px;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(194,205,220,.13);border-radius:999px;background:#292c31;color:#e2e5e9;font-family:var(--font-ui);font-size:13px!important;font-weight:var(--weight-control)!important;line-height:1!important;letter-spacing:-.01em;white-space:nowrap;cursor:pointer}.inline-block-actions button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inline-block-insert{display:flex;margin-top:10px;gap:8px;flex-wrap:wrap}.inline-block-insert button{min-height:40px;padding:0 13px;border:1px dashed rgba(194,205,220,.22);border-radius:999px;background:transparent;color:#c5d0de;font-family:var(--font-ui);font-size:13px!important;font-weight:600!important;line-height:1!important}.inline-block-insert button:active{transform:scale(.97)}
 .inline-block-actions button.primary{border-color:#287be8;background:#287be8;color:#fff;box-shadow:none}
 .inline-block-actions button:active{transform:scale(.97)}
 .inline-delete-confirm-layer{position:fixed;z-index:420;inset:0;display:flex;padding:18px;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7)}.inline-delete-confirm{width:min(100%,430px);padding:22px 20px calc(18px + env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.08);border-radius:24px;background:#1c1d20;color:#f5f5f7;box-shadow:0 -16px 42px rgba(0,0,0,.38)}.inline-delete-confirm h2{margin:0;font-size:19px;letter-spacing:-.02em}.inline-delete-confirm p{margin:8px 0 20px;color:#a8abb1;font-size:13px;line-height:1.45}.inline-delete-confirm-actions{display:flex;justify-content:flex-end;gap:9px}.inline-delete-confirm-actions button{min-height:42px;padding:0 17px;border:0;border-radius:999px;background:#2a2c31;color:#f3f4f6;font:var(--weight-control) 13px/1 var(--font-ui)}.inline-delete-confirm-actions .danger{background:rgba(229,72,77,.16);color:#ff7470}@media(max-width:374px){.inline-block-actions{align-items:stretch}.inline-block-actions .inline-block-delete{padding-inline:6px}.inline-block-action-group{gap:6px}.inline-block-actions button{min-width:72px;padding-inline:11px}}
@@ -929,7 +914,25 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 .event-filter-segments{background:rgba(8,9,11,.5);box-shadow:0 7px 24px rgba(0,0,0,.22);touch-action:pan-y;user-select:none;-webkit-user-select:none;backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}.event-filter-indicator{border:0;background:rgba(210,214,220,.18);box-shadow:0 1px 3px rgba(0,0,0,.12);backdrop-filter:blur(14px) saturate(125%) brightness(1.08);-webkit-backdrop-filter:blur(14px) saturate(125%) brightness(1.08)}.event-filter-segments.is-dragging .event-filter-indicator{transition:none}.event-filter-segments.is-dragging button{transition:color 70ms linear!important}
 .event-filter-segments,.event-filter-segments:focus,.event-filter-segments:focus-visible{border:none!important;outline:none!important;box-shadow:none!important}.event-filter-segments::before,.event-filter-segments::after{display:none!important}.event-filter-indicator{border:none!important;outline:none!important;box-shadow:none!important}
 .stage-summary-label{display:none}.stage-mode .stage-harmonic-summary{display:grid;gap:10px}.stage-mode .stage-harmonic-summary .wa-block{margin:0;padding:10px 14px 12px;border:0;border-radius:0;background:color-mix(in srgb,var(--stage-text) 6%,transparent);box-shadow:none}.stage-mode #detail-content .letra-linha,.stage-mode #detail-content .full-chord-line:not(.is-chord):not(.is-section){color:#fff!important}.event-leadership-action{display:block;margin:14px auto 0;padding:10px 14px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#d7dbe2;font:650 12px/1 inherit;cursor:pointer}
-
+.login-email-form{display:grid;width:100%;gap:10px;text-align:left}
+.login-email-form[hidden]{display:none}
+.login-email-form label{color:#c7c7cc;font-size:13px;font-weight:600}
+.login-email-form input{width:100%;min-height:48px;box-sizing:border-box;padding:0 14px;border:1px solid #3a3a3c;border-radius:14px;background:#111;color:#fff;font:600 16px/1 inherit}
+.login-email-form input:focus{outline:2px solid #0a84ff;outline-offset:1px}
+.login-email-form .login-email-code{letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums}
+.login-email-form button{min-height:48px;border:0;border-radius:14px;font:700 14px/1 inherit}
+.login-email-submit{background:#fff;color:#111}
+.login-email-submit:disabled{opacity:.6}
+.login-email-link{background:transparent;color:#9a9aa1;min-height:36px!important}
+.login-email-note{margin:0;color:#9a9aa1;font-size:12px;line-height:1.4}
+.login-email-error{margin:0;color:#ff6961;font-size:13px}
+.login-email-error:empty{display:none}
+#modal-body .login-email-form{margin-top:4px}
+#modal-body .login-email-form input{background:var(--surface,#111)}
+.account-drawer-settings-item{text-decoration:none;color:inherit}
+.account-drawer-settings-item--danger strong{color:#ff6961}
+.delete-account-list{margin:8px 0 12px 18px;padding:0;color:var(--text2,#c7c7cc);font-size:14px;line-height:1.5}
+.delete-account-confirm{letter-spacing:.2em;text-transform:uppercase}
 /* EVENT DETAIL — scroll-scrubbed spotlight header */
 #view-sd{--event-header-progress:0;--event-header-height:112px;--event-header-alpha:0;--event-header-blur:0px;--event-spotlight-opacity:1;--event-title-scale:1;--event-condensed-title-opacity:0;isolation:isolate;background:#000}#view-sd::before{position:absolute;z-index:0;top:0;right:0;left:0;height:250px;content:"";background:radial-gradient(ellipse 72% 88% at 52% -6%,rgba(28,101,190,.32),rgba(10,42,77,.16) 43%,transparent 76%);opacity:var(--event-spotlight-opacity);pointer-events:none;will-change:opacity}#view-sd>.detail-header{position:sticky;z-index:8;top:0;display:block;min-height:var(--event-header-height);padding:0;border:0;background:rgba(2,6,13,calc(var(--event-header-alpha)*.34));box-shadow:none;backdrop-filter:blur(var(--event-header-blur)) saturate(145%);-webkit-backdrop-filter:blur(var(--event-header-blur)) saturate(145%)}#view-sd>.detail-header::before{position:absolute;z-index:0;inset:0 0 -30px;content:"";background:radial-gradient(ellipse 72% 150% at 18% -35%,rgba(45,112,221,.48),transparent 67%),radial-gradient(ellipse 44% 120% at 88% -28%,rgba(27,83,158,.24),transparent 72%),linear-gradient(180deg,rgba(7,27,56,.86) 0%,rgba(5,18,38,.68) 52%,rgba(3,10,22,.3) 78%,rgba(2,6,13,0) 100%);opacity:var(--event-header-progress);pointer-events:none}#view-sd>.detail-header>*{z-index:1}#view-sd>.detail-body{position:relative;z-index:1;background:transparent}#view-sd .event-detail-back{position:absolute;top:11px;left:10px;display:flex;height:38px;padding:0 6px;align-items:center;gap:3px;border:0;background:transparent;color:rgb(var(--event-header-accent,72 153 255));font:500 13px/1 var(--font-ui);cursor:pointer}#view-sd .event-detail-back svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}#view-sd .event-detail-back-label{opacity:calc(1 - var(--event-header-progress));transform:translateX(calc(var(--event-header-progress)*-4px))}#view-sd .detail-title-wrap{position:absolute;top:57px;right:14px;left:14px;min-width:0;opacity:calc(1 - var(--event-header-progress)*1.35);transform:translate3d(0,calc(var(--event-header-progress)*-10px),0) scale(var(--event-title-scale));transform-origin:left center;will-change:transform,opacity}#view-sd .detail-title{color:var(--text-primary)}#view-sd .event-condensed-title{position:absolute;top:0;left:50%;display:flex;width:min(260px,calc(100% - 280px));height:60px;align-items:center;justify-content:center;overflow:hidden;color:#f7f8fa;font:720 15px/1.2 var(--font-ui);letter-spacing:-.018em;opacity:var(--event-condensed-title-opacity);text-align:center;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;transform:translateX(-50%);will-change:opacity}#view-sd .detail-capo{max-height:18px;margin-top:5px;color:#a9b2bf;font-size:10px;opacity:calc(1 - var(--event-header-progress)*1.45);transform:translateY(calc(var(--event-header-progress)*-3px));overflow:hidden}#view-sd .event-notification-button{position:absolute;top:10px;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:rgb(var(--event-header-icon,218 226 236));box-shadow:none}#view-sd .event-notification-button:hover{background:rgba(255,255,255,.055)}#view-sd #event-chat-fab{right:58px}#view-sd #event-notification-button{right:10px}
 #view-sd{--event-icon-scale:1;--event-icon-y:0px;--event-meta-opacity:1;--event-meta-y:0px}#view-sd::before{height:300px}#view-sd .event-notification-button{transform:translate3d(0,var(--event-icon-y),0) scale(var(--event-icon-scale));transition:background .15s,color .15s;will-change:transform,color}#view-sd .event-notification-button>svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}#view-sd #event-chat-fab{right:98px}#view-sd #event-notification-button{right:54px}#view-sd #event-more-button{right:10px}#view-sd .event-more-button svg{width:21px;height:21px;fill:currentColor;stroke:none}#view-sd .event-notification-badge{transform:scale(calc(1 + var(--event-header-progress)*.08));transform-origin:center}
@@ -995,6 +998,7 @@ body:not(:has(#tab-setlists[aria-selected="true"])) .event-filter-segments{displ
 #view-detail:not(.stage-mode) .youtube-song-result-info span{color:#9299a4;font-size:9px}
 #view-detail:not(.stage-mode) .youtube-song-result-more{display:grid;width:28px;flex:0 0 28px;place-items:center;color:#d8dce2;font-size:21px}
 @media(max-width:430px){#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-actions{gap:6px;padding-inline:8px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action{padding-inline:10px;font-size:9px}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded .youtube-player-action span:last-child{display:none}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="repeat"] span:last-child,#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="floating"] span:last-child{display:inline}#view-detail:not(.stage-mode) .youtube-player-shell.is-expanded [data-player-action="close"]{padding:0}}
+@media(prefers-reduced-motion:reduce){#view-detail:not(.stage-mode).video-study-expanded>.detail-header{scroll-behavior:auto}}
 @media(max-width:360px){#pane-setlists .band-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}#pane-setlists .band-toolbar button{padding-inline:12px}#pane-setlists .setlist-item{grid-template-columns:46px minmax(0,1fr) 20px}#pane-setlists .event-date strong{font-size:21px;font-weight:var(--weight-title)}#pane-setlists .sl-sub{font-size:8px}}
 #pane-musicas>.youtube-panel,#pane-musicas>#youtube-results{display:none!important}
 #view-main>.topbar{min-height:62px;padding:10px 18px;gap:6px;background:#030405;border-bottom-color:rgba(190,200,214,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -1181,6 +1185,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
           <p id="login-email-feedback" role="status" aria-live="polite"></p>
         </form>
       </div>
+      <p class="login-gate-legal">Ao continuar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>
       <p class="login-gate-status" id="login-gate-status" aria-live="polite">Verificando sua sessão…</p>
     </div>
   </div>
@@ -1525,13 +1530,14 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/song-repository.js?v=18"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=22"></script>
-<script src="js/event-model.js?v=8"></script>
+<script src="js/event-model.js?v=10"></script>
 <script src="js/study-evidence.js?v=2"></script>
 <script src="js/context-intelligence.js?v=6"></script>
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
-<script src="js/event-chat-audio.js?v=6"></script>
+<script src="js/event-chat-audio.js?v=7"></script>
 <script src="js/event-chat.js?v=8"></script>
+<script src="js/support-attachment.js?v=2"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=10"></script>
@@ -1549,26 +1555,23 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=2"></script>
 <script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=14"></script>
+<script src="js/editor/song-format.js?v=15"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
 <script src="js/editor/song-editor-state.js"></script>
 <script src="js/editor/song-editor-renderer.js"></script>
 <script src="js/editor/song-editor.js"></script>
-<script src="js/ai/api-config.js?v=7"></script>
+<script src="js/ai/api-config.js?v=8"></script>
 <script src="js/song-reports.js?v=1"></script>
-<script src="js/app-auth.js?v=21"></script>
-<script src="js/profile-cover.js?v=2"></script>
-<script src="js/ui-i18n.js?v=14"></script>
+<script src="js/app-auth.js?v=22"></script>
+<script src="js/profile-cover.js?v=3"></script>
+<script src="js/ui-i18n.js?v=16"></script>
 <script src="js/tuner.js?v=5"></script>
 <script src="js/chord-audio.js?v=2"></script>
 <script src="js/smart-scroll.js?v=7"></script>
 <script src="js/sync-realtime.js?v=2"></script>
-<script src="js/location-service.js?v=2"></script>
-<script src="js/map-preview.js?v=2"></script>
-<script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=19"></script>
+<script src="js/event-collaboration-client.js?v=20"></script>
 <script src="js/event-share.js?v=6"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
 <script src="js/contextual-copy.js?v=9"></script>
@@ -1577,36 +1580,43 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-history.js?v=3"></script>
 <script src="js/band-client.js?v=1"></script>
 <script src="js/ai/harmonic-summary-client.js?v=18"></script>
-<script src="js/summary-organizer.js?v=4"></script>
+<script src="js/summary-organizer.js?v=6"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=21"></script>
 <script src="js/ai/camera-capture.js?v=6"></script>
-<script src="js/assistant-intent-catalog.js?v=1"></script>
-<script src="js/assistant-intent-client.js?v=1"></script>
-<script src="js/assistant-voice.js?v=4"></script>
-<script src="js/assistant-language.js?v=1"></script>
-<script src="js/assistant-actions.js?v=9"></script>
-<script src="js/assistant-action-manager.js?v=5"></script>
-<script src="js/assistant-action-runtime.js?v=6"></script>
-<script src="js/assistant-memory.js?v=2"></script>
-<script src="js/assistant-dialogue.js?v=4"></script>
-<script src="js/assistant-sequences.js?v=2"></script>
-<script src="js/app-assistant.js?v=34"></script>
- <script src="js/event-user-invites.js?v=10"></script>
+ <script src="js/event-user-invites.js?v=12"></script>
  <script src="js/event-qr-scanner.js?v=3"></script>
 <script>
 // Bibliotecas de QR Code carregam sob demanda.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
 </script>
+<script>
+// Assistente de voz: carrega depois que o app abre, ou na hora se a pessoa tocar nele,
+// para não pesar na abertura. Os arquivos continuam no cache offline.
+(function(){
+  const files=["js/assistant-intent-catalog.js?v=1","js/assistant-intent-client.js?v=1","js/assistant-voice.js?v=4","js/assistant-language.js?v=1","js/assistant-actions.js?v=9","js/assistant-action-manager.js?v=5","js/assistant-action-runtime.js?v=6","js/assistant-memory.js?v=2","js/assistant-dialogue.js?v=4","js/assistant-sequences.js?v=2","js/app-assistant.js?v=37"];
+  let loading=null;
+  function load(){
+    if(!loading)loading=files.reduce((chain,src)=>chain.then(()=>window.roudyLoadScript(src)),Promise.resolve()).catch(error=>{loading=null;throw error;});
+    return loading;
+  }
+  const stub={ensureLoaded:load,updateLaunchVisibility(){},getConversationState:()=>null,getLastIntentResult:()=>null,getLastActionResult:()=>null,getActions:()=>[]};
+  for(const name of ['open','close','listen','run','clean','cancelConversation'])stub[name]=(...args)=>load().then(()=>{const real=window.roudyAssistant;if(real&&real!==stub&&typeof real[name]==='function')return real[name](...args);}).catch(error=>console.warn('Não foi possível carregar o assistente.',error));
+  if(!window.roudyAssistant)window.roudyAssistant=stub;
+  const whenIdle=window.requestIdleCallback?fn=>window.requestIdleCallback(fn,{timeout:5000}):fn=>setTimeout(fn,2500);
+  const start=()=>whenIdle(()=>load().catch(()=>{}));
+  if(document.readyState==='complete')start();else window.addEventListener('load',start,{once:true});
+})();
+</script>
  <script src="js/profile-qr.js?v=6"></script>
- <script src="js/notification-center.js?v=7"></script>
+ <script src="js/notification-center.js?v=9"></script>
 <script src="js/user-playlists.js?v=7"></script>
-<script src="js/song-share.js?v=1"></script>
-<script src="js/home-playlists.js?v=42"></script>
+<script src="js/song-share.js?v=2"></script>
+<script src="js/home-playlists.js?v=43"></script>
 <script src="js/playlist-collaboration.js?v=2"></script>
 <script src="js/personal-playlist-sync.js?v=4"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
-<script src="js/playlist-invites.js?v=5"></script>
+<script src="js/playlist-invites.js?v=8"></script>
 <script src="js/profile-username.js?v=4"></script>
 <script>
 // ── TRANSPOSIÇÃO ──────────────────────────────────────────────────────
@@ -1616,11 +1626,13 @@ const ALL_CHORDS = ['C#m','Dbm','D#m','Ebm','F#m','Gbm','G#m','Abm','A#m','Bbm',
                     'C#','Db','D#','Eb','F#','Gb','G#','Ab','A#','Bb',
                     'Cm','Dm','Em','Fm','Gm','Am','Bm','C','D','E','F','G','A','B'];
 
+// Grafia mais usada no Brasil: C#m em vez de Dbm, F#m em vez de Gbm (Eb, Ab e Bb continuam como vierem).
+const PREFERRED_ROOT={Db:'C#',Gb:'F#'};
 function noteIdx(n){let i=SHARP.indexOf(n);return i===-1?FLAT.indexOf(n):i;}
 function shiftNote(n,s){
   const i=noteIdx(n); if(i===-1) return n;
-  const ni=((i+s)%12+12)%12;
-  return FLAT.includes(n)?FLAT[ni]:SHARP[ni];
+  const ni=((i+s)%12+12)%12,shifted=FLAT.includes(n)?FLAT[ni]:SHARP[ni];
+  return PREFERRED_ROOT[shifted]||shifted;
 }
 function shiftToken(tok,s){
   for(const cn of ALL_CHORDS){
@@ -1636,7 +1648,7 @@ function shiftToken(tok,s){
   return tok;
 }
 function shiftText(text,s){
-  if(!s) return text;
+  if(!s&&!/[DG]b/.test(String(text||''))) return text;
   return text.split('\n').map(line=>
     line.replace(/[A-G][#b]?[a-z0-9#()\/]*/g,tok=>{
       for(const cn of ALL_CHORDS){if(tok.startsWith(cn)) return shiftToken(tok,s);}
@@ -1664,7 +1676,7 @@ function showToast(msg){
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',1800);
 }
 // ── STATE ─────────────────────────────────────────────────────────────
-let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=0, currentLocationAutocomplete=null, tablatureFontSize=13;
+let currentDetailId=null, currentDetailSongOverride=null, currentSemitones=0, currentTab='musicas', editingId=null, currentSdId=null, simpleReviewDraft=null, eventSongEditDraft=null, currentSongView='summary', currentSongPage=0, tablatureFontSize=13;
 let detailEditBaseline=null,detailEditOwner=null,detailStageFont=28;
 let detailEventContext=null;
 const studyMetronome=window.studyMetronome.create(document.getElementById('study-metronome'),storage,showToast,{shouldPersist:()=>!detailEditBaseline,onChange:()=>updateDetailSaveButton()});
@@ -1688,7 +1700,14 @@ window.addEventListener('pagehide',flushDetailAutoSave);document.addEventListene
 async function saveDetailChanges(options={}){
   if(!detailEditBaseline||detailEditOwner!==appCurrentUser.id)return {ok:false};
   if(detailEventContext){const context={...detailEventContext},state=detailEditableState(),song=currentDetailSongOverride;
-    return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},state),options):{ok:false};}
+    // Trocar de página, rolagem, fonte, instrumento ou BPM não é editar a música. Antes isso criava em
+    // silêncio uma cópia pessoal congelada, e a pessoa nunca mais via o que o líder muda na versão da banda.
+    // Só tom e capotraste (escolha consciente) viram versão pessoal quando ainda não existe uma.
+    const event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));
+    const hasPersonal=Boolean(item)&&eventModel.effectiveRepertoireItem(event,item.id,appCurrentUser.id)?.effective.scope==='personal';
+    const toneChanged=Number(state.semitones)!==Number(detailEditBaseline.semitones);
+    if(!hasPersonal&&!toneChanged){detailEditBaseline=state;return {ok:true,skipped:true};}
+    return song?await saveContextEventSong(context,eventSongCopy({...song,...state.video},{...state,capo:storedCapo}),options):{ok:false};}
   if(detailPlaylistContext&&window.homePlaylists){const state=detailEditableState();if(!homePlaylists.saveItemPlayback(detailPlaylistContext,state))return {ok:false};
     if(currentDetailSongOverride)currentDetailSongOverride={...currentDetailSongOverride,playbackSettings:{...(currentDetailSongOverride.playbackSettings||{}),...state,video:undefined}};
     detailEditBaseline=JSON.parse(JSON.stringify(state));updateDetailSaveButton();if(!options.quiet&&!options.silent)showToast('✅ Tom salvo nesta playlist');return {ok:true,scope:'user-playlist'};}
@@ -2311,9 +2330,16 @@ function setInstrument(inst){
 }
 
 let selectedCapo=0, storedCapo=0;
+// Capotraste é escolha de cada músico (violão usa, baixo e teclado não): no evento ele fica só
+// neste aparelho, por pessoa e por música do evento. O tom e o resumo continuam sendo da banda.
+const EVENT_CAPO_PREFS_KEY='sc_event_capo_prefs_v1';
+function eventCapoPrefKey(context){return context?[String(appCurrentUser?.id||''),String(context.eventId),String(context.itemId)].join('|'):'';}
+function readEventCapoPref(context){const value=(storage.get(EVENT_CAPO_PREFS_KEY,{})||{})[eventCapoPrefKey(context)];return Number.isInteger(value)?value:null;}
+function writeEventCapoPref(context,capo){const key=eventCapoPrefKey(context);if(!key)return;const prefs={...(storage.get(EVENT_CAPO_PREFS_KEY,{})||{}),[key]:capo};storage.set(EVENT_CAPO_PREFS_KEY,prefs);}
 
 function selectCapo(n){
   selectedCapo=Math.max(0,Math.min(12,Math.trunc(Number(n)||0)));
+  if(detailEventContext)writeEventCapoPref(detailEventContext,selectedCapo);
   const view=document.getElementById('view-detail'),position=view?.scrollTop;
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
@@ -2374,6 +2400,8 @@ function renderLyricsReadingText(text){
   }).join('');
 }
 
+// Trechos de tablatura do Cifra Club ("Parte 1 de 3", "E|--3--1--|") não são letra: a página Letra pula.
+function isTablatureMarkerLine(value){const text=String(value||'').trim();return /^parte\s+\d+\s+de\s+\d+\s*:?$/i.test(text)||/^[A-Ga-g][#b]?\s*\|/.test(text)||/^[|\-0-9hpbr\/\\~x() ]{6,}$/i.test(text)&&/-{3,}/.test(text);}
 function renderLyricsReadingRows(content){
   const rows=[],pendingTitles=[];
   String(content||'').replace(/\r\n?/g,'\n').split('\n').forEach(raw=>{
@@ -2383,6 +2411,8 @@ function renderLyricsReadingRows(content){
       return;
     }
     if(isChordLine(text))return;
+    // O título acima de um trecho de tablatura ("Dedilhado - Segunda Parte") é da tablatura: some junto.
+    if(isTablatureMarkerLine(text)){pendingTitles.splice(0);return;}
     const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
     if(tagged&&(!tagged[2].trim()||isChordLine(tagged[2]))){
       pendingTitles.splice(0,pendingTitles.length,renderSongSectionHeading(tagged[1],'song-lyrics-section-title'));
@@ -2481,6 +2511,41 @@ function inlineBlockActionMarkup(songId,index,kind,saveHandler,saveLabel='Salvar
   return `<div class="inline-block-actions"><button type="button" class="inline-block-delete" onclick="event.stopPropagation();openInlineBlockDeleteConfirm('${eventEsc(String(songId))}',${index},'${kind}')">${trash}<span>Excluir</span></button><div class="inline-block-action-group"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();${saveHandler}">${check}<span>${saveLabel}</span></button></div></div>`;
 }
 
+// Resumo harmônico: inserir um bloco novo antes ou depois do bloco que está em edição.
+function inlineBlockInsertMarkup(songId,index){
+  const id=eventEsc(String(songId));
+  return `<div class="inline-block-insert" role="group" aria-label="Adicionar bloco"><button type="button" onclick="event.stopPropagation();openInlineNewBlock('${id}',${index},'above',this)">＋ Adicionar acima</button><button type="button" onclick="event.stopPropagation();openInlineNewBlock('${id}',${index},'below',this)">＋ Adicionar abaixo</button></div>`;
+}
+function openInlineNewBlock(songId,index,position,button){
+  const card=button?.closest('[data-inline-editing]');
+  if(card){
+    const original=card.dataset.inlineOriginal,current=JSON.stringify([card.querySelector('.inline-block-chords')?.value??'',card.querySelector('.inline-block-lyrics')?.value??'']);
+    // Não descarta sem aviso o que a pessoa já mudou neste bloco.
+    if(original&&original!==current){showToast('⚠️ Salve ou cancele este bloco antes de adicionar outro.');return;}
+  }
+  renderDetail();
+  const target=[...document.querySelectorAll('#view-detail [data-long-press-edit]')].find(el=>el.dataset.longPressEdit===String(songId)&&el.dataset.editSection===String(index));
+  if(!target){showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');return;}
+  const insertAt=position==='above'?index:index+1,id=eventEsc(String(songId)),check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+  const draft=document.createElement('div');draft.className=target.className;draft.dataset.inlineEditing='true';draft.dataset.inlineNew='true';
+  // No resumo a letra vai na linha de baixo dos acordes, no mesmo campo (como nos blocos existentes).
+  draft.innerHTML=`<label class="inline-block-label" for="inline-new-chords">Bloco novo — cifras e letra</label><textarea class="inline-block-textarea inline-block-chords" id="inline-new-chords" placeholder="C#m  B  A  F#m\nComo em Gales Tu fez"></textarea><div class="inline-block-actions"><div class="inline-block-action-group"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineNewBlock('${id}',${insertAt},this)">${check}<span>Adicionar</span></button></div></div>`;
+  target.insertAdjacentElement(position==='above'?'beforebegin':'afterend',draft);
+  draft.scrollIntoView({block:'center',behavior:'smooth'});
+  draft.querySelector('textarea')?.focus({preventScroll:true});
+}
+function saveInlineNewBlock(songId,insertAt,button){
+  const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
+  const chords=card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),lyrics='';
+  if(!chords){showToast('⚠️ Adicione pelo menos um acorde');return;}
+  const model=songFormat.fromLegacy(song);if(insertAt<0||insertAt>model.sections.length){showToast('⚠️ A música mudou. Reabra e tente de novo.');renderDetail();return;}
+  const parsed=songFormat.fromLegacy({blocos:[{l:lyrics,c:chords}]}).sections[0];
+  if(!parsed){showToast('⚠️ Não foi possível entender esse bloco.');return;}
+  const sections=[...model.sections];sections.splice(insertAt,0,parsed);
+  const candidate=songFormat.toLegacy(songFormat.normalize({...model,sections}),song);
+  button.disabled=true;
+  return commitInlineSongEdit(song,candidate,'✅ Bloco adicionado');
+}
 function beginInlineBlockEdit(target){
   if(!target||target.dataset.inlineEditing==='true'||stageMode)return;
   const songId=target.dataset.longPressEdit,section=target.dataset.editSection;
@@ -2502,7 +2567,8 @@ function beginInlineBlockEdit(target){
     const index=Number(section),current=inlineEditSection(song,index);if(!current){renderDetail();return;}
     const block=inlineSectionToBlock(current);
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
-    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockInsertMarkup(songId,index)}${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+    target.dataset.inlineOriginal=JSON.stringify([block.c,block.l]);
   }
   target.querySelector('textarea')?.focus();
 }
@@ -2538,7 +2604,7 @@ async function commitInlineSongEdit(song,candidate,message){
   }
   if(detailEventContext&&currentDetailSongOverride&&String(currentDetailSongOverride.id)===String(song.id)){
     const result=await saveContextEventSong({...detailEventContext},eventSongCopy({...candidate,playbackSettings:{...(candidate.playbackSettings||{}),semitones:0,capo:songFormat.parseCapo(candidate.capo)}}));
-    if(result?.ok===false){showToast('⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
+    if(result?.ok===false){showToast(result.message||'⚠️ Não foi possível salvar a alteração neste evento.');renderDetail();return false;}
     window.studyPreparation?.editCommitted(studyAttempt);renderDetail();showToast(message);return true;
   }
   const library=musicas.find(item=>String(item.id)===String(song.id));
@@ -2722,6 +2788,37 @@ function renderSmartFullChordLine(chordLine){
   return `<div class="smart-scroll-line" data-smart-line data-smart-repeat="${repeat}" data-smart-chords="${eventEsc(normalized)}"><div class="full-chord-line is-chord">${renderSmartChordTokens(chordLine)}</div></div>`;
 }
 
+// Acorde preso à letra: cada pedaço da letra leva o acorde que fica em cima dele. Com zoom (ou tela
+// estreita) a linha quebra entre palavras e o acorde vai junto — nunca fica sozinho na linha de cima.
+function renderChordLyricPair(rawChordLine,lyric,totalShift){
+  const chordText=String(rawChordLine||''),text=String(lyric||'').trimEnd(),indent=text.length-text.trimStart().length,words=text.slice(indent);
+  // Acorde escrito em cima do espaço antes da palavra encosta na palavra (não abre buraco na letra).
+  const snap=pos=>{if(pos>=words.length||!/\s/.test(words[pos]))return pos;const next=words.slice(pos).search(/\S/);return next<0?pos:pos+next;};
+  const chords=[...chordText.matchAll(/\S+/g)].map(match=>({pos:snap(Math.max(0,match.index-indent)),chord:shiftText(match[0],totalShift)}));
+  if(!chords.length||!words.trim())return null;
+  // Cortes: onde cai um acorde e onde começa cada palavra.
+  const cuts=new Set([0]);
+  chords.forEach(item=>{if(item.pos<words.length)cuts.add(item.pos);});
+  words.replace(/\s+/g,(spaces,index)=>{if(index+spaces.length<words.length)cuts.add(index+spaces.length);return spaces;});
+  const sorted=[...cuts].sort((a,b)=>a-b),segments=sorted.map((start,index)=>({start,lyric:words.slice(start,sorted[index+1]??words.length),chords:[]}));
+  chords.forEach(item=>{
+    if(item.pos>=words.length){segments.push({start:item.pos,lyric:'',chords:[item.chord],tail:true});return;}
+    const owner=[...segments].reverse().find(segment=>!segment.tail&&segment.start<=item.pos);
+    owner.chords.push(item.chord);
+  });
+  // Unidade = palavra inteira (com os acordes dela); a quebra só acontece entre unidades.
+  const units=[];
+  segments.forEach(segment=>{
+    const last=units[units.length-1];
+    if(!last||segment.tail||/\s$/.test(last[last.length-1].lyric)||last[last.length-1].tail)units.push([segment]);
+    else last.push(segment);
+  });
+  const chordHtml=list=>list.length?list.map(chord=>`<span class="smart-chord-token" data-smart-chord-token="${eventEsc(chord)}">${eventEsc(chord)}</span>`).join(' '):'&nbsp;';
+  const html=units.map(unit=>`<span class="cp-unit">${unit.map(segment=>`<span class="cp-seg${segment.chords.length?' has-chord':''}"><span class="full-chord-line is-chord cp-chord">${chordHtml(segment.chords)}</span><span class="full-chord-line cp-lyric">${segment.lyric?eventEsc(segment.lyric):'&nbsp;'}</span></span>`).join('')}</span>`).join('');
+  const normalized=chords.map(item=>item.chord).join(' ');
+  return `<div class="smart-scroll-line chord-pair-line" data-smart-line data-smart-repeat="${smartScroll.repeatCount(chordText)}" data-smart-chords="${eventEsc(normalized)}"><div class="chord-pair">${html}</div></div>`;
+}
+
 function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
   if(!sheet?.content&&!Array.isArray(sheet?.sections)) return '';
   if(Array.isArray(sheet.sections)&&sheet.sections.some(section=>Array.isArray(section.linhas)&&section.linhas.length)){
@@ -2731,13 +2828,16 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
       const heading=!name?'':isChordLine(name)?renderMusicalText(name,totalShift,true):SHEET_SECTION_LINE.test(name)?renderSongSectionHeading(name.replace(/:$/,''),contentMode==='lyrics'?'song-lyrics-section-title':''):(contentMode==='chords'||name.localeCompare(firstLyric,'pt-BR',{sensitivity:'base'})===0?'':`<div class="full-chord-line">${eventEsc(name)}</div>`);
       const lines=(section.linhas||[]).map(line=>{
         const ordered=[...(line.acordes||[])].sort((a,b)=>a.posicao-b.posicao);
-        let chordLine='';
+        let chordLine='',rawChordLine='';
         ordered.forEach(item=>{
           const chord=shiftText(item.acorde,totalShift);
           const position=Math.max(chordLine.length,Number(item.posicao)||0);
           chordLine+=' '.repeat(position-chordLine.length)+chord;
+          rawChordLine+=' '.repeat(Math.max(0,position-rawChordLine.length))+item.acorde;
         });
+        if(contentMode==='combined'&&chordLine&&line.letra){const pair=renderChordLyricPair(rawChordLine,line.letra,totalShift);if(pair)return pair;}
         const chords=chordLine&&contentMode!=='lyrics'?renderSmartFullChordLine(chordLine):'';
+        if(contentMode==='lyrics'&&isTablatureMarkerLine(line.letra))return '';
         const lyric=line.letra&&contentMode!=='chords'?(contentMode==='lyrics'?renderLyricsReadingText(line.letra):renderMusicalText(line.letra,totalShift,true)):'';
         return chords+lyric;
       }).join('');
@@ -2746,10 +2846,21 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     }).join('');
     if(contentMode!=='lyrics'||structured)return `<article class="full-chord-sheet full-chord-sheet-sections">${structured}</article>`;
   }
-  const renderRows=content=>String(content||'').replace(/\r\n?/g,'\n').split('\n').map(raw=>{
+  const renderRows=content=>{const rows=String(content||'').replace(/\r\n?/g,'\n').split('\n');let skip=-1;return rows.map((raw,rowIndex)=>{
+    if(rowIndex===skip)return '';
     const text=songFormat.cleanSheetLine(raw).trimEnd();
     if(!text.trim()) return contentMode==='chords'?'':contentMode==='lyrics'?'<div class="song-lyrics-stanza-break" aria-hidden="true"></div>':'<div class="full-chord-line">&nbsp;</div>';
-    if(isChordLine(text)) return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
+    if(isChordLine(text)){
+      if(contentMode==='combined'){
+        // Linha de acordes + linha de letra logo abaixo: renderiza juntas para o acorde acompanhar a letra no zoom.
+        const next=songFormat.cleanSheetLine(rows[rowIndex+1]??'').trimEnd();
+        if(next.trim()&&!isChordLine(next)&&!SHEET_SECTION_LINE.test(next)&&!/^\s*\[[^\]]{1,60}\]/.test(next)){
+          const pair=renderChordLyricPair(text,next,totalShift);
+          if(pair){skip=rowIndex+1;return pair;}
+        }
+      }
+      return contentMode==='lyrics'?'':renderSmartFullChordLine(shiftText(text,totalShift));
+    }
     // "[Intro] C7M  D9  Bm7": título da seção + linha de acordes.
     const tagged=text.match(/^\s*\[([^\]]{1,60})\]\s*(.*)$/);
     if(tagged&&tagged[2].trim()&&isChordLine(tagged[2])){
@@ -2759,7 +2870,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
     return section?renderSongSectionHeading(text,contentMode==='lyrics'?'song-lyrics-section-title':''):`<div class="full-chord-line${contentMode==='lyrics'?' song-lyrics-verse':''}">${eventEsc(text)}</div>`;
-  }).join('');
+  }).join('');};
   const chunks=splitFullSheetSections(sheet),sections=chunks.map((chunk,index)=>{
     const rows=contentMode==='lyrics'?renderLyricsReadingRows(chunk):renderRows(chunk);
     if(contentMode==='lyrics'&&!rows.includes('song-lyrics-verse'))return '';
@@ -3046,9 +3157,13 @@ function openDetail(id,options={}){
   const context=navigationContext.get();
 
   if(!stageMode){
+    // A página que a pessoa deixou na música (Resumo, Letra e cifra...) sempre vale. A visão sugerida
+    // pelo evento/playlist só entra quando ela ainda não escolheu nada nessa música.
+    // Ordem atual das páginas: 0 Letra e cifra, 1 Resumo harmônico, 2 Letra.
+    const savedSongPage=storage.get(songPageStorageKey(nid),null);
     currentSongPage=loadSongPage(nid);
-    const eventViewPage={summary:0,combined:1,lyrics:2,chords:1}[contextualSong?.view];
-    if(Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
+    const eventViewPage={summary:1,combined:0,lyrics:2,chords:0}[contextualSong?.view];
+    if(savedSongPage===null&&Number.isInteger(eventViewPage))currentSongPage=eventViewPage;
     currentSongView=songViewForPage(currentSongPage);
   }
   const preparedSong=tablature.prepareSong(m),summary=songFormat.harmonicSummary(preparedSong);
@@ -3060,9 +3175,9 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=saved.capo??capoNum;scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=saved.scrollSpeed??scrollSpeed;currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
-  document.getElementById('capo-opt-'+capoNum)?.classList.add('active');
+  document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
   const lbl=document.getElementById('inst-label');
   const instrumentInfo=instrumentDefinitions.get(currentInstrument);
@@ -3127,7 +3242,9 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-var STAGE_CLEAN=false;
+// Modo Palco limpo (decisão do Thiago, 12/10; reforçada em 05/11): a mesma cifra da tela de estudo —
+// mesmo resumo, Letra + Cifras e Letra, na página em que a pessoa estava. Não voltar para false.
+var STAGE_CLEAN=true;
 let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
@@ -3158,7 +3275,8 @@ async function enterStageMode(){
   studyMetronome.stop();
   document.getElementById('study-metronome').hidden=true;
   activeStagePreferences=stagePreferences.normalize({...stagePreferences.load(appCurrentUser.id),theme:'dark',controlsMode:'always',autoScroll:false,fullscreen:false,showPrevious:true,showNext:true,showPosition:true,showSetlist:true,showNextPreview:true,showKey:true});
-  currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
+  // Palco limpo abre na mesma página do estudo; só o palco antigo escolhia a visão pela preferência.
+  if(!STAGE_CLEAN)currentSongView=activeStagePreferences.sheetView==='full'?'full':'summary';
   const packData=stageContextData();
   if(!packData.event){try{stageOffline.prepare({userId:appCurrentUser.id,contextId:packData.contextId,event:null,songs:packData.songs,preferences:activeStagePreferences});}catch(error){showToast('⚠️ Não foi possível guardar esta música neste dispositivo. Mantenha o app aberto.');}}
   stageMode=true;stageExecutionStarted=false;if(detailEditBaseline)activeStagePreferences={...activeStagePreferences,fontSize:detailStageFont,autoScrollSpeed:scrollSpeed};else scrollSpeed=activeStagePreferences.autoScrollSpeed;
@@ -3179,6 +3297,35 @@ async function enterStageMode(){
   revealStageControls();if(!STAGE_CLEAN)showToast('🎤 Modo Palco preparado');
 }
 
+// Tela acesa enquanto uma música estiver aberta, no estudo e no Palco (Thiago, 06/11/2026).
+// Observa a própria tela da música (qualquer caminho que a abra ou feche: biblioteca, evento, playlist,
+// palco). Voltou para a lista ou o app foi para segundo plano: o celular volta a apagar normalmente.
+let songWakeLock=null,songWakeLockPending=false;
+function songScreenOpen(){const vd=document.getElementById('view-detail');return Boolean(vd&&vd.style.display!=='none'&&getComputedStyle(vd).display!=='none');}
+// Decidido em 12/11/2026: com o ROUDY aberto na frente, a tela fica sempre acesa (afinador, metrônomo,
+// listas, música, palco) — antes era só com uma música aberta.
+function appScreenOpen(){return document.visibilityState==='visible';}
+async function syncSongWakeLock(){
+  const want=appScreenOpen();
+  if(want&&!songWakeLock&&!songWakeLockPending&&navigator.wakeLock?.request){
+    songWakeLockPending=true;
+    try{
+      const sentinel=await navigator.wakeLock.request('screen');
+      if(!appScreenOpen()){try{await sentinel.release();}catch(_){}}
+      else{songWakeLock=sentinel;sentinel.addEventListener('release',()=>{if(songWakeLock===sentinel)songWakeLock=null;});}
+    }catch(_){}finally{songWakeLockPending=false;}
+  }else if(!want&&songWakeLock){const sentinel=songWakeLock;songWakeLock=null;try{await sentinel.release();}catch(_){}}
+}
+function setupSongWakeLock(){
+  const vd=document.getElementById('view-detail');if(!vd)return;
+  new MutationObserver(()=>syncSongWakeLock()).observe(vd,{attributes:true,attributeFilter:['style','class']});
+  document.addEventListener('visibilitychange',()=>syncSongWakeLock());
+  // Alguns navegadores (Safari) só liberam a tela acesa depois de um toque: tenta de novo no toque.
+  document.addEventListener('pointerdown',()=>{if(!songWakeLock&&appScreenOpen())syncSongWakeLock();},{passive:true});
+  window.addEventListener('focus',()=>syncSongWakeLock());
+  syncSongWakeLock();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupSongWakeLock);else setupSongWakeLock();
 async function acquireStageWakeLock(){if(!stageMode||!navigator.wakeLock?.request)return;try{stageWakeLock=await navigator.wakeLock.request('screen');stageWakeLock.addEventListener('release',()=>{stageWakeLock=null;});}catch(error){stageWakeLock=null;}}
 async function exitStageMode(restorePlayer=true){
   const vd=document.getElementById('view-detail');stopAutoScroll(true);clearTimeout(stageControlsTimer);vd.removeEventListener('pointerdown',revealStageControls);
@@ -4343,7 +4490,7 @@ function captureEventInvitation(){
 let pendingEventInvitation=captureEventInvitation();
 function showEventInvitationLogin(){
   if(!pendingEventInvitation||!currentAuthState.enabled)return;
-  document.getElementById('modal-body').innerHTML='<div class="modal-title">Convite para evento</div><p class="event-scope-note">Entre com sua conta para aceitar o convite e participar automaticamente como integrante.</p><button type="button" class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><button type="button" class="btn btn-outline" onclick="closeModal()">Agora não</button>';
+  document.getElementById('modal-body').innerHTML='<div class="modal-title">Convite para evento</div><p class="event-scope-note">Entre com sua conta para aceitar o convite e participar automaticamente como integrante.</p><button type="button" class="btn btn-primary" onclick="loginAppAccount()">Entrar com Google</button><button type="button" class="btn btn-outline" onclick="openLoginOptions()">Entrar com e-mail</button><button type="button" class="btn btn-outline" onclick="closeModal()">Agora não</button>';
   document.getElementById('modal-overlay').style.display='flex';
 }
 async function acceptPendingEventInvitation(){
@@ -4372,13 +4519,13 @@ const ACCOUNT_PROFILES_KEY='sc_account_profiles_v1',APP_SETTINGS_KEY='sc_setting
 const CHORD_COLOR_OPTIONS=Object.freeze({gold:'#D8C278',coral:'#E8896B',red:'#EF4444',orange:'#FF8822',yellow:'#FACC15',green:'#22C55E',blue:'#3B82F6',purple:'#A78BFA',pink:'#F472B6',white:'#F8FAFC'});
 const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',themeVersion:2,highContrast:false,colorBlind:false,scale:100,chordColor:'orange'};
 const APP_TRANSLATIONS={
-  'pt-BR':{tabPlaylist:'Home',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encontre um vídeo para adicionar à sua playlist',youtubePlaceholder:'Pesquisar música, artista ou link no YouTube',playlistPlaceholder:'Buscar música na playlist',search:'Pesquisar',account:'Minha conta',myProfile:'Meu Perfil',profileHelp:'Edite sua foto e seus dados pessoais',settings:'Configurações',settingsHelp:'Idioma, acessibilidade e preferências',backup:'Backup e dados',backupHelp:'Restauração e estado da sincronização automática',logout:'Sair da conta',login:'Entrar com Google'},
-  'en':{tabPlaylist:'Home',tabEvents:'Events',tabMedley:'Medley',youtubeHelp:'Find a video to add to your playlist',youtubePlaceholder:'Search music, artist or YouTube link',playlistPlaceholder:'Search music in playlist',search:'Search',account:'My account',myProfile:'My Profile',profileHelp:'Edit your photo and personal information',settings:'Settings',settingsHelp:'Language, accessibility and preferences',backup:'Backup and data',backupHelp:'Restore and automatic sync status',logout:'Log out',login:'Sign in with Google'},
-  'es':{tabPlaylist:'Home',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encuentra un video para agregar a tu playlist',youtubePlaceholder:'Buscar música, artista o enlace de YouTube',playlistPlaceholder:'Buscar música en la playlist',search:'Buscar',account:'Mi cuenta',myProfile:'Mi Perfil',profileHelp:'Edita tu foto y datos personales',settings:'Configuración',settingsHelp:'Idioma, accesibilidad y preferencias',backup:'Copia y datos',backupHelp:'Restauración y estado de sincronización automática',logout:'Cerrar sesión',login:'Ingresar con Google'}
+  'pt-BR':{tabPlaylist:'Home',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encontre um vídeo para adicionar à sua playlist',youtubePlaceholder:'Pesquisar música, artista ou link no YouTube',playlistPlaceholder:'Buscar música na playlist',search:'Pesquisar',account:'Minha conta',myProfile:'Meu Perfil',profileHelp:'Edite sua foto e seus dados pessoais',settings:'Configurações',settingsHelp:'Idioma, acessibilidade e preferências',backup:'Backup e dados',backupHelp:'Restauração e estado da sincronização automática',logout:'Sair da conta',login:'Entrar na conta'},
+  'en':{tabPlaylist:'Home',tabEvents:'Events',tabMedley:'Medley',youtubeHelp:'Find a video to add to your playlist',youtubePlaceholder:'Search music, artist or YouTube link',playlistPlaceholder:'Search music in playlist',search:'Search',account:'My account',myProfile:'My Profile',profileHelp:'Edit your photo and personal information',settings:'Settings',settingsHelp:'Language, accessibility and preferences',backup:'Backup and data',backupHelp:'Restore and automatic sync status',logout:'Log out',login:'Sign in'},
+  'es':{tabPlaylist:'Home',tabEvents:'Eventos',tabMedley:'Medley',youtubeHelp:'Encuentra un video para agregar a tu playlist',youtubePlaceholder:'Buscar música, artista o enlace de YouTube',playlistPlaceholder:'Buscar música en la playlist',search:'Buscar',account:'Mi cuenta',myProfile:'Mi Perfil',profileHelp:'Edita tu foto y datos personales',settings:'Configuración',settingsHelp:'Idioma, accesibilidad y preferencias',backup:'Copia y datos',backupHelp:'Restauración y estado de sincronización automática',logout:'Cerrar sesión',login:'Iniciar sesión'}
 };
-APP_TRANSLATIONS.it={tabPlaylist:'Home',tabEvents:'📅 Eventi',tabMedley:'🎛️ Medley',youtubeHelp:'Trova un video da aggiungere alla playlist',youtubePlaceholder:'Cerca musica, artista o link YouTube',playlistPlaceholder:'Cerca nella playlist',search:'Cerca',account:'Il mio account',myProfile:'Il mio profilo',profileHelp:'Modifica foto e dati personali',settings:'Impostazioni',settingsHelp:'Lingua, accessibilità e preferenze',synced:'Sincronizzato automaticamente',syncing:'Sincronizzazione…',offline:'Offline · modifiche salvate',syncPending:'Sincronizzazione in sospeso',logout:'Esci',login:'Accedi con Google'};
-APP_TRANSLATIONS.fr={tabPlaylist:'Home',tabEvents:'📅 Événements',tabMedley:'🎛️ Medley',youtubeHelp:'Trouvez une vidéo à ajouter à votre playlist',youtubePlaceholder:'Rechercher musique, artiste ou lien YouTube',playlistPlaceholder:'Rechercher dans la playlist',search:'Rechercher',account:'Mon compte',myProfile:'Mon profil',profileHelp:'Modifier la photo et les informations personnelles',settings:'Paramètres',settingsHelp:'Langue, accessibilité et préférences',synced:'Synchronisé automatiquement',syncing:'Synchronisation…',offline:'Hors ligne · modifications conservées',syncPending:'Synchronisation en attente',logout:'Se déconnecter',login:'Se connecter avec Google'};
-APP_TRANSLATIONS.de={tabPlaylist:'Home',tabEvents:'📅 Veranstaltungen',tabMedley:'🎛️ Medley',youtubeHelp:'Finde ein Video für deine Playlist',youtubePlaceholder:'Musik, Interpret oder YouTube-Link suchen',playlistPlaceholder:'Playlist durchsuchen',search:'Suchen',account:'Mein Konto',myProfile:'Mein Profil',profileHelp:'Foto und persönliche Daten bearbeiten',settings:'Einstellungen',settingsHelp:'Sprache, Barrierefreiheit und Einstellungen',synced:'Automatisch synchronisiert',syncing:'Synchronisierung…',offline:'Offline · Änderungen gespeichert',syncPending:'Synchronisierung ausstehend',logout:'Abmelden',login:'Mit Google anmelden'};
+APP_TRANSLATIONS.it={tabPlaylist:'Home',tabEvents:'📅 Eventi',tabMedley:'🎛️ Medley',youtubeHelp:'Trova un video da aggiungere alla playlist',youtubePlaceholder:'Cerca musica, artista o link YouTube',playlistPlaceholder:'Cerca nella playlist',search:'Cerca',account:'Il mio account',myProfile:'Il mio profilo',profileHelp:'Modifica foto e dati personali',settings:'Impostazioni',settingsHelp:'Lingua, accessibilità e preferenze',synced:'Sincronizzato automaticamente',syncing:'Sincronizzazione…',offline:'Offline · modifiche salvate',syncPending:'Sincronizzazione in sospeso',logout:'Esci',login:'Accedi'};
+APP_TRANSLATIONS.fr={tabPlaylist:'Home',tabEvents:'📅 Événements',tabMedley:'🎛️ Medley',youtubeHelp:'Trouvez une vidéo à ajouter à votre playlist',youtubePlaceholder:'Rechercher musique, artiste ou lien YouTube',playlistPlaceholder:'Rechercher dans la playlist',search:'Rechercher',account:'Mon compte',myProfile:'Mon profil',profileHelp:'Modifier la photo et les informations personnelles',settings:'Paramètres',settingsHelp:'Langue, accessibilité et préférences',synced:'Synchronisé automatiquement',syncing:'Synchronisation…',offline:'Hors ligne · modifications conservées',syncPending:'Synchronisation en attente',logout:'Se déconnecter',login:'Se connecter'};
+APP_TRANSLATIONS.de={tabPlaylist:'Home',tabEvents:'📅 Veranstaltungen',tabMedley:'🎛️ Medley',youtubeHelp:'Finde ein Video für deine Playlist',youtubePlaceholder:'Musik, Interpret oder YouTube-Link suchen',playlistPlaceholder:'Playlist durchsuchen',search:'Suchen',account:'Mein Konto',myProfile:'Mein Profil',profileHelp:'Foto und persönliche Daten bearbeiten',settings:'Einstellungen',settingsHelp:'Sprache, Barrierefreiheit und Einstellungen',synced:'Automatisch synchronisiert',syncing:'Synchronisierung…',offline:'Offline · Änderungen gespeichert',syncPending:'Synchronisierung ausstehend',logout:'Abmelden',login:'Anmelden'};
 Object.assign(APP_TRANSLATIONS['pt-BR'],{contributionLead:'O Roudy está te abençoando? Se sim, caso queira retribuir,',contributionAny:'qualquer valor é bem-vindo',contributionMiddle:'e ajuda a manter o projeto vivo, trazer melhorias e desenvolver novos recursos.',contributionScan:'Para contribuir, basta escanear o QR Code abaixo.',contributionSuggested:'Escolha um valor sugerido',contributionOther:'Outro',contributionThanks:'Obrigado por fazer parte do projeto!',pixCopy:'Copiar código Pix',pixHelp:'No celular, copie o código e use a opção Pix Copia e Cola no aplicativo do seu banco.'});
 Object.assign(APP_TRANSLATIONS.en,{contributionLead:'Is ROUDY blessing you? If so, and you would like to give back,',contributionAny:'any amount is welcome',contributionMiddle:'and helps keep the project alive, deliver improvements and develop new features.',contributionScan:'To contribute, scan the QR Code below.',contributionThanks:'Thank you for being part of the project!',pixCopy:'Copy Pix code',pixHelp:'On your phone, copy the code and use the Pix Copy and Paste option in your banking app.'});
 Object.assign(APP_TRANSLATIONS.es,{contributionLead:'¿ROUDY te está bendiciendo? Si quieres retribuir,',contributionAny:'cualquier cantidad es bienvenida',contributionMiddle:'y ayuda a mantener vivo el proyecto, incorporar mejoras y desarrollar nuevas funciones.',contributionScan:'Para contribuir, escanea el código QR.',contributionThanks:'¡Gracias por formar parte del proyecto!',pixCopy:'Copiar código Pix',pixHelp:'En el celular, copia el código y usa la opción Pix Copiar y Pegar de tu aplicación bancaria.'});
@@ -4790,7 +4937,7 @@ async function openAccountModal(){
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('settings')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3.2 9.7 1.5h4.6l.5 1.7c.5.2 1 .4 1.5.7l1.6-.8 3.2 3.2-.8 1.6c.3.5.5 1 .7 1.5l1.7.5v4.6l-1.7.5c-.2.5-.4 1-.7 1.5l.8 1.6-3.2 3.2-1.6-.8c-.5.3-1 .5-1.5.7l-.5 1.7H9.7l-.5-1.7c-.5-.2-1-.4-1.5-.7l-1.6.8-3.2-3.2.8-1.6c-.3-.5-.5-1-.7-1.5l-1.7-.5V9.9L3 9.4c.2-.5.4-1 .7-1.5l-.8-1.6 3.2-3.2 1.6.8c.5-.3 1-.5 1.5-.7Z"/><circle cx="12" cy="12" r="3.5"/></svg></span><span class="account-drawer-label"><strong>Configurações e privacidade</strong><small>${eventEsc(appText('settingsHelp'))}</small></span></button>
       <button class="account-drawer-item" type="button" onclick="openAccountDrawerDestination('contribution')"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.3A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.3C20 15.4 12 20 12 20Z"/></svg></span><span class="account-drawer-label"><strong>Contribua com o ROUDY</strong><small>Ajude a manter o projeto vivo</small></span></button>
     </nav><div class="account-drawer-section-line"></div>
-    ${currentAuthState.authenticated?`<div class="account-drawer-sync" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><i class="account-sync-dot" aria-hidden="true"></i><span>${eventEsc(sync.text)}</span></div><button class="account-drawer-item account-drawer-item--danger" type="button" onclick="closeAccountDrawer();logoutAppAccount()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('logout'))}</strong></span></button>`:currentAuthState.enabled?`<button class="account-drawer-item" type="button" onclick="closeAccountDrawer();loginAppAccount()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M16 12H6"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('login'))}</strong><small>Ative a sincronização automática</small></span></button>`:`<div class="account-drawer-sync"><i aria-hidden="true"></i><span>${eventEsc(mode)}</span></div>`}`;
+    ${currentAuthState.authenticated?`<div class="account-drawer-sync" id="account-sync-badge" data-state="${sync.state}" aria-live="polite"><i class="account-sync-dot" aria-hidden="true"></i><span>${eventEsc(sync.text)}</span></div><button class="account-drawer-item account-drawer-item--danger" type="button" onclick="closeAccountDrawer();logoutAppAccount()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('logout'))}</strong></span></button>`:currentAuthState.enabled?`<button class="account-drawer-item" type="button" onclick="closeAccountDrawer();openLoginOptions()"><span class="account-drawer-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M16 12H6"/></svg></span><span class="account-drawer-label"><strong>${eventEsc(appText('login'))}</strong><small>Ative a sincronização automática</small></span></button>`:`<div class="account-drawer-sync"><i aria-hidden="true"></i><span>${eventEsc(mode)}</span></div>`}`;
   requestAnimationFrame(()=>{layer.classList.add('is-open');layer.querySelector('.account-drawer-profile')?.focus({preventScroll:true});});
 }
 
@@ -4798,8 +4945,56 @@ function ensureAccountDrawer(){let layer=document.getElementById('account-drawer
 function closeAccountDrawer(){document.getElementById('account-drawer-layer')?.classList.remove('is-open');document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();}
 function openAccountDrawerDestination(destination){if(destination==='settings'){openAccountDrawerSettings();return;}closeAccountDrawer();document.getElementById('modal-overlay').style.display='flex';if(destination==='profile')openProfileSettings();else if(destination==='tuner')openTuner();else if(destination==='metronome')openToolsMetronome();else if(destination==='contribution')openRoudyContribution();else if(destination==='organize-summaries')openSummaryOrganizer();}
 function accountDrawerSettingsHeader(title,backAction='openAccountModal'){return `<header class="account-drawer-subheader"><button type="button" aria-label="Voltar" onclick="${backAction}()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><h2>${eventEsc(title)}</h2></header>`;}
-function openAccountDrawerSettings(){const drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Configurações e privacidade')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerLanguageSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('language')}</span><span class="account-drawer-settings-copy"><strong>Idioma</strong><small>Português Brasileiro</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerAppearanceSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('appearance')}</span><span class="account-drawer-settings-copy"><strong>Aparência e Acessibilidade</strong><small>Tema, contraste, cores, tamanho e capa</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerHelpSupport()"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Ajuda e Suporte</strong><small>Recuperação, diagnóstico e sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;drawer.scrollTop=0;}
-function openAccountDrawerHelpSupport(){librarySyncInDrawer=false;document.getElementById('modal-overlay').style.display='none';document.body.setAttribute('data-account-menu-open','true');const layer=ensureAccountDrawer(),drawer=layer.querySelector('.account-drawer');layer.classList.add('is-open');drawer.innerHTML=`${accountDrawerSettingsHeader('Ajuda e Suporte','openAccountDrawerSettings')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="showToast('O canal de suporte e feedback estará disponível em breve.')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7.5 9h9M7.5 13h6"/></svg></span><span class="account-drawer-settings-copy"><strong>Fale conosco</strong><small>Suporte e feedback</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openLibrarySync('openAccountDrawerHelpSupport')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6M4.5 11.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6"/></svg></span><span class="account-drawer-settings-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;drawer.scrollTop=0;}
+function openAccountDrawerSettings(){const drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Configurações e privacidade')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerLanguageSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('language')}</span><span class="account-drawer-settings-copy"><strong>Idioma</strong><small>Português Brasileiro</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerAppearanceSettings()"><span class="account-drawer-settings-icon">${settingsUiIcon('appearance')}</span><span class="account-drawer-settings-copy"><strong>Aparência e Acessibilidade</strong><small>Tema, contraste, cores, tamanho e capa</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openAccountDrawerHelpSupport()"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Ajuda e Suporte</strong><small>Recuperação, diagnóstico e sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button><a class="account-drawer-settings-item" href="termos.html" target="_blank" rel="noopener"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Termos de uso</strong><small>Regras do ROUDY e pedido de remoção de conteúdo</small></span><span class="account-drawer-settings-chevron">›</span></a><a class="account-drawer-settings-item" href="privacidade.html" target="_blank" rel="noopener"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Política de privacidade</strong><small>Quais dados usamos e por quê</small></span><span class="account-drawer-settings-chevron">›</span></a>${currentAuthState.authenticated?`<button class="account-drawer-settings-item account-drawer-settings-item--danger" type="button" onclick="openDeleteAccount()"><span class="account-drawer-settings-icon">${settingsUiIcon('help')}</span><span class="account-drawer-settings-copy"><strong>Excluir minha conta</strong><small>Apaga sua conta e seus dados do ROUDY</small></span><span class="account-drawer-settings-chevron">›</span></button>`:''}</main>`;drawer.scrollTop=0;}
+function openAccountDrawerHelpSupport(){librarySyncInDrawer=false;document.getElementById('modal-overlay').style.display='none';document.body.setAttribute('data-account-menu-open','true');const layer=ensureAccountDrawer(),drawer=layer.querySelector('.account-drawer');layer.classList.add('is-open');drawer.innerHTML=`${accountDrawerSettingsHeader('Ajuda e Suporte','openAccountDrawerSettings')}<main class="account-drawer-settings"><button class="account-drawer-settings-item" type="button" onclick="showToast('O canal de suporte e feedback estará disponível em breve.')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-4.5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7.5 9h9M7.5 13h6"/></svg></span><span class="account-drawer-settings-copy"><strong>Fale conosco</strong><small>Suporte e feedback</small></span><span class="account-drawer-settings-chevron">›</span></button><button class="account-drawer-settings-item" type="button" onclick="openLibrarySync('openAccountDrawerHelpSupport')"><span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6M4.5 11.5v6c0 1.65 3.35 3 7.5 3s7.5-1.35 7.5-3v-6"/></svg></span><span class="account-drawer-settings-copy"><strong>Backup e dados</strong><small>Recuperação, diagnóstico e estado da sincronização</small></span><span class="account-drawer-settings-chevron">›</span></button></main>`;appendBugReportMenuItem(drawer);drawer.scrollTop=0;}
+// Support intake uses the authenticated backend, never a browser-side Brevo key.
+function openBugReportForm(){
+  const owner=appAuth.getState().user?.id;
+  if(!appAuth.getState().authenticated||!owner){showToast('Entre na sua conta para relatar um bug.');return;}
+  const drawer=ensureAccountDrawer().querySelector('.account-drawer');
+  drawer.innerHTML=`<section class="bug-report-screen">${accountDrawerSettingsHeader('Relatar bugs','openAccountDrawerHelpSupport')}<main class="account-drawer-settings account-drawer-settings--form bug-report-content"><form id="bug-report-form"><div class="bug-report-intro"><span class="bug-report-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M8 9h8M8 13h5"/></svg></span><label class="bug-report-title" for="bug-description">Descreva o problema</label><p>Seu relato ajuda a melhorar o ROUDY.</p></div><textarea class="form-input" id="bug-description" required minlength="10" maxlength="4000" rows="6" aria-describedby="bug-description-help bug-report-privacy" placeholder="O que aconteceu por aí?"></textarea><div id="bug-description-help"><strong class="bug-report-guide-title">Como podemos entender melhor?</strong><ol class="bug-report-guide-list"><li>Conte em qual tela estava e o que tentou fazer.</li><li>Explique, na ordem, onde tocou ou clicou até o problema aparecer.</li><li>Diga o que aconteceu e o que esperava que acontecesse.</li></ol><p class="bug-report-example"><span>Por exemplo</span>“Abri as notificações e toquei em Ler todas, mas o número no sino não sumiu.”</p></div><p class="bug-report-privacy" id="bug-report-privacy">Enviado ao suporte do ROUDY. Não inclua senhas, códigos de acesso ou dados pessoais desnecessários. Nenhum diagnóstico é anexado automaticamente.</p><button class="account-drawer-settings-save" type="submit">Enviar relato</button><p id="bug-report-status" role="status" aria-live="polite"></p></form></main></section>`;
+  drawer.scrollTop=0;
+  const form=document.getElementById('bug-report-form'),status=document.getElementById('bug-report-status'),button=form.querySelector('button[type="submit"]'),attachment=window.supportAttachment.create(form);
+  let clientId=null,signature=null,busy=false,unconfirmed=false;
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();if(busy||!form.reportValidity())return;
+    if(attachment.processing){status.textContent='Aguarde a preparação da imagem antes de enviar.';return;}
+    if(appAuth.getState().user?.id!==owner){status.textContent='Sua conta mudou. Abra o formulário novamente.';return;}
+    const description=form.querySelector('#bug-description').value.trim();
+    if(description.length<10){status.textContent='Descreva o problema com pelo menos 10 caracteres.';return;}
+    const content=JSON.stringify([description,attachment.identity]);if(signature!==content){clientId=crypto.randomUUID();signature=content;}
+    busy=true;button.disabled=true;attachment.lock(true);form.querySelector('#bug-description').disabled=true;status.textContent='Enviando…';
+    let safeToEdit=false;
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);
+    try{
+      const headers={Authorization:'Bearer '+appAuth.getAccessToken()};let body;
+      if(attachment.blob){body=new FormData();body.append('clientId',clientId);body.append('description',description);body.append('image',attachment.blob,attachment.blob.type==='image/png'?'print.png':'print.jpg');}
+      else{headers['Content-Type']='application/json';body=JSON.stringify({clientId,description});}
+      const response=await fetch(apiConfig.collaborationEndpoint('/bug-reports'),{method:'POST',headers,body,signal:controller.signal});
+      safeToEdit=!unconfirmed&&[400,401,403,413,429].includes(response.status);
+      const data=await response.json().catch(()=>null);
+      if(!response.ok)throw new Error(data?.erro?.mensagem||(response.status===429?'Aguarde antes de tentar novamente.':response.status===401?'Sua sessão expirou. Entre novamente na sua conta.':'Não foi possível confirmar o envio agora.'));
+      if(!data||typeof data.id!=='string'||typeof data.emailStatus!=='string')throw new Error('Não foi possível confirmar o envio agora.');
+      if(appAuth.getState().user?.id!==owner||!form.isConnected)return;
+      if(['uncertain','sending'].includes(data.emailStatus)){
+        status.textContent='Protocolo: '+data.id+' — Não foi possível confirmar o encaminhamento. Para evitar duplicatas, não envie novamente; o suporte precisa verificar este protocolo.';
+        button.textContent='Verificação pendente';return;
+      }
+      if(data.emailStatus!=='accepted'){safeToEdit=['retry','not_configured','failed'].includes(data.emailStatus);throw new Error('Relato salvo (protocolo '+data.id+'), mas o e-mail não foi encaminhado.');}
+      form.querySelectorAll('textarea').forEach(input=>input.disabled=true);
+      status.textContent='Relato encaminhado ao suporte. Protocolo: '+data.id;
+      button.hidden=true;
+    }catch(error){if(form.isConnected&&appAuth.getState().user?.id===owner){unconfirmed=!safeToEdit;status.textContent=(error.name==='AbortError'?'O envio demorou demais.':error.message)+' O texto continua aqui; tente novamente.'+(safeToEdit?' Você também pode remover a imagem e enviar somente o texto.':' Para evitar duplicatas, mantivemos o relato sem alterações até confirmar o resultado.');button.disabled=false;attachment.lock(!safeToEdit);form.querySelector('#bug-description').disabled=!safeToEdit;}}
+    finally{clearTimeout(timeout);busy=false;}
+  });
+}
+function appendBugReportMenuItem(drawer){
+  const link=document.createElement("button");
+  link.className="account-drawer-settings-item";link.type='button';link.onclick=openBugReportForm;
+  link.style.textDecoration="none";
+link.innerHTML=`<span class="account-drawer-settings-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="14" rx="5"/><path d="M9 7V5a3 3 0 0 1 6 0v2M3 10h4m10 0h4M3 15h4m10 0h4M5 21l3-3m8 0 3 3M12 8v12"/></svg></span><span class="account-drawer-settings-copy"><strong>Relatar bugs</strong><small>Informar um problema no aplicativo</small></span><span class="account-drawer-settings-chevron">›</span>`;
+  drawer.querySelector(".account-drawer-settings").appendChild(link);
+}
 function openAccountDrawerLanguageSettings(){const value=loadAppSettings(),languages=[['pt-BR','Português Brasileiro'],['es','Español'],['en','English'],['it','Italiano'],['fr','Français'],['de','Deutsch']],drawer=ensureAccountDrawer().querySelector('.account-drawer');drawer.innerHTML=`${accountDrawerSettingsHeader('Idioma','openAccountDrawerSettings')}<main class="account-drawer-settings account-drawer-settings--form"><input id="setting-language" type="hidden" value="${eventEsc(value.language)}"><section class="account-drawer-language" role="radiogroup" aria-label="Idioma da interface">${languages.map(([code,name])=>`<button class="account-drawer-language-item ${value.language===code?'is-selected':''}" type="button" role="radio" aria-checked="${value.language===code}" data-language="${code}" onclick="selectAppLanguage('${code}')"><span lang="${code}">${name}</span><span class="account-drawer-language-check" aria-hidden="true">✓</span></button>`).join('')}</section><button class="account-drawer-settings-save" type="button" onclick="saveAccountDrawerSettings()">Salvar configurações</button></main>`;drawer.scrollTop=0;}
 function chordColorValue(value){return CHORD_COLOR_OPTIONS[value]||CHORD_COLOR_OPTIONS.orange;}
 function chordColorPickerMarkup(selected){const colors=[['orange','Laranja (padrão)'],['white','Branco'],['gold','Dourado'],['red','Vermelho'],['pink','Rosa'],['yellow','Amarelo'],['coral','Coral'],['green','Verde'],['blue','Azul'],['purple','Roxo']].map(([value,label])=>[value,label,CHORD_COLOR_OPTIONS[value]]);return `<input id="setting-chord-color" type="hidden" value="${eventEsc(selected)}"><div class="account-drawer-color-picker" role="radiogroup" aria-label="Cor da cifra" hidden>${colors.map(([value,label,color])=>`<button type="button" role="radio" aria-checked="${selected===value}" class="account-drawer-color-option ${selected===value?'is-selected':''}" data-color-value="${value}" onclick="selectChordColor('${value}',this)"><i style="--choice-color:${color}" aria-hidden="true"></i><span>${label}</span><b aria-hidden="true">✓</b></button>`).join('')}</div>`;}
@@ -5164,7 +5359,7 @@ function openGuestLibraryImportPrompt({count=0,userId=null}={}){
 async function confirmGuestLibraryImport(button){if(button)button.disabled=true;try{showToast('Sincronizando músicas locais…');await librarySync.migrateLegacy();closeModal();showToast('✅ Músicas adicionadas à sua conta.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível adicionar as músicas agora.'));}}
 async function keepGuestLibrarySeparate(button){if(button)button.disabled=true;try{await librarySync.declineMigration();closeModal();showToast('As músicas locais continuam salvas neste dispositivo.');renderMusicas();}catch(error){if(button)button.disabled=false;showToast('⚠️ '+(error.message||'Não foi possível carregar sua conta.'));}}
 function renderLoginGate(state=currentAuthState){const gate=document.getElementById('login-gate'),actions=document.getElementById('login-gate-actions'),status=document.getElementById('login-gate-status');if(!gate)return;if((state.authenticated&&!loginGatePreview)||loginGatePassed){gate.hidden=true;return;}gate.hidden=false;if(!loginGateAuthReady){actions.hidden=true;status.hidden=false;status.textContent='Verificando sua sessão…';return;}actions.hidden=false;status.hidden=true;status.textContent='';}
-function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();}
+function continueWithoutLogin(){loginGatePassed=true;renderLoginGate();window.homePlaylists?.openPendingSharedPlaylist?.();}
 function openLoginEmail(mode='signin'){
   const form=document.getElementById('login-email-form');form.dataset.mode=mode;form.hidden=false;
   form.querySelector('label').textContent=mode==='signup'?'Crie sua conta com e-mail':'Entre com seu e-mail';
@@ -5182,9 +5377,72 @@ async function sendLoginEmail(event){
   finally{button.disabled=false;}
 }
 async function loginAppAccount(){try{await appAuth.signInWithGoogle();return {ok:true};}catch(error){showToast('⚠️ '+error.message);return {ok:false,message:error.message};}}
+// Login por e-mail com código (Supabase OTP). Etapa 1: e-mail. Etapa 2: código de 6 dígitos.
+function showEmailLogin(container,trigger){if(!container)return;if(trigger)trigger.hidden=true;container.hidden=false;renderEmailLoginStep(container,'email','');}
+function renderEmailLoginStep(container,step,email){
+  container.replaceChildren();
+  const label=document.createElement('label'),input=document.createElement('input'),submit=document.createElement('button'),error=document.createElement('p'),note=document.createElement('p');
+  const id=(container.id||'login-email')+'-'+step;label.htmlFor=id;input.id=id;error.className='login-email-error';error.setAttribute('role','alert');note.className='login-email-note';submit.type='button';submit.className='login-email-submit';
+  if(step==='email'){label.textContent='Seu e-mail';input.type='email';input.inputMode='email';input.autocomplete='email';input.placeholder='voce@exemplo.com';input.value=email||'';submit.textContent='Enviar código';note.textContent='Funciona com qualquer e-mail. Você recebe um código para entrar, sem senha.';}
+  else{label.textContent='Código enviado para '+email;input.type='text';input.inputMode='numeric';input.autocomplete='one-time-code';input.maxLength=10;input.className='login-email-code';input.placeholder='000000';submit.textContent='Entrar';note.textContent='Não chegou? Veja a caixa de spam ou peça um novo código.';}
+  const run=async()=>{if(submit.disabled)return;error.textContent='';submit.disabled=true;const idle=submit.textContent;submit.textContent=step==='email'?'Enviando…':'Confirmando…';
+    try{if(step==='email'){const sent=await appAuth.sendEmailCode(input.value);renderEmailLoginStep(container,'code',sent.email);}
+      else{const state=await appAuth.verifyEmailCode(email,input.value);if(state.authenticated){if(document.getElementById('modal-overlay')?.contains(container))closeModal();showToast('✅ Você entrou na sua conta.');}}}
+    catch(failure){error.textContent=failure?.message||'Não foi possível entrar agora.';submit.disabled=false;submit.textContent=idle;input.focus();}};
+  submit.addEventListener('click',run);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();run();}});
+  container.append(label,input,error,submit,note);
+  if(step==='code'){const again=document.createElement('button');again.type='button';again.className='login-email-link';again.textContent='Usar outro e-mail';again.addEventListener('click',()=>renderEmailLoginStep(container,'email',email));container.appendChild(again);}
+  setTimeout(()=>input.focus(),0);
+}
+function openLoginOptions(){
+  const body=document.getElementById('modal-body');if(!body)return;
+  body.innerHTML='<div class="modal-title">Entrar na conta</div><p class="event-scope-note">Entrar mantém os dados locais e ativa a sincronização automática.</p><button type="button" class="btn btn-primary" onclick="loginAppAccount()">Continuar com Google</button><div class="login-email-form" id="login-modal-email"></div><button type="button" class="btn btn-outline" onclick="closeModal()">Agora não</button>';
+  renderEmailLoginStep(document.getElementById('login-modal-email'),'email','');
+  document.getElementById('modal-overlay').style.display='flex';
+}
 // Sair da conta: confirma que tudo está na nuvem e só então apaga do aparelho os dados DESTA conta.
 function songsPendingUpload(){const status=librarySync.getStatus()||{};const dirty=musicas.filter(song=>{const meta=song&&song.librarySync;return !meta||!meta.clientId||!meta.contentHash||meta.contentHash!==librarySync.contentHash(song);}).length;return dirty+Number(status.conflicts||0)+songRepository.getPendingDeletedClientIds().length;}
 function eventsPendingUpload(){return setlists.filter(event=>event&&event.syncState==='pending').length;}
+// Volta o aparelho ao estado de visitante, apagando os dados desta conta (usado por Sair e Excluir conta).
+function purgeAccountFromDevice(authUserId,owners){
+  const purge=()=>{
+    // Volta o aparelho ao estado de visitante: só o catálogo de exemplo, sem eventos da conta.
+    try{musicas=songRepository.deactivateOwner(null,catalogoPadrao)||songModel.normalizeCollection(demoLibrary.catalog());}catch(_){}
+    try{setlists=eventRepository.deactivateOwner(null);}catch(_){}
+    try{automaticEventOffline.clear();}catch(_){}
+    currentSdId=null;
+    try{if(authUserId)Object.keys(localStorage).filter(k=>k.includes(authUserId)).forEach(k=>localStorage.removeItem(k));}catch(_){}
+    try{if(!purge.idbDone&&window.indexedDB){purge.idbDone=true;indexedDB.deleteDatabase('roudy-event-offline-v1');}}catch(_){}
+    if(owners.songs)songRepository.purgeOwner(owners.songs);
+    if(owners.events)eventRepository.purgeOwner(owners.events);
+    if(owners.medley)medleyRepository.purgeOwner(owners.medley);
+    // MANUTENÇÃO: Preserve somente a foto por conta; logout não é uma solicitação de removê-la.
+    if(owners.profile){const profiles=accountProfiles(),saved=profiles[owners.profile];if(saved){if(Object.prototype.hasOwnProperty.call(saved,'avatarUrl'))profiles[owners.profile]={avatarUrl:saved.avatarUrl,avatarPending:Boolean(saved.avatarPending)};else delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
+  };
+  purge();setTimeout(purge,0);setTimeout(()=>{purge();try{closeDetail();switchTab('musicas');renderMusicas();renderSetlists();}catch(_){}},600); // depois que a troca de conta termina de gravar
+}
+// Excluir conta (exigência da Play Store): confirma digitando EXCLUIR; o servidor apaga conta e dados,
+// e o aparelho volta ao estado de visitante (mesma limpeza do Sair, sem precisar salvar antes).
+function openDeleteAccount(){
+  if(!currentAuthState.authenticated){showToast('Entre na sua conta para excluí-la.');return;}
+  document.getElementById('modal-body').innerHTML=`<div class="modal-title">Excluir minha conta</div><p class="event-scope-note">Isso não pode ser desfeito. Serão apagados:</p><ul class="delete-account-list"><li>seu perfil, foto e capa;</li><li>sua biblioteca de músicas e suas playlists;</li><li>os eventos e as equipes de que você é dono(a);</li><li>sua participação nos eventos de outras pessoas (suas mensagens ficam como “Conta excluída”).</li></ul><p class="event-scope-note">As músicas que você enviou ao catálogo compartilhado continuam disponíveis, sem o seu nome.</p><div class="form-group"><label class="form-label" for="delete-account-confirm">Digite EXCLUIR para confirmar</label><input class="form-input delete-account-confirm" id="delete-account-confirm" autocomplete="off" autocapitalize="characters" spellcheck="false"></div><p class="login-email-error" id="delete-account-error" role="alert"></p><button type="button" class="btn btn-primary" id="delete-account-button" style="background:#ff453a;color:#fff" onclick="confirmDeleteAccount(this)">Excluir minha conta</button><button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>`;
+  document.getElementById('modal-overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('delete-account-confirm')?.focus(),0);
+}
+async function confirmDeleteAccount(button){
+  const input=document.getElementById('delete-account-confirm'),error=document.getElementById('delete-account-error');
+  const typed=String(input?.value||'').trim().toUpperCase();
+  if(typed!=='EXCLUIR'){if(error)error.textContent='Digite EXCLUIR para confirmar.';input?.focus();return;}
+  if(navigator.onLine===false){if(error)error.textContent='Conecte-se à internet para excluir a conta.';return;}
+  if(button){button.disabled=true;button.textContent='Excluindo…';}
+  const authUserId=String(currentAuthState.user?.id||'');
+  const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:profileStorageOwner()};
+  try{await appAuth.deleteAccount(typed);}
+  catch(failure){if(error)error.textContent=failure?.message||'Não foi possível excluir a conta agora.';if(button){button.disabled=false;button.textContent='Excluir minha conta';}return;}
+  purgeAccountFromDevice(authUserId,owners);
+  if(owners.profile){try{const profiles=accountProfiles();delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}catch(_){}}
+  closeModal();showToast('Sua conta foi excluída. Obrigado por ter usado o ROUDY.');
+}
 async function logoutAppAccount(){
   if(!await profileCover.flush()){appAlert('Sua capa está salva neste aparelho, mas ainda não foi confirmada na conta. Verifique a conexão antes de sair.');return;}
   if(!currentAuthState.authenticated){try{await appAuth.signOut();}catch(_){}closeModal();return;}
@@ -5205,21 +5463,7 @@ async function logoutAppAccount(){
   const authUserId=String(currentAuthState.user?.id||'');
   const owners={songs:songRepository.getActiveOwnerId(),events:eventRepository.getActiveOwnerId(),medley:medleyActiveOwner,profile:profileStorageOwner()};
   try{await appAuth.signOut();}catch(error){showToast('⚠️ '+error.message);return;}
-  const purge=()=>{
-    // Volta o aparelho ao estado de visitante: só o catálogo de exemplo, sem eventos da conta.
-    try{musicas=songRepository.deactivateOwner(null,catalogoPadrao)||songModel.normalizeCollection(demoLibrary.catalog());}catch(_){}
-    try{setlists=eventRepository.deactivateOwner(null);}catch(_){}
-    try{automaticEventOffline.clear();}catch(_){}
-    currentSdId=null;
-    try{if(authUserId)Object.keys(localStorage).filter(k=>k.includes(authUserId)).forEach(k=>localStorage.removeItem(k));}catch(_){}
-    try{if(!purge.idbDone&&window.indexedDB){purge.idbDone=true;indexedDB.deleteDatabase('roudy-event-offline-v1');}}catch(_){}
-    if(owners.songs)songRepository.purgeOwner(owners.songs);
-    if(owners.events)eventRepository.purgeOwner(owners.events);
-    if(owners.medley)medleyRepository.purgeOwner(owners.medley);
-    // MANUTENÇÃO: Preserve somente a foto por conta; logout não é uma solicitação de removê-la.
-    if(owners.profile){const profiles=accountProfiles(),saved=profiles[owners.profile];if(saved){if(Object.prototype.hasOwnProperty.call(saved,'avatarUrl'))profiles[owners.profile]={avatarUrl:saved.avatarUrl,avatarPending:Boolean(saved.avatarPending)};else delete profiles[owners.profile];storage.set(ACCOUNT_PROFILES_KEY,profiles);}}
-  };
-  purge();setTimeout(purge,0);setTimeout(()=>{purge();try{closeDetail();switchTab('musicas');renderMusicas();renderSetlists();}catch(_){}},600); // depois que a troca de conta termina de gravar
+  purgeAccountFromDevice(authUserId,owners);
   closeModal();showToast('Você saiu. Os dados da sua conta foram removidos deste aparelho.');
 }
 async function openBandManager(){
@@ -5241,13 +5485,21 @@ function transposeEventChordText(value,semitones){
 }
 // O tom-alvo pode mudar automaticamente; este campo descreve o tom REAL do texto salvo.
 function eventChordSheetAtKey(edit,key){return transposeEventChordText(edit?.chordSheet,eventKeyShift(edit?.chordSheetKey||edit?.key,key));}
+function eventShiftSections(sections,shift){
+  if(!shift)return sections;
+  return sections.map(section=>({...section,lines:section.lines.map(line=>{let cursor=-1;return {...line,chords:line.chords.map(c=>{const chord=shiftText(c.chord,shift),position=Math.max(c.position,cursor+1);cursor=position+chord.length;return {...c,chord,position};})};})}));
+}
 function eventSongModel(song,edit,fallbackEdit){
   const base=songFormat.fromLegacy(edit?.songData||fallbackEdit?.songData||song),primary=edit||{},fallback=fallbackEdit||{},complete=Boolean(primary.title||primary.chordSheet);
   const title=primary.title||fallback.title||base.title,key=primary.key||fallback.key||base.originalKey;
   const artist=complete?primary.artist:(primary.artist||fallback.artist||base.artist),capoValue=complete?primary.capo:(primary.capo||fallback.capo||String(base.capo||''));
   const sourceKey=primary.chordSheet?(primary.chordSheetKey||primary.key):fallback.chordSheet?(fallback.chordSheetKey||fallback.key):base.originalKey;
   const chordSheet=transposeEventChordText(primary.chordSheet||fallback.chordSheet||songFormat.simpleText(base),eventKeyShift(sourceKey,key));
-  const fullShift=eventKeyShift(base.originalKey,key),sections=songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
+  // O texto guarda a letra antes dos acordes; remontar os blocos por ele grudava a letra no acorde
+  // errado quando havia uma linha só de acordes antes (ex.: "G A 3x" / "E7" / letra). Quando o texto
+  // é o mesmo dos blocos salvos (songData), usa os blocos salvos, só transpostos para o tom.
+  const sourceText=String(primary.chordSheet||fallback.chordSheet||'').trim(),structured=base.sections.length&&(!sourceText||sourceText===songFormat.simpleText(base).trim());
+  const fullShift=eventKeyShift(base.originalKey,key),sections=structured?eventShiftSections(base.sections,eventKeyShift(sourceKey,key)):songFormat.sectionsFromSimpleText(chordSheet,base),baseFullChordSheet=base.fullChordSheet?.content?{...base.fullChordSheet,content:transposeEventChordText(base.fullChordSheet.content,fullShift),sections:fullShift?[]:base.fullChordSheet.sections}:base.fullChordSheet;
   const fullChordSheet=primary.chordSheet&&primary.view&&primary.view!=='summary'?{...(baseFullChordSheet||{}),content:chordSheet,sections:[]}:baseFullChordSheet;
   return songFormat.normalize({...base,title,artist,originalKey:key,currentKey:key,capo:songFormat.parseCapo(capoValue),sections,fullChordSheet});
 }
@@ -5283,23 +5535,26 @@ function eventSongCopy(song,state=song.playbackSettings||{}){
 function eventEditFromSong(data,notes=''){const model=songFormat.fromLegacy(data);return {title:model.title,artist:model.artist,key:model.originalKey,capo:String(model.capo),chordSheet:songFormat.simpleText(model),chordSheetKey:model.originalKey,notes,songData:data};}
 // MANUTENÇÃO: O contexto captura proprietário/evento/item; revalidá-lo evita aplicar resposta tardia em outra conta.
 async function saveContextEventSong(context,data,options={}){
-  if(context.ownerId!==appCurrentUser.id){showToast('⚠️ A conta mudou. Reabra a música.');return {ok:false};}
-  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));if(!item||!eventModel.canAccess(event,owner))return {ok:false};
+  if(context.ownerId!==appCurrentUser.id){const message='⚠️ A conta mudou. Reabra a música.';showToast(message);return {ok:false,message};}
+  const owner=appCurrentUser.id,event=findEvent(context.eventId),item=event?.repertoire.find(i=>String(i.id)===String(context.itemId));
+  // Sem estes avisos a tela só mostrava "Não foi possível salvar" e não havia como saber o motivo.
+  if(!item){const message='⚠️ Esta música mudou no evento. Volte ao evento, reabra a música e tente de novo.';showToast(message);return {ok:false,message};}
+  if(!eventModel.canAccess(event,owner)){const message='⚠️ Sua conta não aparece neste evento. Saia, entre de novo na conta e tente outra vez.';showToast(message);return {ok:false,message};}
   const originalDraft=detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId?JSON.stringify(detailEditableState()):null;
   const originalSimpleEditor=simpleReviewDraft,originalEventEditor=eventSongEditDraft,originalModalOpen=document.getElementById('modal-overlay').style.display==='flex';
   const modalValues=()=>JSON.stringify([...document.querySelectorAll('#modal-body input,#modal-body textarea,#modal-body select')].map(input=>[input.id,input.value]));
   const originalModalChild=originalModalOpen?document.getElementById('modal-body').firstElementChild:null,originalModalValues=originalModalOpen?modalValues():null;
   let pendingSync=event.remoteVersion==null;
   const changes=eventEditFromSong(data,item.personalEdits[owner]?.notes||item.shared.notes||'');
-  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return {ok:false};}pendingSync=true;updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
+  let updated;try{updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);if(event.remoteVersion!=null)updated=await eventCollaboration.savePersonalItem(updated,item.id,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}catch(error){if(!collaborationAllowsOffline(error)){const message='⚠️ '+error.message;showToast(message);return {ok:false,message};}pendingSync=true;updated=eventModel.applyPersonalEdit(event,item.id,owner,changes);eventCollaboration.queuePersonalOperation(event.id,item.id,'upsert',changes);}
   if(owner!==appCurrentUser.id)return {ok:false};
-  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){showToast('⚠️ Não foi possível salvar no evento.');return {ok:false};}setlists=events;
+  const events=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(events)){const message='⚠️ Não foi possível guardar o evento neste aparelho (memória do navegador cheia?).';showToast(message);return {ok:false,message};}setlists=events;
   const editorUnchanged=originalSimpleEditor===simpleReviewDraft&&originalEventEditor===eventSongEditDraft&&originalModalOpen===(document.getElementById('modal-overlay').style.display==='flex')&&(!originalModalOpen||(originalModalChild===document.getElementById('modal-body').firstElementChild&&originalModalValues===modalValues()));
   if(detailEventContext?.eventId===context.eventId&&detailEventContext?.itemId===context.itemId&&editorUnchanged&&originalDraft===JSON.stringify(detailEditableState())){
     currentDetailSongOverride=eventSongVariant(updated,updated.repertoire.find(i=>String(i.id)===String(item.id)),owner);
     // A variante recém-salva já contém tom e capo aplicados. Zerar o deslocamento evita
     // transpor a mesma cópia novamente ao reabrir o Estudo ou o Modo Palco pelo evento.
-    storedCapo=songFormat.harmonicSummary(currentDetailSongOverride).capo;selectedCapo=storedCapo;currentSemitones=0;
+    storedCapo=songFormat.harmonicSummary(currentDetailSongOverride).capo;selectedCapo=readEventCapoPref(detailEventContext)??0;currentSemitones=0;
     detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));
     if(!options.quiet){closeModal();openDetailFromEventItem(event.id,item.id);}
   }
@@ -5407,7 +5662,7 @@ function openAddSetlist(prefill){
       const saved=await window.saveSetlist({keepOpen:true});
       if(!saved||saved.remoteVersion==null){showToast('⚠️ Salve o evento na nuvem antes de convidar.');return;}
       const invitation=await eventCollaboration.createInvitation(saved.id,name,role);
-      const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+      const link=apiConfig.withPreviewApi(new URL(location.pathname,location.origin));link.hash='convite='+encodeURIComponent(invitation.token);
       const text=`Você foi convidado(a) para ${invitation.eventTitle} como ${role} (${name}). Abra o link e entre com sua conta para participar.`;
       document.getElementById('event-member-name').value='';
       if(navigator.share){try{await navigator.share({title:'Convite para '+invitation.eventTitle,text,url:link.href});return;}catch(error){if(error.name==='AbortError'){showToast('Convite criado. Toque em Convidar Integrante para gerar outro link.');return;}}}
@@ -5625,9 +5880,10 @@ function eventNoticeTargetsUser(notice,userId=appCurrentUser?.id){
   const actorId=String(notice?.actorId||'').trim(),recipientId=String(userId||'').trim();
   return !actorId||!recipientId||actorId!==recipientId;
 }
-function eventUnreadNotices(event){const read=eventNoticeReadIds(event.id);return (Array.isArray(event?.notifications)?event.notifications:[]).filter(notice=>eventNoticeTargetsUser(notice)&&!read.has(String(notice.id)));}
+function eventUnreadNotices(event){const read=eventNoticeReadIds(event.id);return (Array.isArray(event?.notifications)?event.notifications:[]).filter(notice=>eventNoticeTargetsUser(notice)&&!read.has(String(notice.id))&&!window.notificationCenter?.isAcknowledged(`event:${event.id}:${notice.id}`));}
 function markEventNoticesRead(event){
-  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),next={...(state||{})},ids=[...new Set([...eventNoticeReadIds(event.id),...(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id))])].slice(-50);
+  // Keep acknowledgements for the entire retained history, not just its last 50 entries.
+  const state=storage.get(EVENT_NOTICE_READ_KEY,{}),next={...(state||{})},ids=[...new Set([...eventNoticeReadIds(event.id),...(Array.isArray(event?.notifications)?event.notifications:[]).map(notice=>String(notice.id))])];
   roudyNotificationScopes().forEach(userId=>{const userState={...(next[userId]||{})};userState[String(event.id)]=ids;next[userId]=userState;});
   storage.set(EVENT_NOTICE_READ_KEY,next);
 }
@@ -5668,7 +5924,7 @@ function eventNoticePeriod(value){const date=new Date(value),now=new Date(),toda
 function eventNoticeRelativeTime(value){const date=new Date(value),seconds=Math.max(0,Math.floor((Date.now()-date.getTime())/1000));if(!Number.isFinite(seconds))return '';if(seconds<60)return 'agora';if(seconds<3600)return Math.floor(seconds/60)+' min';if(seconds<86400)return Math.floor(seconds/3600)+' h';if(seconds<604800)return Math.floor(seconds/86400)+' d';return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','');}
 function openEventNotifications(){
   const event=findEvent(currentSdId);if(!event)return;
-  markEventNoticesRead(event);renderEventNoticeButton(event);
+  markEventNoticesRead(event);renderEventNoticeButton(event);window.notificationCenter?.update();
   closeModal();const overlay=document.getElementById('modal-overlay');overlay.classList.add('notification-center-overlay');let activePeriod='';
   const notices=(Array.isArray(event.notifications)?event.notifications:[]).slice().reverse().map(notice=>{const period=eventNoticePeriod(notice.createdAt),heading=period!==activePeriod?`<h2 class="notification-period">${period}</h2>`:'';activePeriod=period;const name=notice.actorName||'ROUDY',palette=eventAvatarPaletteClass(notice.actorId||name);return `${heading}<article class="notification-row notification-row-static"><span class="notification-avatar ${palette}">${eventEsc(eventInitials(name))}</span><span class="notification-copy"><strong>${eventEsc(name)}</strong><span> ${eventEsc(notice.summary)} <time datetime="${eventEsc(notice.createdAt)}">${eventEsc(eventNoticeRelativeTime(notice.createdAt))}</time></span><small>${eventEsc(event.title)}</small></span></article>`;}).join('');
   document.getElementById('modal-body').innerHTML=`<section class="notification-center-page"><header class="notification-center-header"><button class="notification-center-back" type="button" onclick="closeModal()" aria-label="Voltar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h1>${eventEsc(event.title)}</h1><span></span></header><main class="notification-center-content">${notices||'<div class="event-notification-empty">Nenhuma alteração registrada neste evento.</div>'}</main></section>`;
@@ -5753,7 +6009,7 @@ async function shareEventMemberInvitation(eventId){
     // MANUTENÇÃO: Link de convite autenticado, com função no servidor; não compartilhar uma simples cópia do evento.
     const invitation=await eventCollaboration.createInvitation(event.id,'',role);
     if(!valid())return;
-    const link=new URL(location.pathname,location.origin);link.hash='convite='+encodeURIComponent(invitation.token);
+    const link=apiConfig.withPreviewApi(new URL(location.pathname,location.origin));link.hash='convite='+encodeURIComponent(invitation.token);
     const text=`Você foi convidado(a) para ${invitation.eventTitle||event.title} como ${eventInviteRoleLabel(role)}. Abra o link e entre com sua conta para participar.`;
     if(navigator.share){try{await navigator.share({title:'Convite para '+event.title,text,url:link.href});if(valid())closeEventActionLayer();return;}catch(error){if(error?.name==='AbortError')throw error;if(!valid())return;}}
     if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text+'\n'+link.href);if(valid()){if(status)status.textContent='Convite copiado para compartilhar.';showToast('Link do convite copiado.');}}
@@ -6138,12 +6394,11 @@ function openSD(id,options={}){
   const referenceActions=`<div class="event-reference-actions"><div class="event-reference-utilities"><button type="button" class="event-reference-icon" onclick="scrollEventMembers()" aria-label="Ver participantes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.5-4 2.4-6 5.5-6s5 2 5.5 6M17 9a2.5 2.5 0 0 1 0 5M16.5 14.5c2.5.2 3.8 1.7 4 4.5"></path></svg></button><button type="button" class="event-reference-icon" onclick="openEventChat()" aria-label="Abrir chat do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.3a7.7 7.7 0 0 1-8 7.4 8.8 8.8 0 0 1-3.2-.6L4 20l1.4-4a7 7 0 0 1-1.4-4.2A7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.3Z"></path></svg></button><button type="button" class="event-reference-icon" onclick="sharePlaylist('${eventEsc(event.id)}')" aria-label="Compartilhar evento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0-11 4 4m-4-4L8 8M5 12v7h14v-7"></path></svg></button><button type="button" class="event-reference-icon event-reference-icon--more" onclick="openEventMoreActions()" aria-label="Mais ações do evento"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></button></div><button type="button" class="event-stage-entry event-stage-entry--origin" onclick="openStageFromEvent('${eventEsc(event.id)}')">▶ Modo Palco</button></div>${canShared?'<div class="event-reference-admin-surface" aria-hidden="true"></div>':''}<div class="event-reference-admin" aria-label="Ações do evento"><div class="event-reference-admin-chips">${adminChips}</div></div>`;
   const emptyRepertoire=canShared?'<div class="event-repertoire-empty-state"><button class="event-repertoire-primary-add" type="button" onclick="openEventAddSongs('+attrJs(event.id)+')"><span aria-hidden="true">＋</span>Adicionar músicas</button></div>'+eventSuggestionMarkup(event):`<div class="empty-state"><div class="event-empty-note" aria-hidden="true">${roudyListLoading.noteIcon('song',{standalone:true})}</div><p>Nenhuma música adicionada</p></div>`;
   const repertoireContent=rows?`<div class="event-section-title event-section-title--repertoire">Repertório</div><div class="event-repertoire-list">${rows}</div>${eventClosingSuggestionsMarkup(event,availableItems,canShared)}`:emptyRepertoire;
-  eventDetailContent.innerHTML=`${eventMeta}${referenceActions}<div id="event-detail-map" class="event-map-preview" hidden></div>${repertoireContent}${eventParticipantsMarkup(event)}`;
+  eventDetailContent.innerHTML=`${eventMeta}${referenceActions}${repertoireContent}${eventParticipantsMarkup(event)}`;
   restoreEventSuggestionArtwork(eventDetailContent,retainedSuggestionArtwork);
   renderEventChatButton(event);
   if(currentAuthState.authenticated&&options.refreshChat!==false)eventChat.refresh(event.id).then(()=>renderEventChatButton(event)).catch(()=>{});
   renderEventNoticeButton(event);
-  eventMapPreview.render(document.getElementById('event-detail-map'),event.eventLocation);
   eventView.style.display='flex';eventView.style.zIndex='15';if(preservedScroll!=null)eventView.scrollTop=preservedScroll;
   requestAnimationFrame(()=>{setupEventDetailHeaderMotion();setupEventParticipantsMorph();});
 }
@@ -6207,12 +6462,17 @@ async function changeEventOfficialKey(eventId,itemId,direction){
   finally{eventOfficialKeyBusy.delete(busyKey);control?.querySelectorAll('button').forEach(button=>button.disabled=false);}
 }
 
-let eventLiveRefreshRunning=false;
+let eventLiveRefreshRunning=false,eventLiveFullFetchAt=0;
 async function refreshOpenEventFromCloud(){
   if(eventLiveRefreshRunning||!currentAuthState.authenticated||document.visibilityState!=='visible'||document.getElementById('view-sd').style.display!=='flex'||!currentSdId||eventOfficialKeyBusy.size)return;
   const local=findEvent(currentSdId);if(!local||local.remoteVersion==null)return;
   eventLiveRefreshRunning=true;
   try{
+    const remoteVersion=typeof eventCollaboration.getEventVersion==='function'?await eventCollaboration.getEventVersion(currentSdId):null;
+    if(remoteVersion!=null&&remoteVersion<=Number(local.remoteVersion||0))return;
+    // Sem a pergunta leve (servidor antigo), o evento inteiro é baixado no máximo a cada 10 s.
+    if(remoteVersion==null&&Date.now()-eventLiveFullFetchAt<10000)return;
+    eventLiveFullFetchAt=Date.now();
     const remote=await eventCollaboration.getEvent(currentSdId,appCurrentUser);
     if(Number(remote.remoteVersion||0)<=Number(local.remoteVersion||0))return;
     setlists=eventRepository.upsert(setlists,remote).events;eventRepository.save(setlists);
@@ -6221,6 +6481,7 @@ async function refreshOpenEventFromCloud(){
   finally{eventLiveRefreshRunning=false;}
 }
 setInterval(refreshOpenEventFromCloud,3000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshOpenEventFromCloud();});
 function renderEventChatButton(event){
   const button=document.getElementById('event-chat-fab');if(!button)return;
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}
@@ -6629,7 +6890,7 @@ function submitEventPoll(){try{eventChat.createPoll(currentSdId,{question:docume
 function receiveInvitedEvent(event){setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();automaticEventOffline.schedule();}
 function closeModalOut(e){if(e.target===document.getElementById('modal-overlay')) closeModal();}
 // MANUTENÇÃO: Fechar uma tela também libera áudio e invalida rascunhos/contextos; não remova a limpeza de recursos.
-function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();if(currentLocationAutocomplete){currentLocationAutocomplete.destroy();currentLocationAutocomplete=null;}const modalOverlay=document.getElementById('modal-overlay');modalOverlay.style.display='none';modalOverlay.classList.remove('notification-center-overlay','event-poll-compose-overlay','event-poll-results-overlay');document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
+function closeModal(){stopTuner();toolsMetronome.stop();closeProfilePhotoEditor();const modalOverlay=document.getElementById('modal-overlay');modalOverlay.style.display='none';modalOverlay.classList.remove('notification-center-overlay','event-poll-compose-overlay','event-poll-results-overlay');document.body.removeAttribute('data-account-menu-open');window.roudyAssistant?.updateLaunchVisibility();editingId=null;simpleReviewDraft=null;eventSongEditDraft=null;}
 
 function exportarBiblioteca(options={}){
   const ownerId=requireBackupIdentity();
@@ -6731,7 +6992,9 @@ appAuth.subscribe(async state=>{
     document.getElementById('view-sd').style.display='none';closeDetail();switchTab('musicas');
   }
   currentAuthState=state;renderAccountButton();renderLoginGate(state);
+  if(state.authenticated&&state.user&&cachedAccountOwner()?.authUserId!==String(state.user.id))homePlaylists.setProvisionalOwner(null);
   if(!state.authenticated){
+    if(!savedLoginUserId()){forgetCachedAccountOwner();homePlaylists.setProvisionalOwner(null);}
     contextAcknowledgements.resetHydration();
     appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
     appCurrentUser=Object.freeze({...appIdentity.user});
@@ -6748,7 +7011,8 @@ appAuth.subscribe(async state=>{
     // A identidade estável já está pronta: mostra imediatamente avatar e playlists em cache,
     // e inicia a reconciliação na nuvem sem esperar eventos, convites e contexto terminarem.
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
-    renderAccountButton();homePlaylists.renderHome();
+    rememberCachedAccountOwner(state.user.id,appCurrentUser.id);homePlaylists.setProvisionalOwner(null);
+    renderAccountButton();homePlaylists.renderHome();homePlaylists.openPendingSharedPlaylist?.();
     personalPlaylistSync.schedule(0);
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
     setlists=activation.events;eventMigrationCandidate=activation.migrationCandidate;
@@ -6774,7 +7038,14 @@ appAuth.subscribe(async state=>{
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeletedMany:(values,confirmed)=>songRepository.markDeletedMany(values,confirmed),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{window.roudySearchMenu?.refreshCards();updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.querySelector('[data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
-appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
+const CACHED_ACCOUNT_OWNER_KEY='roudy_cached_account_owner';
+function savedLoginUserId(){try{const keys=Object.keys(localStorage).filter(name=>/^sb-.+-auth-token$/.test(name));const configured=JSON.parse(localStorage.getItem('sc_public_auth_config_v1')||'null');const key=configured?.supabaseUrl?'sb-'+new URL(configured.supabaseUrl).hostname.split('.')[0]+'-auth-token':keys.length===1?keys[0]:null;const saved=key&&JSON.parse(localStorage.getItem(key)||'null');return saved?.user?.id?String(saved.user.id):null;}catch(_){return null;}}
+function rememberCachedAccountOwner(authUserId,ownerId){try{if(authUserId&&ownerId)localStorage.setItem(CACHED_ACCOUNT_OWNER_KEY,JSON.stringify({authUserId:String(authUserId),ownerId:String(ownerId)}));}catch(_){}}
+function forgetCachedAccountOwner(){try{localStorage.removeItem(CACHED_ACCOUNT_OWNER_KEY);}catch(_){}}
+function cachedAccountOwner(){try{const cached=JSON.parse(localStorage.getItem(CACHED_ACCOUNT_OWNER_KEY)||'null');return cached?.authUserId&&cached?.ownerId?cached:null;}catch(_){return null;}}
+function showCachedAccountPlaylists(){try{const cached=cachedAccountOwner(),loginUser=savedLoginUserId();if(cached?.ownerId&&loginUser&&cached.authUserId===loginUser&&!currentAuthState.authenticated)homePlaylists.setProvisionalOwner(cached.ownerId);}catch(_){}}
+showCachedAccountPlaylists();
+appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);homePlaylists.openPendingSharedPlaylist?.();automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 window.addEventListener('online',()=>{if(!currentAuthState.authenticated)return;contextAcknowledgements.flush(appCurrentUser.id).then(()=>renderContextualHomeCard()).catch(()=>{});});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!currentAuthState.authenticated)return;if(eventMigrationCandidate)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady)syncEventsNow(true);librarySync.pull().catch(()=>{});});
@@ -6954,6 +7225,8 @@ function openEventChatStyleMenu(trigger, scope='style'){
 <script src="js/event-chat-selection.js?v=4"></script>
 <script src="js/song-search.js?v=2"></script>
 <script src="js/search-menu.js?v=25"></script>
+<script src="js/android-back.js?v=4"></script>
+<script src="js/pull-refresh.js?v=3"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -6961,8 +7234,11 @@ if ('serviceWorker' in navigator) {
       registration.update().catch(function(){});
     }).catch(function(){});
   });
-  // Nova versão assumiu: recarrega para o celular não ficar preso em build antigo.
-  var hadController = !!navigator.serviceWorker.controller, swReloaded = false;
+  // Nova versão instalada: não recarrega enquanto a pessoa usa o app (recarregar no meio do uso jogava
+  // para a tela inicial "do nada"). A versão nova vale na próxima vez que o app abrir, ou ao voltar
+  // para o app depois de mais de 30 minutos fora. "Puxar para atualizar" continua aplicando na hora.
+  var hadController = !!navigator.serviceWorker.controller, swReloaded = false, swUpdatePending = false, hiddenSince = 0;
+  var UPDATE_AFTER_HIDDEN_MS = 30 * 60 * 1000;
   function reloadForUpdate(){
     if (swReloaded) return;
     swReloaded = true;
@@ -6971,10 +7247,11 @@ if ('serviceWorker' in navigator) {
   }
   navigator.serviceWorker.addEventListener('controllerchange', function(){
     if (!hadController) { hadController = true; return; }
-    var a = document.activeElement;
-    var editing = a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
-    if (!editing && !document.querySelector('.modal.active,.modal.open,.modal[open]')) return reloadForUpdate();
-    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') reloadForUpdate(); });
+    swUpdatePending = true;
+  });
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') { hiddenSince = Date.now(); return; }
+    if (swUpdatePending && hiddenSince && Date.now() - hiddenSince >= UPDATE_AFTER_HIDDEN_MS) reloadForUpdate();
   });
 }
 </script>

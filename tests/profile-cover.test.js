@@ -41,5 +41,16 @@ function harness(server,cache={}){
   const legacy=harness({}, {'sc_playlist_cover_v1':'data:image/jpeg;base64,bGVnYWN5','sc_playlist_cover_position_v1':{x:0,y:40}});
   await legacy.login('legacy-a');await legacy.w.profileCover.flush();assert.equal(legacy.w.profileCover.get().position.x,0);
   await legacy.login('legacy-b');assert.equal(legacy.w.profileCover.get().coverImage,null,'migração da capa antiga ocorre uma única vez');
-  console.log('profile-cover.test.js: OK (contas, dois aparelhos, offline, remoção, conflito, quota e migração)');
+  // Foto antiga grande demais (recusada pelo servidor): sem aviso a cada abertura, não insiste e não some do aparelho.
+  const rejectServer={},rejecting=harness(rejectServer,{'sc_playlist_cover_v1':'data:image/jpeg;base64,Z3JhbmRl','sc_playlist_cover_position_v1':{x:10,y:40}});
+  const realFetch=rejecting.w.fetch;let puts=0;
+  rejecting.w.fetch=async(url,options)=>{if(options.method==='PUT'){puts++;return {ok:false,status:400,json:async()=>({})};}return realFetch(url,options);};
+  await rejecting.login('big');await rejecting.w.profileCover.refresh();await rejecting.w.profileCover.refresh();
+  assert.equal(rejecting.notices.length,0,'tentativa em segundo plano não mostra aviso');
+  assert.equal(puts,1,'foto recusada não é reenviada a cada abertura');
+  assert.equal(rejecting.w.profileCover.get().coverImage,'data:image/jpeg;base64,Z3JhbmRl','foto recusada continua neste aparelho');
+  rejecting.w.profileCover.save('data:image/jpeg;base64,bm92YQ==',{x:50,y:38});await rejecting.w.profileCover.flush();
+  assert.equal(puts,2,'escolher outra foto tenta de novo');
+  assert.equal(rejecting.notices.length,1,'logo depois de escolher a foto, avisa uma vez se não deu');
+  console.log('profile-cover.test.js: OK (contas, dois aparelhos, offline, remoção, conflito, quota, migração e foto recusada)');
 })().catch(e=>{console.error(e);process.exitCode=1});

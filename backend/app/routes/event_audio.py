@@ -1,8 +1,8 @@
 import io
 import uuid
 from datetime import datetime, timezone, timedelta
-from flask import Blueprint, g, request, jsonify, send_file
-from sqlalchemy.exc import IntegrityError
+from flask import Blueprint, current_app, g, request, jsonify, send_file
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from .. import limiter
 from ..database import db
 from ..errors import ApiError
@@ -27,6 +27,8 @@ def existing(event_id, message_id):
 def create_audio(event_id):
     event = _event_or_404(event_id)
     _member(event, g.current_user.id)
+    request.max_content_length = min(request.max_content_length or MAX_BYTES + 65536, MAX_BYTES + 65536)
+    request.max_form_parts = 2
     if request.content_length and request.content_length > MAX_BYTES + 65536:
         raise ApiError("audio_grande", "Áudio maior que 3 MB.", 413)
     message_id = request.form.get("clientId", "")
@@ -42,9 +44,10 @@ def create_audio(event_id):
                                      EventMessage.created_at >= datetime.now(timezone.utc) - timedelta(days=1)).count()
     if count >= 60:
         raise ApiError("audio_limite", "Limite diário de 60 áudios atingido. Tente novamente amanhã.", 429)
-    upload = request.files.get("audio")
-    if not upload:
+    uploads = list(request.files.items(multi=True))
+    if len(uploads) != 1 or uploads[0][0] != "audio":
         raise ApiError("audio_invalido", "Envie uma gravação.", 400)
+    upload = uploads[0][1]
     data, duration = normalize_audio(upload.read(MAX_BYTES + 1))
     row = EventMessage(id=message_id, event_id=event.id, sender_id=g.current_user.id,
                        sender_name=g.current_user.name, sender_avatar_url=g.current_user.avatar_url,
@@ -59,7 +62,12 @@ def create_audio(event_id):
         db.session.rollback()
         row = existing(event_id, message_id)
         if not row:
-            raise
+            current_app.logger.warning("event_audio_write_failed requestId=%s type=IntegrityError", g.get("request_id"))
+            raise ApiError("audio_armazenamento", "Não foi possível guardar o áudio no servidor. Tente novamente.", 503) from None
+    except SQLAlchemyError as error:
+        db.session.rollback()
+        current_app.logger.warning("event_audio_write_failed requestId=%s type=%s", g.get("request_id"), type(error).__name__)
+        raise ApiError("audio_armazenamento", "Não foi possível guardar o áudio no servidor. Tente novamente.", 503) from None
     return jsonify(_serialize_message(row)), 201
 
 

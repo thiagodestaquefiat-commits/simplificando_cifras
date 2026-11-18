@@ -4,6 +4,8 @@
   // Apenas textos da interface. Títulos, letras, cifras, nomes e dados do usuário
   // não são traduzidos nem enviados a serviços externos.
   const rows = [
+    ['Limpar histórico','Clear history','Borrar historial','Cancella cronologia','Effacer l’historique','Verlauf löschen'],
+    ['Histórico de notificações limpo.','Notification history cleared.','Historial de notificaciones borrado.','Cronologia delle notifiche cancellata.','Historique des notifications effacé.','Benachrichtigungsverlauf gelöscht.'],
     ['Alterações salvas neste dispositivo','Changes saved on this device','Cambios guardados en este dispositivo','Modifiche salvate su questo dispositivo','Modifications enregistrées sur cet appareil','Änderungen auf diesem Gerät gespeichert'],
     ['Aguardando conexão para sincronizar','Waiting for a connection to sync','Esperando conexión para sincronizar','In attesa di connessione per sincronizzare','En attente de connexion pour synchroniser','Warte auf Verbindung zur Synchronisierung'],
     ['Não foi possível sincronizar agora','Unable to sync right now','No se pudo sincronizar ahora','Impossibile sincronizzare ora','Synchronisation impossible pour le moment','Synchronisierung derzeit nicht möglich'],

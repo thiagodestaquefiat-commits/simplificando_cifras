@@ -21,6 +21,8 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app = Flask(__name__)
+    from .routes.bug_reports import SupportMemoryRequest
+    app.request_class = SupportMemoryRequest
     app.config.from_object(config_object)
 
     db.init_app(app)
@@ -82,7 +84,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     def health():
         return jsonify({"status": "ok", "scraperApiConfigured": bool(app.config.get("SCRAPER_API_KEY")),
                         "deepseekConfigured": bool(app.config.get("DEEPSEEK_API_KEY")),
-                        "appVersion": "v168-resumo-organizado"})
+                        "appVersion": "v169-resumo-por-voltas"})
 
     from .routes.events import blueprint as events_blueprint
     from .routes.assistant import blueprint as assistant_blueprint
@@ -99,10 +101,13 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     from .routes.personal_playlists import blueprint as personal_playlists_blueprint
     from .routes.profile_cover import blueprint as profile_cover_blueprint
     from .routes.event_audio import blueprint as event_audio_blueprint
+    from .routes.bug_reports import blueprint as bug_reports_blueprint
+    from .routes.account import blueprint as account_blueprint
     from .routes.resumo_harmonico import blueprint
 
     app.register_blueprint(blueprint)
     app.register_blueprint(events_blueprint)
+    app.register_blueprint(account_blueprint)
     app.register_blueprint(assistant_blueprint)
     app.register_blueprint(locations_blueprint)
     app.register_blueprint(auth_blueprint)
@@ -117,6 +122,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(personal_playlists_blueprint)
     app.register_blueprint(profile_cover_blueprint)
     app.register_blueprint(event_audio_blueprint)
+    app.register_blueprint(bug_reports_blueprint)
     with app.app_context():
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()

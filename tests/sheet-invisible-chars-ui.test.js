@@ -34,7 +34,12 @@ const CONTENT = `[Intro] C7M  D9  Bm7  C7M\n\n${ZW}[Primeira Parte]\n\n${NB}${NB
     const raw = await page.evaluate((content) => {
       const box = document.createElement("div");
       box.innerHTML = renderFullChordSheet({ content, sections: [] }, 0, "x");
-      const lines = [...box.querySelectorAll(".full-chord-line")].map((el) => ({ text: el.textContent.trim(), chord: el.classList.contains("is-chord"), section: el.classList.contains("is-section") }));
+      // Acorde + letra logo abaixo viram um par (o acorde acompanha a letra no zoom): junta de volta para conferir.
+      const pairs = [...box.querySelectorAll(".chord-pair-line")].flatMap((el) => [
+        { text: el.dataset.smartChords, chord: [...el.querySelectorAll(".cp-chord")].some((c) => c.classList.contains("is-chord")), section: false },
+        { text: [...el.querySelectorAll(".cp-lyric")].map((c) => c.textContent).join("").replace(/\u00a0/g, " "), chord: false, section: false }]);
+      box.querySelectorAll(".chord-pair-line").forEach((el) => el.remove());
+      const lines = pairs.concat([...box.querySelectorAll(".full-chord-line")].map((el) => ({ text: el.textContent.trim(), chord: el.classList.contains("is-chord"), section: el.classList.contains("is-section") })));
       return lines.filter((line) => line.text);
     }, CONTENT);
     const find = (text) => raw.find((line) => line.text.replace(/\s+/g, " ") === text);

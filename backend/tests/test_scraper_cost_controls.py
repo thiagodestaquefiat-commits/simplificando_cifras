@@ -45,7 +45,7 @@ def test_local_parser_builds_sections_blocks_and_positions():
     assert names == ["Intro", "Primeira Parte", "Pré-Refrão"]  # tablatura fica de fora
     verse = result.fullChordSheet.sections[1].linhas[0]
     assert verse.letra == "Um menino nasceu" and [(a.acorde, a.posicao) for a in verse.acordes] == [("C", 0), ("G4", 7), ("Am", 15)]
-    assert result.harmonicSummary.blocos[2].fraseGuia == "E o Seu nome é"
+    assert result.harmonicSummary.blocos[1].fraseGuia == "E o Seu nome é"  # Intro com a mesma volta entra no 1º bloco
     assert result.tom == "C"
 
 
@@ -53,7 +53,7 @@ def test_web_sheet_is_built_without_ai_and_uses_page_key_and_capo():
     hit = ChordSheetHit(ISAIAS, "https://www.cifraclub.com.br/rodolfo-abrantes/isaias-9/", "cifraclub", key="D", shape_key="C", capo=2)
     result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
     assert (result.tom, result.capotraste) == ("D", 2)
-    assert result.harmonicSummary.blocos[0].acordes == ["C", "G4", "Am"] and result.harmonicSummary.blocos[0].repeticoes == 2
+    assert result.harmonicSummary.blocos[0].acordes == ["C", "G4", "Am"] and result.harmonicSummary.blocos[0].repeticoes == 4  # Intro (2) + Primeira Parte (2)
     assert result.observacoes[0] == "Tom: D (acordes na forma de C, capotraste na 2ª casa)."
 
 
@@ -98,12 +98,10 @@ def test_summary_follows_roudy_standard_for_real_sheet():
     result = IaService(NoAI(), web_search=lambda *a: None, sheet_finder=lambda *a: hit).generate(request())
     summary = [(b.secao, b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
     assert summary == [
-        (None, None, ["C", "G4", "Am"], 2),
-        (None, "Um menino nasceu", ["C", "G4", "Am"], None),
+        (None, "Um menino nasceu", ["C", "G4", "Am"], 6),  # Intro (2) + 4 linhas com a mesma volta: uma linha só
         (None, "E o Seu nome é", ["F7M", "Am", "Dm", "F7M", "Am", "G"], None),
-        (None, "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-        (None, None, ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
-        (None, "Santo, Santo, Santo é o Senhor", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], None),
+        # "Santo, Santo, Santo" é a mesma volta logo em seguida: soma (2x); o [Solo] também não vira bloco
+        (None, "O céu começa a se abrir", ["Am", "Em", "Am", "F7M", "C", "Em", "F7M"], 2),
     ], "padrão ROUDY: sem nomes de seção, só acordes e frases-gancho"
     assert (result.tom, result.capotraste) == ("D", 2)
 
@@ -305,9 +303,50 @@ Linha final
     blocks = [(b.fraseGuia, b.acordes, b.repeticoes)
               for b in parse_chord_sheet(sheet, "Minha Alma", "O Rappa", key="Am").harmonicSummary.blocos]
     assert blocks == [
-        ("Linha sem acorde que", ["Am", "F", "Dm", "Am"], None),
-        ("Começo da segunda parte", ["F", "Dm", "Am"], 2),
+        # regra de voltas: "Am F Dm Am" volta pro Am = Am F Dm; "F Dm Am" é a mesma volta começando no F
+        ("Linha sem acorde que", ["Am", "F", "Dm"], None),
         ("Grades do refrão", ["Am7", "G6/A", "Am", "Am7", "Dm9/A"], None),
-        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A", "Am"], None),
+        ("Segunda estrofe do refrão", ["Am7", "G6/A", "Dm9/A"], None),
     ], blocks
     assert all(not (b[0] or "").endswith(":") for b in blocks), "nome de parte nunca vira frase"
+
+
+def test_summary_is_simplified_like_morada():
+    """Princípio ROUDY (simplificando cifras): 'Parte 1 de 3' é rótulo de tablatura, não letra;
+    F9 e F7M no fim da mesma volta contam como a mesma volta; Intro igual ao verso vira uma linha só."""
+    text = """[Intro] C  E7  Am7  G  F9
+
+[Primeira Parte]
+
+C                E7
+Linha inventada um
+Am7          G          F9
+Linha inventada dois
+C               E7
+Linha inventada três
+Am7           G         F7M
+Linha inventada quatro
+
+[Ponte]
+
+Parte 1 de 3
+   Dm7       C/E
+E|-----------------|
+
+Parte 2 de 3
+   F9        C/E
+E|-----------------|
+
+[Pré-Refrão]
+
+Dm7          C/E
+Frase do pré
+F9            C/E
+Linha inventada do pré
+"""
+    result = parse_chord_sheet(text, "X", "Y", key="C")
+    summary = [(b.fraseGuia, b.acordes, b.repeticoes) for b in result.harmonicSummary.blocos]
+    assert summary == [
+        ("Linha inventada um", ["C", "E7", "Am7", "G", "F9"], 3),
+        ("Frase do pré", ["Dm7", "C/E", "F9", "C/E"], None),
+    ]
