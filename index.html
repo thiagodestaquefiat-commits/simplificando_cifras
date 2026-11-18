@@ -6229,7 +6229,7 @@ async function changeEventOfficialKey(eventId,itemId,direction){
   finally{eventOfficialKeyBusy.delete(busyKey);control?.querySelectorAll('button').forEach(button=>button.disabled=false);}
 }
 
-let eventLiveRefreshRunning=false;
+let eventLiveRefreshRunning=false,eventLiveFullFetchAt=0;
 async function refreshOpenEventFromCloud(){
   if(eventLiveRefreshRunning||!currentAuthState.authenticated||document.visibilityState!=='visible'||document.getElementById('view-sd').style.display!=='flex'||!currentSdId||eventOfficialKeyBusy.size)return;
   const local=findEvent(currentSdId);if(!local||local.remoteVersion==null)return;
@@ -6237,6 +6237,9 @@ async function refreshOpenEventFromCloud(){
   try{
     const remoteVersion=typeof eventCollaboration.getEventVersion==='function'?await eventCollaboration.getEventVersion(currentSdId):null;
     if(remoteVersion!=null&&remoteVersion<=Number(local.remoteVersion||0))return;
+    // Sem a pergunta leve (servidor antigo), o evento inteiro é baixado no máximo a cada 10 s.
+    if(remoteVersion==null&&Date.now()-eventLiveFullFetchAt<10000)return;
+    eventLiveFullFetchAt=Date.now();
     const remote=await eventCollaboration.getEvent(currentSdId,appCurrentUser);
     if(Number(remote.remoteVersion||0)<=Number(local.remoteVersion||0))return;
     setlists=eventRepository.upsert(setlists,remote).events;eventRepository.save(setlists);
@@ -6244,8 +6247,10 @@ async function refreshOpenEventFromCloud(){
   }catch(error){if(!collaborationAllowsOffline(error))console.warn('Não foi possível atualizar o evento aberto.',error);}
   finally{eventLiveRefreshRunning=false;}
 }
-// Evento aberto: confere a cada 10 s se mudou; o evento inteiro só é baixado quando mudou.
-setInterval(refreshOpenEventFromCloud,10000);
+// Evento aberto: confere a cada 3 s se mudou (pergunta leve); o evento inteiro só é baixado quando mudou.
+// Ao voltar para o app, confere na hora.
+setInterval(refreshOpenEventFromCloud,3000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshOpenEventFromCloud();});
 function renderEventChatButton(event){
   const button=document.getElementById('event-chat-fab');if(!button)return;
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}

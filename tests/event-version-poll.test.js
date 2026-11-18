@@ -3,8 +3,9 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 
 const html = fs.readFileSync("index.html", "utf8");
-assert.match(html, /setInterval\(refreshOpenEventFromCloud,10000\)/, "o evento aberto confere a cada 10 s, não a cada 3 s");
-assert.doesNotMatch(html, /setInterval\(refreshOpenEventFromCloud,3000\)/);
+assert.match(html, /setInterval\(refreshOpenEventFromCloud,3000\)/, "o evento aberto confere a cada 3 s");
+assert.match(html, /remoteVersion==null&&Date\.now\(\)-eventLiveFullFetchAt<10000/, "sem a pergunta leve, o evento inteiro não é baixado mais que a cada 10 s");
+assert.match(html, /visibilitychange[^\n]*refreshOpenEventFromCloud/, "ao voltar para o app, confere na hora");
 assert.match(html, /eventCollaboration\.getEventVersion\(currentSdId\)/, "a conferência usa a versão leve");
 
 const values = new Map();
