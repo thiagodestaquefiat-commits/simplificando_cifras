@@ -33,3 +33,9 @@ Tests cover production host, custom production domain, preview host, both local 
 ## Autofill palette correction
 
 Browser autofill was painting a pale blue surface outside the ROUDY palette. Login fields now use dark color-scheme and native :autofill / :-webkit-autofill styles: inset control-surface fill, canonical primary text, blue caret and retained focus ring. Applied to email-link and dedicated sign-in fields. No authentication behavior changed. Chrome test forces the actual autofill pseudo-state and verifies dark surface plus primary text; existing password/email sign-in flow remains passing.
+
+## Direct entry on mobile Deploy Previews
+
+On this site's deploy-preview-N host, viewports up to 767px skip the welcome gate and use the existing guest path. Existing signed-in sessions are preserved. Production, other hosts and desktop previews keep their prior behavior. Add testLogin=1 to a preview URL to test welcome/sign-in explicitly. No synthetic authenticated state or server permissions are introduced.
+
+Validation: Chrome serves the actual repository at a simulated preview origin and tests mobile direct entry, desktop welcome and explicit mobile login mode. Existing login-entry responsive suite and index-syntax also pass.
