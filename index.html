@@ -6971,8 +6971,11 @@ if ('serviceWorker' in navigator) {
       registration.update().catch(function(){});
     }).catch(function(){});
   });
-  // Nova versão assumiu: recarrega para o celular não ficar preso em build antigo.
-  var hadController = !!navigator.serviceWorker.controller, swReloaded = false;
+  // Nova versão instalada: não recarrega enquanto a pessoa usa o app (recarregar no meio do uso jogava
+  // para a tela inicial "do nada"). A versão nova vale na próxima vez que o app abrir, ou ao voltar
+  // para o app depois de mais de 30 minutos fora. "Puxar para atualizar" continua aplicando na hora.
+  var hadController = !!navigator.serviceWorker.controller, swReloaded = false, swUpdatePending = false, hiddenSince = 0;
+  var UPDATE_AFTER_HIDDEN_MS = 30 * 60 * 1000;
   function reloadForUpdate(){
     if (swReloaded) return;
     swReloaded = true;
@@ -6981,10 +6984,11 @@ if ('serviceWorker' in navigator) {
   }
   navigator.serviceWorker.addEventListener('controllerchange', function(){
     if (!hadController) { hadController = true; return; }
-    var a = document.activeElement;
-    var editing = a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
-    if (!editing && !document.querySelector('.modal.active,.modal.open,.modal[open]')) return reloadForUpdate();
-    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') reloadForUpdate(); });
+    swUpdatePending = true;
+  });
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') { hiddenSince = Date.now(); return; }
+    if (swUpdatePending && hiddenSince && Date.now() - hiddenSince >= UPDATE_AFTER_HIDDEN_MS) reloadForUpdate();
   });
 }
 </script>
