@@ -128,7 +128,7 @@
     const detail = element("view-detail");
     if (!detail) return;
     detail.classList.add("video-study-expanded");
-    let frame = 0;
+    let frame = 0, lastProgress = "", lastCompact = null;
     const render = () => {
       frame = 0;
       const player = element("youtube-song-player");
@@ -136,8 +136,11 @@
       const playerBottom = (player?.offsetTop || 0) + (media?.offsetHeight || 0);
       const revealStart = Math.max(1, playerBottom - 58);
       const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
-      detail.style.setProperty("--video-header-progress", progress.toFixed(4));
-      detail.classList.toggle("video-header-compact", progress >= 0.98);
+      // Só mexe no estilo quando o valor muda: durante a rolagem automática isto roda a cada quadro.
+      const value = progress.toFixed(4);
+      if (value !== lastProgress) { lastProgress = value; detail.style.setProperty("--video-header-progress", value); }
+      const compact = progress >= 0.98;
+      if (compact !== lastCompact) { lastCompact = compact; detail.classList.toggle("video-header-compact", compact); }
     };
     const onScroll = () => {
       if (!frame) frame = global.requestAnimationFrame(render);

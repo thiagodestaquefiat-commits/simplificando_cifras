@@ -1400,7 +1400,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
 <script src="js/youtube-player.js?v=9"></script>
-<script src="js/youtube-player-ui.js?v=24"></script>
+<script src="js/youtube-player-ui.js?v=25"></script>
 <script src="js/youtube-ui.js?v=3"></script>
 <script src="js/export-library.js?v=4"></script>
 <script src="js/library-recovery.js?v=2"></script>
@@ -3262,7 +3262,10 @@ function startAutoScroll(){
   if(stageMode)stageExecutionStarted=true;
   setSongScrolling(true);if(btn)btn.classList.add('active');
   stageLastFrame=performance.now();stageScrollRemainder=0;
-  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,pixels=Math.floor(distance);stageScrollRemainder=distance-pixels;if(pixels)vd.scrollTop+=pixels;if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}scrollTimer=requestAnimationFrame(tick);};
+  // Rolagem suave: anda em frações de pixel do aparelho (telas de celular têm 2 a 3 pontos por pixel),
+  // em vez de esperar juntar 1 pixel inteiro e dar um pulo. A posição é guardada com casas decimais.
+  const scrollUnit=1/Math.max(1,Math.min(4,Number(window.devicePixelRatio)||1));let scrollPosition=vd.scrollTop;
+  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;if(Math.abs(vd.scrollTop-scrollPosition)>2)scrollPosition=vd.scrollTop;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,step=Math.floor(distance/scrollUnit)*scrollUnit;stageScrollRemainder=distance-step;if(step){scrollPosition+=step;vd.scrollTop=scrollPosition;}if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight-1){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);updateStageScrollState();
 }
 function pauseAutoScroll(){
