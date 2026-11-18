@@ -251,3 +251,6 @@ body[data-search-open]{overflow:hidden}.roudy-search-open .app-assistant-floatin
   opacity:.96;
 }
 .roudy-search-cover-light.has-color img{opacity:0}
+
+/* The active search surface communicates editing without the global blue ring. */
+.roudy-search-input:focus,.roudy-search-input:focus-visible{outline:none;box-shadow:none}

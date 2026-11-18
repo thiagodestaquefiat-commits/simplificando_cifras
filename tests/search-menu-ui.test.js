@@ -121,6 +121,8 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     assert.deepEqual(await appearance(),['999px','rgb(36, 36, 38)']);
     assert.equal(await field.evaluate(node=>getComputedStyle(node).height),'36px');
     assert.equal(await field.locator('.roudy-search-field-icon').isVisible(),false);
+    assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).outlineStyle),'none');
+    assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).boxShadow),'none');
     await page.getByRole('button',{name:'Cancelar',exact:true}).click();
     assert.deepEqual(await appearance(),['6px','rgb(65, 64, 71)']);
   }
