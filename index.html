@@ -685,10 +685,9 @@ html.a11y-high-contrast #pane-musicas .music-sub{color:#eee}
    a letra rola por baixo dela (pedido da equipe, 18/11). Fica acima do vídeo quando ele sai da tela,
    e o miniplayer do YouTube desce para não cobrir a barra. */
 #view-detail>#song-controls{position:sticky;top:var(--sticky-header-h,58px);z-index:9}
-/* Anterior/Próxima também ficam fixos, logo abaixo da barra de ferramentas. No Modo Palco ficam menores. */
-#view-detail>#detail-nav-toolbar{position:sticky;top:calc(var(--sticky-header-h,58px) + var(--sticky-controls-h,77px));z-index:8}
-#view-detail.stage-clean>#detail-nav-toolbar{padding:5px 14px;gap:8px}
-#view-detail.stage-clean>#detail-nav-toolbar .stage-btn{min-height:30px;padding:4px 10px;font-size:12px;border-radius:9px}
+/* Anterior/Próxima também ficam fixos, logo abaixo da barra de ferramentas, menores (estudo e Modo Palco). */
+#view-detail>#detail-nav-toolbar{position:sticky;top:calc(var(--sticky-header-h,58px) + var(--sticky-controls-h,77px));z-index:8;padding:5px 14px;gap:8px}
+#view-detail>#detail-nav-toolbar .stage-btn{min-height:30px;padding:4px 10px;font-size:12px;border-radius:9px}
 #view-detail{scroll-padding-top:var(--sticky-total,0px)}
 #view-detail>.youtube-player-shell.is-floating{top:calc(var(--sticky-total,135px) + 10px)!important}
 #view-detail:not(.stage-mode)>.youtube-player-shell.is-search{margin:0;padding:17px 22px 15px;border:0;border-top:1px solid rgba(255,255,255,.08);border-radius:0;background:#000;box-shadow:none}
