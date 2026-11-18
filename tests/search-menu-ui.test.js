@@ -38,11 +38,17 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
   assert.equal(await page.locator('.roudy-search-shortcut-art > img').count(),4);
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
+  const finish=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
+    const panel=card.querySelector('.roudy-search-shortcut-copy'),signature=card.querySelector('.roudy-search-shortcut-signature'),a=card.getBoundingClientRect(),b=panel.getBoundingClientRect();
+    return {background:getComputedStyle(card).backgroundColor===getComputedStyle(panel).backgroundColor,filled:Math.abs(a.bottom-b.bottom)<1,label:getComputedStyle(signature).color!=='rgb(66, 66, 71)'};
+  }));
+  assert.ok(finish.every(value=>value.background&&value.filled&&value.label),'base sem faixa branca e assinatura clara sobre a cor opaca do painel');
+
   const artwork=await page.locator('.roudy-search-shortcut-art').evaluateAll(nodes=>nodes.map(node=>{
     const bounds=node.getBoundingClientRect(),signature=node.querySelector('.roudy-search-shortcut-signature').getBoundingClientRect(),image=node.querySelector('img');
     return {size:parseFloat(getComputedStyle(node.querySelector('.roudy-search-shortcut-signature')).fontSize)/bounds.width,center:(signature.top+signature.height/2-bounds.top)/bounds.height,fade:getComputedStyle(node.querySelector('.roudy-search-shortcut-blur')).maskImage.includes('linear-gradient'),fullHeight:Math.abs(image.getBoundingClientRect().height-bounds.height)<1};
   }));
-  assert.ok(artwork.every(value=>Math.abs(value.size-.075)<.002&&Math.abs(value.center-.84)<.02&&value.fade&&value.fullHeight),'arte contínua com assinatura dimensionada e posicionada pela proporção da referência');
+  assert.ok(artwork.every(value=>Math.abs(value.size-.075)<.002&&Math.abs(value.center-.94)<.02&&value.fade&&value.fullHeight),'arte contínua com assinatura dimensionada e posicionada pela proporção da referência');
   const layers=await page.locator('.roudy-search-shortcut-art').evaluateAll(nodes=>nodes.map(node=>{
     const image=node.querySelector('.roudy-search-shortcut-graphic'),blur=node.querySelector('.roudy-search-shortcut-blur img'),fusion=node.querySelector('.roudy-search-shortcut-fusion'),panel=node.nextElementSibling;
     const a=image.getBoundingClientRect(),b=blur.getBoundingClientRect();

@@ -95,3 +95,9 @@ Apple explicit guidance: Testar legibilidade em diferentes contextos.
 Design inference: Dar largura real ao conteúdo evita tentar resolver falta de espaço diminuindo a fonte.
 ROUDY-specific decision: Remover o limite antigo de 60vw e separar os espaços da contagem e do play.
 Implementation: search-menu.css; suíte valida Dados indisponíveis de 320 a 430px, palavra inteira e ausência de overflow, além de navegação e seis larguras existentes.
+
+## Card footer and signature contrast
+
+The old white button background was exposed below shorter footer contents on some layouts. Card background now uses its exact panel color, footer stretches to fill its track, and native button appearance is disabled. The signature moves within the lower end of the existing artwork box, where the fusion is already fully opaque (88%). Its gray is derived from the canonical primary/secondary text roles instead of the old dark gray that disappeared over silhouettes and blue waves. No white band, glow or changed assets; typography size remains unchanged.
+
+Validation: responsive search suite verifies bottom edges match, card/panel share background color, bright signature sits on opaque panel, source/blur crops still match, and all four routes work. Browser visual inspection confirms the corrected composition. Apple HIG Typography / Ensuring legibility consulted earlier in this task informs the contrast correction; exact blending/position are ROUDY-specific implementation decisions.
