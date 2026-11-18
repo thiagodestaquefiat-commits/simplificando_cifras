@@ -40,9 +40,9 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
   const frames=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const outer=getComputedStyle(card,'::before'),inner=getComputedStyle(card,'::after'),style=getComputedStyle(card);
-    return {outer:outer.content,inner:inner.borderTopWidth,highlight:inner.backgroundImage,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,layoutBorder:style.borderTopWidth};
+    return {outer:outer.content,inner:inner.borderTopWidth,highlight:inner.backgroundImage,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,elevation:style.boxShadow,radius:parseFloat(style.borderTopLeftRadius),layoutBorder:style.borderTopWidth};
   }));
-  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.inner==='1px'&&value.highlight==='none'&&value.inset==='0px'&&Math.abs(value.curve)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow.includes('inset')&&value.layoutBorder==='0px'),'uma única borda discreta, sem segundo aro ou gradiente prateado');
+  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.inner==='1px'&&value.highlight==='none'&&value.inset==='0px'&&Math.abs(value.curve)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow==='none'&&!value.elevation.includes('inset')&&value.elevation.includes('18px')&&value.radius>=12&&value.layoutBorder==='0px'),'borda quase invisível, superfície sem sombra interna e elevação externa suave');
   const firstFrame=page.locator('.roudy-search-shortcut').first();
   for(const reduced of ['no-preference','reduce']){
     await page.emulateMedia({reducedMotion:reduced});

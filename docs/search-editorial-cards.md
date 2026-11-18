@@ -138,3 +138,9 @@ Validation: search-menu-ui confere path-only SVG sem image/filter, filtro none d
 The user rejected the detached 3px inner frame. Replaced it with a continuous 1px edge highlight, using a masked CSS gradient whose center is fully excluded; no gradient paints the content surface. The short inner shade is attached at 1px from the edge rather than outlining a separate rectangle. Original radius, image, composition, dimensions and interaction remain unchanged. Outer shadow stays short. This mechanically follows the new reference; prior HIG Materials research remains applicable without implying Apple prescribes these values.
 
 Validation: Chrome search-menu suite checks center-excluding mask, continuous contour, attached radius, geometry and all four routes across six widths, including reduced motion. Visual inspection confirmed removal of the detached inner frame.
+
+## Lightly elevated piece (latest approved reference)
+
+Removed the inset shadow completely. A single 1px neutral contour at 10% opacity follows the outer edge; there is no detached rim or highlight. External shadows are 0 8px 18px -5px at 32% black and 0 2px 5px at 12% black, giving soft separation predominantly below the card on the near-black background. Corner radius is now clamp(12px,3.6vw,18px) for the rounded continuous silhouette requested. No layout dimensions, typography, assets or blur were changed. RD/title retain the explicitly measured #4A4A4A.
+
+Validation: search-menu-ui confirms no inset shadows on either card or edge, no second contour, soft external shadow and rounded radius; geometry/content/routes/reduced motion remain passing across six widths. Visual inspection performed. This applies the user's approved elevation specification; previous HIG Materials research distinguishes depth/hierarchy from content-layer glass.
