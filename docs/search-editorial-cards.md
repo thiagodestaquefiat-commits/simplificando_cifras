@@ -144,3 +144,9 @@ Validation: Chrome search-menu suite checks center-excluding mask, continuous co
 Removed the inset shadow completely. A single 1px neutral contour at 10% opacity follows the outer edge; there is no detached rim or highlight. External shadows are 0 8px 18px -5px at 32% black and 0 2px 5px at 12% black, giving soft separation predominantly below the card on the near-black background. Corner radius is now clamp(12px,3.6vw,18px) for the rounded continuous silhouette requested. No layout dimensions, typography, assets or blur were changed. RD/title retain the explicitly measured #4A4A4A.
 
 Validation: search-menu-ui confirms no inset shadows on either card or edge, no second contour, soft external shadow and rounded radius; geometry/content/routes/reduced motion remain passing across six widths. Visual inspection performed. This applies the user's approved elevation specification; previous HIG Materials research distinguishes depth/hierarchy from content-layer glass.
+
+## Visible tonal frame requested after the faint contour
+
+The prior 10%-opacity contour was too faint for the user's reference. New single continuous frame is 2px wide; a center-excluding mask confines tonal variation to the perimeter. Tones derive from each panel with subtle lighter top/left and deeper side/lower shading, avoiding an independent silver color or second inner line. No inset shadow, surface gradient or changes to layout/assets/blur/type. Existing external elevation and press behavior remain.
+
+Validation: Chrome suite confirms one masked ring with 2px padding and transparent center, unchanged geometry, no inset shadows, routes and reduced motion across six widths. Visual comparison confirmed the perimeter is visible without detached parallel lines. Implements the user's explicit reference correction; prior Materials research applies.
