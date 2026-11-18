@@ -1,7 +1,7 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v893-card-signature-size";
+const CACHE_NAME = "simplificando-cifras-v894-card-quiet-edge";
 // Compatibility marker: simplificando-cifras-v623-playlists-indexeddb
 // Compatibility marker: simplificando-cifras-v622-playlists-exclusao-explicita
 // Compatibility marker: simplificando-cifras-v621-playlists-na-nuvem
@@ -176,7 +176,7 @@ const ASSETS = [
   "./index.html",
   "./js/contextual-copy.js?v=9",
   "./js/search-menu.js?v=25",
-  "./css/search-menu.css?v=71",
+  "./css/search-menu.css?v=72",
   "./assets/search/musicas-album.svg",
   "./assets/search/playlists-album.svg",
   "./assets/search/medley-album.svg",
