@@ -16,7 +16,11 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   for(const [width,height] of [[320,568],[375,667],[390,844],[777,837],[820,600]]){
     await page.setViewportSize({width,height});
     await page.locator('#login-gate').evaluate(node=>node.scrollTop=0);
+    const art=await page.locator('.login-people').boundingBox(),card=await page.locator('.login-gate-card').boundingBox();
+    assert.ok(Math.abs(art.width-card.width)<1,'portrait composition fills the card width at '+width+'x'+height);
+    assert.ok(card.height>=height,'welcome fills the visible screen height');
     const entry=page.getByRole('button',{name:'Entrar',exact:true});
+    await entry.scrollIntoViewIfNeeded();
     const bounds=await entry.boundingBox();
     assert.ok(bounds.y>=0&&bounds.y+bounds.height<=height,JSON.stringify({width,height,bounds}));
     assert.equal(await entry.evaluate(node=>{const r=node.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===node}),true);
