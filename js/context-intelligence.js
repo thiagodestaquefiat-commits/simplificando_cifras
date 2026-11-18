@@ -62,7 +62,7 @@
         songId: value.songId == null ? null : String(value.songId),
         order: Number.isFinite(Number(value.order)) ? Number(value.order) : index,
         official: value.shared && typeof value.shared === 'object' ? { ...value.shared } : {},
-        status: text(value.status), accessible: value.accessible !== false,
+        status: text(value.status), accessible: value.accessible !== false, updatedAt: text(value.updatedAt),
         personal: personal && typeof personal === 'object' ? { ...personal } : null,
         preparation: value.preparation && typeof value.preparation === 'object' ? { ...value.preparation } : null
       };
@@ -181,6 +181,7 @@
     }).sort((left, right) => (timestamp(left.startsAt) || Infinity) - (timestamp(right.startsAt) || Infinity));
     return {
       version: 1, generatedAt: now.toISOString(), user: { id: user.id, name: text(user.name), role: text(user.role) },
+      dedication: source.dedication || null,
       events, activity: source.activity && typeof source.activity === 'object' ? { ...source.activity } : null,
       preferences: source.preferences && typeof source.preferences === 'object' ? { ...source.preferences } : {},
       missingData: [...new Set(events.flatMap(event => event.preparation.missingData))]
@@ -244,7 +245,7 @@
 
   const PRIORITY_ORDER = Object.freeze({ NONE: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 });
   const ACTION_ORDER = Object.freeze({ OPEN_UPCOMING_EVENT: 1, RECOGNIZE_PREPARATION: 2, CONTINUE_STUDY: 3, START_PREPARATION: 4, CONTINUE_PREPARATION: 4, ENTER_STAGE_MODE: 4, CHECK_EVENT_CHANGES: 5, REVIEW_CHANGED_SONG: 6 });
-  const CATEGORY_COOLDOWN_HOURS = Object.freeze({ changes: 6, preparation: 24, continuity: 24, recognition: 168, anticipation: 36, event_day: 4 });
+  const CATEGORY_COOLDOWN_HOURS = Object.freeze({ changes: 6, preparation: 24, continuity: 24, recognition: 168, inactivity: 168, anticipation: 36, event_day: 4 });
   const CATEGORY_ORDER = Object.freeze({ anticipation: 1, recognition: 2, continuity: 3, preparation: 4, event_day: 4, changes: 5 });
   function contextualPriority(event, kind) {
     if (!event || [EVENT_PHASES.UNKNOWN, EVENT_PHASES.PAST].includes(event.phase)) return PRIORITIES.NONE;
@@ -426,6 +427,13 @@
         if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
       }
     }
+    if (snapshot.dedication && global.studyEvidence) {
+      const resume = global.studyEvidence.inactivityCandidate({ ...snapshot.dedication, userId: snapshot.user.id, now: timestamp(snapshot.generatedAt) });
+      if (resume && candidateAllowed(resume, options, snapshot.generatedAt)) candidates.push(resume);
+      for (const candidate of global.studyEvidence.candidates({ ...snapshot.dedication, events: snapshot.events, userId: snapshot.user.id, now: timestamp(snapshot.generatedAt) })) {
+        if (candidateAllowed(candidate, options, snapshot.generatedAt)) candidates.push(candidate);
+      }
+    }
     const unique = new Map();
     for (const candidate of candidates) if (!unique.has(candidate.fingerprint)) unique.set(candidate.fingerprint, candidate);
     return [...unique.values()].sort((left, right) =>
@@ -444,7 +452,7 @@
   }
   function nextBestAction(snapshot, rankedSignals, options) {
     const candidates = buildCandidates(snapshot, rankedSignals, options);
-    const winner = candidates.find(candidate => PRIORITY_ORDER[candidate.priority] >= PRIORITY_ORDER[PRIORITIES.MEDIUM]);
+    const winner = candidates.find(candidate => PRIORITY_ORDER[candidate.priority] >= PRIORITY_ORDER[PRIORITIES.MEDIUM]) || candidates.find(candidate => candidate.localOnly && global.studyEvidence?.isRecognition(candidate));
     if (!winner) {
       const reasonCode = noneReason(snapshot, candidates);
       return {

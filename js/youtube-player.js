@@ -7,6 +7,7 @@
   let mountedVideoId = null;
   let segmentLoop = null;
   let segmentTimer = null;
+  const preparationLoop = global.studyEvidence?.createLoopObserver();
 
   function stopSegmentTimer() {
     if (segmentTimer) global.clearInterval(segmentTimer);
@@ -15,6 +16,8 @@
 
   function clearSegmentLoop() {
     segmentLoop = null;
+    preparationLoop?.arm(null);
+    global.studyPreparation?.armLoop({ deliberate: false });
     stopSegmentTimer();
   }
 
@@ -24,6 +27,8 @@
       if (!player || !segmentLoop || typeof player.getCurrentTime !== "function") return;
       const current = Number(player.getCurrentTime());
       if (!Number.isFinite(current)) return;
+      const passage = preparationLoop?.sample({ position: current, at: global.performance?.now?.() ?? Date.now(), playing: typeof player.getPlayerState === 'function' && player.getPlayerState() === 1, visible: global.document.visibilityState === 'visible', rate: typeof player.getPlaybackRate === 'function' ? player.getPlaybackRate() : 1 });
+      if (passage) global.studyPreparation?.loopPass(passage);
       const ended = typeof player.getPlayerState === "function" && player.getPlayerState() === 0;
       if (current >= segmentLoop.end - .08 || ended) {
         player.seekTo(segmentLoop.start, true);
@@ -192,13 +197,15 @@
     return Number(player.getCurrentTime()) || 0;
   }
 
-  function setSegmentLoop(start, end) {
+  function setSegmentLoop(start, end, options = {}) {
     const duration = getDuration();
     if(!player||typeof player.seekTo!=="function"||duration<=0)throw new Error("Aguarde o player interativo do YouTube carregar para repetir o trecho.");
     const safeStart = Math.max(0, Number(start) || 0);
     const safeEnd = Math.min(duration || Number(end), Number(end) || 0);
     if (!Number.isFinite(safeEnd) || safeEnd <= safeStart + .5) throw new Error("Selecione um trecho válido.");
     segmentLoop = { start: safeStart, end: safeEnd };
+    const evidence = { ...segmentLoop, deliberate: options.deliberate === true };
+    preparationLoop?.arm(evidence); global.studyPreparation?.armLoop(evidence);
     player.seekTo(safeStart, true);
     play();
     monitorSegment();

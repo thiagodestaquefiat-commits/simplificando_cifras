@@ -66,14 +66,27 @@
       ]),
       generic: Object.freeze(['Preparação feita. Agora é palco.'])
     }),
+    RESUME_AFTER_INACTIVITY: Object.freeze({
+      generic: Object.freeze([
+        variant('Será que você ainda lembra aquele refrão?', F, 'retomada-pergunta'),
+        variant('Bora tirar a poeira desses acordes?', F, 'retomada-convite'),
+        variant('Sumiu do ensaio? Bora voltar!', F, 'retomada-conversa'),
+        variant('Seu repertório perguntou por você.', F, 'retomada-personificacao'),
+        variant('Seu violão está com saudade. A gente também.', F, 'retomada-saudade'),
+        variant('Faz um tempinho que não damos play nos estudos, hein?', F, 'retomada-conversa')
+      ])
+    }),
     CONTINUE_STUDY: Object.freeze({
       generic: Object.freeze([variant('{songTitle}', D, 'continuidade-neutra')])
     }),
+    RECOGNIZE_SONG_DEDICATION: Object.freeze({ observed: Object.freeze([variant('Você e {songTitle} já estão ficando íntimos.', F, 'cumplicidade'), variant('Mais uma vez? Essa música já deve saber seu nome.', F, 'personificacao-fato'), variant('{songTitle} ganhou lugar cativo nos seus bastidores.', F, 'bastidores-fato'), variant('Você e {songTitle}: essa parceria está rendendo.', O, 'cumplicidade'), variant('Você voltou à preparação de {songTitle}.', D, 'fato-reconhecimento')]) }),
+    RECOGNIZE_CONSISTENCY: Object.freeze({ observed: Object.freeze([variant('Olha quem voltou! Os bastidores já estavam esperando.', F, 'bastidores-fato'), variant('Vocês estão se vendo bastante ultimamente, hein?', F, 'cumplicidade'), variant('Preparação musical em dias diferentes. Eu reparei.', D, 'fato-reconhecimento'), variant('Tem uma parceria ficando séria por aqui: você e a música.', O, 'cumplicidade')]) }),
+    RECOGNIZE_REPERTOIRE_DEDICATION: Object.freeze({ observed: Object.freeze([variant('Esse repertório já está ficando íntimo de você.', F, 'cumplicidade'), variant('Tem música recebendo tratamento VIP por aqui.', F, 'bastidores-fato'), variant('O repertório de {eventName} está recebendo atenção.', D, 'fato-reconhecimento'), variant('Esse repertório ganhou camarim na sua agenda.', O, 'bastidores-fato')]) }),
     RECOGNIZE_PREPARATION: Object.freeze({
       complete: Object.freeze([variant('Repertório de {eventName} inteiro revisado. Temos um profissional aqui.', F, 'conquista-celebracao'), variant('Preparação confirmada em {eventName}. O palco que lute.', O, 'conquista-humor'), variant('Todas as músicas de {eventName} foram revisadas. Isso merece aplausos.', F, 'conquista-celebracao'), variant('Repertório em dia. Meu trabalho de roadie ficou mais fácil.', F, 'roadie-humor')])
     }),
     OPEN_UPCOMING_EVENT: Object.freeze({
-      empty: Object.freeze([variant('{eventName} está chegando e ainda não tem repertório associado.', D, 'fato-acao'), variant('{eventName} já está no calendário e ainda não tem repertório. As músicas não chegaram aos bastidores.', F, 'bastidores-fato')]),
+      empty: Object.freeze([variant('“{eventName}” está esperando as primeiras músicas!', F, 'personificacao-fato'), variant('Vamos dar som a esse repertório “{eventName}”?', F, 'bastidores-convite'), variant('Adicione músicas ao repertório de “{eventName}”.', D, 'fato-acao')]),
       todayUnknown: Object.freeze([variant('É hoje: {eventName}. Abra o repertório para a conferência do dia.', D, 'dia-evento-neutro'), variant('Hoje tem {eventName}. Eu trouxe o repertório; você traz a música.', F, 'cumplicidade')]),
       tomorrowReady: Object.freeze([variant('{eventName} é amanhã e o repertório está revisado.', F, 'fato-reconhecimento'), variant('Amanhã tem {eventName}. Preparação confirmada; agora é confiar no ensaio.', F, 'conquista-convite')]),
       tomorrowPending: Object.freeze([variant('{eventName} é amanhã. Há revisões pendentes no repertório.', D, 'fato-acao')]),
@@ -83,12 +96,16 @@
       threeDaysUnknown: Object.freeze([variant('Adivinha quem toca em {daysUntil} dias? Isso mesmo. Você.', F, 'pergunta-revelacao'), variant('{eventName} está a {daysUntil} dias. O calendário não mente.', F, 'fato-comentario')]),
       weekReady: Object.freeze([variant('{eventName} está no radar e o repertório já foi revisado.', F, 'fato-reconhecimento')]),
       weekPending: Object.freeze([variant('Uma semana para {eventName}. Há músicas aguardando revisão.', D, 'fato-acao'), variant('{eventName} vem aí. Uma música por vez mantém o improviso desesperado longe.', O, 'fato-humor')]),
-      weekUnknown: Object.freeze([variant('{eventName} está no radar. O repertório pode ser aberto quando você quiser.', D, 'fato-neutro'), variant('O calendário está dizendo que temos música chegando: {eventName}.', F, 'fato-comentario')]),
+      weekUnknown: Object.freeze([variant('Faltam {daysUntil} dias! Que tal dar uma passada no repertório de “{eventName}”?', F, 'fato-convite'), variant('O calendário está dizendo que temos uma apresentação chegando: “{eventName}”!', F, 'fato-comentario')]),
       newEvent: Object.freeze([variant('{eventName} entrou na agenda. Os bastidores estão abertos.', F, 'bastidores-convite'), variant('Evento novo no radar: {eventName}.', D, 'fato-neutro')])
     })
   });
 
   const ACTION_META = Object.freeze({
+    RESUME_AFTER_INACTIVITY: Object.freeze({ kicker: 'DE VOLTA AOS ESTUDOS', actionLabel: 'Retomar estudos' }),
+    RECOGNIZE_SONG_DEDICATION: Object.freeze({ kicker: 'PARCERIA MUSICAL', actionLabel: 'Abrir música' }),
+    RECOGNIZE_CONSISTENCY: Object.freeze({ kicker: 'DE VOLTA À MÚSICA', actionLabel: 'Abrir música' }),
+    RECOGNIZE_REPERTOIRE_DEDICATION: Object.freeze({ kicker: 'ATENÇÃO AO REPERTÓRIO', actionLabel: 'Ver repertório' }),
     REVIEW_CHANGED_SONG: Object.freeze({ kicker: 'ALTERAÇÃO NO REPERTÓRIO', actionLabel: 'Revisar' }),
     CHECK_EVENT_CHANGES: Object.freeze({ kicker: 'MUDANÇAS NO EVENTO', actionLabel: 'Conferir alteração' }),
     START_PREPARATION: Object.freeze({ kicker: 'PRÓXIMO EVENTO', actionLabel: 'Começar' }),
@@ -114,7 +131,7 @@
     const hoursUntil = Number.isFinite(Number(hoursRaw)) ? Number(hoursRaw) : null;
     return {
       eventName: text(event && event.title) || 'seu evento',
-      songTitle: text(item && item.shared && item.shared.title) || 'A música',
+      songTitle: text(item && item.shared && item.shared.title) || (action?.localOnly ? text(action.evidence?.songTitle) : '') || 'A música',
       changedSongTitle: text(item && item.shared && item.shared.title) || 'Uma música',
       changeBefore: safeScalar(latestChange && latestChange.before),
       changeAfter: safeScalar(latestChange && latestChange.after) || 'um novo tom',
@@ -146,6 +163,7 @@
     return changes.find(value => text(value && (value.type || value.changeType)) === 'SONG_ADDED') || null;
   }
   function familyFor(action, variables) {
+    if (action.localOnly && action.evidence?.observedPreparation && Array.isArray(action.evidence.sessionIds) && new Set(action.evidence.sessionIds).size === 2 && /^RECOGNIZE_(SONG_DEDICATION|CONSISTENCY|REPERTOIRE_DEDICATION)$/.test(action.actionType)) return 'observed';
     if (action.actionType === 'REVIEW_CHANGED_SONG') return reliableKeyChange(action) ? 'keyChange' : 'generic';
     if (action.actionType === 'ENTER_STAGE_MODE') return variables.eventPhase === 'TODAY' && text(action.evidence && action.evidence.state) === 'READY' ? 'today' : null;
     if (action.actionType === 'CHECK_EVENT_CHANGES') {
@@ -156,7 +174,7 @@
       if (types.includes('SONG_REMOVED')) return 'removed';
       return 'generic';
     }
-    if (action.actionType === 'CONTINUE_STUDY') return 'generic';
+    if (['CONTINUE_STUDY', 'RESUME_AFTER_INACTIVITY'].includes(action.actionType)) return 'generic';
     if (action.actionType === 'RECOGNIZE_PREPARATION') return variables.readyCount != null && variables.totalCount === variables.readyCount ? 'complete' : null;
     if (action.actionType === 'OPEN_UPCOMING_EVENT') {
       if (variables.repertoireCount === 0) return 'empty';
@@ -211,7 +229,9 @@
     if (!variants || !variants.length) return null;
     const seed = text(action.fingerprint) || [action.actionType, action.eventId, action.repertoireItemId, variables.pendingCount, variables.eventPhase].join(':');
     const recent = recentEditorial(context), usedVariants = new Set(recent.map(value => text(value.variantId))), usedStructures = new Set(recent.slice(0, 2).map(value => text(value.editorialStructure)));
-    const normalized = variants.map(value => normalizedVariant(value, family));
+    let normalized = variants.map(value => normalizedVariant(value, family));
+    // A dedication joke is occasionally bold; its deterministic gate is shared by rerenders.
+    if (action.localOnly && (hash(seed + ':bold') % 5 !== 0 || recent.some(value => value.intensity === O))) normalized = normalized.filter(value => value.intensity !== O);
     let eligible = normalized.map((value, index) => ({ value, index })).filter(entry => !usedVariants.has(`${action.actionType}.${family}.${entry.index + 1}`) && !usedStructures.has(text(entry.value.structure)));
     if (!eligible.length) eligible = normalized.map((value, index) => ({ value, index })).filter(entry => !usedVariants.has(`${action.actionType}.${family}.${entry.index + 1}`));
     if (!eligible.length) eligible = normalized.map((value, index) => ({ value, index }));
@@ -219,7 +239,7 @@
     return Object.freeze({
       messageKey, variantId, tone: 'roudy-contextual', variables: Object.freeze({ ...variables }),
       editorialFamily: family, intensity: selected.value.intensity, editorialStructure: selected.value.structure,
-      text: normalizeTerminology(interpolate(selected.value.text, variables)), kicker: meta.kicker, actionLabel: meta.actionLabel,
+      text: normalizeTerminology(interpolate(selected.value.text, variables)), kicker: meta.kicker, actionLabel: action.actionType === 'OPEN_UPCOMING_EVENT' && family === 'empty' ? 'Adicionar músicas' : meta.actionLabel,
       usedLlm: false
     });
   }

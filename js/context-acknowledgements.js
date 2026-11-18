@@ -13,10 +13,10 @@
     values[id] = { ...local, ...remote, syncState: 'synced' }; global.storage.set(STORAGE_KEY, values); return values[id];
   }
   function acknowledgeLocal(action, userId, acknowledgedAt) {
-    if (!action || action.actionType === 'NONE' || !action.fingerprint || !action.eventId) throw new Error('A ação contextual não pode ser reconhecida.');
+    if (!action || action.actionType === 'NONE' || !action.fingerprint || (!action.eventId && !action.localOnly)) throw new Error('A ação contextual não pode ser reconhecida.');
     const values = root(), id = key(userId, action.fingerprint);
     if (values[id]) return values[id];
-    values[id] = { userId: text(userId), fingerprint: action.fingerprint, eventId: action.eventId, actionType: action.actionType, acknowledgedAt: acknowledgedAt || new Date().toISOString(), syncState: 'pending' };
+    values[id] = { userId: text(userId), fingerprint: action.fingerprint, eventId: action.eventId, actionType: action.actionType, acknowledgedAt: acknowledgedAt || new Date().toISOString(), syncState: action.localOnly ? 'local' : 'pending' };
     global.storage.set(STORAGE_KEY, values); return values[id];
   }
   async function syncOne(value) {

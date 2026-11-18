@@ -37,6 +37,7 @@
     return {
       name: playlist.name,
       description: playlist.description || "",
+      visibility: playlist.visibility || "private",
       coverImage: cover(playlist.coverImage),
       pinned: Boolean(playlist.pinned),
       createdAt: playlist.createdAt || "",
@@ -53,7 +54,7 @@
   function signature(playlist) {
     const data = payload(playlist);
     const items = data.items.map((item) => [item.id, item.songClientId || item.songId, sorted(item.playback), item.notes]);
-    return JSON.stringify([data.name, data.description, data.coverImage ? data.coverImage.length + ":" + data.coverImage.slice(-64) : null, data.pinned, items]);
+    return JSON.stringify([data.name, data.description, data.visibility, data.coverImage ? data.coverImage.length + ":" + data.coverImage.slice(-64) : null, data.pinned, items]);
   }
   function sorted(value) {
     return Object.keys(value || {}).sort().map((key) => [key, value[key]]);
@@ -66,6 +67,7 @@
       id: remote.clientId,
       name: data.name,
       description: data.description || "",
+      visibility: data.visibility === "public" ? "public" : "private",
       coverImage: data.coverImage || null,
       pinned: Boolean(data.pinned),
       sharedFrom: current?.sharedFrom || null,

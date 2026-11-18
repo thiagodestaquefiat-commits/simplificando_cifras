@@ -89,6 +89,7 @@ def _clean(value):
     data = {
         "name": name,
         "description": _text(value.get("description"), 300),
+        "visibility": "public" if value.get("visibility") == "public" else "private",
         "coverImage": cover,
         "pinned": bool(value.get("pinned")),
         "createdAt": _text(value.get("createdAt"), 40),

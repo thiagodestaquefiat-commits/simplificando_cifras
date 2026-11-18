@@ -31,6 +31,6 @@
   function presented(action, userId, at, editorial) { return record(action, userId, 'presented', at, editorial); }
   function opened(action, userId, at) { return record(action, userId, 'opened', at); }
 
-  global.contextHistory = Object.freeze({ STORAGE_KEY, list, presented, opened });
+  global.contextHistory = Object.freeze({ STORAGE_KEY, list, presented, opened, clearCategory(userId, category) { return write(userId, list(userId).filter(record => record.category !== category)); } });
   if (typeof module !== 'undefined' && module.exports) module.exports = global.contextHistory;
 })(typeof window !== 'undefined' ? window : globalThis);

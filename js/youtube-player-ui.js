@@ -8,8 +8,6 @@
   let requestController = null;
   let searchTimer = null;
   let manualMode = false;
-  let expanded = false;
-  let openSelectedVideoPaused = false;
   let controlsTimer = null;
   let controlsElement = null;
   let repeatPanel = null;
@@ -19,9 +17,7 @@
   let playerNextSibling = null;
   let activePlayerContainer = null;
   let iframeFocusHandler = null;
-  let detailScrollCleanup = null;
   let excludedVideoId = null;
-  const expandedSongs = new Set();
   const CONTROLS_DURATION = 4500;
 
   function element(id) { return global.document.getElementById(id); }
@@ -105,12 +101,9 @@
     if (iframeFocusHandler) global.removeEventListener("blur", iframeFocusHandler);
     iframeFocusHandler = null;
     activePlayerContainer = null;
-    if (detailScrollCleanup) detailScrollCleanup();
-    detailScrollCleanup = null;
     const detail = element("view-detail");
     if (detail) {
-      detail.style.removeProperty("--video-header-progress");
-      detail.classList.remove("video-study-expanded", "video-header-compact");
+      detail.classList.remove("video-study-expanded");
     }
     resetFloating(container);
   }
@@ -119,37 +112,8 @@
     excludedVideoId = String(song?.youtubeVideoId || "").trim() || null;
     currentVideos = [];
     manualMode = true;
-    expanded = false;
     render(message || "Este vídeo não está disponível no player. Buscando outras gravações…");
     global.setTimeout(search, 0);
-  }
-
-  function setupDetailScrollMotion() {
-    const detail = element("view-detail");
-    if (!detail) return;
-    detail.classList.add("video-study-expanded");
-    let frame = 0;
-    const render = () => {
-      frame = 0;
-      const player = element("youtube-song-player");
-      const media = player?.querySelector(".youtube-player-frame") || player;
-      const playerBottom = (player?.offsetTop || 0) + (media?.offsetHeight || 0);
-      const revealStart = Math.max(1, playerBottom - 58);
-      const progress = Math.min(1, Math.max(0, (detail.scrollTop - revealStart) / 36));
-      detail.style.setProperty("--video-header-progress", progress.toFixed(4));
-      detail.classList.toggle("video-header-compact", progress >= 0.98);
-    };
-    const onScroll = () => {
-      if (!frame) frame = global.requestAnimationFrame(render);
-    };
-    detail.addEventListener("scroll", onScroll, { passive: true });
-    global.addEventListener("resize", onScroll, { passive: true });
-    render();
-    detailScrollCleanup = () => {
-      detail.removeEventListener("scroll", onScroll);
-      global.removeEventListener("resize", onScroll);
-      if (frame) global.cancelAnimationFrame(frame);
-    };
   }
 
   function watchIframeInteraction(container) {
@@ -255,7 +219,7 @@
     panel.setAttribute("aria-label", "Selecionar trecho para repetir");
     const header = global.document.createElement("div");
     header.className = "youtube-repeat-header";
-    const toggle = button("↶", "youtube-repeat-toggle", () => {
+    const toggle = button("↶", "youtube-repeat-toggle", (event) => {
       if (global.youtubePlayer.getSegmentLoop()) {
         global.youtubePlayer.clearSegmentLoop();
         repeatAction.classList.remove("is-active");
@@ -264,7 +228,7 @@
         status.textContent = "Player pronto";
       } else {
         try {
-          global.youtubePlayer.setSegmentLoop(start, end);
+          global.youtubePlayer.setSegmentLoop(start, end, { deliberate: Boolean(event?.isTrusted) });
           repeatAction.classList.add("is-active");
           toggle.classList.add("is-active");
           toggle.setAttribute("aria-label", "Desativar repetição do trecho");
@@ -289,7 +253,7 @@
     [startInput, endInput].forEach((input) => { input.type = "range"; input.min = "0"; input.max = String(Math.floor(duration)); input.step = "1"; });
     startInput.value = String(Math.floor(start));
     endInput.value = String(Math.ceil(end));
-    const update = (source) => {
+    const update = (source, event) => {
       start = Number(startInput.value);
       end = Number(endInput.value);
       if (source === startInput && start >= end) startInput.value = String(start = Math.max(0, end - 1));
@@ -301,12 +265,12 @@
       if (source && global.youtubePlayer.getSegmentLoop()) {
         // Editing the boundaries updates the active loop; only another press
         // on the repeat button (or leaving this video) should turn it off.
-        global.youtubePlayer.setSegmentLoop(start, end);
+        global.youtubePlayer.setSegmentLoop(start, end, { deliberate: Boolean(event?.isTrusted) });
         status.textContent = `Repetindo ${formatTime(start)}–${formatTime(end)}`;
       }
     };
-    startInput.addEventListener("input", () => update(startInput));
-    endInput.addEventListener("input", () => update(endInput));
+    startInput.addEventListener("input", event => update(startInput, event));
+    endInput.addEventListener("input", event => update(endInput, event));
     ranges.append(startInput, endInput);
     timeline.append(startLabel, ranges, endLabel);
     panel.append(header, timeline);
@@ -343,33 +307,7 @@
     container.appendChild(results);
   }
 
-  function renderCollapsed(container, song) {
-    container.className = "youtube-player-shell is-linked is-collapsed";
-    playerTop(container);
-    const card = global.document.createElement("button");
-    card.type = "button";
-    card.className = "youtube-player-preview";
-    card.setAttribute("aria-label", `Abrir vídeo de ${song.title}`);
-    const info = global.document.createElement("span");
-    info.className = "youtube-player-preview-info";
-    const provider = global.document.createElement("small");
-    provider.textContent = "VÍDEO PARA ESTUDO";
-    const title = global.document.createElement("strong");
-    title.textContent = song.title;
-    const channel = global.document.createElement("span");
-    channel.textContent = song.youtubeChannelTitle || song.artist || "YouTube";
-    info.append(provider, title, channel);
-    const thumbWrap = global.document.createElement("span");
-    thumbWrap.className = "youtube-player-preview-thumb";
-    thumbWrap.append(imageFor(song, "youtube-player-preview-image"), Object.assign(global.document.createElement("span"), { className: "youtube-player-preview-play", textContent: "▶" }));
-    card.append(info, thumbWrap);
-    card.addEventListener("click", openExpanded);
-    container.appendChild(card);
-  }
-
   function renderExpanded(container, song) {
-    const shouldStartPaused = openSelectedVideoPaused;
-    openSelectedVideoPaused = false;
     container.className = "youtube-player-shell is-linked is-expanded";
     playerTop(container);
     const status = global.document.createElement("small");
@@ -394,11 +332,12 @@
     container.append(frame, actions, grip, status);
     attachFloatingDrag(container, grip);
     watchIframeInteraction(container);
-    setupDetailScrollMotion();
+    element("view-detail")?.classList.add("video-study-expanded");
     showControls();
     global.requestAnimationFrame(() => {
+      if (!frame.isConnected) return;
       global.youtubePlayer.mount("youtube-iframe-player", song.youtubeVideoId, {
-        autoplay: !shouldStartPaused,
+        autoplay: false,
         onReady() { status.textContent = "Player pronto"; showControls(); },
         onStateChange(event) {
           const labels = { "-1": "Player pronto", 0: "Vídeo finalizado", 1: "Reproduzindo", 2: "Pausado", 3: "Carregando…", 5: "Player pronto" };
@@ -472,8 +411,7 @@
     global.youtubePlayer.destroy();
     clear(container);
     if (song.youtubeVideoId && !manualMode) {
-      if (expanded) renderExpanded(container, song);
-      else renderCollapsed(container, song);
+      renderExpanded(container, song);
     } else renderSearch(container, message);
   }
 
@@ -491,10 +429,6 @@
     currentSongId = song && song.id;
     currentVideos = [];
     manualMode = false;
-    // Depois que o usuário abriu o vídeo desta música, preserve o player completo
-    // ao sair e voltar durante a mesma sessão. Evita o estado intermediário da capa.
-    expanded = expandedSongs.has(String(currentSongId));
-    openSelectedVideoPaused = false;
     requestVersion += 1;
     render();
   }
@@ -503,8 +437,6 @@
     currentSongId = null;
     currentVideos = [];
     manualMode = false;
-    expanded = false;
-    openSelectedVideoPaused = false;
     requestVersion += 1;
     clearTimeout(searchTimer);
     if (requestController) requestController.abort();
@@ -515,24 +447,16 @@
     if (container) { clear(container); container.className = "youtube-player-shell"; container.style.removeProperty("top"); }
   }
 
-  function openExpanded() {
-    expanded = true;
-    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.add(String(currentSongId));
-    render();
-  }
   function closeExpanded() {
     global.youtubePlayer.pause();
     currentVideos = [];
     manualMode = true;
-    expanded = false;
-    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.delete(String(currentSongId));
     render("Pesquise outra gravação para estudar.");
   }
   function showManualSearch() {
     global.youtubePlayer.pause();
     currentVideos = [];
     manualMode = true;
-    expanded = false;
     render("Pesquise e selecione outra gravação.");
   }
   function scheduleSearch() {
@@ -571,9 +495,6 @@
     excludedVideoId = null;
     currentVideos = [];
     manualMode = false;
-    expanded = true;
-    if (currentSongId !== null && currentSongId !== undefined) expandedSongs.add(String(currentSongId));
-    openSelectedVideoPaused = true;
     context.showToast("Música vinculada ao YouTube");
     render();
   }
@@ -587,5 +508,5 @@
     input.value = String(query || '').trim();
     return search({ isCurrent });
   }
-  global.youtubePlayerUI = Object.freeze({ initialize, showSong, hide, search, searchFromVoice, scheduleSearch, selectVideo, openExpanded, closeExpanded });
+  global.youtubePlayerUI = Object.freeze({ initialize, showSong, hide, search, searchFromVoice, scheduleSearch, selectVideo, closeExpanded });
 })(window);

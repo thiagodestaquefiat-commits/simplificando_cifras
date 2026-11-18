@@ -18,7 +18,7 @@ const event={id:'event-42',title:'Ensaio de interface',date:'2026-10-10',time:'1
   const variants=new Set(Array.from({length:30},(_,index)=>eventShare.gradientVariant(`event-${index}`)));
   assert(variants.size>=6,'eventos diferentes devem distribuir as artes entre várias identidades visuais');
   const completeVariantSet=new Set(Array.from({length:200},(_,index)=>eventShare.gradientVariant(`catalog-event-${index}`)));
-  assert.strictEqual(completeVariantSet.size,9,'o catálogo deve manter nove artes disponíveis');
+  assert.strictEqual(completeVariantSet.size,10,'o catálogo deve manter dez artes disponíveis');
 
   const data=eventShare.createData(event,id=>library.get(String(id)),{link:'https://roudy.test/?share=safe'});
   const eventArtVariants=new Set(Array.from({length:12},(_,index)=>eventShare.createData({...event,id:`sample-${index}`,title:`Culto ${index}`,date:`2026-10-${String(index+1).padStart(2,'0')}`},id=>library.get(String(id))).variant));

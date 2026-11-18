@@ -701,6 +701,23 @@ def get_event(event_id: str):
     return jsonify(result), 200
 
 
+@blueprint.get("/events/<event_id>/version")
+@authenticated
+def get_event_version(event_id: str):
+    """Resposta leve para o app saber se o evento aberto mudou.
+
+    Lê só a versão do evento, sem carregar repertório, mensagens ou histórico,
+    para o celular não baixar o evento inteiro quando nada mudou.
+    """
+    version = db.session.query(Event.version).filter(Event.id == str(event_id)).scalar()
+    if version is None:
+        raise ApiError("evento_nao_encontrado", "O evento não foi encontrado.", 404)
+    if EventMember.query.filter_by(event_id=str(event_id), user_id=g.current_user.id).first() is None:
+        raise ApiError("acesso_negado", "Somente integrantes podem acessar este evento.", 403)
+    db.session.commit()
+    return jsonify({"id": str(event_id), "remoteVersion": int(version)}), 200
+
+
 @blueprint.get("/events/<event_id>/messages")
 @authenticated
 def list_event_messages(event_id: str):

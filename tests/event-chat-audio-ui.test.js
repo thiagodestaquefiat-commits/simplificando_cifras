@@ -15,7 +15,7 @@ try{
   assert.equal(created.status(),201);const event=await created.json();
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'Continuar sem login'}).click();
   await page.evaluate(async({token,event})=>{window.appAuth={getState:()=>({authenticated:true,user:{id:'test-ana'}}),getAccessToken:()=>token};currentAuthState=appAuth.getState();appCurrentUser={id:'test-ana',name:'Ana',role:'Vocal'};setlists=[eventModel.create(event)];currentSdId=event.id;await openEventChat();},{token:fixture.tokens['test-ana'],event});
-  const mic=page.getByRole('button',{name:'Segure para gravar áudio'});
+  const mic=page.getByRole('button',{name:'Gravar áudio'});
   async function hold(){await mic.hover();await page.mouse.down();await page.waitForFunction(()=>document.querySelector('.event-chat-mic.is-recording'));await page.waitForTimeout(650);}
   await hold();await page.mouse.up();await page.waitForFunction(()=>document.querySelectorAll('.event-audio-message').length===1);
   assert.equal(posts,1);
@@ -23,7 +23,7 @@ try{
   assert.equal(await page.locator('.event-audio-tools').isVisible(),false,'sucesso não deixa mensagem ou faixa vazia no compositor');
   const artifacts=process.env.ROUDY_TEST_ARTIFACTS||path.join(root,'artifacts');fs.mkdirSync(artifacts,{recursive:true});await page.screenshot({path:path.join(artifacts,'chat-audio-mobile.png')});
   await page.getByRole('button',{name:'Reproduzir mensagem de áudio'}).click();await page.waitForFunction(()=>document.querySelector('.event-audio-message audio')?.src.startsWith('blob:'));
-  assert.ok(await page.locator('.event-audio-message audio').isVisible());
+  assert.equal(await page.locator('.event-audio-message audio').isVisible(),false);assert.ok(await page.locator('.event-audio-progress').isVisible());
   await page.waitForFunction(()=>{const a=document.querySelector('.event-audio-message audio');return a.readyState>=2&&a.currentTime>0&&!a.error;});
   const audioSrc=await page.locator('.event-audio-message audio').getAttribute('src');await page.evaluate(()=>renderEventChatMessages(false));
   assert.equal(await page.locator('.event-audio-message audio').getAttribute('src'),audioSrc,'atualização do histórico preserva o mesmo player');

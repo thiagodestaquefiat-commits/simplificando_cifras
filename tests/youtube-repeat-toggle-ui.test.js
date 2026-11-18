@@ -3,11 +3,13 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
   const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setContent('<div id="view-detail"><div id="youtube-song-player"></div></div>');
   await page.evaluate(()=>{
-    window.YT={Player:function(id,options){let time=50,state=1;window.loopTest={seeks:[],time:value=>time=value,end:()=>{state=0;time=0;}};this.destroy=()=>{};this.getDuration=()=>120;this.getCurrentTime=()=>time;this.getPlayerState=()=>state;this.playVideo=()=>state=1;this.pauseVideo=()=>state=2;this.seekTo=value=>{time=value;loopTest.seeks.push(value)};setTimeout(()=>options.events.onReady({target:this}),0);}};
+    window.YT={Player:function(id,options){let time=50,state=1;window.loopTest={autoplay:options.playerVars.autoplay,seeks:[],time:value=>time=value,end:()=>{state=0;time=0;}};this.destroy=()=>{};this.getDuration=()=>120;this.getCurrentTime=()=>time;this.getPlayerState=()=>state;this.playVideo=()=>state=1;this.pauseVideo=()=>state=2;this.seekTo=value=>{time=value;loopTest.seeks.push(value)};setTimeout(()=>options.events.onReady({target:this}),0);}};
   });
   await page.addScriptTag({path:path.resolve('js/youtube-player.js')});await page.addScriptTag({path:path.resolve('js/youtube-player-ui.js')});
-  await page.evaluate(()=>{const song={id:'loop',title:'Teste',youtubeVideoId:'fixture'};youtubePlayerUI.initialize({getSongs:()=>[song],showToast:()=>{}});youtubePlayerUI.showSong(song);youtubePlayerUI.openExpanded();});
+  await page.evaluate(()=>{const song={id:'loop',title:'Teste',youtubeVideoId:'fixture'};youtubePlayerUI.initialize({getSongs:()=>[song],showToast:()=>{}});youtubePlayerUI.showSong(song);});
   await page.waitForFunction(()=>youtubePlayer.getDuration()===120);
+  assert.equal(await page.locator('.youtube-player-preview').count(),0);
+  assert.equal(await page.evaluate(()=>loopTest.autoplay),0);
   await page.getByRole('button',{name:'Repetir trecho',exact:true}).click();
   const panel=page.getByRole('dialog',{name:'Selecionar trecho para repetir'}),sliders=panel.locator('input');
   await sliders.nth(0).evaluate(n=>{n.value=20;n.dispatchEvent(new Event('input'))});await sliders.nth(1).evaluate(n=>{n.value=40;n.dispatchEvent(new Event('input'))});

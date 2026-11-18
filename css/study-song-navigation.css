@@ -1,0 +1,42 @@
+/* Quiet repertoire navigation; musical tools and stage header remain independent. */
+#view-detail:not(.stage-mode) > .detail-header .study-song-navigation{display:flex;align-items:center;min-width:0;width:100%;gap:4px}
+#view-detail:not(.stage-mode) .study-song-navigation .detail-title-wrap{flex:1;min-width:0;text-align:center}
+#view-detail:not(.stage-mode) > .detail-header .study-song-navigation .detail-title{font-size:17px;font-weight:700;line-height:1.2}
+.study-song-meta{
+  display:flex;
+  justify-content:center;
+  gap:4px;
+  margin-top:2px;
+  color:var(--text-secondary);
+  font-size:12px;
+  font-weight:var(--weight-body);
+  line-height:15px;
+  white-space:nowrap;
+}
+.study-song-meta > #detail-artist-label{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.study-song-meta > #detail-artist-label:empty{display:none}
+.study-song-position{flex:none}
+.study-song-meta > #detail-artist-label:not(:empty) + .study-song-position::before{content:"•";margin-right:4px}
+.study-song-skip{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:0;background:none;color:#f7f8fa;box-shadow:none;cursor:pointer;touch-action:manipulation}
+.study-song-skip svg{display:block;width:20px;height:20px;fill:currentColor}
+.study-song-skip:disabled{opacity:.28;cursor:default}
+.study-song-skip:active:not(:disabled){opacity:.55}
+.study-song-skip:focus-visible{outline:2px solid var(--text-secondary);outline-offset:-3px;border-radius:6px}
+.study-song-skip[hidden],.study-song-position[hidden]{display:none}
+
+.study-song-current-number{color:#0789e7}
+
+/* Keep the sticky controls and scrolling content below the header's hit area. */
+#view-detail:not(.stage-mode) > .detail-header{
+  flex-shrink:0;
+  z-index:6;
+}
+
+#view-detail:not(.stage-mode) > .detail-header .study-song-navigation.has-repertoire{
+  max-width:320px;
+  justify-self:center;
+}

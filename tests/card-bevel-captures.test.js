@@ -1,0 +1,35 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..'),shots=path.join(require('node:os').tmpdir(),'roudy-search-review');
+const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'};
+const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,pathname==='/'?'index.html':decodeURIComponent(pathname.slice(1)));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())return res.writeHead(404).end();res.writeHead(200,{'Content-Type':(types[path.extname(file)]||'application/octet-stream')+'; charset=utf-8'});fs.createReadStream(file).pipe(res)});
+(async()=>{let browser;try{
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  fs.mkdirSync(shots,{recursive:true});
+  browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:3,serviceWorkers:'block'}),page=await context.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.route('https://fonts.googleapis.com/**',route=>route.fulfill({contentType:'text/css',body:''}));
+  await page.route('**/api/**',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+  await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'Continuar sem login'}).click();
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>roudySearchMenu.open());
+  await page.waitForFunction(()=>[...document.querySelectorAll('.roudy-search-shortcut')].every(card=>card.dataset.bevelReady==='true'));
+  const output='C:/Users/geinu/.codex/visualizations/2026/09/21/01a0c55e-a330-7600-879e-ea2dcc48d4c2';
+  await page.addStyleTag({content:'.roudy-search-shortcut[data-flat]::after{display:none}'});
+  const grid=page.locator('.roudy-search-explore'),first=page.locator('.roudy-search-shortcut').first();
+  await page.waitForTimeout(200);
+  await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.forEach(card=>card.dataset.flat='true'));
+  await grid.screenshot({path:output+'/bevel-original.png'});
+  await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.forEach(card=>delete card.dataset.flat));
+  await grid.screenshot({path:output+'/bevel-volumetrico.png'});
+  await page.screenshot({path:output+'/bevel-mobile.png'});
+  const bounds=await first.boundingBox();
+  await page.screenshot({path:output+'/bevel-canto-superior.png',clip:{x:bounds.x,y:bounds.y,width:48,height:48}});
+  await page.screenshot({path:output+'/bevel-canto-inferior.png',clip:{x:bounds.x+bounds.width-48,y:bounds.y+bounds.height-48,width:48,height:48}});
+  // Pixel equality of the untouched center, rendered with/without the finish.
+  const map=await first.evaluate(card=>card.style.getPropertyValue('--card-bevel-map'));
+  assert.ok(map.includes('data:image/png'));
+  assert.deepEqual(errors,[]);console.log('card-bevel-captures: OK');
+}finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});

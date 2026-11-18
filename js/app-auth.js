@@ -247,6 +247,21 @@
     return body || { deleted: true };
   }
 
+  async function signInWithEmail(email, {shouldCreateUser = true} = {}) {
+    await ensureLoginReady();
+    const emailRedirectTo = new URL(global.location.href).origin + "/";
+    const result = await client.auth.signInWithOtp({email,options:{emailRedirectTo,shouldCreateUser}});
+    if (result.error) throw new Error("Não foi possível enviar o link de acesso. Confira o e-mail e tente novamente.");
+  }
+
+  async function signInWithPassword(email, password) {
+    await ensureLoginReady();
+    const result = await withTimeout(client.auth.signInWithPassword({ email: String(email || '').trim(), password }), "A conexão demorou. Tente novamente.");
+    if (result.error || !result.data?.session?.user) throw new Error("Não foi possível entrar. Confira o e-mail e a senha e tente novamente.");
+    session = result.data.session; offlineSession = false; emit();
+    return getState();
+  }
+
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
@@ -303,5 +318,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, sendEmailCode, verifyEmailCode, deleteAccount, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signInWithPassword, sendEmailCode, verifyEmailCode, deleteAccount, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

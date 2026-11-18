@@ -55,7 +55,27 @@ assert.match(readyTomorrow.text, /revisado|Preparação confirmada/);
 const unknownTomorrow = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'upcoming-unknown', evidence: { eventMoment: 'TOMORROW', daysUntil: 1, repertoireCount: 2, preparationState: 'UNKNOWN' } }), { events });
 assert.doesNotMatch(unknownTomorrow.text, /pendente|não estudou|atrasad/i, 'estado desconhecido não presume falta de estudo');
 const emptyEvent = copy.resolve(action('OPEN_UPCOMING_EVENT', { fingerprint: 'empty-event', evidence: { eventMoment: 'WITHIN_WEEK', daysUntil: 6, repertoireCount: 0 } }), { events });
-assert.match(emptyEvent.text, /ainda não tem repertório/);
+assert.equal(emptyEvent.actionLabel, 'Adicionar músicas');
+assert.equal(upcoming.actionLabel, 'Abrir evento', 'eventos com repertório preservam o CTA de abrir');
+const emptyVariants=new Set();
+for(let index=0;index<40;index++) emptyVariants.add(copy.resolve(action('OPEN_UPCOMING_EVENT', {fingerprint:'empty-'+index,evidence:{repertoireCount:0}}),{events}).text);
+assert.deepEqual([...emptyVariants].sort(),[
+  '“Culto de Domingo” está esperando as primeiras músicas!',
+  'Vamos dar som a esse repertório “Culto de Domingo”?',
+  'Adicione músicas ao repertório de “Culto de Domingo”.'
+].sort(), 'as três variações usam o nome real do evento');
+
+const weekVariants=new Set();
+for(let index=0;index<40;index++) weekVariants.add(copy.resolve(action('OPEN_UPCOMING_EVENT', {fingerprint:'week-unknown-'+index,evidence:{eventMoment:'WITHIN_WEEK',daysUntil:5,repertoireCount:2,preparationState:'UNKNOWN'}}),{events}).text);
+assert.deepEqual([...weekVariants].sort(),[
+  'Faltam 5 dias! Que tal dar uma passada no repertório de “Culto de Domingo”?',
+  'O calendário está dizendo que temos uma apresentação chegando: “Culto de Domingo”!'
+].sort());
+for(const daysUntil of [4,6,7]){
+  const variants=new Set();
+  for(let index=0;index<40;index++) variants.add(copy.resolve(action('OPEN_UPCOMING_EVENT', {fingerprint:'week-days-'+index,evidence:{eventMoment:'WITHIN_WEEK',daysUntil,repertoireCount:2,preparationState:'UNKNOWN'}}),{events}).text);
+  assert.ok([...variants].some(text=>text.startsWith('Faltam '+daysUntil+' dias!')),'contagem deve refletir os dias reais');
+}
 
 let preciseKeyChange = null;
 for (let index = 0; index < 100 && !preciseKeyChange; index += 1) {

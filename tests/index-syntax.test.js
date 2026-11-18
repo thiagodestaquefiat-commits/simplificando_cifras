@@ -11,11 +11,11 @@ scripts.forEach((source, index) => new vm.Script(source, { filename: `index-inli
 const musicPane = html.slice(html.indexOf('id="pane-musicas"'), html.indexOf('id="pane-setlists"'));
 const topbar = html.slice(html.indexOf('id="app-topbar"'), html.indexOf('id="primary-tabs"'));
 assert.doesNotMatch(musicPane, /class="search-bar"/, "a playlist não deve reservar espaço para uma busca permanente");
-assert.match(topbar, /placeholder="Buscar músicas, artistas\.\.\."/);
+assert.match(topbar, /placeholder="O que você quer tocar\?"/);
 assert.match(topbar, /id="topbar-search-mode"[^>]*hidden/);
 assert.match(fs.readFileSync(require("node:path").resolve(__dirname, "..", "js", "medley-editor.css"), "utf8"), /data-active-tab="medley"[^\n]*topbar:has\(\.topbar-search-mode:not\(\[hidden\]\)\)[^\n]*background:#0b0b0c/, 'a busca do Medley cobre o fundo iluminado do cabeçalho com a mesma superfície dos resultados');
 assert.match(topbar, /onclick="openHomePlaylistSearch\(\)"/);
-assert.match(topbar, /placeholder="Buscar suas playlists"/);
+assert.match(topbar, /placeholder="Busque na Sua Biblioteca"/);
 assert.match(html, /function homePlaylistSearchArtwork\(/, "a busca de playlists deve renderizar sua capa ou mosaico");
 assert.match(topbar, /onclick="closePlaylistSearch\(\)"/);
 assert.match(musicPane, /Encontre um vídeo para adicionar à sua playlist/);

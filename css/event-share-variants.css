@@ -48,3 +48,7 @@
 .event-share-palette button:nth-child(9){--share-swatch:linear-gradient(145deg,#fff7dc,#151515 58%,#cba55c)}
 @media(max-width:390px){.event-share-palette{gap:7px}.event-share-palette button{width:23px;height:23px;flex-basis:23px}}
 @media(prefers-reduced-motion:reduce){.event-share-palette button{transition:none}}
+
+.event-share-card--v9::before{background:radial-gradient(circle,rgba(80,122,129,.58),transparent 70%)}
+.event-share-card--v9::after{background:radial-gradient(circle,rgba(150,163,167,.30),transparent 70%)}
+.event-share-palette button:nth-child(10){--share-swatch:linear-gradient(145deg,#507A81,#43585B 58%,#96A3A7)}

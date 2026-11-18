@@ -93,6 +93,21 @@ const server=http.createServer((req,res)=>{
   await page.getByRole('button',{name:'Editar foto',exact:true}).click();
   const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Selecionar foto',exact:true}).click();await (await chooser).setFiles([]);
   assert.equal(await page.locator('#event-chat-photo-actions').evaluate(n=>n.classList.contains('is-open')),false,'cancelar seletor de arquivo não deixa o painel aberto');
+  const side=1600, image=Buffer.alloc(54+side*side*3,90);
+  image.fill(0,0,54);
+  image.write('BM');image.writeUInt32LE(image.length,2);image.writeUInt32LE(54,10);
+  image.writeUInt32LE(40,14);image.writeInt32LE(side,18);image.writeInt32LE(side,22);
+  image.writeUInt16LE(1,26);image.writeUInt16LE(24,28);
+  await page.locator('#event-chat-photo-gallery-input').setInputFiles({name:'foto-grande.bmp',mimeType:'image/bmp',buffer:image});
+  await page.waitForFunction(()=>document.querySelector('#event-chat-photo-viewer-image')?.naturalWidth===512);
+  const savedPhoto=await page.evaluate(()=>storage.get('sc_event_chat_photo_overrides_v1',{})['appearance-fixture']);
+  assert.ok(savedPhoto.startsWith('data:image/jpeg,')||savedPhoto.startsWith('data:image/jpeg;base64,'));
+  assert.equal(await page.locator('#event-chat-event-avatar img').getAttribute('src'),savedPhoto);
+  assert.equal(await page.locator('#event-chat-group-menu-avatar img').getAttribute('src'),savedPhoto);
+  await page.evaluate(()=>{closeEventChatPhotoViewer();openEventChatPhotoViewer(findEvent(currentSdId));});
+  assert.equal(await page.locator('#event-chat-photo-viewer-image').getAttribute('src'),savedPhoto);
+  await page.evaluate(()=>removeEventChatPhoto());
+  assert.equal(await page.locator('#event-chat-event-avatar img').count(),0);
   await page.evaluate(()=>closeEventChatPhotoViewer());
   if(process.env.ROUDY_TEST_ARTIFACTS){fs.mkdirSync(process.env.ROUDY_TEST_ARTIFACTS,{recursive:true});await page.evaluate(()=>openEventChatBackgrounds());await page.screenshot({path:path.join(process.env.ROUDY_TEST_ARTIFACTS,'chat-fundos-430.png')});}
   assert.deepEqual(errors,[]);console.log('chat-appearance-behavior-ui.test.js: OK (375/390/430, scroll, histórico estável, seleção, restabelecer e foto)');

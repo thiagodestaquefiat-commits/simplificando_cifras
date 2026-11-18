@@ -24,7 +24,7 @@
   }
   function snapshot(playlist) {
     const values = typeof musicas !== 'undefined' ? musicas : global.musicas || [];
-    return { name: playlist.name, description: playlist.description || '', coverImage: playlist.coverImage || null, items: playlist.items.map(item => {
+    return { name: playlist.name, visibility: playlist.visibility || 'private', description: playlist.description || '', coverImage: playlist.coverImage || null, items: playlist.items.map(item => {
       const source = item.song || values.find(song => String(song.id) === String(item.songId));
       if (!source) throw new Error('Uma música está indisponível. Remova-a ou recupere-a antes de convidar.');
       const song = clone(source);

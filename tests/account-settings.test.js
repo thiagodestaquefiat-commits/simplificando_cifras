@@ -101,7 +101,7 @@ assert.match(html, /id="login-gate"/);
 assert.match(html, /Continuar com Google/);
 assert.match(html, /Continuar sem login/);
 assert.match(html, /function continueWithoutLogin\(\)/);
-assert.match(html, /state\.authenticated\|\|loginGatePassed/);
+assert.match(html, /\(state\.authenticated&&!loginGatePreview\)\|\|loginGatePassed/);
 assert.match(html, /class="account-contribution"/);
 assert.match(html, /assets\/qr-contribuicao\.png\?v=1/);
 assert.match(html, /class="account-contribution-copy"/);

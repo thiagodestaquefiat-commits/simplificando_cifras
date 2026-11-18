@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const html=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('js/account-contribution.css','utf8');
-assert.match(html,/account-contribution\.css\?v=13/);
+assert.match(html,/account-contribution\.css\?v=14/);
 assert.match(html,/class="account-contribution-page"/);
 assert.match(html,/class="account-contribution-card"/);
 assert.match(html,/class="account-contribution-copy"[^>]*onclick="copyRoudyPixCode\(\)"/);

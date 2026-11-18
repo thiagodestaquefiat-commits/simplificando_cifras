@@ -151,6 +151,7 @@
       id: String(value.id || newId("pl")),
       name,
       description: String(value.description || "").trim().slice(0, 300),
+      visibility: value.visibility === "public" ? "public" : "private",
       coverImage: typeof value.coverImage === "string" && value.coverImage.startsWith("data:image/") ? value.coverImage : null,
       pinned: Boolean(value.pinned),
       items: (Array.isArray(value.items) ? value.items : []).map(normalizeItem).filter(Boolean),
@@ -205,6 +206,10 @@
     const playlist = normalizePlaylist({ ...extra, id: newId("pl"), name, items, createdAt: now(), updatedAt: now() });
     if (!playlist) return null;
     return save(owner, [...all(owner), playlist]) ? playlist : null;
+  }
+
+  function setDetails(owner, id, details) {
+    return update(owner, id, playlist => ({...playlist, name:details.name, description:details.description, visibility:details.visibility}));
   }
 
   function rename(owner, id, name) {
@@ -294,6 +299,6 @@
     return () => listeners.delete(listener);
   }
 
-  global.userPlaylists = Object.freeze({ STORAGE_KEY, ready, flush: () => flush() || Promise.resolve(), deletions, setDeletions, PLAYBACK_FIELDS, all, replace, list, get, create, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setItemContent, setCoverImage, setPinned, cleanPlayback, subscribe });
+  global.userPlaylists = Object.freeze({ STORAGE_KEY, ready, flush: () => flush() || Promise.resolve(), deletions, setDeletions, PLAYBACK_FIELDS, all, replace, list, get, create, setDetails, rename, remove, duplicate, addSong, removeItem, moveItem, setItemPlayback, setItemNotes, setItemContent, setCoverImage, setPinned, cleanPlayback, subscribe });
   init();
 })(window);

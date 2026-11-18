@@ -6,7 +6,7 @@ const css = fs.readFileSync("js/medley-editor.css", "utf8");
 const topbarCss = fs.readFileSync("css/topbar-labels.css", "utf8");
 const source = html.slice(html.indexOf("let medleyBlocos=[];"), html.indexOf("function tocarMedley(){"));
 
-assert.match(html, /medley-editor\.css\?v=30/);
+assert.match(html, /medley-editor\.css\?v=33/);
 assert.ok(html.indexOf('css/roudy-color-system-preview.css?v=15') < html.indexOf('js/medley-editor.css?v=30'), 'o CSS específico do Medley deve prevalecer sobre a camada global de cores');
 assert.match(css, /\.medley-editor-header\{margin:-22px 0 12px\}/, 'o título do Medley deve alinhar verticalmente com o título de Eventos');
 assert.match(css, /\.medley-editor-subline\{display:flex;margin-top:22px;/, 'os metadados e o botão de tom devem ter respiro abaixo do título');
