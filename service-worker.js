@@ -164,6 +164,7 @@ const ASSETS = [
   "./js/song-model.js?v=8",
   "./js/song-artwork.js?v=2",
   "./js/sheet-music.js?v=1",
+  "./js/editor/song-format.js?v=15",
   "./js/editor/song-format.js?v=14",
   "./js/event-model.js?v=6",
   "./js/event-repository.js?v=10",
