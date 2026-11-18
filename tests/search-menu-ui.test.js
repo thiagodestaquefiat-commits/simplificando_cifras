@@ -121,10 +121,17 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     assert.deepEqual(await appearance(),['999px','rgb(36, 36, 38)']);
     assert.equal(await field.evaluate(node=>getComputedStyle(node).height),'36px');
     assert.equal(await field.locator('.roudy-search-field-icon').isVisible(),false);
+    const edge=await page.locator('.roudy-search-header').evaluate(header=>{
+      const shadow=getComputedStyle(header,'::after'),root=header.closest('.roudy-search');
+      return {height:shadow.height,pointer:shadow.pointerEvents,gradient:shadow.backgroundImage,headerBackground:getComputedStyle(header).backgroundColor,contentBackground:getComputedStyle(root.querySelector('.roudy-search-scroll')).backgroundColor};
+    });
+    assert.equal(edge.height,'12px');assert.equal(edge.pointer,'none');assert.ok(edge.gradient.includes('linear-gradient'));assert.notEqual(edge.headerBackground,edge.contentBackground);
+
     assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).outlineStyle),'none');
     assert.equal(await page.locator('#roudy-search-input').evaluate(node=>getComputedStyle(node).boxShadow),'none');
     await page.getByRole('button',{name:'Cancelar',exact:true}).click();
     assert.deepEqual(await appearance(),['6px','rgb(65, 64, 71)']);
+    assert.ok(['none','normal'].includes(await page.locator('.roudy-search-header').evaluate(node=>getComputedStyle(node,'::after').content)));
   }
   await page.setViewportSize({width:390,height:844});
   await page.setViewportSize({width:390,height:600});

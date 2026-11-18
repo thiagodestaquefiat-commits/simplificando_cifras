@@ -150,3 +150,11 @@ Validation: search-menu-ui confirms no inset shadows on either card or edge, no 
 The prior 10%-opacity contour was too faint for the user's reference. New single continuous frame is 2px wide; a center-excluding mask confines tonal variation to the perimeter. Tones derive from each panel with subtle lighter top/left and deeper side/lower shading, avoiding an independent silver color or second inner line. No inset shadow, surface gradient or changes to layout/assets/blur/type. Existing external elevation and press behavior remain.
 
 Validation: Chrome suite confirms one masked ring with 2px padding and transparent center, unchanged geometry, no inset shadows, routes and reduced motion across six widths. Visual comparison confirmed the perimeter is visible without detached parallel lines. Implements the user's explicit reference correction; prior Materials research applies.
+
+## Active-search header separation
+
+Following the supplied reference, the active-search header keeps the canonical near-black background while the content surface uses a subtle mix of background/surface tokens. A full-width 12px transparent-ended shadow separates the two planes without a divider line. It exists only while search is active and does not reintroduce an input focus ring. No control geometry, filtering or navigation changes.
+
+Design basis: HIG Layout / Visual hierarchy and Materials were retrieved earlier in this task; they support grouping and visual separation of controls/content. Exact tonal mix and 12px edge are ROUDY-specific choices matching the user's reference, not Apple-prescribed values.
+
+Validation: Chrome suite checks the actual scroll-content/header colors differ, edge height/gradient/pointer behavior, removal on Cancel and absence of the blue input outline. Existing responsive routes and searches remain passing; screenshot inspected.
