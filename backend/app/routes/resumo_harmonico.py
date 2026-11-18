@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, g, jsonify, request
 from .. import limiter
 from ..errors import ApiError
 from ..schemas.resumo_harmonico import ResumoHarmonicoRequest
-from ..services.ia_service import IaService
+from ..services.ia_service import IaService, _user_web_quota, web_quota_message
 from ..services.content_extractor import extract_uploads
 from ..services.collaboration_auth import authenticated
 from ..services.content_extractor import ExtractedContent
@@ -58,6 +58,10 @@ def resumo_harmonico():
         if payload.modoGeracao != "conhecimento_modelo" and (not payload.sourceProvider or not payload.sourceId):
             raise ApiError("fonte_nao_selecionada", "Escolha uma fonte antes de gerar a música.", 400)
         if payload.sourceProvider and payload.sourceId:
+            if payload.sourceProvider == "cifraclub":
+                quota = _user_web_quota(current_app.config.get("SCRAPER_USER_LIMIT", "10 per day"))
+                if quota is not None and not quota(g.current_user.id):
+                    raise ApiError("limite_busca_web", quota.message(g.current_user.id) if hasattr(quota, "message") else web_quota_message(), 429)
             try:
                 online_source = current_app.extensions["music_source_registry"].fetch(payload.sourceProvider, payload.sourceId)
             except MusicSourceTimeout as error:
