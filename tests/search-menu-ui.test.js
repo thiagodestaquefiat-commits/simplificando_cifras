@@ -52,6 +52,21 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
 
 
   assert.deepEqual(await page.locator('.roudy-search-shortcut-hint').allTextContents(),['Prontas para praticar','Organize suas músicas','Crie seu primeiro','Ver repertório']);
+  const storedMeta=await page.locator('#roudy-search-music-meta').textContent();
+  for(const width of [320,375,390,430]){
+    await page.setViewportSize({width,height:844});
+    await page.locator('#roudy-search-music-meta').evaluate(node=>node.textContent='Dados indisponíveis');
+    const unavailable=await page.locator('#roudy-search-music-meta').evaluate(node=>{
+      const value=node.firstChild,range=document.createRange();range.setStart(value,6);range.setEnd(value,value.length);
+      const panel=node.closest('.roudy-search-shortcut-copy'),card=panel.parentElement,grid=card.parentElement;
+      return {wordLines:range.getClientRects().length,overflow:panel.scrollWidth>panel.clientWidth,ratio:card.clientWidth/grid.clientWidth};
+    });
+    assert.equal(unavailable.wordLines,1,'estado indisponível não parte uma palavra');
+    assert.equal(unavailable.overflow,false);
+    assert.ok(unavailable.ratio>.46&&unavailable.ratio<.5,'duas colunas ocupam a largura disponível');
+  }
+  await page.locator('#roudy-search-music-meta').evaluate((node,text)=>node.textContent=text,storedMeta);
+
   for(const width of [320,375,390,430,1107,1440]){
     await page.setViewportSize({width,height:844});
 
@@ -110,7 +125,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(mobileCards[2].y,mobileCards[3].y);
   assert.ok(mobileCards[0].y<mobileCards[2].y);
   assert.ok(mobileCards.every(card=>card.width===mobileCards[0].width&&card.height===mobileCards[0].height));
-  assert.ok(mobileCards.every(card=>Math.abs(card.width-117)<1&&Math.abs(card.height-card.width*2/3)<1));
+  assert.ok(mobileCards.every(card=>Math.abs(card.width-173.75)<1&&Math.abs(card.height-card.width*2/3)<1));
   assert.equal(await page.locator('.roudy-search-shortcut-art img').count(),8,'artes tipográficas substituem as fotos');
   assert.equal(await page.locator('.roudy-search-shortcut-rd').first().evaluate(node=>getComputedStyle(node).maskImage.includes('roudy-rd-premium.svg')),true,'assinatura original no lugar da maçã da referência');
   for(const [selector,expectedWeight] of [['.roudy-search-shortcut-signature','700'],['.roudy-search-shortcut-copy small span','600']]){

@@ -9,7 +9,7 @@
 .roudy-search-explore{
   display:grid;
   --explore-gap:clamp(8px,3.2vw,14px);
-  width:min(100%,420px,calc(60vw + var(--explore-gap)));
+  width:min(100%,420px);
   margin-inline:auto;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:var(--explore-gap);
@@ -96,7 +96,7 @@
 }
 .roudy-search-shortcut-copy small{
   display:flex;
-  grid-column:1;
+  grid-column:1 / -1;
   width:100%;
   min-width:0;
   align-items:flex-start;
@@ -104,10 +104,10 @@
   color:inherit;
   font:var(--weight-control) clamp(12px,3vw,16px)/1.25 var(--font-ui);
 }
-.roudy-search-shortcut-hint{grid-column:1;color:rgba(255,255,255,.76);display:block;width:100%;font:var(--weight-body) clamp(11px,2.7vw,14px)/1.3 var(--font-ui);overflow-wrap:anywhere}
-.roudy-search-shortcut-play{grid-column:2;grid-row:1 / 3;display:grid;place-items:center;width:clamp(21px,5.5vw,30px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.9);color:var(--shortcut-footer)}
+.roudy-search-shortcut-hint{grid-column:1;grid-row:2;color:rgba(255,255,255,.76);display:block;width:100%;font:var(--weight-body) clamp(11px,2.7vw,14px)/1.3 var(--font-ui);overflow-wrap:normal}
+.roudy-search-shortcut-play{grid-column:2;grid-row:2;display:grid;place-items:center;width:clamp(21px,5.5vw,30px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.9);color:var(--shortcut-footer)}
 .roudy-search-shortcut-play svg{display:block;width:68%;height:68%;fill:currentColor;stroke:none}
-.roudy-search-shortcut-copy small span{min-width:0;overflow-wrap:anywhere}
+.roudy-search-shortcut-copy small span{min-width:0;overflow-wrap:normal}
 .roudy-search-shortcut-copy small svg{
   width:1em;
   height:1em;

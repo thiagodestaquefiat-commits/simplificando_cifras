@@ -81,3 +81,17 @@ Design inference: Limitar filtros às imagens mantém a nitidez da assinatura e 
 ROUDY-specific decision: Implementar exatamente as três camadas solicitadas, preservar o desenho e usar a cor existente de cada painel.
 
 Implementation: index.html adiciona camadas decorativas; search-menu.css compõe máscara/blur/fusão; service-worker.js atualiza o cache; search-menu-ui verifica fonte idêntica, enquadramento, original sem filtro, blur limitado, ausência do pseudo-elemento branco, geometria em seis larguras e navegação existente.
+
+## Mobile width correction
+
+Cause: the legacy 60vw grid cap left each card only 30vw wide; the play column further reduced metadata width. The unavailable state wrapped mid-word and stretched the row.
+
+Correction: two columns use the available content width (retaining the 420px desktop cap and existing gap). Metadata spans the footer width; subtitle and play share the second row. Words wrap at spaces. Original image aspect, assets and transition remain intact.
+
+APPLE DESIGN RESEARCH
+Question: Como impedir quebra excessiva sem reduzir a legibilidade dos textos no mobile?
+Sources consulted: HIG Typography / Ensuring legibility, já recuperada e lida nesta tarefa.
+Apple explicit guidance: Testar legibilidade em diferentes contextos.
+Design inference: Dar largura real ao conteúdo evita tentar resolver falta de espaço diminuindo a fonte.
+ROUDY-specific decision: Remover o limite antigo de 60vw e separar os espaços da contagem e do play.
+Implementation: search-menu.css; suíte valida Dados indisponíveis de 320 a 430px, palavra inteira e ausência de overflow, além de navegação e seis larguras existentes.
