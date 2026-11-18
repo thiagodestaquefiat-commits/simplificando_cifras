@@ -119,3 +119,16 @@ ROUDY-specific decision: Dois contornos de 1px desenhados sobre o card inteiro, 
 Implementation: css/search-menu.css centraliza --card-radius e duas camadas decorativas sem consumo de layout, pointer-events:none. Sombra externa 0 2px 6px/16% e contorno preto/22%. Interna 0 2px 3px/20%, 1px 0 2px/10% e filete inferior/5%. Preserva feedback de opacidade/scale(.985), acrescenta transição 150ms e suprime escala quando movimento reduzido está ativo. index.html e service-worker.js apenas atualizam versão do CSS/cache.
 
 Validation: search-menu-ui testa raios, espessura, inset, geometria inalterada, camada sem captura de clique, pressionamento normal e movimento reduzido, seis larguras e rotas existentes. Inspeção visual dos quatro cards; index-syntax passa. Nenhum asset modificado.
+
+## Sharp vector signature and hierarchy
+
+Cause: assets/icons/roudy-rd-premium.svg contains embedded raster images and filters; its small mask looked soft. Search cards now use the existing assets/search/rd.svg, a path-only vector, without editing either asset. The mask preserves currentColor. RD size increases to 1.45em by .98em; category title is 10.5cqw instead of 7.5cqw, retaining Inter 700 and the approved light gray. The signature remains in the artwork layer, explicitly unfiltered, and gets 18% of the artwork height to avoid clipping. Metadata and hint sizes/weights remain unchanged. Card geometry, frame, imagery and blur remain unchanged.
+
+APPLE DESIGN RESEARCH
+Question: Como separar identidade da categoria e metadados sem perder nitidez em tamanhos pequenos?
+Sources consulted: Apple HIG Typography (search + read; returned Ensuring legibility section).
+Apple explicit guidance: Tamanho e peso afetam legibilidade; testar em diferentes contextos e considerar tamanho/contraste quando necessário.
+Design inference: Um monograma em caminhos vetoriais evita reamostrar imagem embutida; tamanho visivelmente diferente distingue assinatura de contagem.
+ROUDY-specific decision: Reutilizar RD vetorial existente e aumentar somente a assinatura, mantendo as demais camadas.
+Implementation: CSS compartilhado, versão/cache e testes.
+Validation: search-menu-ui confere path-only SVG sem image/filter, filtro none da assinatura, proporção de tamanho maior que metadados, contenção nos cantos, seis larguras, reduced motion e navegação. Inspeção visual dos quatro cards.
