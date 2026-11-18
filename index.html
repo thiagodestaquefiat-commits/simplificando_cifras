@@ -3248,9 +3248,8 @@ function openStageFromEvent(eventId){
   openDetailFromPlaylist(event.id,0);enterStageMode();
 }
 // ── MODO PALCO ────────────────────────────────────────────────────────
-// Modo Palco limpo (decisão do Thiago, 12/10; reforçada em 05/11): a mesma cifra da tela de estudo —
-// mesmo resumo, Letra + Cifras e Letra, na página em que a pessoa estava. Não voltar para false.
-var STAGE_CLEAN=true;
+// Modo Palco aprovado no preview, preservando controles e apresentação próprios.
+var STAGE_CLEAN=false;
 let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
