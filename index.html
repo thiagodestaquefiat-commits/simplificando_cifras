@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="js/account-tools.css?v=4">
 <link rel="stylesheet" href="js/account-profile.css?v=5">
 <link rel="stylesheet" href="js/event-member-profile.css?v=2">
-  <link rel="stylesheet" href="js/event-detail-refactor.css?v=147">
+  <link rel="stylesheet" href="js/event-detail-refactor.css?v=148">
 <link rel="stylesheet" href="js/event-qr-scanner.css?v=3">
 <link rel="stylesheet" href="js/profile-qr.css?v=4">
 <link rel="stylesheet" href="css/qr-stage-light.css?v=2">
@@ -5786,10 +5786,10 @@ function setupEventParticipantsMorph(){
   function renderParticipants(){
     frame=0;
     const viewRect=view.getBoundingClientRect(),sectionRect=section.getBoundingClientRect(),width=stage.clientWidth,rowHeight=68,topInset=8;
-    const stageHeight=Math.max(253,count*rowHeight+topInset+76),compactHeight=count<=3?124:146;
+    const compactHeight=count<=3?124:146,stageHeight=Math.max(compactHeight+30,count*rowHeight+topInset+68);
     const maxScroll=Math.max(1,view.scrollHeight-view.clientHeight),scrollProgress=view.scrollTop/maxScroll;
-    const progress=count===1||reduced?1:clampEventMemberProgress((scrollProgress-.64)/.3);
-    stage.style.height=`${count===1?116:stageHeight}px`;
+    const progress=count===1||reduced||view.scrollHeight<=view.clientHeight+1?1:clampEventMemberProgress((scrollProgress-.64)/.3);
+    stage.style.height=`${count===1?144:stageHeight}px`;
     const copy=clampEventMemberProgress((progress-.32)/.38),role=clampEventMemberProgress((progress-.48)/.34),divider=clampEventMemberProgress((progress-.58)/.28);
     items.forEach((item,index)=>{
       const leader=item.dataset.leader==='true',representative=item.dataset.representative==='true',orbit=Number(item.dataset.orbitIndex)||0;
