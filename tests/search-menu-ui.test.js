@@ -38,6 +38,23 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut-word').count(),0);
   assert.equal(await page.locator('.roudy-search-shortcut-art > img').count(),4);
   assert.equal(await page.locator('.roudy-search-shortcut-play').count(),4);
+  const frames=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
+    const outer=getComputedStyle(card,'::before'),inner=getComputedStyle(card,'::after'),style=getComputedStyle(card);
+    return {outer:outer.borderTopWidth,inner:inner.borderTopWidth,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,layoutBorder:style.borderTopWidth};
+  }));
+  assert.ok(frames.every(value=>value.outer==='1px'&&value.inner==='1px'&&value.inset==='3px'&&Math.abs(value.curve-3)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow.includes('inset')&&value.layoutBorder==='0px'),'moldura dupla acompanha o raio sem mudar geometria nem bloquear cliques');
+  const firstFrame=page.locator('.roudy-search-shortcut').first();
+  for(const reduced of ['no-preference','reduce']){
+    await page.emulateMedia({reducedMotion:reduced});
+    await firstFrame.hover();await page.mouse.down();await page.waitForTimeout(180);
+    const press=await firstFrame.evaluate(node=>({transform:getComputedStyle(node).transform,duration:getComputedStyle(node).transitionDuration}));
+    if(reduced==='reduce'){assert.equal(press.transform,'none');assert.ok(parseFloat(press.duration)<=.001,'sem duração perceptível com movimento reduzido');}
+    else assert.match(press.transform,/matrix\(0\.985/,'pressionamento move o card completo');
+    await page.mouse.move(0,0);await page.mouse.up();await page.waitForTimeout(180);
+  }
+  await page.emulateMedia({reducedMotion:'no-preference'});
+
+
   const finish=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const panel=card.querySelector('.roudy-search-shortcut-copy'),signature=card.querySelector('.roudy-search-shortcut-signature'),a=card.getBoundingClientRect(),b=panel.getBoundingClientRect();
     return {background:getComputedStyle(card).backgroundColor===getComputedStyle(panel).backgroundColor,filled:Math.abs(a.bottom-b.bottom)<1,label:getComputedStyle(signature).color!=='rgb(66, 66, 71)'};
@@ -172,6 +189,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.deepEqual(await cardDetails(),['2 músicas','1 playlist','1 medley','Próximo: 24 nov. · 19h30']);
   assert.equal(await page.locator('#roudy-search-medley-hint').textContent(),'Crie seu próximo');
   await page.screenshot({path:path.join(shots,'roudy-explorar-cards.png'),fullPage:false});
+  await page.locator('.roudy-search-explore').screenshot({path:path.join(shots,'roudy-cards-inset-frame.png')});
   await page.evaluate(()=>{
     musicas=[];setlists=[];
     userPlaylists.remove(homePlaylists.ownerId,"card-owned");

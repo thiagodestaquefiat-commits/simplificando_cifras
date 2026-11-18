@@ -101,3 +101,21 @@ Implementation: search-menu.css; suíte valida Dados indisponíveis de 320 a 430
 The old white button background was exposed below shorter footer contents on some layouts. Card background now uses its exact panel color, footer stretches to fill its track, and native button appearance is disabled. The signature moves within the lower end of the existing artwork box, where the fusion is already fully opaque (88%). Its gray is derived from the canonical primary/secondary text roles instead of the old dark gray that disappeared over silhouettes and blue waves. No white band, glow or changed assets; typography size remains unchanged.
 
 Validation: responsive search suite verifies bottom edges match, card/panel share background color, bright signature sits on opaque panel, source/blur crops still match, and all four routes work. Browser visual inspection confirms the corrected composition. Apple HIG Typography / Ensuring legibility consulted earlier in this task informs the contrast correction; exact blending/position are ROUDY-specific implementation decisions.
+
+## Inset card frame
+
+APPLE DESIGN RESEARCH
+
+Question: Como adicionar profundidade apenas nas extremidades sem mudar a superfície editorial ou a área de conteúdo?
+
+Sources consulted: Apple HIG Materials, design/human-interface-guidelines/materials (search + read).
+
+Apple explicit guidance: Materiais podem estabelecer profundidade/hierarquia; Liquid Glass não deve ser aplicado na camada de conteúdo, pois pode adicionar complexidade e confundir hierarquia.
+
+Design inference: Para os cards de conteúdo, contornos discretos e sombras curtas nas bordas atendem ao acabamento solicitado sem superfície de vidro.
+
+ROUDY-specific decision: Dois contornos de 1px desenhados sobre o card inteiro, interno a 3px; raio derivado do existente, sombra curta de baixa opacidade. Nenhum filtro novo sobre as artes nem mudança de composição.
+
+Implementation: css/search-menu.css centraliza --card-radius e duas camadas decorativas sem consumo de layout, pointer-events:none. Sombra externa 0 2px 6px/16% e contorno preto/22%. Interna 0 2px 3px/20%, 1px 0 2px/10% e filete inferior/5%. Preserva feedback de opacidade/scale(.985), acrescenta transição 150ms e suprime escala quando movimento reduzido está ativo. index.html e service-worker.js apenas atualizam versão do CSS/cache.
+
+Validation: search-menu-ui testa raios, espessura, inset, geometria inalterada, camada sem captura de clique, pressionamento normal e movimento reduzido, seis larguras e rotas existentes. Inspeção visual dos quatro cards; index-syntax passa. Nenhum asset modificado.
