@@ -233,6 +233,22 @@
     return fromRemote(await request("/events/" + encodeURIComponent(eventId), { method: "GET" }));
   }
 
+  // Evento aberto: pergunta só a versão. Se o servidor ainda não tiver esse
+  // endereço (versão antiga), devolve null e o app usa o caminho completo de antes.
+  let eventVersionEndpointMissing = false;
+  async function getEventVersion(eventId) {
+    if (eventVersionEndpointMissing) return null;
+    try {
+      const body = await request("/events/" + encodeURIComponent(eventId) + "/version", { method: "GET" });
+      const version = Number(body && body.remoteVersion);
+      return Number.isFinite(version) ? version : null;
+    } catch (error) {
+      if (error && error.offline) throw error;
+      if (error && (error.status === 404 && error.code !== "evento_nao_encontrado" || error.status === 405)) eventVersionEndpointMissing = true;
+      return null;
+    }
+  }
+
   async function requireEventSongData(){
     const body=await request('/capabilities');
     if(body?.eventSongData!==1)throw new CollaborationError('A cópia da música foi preservada localmente. A atualização do servidor é necessária para sincronizar.',404,'event_song_data_pending');
@@ -431,5 +447,5 @@
     return global.appAuth && global.appAuth.getAccessToken && global.appAuth.getAccessToken() || readIdentity() && readIdentity().accessToken || null;
   }
 
-  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, saveSharedEvent, createInvitation, acceptInvitation, searchUsers, inviteUser, listInvitations, respondInvitation, getUsername, checkUsername, claimUsername, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, markSongAsReviewed, listContextAcknowledgements, acknowledgeContextAction, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, leaveEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
+  global.eventCollaboration = Object.freeze({ identityKey: IDENTITY_KEY, personalQueueKey: PERSONAL_QUEUE_KEY, deleteQueueKey: DELETE_QUEUE_KEY, readIdentity, ensureLocalIdentity, ensureRegistered, listEvents, getEvent, getEventVersion, saveSharedEvent, createInvitation, acceptInvitation, searchUsers, inviteUser, listInvitations, respondInvitation, getUsername, checkUsername, claimUsername, transferLeadership, saveSharedItem, savePersonalItem, clearPersonalItem, markSongAsReviewed, listContextAcknowledgements, acknowledgeContextAction, queuePersonalOperation, readPersonalQueue, flushPersonalQueue, deleteEvent, leaveEvent, queueEventDeletion, flushEventDeletionQueue, toRemotePayload, fromRemote, toRemoteSongId, fromRemoteSongId, currentAccessToken, CollaborationError });
 })(window);

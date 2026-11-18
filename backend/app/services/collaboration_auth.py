@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 from flask import current_app, g, request
@@ -14,6 +14,8 @@ from ..database import db
 from ..errors import ApiError
 from ..models import CollaborationUser, ExternalIdentity, UserAccessToken
 from .supabase_auth import SupabaseAuthError
+
+LAST_USED_WRITE_INTERVAL = timedelta(minutes=10)
 
 
 def _digest(token: str) -> str:
@@ -42,7 +44,14 @@ def authenticated(handler):
             user = db.session.get(CollaborationUser, token.user_id)
             if user is None:
                 raise ApiError("usuario_invalido", "O usuário deste token não existe mais.", 401)
-            token.last_used_at = datetime.now(timezone.utc)
+            now = datetime.now(timezone.utc)
+            last_used = token.last_used_at
+            if last_used is not None and last_used.tzinfo is None:
+                last_used = last_used.replace(tzinfo=timezone.utc)
+            # Grava o último uso no máximo a cada 10 minutos: com um evento aberto
+            # o app consulta o servidor com frequência e cada gravação pesa no banco.
+            if last_used is None or now - last_used >= LAST_USED_WRITE_INTERVAL:
+                token.last_used_at = now
             g.current_access_token = token
             g.auth_provider = "local"
         else:

@@ -1476,7 +1476,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/location-service.js?v=2"></script>
 <script src="js/map-preview.js?v=2"></script>
 <script src="js/location-autocomplete.js?v=1"></script>
-<script src="js/event-collaboration-client.js?v=19"></script>
+<script src="js/event-collaboration-client.js?v=20"></script>
 <script src="js/event-share.js?v=5"></script>
 <script src="js/preparation-receipts.js?v=1"></script>
 <script src="js/contextual-copy.js?v=5"></script>
@@ -1488,23 +1488,30 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/summary-organizer.js?v=5"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=21"></script>
 <script src="js/ai/camera-capture.js?v=6"></script>
-<script src="js/assistant-intent-catalog.js?v=1"></script>
-<script src="js/assistant-intent-client.js?v=1"></script>
-<script src="js/assistant-voice.js?v=4"></script>
-<script src="js/assistant-language.js?v=1"></script>
-<script src="js/assistant-actions.js?v=9"></script>
-<script src="js/assistant-action-manager.js?v=5"></script>
-<script src="js/assistant-action-runtime.js?v=6"></script>
-<script src="js/assistant-memory.js?v=2"></script>
-<script src="js/assistant-dialogue.js?v=4"></script>
-<script src="js/assistant-sequences.js?v=2"></script>
-<script src="js/app-assistant.js?v=34"></script>
  <script src="js/event-user-invites.js?v=12"></script>
  <script src="js/event-qr-scanner.js?v=2"></script>
 <script>
 // Bibliotecas de QR Code carregam sob demanda.
 window.roudyLoadScript=(function(){const pending={};return function(src){if(!pending[src])pending[src]=new Promise((resolve,reject)=>{const tag=document.createElement("script");tag.src=src;tag.onload=resolve;tag.onerror=()=>{delete pending[src];reject(new Error("Não foi possível carregar o leitor de QR Code."));};document.head.appendChild(tag);});return pending[src];};})();
 window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScript("js/vendor/qrcode.min.js?v=1"),reader:()=>window.jsQR?Promise.resolve():window.roudyLoadScript("js/vendor/jsqr.min.js?v=1")};
+</script>
+<script>
+// Assistente de voz: carrega depois que o app abre, ou na hora se a pessoa tocar nele,
+// para não pesar na abertura. Os arquivos continuam no cache offline.
+(function(){
+  const files=["js/assistant-intent-catalog.js?v=1","js/assistant-intent-client.js?v=1","js/assistant-voice.js?v=4","js/assistant-language.js?v=1","js/assistant-actions.js?v=9","js/assistant-action-manager.js?v=5","js/assistant-action-runtime.js?v=6","js/assistant-memory.js?v=2","js/assistant-dialogue.js?v=4","js/assistant-sequences.js?v=2","js/app-assistant.js?v=35"];
+  let loading=null;
+  function load(){
+    if(!loading)loading=files.reduce((chain,src)=>chain.then(()=>window.roudyLoadScript(src)),Promise.resolve()).catch(error=>{loading=null;throw error;});
+    return loading;
+  }
+  const stub={ensureLoaded:load,updateLaunchVisibility(){},getConversationState:()=>null,getLastIntentResult:()=>null,getLastActionResult:()=>null,getActions:()=>[]};
+  for(const name of ['open','close','listen','run','clean','cancelConversation'])stub[name]=(...args)=>load().then(()=>{const real=window.roudyAssistant;if(real&&real!==stub&&typeof real[name]==='function')return real[name](...args);}).catch(error=>console.warn('Não foi possível carregar o assistente.',error));
+  if(!window.roudyAssistant)window.roudyAssistant=stub;
+  const whenIdle=window.requestIdleCallback?fn=>window.requestIdleCallback(fn,{timeout:5000}):fn=>setTimeout(fn,2500);
+  const start=()=>whenIdle(()=>load().catch(()=>{}));
+  if(document.readyState==='complete')start();else window.addEventListener('load',start,{once:true});
+})();
 </script>
  <script src="js/profile-qr.js?v=4"></script>
  <script src="js/notification-center.js?v=8"></script>
@@ -6228,6 +6235,8 @@ async function refreshOpenEventFromCloud(){
   const local=findEvent(currentSdId);if(!local||local.remoteVersion==null)return;
   eventLiveRefreshRunning=true;
   try{
+    const remoteVersion=typeof eventCollaboration.getEventVersion==='function'?await eventCollaboration.getEventVersion(currentSdId):null;
+    if(remoteVersion!=null&&remoteVersion<=Number(local.remoteVersion||0))return;
     const remote=await eventCollaboration.getEvent(currentSdId,appCurrentUser);
     if(Number(remote.remoteVersion||0)<=Number(local.remoteVersion||0))return;
     setlists=eventRepository.upsert(setlists,remote).events;eventRepository.save(setlists);
@@ -6235,7 +6244,8 @@ async function refreshOpenEventFromCloud(){
   }catch(error){if(!collaborationAllowsOffline(error))console.warn('Não foi possível atualizar o evento aberto.',error);}
   finally{eventLiveRefreshRunning=false;}
 }
-setInterval(refreshOpenEventFromCloud,3000);
+// Evento aberto: confere a cada 10 s se mudou; o evento inteiro só é baixado quando mudou.
+setInterval(refreshOpenEventFromCloud,10000);
 function renderEventChatButton(event){
   const button=document.getElementById('event-chat-fab');if(!button)return;
   let unread=0;try{unread=eventChat.unreadCount(event.id);}catch(error){}

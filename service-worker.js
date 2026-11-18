@@ -1,7 +1,9 @@
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v735-capo-pessoal";
+const CACHE_NAME = "simplificando-cifras-v736-caminho-do-culto";
+const NAVIGATION_TIMEOUT_MS = 3000;
+// Compatibility marker: simplificando-cifras-v735-capo-pessoal
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -81,6 +83,7 @@ const ASSETS = [
   "./js/playlist-invites.js?v=7",
   "./js/event-model.js?v=9",
   "./js/event-user-invites.js?v=12",
+  "./js/event-collaboration-client.js?v=20",
   "./js/event-collaboration-client.js?v=19",
   "./js/event-user-invites.js?v=9",
   "./js/event-collaboration-client.js?v=16",
@@ -109,6 +112,7 @@ const ASSETS = [
   "./js/app-assistant.js?v=30",
   "./js/app-assistant.js?v=31",
   "./js/app-assistant.js?v=32",
+  "./js/app-assistant.js?v=35",
   "./js/app-assistant.js?v=34",
   "./js/event-user-invites.js?v=8",
   "./css/song-reading.css?v=3",
@@ -355,15 +359,28 @@ self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate") {
     // Só a página do app vira a cópia offline; Termos, Privacidade e Excluir conta são páginas à parte.
     const appShell = /^\/(?:index\.html)?$/.test(requestUrl.pathname);
-    event.respondWith(
-      fetch(event.request).then((response) => {
-        if (appShell && response && response.status === 200) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
-        }
-        return response;
-      }).catch(() => caches.match("./index.html"))
-    );
+    const network = fetch(event.request).then((response) => {
+      if (appShell && response && response.status === 200) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+      }
+      return response;
+    });
+    // Internet fraca (ex.: Wi-Fi da igreja): espera a rede por pouco tempo e,
+    // se houver cópia guardada do app, abre a cópia. A rede continua baixando
+    // em segundo plano e atualiza a cópia para a próxima abertura.
+    event.respondWith((async () => {
+      if (!appShell) return network.catch(() => caches.match("./index.html"));
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), NAVIGATION_TIMEOUT_MS));
+      const first = await Promise.race([network.catch(() => null), timeout]);
+      if (first) return first;
+      const cached = await caches.match("./index.html");
+      if (cached) {
+        event.waitUntil(network.catch(() => null));
+        return cached;
+      }
+      return network.catch(() => caches.match("./index.html"));
+    })());
     return;
   }
 
