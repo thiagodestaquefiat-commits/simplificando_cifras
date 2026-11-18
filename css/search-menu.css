@@ -78,7 +78,7 @@
   align-items:center;
   justify-content:center;
   gap:.26em;
-  color:var(--text-secondary);
+  color:var(--text-tertiary);
   font:var(--weight-title) 7.5cqw/1 var(--font-ui);
   z-index:1;
   filter:none;
