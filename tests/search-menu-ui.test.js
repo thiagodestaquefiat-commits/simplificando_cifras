@@ -37,6 +37,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(await page.locator('.roudy-search-shortcut').count(),4);
   for(const width of [320,375,390,430,1107,1440]){
     await page.setViewportSize({width,height:844});
+    await page.waitForFunction(()=>[...document.querySelectorAll('.roudy-search-shortcut-word')].every(word=>word.scrollWidth<=word.clientWidth+1));
     const geometry=await page.locator('.roudy-search-explore').evaluate(grid=>({
       horizontalOverflow:grid.scrollWidth>grid.clientWidth,
       contained:[...grid.children].every(card=>{
@@ -44,8 +45,11 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
         const art=card.querySelector('.roudy-search-shortcut-art').getBoundingClientRect();
         const copy=card.querySelector('.roudy-search-shortcut-copy');
         const text=copy.getBoundingClientRect();
+        const signature=card.querySelector('.roudy-search-shortcut-signature'),brand=signature.getBoundingClientRect();
+        const word=card.querySelector('.roudy-search-shortcut-word');
         return art.left>=bounds.left-1&&art.right<=bounds.right+1&&art.top>=bounds.top-1&&art.bottom<=bounds.bottom+1&&
-          text.left>=art.left&&text.right<=art.right&&text.top>=art.top&&text.bottom<=art.bottom&&copy.scrollWidth<=copy.clientWidth+1;
+          text.left>=bounds.left-1&&text.right<=bounds.right+1&&text.top>=art.bottom-1&&text.bottom<=bounds.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&
+          brand.left>=art.left&&brand.right<=art.right&&brand.bottom<=art.bottom&&signature.scrollWidth<=signature.clientWidth+1&&word.scrollWidth<=word.clientWidth+1;
       })
     }));
     assert.deepEqual(geometry,{horizontalOverflow:false,contained:true},`atalhos contidos em ${width}px`);
@@ -89,15 +93,16 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.equal(mobileCards[2].y,mobileCards[3].y);
   assert.ok(mobileCards[0].y<mobileCards[2].y);
   assert.ok(mobileCards.every(card=>card.width===mobileCards[0].width&&card.height===mobileCards[0].height));
-  assert.ok(mobileCards.every(card=>Math.abs(card.width-117)<1&&Math.abs(card.height-card.width)<1));
-  for(const element of ['strong','small span']){
-    const typography=await page.locator('.roudy-search-shortcut-copy '+element).evaluateAll(nodes=>nodes.map(node=>{
+  assert.ok(mobileCards.every(card=>Math.abs(card.width-117)<1&&Math.abs(card.height-card.width*2/3)<1));
+  assert.equal(await page.locator('.roudy-search-shortcut-art img').count(),0,'artes tipográficas substituem as fotos');
+  assert.equal(await page.locator('.roudy-search-shortcut-rd').first().evaluate(node=>getComputedStyle(node).maskImage.includes('roudy-rd-premium.svg')),true,'assinatura original no lugar da maçã da referência');
+  for(const [selector,expectedWeight] of [['.roudy-search-shortcut-signature','700'],['.roudy-search-shortcut-copy small span','400']]){
+    const typography=await page.locator(selector).evaluateAll(nodes=>nodes.map(node=>{
       const {fontFamily,fontSize,fontWeight,lineHeight,letterSpacing}=getComputedStyle(node);
       return {fontFamily,fontSize,fontWeight,lineHeight,letterSpacing};
     }));
     assert.equal(typography.length,4);
     for(const [index,style] of typography.entries()){
-      const expectedWeight=element==='small span'?'400':'700';
       assert.deepEqual(style,{...typography[0],fontWeight:expectedWeight});
     }
   }

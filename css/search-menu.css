@@ -15,74 +15,83 @@
   gap:var(--explore-gap);
 }
 .roudy-search-shortcut{
+  --shortcut-accent:#0789e7;
+  --shortcut-label:#07599e;
+  --shortcut-footer:#546a79;
   position:relative;
-  display:block;
+  display:grid;
+  grid-template-rows:auto 1fr;
   min-width:0;
   padding:0;
   overflow:hidden;
   border:0;
-  border-radius:17%;
-  background:var(--ui-control);
-  color:var(--text-primary);
+  border-radius:clamp(8px,2vw,12px);
+  background:#f5f5f7;
+  color:#424247;
   text-align:left;
   cursor:pointer;
 }
-.roudy-search-shortcut:focus-visible{outline:2px solid #0789e7;outline-offset:2px}
-.roudy-search-shortcut-art{
-  display:block;
-  aspect-ratio:1;
-}
-.roudy-search-shortcut-art img{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.roudy-search-shortcut--playlists{background:#ddd;color:#131315}
-.roudy-search-shortcut--medley{background:#071560}
-.roudy-search-shortcut:not(.roudy-search-shortcut--playlists)::before{
+.roudy-search-shortcut--playlists{--shortcut-accent:#e62c8b;--shortcut-label:#9d1f5c;--shortcut-footer:#795665}
+.roudy-search-shortcut--medley{--shortcut-accent:#0952eb;--shortcut-label:#0644b9;--shortcut-footer:#4b617e}
+.roudy-search-shortcut--events{--shortcut-accent:#e81a32;--shortcut-label:#b5112a;--shortcut-footer:#7c555d}
+.roudy-search-shortcut:focus-visible{outline:2px solid var(--roudy-electric-blue);outline-offset:3px}
+.roudy-search-shortcut-art{position:relative;display:block;aspect-ratio:3/2;background:#f5f5f7}
+.roudy-search-shortcut-word{
   position:absolute;
-  inset:43% 0 0;
-  background:linear-gradient(to top,rgba(0,0,0,.84),rgba(0,0,0,.57) 53%,transparent);
-  pointer-events:none;
-  content:"";
-}
-.roudy-search-shortcut-copy{
-  position:absolute;
-  inset:auto 7% 8%;
+  inset:9% 7% 30%;
   display:grid;
-  gap:4px;
-  font-family:var(--font-ui);
-}
-.roudy-search-shortcut-copy strong{
-  display:flex;
-  align-items:baseline;
-  gap:.32em;
-  font-size:clamp(13px,3.9vw,24px);
-  font-weight:var(--weight-title);
-  line-height:1.06;
-  letter-spacing:-.035em;
+  place-items:center;
+  color:var(--shortcut-accent);
+  font:900 italic clamp(24px,7.5vw,48px)/.95 var(--font-display);
+  letter-spacing:-.04em;
+  text-transform:uppercase;
   white-space:nowrap;
 }
+.roudy-search-shortcut--playlists .roudy-search-shortcut-word{font-size:clamp(20px,6.4vw,40px)}
+.roudy-search-shortcut-signature{
+  position:absolute;
+  right:6%;
+  bottom:9%;
+  left:6%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.26em;
+  color:#424247;
+  font:var(--weight-title) clamp(11px,3.2vw,20px)/1 var(--font-ui);
+  letter-spacing:-.045em;
+  white-space:nowrap;
+}
+.roudy-search-shortcut-signature>span:last-child{color:var(--shortcut-label)}
 .roudy-search-shortcut-rd{
-  width:1.08em;
-  height:.74em;
+  display:block;
+  width:1.12em;
+  height:.78em;
   flex:none;
   background:currentColor;
-  -webkit-mask:url("../assets/search/rd.svg") center / contain no-repeat;
-  mask:url("../assets/search/rd.svg") center / contain no-repeat;
+  -webkit-mask:url('../assets/icons/roudy-rd-premium.svg') center/contain no-repeat;
+  mask:url('../assets/icons/roudy-rd-premium.svg') center/contain no-repeat;
+}
+.roudy-search-shortcut-copy{
+  display:flex;
+  min-width:0;
+  min-height:64px;
+  padding:9px 8%;
+  align-items:center;
+  background:var(--shortcut-footer);
+  color:#fff;
+  font-family:var(--font-ui);
 }
 .roudy-search-shortcut-copy small{
   display:flex;
+  width:100%;
+  min-width:0;
   align-items:flex-start;
   gap:.4em;
-  color:#e4e4e7;
-  font-size:clamp(12px,3vw,16px);
-  font-weight:var(--weight-body);
-  line-height:1.25;
-  min-height:2.5em;
+  color:inherit;
+  font:var(--weight-body) clamp(12px,3vw,16px)/1.25 var(--font-ui);
 }
-.roudy-search-shortcut--playlists small{color:#38383b;font-weight:var(--weight-body)}
+.roudy-search-shortcut-copy small span{min-width:0;overflow-wrap:anywhere}
 .roudy-search-shortcut-copy small svg{
   width:1em;
   height:1em;
