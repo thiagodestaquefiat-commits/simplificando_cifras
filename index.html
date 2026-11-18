@@ -4366,9 +4366,7 @@ async function acceptPendingEventInvitation(){
 const legacyCurrentUser=storage.get('sc_current_user_v1',{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null})||{id:'local-user',name:'Você',role:'Liderança',avatarUrl:null};
 let appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
 let appCurrentUser=Object.freeze({...appIdentity.user,role:appIdentity.user.role||'Liderança'});
-// Mobile Deploy Previews may enter as a guest; production authentication is unchanged.
-const mobilePreviewGuest=/^deploy-preview-\d+--simplificandocifras\.netlify\.app$/.test(location.hostname)&&matchMedia('(max-width:767px)').matches&&new URLSearchParams(location.search).get('testLogin')!=='1';
-let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false,loginGatePassed=mobilePreviewGuest,loginGateAuthReady=false,promptedGuestLibraryOwner=null;
+let appBands=[],activeBandId=storage.get('sc_active_band_id_v1',null),currentAuthState={enabled:false,authenticated:false,user:null},authLinking=false,eventSyncRunning=false,loginGatePassed=false,loginGateAuthReady=false,promptedGuestLibraryOwner=null;
 const ACCOUNT_PROFILES_KEY='sc_account_profiles_v1',APP_SETTINGS_KEY='sc_settings_v3';
 const CHORD_COLOR_OPTIONS=Object.freeze({gold:'#D8C278',coral:'#E8896B',red:'#EF4444',orange:'#FF8822',yellow:'#FACC15',green:'#22C55E',blue:'#3B82F6',purple:'#A78BFA',pink:'#F472B6',white:'#F8FAFC'});
 const APP_SETTINGS_DEFAULT={language:'pt-BR',theme:'dark',themeVersion:2,highContrast:false,colorBlind:false,scale:100,chordColor:'orange'};

@@ -19,7 +19,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile())return route.fulfill({status:404,body:''});
     return route.fulfill({contentType:types[path.extname(file)]||'application/octet-stream',body:fs.readFileSync(file)});
   });
-  for(const [width,query,hidden] of [[390,'',true],[820,'',false],[390,'?testLogin=1',false]]){
+  for(const [width,query,hidden] of [[390,'',false],[820,'',false],[390,'?testLogin=1',false]]){
     await page.setViewportSize({width,height:844});
     await page.goto(`https://${host}/${query}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>loginGateAuthReady);
@@ -27,5 +27,5 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     assert.equal(await page.evaluate(()=>appAuth.getState().authenticated),false,'atalho entra como convidado, sem fabricar sessão');
   }
   assert.deepEqual(errors,[]);
-  console.log('mobile-preview-guest-ui.test.js: OK');
+  console.log('mobile-preview-login-ui.test.js: OK');
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});
