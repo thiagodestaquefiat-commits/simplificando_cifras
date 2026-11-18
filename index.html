@@ -4315,7 +4315,7 @@ function renderAddSongEventSheet(){
     const status=chat?'›':exists
       ?'<svg class="playlist-picker-status" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-7"/></svg>'
       :'<svg class="playlist-picker-status" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg>';
-    return `<button type="button" class="add-song-event-row${chat?'':' playlist-picker-row'}${exists?' is-selected':''}" ${exists?'disabled':''} onclick="${action}(${attrJs(event.id)},${attrJs(song.id)}${chat?'':',this'})" aria-label="${eventEsc(chat?`Enviar ${song.title} no chat de ${event.title}`:exists?`${song.title} já está em ${event.title}`:`Adicionar ${song.title} a ${event.title}`)}">${eventChatEventArtwork(event,"add-song-event-art")}<span class="add-song-event-copy${chat?'':' playlist-picker-copy'}"><strong>${eventEsc(event.title)}</strong><small>${eventEsc(secondary)}</small></span>${chat?'<span class="add-song-event-state" aria-hidden="true">›</span>':status}</button>`;
+    return `<button type="button" class="add-song-event-row${chat?'':' playlist-picker-row'}${exists?' is-selected':''}" aria-pressed="${exists}" onclick="${action}(${attrJs(event.id)},${attrJs(song.id)}${chat?'':',this'})" aria-label="${eventEsc(chat?`Enviar ${song.title} no chat de ${event.title}`:exists?`${song.title} já está em ${event.title}`:`Adicionar ${song.title} a ${event.title}`)}">${eventChatEventArtwork(event,"add-song-event-art")}<span class="add-song-event-copy${chat?'':' playlist-picker-copy'}"><strong>${eventEsc(event.title)}</strong><small>${eventEsc(secondary)}</small></span>${chat?'<span class="add-song-event-state" aria-hidden="true">›</span>':status}</button>`;
   }
 }
 function showAddSongEventSheet(song,returnFocus,mode='repertoire'){
@@ -4339,7 +4339,13 @@ function openNewRepertoireForSong(songId){
 }
 function addSongToEvent(eventId,songId,trigger){
   const event=findEvent(eventId),song=addSongEventSource(songId);if(!event||!song)return;
-  if(event.repertoire.some(item=>String(item.songId)===String(song.id))){showToast('A música já está neste repertório.');return}
+  const actor=eventPermissionActor(event);if(!eventModel.canEditShared(event,actor.id))return;
+  const exists=event.repertoire.some(item=>String(item.songId)===String(song.id));
+  if(exists){
+    const updated=eventModel.withSharedChange(eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.songId)!==String(song.id)).map((item,order)=>({...item,order})),syncState:'pending',pendingShared:true}),actor,'repertoire.song.removed',`removeu ${song.title} do repertório oficial`);
+    const next=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(next)){showToast('Não foi possível remover a música.');return;}
+    setlists=next;renderSetlists();if(trigger){trigger.disabled=false;trigger.classList.remove('is-selected');trigger.setAttribute('aria-pressed','false');const icon=trigger.querySelector('.playlist-picker-status');if(icon)icon.innerHTML='<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>';const caption=trigger.querySelector('small');if(caption)caption.textContent='Adicionar ao repertório';}return;
+  }
   const repertoireItem={id:'rep_'+Date.now(),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
   const repertoire=[...event.repertoire,repertoireItem];
   let updated=eventModel.create({...event,repertoire,syncState:'pending',pendingShared:true});
@@ -4349,7 +4355,7 @@ function addSongToEvent(eventId,songId,trigger){
   setlists=nextEvents;renderSetlists();
   const icon=trigger?.querySelector('.playlist-picker-status');
   if(icon){
-    trigger.disabled=true;
+    trigger.disabled=false;trigger.setAttribute('aria-pressed','true');
     trigger.classList.add('is-selected');
     icon.innerHTML='<circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-7"/>';
   }
@@ -6241,21 +6247,24 @@ function renderEventAddSongs(){
   if(state.filter==='playlists'){const lists=(window.userPlaylists?userPlaylists.list(appCurrentUser.id):[]).filter(list=>!query||list.name.toLocaleLowerCase('pt-BR').includes(query));
     target.innerHTML=lists.map(list=>{const missing=homePlaylists.eventItemsFromPlaylist(list,event).length;return `<div class="event-admin-song-row">${homePlaylists.artworkForPlaylist(list)}<span class="event-admin-song-copy"><strong>${eventEsc(list.name)}</strong><small>${missing?`${missing} ${missing===1?'música entra':'músicas entram'} no tom da playlist`:'Todas já estão no repertório'}</small></span><button type="button" class="event-admin-add-button${missing?'':' is-added'}" ${missing?'':'disabled'} onclick="addUserPlaylistToEventSheet(${attrJs(list.id)})" aria-label="Adicionar a playlist ${eventEsc(list.name)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`;}).join('')||'<div class="event-admin-empty">Você ainda não tem playlists. Crie na aba Home.</div>';return;}
   const usage=eventSongUsage(event.id),lastOpened=storage.get(HOME_CARD_LAST_SONG_KEY,null)?.songId;
-  let available=[...musicas].filter(song=>!present.has(String(song.id)));
+  let available=[...musicas].filter(song=>!present.has(String(song.id))||state.added.has(String(song.id)));
   if(state.filter==='recent')available.sort((a,b)=>(String(b.id)===String(lastOpened)?1:0)-(String(a.id)===String(lastOpened)?1:0)||(Date.parse(b.updatedAt||b.createdAt||0)||0)-(Date.parse(a.updatedAt||a.createdAt||0)||0));
   else if(state.filter==='repertoires')available=available.filter(song=>usage.has(String(song.id))).sort((a,b)=>(usage.get(String(b.id))||0)-(usage.get(String(a.id))||0)||String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
   else available.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
   available=available.filter(song=>!query||`${song.title||''} ${song.artist||''}`.toLocaleLowerCase('pt-BR').includes(query));
   const emptyText=query?'Nenhuma música encontrada.':state.filter==='repertoires'?'Nenhuma música de outros repertórios disponível.':'Todas as músicas já estão neste repertório.';
-  target.innerHTML=available.map(song=>`<div class="event-admin-song-row">${eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${eventEsc(song.title)}</strong>${song.artist?`<small>${eventEsc(song.artist)}</small>`:''}</span><button type="button" class="event-admin-add-button" onclick="addSongFromEventSheet(${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`).join('')||`<div class="event-admin-empty">${emptyText}</div>`;
+  target.innerHTML=available.map(song=>`<div class="event-admin-song-row">${eventSongArtwork(song)}<span class="event-admin-song-copy"><strong>${eventEsc(song.title)}</strong>${song.artist?`<small>${eventEsc(song.artist)}</small>`:''}</span><button type="button" class="event-admin-add-button${present.has(String(song.id))?' is-added':''}" aria-pressed="${present.has(String(song.id))}" onclick="addSongFromEventSheet(${attrJs(song.id)},this)" aria-label="Adicionar ${eventEsc(song.title)} ao repertório"><svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M7 12h10"></path></svg><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m7.5 12 3 3 6-7"></path></svg></button></div>`).join('')||`<div class="event-admin-empty">${emptyText}</div>`;
 }
 function addSongFromEventSheet(songId,button){
-  const state=eventAdminSheetState;let event=state&&findEvent(state.eventId);const song=musicas.find(item=>String(item.id)===String(songId));if(!event||!song||event.repertoire.some(item=>String(item.songId)===String(song.id)))return;
-  button.disabled=true;button.classList.add('is-added');button.setAttribute('aria-label',`${song.title} adicionada ao repertório`);
-  const repertoireItem={id:'rep_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),songId:song.id,order:event.repertoire.length,shared:eventEditFromSong(eventSongCopy(song)),personalEdits:{}};
-  event=eventModel.create({...event,repertoire:[...event.repertoire,repertoireItem],syncState:'pending',pendingShared:true});event=eventModel.withSharedChange(event,eventPermissionActor(event),'repertoire.song.added',`adicionou ${song.title} ao repertório oficial`,{songId:song.id,changeType:'SONG_ADDED',after:{repertoireItemId:repertoireItem.id,songId:song.id}});
-  setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);renderSetlists();openSD(event.id);state.added.add(String(song.id));setTimeout(()=>{if(eventAdminSheetState===state)renderEventAddSongs()},360);
+  const state=eventAdminSheetState;const event=state&&findEvent(state.eventId),song=musicas.find(item=>String(item.id)===String(songId));if(!event||!song)return;
+  addSongEventSheetSong=null;
+  addSongToEvent(event.id,song.id);
+  const added=findEvent(event.id).repertoire.some(item=>String(item.songId)===String(song.id));
+  if(added)state.added.add(String(song.id));else state.added.delete(String(song.id));
+  button.disabled=false;button.classList.toggle('is-added',added);button.setAttribute('aria-pressed',String(added));button.setAttribute('aria-label',`${added?'Remover':'Adicionar'} ${song.title} ${added?'do':'ao'} repertório`);
+  openSD(event.id);
 }
+
 function addUserPlaylistToEventSheet(playlistId){
   const state=eventAdminSheetState,eventId=state&&state.eventId;if(!eventId)return;
   const event=homePlaylists.addPlaylistToEvent(playlistId,eventId);if(event)openSD(event.id);

@@ -23,6 +23,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.getByRole('button',{name:'Adicionar ao repertório',exact:true}).click();
   await page.locator('[data-repertoire-options] button').filter({hasText:'Próximo evento'}).click();
   const saved=await page.evaluate(()=>findEvent('snapshot-event').repertoire[0]);
+  const toggle=page.locator('#add-song-event-list .add-song-event-row').filter({hasText:'Próximo evento'});
+  await toggle.click();assert.equal(await page.evaluate(()=>findEvent('snapshot-event').repertoire.length),0,'second click removes song');
+  await toggle.click();assert.equal(await page.evaluate(()=>findEvent('snapshot-event').repertoire.length),1,'third click adds again');
+  await page.evaluate(()=>renderAddSongEventSheet());
+  await page.locator('#add-song-event-list .add-song-event-row').filter({hasText:'Próximo evento'}).click();
+  assert.equal(await page.evaluate(()=>findEvent('snapshot-event').repertoire.length),0,'already selected rows remain removable after render');
   assert.equal(saved.songId,'snapshot-only');assert.equal(saved.shared.key,'A');assert.equal(saved.shared.songData.title,'Só na playlist');
   assert.equal(await page.evaluate(()=>musicas.length),0,'adding snapshot must not change personal library');
   await page.evaluate(()=>{closeAddSongEventSheet();document.getElementById('view-detail').style.display='flex';openInstModal();});
