@@ -86,7 +86,7 @@
       threeDaysUnknown: Object.freeze([variant('Adivinha quem toca em {daysUntil} dias? Isso mesmo. Você.', F, 'pergunta-revelacao'), variant('{eventName} está a {daysUntil} dias. O calendário não mente.', F, 'fato-comentario')]),
       weekReady: Object.freeze([variant('{eventName} está no radar e o repertório já foi revisado.', F, 'fato-reconhecimento')]),
       weekPending: Object.freeze([variant('Uma semana para {eventName}. Há músicas aguardando revisão.', D, 'fato-acao'), variant('{eventName} vem aí. Uma música por vez mantém o improviso desesperado longe.', O, 'fato-humor')]),
-      weekUnknown: Object.freeze([variant('{eventName} está no radar. O repertório pode ser aberto quando você quiser.', D, 'fato-neutro'), variant('O calendário está dizendo que temos música chegando: {eventName}.', F, 'fato-comentario')]),
+      weekUnknown: Object.freeze([variant('Faltam {daysUntil} dias! Que tal dar uma passada no repertório de “{eventName}”?', F, 'fato-convite'), variant('O calendário está dizendo que temos uma apresentação chegando: “{eventName}”!', F, 'fato-comentario')]),
       newEvent: Object.freeze([variant('{eventName} entrou na agenda. Os bastidores estão abertos.', F, 'bastidores-convite'), variant('Evento novo no radar: {eventName}.', D, 'fato-neutro')])
     })
   });
