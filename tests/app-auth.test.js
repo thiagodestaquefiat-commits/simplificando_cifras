@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, "..", "js/app-auth.js"), 
 function createAuthHarness(options = {}) {
   const storage = options.storage || new Map();
   const listeners = [];
-  const calls = { exchange: [], oauth: [], otp: [], updateUser: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
+  const calls = { exchange: [], oauth: [], otp: [], password: [], updateUser: [], authEvents: [], replaceState: [], createOptions: null, createClients: 0, configFetches: 0, getSession: 0, signOut: 0, logs: [] };
   const user = { id: "user-1", email: "musico@example.com", user_metadata: { full_name: "Músico" } };
   const exchangedSession = { access_token: "access-token", user };
   let currentSession = options.initialSession || null;
@@ -23,6 +23,7 @@ function createAuthHarness(options = {}) {
       return { data: { session: currentSession }, error: null };
     },
     onAuthStateChange(listener) { listeners.push(listener); return { data: { subscription: { unsubscribe() {} } } }; },
+    async signInWithPassword(payload) { calls.password.push(payload); return options.passwordError ? { data: {session:null}, error: new Error('provider detail') } : { data: {session:exchangedSession}, error:null }; },
     async signInWithOtp(payload) { calls.otp.push(payload); return { error: null }; },
     async signInWithOAuth(payload) { calls.oauth.push(payload); return { error: null }; },
     async updateUser(attributes) { calls.updateUser.push(attributes);currentSession={...currentSession,user:{...currentSession.user,email:attributes.email||currentSession.user.email,user_metadata:{...currentSession.user.user_metadata,...attributes.data}}};return {data:{user:currentSession.user},error:null}; },
@@ -167,5 +168,17 @@ function createAuthHarness(options = {}) {
   const failedPhoto=createAuthHarness({avatarFailure:true,initialSession:{access_token:'photo-token',user:{id:'photo-user',user_metadata:{}}}});
   await failedPhoto.window.appAuth.initialize();
   await assert.rejects(()=>failedPhoto.window.appAuth.updateProfile({name:'A',avatarUrl:image}),/não foi possível guardá-la/,'não anunciar persistência remota quando o servidor falha');
+  const passwordLogin=createAuthHarness();
+  await passwordLogin.window.appAuth.initialize();
+  const passwordState=await passwordLogin.window.appAuth.signInWithPassword(' musico@example.com ','test-password');
+  assert.equal(passwordState.authenticated,true);
+  assert.equal(passwordState.user.id,'user-1');
+  assert.equal(passwordLogin.calls.password[0].email,'musico@example.com');
+  assert.equal(passwordLogin.calls.password[0].password,'test-password');
+  const invalidPassword=createAuthHarness({passwordError:true});
+  await invalidPassword.window.appAuth.initialize();
+  await assert.rejects(()=>invalidPassword.window.appAuth.signInWithPassword('test@example.com','wrong'),/Confira o e-mail e a senha/);
+  assert.equal(invalidPassword.window.appAuth.getState().authenticated,false);
+  await assert.rejects(()=>disabled.window.appAuth.signInWithPassword('test@example.com','wrong'),/não foi configurado/);
   console.log("app-auth.test.js: OK (Google, PKCE, persistência, renovação, logout, redirects e foto da conta)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

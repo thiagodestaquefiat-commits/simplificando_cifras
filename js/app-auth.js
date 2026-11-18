@@ -173,6 +173,14 @@
     if (result.error) throw new Error("Não foi possível enviar o link de acesso. Confira o e-mail e tente novamente.");
   }
 
+  async function signInWithPassword(email, password) {
+    if (!client) throw new Error("O login ainda não foi configurado pela equipe.");
+    const result = await withTimeout(client.auth.signInWithPassword({ email: String(email || '').trim(), password }), "A conexão demorou. Tente novamente.");
+    if (result.error || !result.data?.session?.user) throw new Error("Não foi possível entrar. Confira o e-mail e a senha ou use Entrar sem senha.");
+    session = result.data.session; offlineSession = false; emit();
+    return getState();
+  }
+
   async function signOut() {
     if(offlineSession){const key=sessionStorageKey();if(key)global.localStorage.removeItem(key);client?.auth?.stopAutoRefresh?.();authSubscription?.unsubscribe?.();authSubscription=null;client=null;session=null;offlineSession=false;emit();return;}
     if (!client) return;
@@ -229,5 +237,5 @@
   function refreshConfiguration() { return initialize(true); }
   global.addEventListener?.('online',()=>{if(offlineSession)initialize(true).catch(()=>{});});
 
-  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
+  global.appAuth = Object.freeze({ initialize, refreshConfiguration, signInWithGoogle, signInWithEmail, signInWithPassword, signOut, updateProfile, subscribe, getAccessToken, getState, createRealtimeChannel, removeRealtimeChannel });
 })(window);

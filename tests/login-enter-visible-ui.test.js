@@ -25,7 +25,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   await page.getByRole('button',{name:'Continuar sem login'}).scrollIntoViewIfNeeded();
   assert.equal(await page.getByRole('button',{name:'Continuar sem login'}).isVisible(),true);
   await page.getByRole('button',{name:'Entrar',exact:true}).click();
-  assert.equal(await page.locator('#login-email-form').isVisible(),true);
+  assert.equal(await page.locator('#login-signin-form').isVisible(),true);
   assert.deepEqual(errors,[]);
   console.log('login-enter-visible-ui.test.js: OK');
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}})().catch(error=>{console.error(error);process.exitCode=1});

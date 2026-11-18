@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync('js/login-signin.js','utf8');
+const saved=new Map(),nodes=new Map();let listener;
+const localStorage={getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)};
+const window={accountProfile:()=>({name:'Nome local',avatarUrl:'https://example.test/avatar.png'}),appAuth:{subscribe(fn){listener=fn;fn({authenticated:false});}}};
+const document={getElementById(id){if(!nodes.has(id))nodes.set(id,{value:'',addEventListener(){}});return nodes.get(id);}};
+vm.runInNewContext(source,{window,document,localStorage});
+assert.equal(saved.size,0,'não inventa conta lembrada para convidado');
+listener({authenticated:true,user:{id:'a',name:'Nome',email:'a@example.com',access_token:'never-store'}});
+const first=JSON.parse(saved.get('sc_remembered_login_v1'));
+assert.deepEqual(Object.keys(first).sort(),['avatarUrl','email','id','name']);
+assert.equal(first.name,'Nome local');assert.equal(first.email,'a@example.com');
+listener({authenticated:false});assert.equal(JSON.parse(saved.get('sc_remembered_login_v1')).id,'a','logout preserva somente a identificação');
+listener({authenticated:true,user:{id:'b',email:'b@example.com'}});
+assert.equal(JSON.parse(saved.get('sc_remembered_login_v1')).id,'b','troca de conta substitui a identificação lembrada');
+console.log('login-signin.test.js: OK');
