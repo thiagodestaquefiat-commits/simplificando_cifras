@@ -42,7 +42,12 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     const outer=getComputedStyle(card,'::before'),inner=getComputedStyle(card,'::after'),style=getComputedStyle(card);
     return {outer:outer.content,inner:inner.borderTopWidth,highlight:inner.backgroundImage,mask:inner.maskComposite,thickness:inner.paddingTop,inset:inner.top,curve:parseFloat(style.borderTopLeftRadius)-parseFloat(inner.borderTopLeftRadius),pointerEvents:inner.pointerEvents,boxSizing:inner.boxSizing,shadow:inner.boxShadow,elevation:style.boxShadow,radius:parseFloat(style.borderTopLeftRadius),layoutBorder:style.borderTopWidth};
   }));
-  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.inner==='0px'&&value.highlight.includes('linear-gradient')&&value.mask.includes('exclude')&&value.thickness==='2px'&&value.inset==='0px'&&Math.abs(value.curve)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow==='none'&&!value.elevation.includes('inset')&&value.elevation.includes('18px')&&value.radius>=12&&value.layoutBorder==='0px'),'frame único com nuances restrito ao perímetro, sem alterar a superfície ou a geometria');
+  assert.ok(frames.every(value=>['none','normal'].includes(value.outer)&&value.inner==='0px'&&value.highlight.includes('linear-gradient')&&value.mask.includes('exclude')&&value.thickness==='1.5px'&&value.inset==='0px'&&Math.abs(value.curve)<.01&&value.pointerEvents==='none'&&value.boxSizing==='border-box'&&value.shadow==='none'&&!value.elevation.includes('inset')&&value.elevation.includes('18px')&&value.radius>=12&&value.layoutBorder==='0px'),'frame único com nuances restrito ao perímetro, sem alterar a superfície ou a geometria');
+
+  assert.ok(frames.every(value=>value.highlight===frames[0].highlight),'as bordas não herdam rosa/azul do painel');
+  for(const color of frames[0].highlight.matchAll(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/g)){
+    assert.equal(color[1],color[2]);assert.equal(color[2],color[3]);assert.ok(Number(color[4])<.4,'luz e sombra neutras e translúcidas');
+  }
   const firstFrame=page.locator('.roudy-search-shortcut').first();
   for(const reduced of ['no-preference','reduce']){
     await page.emulateMedia({reducedMotion:reduced});

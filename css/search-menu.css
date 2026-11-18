@@ -41,15 +41,11 @@
   text-align:left;
   cursor:pointer;
 }
-/* One continuous frame with tonal nuances, confined to a 2px perimeter. */
+/* Neutral translucent light/shade follows the pixels beneath, not the footer hue. */
 .roudy-search-shortcut::after{
   content:"";position:absolute;inset:0;z-index:3;box-sizing:border-box;
-  padding:2px;border-radius:inherit;
-  background:linear-gradient(145deg,
-    color-mix(in srgb,var(--card-panel-color) 66%,#c6cfd7),
-    color-mix(in srgb,var(--card-panel-color) 68%,#15191e) 32%,
-    #20262d 65%,
-    color-mix(in srgb,var(--card-panel-color) 80%,#a3afb9));
+  padding:1.5px;border-radius:inherit;
+  background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(0,0,0,.18) 32%,rgba(0,0,0,.32) 68%,rgba(255,255,255,.10));
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
   mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;

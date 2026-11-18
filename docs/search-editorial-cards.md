@@ -158,3 +158,9 @@ Following the supplied reference, the active-search header keeps the canonical n
 Design basis: HIG Layout / Visual hierarchy and Materials were retrieved earlier in this task; they support grouping and visual separation of controls/content. Exact tonal mix and 12px edge are ROUDY-specific choices matching the user's reference, not Apple-prescribed values.
 
 Validation: Chrome suite checks the actual scroll-content/header colors differ, edge height/gradient/pointer behavior, removal on Cancel and absence of the blue input outline. Existing responsive routes and searches remain passing; screenshot inspected.
+
+## Neutral depth instead of a tinted applied frame
+
+The panel-derived opaque ring incorrectly tinted white artwork pink/blue. Replaced it with a thinner 1.5px center-excluding ring using only translucent white light and black shade. Thus the actual image/panel pixels show through without importing the footer hue into the artwork. External elevation remains; no second contour or surface fill. No changes to layout, assets, blur or text.
+
+Validation: Chrome suite confirms identical neutral translucent edge treatment across four differently colored panels, equal RGB channels, opacity below 40%, preserved geometry and routes. Visual inspection confirms no pink edge over the white artwork. Applies the user's explicit correction to the previously approved border treatment.
