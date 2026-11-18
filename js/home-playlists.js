@@ -14,7 +14,16 @@
   let suppressPlaylistClickId = null;
   let coverCropState = null;
 
-  const owner = () => (typeof appCurrentUser !== "undefined" && appCurrentUser && appCurrentUser.id) || "local";
+  // Ao abrir o app logado, mostra na hora as playlists guardadas da última conta deste aparelho
+  // (só se a sessão salva for da mesma conta), enquanto o login confirma a conta pela internet.
+  let provisionalOwner = null;
+  const owner = () => provisionalOwner || (typeof appCurrentUser !== "undefined" && appCurrentUser && appCurrentUser.id) || "local";
+  function setProvisionalOwner(value) {
+    const next = value ? String(value) : null;
+    if (next === provisionalOwner) return;
+    provisionalOwner = next;
+    if (view === "home") renderHome();
+  }
   const esc = (value) => global.eventEsc(String(value ?? ""));
   const js = (value) => global.attrJs(value);
   const pane = () => document.getElementById("pane-musicas");
@@ -925,6 +934,7 @@
     openAddSongs, filterAdd, addSong, chooseForSong, addSongTo, useInEvent, addPlaylistToEvent, eventItemsFromPlaylist, share, openReceived, saveReceived, saveReceivedFrom, checkSharedLink,
     refreshCollaboration() { if (view === 'playlist') renderPlaylist(); else if (view === 'home') renderHome(); },
     isCollaborativeContext, saveItemSong,
+    setProvisionalOwner,
     get ownerId() { return owner(); }, get view() { return view; }, get currentPlaylistId() { return currentPlaylistId; }
   });
 })(window);

@@ -1469,7 +1469,7 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
  <script src="js/notification-center.js?v=8"></script>
 <script src="js/user-playlists.js?v=6"></script>
 <script src="js/song-share.js?v=1"></script>
-<script src="js/home-playlists.js?v=27"></script>
+<script src="js/home-playlists.js?v=28"></script>
 <script src="js/playlist-collaboration.js?v=1"></script>
 <script src="js/personal-playlist-sync.js?v=3"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
@@ -6694,7 +6694,11 @@ appAuth.subscribe(async state=>{
     document.getElementById('view-sd').style.display='none';closeDetail();switchTab('musicas');
   }
   currentAuthState=state;renderAccountButton();renderLoginGate(state);
+  // Conta diferente da guardada: nunca mostrar as playlists da outra conta.
+  if(state.authenticated&&state.user&&cachedAccountOwner()?.authUserId!==String(state.user.id))homePlaylists.setProvisionalOwner(null);
   if(!state.authenticated){
+    // Só esquece a conta guardada quando a sessão salva sumiu (tocou em Sair). Falha de rede não é sair.
+    if(!savedLoginUserId()){forgetCachedAccountOwner();homePlaylists.setProvisionalOwner(null);}
     contextAcknowledgements.resetHydration();
     appIdentity=eventCollaboration.ensureLocalIdentity(legacyCurrentUser);
     appCurrentUser=Object.freeze({...appIdentity.user});
@@ -6711,6 +6715,7 @@ appAuth.subscribe(async state=>{
     // A identidade estável já está pronta: mostra imediatamente avatar e playlists em cache,
     // e inicia a reconciliação na nuvem sem esperar eventos, convites e contexto terminarem.
     appCurrentUser=Object.freeze({...appCurrentUser,...accountProfile()});
+    rememberCachedAccountOwner(state.user.id,appCurrentUser.id);homePlaylists.setProvisionalOwner(null);
     renderAccountButton();homePlaylists.renderHome();
     personalPlaylistSync.schedule(0);
     const activation=eventRepository.activateOwner(appCurrentUser.id,setlists,appCurrentUser,[previousUser.id,...(appIdentity.legacyUserIds||[])]);
@@ -6737,6 +6742,16 @@ appAuth.subscribe(async state=>{
 librarySync.initialize({getSongs:()=>musicas,setSongs:value=>{musicas=value;},persist:value=>songRepository.save(value),render:renderMusicas,activateOwner:userId=>songRepository.activateOwner(userId,musicas,catalogoPadrao),deactivateOwner:()=>songRepository.deactivateOwner(musicas),declineOwnerMigration:()=>songRepository.declineActiveOwnerMigration(),onMigrationCandidate:openGuestLibraryImportPrompt,seedNewOwner:()=>demoLibrary.catalog(),confirmOwner:value=>songRepository.confirmActiveOwner(value),markDeletedMany:(values,confirmed)=>songRepository.markDeletedMany(values,confirmed),markDeleted:(value,confirmed)=>songRepository.markDeleted(value,confirmed),confirmDeleted:value=>songRepository.confirmDeleted(value),getDeletedClientIds:()=>songRepository.getDeletedClientIds(),getPendingDeletedClientIds:()=>songRepository.getPendingDeletedClientIds()});
 librarySync.subscribe(state=>{updateAccountSyncBadge(state);updateLibrarySyncHint(state);if(document.querySelector('[data-library-sync-status]'))renderLibrarySyncPanel(state);});
 syncRealtime.initialize({library:()=>librarySync.pull({silent:true}),event:()=>syncEventsNow(true),chat:eventId=>eventChat.refresh(eventId)});
+// Página inicial: guarda qual conta do ROUDY corresponde à sessão de login deste aparelho. Ao abrir o
+// app, se a sessão salva for dessa mesma conta, as playlists guardadas aparecem na hora, sem esperar o
+// login confirmar pela internet. Ao sair da conta, a lembrança é apagada.
+const CACHED_ACCOUNT_OWNER_KEY='roudy_cached_account_owner';
+function savedLoginUserId(){try{const key=Object.keys(localStorage).find(name=>/^sb-.+-auth-token$/.test(name));const saved=key&&JSON.parse(localStorage.getItem(key)||'null');return saved?.user?.id?String(saved.user.id):null;}catch(_){return null;}}
+function rememberCachedAccountOwner(authUserId,ownerId){try{if(authUserId&&ownerId)localStorage.setItem(CACHED_ACCOUNT_OWNER_KEY,JSON.stringify({authUserId:String(authUserId),ownerId:String(ownerId)}));}catch(_){}}
+function forgetCachedAccountOwner(){try{localStorage.removeItem(CACHED_ACCOUNT_OWNER_KEY);}catch(_){}}
+function cachedAccountOwner(){try{const cached=JSON.parse(localStorage.getItem(CACHED_ACCOUNT_OWNER_KEY)||'null');return cached?.authUserId&&cached?.ownerId?cached:null;}catch(_){return null;}}
+function showCachedAccountPlaylists(){try{const cached=cachedAccountOwner(),loginUser=savedLoginUserId();if(cached?.ownerId&&loginUser&&cached.authUserId===loginUser&&!currentAuthState.authenticated)homePlaylists.setProvisionalOwner(cached.ownerId);}catch(_){}}
+showCachedAccountPlaylists();
 appAuth.initialize().catch(()=>appAuth.getState()).then(state=>{loginGateAuthReady=true;renderLoginGate(state);automaticEventOffline.schedule();});
 window.addEventListener('online',()=>{if(pendingEventInvitation&&currentAuthState.authenticated)acceptPendingEventInvitation().then(joined=>{if(joined)syncEventsNow(true);});if(eventMigrationCandidate&&currentAuthState.authenticated)migrateLegacyEventsInBackground();else if(eventBackgroundSyncReady&&currentAuthState.authenticated)syncEventsNow(true);});
 window.addEventListener('online',()=>{if(!currentAuthState.authenticated)return;contextAcknowledgements.flush(appCurrentUser.id).then(()=>renderContextualHomeCard()).catch(()=>{});});
