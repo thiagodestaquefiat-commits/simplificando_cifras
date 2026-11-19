@@ -159,3 +159,7 @@ html #view-detail.stage-mode #detail-content .song-page-lyrics .wa-block.song-ly
 html #view-detail.stage-mode #detail-content .song-page-lyrics .stage-summary-label{display:none}
 /* Rolagem automática: a cifra pode receber um deslocamento de fração de pixel (ver startAutoScroll). */
 #view-detail.is-auto-scrolling #detail-content{will-change:transform}
+/* Modo Palco no PC (tela larga): a lista de eventos aparecia apagada nas laterais, atrás do palco.
+   Durante o palco, a tela de baixo fica invisível (continua carregada, só não aparece). */
+body.stage-active #view-main{visibility:hidden!important}
+body.stage-active,body.stage-active #app{background:#000!important;box-shadow:none!important}
