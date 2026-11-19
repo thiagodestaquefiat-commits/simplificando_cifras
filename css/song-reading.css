@@ -140,3 +140,9 @@
    Ao parar a rolagem, o visual volta. */
 #view-detail.is-auto-scrolling>.detail-header,#view-detail.is-auto-scrolling>.detail-header .back-btn,#view-detail.is-auto-scrolling>#song-controls,#view-detail.is-auto-scrolling .stage-performance-header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #view-detail.is-auto-scrolling:not(.stage-mode)>.detail-header{background:#080a0d!important}
+
+/* Modo Palco: a Letra + Cifras usa a largura da tela como no estudo (pedido do Thiago, 18/11).
+   O palco tinha 38px de margem dos dois lados e letra de 22px: as linhas quebravam a cada ~20 letras
+   e a cifra ficava espremida, com buracos. O resumo harmônico continua com o visual do palco. */
+html #view-detail.stage-mode .detail-body{padding-left:16px!important;padding-right:16px!important}
+html #view-detail.stage-mode #detail-content .full-chord-sheet:not(.lyrics-reading-sheet) .full-chord-line{font-size:calc(18px * var(--song-text-scale,1))!important;line-height:1.48!important;letter-spacing:0!important}
