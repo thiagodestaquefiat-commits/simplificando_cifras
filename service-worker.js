@@ -133,6 +133,7 @@ const ASSETS = [
   "./js/sheet-music.js?v=1",
   "./js/editor/song-format.js?v=15",
   "./js/editor/song-format.js?v=16",
+  "./js/editor/song-format.js?v=17",
   "./js/event-repository.js?v=10",
   "./js/closing-suggestions.js?v=1",
   "./js/assistant-intent-catalog.js?v=1",

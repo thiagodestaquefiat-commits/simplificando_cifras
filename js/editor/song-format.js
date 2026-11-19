@@ -70,8 +70,21 @@
   // separável...) faziam "D9" não ser reconhecido como acorde e aparecer na cor da letra.
   const INVISIBLE_CHARS = /[\u00ad\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\ufeff]/g;
   const ODD_SPACES = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
+  // Acordes grudados ("C#F#G#" numa intro) viram "C# F# G#". Só quando cada pedaço é acorde e o
+  // grupo tem sustenido, bemol ou número — assim palavras como "EBA" continuam sendo texto.
+  function expandGluedChords(line) {
+    const library = global.multiInstrumentChordLibrary;
+    if (!library) return line;
+    return line.replace(/\S+/g, (token) => {
+      if (token.length < 4 || !/[#b\d]/.test(token) || library.parseChord(token)) return token;
+      const pieces = token.match(/[A-G](?:#|b)?[^A-G\s]*/g);
+      if (!pieces || pieces.length < 2 || pieces.join("") !== token) return token;
+      return pieces.every((piece) => library.parseChord(piece)) ? pieces.join(" ") : token;
+    });
+  }
+
   function cleanSheetLine(value) {
-    return String(value == null ? "" : value).replace(INVISIBLE_CHARS, "").replace(ODD_SPACES, " ").replace(/\t/g, "    ");
+    return expandGluedChords(String(value == null ? "" : value).replace(INVISIBLE_CHARS, "").replace(ODD_SPACES, " ").replace(/\t/g, "    "));
   }
 
   // Parênteses, colchetes e barras em volta dos acordes ("( C#m A4 E )", "[G D]", "| C | G |")
