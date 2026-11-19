@@ -20,8 +20,8 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
     await page.locator('#btn-previous-song').click();assert.equal(await page.evaluate(()=>detailEventContext.itemId),'stage-ref-0','study header previous');
     await page.evaluate(()=>toggleStageModeBtn());
     assert.equal(await page.locator('#view-detail').evaluate(n=>n.classList.contains('stage-mode')),true);
-    await page.evaluate(()=>navigateSong(1));assert.equal(await page.evaluate(()=>detailEventContext.itemId),'stage-ref-1','next opens event snapshot without personal library');
-    await page.evaluate(()=>navigateSong(-1));assert.equal(await page.evaluate(()=>detailEventContext.itemId),'stage-ref-0','previous opens event snapshot');
+    await page.locator('#stage-next').click();assert.equal(await page.evaluate(()=>detailEventContext.itemId),'stage-ref-1','next opens event snapshot without personal library');
+    await page.locator('#stage-prev').click();assert.equal(await page.evaluate(()=>detailEventContext.itemId),'stage-ref-0','previous opens event snapshot');
     assert.equal(await page.evaluate(()=>currentSongView===stageExpectedView),true,'stage preserves selected content');
     assert.equal(await page.locator('#song-controls').isVisible(),false,'study expandable toolbar absent in stage');
     assert.equal(await page.locator('.stage-performance-header').isVisible(),true,'approved performance header visible');
