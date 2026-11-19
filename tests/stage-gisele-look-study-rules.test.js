@@ -6,8 +6,8 @@ assert.ok(/var STAGE_CLEAN=false;/.test(html),'o palco continua com a cara da Gi
 assert.ok(/var STAGE_STUDY_CONTENT=true;/.test(html),'o palco usa o conteúdo do estudo');
 assert.ok(/function stageUsesOwnContent\(\)\{return stageMode&&!STAGE_CLEAN&&!STAGE_STUDY_CONTENT;\}/.test(html));
 assert.ok(/detailContent\.innerHTML=stageUsesOwnContent\(\)\?stageHtml:/.test(html),'renderiza as páginas do estudo no palco');
-assert.ok(/indicator\.hidden=stageUsesOwnContent\(\);/.test(html),'pontinhos de página aparecem no palco');
+assert.ok(/indicator\.hidden=stageMode&&!STAGE_CLEAN;/.test(html),'sem pontinhos no palco (Thiago, 19/11)');
 assert.ok(/pointerType!=='touch'\|\|stageUsesOwnContent\(\)\|\|/.test(html),'dá para passar as páginas para o lado no palco');
 assert.ok(/html #view-detail\.stage-mode \.detail-body\{padding-left:0!important;padding-right:0!important/.test(css),'sem a margem de 38px do palco antigo');
-assert.ok(/html #view-detail\.stage-mode #song-page-indicator:not\(\[hidden\]\)\{display:flex!important/.test(css));
+assert.ok(!/stage-mode #song-page-indicator:not\(\[hidden\]\)/.test(css),'pontinhos não são forçados no palco');
 console.log('ok - palco com a cara da Gisele e as regras do estudo');

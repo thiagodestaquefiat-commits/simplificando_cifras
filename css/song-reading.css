@@ -145,7 +145,6 @@
    com as páginas (Letra + Cifras, resumo, letra) passando para o lado, a largura da tela e a mesma letra.
    As regras do palco antigo (margem de 38px, letra 22px negrito) deixavam a cifra espremida. */
 html #view-detail.stage-mode .detail-body{padding-left:0!important;padding-right:0!important;overflow-x:clip!important}
-html #view-detail.stage-mode #song-page-indicator:not([hidden]){display:flex!important;background:transparent}
 html #view-detail.stage-mode #detail-content .song-page{padding-left:16px;padding-right:16px}
 html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-section,.wa-block){padding-left:2px;padding-right:2px;margin-bottom:14px!important}
 html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-line.is-chord,.cp-chord,.chord-line,.smart-chord-token){font-size:calc(18px * var(--song-text-scale,1))!important;font-weight:600!important;line-height:1.42!important;letter-spacing:0!important;margin-bottom:0!important}

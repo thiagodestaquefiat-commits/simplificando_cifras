@@ -2981,7 +2981,7 @@ function loadSongPage(songId=currentDetailId){const saved=storage.get(songPageSt
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
-  indicator.hidden=stageUsesOwnContent();
+  indicator.hidden=stageMode&&!STAGE_CLEAN; // Thiago, 19/11: no palco sem os pontinhos; a troca é passando para o lado.
   indicator.querySelectorAll('[data-song-page]').forEach((dot,index)=>{
     if(index===currentSongPage)dot.setAttribute('aria-current','page');else dot.removeAttribute('aria-current');
   });
