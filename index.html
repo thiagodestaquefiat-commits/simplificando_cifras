@@ -3472,14 +3472,18 @@ function startAutoScroll(){
   // Rolagem suave (19/11): o navegador só move a tela em pixels inteiros. Em velocidades baixas isso vira
   // "anda 1, para 1, anda 1" — o engasgo que aparecia até no PC. A posição real fica com casas decimais:
   // a parte inteira vai para a rolagem e a fração é desenhada deslocando a cifra (sem custo de layout).
-  const glide=document.getElementById('detail-content');let scrollPosition=vd.scrollTop;
+  // Celulares (Android) arredondam a rolagem para o pixel da tela: pedir 100 pode virar 99,81.
+  // Por isso a fração é medida pelo que a tela realmente rolou, e a rolagem só para no fim da música
+  // (ou se a tela ficar travada por ~2 segundos), nunca por diferença de arredondamento.
+  const glide=document.getElementById('detail-content');let scrollPosition=vd.scrollTop,lastReached=vd.scrollTop,stalledFrames=0;
   const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;
-    if(Math.abs(vd.scrollTop-Math.floor(scrollPosition))>2)scrollPosition=vd.scrollTop;
+    if(Math.abs(vd.scrollTop-scrollPosition)>2)scrollPosition=vd.scrollTop;
     scrollPosition+=scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND;
-    const whole=Math.floor(scrollPosition);if(whole!==vd.scrollTop)vd.scrollTop=whole;
-    const reached=vd.scrollTop,fraction=reached===whole?scrollPosition-whole:0;
+    const whole=Math.floor(scrollPosition);if(Math.abs(whole-vd.scrollTop)>=0.5)vd.scrollTop=whole;
+    const reached=vd.scrollTop,fraction=Math.max(0,Math.min(1,scrollPosition-reached));
     if(glide){const value=fraction>0.01?`translate3d(0,${(-fraction).toFixed(3)}px,0)`:'';if(glide.style.transform!==value)glide.style.transform=value;}
-    if(reached<whole||vd.scrollTop+vd.clientHeight>=vd.scrollHeight-1){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}
+    stalledFrames=reached>lastReached+0.01?0:stalledFrames+1;lastReached=Math.max(lastReached,reached);
+    if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight-1||(stalledFrames>120&&scrollPosition-reached>3)){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}
     scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);updateStageScrollState();
 }
