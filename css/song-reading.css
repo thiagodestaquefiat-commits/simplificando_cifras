@@ -140,3 +140,16 @@
    Ao parar a rolagem, o visual volta. */
 #view-detail.is-auto-scrolling>.detail-header,#view-detail.is-auto-scrolling>.detail-header .back-btn,#view-detail.is-auto-scrolling>#song-controls,#view-detail.is-auto-scrolling .stage-performance-header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #view-detail.is-auto-scrolling:not(.stage-mode)>.detail-header{background:#080a0d!important}
+
+/* Modo Palco = cara da Gisele (topo e botões) + regras do Thiago (19/11): o conteúdo é o mesmo do estudo,
+   com as páginas (Letra + Cifras, resumo, letra) passando para o lado, a largura da tela e a mesma letra.
+   As regras do palco antigo (margem de 38px, letra 22px negrito) deixavam a cifra espremida. */
+html #view-detail.stage-mode .detail-body{padding-left:0!important;padding-right:0!important;overflow-x:clip!important}
+html #view-detail.stage-mode #song-page-indicator:not([hidden]){display:flex!important;background:transparent}
+html #view-detail.stage-mode #detail-content .song-page{padding-left:16px;padding-right:16px}
+html #view-detail.stage-mode #detail-content .song-page-lyrics{padding-left:22px;padding-right:22px}
+html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-section,.wa-block){padding-left:2px;padding-right:2px;margin-bottom:14px!important}
+html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-line.is-chord,.cp-chord,.chord-line,.smart-chord-token){font-size:calc(18px * var(--song-text-scale,1))!important;font-weight:600!important;line-height:1.42!important;letter-spacing:0!important;margin-bottom:0!important}
+html #view-detail.stage-mode #detail-content .song-page :is(.cp-lyric,.full-chord-line:not(.is-chord):not(.is-section):not(.song-lyrics-verse),.letra-linha){font-size:calc(18px * var(--song-text-scale,1))!important;font-weight:500!important;line-height:1.48!important;letter-spacing:0!important}
+html #view-detail.stage-mode #detail-content .song-page .song-lyrics-verse{font-family:Manrope,Inter,system-ui,sans-serif!important;font-size:calc(25px * var(--song-text-scale,1))!important;font-weight:700!important;line-height:1.28!important;letter-spacing:-.02em!important}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stanza{font-family:Manrope,Inter,system-ui,sans-serif!important}

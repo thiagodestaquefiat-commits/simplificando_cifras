@@ -41,7 +41,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 
-<link rel="stylesheet" href="css/song-reading.css?v=19">
+<link rel="stylesheet" href="css/song-reading.css?v=20">
 <link rel="stylesheet" href="css/topbar-labels.css?v=16">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -2751,7 +2751,7 @@ function saveInlineCombinedSectionEdit(songId,index,button){
     gesture=null;
   };
   content.addEventListener('pointerdown',event=>{
-    if(event.pointerType!=='touch'||(stageMode&&!STAGE_CLEAN)||content.classList.contains('is-pinching')||event.target.closest('textarea,input,select,button,[data-inline-editing="true"]'))return;
+    if(event.pointerType!=='touch'||stageUsesOwnContent()||content.classList.contains('is-pinching')||event.target.closest('textarea,input,select,button,[data-inline-editing="true"]'))return;
     activePointers.add(event.pointerId);
     if(activePointers.size>1){cancel(false);return;}
     const track=content.querySelector('.song-page-track');if(!track)return;
@@ -2981,7 +2981,7 @@ function loadSongPage(songId=currentDetailId){const saved=storage.get(songPageSt
 function updateSongPageIndicator(options={}){
   const indicator=document.getElementById('song-page-indicator');
   if(!indicator)return;
-  indicator.hidden=stageMode&&!STAGE_CLEAN;
+  indicator.hidden=stageUsesOwnContent();
   indicator.querySelectorAll('[data-song-page]').forEach((dot,index)=>{
     if(index===currentSongPage)dot.setAttribute('aria-current','page');else dot.removeAttribute('aria-current');
   });
@@ -3104,12 +3104,12 @@ function renderDetail(preparedSong=null,preparedSummary=null){
     :currentSongView==='tablature'&&visibleTablature?renderTablature(visibleTablature):currentSongView==='sheet'?renderSheetMusicPage(sheet):currentSongPage===2?lyricsHtml:currentSongView==='full'?combinedHtml:`<div class="stage-harmonic-summary">${summaryHtml}</div>`;
   const detailContent=document.getElementById('detail-content');
   // Modo Palco limpo (Thiago, 12/10): mesma cifra da tela de estudo, sem as caixas do palco antigo.
-  detailContent.innerHTML=stageMode&&!STAGE_CLEAN?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[combinedHtml,summaryHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'combined':index===1?'summary':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
+  detailContent.innerHTML=stageUsesOwnContent()?stageHtml:`<div class="song-page-track" style="transform:translate3d(${-currentSongPage*100}%,0,0)">${[combinedHtml,summaryHtml,lyricsHtml,...SONG_EXTRA_VIEWS.map(view=>view==='sheet'?renderSheetMusicPage(sheet):renderTablature(visibleTablature))].map((html,index)=>`<section class="song-page song-page-${index===0?'combined':index===1?'summary':index===2?'lyrics':SONG_EXTRA_VIEWS[index-3]==='sheet'?'sheet':'chords'}" data-page-index="${index}" aria-label="${SONG_PAGE_LABELS[index]}" aria-hidden="${index!==currentSongPage}" ${index!==currentSongPage?'inert':''}>${html}</section>`).join('')}</div>`;
   detailContent.insertAdjacentHTML('beforeend','<button id="detail-save-changes" class="btn btn-primary" style="width:100%;margin-top:12px" hidden onclick="saveDetailChanges()">Salvar alterações</button>');updateDetailSaveButton();
   normalizeStageLyricCase(detailContent);
   if(sheet)paintSheetMusic(sheet);
   updateSongPageIndicator({announce:false});
-  if(!stageMode||STAGE_CLEAN)requestAnimationFrame(syncSongPageHeight);
+  if(!stageUsesOwnContent())requestAnimationFrame(syncSongPageHeight);
   if(smartScrollController.isActive())smartScrollController.sync();
   updateSongControls(summary);
   updateDetailSaveButton();
@@ -3268,6 +3268,10 @@ function openStageFromEvent(eventId){
 // ── MODO PALCO ────────────────────────────────────────────────────────
 // Modo Palco aprovado no preview, preservando controles e apresentação próprios.
 var STAGE_CLEAN=false;
+// Palco com a cara da Gisele (topo e botões) e as regras do Thiago (19/11): a cifra é a mesma do estudo,
+// na página em que a pessoa estava, com as páginas passando para o lado e a largura da tela.
+var STAGE_STUDY_CONTENT=true;
+function stageUsesOwnContent(){return stageMode&&!STAGE_CLEAN&&!STAGE_STUDY_CONTENT;}
 let stageMode=false,stageExecutionStarted=false,scrollTimer=null,scrollSpeed=30,activeStagePreferences=null,stageWakeLock=null,stageControlsTimer=null,stageSpeedFeedbackTimer=null,stageLastFrame=0,stageScrollRemainder=0,stageEventViewWasVisible=false;
 const AUTO_SCROLL_MILLISECONDS_PER_SECOND=1000;
 
