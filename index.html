@@ -3144,10 +3144,13 @@ function openDetail(id,options={}){
   const nid = isNaN(+id) ? id : +id;
   currentDetailId=nid; currentSemitones=0;
   const sharedPlaylistVariant=options.preserveNavigation&&window.homePlaylists?homePlaylists.variantForContext(navigationContext.get()):null;
-  const baseSong=musicas.find(x=>x.id===nid||String(x.id)===String(id))||options.songOverride||sharedPlaylistVariant?.song; if(!baseSong) return;
+  const eventNavigation=options.preserveNavigation&&navigationContext.get(),navigationEvent=eventNavigation&&findEvent(eventNavigation.playlistId);
+  const navigationItem=navigationEvent&&navigationEvent.repertoire.filter(item=>eventSongSource(navigationEvent,item))[eventNavigation.currentIndex];
+  const eventNavigationVariant=navigationItem&&eventSongVariant(navigationEvent,navigationItem,appCurrentUser.id);
+  const baseSong=options.songOverride||eventNavigationVariant||sharedPlaylistVariant?.song||musicas.find(x=>x.id===nid||String(x.id)===String(id)); if(!baseSong) return;
   storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,openedAt:new Date().toISOString()});
   recordRecentlyOpenedSong(baseSong.id);
-  let contextualSong=options.songOverride||sharedPlaylistVariant?.song||null;
+  let contextualSong=options.songOverride||eventNavigationVariant||sharedPlaylistVariant?.song||null;
   if(sharedPlaylistVariant)detailPlaylistContext=sharedPlaylistVariant.item;
   if(!contextualSong&&options.preserveNavigation&&window.homePlaylists){const variant=homePlaylists.variantForContext(navigationContext.get());if(variant){contextualSong=variant.song;detailPlaylistContext=variant.item;}}
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
