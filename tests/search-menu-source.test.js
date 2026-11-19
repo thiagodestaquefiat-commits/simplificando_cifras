@@ -42,7 +42,7 @@ assert.doesNotMatch(js, /Para tocar, revisar e deixar por perto\./, 'a faixa nã
 assert.match(css, /roudy-search-for-you-rail/, 'a faixa é horizontal e própria para mobile');
 assert.match(css, /#0789e7/i);
 assert.match(css, /prefers-reduced-motion/);
-assert.match(sw, /css\/search-menu\.css\?v=85/, 'o cache mantém o CSS atual da busca');
+assert.match(sw, /css\/search-menu\.css\?v=86/, 'o cache mantém o CSS atual da busca');
 assert.match(sw, /js\/search-menu\.js\?v=27/, 'o cache deve usar a faixa contextual da Busca');
 assert.match(sw, /js\/home-playlists\.js\?v=\d+/, 'o cache deve usar o placeholder de capa atual');
 assert.match(sw, /js\/list-loading\.js\?v=\d+/, 'o cache deve conter o módulo compartilhado de carregamento');

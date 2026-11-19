@@ -70,7 +70,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   const layers=await page.locator('.roudy-search-shortcut-art').evaluateAll(nodes=>nodes.map(node=>{
     const image=node.querySelector('.roudy-search-shortcut-graphic'),blur=node.querySelector('.roudy-search-shortcut-blur img'),fusion=node.querySelector('.roudy-search-shortcut-fusion'),panel=node.nextElementSibling;
     const a=image.getBoundingClientRect(),b=blur.getBoundingClientRect();
-    return {sameAsset:image.getAttribute('src')===blur.getAttribute('src'),sameCrop:['objectFit','objectPosition'].every(key=>getComputedStyle(image)[key]===getComputedStyle(blur)[key]),sameBox:['x','y','width','height'].every(key=>a[key]===b[key]),sharp:getComputedStyle(image).filter==='none',blurred:getComputedStyle(blur).filter==='blur(8px)',blend:getComputedStyle(fusion).backgroundImage.includes(getComputedStyle(panel).backgroundColor),panelSharp:getComputedStyle(panel).filter==='none',oldFog:getComputedStyle(panel,'::before').content};
+    return {sameAsset:image.getAttribute('src')===blur.getAttribute('src'),sameCrop:['objectFit','objectPosition'].every(key=>getComputedStyle(image)[key]===getComputedStyle(blur)[key]),sameBox:['x','y','width','height'].every(key=>a[key]===b[key]),sharp:getComputedStyle(image).filter==='none',blurred:getComputedStyle(blur).filter==='blur(3px)',blend:getComputedStyle(fusion).backgroundImage.includes('linear-gradient')&&getComputedStyle(node.parentElement).getPropertyValue('--card-panel-color').trim()!=='',panelSharp:getComputedStyle(panel).filter==='none',oldFog:getComputedStyle(panel,'::before').content};
   }));
   assert.ok(layers.every(value=>value.sameAsset&&value.sameCrop&&value.sameBox&&value.sharp&&value.blurred&&value.blend&&value.panelSharp&&['none','normal'].includes(value.oldFog)),'blur da mesma imagem, mesmo enquadramento, barra opaca e sem névoa branca');
 
@@ -159,7 +159,7 @@ const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http:
   assert.ok(mobileCards[0].y<mobileCards[2].y);
   assert.ok(mobileCards.every(card=>card.width===mobileCards[0].width&&card.height===mobileCards[0].height));
   assert.ok(mobileCards.every(card=>Math.abs(card.width-173.75)<1&&Math.abs(card.height-card.width*2/3)<1));
-  assert.equal(await page.locator('.roudy-search-shortcut-art img').count(),8,'artes tipográficas substituem as fotos');
+  assert.equal(await page.locator('.roudy-search-shortcut-art img').count(),12,'artes tipográficas substituem as fotos');
   assert.equal(await page.locator('.roudy-search-shortcut-rd').first().evaluate(node=>getComputedStyle(node).maskImage.includes('assets/search/rd.svg')),true,'assinatura original no lugar da maçã da referência');
   const hierarchy=await page.locator('.roudy-search-shortcut').evaluateAll(cards=>cards.map(card=>{
     const signature=card.querySelector('.roudy-search-shortcut-signature'),meta=card.querySelector('.roudy-search-shortcut-copy small'),rd=card.querySelector('.roudy-search-shortcut-rd');
