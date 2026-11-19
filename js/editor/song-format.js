@@ -81,9 +81,15 @@
     const core = token.replace(/^[([|]+/, "").replace(/[)\]|]+$/, "");
     return Boolean(core) && Boolean(global.multiInstrumentChordLibrary.parseChord(core));
   }
+  // Pontuação colada no acorde ("B9." no fim da linha de cifra) não transforma a linha em letra,
+  // desde que outro acorde da linha esteja limpo — "A." ou "E." sozinhos continuam sendo texto.
+  const CHORD_TRAILING_PUNCTUATION = /[.,;:]+$/;
   function chordLine(value) {
     const tokens = repeatFromText(cleanSheetLine(value)).text.trim().split(/\s+/).filter(Boolean).filter((token) => !CHORD_GROUPING_ONLY.test(token));
-    return tokens.length > 0 && tokens.every((token) => global.multiInstrumentChordLibrary.parseChord(token) || chordLineToken(token));
+    if (!tokens.length) return false;
+    const clean = (token) => global.multiInstrumentChordLibrary.parseChord(token) || chordLineToken(token);
+    if (tokens.every(clean)) return true;
+    return tokens.some(clean) && tokens.every((token) => clean(token) || (CHORD_TRAILING_PUNCTUATION.test(token) && clean(token.replace(CHORD_TRAILING_PUNCTUATION, ""))));
   }
 
   function chordsFromText(value) {

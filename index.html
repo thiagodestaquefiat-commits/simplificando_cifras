@@ -1562,7 +1562,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=2"></script>
 <script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=15"></script>
+<script src="js/editor/song-format.js?v=16"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -2414,7 +2414,8 @@ function renderLyricsReadingText(text){
     if(!line.trim())return '<div class="song-lyrics-stanza-break" aria-hidden="true"></div>';
     if(SHEET_SECTION_LINE.test(line))return renderSongSectionHeading(line,'song-lyrics-section-title');
     if(isChordLine(line))return '';
-    return `<div class="full-chord-line song-lyrics-verse">${eventEsc(line)}</div>`;
+    // Na página Letra, os espaços que alinhavam o acorde em cima da sílaba não têm mais função.
+    return `<div class="full-chord-line song-lyrics-verse">${eventEsc(line.replace(/\s{2,}/g,' ').trim())}</div>`;
   }).join('');
 }
 
@@ -2440,7 +2441,7 @@ function renderLyricsReadingRows(content){
       pendingTitles.splice(0,pendingTitles.length,renderSongSectionHeading(text,'song-lyrics-section-title'));
       return;
     }
-    rows.push(...pendingTitles.splice(0),`<div class="full-chord-line song-lyrics-verse">${eventEsc(text)}</div>`);
+    rows.push(...pendingTitles.splice(0),`<div class="full-chord-line song-lyrics-verse">${eventEsc(text.replace(/\s{2,}/g,' ').trim())}</div>`);
   });
   while(rows.at(-1)==='<div class="song-lyrics-stanza-break" aria-hidden="true"></div>')rows.pop();
   return rows.join('');
@@ -2887,7 +2888,7 @@ function renderFullChordSheet(sheet,totalShift,songId,contentMode='combined'){
     }
     const section=SHEET_SECTION_LINE.test(text);
     if(contentMode==='chords'&&!section)return '';
-    return section?renderSongSectionHeading(text,contentMode==='lyrics'?'song-lyrics-section-title':''):`<div class="full-chord-line${contentMode==='lyrics'?' song-lyrics-verse':''}">${eventEsc(text)}</div>`;
+    return section?renderSongSectionHeading(text,contentMode==='lyrics'?'song-lyrics-section-title':''):`<div class="full-chord-line${contentMode==='lyrics'?' song-lyrics-verse':''}">${eventEsc(contentMode==='lyrics'?text.replace(/\s{2,}/g,' ').trim():text)}</div>`;
   }).join('');};
   const chunks=splitFullSheetSections(sheet),sections=chunks.map((chunk,index)=>{
     const rows=contentMode==='lyrics'?renderLyricsReadingRows(chunk):renderRows(chunk);
