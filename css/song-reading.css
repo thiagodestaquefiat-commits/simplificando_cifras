@@ -134,3 +134,9 @@
 .study-stage-button:active{transform:scale(.97)}
 .study-stage-button[hidden],#view-detail.stage-mode .study-stage-button,#view-detail.stage-clean .study-stage-button{display:none!important}
 @media(max-width:380px){.study-stage-button{flex-direction:column;gap:2px;width:42px;height:40px;padding:0;border-radius:12px;font-size:9px}.study-stage-button svg{width:15px;height:15px}}
+
+/* Rolagem automática: sem desfoque no cabeçalho enquanto a tela rola. Com vídeo tocando, o celular
+   redesenhava o desfoque a cada quadro do vídeo e da rolagem, e a rolagem engasgava em aparelhos simples.
+   Ao parar a rolagem, o visual volta. */
+#view-detail.is-auto-scrolling>.detail-header,#view-detail.is-auto-scrolling>.detail-header .back-btn,#view-detail.is-auto-scrolling>#song-controls,#view-detail.is-auto-scrolling .stage-performance-header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#view-detail.is-auto-scrolling:not(.stage-mode)>.detail-header{background:#080a0d!important}

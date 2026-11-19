@@ -2,7 +2,7 @@ const NAVIGATION_TIMEOUT_MS = 3000;
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v931-event-header-navigation";
+const CACHE_NAME = "simplificando-cifras-v932-leveza-e-palco";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -110,12 +110,15 @@ const ASSETS = [
   "./js/assistant-voice.js?v=4",
   "./js/youtube-player-ui.js?v=27",
   "./js/smart-scroll.js?v=7",
+  "./js/smart-scroll.js?v=8",
+  "./js/scroll-diagnostics.js?v=1",
   "./js/tuner.js?v=5",
   "./js/chord-audio.js?v=2",
   "./css/responsive.css?v=1",
   "./js/medley-repository.js?v=2",
   "./js/song-repository.js?v=18",
   "./css/roudy-forms.css?v=10",
+  "./css/roudy-forms.css?v=11",
   "./assets/icons/roudy-assistant-headphones.svg?v=1",
   "./css/light-theme.css?v=1",
   "./js/ai/ai-harmonic-summary.css?v=10",
@@ -154,6 +157,7 @@ const ASSETS = [
   "./js/storage.js?v=3",
   "./js/demo-library.js?v=5",
   "./js/library-sync.js?v=22",
+  "./js/library-sync.js?v=23",
   "./js/library-sync-policy.js?v=1",
   "./js/library-recovery.js?v=2",
   "./js/event-share.js?v=6",
