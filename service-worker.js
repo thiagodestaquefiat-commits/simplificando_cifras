@@ -96,6 +96,7 @@ const ASSETS = [
   "./js/account-drawer.css?v=17",
   "./js/account-profile.css?v=5",
   "./css/song-reading.css?v=18",
+  "./css/song-reading.css?v=19",
   "./js/ai/ai-harmonic-summary.js?v=21",
   "./js/app-assistant.js?v=37",
   "./css/topbar-labels.css?v=16",

@@ -41,7 +41,7 @@
 <link rel="stylesheet" href="js/account-settings-ui.css?v=2">
 <link rel="stylesheet" href="js/song-lyrics-typography.css?v=5">
 
-<link rel="stylesheet" href="css/song-reading.css?v=18">
+<link rel="stylesheet" href="css/song-reading.css?v=19">
 <link rel="stylesheet" href="css/topbar-labels.css?v=16">
 <link rel="stylesheet" href="css/light-theme.css?v=1">
 <style>
@@ -1375,6 +1375,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
         </div>
         <button type="button" class="study-song-skip" id="btn-next-song" onclick="navigateSong(1)" aria-label="Próxima música" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.2 15.5 12l-11 6.8V5.2Z"/><rect x="17" y="5" width="3" height="14" rx=".7"/></svg></button>
       </div>
+      <button class="study-stage-button" id="btn-palco" type="button" onclick="toggleStageModeBtn()" aria-label="Abrir Modo Palco" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><span>Palco</span></button>
       <button class="app-assistant-launch" id="song-assistant-launch" data-assistant-launch type="button" onclick="roudyAssistant.listen()" aria-label="Falar com o assistente Roudy" aria-pressed="false" title="Falar com o Roudy"><img src="assets/icons/roudy-assistant-headphones.svg?v=1" alt="" aria-hidden="true"></button>
   <span class="detail-key-badge" id="detail-key" hidden></span>
     </div>
@@ -3164,6 +3165,10 @@ function openDetail(id,options={}){
   studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
   loadSongTextScale();
   const context=navigationContext.get();
+  // Botão Modo Palco na própria música (pedido do Thiago, 18/11): no culto a pessoa sai do palco,
+  // troca de música ou de ordem e volta, sem passar pela tela do evento.
+  const stageButton=document.getElementById('btn-palco'),stageButtonVisible=Boolean(context&&(findEvent(context.playlistId)||String(context.playlistId).startsWith('upl:')));
+  if(stageButton){stageButton.hidden=!stageButtonVisible;stageButton.closest('.detail-header')?.classList.toggle('has-stage-button',stageButtonVisible);}
 
   if(!stageMode){
     // A página que a pessoa deixou na música (Resumo, Letra e cifra...) sempre vale. A visão sugerida
@@ -3295,7 +3300,7 @@ async function enterStageMode(){
   vd.classList.toggle('stage-controls-hidden-permanent',activeStagePreferences.controlsMode==='hidden');
   vd.style.setProperty('--stage-chord-size',activeStagePreferences.fontSize+'px');
   vd.style.setProperty('--stage-lyric-size',Math.max(18,activeStagePreferences.fontSize-2)+'px');
-  const btn=document.getElementById('btn-palco');if(btn){btn.classList.add('active');btn.textContent='✕ Sair do Palco';}
+  const btn=document.getElementById('btn-palco');if(btn){btn.classList.add('active');btn.setAttribute('aria-label','Sair do Modo Palco');}
   youtubePlayerUI.hide();
   renderDetail();vd.querySelectorAll('details').forEach(block=>block.open=true);updatePlaylistNavigation();updateStagePresentation();updateStageScrollState();
   vd.addEventListener('pointerdown',revealStageControls,{passive:true});
@@ -3342,7 +3347,7 @@ async function exitStageMode(restorePlayer=true){
   stageMode=false;vd.className=vd.className.split(/\s+/).filter(name=>!name.startsWith('stage-')).join(' ');vd.style.removeProperty('--stage-chord-size');vd.style.removeProperty('--stage-lyric-size');
   document.body.classList.remove('stage-active');const eventView=document.getElementById('view-sd');if(eventView){eventView.style.removeProperty('visibility');eventView.style.removeProperty('pointer-events');eventView.removeAttribute('aria-hidden');eventView.toggleAttribute('inert',false);}stageEventViewWasVisible=false;
   document.getElementById('study-metronome').hidden=false;
-  const btn=document.getElementById('btn-palco');if(btn){btn.classList.remove('active');btn.textContent='Modo Palco';}
+  const btn=document.getElementById('btn-palco');if(btn){btn.classList.remove('active');btn.setAttribute('aria-label','Abrir Modo Palco');}
   document.getElementById('stage-quick-panel').hidden=true;renderDetail();updatePlaylistNavigation();const currentSong=currentDetailSongOverride||musicas.find(song=>String(song.id)===String(currentDetailId));if(restorePlayer&&currentSong)youtubePlayerUI.showSong(currentSong);
 }
 

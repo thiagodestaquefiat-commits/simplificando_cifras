@@ -126,3 +126,11 @@
 
 /* Instrument back arrow remains unframed, including initial dialog focus. */
 #inst-modal button[aria-label="Voltar"]:focus{outline:none;box-shadow:none}
+
+/* Botão Modo Palco na música (modo estudo). Só aparece quando a música foi aberta de um evento ou playlist. */
+#view-detail:not(.stage-mode)>.detail-header.has-stage-button{grid-template-columns:40px minmax(0,1fr) auto 40px}
+.study-stage-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:34px;padding:0 11px 0 9px;border:1px solid rgba(255,255,255,.18);border-radius:17px;background:rgba(255,255,255,.06);color:#f5f6f8;font:650 12px/1 var(--font-ui,inherit);letter-spacing:.01em;cursor:pointer;white-space:nowrap}
+.study-stage-button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.study-stage-button:active{transform:scale(.97)}
+.study-stage-button[hidden],#view-detail.stage-mode .study-stage-button,#view-detail.stage-clean .study-stage-button{display:none!important}
+@media(max-width:380px){.study-stage-button{flex-direction:column;gap:2px;width:42px;height:40px;padding:0;border-radius:12px;font-size:9px}.study-stage-button svg{width:15px;height:15px}}
