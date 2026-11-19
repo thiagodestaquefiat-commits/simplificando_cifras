@@ -91,3 +91,8 @@
 .login-gate input:is(:autofill,:-webkit-autofill):focus{
   box-shadow:inset 0 0 0 1000px var(--ui-control),0 0 0 1px var(--roudy-electric-blue);
 }
+
+/* Quiet legal copy, retaining readable links and keyboard focus. */
+.login-gate-legal{max-width:340px;margin:18px auto 0;color:var(--text-secondary);font:var(--weight-body) 12px/1.5 var(--font-ui);text-align:center}
+.login-gate-legal a,.login-gate-legal a:visited{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.login-gate-legal a:focus-visible{outline:2px solid var(--roudy-electric-blue);outline-offset:3px;border-radius:2px}
