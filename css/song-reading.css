@@ -147,9 +147,14 @@
 html #view-detail.stage-mode .detail-body{padding-left:0!important;padding-right:0!important;overflow-x:clip!important}
 html #view-detail.stage-mode #song-page-indicator:not([hidden]){display:flex!important;background:transparent}
 html #view-detail.stage-mode #detail-content .song-page{padding-left:16px;padding-right:16px}
-html #view-detail.stage-mode #detail-content .song-page-lyrics{padding-left:22px;padding-right:22px}
 html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-section,.wa-block){padding-left:2px;padding-right:2px;margin-bottom:14px!important}
 html #view-detail.stage-mode #detail-content .song-page :is(.full-chord-line.is-chord,.cp-chord,.chord-line,.smart-chord-token){font-size:calc(18px * var(--song-text-scale,1))!important;font-weight:600!important;line-height:1.42!important;letter-spacing:0!important;margin-bottom:0!important}
 html #view-detail.stage-mode #detail-content .song-page :is(.cp-lyric,.full-chord-line:not(.is-chord):not(.is-section):not(.song-lyrics-verse),.letra-linha){font-size:calc(18px * var(--song-text-scale,1))!important;font-weight:500!important;line-height:1.48!important;letter-spacing:0!important}
-html #view-detail.stage-mode #detail-content .song-page .song-lyrics-verse{font-family:Manrope,Inter,system-ui,sans-serif!important;font-size:calc(25px * var(--song-text-scale,1))!important;font-weight:700!important;line-height:1.28!important;letter-spacing:-.02em!important}
-html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stanza{font-family:Manrope,Inter,system-ui,sans-serif!important}
+html #view-detail.stage-mode #detail-content .song-page.song-page-lyrics{padding-left:clamp(20px,5.65vw,24px);padding-right:clamp(20px,5.65vw,24px);text-align:left}
+html #view-detail.stage-mode #detail-content .song-page-lyrics :is(.full-chord-sheet,.wa-block){font-family:Inter,Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-variant-ligatures:normal}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-verse{margin:0;font-family:Inter,Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:calc(25px * var(--song-text-scale,1))!important;font-weight:700!important;line-height:1.28!important;letter-spacing:-.02em!important;overflow-wrap:break-word;white-space:pre-wrap;text-transform:none}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-verse+.song-lyrics-verse{margin-top:24px}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stanza-break{height:36px}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stanza{padding-top:8px;padding-bottom:18px}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .wa-block.song-lyrics-stanza{padding:0;border:0;border-radius:0;background:transparent}
+html #view-detail.stage-mode #detail-content .song-page-lyrics .stage-summary-label{display:none}
