@@ -1895,7 +1895,8 @@ function settleStudyMeterWheel(){const wheel=document.getElementById('song-meter
 const songMeterWheel=document.getElementById('song-meter-wheel');songMeterWheel.addEventListener('scroll',()=>{if(!meterWheelFrame)meterWheelFrame=requestAnimationFrame(()=>{meterWheelFrame=null;updateStudyMeterWheelDepth()});clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,140)},{passive:true});songMeterWheel.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...songMeterWheel.querySelectorAll('[data-meter]')],current=Math.max(0,buttons.findIndex(button=>button.dataset.meter===preferredStudyMeter)),next=Math.max(0,Math.min(buttons.length-1,current+(event.key==='ArrowRight'?1:-1)));selectStudyMeter(buttons[next].dataset.meter)});
 let songMeterDrag=null,suppressSongMeterClick=false;songMeterWheel.addEventListener('pointerdown',event=>{if(event.button!==0)return;songMeterDrag={id:event.pointerId,x:event.clientX,left:songMeterWheel.scrollLeft,moved:false};songMeterWheel.setPointerCapture?.(event.pointerId);songMeterWheel.classList.add('is-dragging')});songMeterWheel.addEventListener('pointermove',event=>{if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const delta=event.clientX-songMeterDrag.x;if(Math.abs(delta)>3)songMeterDrag.moved=true;songMeterWheel.scrollLeft=songMeterDrag.left-delta;if(songMeterDrag.moved)event.preventDefault()});function finishSongMeterDrag(event){if(!songMeterDrag||songMeterDrag.id!==event.pointerId)return;const moved=songMeterDrag.moved;songMeterDrag=null;songMeterWheel.classList.remove('is-dragging');songMeterWheel.releasePointerCapture?.(event.pointerId);if(moved){suppressSongMeterClick=true;setTimeout(()=>{suppressSongMeterClick=false},0);event.preventDefault();clearTimeout(meterWheelSettleTimer);meterWheelSettleTimer=setTimeout(settleStudyMeterWheel,80)}}songMeterWheel.addEventListener('pointerup',finishSongMeterDrag);songMeterWheel.addEventListener('pointercancel',finishSongMeterDrag);songMeterWheel.addEventListener('click',event=>{if(!suppressSongMeterClick)return;event.preventDefault();event.stopPropagation()},true);
 function setSongScrolling(active){
-  document.getElementById('view-detail')?.classList.toggle('is-auto-scrolling',Boolean(active));window.roudyScrollDiag?.toggle(Boolean(active));
+  document.getElementById('view-detail')?.classList.toggle('is-auto-scrolling',Boolean(active));
+  if(!active){const glide=document.getElementById('detail-content');if(glide&&glide.style.transform)glide.style.transform='';}window.roudyScrollDiag?.toggle(Boolean(active));
   const controls=document.getElementById('song-controls'),button=document.getElementById('btn-scroll');if(active){if(stageMode)toggleSongControls(false);closeSongQuickPicker();}controls.classList.toggle('is-scrolling',active);button.setAttribute('aria-label',active?'Pausar rolagem automática':'Iniciar rolagem automática');
 }
 const songScrollPlayButton=document.getElementById('btn-scroll');
@@ -3467,10 +3468,18 @@ function startAutoScroll(){
   if(stageMode)stageExecutionStarted=true;
   setSongScrolling(true);if(btn)btn.classList.add('active');
   stageLastFrame=performance.now();stageScrollRemainder=0;
-  // Rolagem suave: anda em frações de pixel do aparelho (telas de celular têm 2 a 3 pontos por pixel),
-  // em vez de esperar juntar 1 pixel inteiro e dar um pulo. A posição é guardada com casas decimais.
-  const scrollUnit=1/Math.max(1,Math.min(4,Number(window.devicePixelRatio)||1));let scrollPosition=vd.scrollTop;
-  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;if(Math.abs(vd.scrollTop-scrollPosition)>2)scrollPosition=vd.scrollTop;const distance=stageScrollRemainder+scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND,step=Math.floor(distance/scrollUnit)*scrollUnit;stageScrollRemainder=distance-step;if(step){scrollPosition+=step;vd.scrollTop=scrollPosition;}if(vd.scrollTop+vd.clientHeight>=vd.scrollHeight-1){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}scrollTimer=requestAnimationFrame(tick);};
+  // Rolagem suave (19/11): o navegador só move a tela em pixels inteiros. Em velocidades baixas isso vira
+  // "anda 1, para 1, anda 1" — o engasgo que aparecia até no PC. A posição real fica com casas decimais:
+  // a parte inteira vai para a rolagem e a fração é desenhada deslocando a cifra (sem custo de layout).
+  const glide=document.getElementById('detail-content');let scrollPosition=vd.scrollTop;
+  const tick=now=>{if(scrollTimer===null)return;const elapsed=Math.min(100,now-stageLastFrame);stageLastFrame=now;
+    if(Math.abs(vd.scrollTop-Math.floor(scrollPosition))>2)scrollPosition=vd.scrollTop;
+    scrollPosition+=scrollSpeed*elapsed/AUTO_SCROLL_MILLISECONDS_PER_SECOND;
+    const whole=Math.floor(scrollPosition);if(whole!==vd.scrollTop)vd.scrollTop=whole;
+    const reached=vd.scrollTop,fraction=reached===whole?scrollPosition-whole:0;
+    if(glide){const value=fraction>0.01?`translate3d(0,${(-fraction).toFixed(3)}px,0)`:'';if(glide.style.transform!==value)glide.style.transform=value;}
+    if(reached<whole||vd.scrollTop+vd.clientHeight>=vd.scrollHeight-1){scrollTimer=null;stageScrollRemainder=0;if(!stageMode)studyMetronome.stop();setSongScrolling(false);stageExecutionStarted=false;updateStageScrollState();return;}
+    scrollTimer=requestAnimationFrame(tick);};
   scrollTimer=requestAnimationFrame(tick);updateStageScrollState();
 }
 function pauseAutoScroll(){

@@ -157,3 +157,5 @@ html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stan
 html #view-detail.stage-mode #detail-content .song-page-lyrics .song-lyrics-stanza{padding-top:8px;padding-bottom:18px}
 html #view-detail.stage-mode #detail-content .song-page-lyrics .wa-block.song-lyrics-stanza{padding:0;border:0;border-radius:0;background:transparent}
 html #view-detail.stage-mode #detail-content .song-page-lyrics .stage-summary-label{display:none}
+/* Rolagem automática: a cifra pode receber um deslocamento de fração de pixel (ver startAutoScroll). */
+#view-detail.is-auto-scrolling #detail-content{will-change:transform}
