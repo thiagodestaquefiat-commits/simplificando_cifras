@@ -4158,6 +4158,8 @@ window.searchLibraryBridge={
   persist:next=>{if(!songRepository.save(next))return false;musicas=next;renderMusicas();return true;},
   sync:()=>librarySync.syncNow(),
   remove:song=>{
+    // Mais seguro (Thiago, 19/11): pergunta antes de tirar a música da biblioteca pela Busca.
+    if(!appConfirm('Remover esta música da sua biblioteca?'))return false;
     deleteMusica(song.id);
     return !musicas.some(value=>String(value.id)===String(song.id));
   },
@@ -4376,6 +4378,9 @@ function addSongToEvent(eventId,songId,trigger){
   const actor=eventPermissionActor(event);if(!eventModel.canEditShared(event,actor.id))return;
   const exists=event.repertoire.some(item=>String(item.songId)===String(song.id));
   if(exists){
+    // Mais seguro (Thiago, 19/11): tocar no ✓ de novo tira a música do repertório oficial da banda toda,
+    // então pergunta antes. Um toque sem querer no culto não some com a música.
+    if(!appConfirm(`Remover "${song.title}" do repertório do evento? A música sai para toda a banda.`))return;
     const updated=eventModel.withSharedChange(eventModel.create({...event,repertoire:event.repertoire.filter(item=>String(item.songId)!==String(song.id)).map((item,order)=>({...item,order})),syncState:'pending',pendingShared:true}),actor,'repertoire.song.removed',`removeu ${song.title} do repertório oficial`);
     const next=eventRepository.upsert(setlists,updated).events;if(!eventRepository.save(next)){showToast('Não foi possível remover a música.');return;}
     setlists=next;renderSetlists();if(trigger){trigger.disabled=false;trigger.classList.remove('is-selected');trigger.setAttribute('aria-pressed','false');const icon=trigger.querySelector('.playlist-picker-status');if(icon)icon.innerHTML='<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>';const caption=trigger.querySelector('.add-song-event-copy>small');if(caption)caption.textContent=[eventDisplayDate(event.date),event.time].filter(Boolean).join(' · ');trigger.setAttribute('aria-label',`Adicionar ${song.title} a ${event.title}`);}return;
