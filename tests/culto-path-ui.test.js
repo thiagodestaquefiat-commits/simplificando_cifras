@@ -112,6 +112,12 @@ const scrollTop = page => page.evaluate(() => document.getElementById('view-deta
     for (let i = 1; i <= 8; i++) { await cdp.send('Input.dispatchTouchEvent', { type:'touchMove', touchPoints:[{x:330 - 36*i, y}] }); await page.waitForTimeout(16); }
     await cdp.send('Input.dispatchTouchEvent', { type:'touchEnd', touchPoints:[] });
     await page.waitForTimeout(500);
+    if (await page.evaluate(() => currentSongPage) !== 1) { // o primeiro gesto às vezes chega antes da página assentar
+      await cdp.send('Input.dispatchTouchEvent', { type:'touchStart', touchPoints:[{x:330,y}] });
+      for (let i = 1; i <= 8; i++) { await cdp.send('Input.dispatchTouchEvent', { type:'touchMove', touchPoints:[{x:330 - 36*i, y}] }); await page.waitForTimeout(16); }
+      await cdp.send('Input.dispatchTouchEvent', { type:'touchEnd', touchPoints:[] });
+      await page.waitForTimeout(500);
+    }
     assert.equal(await page.evaluate(() => currentSongPage), 1, 'passar o dedo troca a página no palco');
     await page.evaluate(() => setSongPage(0));
     await page.waitForTimeout(200);
@@ -154,6 +160,8 @@ const scrollTop = page => page.evaluate(() => document.getElementById('view-deta
     await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('sc_enchendo_') || k.startsWith('sc_sync_conflict_backups_v1:teste-')).forEach(k => localStorage.removeItem(k)));
 
     // 8. Playlist em ordem alfabética.
+    await page.evaluate(() => { closeDetail(); switchTab('musicas'); });
+    await page.waitForTimeout(300);
     const order = await page.evaluate(async () => {
       const own = appCurrentUser.id, picks = musicas.filter(song => song.title).slice(2, 8);
       const playlist = userPlaylists.create(own, 'Ordem');
@@ -164,6 +172,26 @@ const scrollTop = page => page.evaluate(() => document.getElementById('view-deta
     const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true });
     assert.ok(order.length >= 2, 'playlist mostra as músicas');
     assert.deepEqual(order, [...order].sort(collator.compare), 'músicas da playlist em ordem alfabética');
+    // Deslizar a música para o lado pergunta antes de tirar da playlist (22/11).
+    const rowCount = () => page.locator('#home-playlist-view .home-playlist-song-swipe').count();
+    const rowsBefore = await rowCount();
+    const swipeFirst = async () => {
+      const row = page.locator('#home-playlist-view .home-playlist-song').first(); await row.scrollIntoViewIfNeeded(); await page.waitForTimeout(200);
+      const rb = await row.boundingBox(), ry = rb.y + rb.height / 2;
+      await cdp.send('Input.dispatchTouchEvent', { type:'touchStart', touchPoints:[{x:rb.x + rb.width * 0.55, y:ry}] });
+      for (let i = 1; i <= 12; i++) { await cdp.send('Input.dispatchTouchEvent', { type:'touchMove', touchPoints:[{x:rb.x + rb.width * 0.55 - 22*i, y:ry}] }); await page.waitForTimeout(16); }
+      await cdp.send('Input.dispatchTouchEvent', { type:'touchEnd', touchPoints:[] });
+      await page.waitForTimeout(500);
+    };
+    let asked = 0;
+    page.once('dialog', dialog => { asked += 1; dialog.dismiss(); });
+    await swipeFirst();
+    assert.equal(asked, 1, 'deslizar pergunta antes de tirar da playlist');
+    assert.equal(await rowCount(), rowsBefore, 'cancelando, a música fica na playlist');
+    page.once('dialog', dialog => { asked += 1; dialog.accept(); });
+    await swipeFirst();
+    assert.equal(asked, 2);
+    assert.equal(await rowCount(), rowsBefore - 1, 'confirmando, a música sai da playlist');
 
     // 9. Leitor de QR fora do app.
     assert.equal(await page.evaluate(() => typeof window.eventQrScanner + typeof window.profileQr), 'undefinedundefined', 'leitor de QR não carrega');

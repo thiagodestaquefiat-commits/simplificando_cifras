@@ -308,11 +308,14 @@
       gesture.song.style.removeProperty("transition");
       if (!gesture.horizontal) return;
       if (gesture.armed && event.type !== "pointercancel") {
-        gesture.row.classList.add("is-removing");
         navigator.vibrate?.(10);
-        global.userPlaylists.removeItem(owner(), currentPlaylistId, gesture.row.dataset.itemId);
-        setTimeout(renderPlaylist, 260);
-        return;
+        // 22/11: deslizar para o lado pergunta antes de tirar a música da playlist.
+        if (confirmRemoveItem(gesture.row.dataset.itemId)) {
+          gesture.row.classList.add("is-removing");
+          global.userPlaylists.removeItem(owner(), currentPlaylistId, gesture.row.dataset.itemId);
+          setTimeout(renderPlaylist, 260);
+          return;
+        }
       }
       gesture.song.style.removeProperty("transform");
       ["--playlist-swipe-progress","--playlist-trash-right","--playlist-trash-opacity","--playlist-trash-scale","--playlist-trash-bars"].forEach(name=>gesture.row.style.removeProperty(name));
@@ -722,7 +725,16 @@
     renderPlaylist();
   }
 
+  // Tirar música da playlist sempre pergunta antes (22/11): deslizar, lixeira ou menu "Remover da playlist".
+  function confirmRemoveItem(itemId) {
+    const playlist = global.userPlaylists.get(owner(), currentPlaylistId);
+    const item = playlist && playlist.items.find((value) => value.id === String(itemId));
+    const song = item && itemSong(item);
+    const title = song ? `"${song.title}"` : "esta música";
+    return global.appConfirm ? global.appConfirm(`Tirar ${title} da playlist?`) : global.confirm(`Tirar ${title} da playlist?`);
+  }
   function removeItem(itemId) {
+    if (!confirmRemoveItem(itemId)) { global.closeEventAdminSheet(); renderPlaylist(); return; }
     global.userPlaylists.removeItem(owner(), currentPlaylistId, itemId);
     global.closeEventAdminSheet();
     renderPlaylist();
