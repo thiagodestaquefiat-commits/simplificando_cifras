@@ -255,7 +255,7 @@ const ASSETS = [
   "./assets/search/musicas-album.webp",
   "./assets/search/playlists-album.webp",
   "./assets/search/medley-album.webp",
-  "./assets/search/eventos-album.webp",
+  "./assets/search/eventos-album.webp"
 ];
 
 self.addEventListener("install", (event) => {
