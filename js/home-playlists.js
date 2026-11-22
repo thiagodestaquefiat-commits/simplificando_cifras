@@ -237,7 +237,7 @@
     const playlist = currentPlaylistId && global.userPlaylists.get(owner(), currentPlaylistId);
     if (!target) return;
     if (!playlist) { setView("home"); return; }
-    const entries = playlist.items.map((item) => ({ item, song: itemSong(item) }));
+    const entries = playlist.items.map((item) => ({ item, song: itemSong(item) })).sort(byTitle);
     const available = entries.filter((entry) => entry.song);
     const rows = entries.map(({ item, song }, index) => {
       if (!song) return `<div class="home-playlist-song-swipe" data-item-id="${esc(item.id)}"><button type="button" class="home-playlist-song-delete" onclick="homePlaylists.removeItem(${js(item.id)})" aria-label="Tirar música indisponível da playlist">${trashIcon()}</button><div class="home-playlist-song is-missing"><span class="home-playlist-song-copy"><strong>Música indisponível</strong><small>Ela não está mais na sua biblioteca</small></span><button type="button" class="home-playlist-song-more" onclick="homePlaylists.itemMenu(${js(item.id)})" aria-label="Opções">⋯</button></div></div>`;
@@ -336,8 +336,15 @@
     setView("home");
   }
 
+  // Músicas da playlist em ordem alfabética pelo título (Thiago, 22/11). A tela e o Anterior/Próxima
+  // seguem a mesma ordem; músicas indisponíveis ficam no fim.
+  const TITLE_COLLATOR = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
+  function byTitle(a, b) {
+    if (!a.song || !b.song) return Number(!a.song) - Number(!b.song);
+    return TITLE_COLLATOR.compare(String(a.song.title || "").trim(), String(b.song.title || "").trim()) || TITLE_COLLATOR.compare(String(a.song.artist || ""), String(b.song.artist || ""));
+  }
   function availableEntries(playlist) {
-    return playlist.items.map((item) => ({ item, song: itemSong(item) })).filter((entry) => entry.song);
+    return playlist.items.map((item) => ({ item, song: itemSong(item) })).filter((entry) => entry.song).sort(byTitle);
   }
 
   function openSong(itemId, options = {}) {
