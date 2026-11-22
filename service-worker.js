@@ -2,7 +2,7 @@ const NAVIGATION_TIMEOUT_MS = 3000;
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v937-rolagem-android";
+const CACHE_NAME = "simplificando-cifras-v939-playlist-confirma-remocao";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -78,20 +78,18 @@ const ASSETS = [
   "./assets/search/nota_musical_vermelha_suave.svg",
   "./css/home-playlists.css?v=48",
   "./js/home-playlists.js?v=43",
+  "./js/home-playlists.js?v=44",
+  "./js/home-playlists.js?v=45",
   "./js/user-playlists.js?v=7",
   "./js/notification-center.js?v=9",
   "./js/playlist-collaboration.js?v=2",
   "./js/personal-playlist-sync.js?v=4",
   "./js/playlist-invites.js?v=8",
+  "./js/playlist-invites.js?v=9",
   "./js/event-model.js?v=10",
   "./js/event-user-invites.js?v=12",
   "./js/event-collaboration-client.js?v=20",
   "./js/app-auth.js?v=22",
-  "./js/event-qr-scanner.js?v=3",
-  "./js/event-qr-scanner.css?v=3",
-  "./js/vendor/jsqr.min.js?v=1",
-  "./js/profile-qr.js?v=6",
-  "./js/profile-qr.css?v=4",
   "./css/qr-stage-light.css?v=2",
   "./js/account-drawer.css?v=17",
   "./js/account-profile.css?v=5",
@@ -158,9 +156,11 @@ const ASSETS = [
   "./js/card-bevel.js?v=1",
   "./css/study-song-navigation.css?v=10",
   "./js/storage.js?v=3",
+  "./js/storage.js?v=4",
   "./js/demo-library.js?v=5",
   "./js/library-sync.js?v=22",
   "./js/library-sync.js?v=23",
+  "./js/library-sync.js?v=24",
   "./js/library-sync-policy.js?v=1",
   "./js/library-recovery.js?v=2",
   "./js/event-share.js?v=6",
@@ -256,7 +256,7 @@ const ASSETS = [
   "./assets/search/musicas-album.webp",
   "./assets/search/playlists-album.webp",
   "./assets/search/medley-album.webp",
-  "./assets/search/eventos-album.webp",
+  "./assets/search/eventos-album.webp"
 ];
 
 self.addEventListener("install", (event) => {
