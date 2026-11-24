@@ -322,7 +322,8 @@
     if (Array.isArray(current)) {
       storedLibraryExistedAtBoot = current.length > 0;
       const migration = migrateCollection(current);
-      if (migration.removed) persistCurrent(migration.songs);
+      const metadataChanged=global.songMetadata&&current.some(song=>JSON.stringify(global.songMetadata.repair(song))!==JSON.stringify(song));
+      if (migration.removed || metadataChanged) persistCurrent(migration.songs);
       return migration.songs;
     }
 

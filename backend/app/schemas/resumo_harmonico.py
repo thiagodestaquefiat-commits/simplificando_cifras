@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator, model_serializer
 
 
 def _clean(value: str | None) -> str | None:
@@ -102,12 +102,23 @@ class CifraCompleta(BaseModel):
     visibility: Literal["private"] = "private"
     source: Literal["user_upload", "user_text", "model_knowledge", "web_source"]
     content: str = Field(min_length=1, max_length=50000)
+    sourceContent: str | None = Field(default=None, max_length=50000)
+    bpmEvidenceText: str | None = Field(default=None, max_length=1000)
     sections: list[SecaoCifraCompleta] = Field(default_factory=list, max_length=80)
 
     @field_validator("content", mode="before")
     @classmethod
     def clean_full_content(cls, value):
         return _clean_content(value)
+
+    @model_serializer(mode="wrap")
+    def optional_metadata(self, handler):
+        data=handler(self)
+        if data.get("sourceContent") is None:
+            data.pop("sourceContent",None)
+        if data.get("bpmEvidenceText") is None:
+            data.pop("bpmEvidenceText",None)
+        return data
 
 
 class ResumoEstruturado(BaseModel):
@@ -116,15 +127,55 @@ class ResumoEstruturado(BaseModel):
     blocos: list[TrechoHarmonico] = Field(default_factory=list, max_length=40)
 
 
+class BpmSource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["explicit_sheet"] = "explicit_sheet"
+    value: int = Field(ge=30, le=240)
+    evidence: str = Field(min_length=1,max_length=200)
+    sourceType: str = Field(max_length=40)
+    url: str | None = Field(default=None,max_length=2000)
+
+
 class ResumoHarmonicoResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     schemaVersion: Literal[2] = 2
     titulo: str = Field(min_length=1, max_length=160)
     artista: str | None = Field(default=None, max_length=160)
+    composer: str | None = Field(default=None, max_length=300)
+    bpm: int | None = Field(default=None, ge=30, le=240)
+    bpmSource: BpmSource | None = None
+    bpmResetVersion: Literal[1] | None = None
     tom: str | None = Field(default=None, max_length=20)
     capotraste: int | None = Field(default=None, ge=0, le=12)
     harmonicSummary: ResumoEstruturado
     observacoes: list[str] = Field(default_factory=list, max_length=20)
     confianca: Literal["alta", "media", "baixa"]
     fullChordSheet: CifraCompleta | None = None
+
+    @model_serializer(mode="wrap")
+    def optional_metadata(self, handler):
+        data=handler(self)
+        for field in ("bpm","bpmSource","bpmResetVersion","composer"):
+            if data.get(field) is None:
+                data.pop(field,None)
+        return data
+
+    @model_validator(mode="after")
+    def extract_sheet_metadata(self):
+        # Um número/proveniência sugerido pelo modelo não constitui evidência.
+        # O BPM da resposta é reconstruído somente do texto explícito da fonte.
+        previous_source=self.bpmSource
+        self.bpm = None
+        self.bpmSource = None
+        if self.fullChordSheet:
+            from ..services.song_metadata import repair_song
+            repaired = repair_song({"artist": self.artista, "composer": self.composer,
+                                    "fullChordSheet": self.fullChordSheet.model_dump(mode="json")})
+            self.artista, self.composer, self.bpm = repaired.get("artist"), repaired.get("composer"), repaired.get("bpm")
+            self.bpmSource = BpmSource.model_validate(repaired["bpmSource"]) if repaired.get("bpmSource") else None
+            if self.bpmSource and previous_source and previous_source.value==self.bpm and previous_source.url and previous_source.url.startswith("https://"):
+                self.bpmSource.url=previous_source.url
+            if repaired["fullChordSheet"]["content"]:
+                self.fullChordSheet = CifraCompleta.model_validate(repaired["fullChordSheet"])
+        return self

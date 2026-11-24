@@ -10,6 +10,7 @@ function device(user) {
   const values = new Map();
   const event = { id: "event-1", members: [{ id: "user-a" }, { id: "user-b" }] };
   const window = {
+    postedTypes: [],
     storage: {
       get(key, fallback) { return values.has(key) ? structuredClone(values.get(key)) : fallback; },
       set(key, value) { values.set(key, structuredClone(value)); return true; }
@@ -22,6 +23,7 @@ function device(user) {
     async fetch(url, options) {
       if ((options && options.method) === "POST") {
         const body = JSON.parse(options.body);
+        window.postedTypes.push(body.type);
         const message = { id: body.clientId, eventId: "event-1", type: body.type, content: body.content, replyTo: body.replyTo || null, poll: body.poll || null, song: body.song || null, reactions: {}, deleted: false, sender: { id: user.id, name: user.name, avatarUrl: null }, createdAt: new Date().toISOString(), editedAt: null };
         const existing = remote.find((item) => item.id === message.id);
         if (!existing) remote.push(message);
@@ -49,5 +51,12 @@ function device(user) {
   await b.eventChat.refresh("event-1");
   assert.equal(b.eventChat.list("event-1", 40)[1].song.title, "A alegria");
   assert.equal(b.eventChat.unreadCount("event-1"), 2);
+  const c=device({id:'user-a',name:'Ana'});
+  const legacy={id:'old-queued-notice',eventId:'event-1',type:'system',content:'Alterou o tom',sender:{id:'user-a',name:'Ana'},createdAt:new Date().toISOString(),pending:true};
+  c.storage.set('sc_event_messages_v1',{'event-1':[legacy,{...legacy,id:'offline-text',type:'text',content:'Conversa após o aviso antigo'}]});
+  await c.eventChat.refresh('event-1');
+  assert.deepEqual(c.postedTypes,['text'],'a fila antiga não envia avisos nem bloqueia a conversa seguinte');
+  assert.ok(c.eventChat.list('event-1',40).some(item=>item.id==='offline-text'&&!item.pending));
+  assert.ok(!c.eventChat.list('event-1',40).some(item=>item.type==='system'));
   console.log("event-chat-remote.test.js: OK (persistência, confirmação e segundo dispositivo)");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

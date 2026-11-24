@@ -102,6 +102,23 @@ def test_personal_override_is_private_and_shared_edit_requires_leader(client, ap
         assert PersonalRepertoireOverride.query.count() == 1
 
 
+def test_event_chat_hides_legacy_notices_before_pagination(client, app):
+    from app.models import EventMessage
+    leader = register(client, "leader-user", "Líder")
+    register(client, "member-user", "Integrante")
+    assert client.post("/api/collaboration/events", headers=auth(leader), json=event_payload()).status_code == 201
+    url = "/api/collaboration/events/event-sunday/messages"
+    assert client.post(url, headers=auth(leader), json={"clientId": "conversation", "type": "text", "content": "Vamos ensaiar?"}).status_code == 201
+    # Simula registros de versões anteriores sem apagar o histórico do banco.
+    with app.app_context():
+        db.session.add_all([EventMessage(id=f"legacy-{i}", event_id="event-sunday", sender_id="leader-user", sender_name="Líder", message_type="system", content="Alterou o tom") for i in range(10)])
+        db.session.commit()
+    result = client.get(url + "?limit=1", headers=auth(leader))
+    assert [m["id"] for m in result.get_json()["messages"]] == ["conversation"]
+    with app.app_context():
+        assert EventMessage.query.count() == 11
+
+
 def test_event_chat_persists_across_members_and_protects_authorship(client):
     leader = register(client, "leader-user", "Líder")
     member = register(client, "member-user", "Integrante")

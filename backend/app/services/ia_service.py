@@ -364,6 +364,8 @@ class IaService:
             knowledge_only = False
             has_online_source = True
         source_text = web_hit.content if web_hit else extracted.text if extracted is not None else payload.conteudo
+        from .song_metadata import repair_song
+        source_metadata = repair_song({"artist": payload.artista, "fullChordSheet": {"content": source_text or "", "source":"web_source" if web_hit else "user_upload" if payload.tipo == "arquivo" else "user_text"}})
         if source_text is not None:
             source_text = clean_musical_text(source_text, (payload.titulo, payload.artista))
             if not source_text:
@@ -453,4 +455,22 @@ class IaService:
             if not reconstructed:
                 raise ApiError("resposta_estruturada_invalida", "A cifra completa não pôde ser reconstruída.", 502)
             normalized.fullChordSheet.content = reconstructed
-        return normalized
+        normalized.artista = normalized.artista or source_metadata.get("artist")
+        normalized.bpm = source_metadata.get("bpm")
+        normalized.composer = normalized.composer or source_metadata.get("composer")
+        if normalized.fullChordSheet:
+            if source_metadata["fullChordSheet"].get("sourceContent"):
+                normalized.fullChordSheet.sourceContent = source_metadata["fullChordSheet"]["sourceContent"]
+            from .song_metadata import classify
+            output_has_bpm = any((classify(line) or (None,))[0] == "bpm" for line in normalized.fullChordSheet.content.splitlines())
+            if normalized.bpm or normalized.fullChordSheet.sourceContent or output_has_bpm:
+                normalized.fullChordSheet.bpmEvidenceText = (source_metadata.get("bpmSource") or {}).get("evidence", "")
+        final = ResumoHarmonicoResponse.model_validate(normalized.model_dump())
+        # A transcrição/organização da IA pode acrescentar "BPM" à cifra. Só o
+        # texto da fonte obtida antes da geração autoriza o preenchimento automático.
+        final.bpm = source_metadata.get("bpm")
+        from ..schemas.resumo_harmonico import BpmSource
+        final.bpmSource = BpmSource.model_validate(source_metadata["bpmSource"]) if source_metadata.get("bpmSource") else None
+        if final.bpmSource and web_hit and str(getattr(web_hit,"url","")).startswith("https://"):
+            final.bpmSource.url=str(web_hit.url)[:2000]
+        return final

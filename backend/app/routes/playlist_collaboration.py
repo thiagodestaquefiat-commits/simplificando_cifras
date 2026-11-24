@@ -25,6 +25,9 @@ FIELDS = ("name", "description", "coverImage", "visibility")
 ITEM_FIELDS = ("song", "playback", "notes")
 SONG_FIELDS = {"id", "title", "artist", "key", "originalKey", "capo", "blocos", "sections", "summary", "fullChordSheet", "editorData", "tablature", "tablatures", "tuning", "instrument", "bpm", "meter", "youtubeUrl", "video", "artworkUrl", "coverUrl", "sheetMusic", "playbackSettings", "chordSheet"}
 SONG_FIELDS.update({"youtubeVideoId", "youtubeThumbnailUrl", "youtubeChannelTitle", "sourceInfo"})
+SONG_FIELDS.add("composer")
+SONG_FIELDS.add("bpmSource")
+SONG_FIELDS.add("bpmResetVersion")
 
 
 def payload():
@@ -35,6 +38,8 @@ def payload():
 
 
 def clean(value):
+    from ..services.song_metadata import repair_tree
+    value = repair_tree(value)
     if not isinstance(value, dict) or not isinstance(value.get("name"), str) or not value["name"].strip():
         raise ApiError("playlist_invalida", "Informe o nome da playlist.")
     items = value.get("items", [])
@@ -60,6 +65,8 @@ def clean(value):
             if number is not None and (isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number)):
                 raise ApiError("playlist_invalida", "Os ajustes numéricos da música são inválidos.")
         result["items"].append({"id": item["id"], "song": {k: v for k, v in song.items() if k in SONG_FIELDS}, "playback": {k: v for k, v in playback.items() if k in {"semitones", "capo", "bpm", "meter", "scrollSpeed", "instrument", "sheetView", "fontSize", "tablatureFontSize"}}, "notes": str(item.get("notes") or "")[:500]})
+        if item.get("bpmResetVersion")==1:
+            result["items"][-1]["bpmResetVersion"]=1
     if len(json.dumps(result, ensure_ascii=False).encode()) > 4_000_000:
         raise ApiError("playlist_grande", "A playlist excede 4 MB.", 413)
     return result
@@ -103,7 +110,7 @@ def merge(base, desired, current):
         if before.get(key) != after.get(key):
             if target.get(key) not in (before.get(key), after.get(key)):
                 conflict()
-            if target.get(key) != after.get(key):
+            if label and target.get(key) != after.get(key):
                 changes.append(label)
             target[key] = copy.deepcopy(after.get(key))
     for key, label in [("name", "alterou o nome da playlist"), ("description", "alterou a descrição"), ("coverImage", "alterou a capa")]:
@@ -123,9 +130,10 @@ def merge(base, desired, current):
                 if key == "playback":
                     target = present[item_id]["playback"]
                     old_playback, new_playback = before["playback"], new[item_id]["playback"]
-                    labels = {"semitones": "o tom (transposição em semitons)", "capo": "o capotraste", "bpm": "o BPM", "meter": "o compasso", "scrollSpeed": "a velocidade da rolagem", "instrument": "o instrumento", "sheetView": "a visualização", "fontSize": "o tamanho da letra", "tablatureFontSize": "o tamanho da tablatura"}
+                    # Ajustes do modo estudo continuam salvos/mesclados normalmente,
+                    # mas não são atividade de conteúdo para notificar colaboradores.
                     for setting in set(old_playback) | set(new_playback):
-                        field(target, old_playback, new_playback, setting, f'alterou {labels.get(setting, setting)} de “{new[item_id]["song"]["title"]}” ({old_playback.get(setting, "padrão")} para {new_playback.get(setting, "padrão")})')
+                        field(target, old_playback, new_playback, setting, None)
                 else:
                     field(present[item_id], before, new[item_id], key, f'alterou {"as observações" if key == "notes" else "o conteúdo"} de “{new[item_id]["song"]["title"]}”')
     for item_id, after in new.items():

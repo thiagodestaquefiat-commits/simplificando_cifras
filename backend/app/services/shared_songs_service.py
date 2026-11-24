@@ -263,12 +263,15 @@ class SharedSongService:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
+                "bpm": song_data.get("bpm"),
+                "bpmSource": song_data.get("bpmSource"),
+                "composer": song_data.get("composer"),
                 "tom": str(song_data.get("key") or song_data.get("currentKey") or song_data.get("originalKey") or "").strip()[:20] or None,
                 "capotraste": capo,
                 "harmonicSummary": {"blocos": blocos[:40]},
                 "observacoes": ["Encontrada na sua biblioteca pessoal."],
                 "confianca": "alta",
-                "fullChordSheet": {"source": source, "content": content[:50000],
+                "fullChordSheet": {"source": source, "content": content[:50000], "sourceContent":sheet.get("sourceContent"), "bpmEvidenceText":sheet.get("bpmEvidenceText"),
                                    "sections": [section.model_dump(mode="json") for section in sections]} if content else None,
             })
         except ValidationError:
@@ -335,6 +338,8 @@ class SharedSongService:
                 full_sheet_payload = {
                     "source": source,
                     "content": content[:50000],
+                    "sourceContent": full_sheet.get("sourceContent"),
+                    "bpmEvidenceText": full_sheet.get("bpmEvidenceText"),
                     "sections": full_sheet.get("sections") or [],
                 }
         if source_url.startswith("https://") and (not full_sheet_payload or full_sheet_payload["source"] == "web_source"):
@@ -343,6 +348,9 @@ class SharedSongService:
             response = ResumoHarmonicoResponse.model_validate({
                 "titulo": str(song_data.get("title") or "").strip()[:160],
                 "artista": str(song_data.get("artist") or "").strip()[:160] or None,
+                "bpm": song_data.get("bpm"),
+                "bpmSource": song_data.get("bpmSource"),
+                "composer": song_data.get("composer"),
                 "tom": str(song_data.get("originalKey") or song_data.get("key") or "").strip()[:20] or None,
                 "capotraste": parse_capo(capo),
                 "harmonicSummary": {"blocos": blocos[:40]},

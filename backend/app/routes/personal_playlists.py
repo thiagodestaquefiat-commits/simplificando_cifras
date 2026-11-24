@@ -85,6 +85,7 @@ def _clean(value):
             "artist": _text(item.get("artist"), 200),
             "playback": clean_playback,
             "notes": _text(item.get("notes"), 500),
+            **({"bpmResetVersion":1} if item.get("bpmResetVersion")==1 else {}),
         })
     data = {
         "name": name,

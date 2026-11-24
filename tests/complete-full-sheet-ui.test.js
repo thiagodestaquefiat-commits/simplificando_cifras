@@ -25,6 +25,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
   await page.route(/\/api\/(library|collaboration)/, (r) => r.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
   await page.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ status: 200, contentType: "text/css", body: "" }));
   await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(()=>continueWithoutLogin());
   try {
     await page.waitForFunction(() => typeof window.openSimpleSongEditor === "function" && Array.isArray(window.musicas || musicas));
     // Música só com resumo harmônico.
@@ -34,8 +35,8 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
       return musicas.find((m) => m.title === "Só Resumo").id;
     });
     await page.evaluate((songId) => editMusica(songId), id);
-    await page.getByText("Esta música só tem o resumo harmônico.").waitFor();
     await page.locator("[data-simple-editor-view=full]").click();
+    await page.getByText(/Complete a música com a letra e a cifra/).waitFor();
     const textarea = page.locator("#ai-review-full-text");
     assert.equal(await textarea.inputValue(), "");
     assert.equal(await page.locator("#full-sheet-attach").innerText(), "📎 Anexar arquivo ou foto");
@@ -54,7 +55,7 @@ const SHEET = "[Intro]\nC  G  Am\n\n[Verso]\nC        G\nPrimeira linha\nAm     
     assert.equal(saved.fullChordSheet.source, "user_upload");
     assert.ok(saved.blocos.length >= 1, "resumo harmônico mantido");
     // Detalhe passa a ter a visualização Letra + Cifras.
-    await page.getByRole("tab", { name: "Letra + Cifras" }).first().waitFor();
+    await page.locator('#detail-content .song-page-combined').waitFor({state:'attached'});
     // Reabrir: aba já preenchida, sem o aviso de "só resumo".
     await page.evaluate((songId) => editMusica(songId), id);
     assert.equal(await page.getByText("Esta música só tem o resumo harmônico.").count(), 0);

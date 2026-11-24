@@ -31,6 +31,8 @@
       visibility: "private",
       source: ["user_text", "model_knowledge", "web_source"].includes(value.source) ? value.source : "user_upload",
       content,
+      ...(typeof value.sourceContent==='string'?{sourceContent:value.sourceContent.slice(0,50000)}:{}),
+      ...(typeof value.bpmEvidenceText==='string'?{bpmEvidenceText:value.bpmEvidenceText.slice(0,1000)}:{}),
       sections: Array.isArray(value.sections) ? value.sections.map((section) => ({
         nome: cleanText(section && section.nome || "", 80) || null,
         linhas: Array.isArray(section && section.linhas) ? section.linhas.map((line) => ({
@@ -161,15 +163,18 @@
 
   function normalize(input, defaults) {
     const now = new Date().toISOString();
-    const value = global.tablature?.prepareSong(input || {}) || input || {};
+    const prepared = global.songMetadata?.repair(input || {}) || input || {};
+    const value = global.tablature?.prepareSong(prepared) || prepared;
     const fallback = defaults || {};
     const originalKey = cleanText(value.originalKey || value.key || fallback.originalKey || "C", 12);
     return {
       id: value.id == null ? id("song") : value.id,
-      title: cleanText(value.title || "", 160), artist: cleanText(value.artist || "", 160),
+      title: cleanText(value.title || "", 160), artist: cleanText(value.artist || "", 160), composer: cleanText(value.composer || "",300),
       originalKey, currentKey: cleanText(value.currentKey || originalKey, 12),
       capo: parseCapo(value.capo), instrument: global.instrumentDefinitions.normalizeId(value.instrument || value.instrumento || fallback.instrument || "guitar"),
       bpm: value.bpm === null || value.bpm === "" || value.bpm === undefined ? null : Math.max(20, Math.min(300, Number(value.bpm) || 0)),
+      ...(value.bpmSource?.value===value.bpm?{bpmSource:value.bpmSource}:{}),
+      ...(value.bpmResetVersion===1?{bpmResetVersion:1}:{}),
       status: value.status === "published" ? "published" : "draft",
       source: ["manual", "imported", "ai", "existing"].includes(value.source) ? value.source : (fallback.source || "manual"),
       sourceInfo: normalizeSourceInfo(value.sourceInfo || fallback.sourceInfo),
@@ -184,7 +189,7 @@
   }
 
   function fromLegacy(song) {
-    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet, tablature: song.tablature || song.editorData.tablature });
+    if (song && song.editorData && Array.isArray(song.editorData.sections)) return normalize({ ...song.editorData, id: song.id, title: song.title, artist: song.artist, bpm:song.bpm??song.editorData.bpm, bpmResetVersion:song.bpmResetVersion??song.editorData.bpmResetVersion, composer:song.composer||song.editorData.composer, accessContext: song.accessContext || song.editorData.accessContext, fullChordSheet: song.fullChordSheet || song.editorData.fullChordSheet, tablature: song.tablature || song.editorData.tablature });
     return normalize({
       id: song && song.id, title: song && song.title, artist: song && song.artist,
       originalKey: song && song.key, currentKey: song && song.key, capo: parseCapo(song && song.capo),
@@ -192,7 +197,7 @@
       sections: Array.isArray(song && song.blocos) ? song.blocos.map(legacyBlockToSection) : undefined,
       accessContext: song && song.accessContext, sourceInfo: song && song.sourceInfo,
       fullChordSheet: song && song.fullChordSheet, tablature: song && song.tablature,
-      notes: song && song.notes, bpm: song && song.bpm, createdAt: song && song.createdAt
+      notes: song && song.notes, bpm: song && song.bpm, bpmSource:song&&song.bpmSource, bpmResetVersion:song&&song.bpmResetVersion, composer: song && song.composer, createdAt: song && song.createdAt
     });
   }
 
@@ -360,7 +365,7 @@
     return {
       ...(existing || {}), id: normalized.id, title: normalized.title, artist: normalized.artist,
       key: normalized.currentKey, capo: normalized.capo ? `Capotraste casa ${normalized.capo}` : "",
-      instrumento: normalized.instrument, bpm: normalized.bpm, notes: normalized.notes, blocos,
+      instrumento: normalized.instrument, bpm: normalized.bpm, ...(normalized.bpmSource?{bpmSource:normalized.bpmSource}:{}), ...(normalized.bpmResetVersion===1?{bpmResetVersion:1}:{}), composer: normalized.composer, notes: normalized.notes, blocos,
       songFormatVersion: 3, originalKey: normalized.originalKey, currentKey: normalized.currentKey,
       status: normalized.status, source: normalized.source, aiGenerated: normalized.aiGenerated,
       reviewedByUser: normalized.reviewedByUser, aiConfidence: normalized.aiConfidence,

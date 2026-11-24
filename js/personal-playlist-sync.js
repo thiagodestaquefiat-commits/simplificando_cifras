@@ -45,7 +45,7 @@
       items: playlist.items.map((item) => {
         const song = findSong(item.songId);
         const songClientId = String(song?.librarySync?.clientId || "");
-        return { id: item.id, songClientId, songId: String(song?.id ?? item.songId), title: song?.title || "", artist: song?.artist || "", playback: item.playback || {}, notes: item.notes || "" };
+        return { id: item.id, ...(item.bpmResetVersion===1?{bpmResetVersion:1}:{}), songClientId, songId: String(song?.id ?? item.songId), title: song?.title || "", artist: song?.artist || "", playback: item.playback || {}, notes: item.notes || "" };
       })
     };
   }
@@ -75,7 +75,7 @@
       updatedAt: data.updatedAt || remote.updatedAt,
       items: (data.items || []).map((item) => {
         const song = findSong(item.songClientId) || findSong(item.songId);
-        return { id: item.id, songId: song ? song.id : (item.songClientId || item.songId), playback: item.playback || {}, notes: item.notes || "" };
+        return { id: item.id, ...(item.bpmResetVersion===1?{bpmResetVersion:1}:{}), songId: song ? song.id : (item.songClientId || item.songId), playback: item.playback || {}, notes: item.notes || "" };
       })
     };
     return { ...local, cloud: { version: remote.version, signature: signature(local) } };

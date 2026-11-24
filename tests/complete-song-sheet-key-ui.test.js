@@ -36,6 +36,7 @@ const SHEET_A = "INTRO\nA9   F#m7   E4   D7M\n\nPRIMEIRA PARTE\n      A\nNada no
       return musicas.find((m) => m.title === "Gratidão").id;
     });
     await page.evaluate((songId) => openDetail(songId), id);
+    await page.evaluate(()=>continueWithoutLogin());
     await page.locator("#complete-sheet-button").click();
     await page.getByText("Letra + Cifras adicionada").waitFor();
     const saved = await page.evaluate((songId) => musicas.find((m) => String(m.id) === String(songId)), id);
