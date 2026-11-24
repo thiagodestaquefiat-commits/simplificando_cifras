@@ -727,7 +727,8 @@ def list_event_messages(event_id: str):
         limit = max(1, min(int(request.args.get("limit", 100)), 200))
     except (TypeError, ValueError):
         limit = 100
-    query = EventMessage.query.filter_by(event_id=event.id)
+    # Filtrar antes do limite para avisos antigos não ocuparem a página de mensagens.
+    query = EventMessage.query.filter_by(event_id=event.id).filter(EventMessage.message_type != "system")
     before = request.args.get("before", "").strip()
     if before:
         query = query.filter(EventMessage.created_at < _datetime(before, datetime.now(timezone.utc)))
@@ -742,13 +743,28 @@ def create_event_message(event_id: str):
     _member(event, g.current_user.id)
     payload = _json()
     message_id = _text(payload.get("clientId"), 80, "clientId") or str(uuid.uuid4())
+    message_type = _text(payload.get("type"), 16, "type") or "text"
     existing = db.session.get(EventMessage, message_id)
     if existing is not None:
         if existing.event_id != event.id or existing.sender_id != g.current_user.id:
             raise ApiError("mensagem_existente", "Este identificador de mensagem já está em uso.", 409)
-        return jsonify(_serialize_message(existing)), 200
-    message_type = _text(payload.get("type"), 16, "type") or "text"
-    if message_type not in {"text", "system", "poll", "song", "playlist", "event", "image", "file"}:
+        if (existing.message_type == "system") != (message_type == "system"):
+            raise ApiError("mensagem_existente", "Este identificador de mensagem já está em uso.", 409)
+        if message_type != "system":
+            return jsonify(_serialize_message(existing)), 200
+    if message_type == "system":
+        # Clientes antigos esperam um objeto de mensagem (id/type), não HTTP 204:
+        # sem ele não retiram o aviso da fila e bloqueiam as conversas seguintes.
+        # A confirmação abaixo é efêmera: NÃO cria linha, recibo ou notificação.
+        return jsonify({
+            "id": message_id, "eventId": event.id, "type": "system",
+            "ignored": True, "reason": "notifications_are_not_chat_messages",
+            "content": "", "deleted": True, "reactions": {},
+            "sender": {"id": g.current_user.id, "name": g.current_user.name, "avatarUrl": None},
+            "createdAt": datetime.now(timezone.utc).isoformat(), "editedAt": None,
+            "replyTo": None, "poll": None, "song": None, "attachment": None, "audio": None,
+        }), 200
+    if message_type not in {"text", "poll", "song", "playlist", "event", "image", "file"}:
         raise ApiError("tipo_invalido", "Tipo de mensagem inválido.", 400)
     content = _text(payload.get("content"), 5000 if message_type == "text" else 500, "content")
     poll = None
@@ -834,7 +850,7 @@ def update_event_message(event_id: str, message_id: str):
     event = _event_or_404(event_id)
     _member(event, g.current_user.id)
     message = db.session.get(EventMessage, message_id)
-    if message is None or message.event_id != event.id:
+    if message is None or message.event_id != event.id or message.message_type == "system":
         raise ApiError("mensagem_nao_encontrada", "Mensagem não encontrada.", 404)
     payload = _json()
     action = _text(payload.get("action"), 20, "action", True)

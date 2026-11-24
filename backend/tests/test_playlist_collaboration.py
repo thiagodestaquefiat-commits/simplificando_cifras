@@ -1,4 +1,5 @@
 from copy import deepcopy
+import pytest
 from app.database import db
 from app.models import PersonalSong, SharedSong
 from app.models.playlist_collaboration import PlaylistInvite, PlaylistNotification, PlaylistMember, CollaborativePlaylist
@@ -31,6 +32,43 @@ def edit(client, token, row, desired, op="operation-one", **extra):
     return client.post(f'{BASE}/{row["id"]}/operations', headers=auth(token), json={"operationId": op, "base": row["data"], "data": desired, **extra})
 
 
+@pytest.mark.parametrize("setting,value", [
+    ("scrollSpeed", 75), ("instrument", "guitarra"), ("sheetView", "lyrics"),
+    ("fontSize", 32), ("tablatureFontSize", 16), ("bpm", 120),
+    ("meter", "3/4"), ("semitones", 2), ("capo", 2),
+])
+def test_study_settings_save_without_notifying_collaborators(client, app, setting, value):
+    a, b, _, row = setup(client)
+    assert join(client, a, b, row).status_code == 200
+    with app.app_context():
+        count = PlaylistNotification.query.count()
+    desired = deepcopy(row["data"])
+    desired["items"][0]["playback"][setting] = value
+    response = edit(client, b, row, desired)
+    assert response.status_code == 200
+    assert response.get_json()["playlist"]["data"]["items"][0]["playback"][setting] == value
+    other = client.get(BASE, headers=auth(a)).get_json()
+    assert other["playlists"][0]["data"]["items"][0]["playback"][setting] == value
+    with app.app_context():
+        assert PlaylistNotification.query.count() == count
+    assert edit(client, b, row, desired).status_code == 200  # retry idempotente
+    with app.app_context():
+        assert PlaylistNotification.query.count() == count
+
+
+def test_study_and_content_edit_only_notify_content(client):
+    a, b, _, row = setup(client)
+    join(client, a, b, row)
+    desired = deepcopy(row["data"])
+    desired["items"][0]["playback"].update(scrollSpeed=75, instrument="guitarra")
+    desired["items"][0]["song"]["blocos"] = [{"l": "Novo verso", "c": "G D"}]
+    assert edit(client, b, row, desired).status_code == 200
+    notices = client.get(BASE, headers=auth(a)).get_json()["notifications"]
+    edits = [n for n in notices if "conteúdo" in n["summary"]]
+    assert len(edits) == 1
+    assert "rolagem" not in edits[0]["summary"] and "instrumento" not in edits[0]["summary"]
+
+
 def test_accept_permissions_notifications_and_private_libraries(client, app):
     a, b, c, row = setup(client)
     assert client.get(BASE).status_code == 401
@@ -38,12 +76,13 @@ def test_accept_permissions_notifications_and_private_libraries(client, app):
     assert join(client, a, b, row).status_code == 200
     desired = deepcopy(row["data"])
     desired["items"][0]["playback"]["semitones"] = 2
+    desired["items"][0]["notes"] = "Entrada suave"
     response = edit(client, b, row, desired)
     assert response.status_code == 200, response.get_json()
     assert len(response.get_json()["playlist"]["members"]) == 2
     assert all(m["role"] == "owner" for m in response.get_json()["playlist"]["members"])
     inbox = client.get(BASE, headers=auth(a)).get_json()
-    assert any("tom" in n["summary"] and n["actorName"] == "Bruno" for n in inbox["notifications"])
+    assert any("observações" in n["summary"] and n["actorName"] == "Bruno" for n in inbox["notifications"])
     assert client.get(BASE, headers=auth(c)).get_json()["playlists"] == []
     with app.app_context():
         assert PersonalSong.query.count() == SharedSong.query.count() == 0

@@ -1,0 +1,42 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..');
+const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,p==='/'?'index.html':p.slice(1));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return res.writeHead(404).end();res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream');res.end(fs.readFileSync(file));});
+(async()=>{let browser;try{
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'});
+  await page.route('**/api/**',r=>r.fulfill({json:{}}));
+  await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({contentType:'text/css',body:''}));
+  await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'Continuar sem login'}).click();
+  await page.evaluate(()=>{
+    const song={id:'metadata-ui',title:'Primeira essência',artist:'',key:'C',blocos:[{l:'Intro',c:'C G'}]};
+    musicas=songRepository.addOrReuse(musicas,song).songs;salvar();openDetail(song.id);
+    window.harmonicSummaryClient={...harmonicSummaryClient,generate:async()=>({data:{titulo:song.title,artista:'Aline Barros',tom:'C',bpm:75,composer:'Anderson Freire',fullChordSheet:{source:'web_source',visibility:'private',content:'Composição de: Anderson Freire\n[Ritmo Padrão] 75 bpm\n[Intro]\nC G\nLetra original',sections:[]}}})};
+  });
+  await page.locator('#complete-sheet-button').click();
+  await page.waitForFunction(()=>musicas.find(s=>s.id==='metadata-ui')?.bpm===75);
+  const saved=await page.evaluate(()=>musicas.find(s=>s.id==='metadata-ui'));
+  assert.equal(saved.artist,'Aline Barros');assert.equal(saved.composer,'Anderson Freire');
+  assert.equal(saved.fullChordSheet.content,'[Intro]\nC G\nLetra original');
+  assert.match(saved.fullChordSheet.sourceContent,/75 bpm/);
+  assert.equal(await page.locator('#metronome-bpm').textContent(),'75',JSON.stringify(await page.evaluate(()=>({song:musicas.find(s=>s.id==='metadata-ui'),metronome:storage.get('study-metronome-bpm-v1',{}),baseline:detailEditBaseline}))));
+  assert.equal(await page.locator('#detail-artist-label').textContent(),'Aline Barros');
+  await page.evaluate(()=>{
+    const source=musicas.find(s=>s.id==='metadata-ui');
+    musicas=songRepository.update(musicas,source.id,{bpmResetVersion:1,playbackSettings:{...source.playbackSettings,bpm:75}}).songs;salvar();
+    storage.set('study-metronome-bpm-v1',{...storage.get('study-metronome-bpm-v1',{}),[appCurrentUser.id+':metadata-ui']:99});
+    detailEditBaseline=null;openDetail('metadata-ui');
+  });
+  assert.equal(await page.locator('#metronome-bpm').textContent(),'75','BPM da fonte substitui o valor antigo depois da atualização');
+  await page.evaluate(()=>studyMetronome.setBpm(88));
+  await page.waitForFunction(()=>musicas.find(s=>s.id==='metadata-ui')?.playbackSettings?.bpm===88);
+  await page.evaluate(()=>openDetail('metadata-ui'));
+  assert.equal(await page.locator('#metronome-bpm').textContent(),'88','alterações feitas depois da atualização continuam permitidas');
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.evaluate(()=>openDetail('metadata-ui'));
+  assert.equal(await page.locator('#metronome-bpm').textContent(),'88');
+  assert.equal(await page.locator('#detail-artist-label').textContent(),'Aline Barros');
+  console.log('complete-song-metadata-ui: OK (botão, artista, compositor, BPM, fonte original e reabertura)');
+}finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

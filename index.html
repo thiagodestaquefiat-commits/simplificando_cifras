@@ -10,7 +10,7 @@
 <title>ROUDY</title>
 <link rel="stylesheet" href="css/roudy-tokens.css?v=1">
 <link rel="stylesheet" href="css/event-chat-audio.css?v=5">
-<link rel="stylesheet" href="css/bug-report.css?v=2">
+<link rel="stylesheet" href="css/bug-report.css?v=3">
 <meta name="theme-color" content="#0B0B0C">
 <meta name="description" content="ROUDY — Menos papel, menos distração, mais música.">
 <meta name="application-name" content="ROUDY">
@@ -1525,13 +1525,14 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 
 <script src="js/storage.js?v=4"></script>
 <script src="js/tablature.js?v=2"></script>
-<script src="js/song-model.js?v=8"></script>
+<script src="js/song-metadata.js?v=2"></script>
+<script src="js/song-model.js?v=9"></script>
 <script src="js/song-artwork.js?v=2"></script>
 <script src="js/list-loading.js?v=10"></script>
 <script src="js/sheet-music.js?v=1"></script>
 <script src="js/demo-library.js?v=5"></script>
 <script src="js/medley-repository.js?v=2"></script>
-<script src="js/song-repository.js?v=18"></script>
+<script src="js/song-repository.js?v=19"></script>
 <script src="js/library-sync-policy.js?v=1"></script>
 <script src="js/library-sync.js?v=24"></script>
 <script src="js/event-model.js?v=10"></script>
@@ -1540,7 +1541,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/event-repository.js?v=10"></script>
 <script src="js/closing-suggestions.js?v=1"></script>
 <script src="js/event-chat-audio.js?v=7"></script>
-<script src="js/event-chat.js?v=8"></script>
+<script src="js/event-chat.js?v=9"></script>
 <script src="js/support-attachment.js?v=2"></script>
 <script src="js/youtube-api.js?v=8"></script>
 <script src="js/youtube-song-linker.js?v=2"></script>
@@ -1558,8 +1559,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/stage-preferences.js?v=3"></script>
 <script src="js/stage-offline.js?v=2"></script>
 <script src="js/event-offline.js?v=2"></script>
-<script src="js/study-metronome.js?v=7"></script>
-<script src="js/editor/song-format.js?v=17"></script>
+<script src="js/study-metronome.js?v=9"></script>
+<script src="js/editor/song-format.js?v=20"></script>
 <script src="js/editor/song-editor-history.js"></script>
 <script src="js/editor/song-editor-validation.js"></script>
 <script src="js/editor/chord-simplifier.js"></script>
@@ -1584,7 +1585,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}html{overscroll
 <script src="js/context-acknowledgements.js?v=2"></script>
 <script src="js/context-history.js?v=3"></script>
 <script src="js/band-client.js?v=1"></script>
-<script src="js/ai/harmonic-summary-client.js?v=18"></script>
+<script src="js/ai/harmonic-summary-client.js?v=21"></script>
 <script src="js/summary-organizer.js?v=6"></script>
 <script src="js/ai/ai-harmonic-summary.js?v=21"></script>
 <script src="js/ai/camera-capture.js?v=6"></script>
@@ -1613,11 +1614,11 @@ window.roudyQrLibs={code:()=>window.QRCode?Promise.resolve():window.roudyLoadScr
 })();
 </script>
  <script src="js/notification-center.js?v=9"></script>
-<script src="js/user-playlists.js?v=7"></script>
+<script src="js/user-playlists.js?v=8"></script>
 <script src="js/song-share.js?v=2"></script>
 <script src="js/home-playlists.js?v=45"></script>
-<script src="js/playlist-collaboration.js?v=2"></script>
-<script src="js/personal-playlist-sync.js?v=4"></script>
+<script src="js/playlist-collaboration.js?v=3"></script>
+<script src="js/personal-playlist-sync.js?v=5"></script>
 <script>try{personalPlaylistSync.start();}catch(error){console.error(error);}</script>
 <script src="js/playlist-invites.js?v=9"></script>
 <script src="js/profile-username.js?v=4"></script>
@@ -3162,14 +3163,14 @@ function openDetail(id,options={}){
   if(sharedPlaylistVariant)detailPlaylistContext=sharedPlaylistVariant.item;
   if(!contextualSong&&options.preserveNavigation&&window.homePlaylists){const variant=homePlaylists.variantForContext(navigationContext.get());if(variant){contextualSong=variant.song;detailPlaylistContext=variant.item;}}
   if(!contextualSong&&options.preserveNavigation){const context=navigationContext.get(),event=context&&findEvent(context.playlistId),available=event&&event.repertoire.filter(item=>eventSongSource(event,item)),item=available&&available[context.currentIndex];if(event&&item)contextualSong=eventSongVariant(event,item,appCurrentUser.id);}
-  currentDetailSongOverride=contextualSong;
-  const m=contextualSong||baseSong;
+  currentDetailSongOverride=contextualSong?songMetadata.repair(contextualSong):null;
+  const m=currentDetailSongOverride||songMetadata.repair(baseSong);
   const activeContext=navigationContext.get(),activeEvent=activeContext&&findEvent(activeContext.playlistId);
   if(contextualSong&&activeEvent){const item=activeEvent.repertoire.filter(value=>eventSongSource(activeEvent,value))[activeContext.currentIndex];if(item){detailEventContext={eventId:activeEvent.id,itemId:item.id,ownerId:appCurrentUser.id};storage.set(HOME_CARD_LAST_SONG_KEY,{songId:baseSong.id,eventId:activeEvent.id,repertoireItemId:item.id,openedAt:new Date().toISOString()});}}
   renderContextualHomeCard();
   detailEditBaseline={};
   document.getElementById('study-metronome').hidden=false;
-  studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id);
+  studyMetronome.setSong(detailEventContext?'event:'+detailEventContext.eventId+':'+detailEventContext.itemId:m.id,appCurrentUser.id,m.bpm,m.bpmResetVersion);
   loadSongTextScale();
   const context=navigationContext.get();
   // Botão Modo Palco na própria música (pedido do Thiago, 18/11): no culto a pessoa sai do palco,
@@ -3196,7 +3197,7 @@ function openDetail(id,options={}){
   storedCapo=capoNum;
   selectedCapo=capoNum;
   scrollSpeed=stagePreferences.load(appCurrentUser.id).autoScrollSpeed;
-  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=detailEventContext?(readEventScrollPref(detailEventContext)??scrollSpeed):(saved.scrollSpeed??scrollSpeed);currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm());studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
+  {const saved=m.playbackSettings||{};currentSemitones=Number(saved.semitones)||0;selectedCapo=detailEventContext?(readEventCapoPref(detailEventContext)??0):(saved.capo??capoNum);scrollSpeed=detailEventContext?(readEventScrollPref(detailEventContext)??scrollSpeed):(saved.scrollSpeed??scrollSpeed);currentInstrument=saved.instrument||currentInstrument;currentSongView=saved.sheetView||currentSongView;tablatureFontSize=saved.tablatureFontSize||13;detailStageFont=saved.fontSize||28;studyMetronome.setBpm(saved.bpm||studyMetronome.getBpm(),false);studyMetronome.setMeter(saved.meter||studyMetronome.getMeter());detailEditOwner=appCurrentUser.id;detailEditBaseline=JSON.parse(JSON.stringify(detailEditableState()));}
   document.querySelectorAll('.capo-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('capo-opt-'+selectedCapo)?.classList.add('active');
   // músicas antigas, sem instrumento salvo, usam sempre Violão & Guitarra
@@ -4019,19 +4020,24 @@ async function completeSongSheet(id){
     }
     if(eventContext&&(eventContext.ownerId!==appCurrentUser.id||eventContext.eventId!==detailEventContext?.eventId||eventContext.itemId!==detailEventContext?.itemId))return;
     if(playlistContext&&(playlistContext.ownerId!==appCurrentUser.id||playlistContext.itemId!==detailPlaylistContext?.itemId))return;
+    flushDetailAutoSave();
     const current=eventContext||playlistContext?currentDetailSongOverride:musicas.find(item=>String(item.id)===String(song.id));
     if(!current)return;
-    if(playlistContext){await commitInlineSongEdit(current,{...current,fullChordSheet:sheet},'Letra e cifra salvas');return;}
+    const completed=base=>songMetadata.repair({...base,artist:base.artist||result?.data?.artista||'',bpm:base.bpm??songMetadata.trustedBpm(result?.data),bpmSource:base.bpmSource||result?.data?.bpmSource,composer:base.composer||result?.data?.composer||'',fullChordSheet:sheetAtSongKey(sheet,base,result?.data)});
+    if(playlistContext){await commitInlineSongEdit(current,completed(current),'Letra e cifra salvas');return;}
     if(current.fullChordSheet?.content){showToast('✅ Esta música já tem Letra + Cifras.');openDetail(current.id);return;}
     if(eventContext){
       // Completar dentro do evento também completa a música da biblioteca (se ela ainda não tem),
       // senão a mesma música continua "só com resumo" fora do evento.
       const library=musicas.find(item=>String(item.id)===String(current.id));
-      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,{fullChordSheet:sheetAtSongKey(sheet,library,result?.data)});commitSongs(lib.songs);}
-      await saveContextEventSong(eventContext,eventSongCopy({...current,fullChordSheet:sheetAtSongKey(sheet,current,result?.data)}));return;
+      if(library&&!library.fullChordSheet?.content){const lib=songRepository.update(musicas,library.id,completed(library));commitSongs(lib.songs);}
+      await saveContextEventSong(eventContext,eventSongCopy(completed(current)));return;
     }
-    const updated=songRepository.update(musicas,current.id,{fullChordSheet:sheetAtSongKey(sheet,current,result?.data)});
+    const updated=songRepository.update(musicas,current.id,completed(current));
     if(!commitSongs(updated.songs))return;
+    // A importação mudou metadados, não os controles: não salvar o antigo BPM
+    // como preferência apenas porque o nome do artista foi preenchido agora.
+    detailEditBaseline=null;
     renderMusicas();openDetail(updated.song.id);
     showToast('✅ Letra + Cifras adicionada. O resumo harmônico continua o mesmo.');
   }catch(error){
@@ -5641,7 +5647,6 @@ async function createNewEventFromSheet(){
     result=eventRepository.upsertShared(setlists,candidate,appCurrentUser);
     try{candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate)}catch(error){if(!collaborationAllowsOffline(error))throw error}
     setlists=result.events;eventRepository.save(setlists);renderSetlists();closeEventAdminSheet();switchTab('setlists');openSD(candidate.id);
-    try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+' criou o evento.')}catch(_error){}
   }catch(error){if(errorTarget)errorTarget.textContent=error.message||'Não foi possível criar o evento.';if(button)button.disabled=false;return;}
 }
 
@@ -5742,7 +5747,6 @@ function openAddSetlist(prefill){
     let result,syncWarning='';try{result=eventRepository.upsertShared(setlists,candidate,permissionActor);}catch(error){showToast('🔒 '+error.message);return;}
     try{if(candidate.remoteVersion!=null||String(permissionActor.id)===String(appCurrentUser.id)){candidate=await eventCollaboration.saveSharedEvent(candidate,appCurrentUser);result=eventRepository.upsert(result.events,candidate);}}catch(error){if(!error.offline&&error.status!==404&&error.code!=='membro_nao_registrado'){showToast('⚠️ '+error.message);return;}if(error.code==='membro_nao_registrado')syncWarning='📱 Há um integrante legado sem conta registrada. Corrija-o antes de convidar.';}
     setlists=result.events;eventRepository.save(setlists);
-    try{eventChat.sendSystem(candidate.id,(appCurrentUser.name||'Você')+(editingId?' atualizou o evento.':' criou o evento.'));}catch(error){}
     source=candidate;editingId=candidate.id;eventMembers=[...candidate.members];renderMembers();
     let inviteNote='';
     if(pendingInvites.length&&!options.keepOpen){
@@ -6515,7 +6519,6 @@ async function changeEventOfficialKey(eventId,itemId,direction){
       try{updated=await eventCollaboration.savePersonalItem(updated,itemId,personalChanges,appCurrentUser);}catch(error){eventCollaboration.queuePersonalOperation(updated.id,itemId,'upsert',personalChanges);}
     }
     setlists=eventRepository.upsert(setlists,updated).events;eventRepository.save(setlists);
-    try{eventChat.sendSystem(updated.id,(actor.name||'O líder')+' alterou o tom oficial para '+nextKey+'.');}catch(error){}
     const position=document.getElementById('view-sd').scrollTop;openSD(updated.id);document.getElementById('view-sd').scrollTop=position;
     showToast(`🎵 Tom oficial: ${nextKey}`);
   }catch(error){showToast('⚠️ '+error.message);}
@@ -6654,7 +6657,6 @@ async function saveEventSongEdit(){
     if(draft.scope==='personal'){if(event.remoteVersion!=null)event=await eventCollaboration.savePersonalItem(event,draft.itemId,changes,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,draft.itemId,'upsert',changes);}else event=event.remoteVersion==null?await eventCollaboration.saveSharedEvent(event,appCurrentUser):await eventCollaboration.saveSharedItem(event,draft.itemId,changes,appCurrentUser);
   }catch(error){saveButton.disabled=false;if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}if(draft.scope==='personal')eventCollaboration.queuePersonalOperation(event.id,draft.itemId,'upsert',changes);}
   setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);
-  try{eventChat.sendSystem(event.id,(appCurrentUser.name||'Você')+' alterou uma música do repertório oficial.');}catch(error){}
   closeEventSongEditSheet({restoreFocus:false});openSD(event.id);showToast(draft.scope==='personal'?'Minha versão foi salva':'Alteração oficial salva');
 }
 async function clearEventPersonalEdit(eventId,itemId){let event=findEvent(eventId);if(!event)return;try{event=eventModel.create({...eventModel.clearPersonalEdit(event,itemId,appCurrentUser.id),syncState:'pending'});if(event.remoteVersion!=null)event=await eventCollaboration.clearPersonalItem(event,itemId,appCurrentUser);else eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}catch(error){if(!collaborationAllowsOffline(error)){showToast('⚠️ '+error.message);return;}eventCollaboration.queuePersonalOperation(event.id,itemId,'delete');}setlists=eventRepository.upsert(setlists,event).events;eventRepository.save(setlists);closeModal();openSD(event.id);showToast('🌐 Versão oficial restaurada');}

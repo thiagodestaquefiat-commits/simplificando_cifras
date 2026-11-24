@@ -93,5 +93,13 @@ function element() {
   controls['#metronome-meter'].handlers.change();
   assert.equal(beats.filter(beat => !beat.hidden).length, 6);
   assert.deepEqual(errors, []);
+  metronome.setSong('metadata-song','user-1',75);
+  assert.equal(metronome.getBpm(),75);
+  metronome.setBpm(90);metronome.setSong('metadata-song','user-1',75);
+  assert.equal(metronome.getBpm(),90,'ajuste pessoal vence o BPM original');
+  metronome.setSong('metadata-song','user-1',75,1);
+  assert.equal(metronome.getBpm(),75,'a atualização substitui a preferência antiga pelo BPM da fonte');
+  metronome.setBpm(88);metronome.setSong('metadata-song','user-1',75,1);
+  assert.equal(metronome.getBpm(),88,'a substituição ocorre uma vez; escolhas posteriores são preservadas');
   console.log('study-metronome: OK (clique agendado, controles, pausa e BPM por música)');
 })().catch(error => { console.error(error); process.exitCode = 1; });

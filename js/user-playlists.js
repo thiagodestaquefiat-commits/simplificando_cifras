@@ -140,7 +140,7 @@
 
   function normalizeItem(item) {
     if (!item || item.songId === undefined || item.songId === null || item.songId === "") return null;
-    return { id: String(item.id || newId("pli")), songId: item.songId, playback: cleanPlayback(item.playback), notes: String(item.notes || "").slice(0, 500), ...(item.song && typeof item.song === "object" ? { song: item.song } : {}) };
+    return { id: String(item.id || newId("pli")), songId: item.songId, playback: cleanPlayback(item.playback), notes: String(item.notes || "").slice(0, 500), ...(item.bpmResetVersion===1?{bpmResetVersion:1}:{}), ...(item.song && typeof item.song === "object" ? { song: item.song } : {}) };
   }
 
   function normalizePlaylist(value) {

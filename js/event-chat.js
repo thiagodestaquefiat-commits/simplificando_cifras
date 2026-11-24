@@ -37,7 +37,8 @@
   }
   function list(eventId, limit, before) {
     assertAccess(eventId);
-    let values = allMessages()[String(eventId)] || [];
+    // Avisos automáticos antigos não fazem parte da conversa nem da paginação.
+    let values = (allMessages()[String(eventId)] || []).filter(message => message.type !== "system");
     if (before) values = values.filter((message) => message.createdAt < before);
     return values.slice(-(Number(limit) || 40));
   }
@@ -65,7 +66,7 @@
     return saved;
   }
   async function flush(eventId) {
-    const pending = (allMessages()[String(eventId)] || []).filter((message) => message.pending);
+    const pending = (allMessages()[String(eventId)] || []).filter((message) => message.pending && message.type !== "system");
     for (const message of pending) {
       try { await createRemote(message); } catch (_error) { break; }
     }
@@ -99,10 +100,9 @@
     return message;
   }
   function sendSystem(eventId, content) {
-    const message = { ...baseMessage(eventId, "system"), content: String(content || "") };
-    write(eventId, (values) => [...values, message]);
-    createRemote(message).catch(() => {});
-    return message;
+    // Compatibilidade com chamadas antigas, sem escrever nem enviar avisos ao chat.
+    assertAccess(eventId);
+    return null;
   }
   function createPoll(eventId, poll) {
     const options = (poll.options || []).map((label) => String(label || "").trim()).filter(Boolean).map((label) => ({ id: uid("option"), label }));
@@ -189,7 +189,7 @@
   function isUnread(eventId, message) {
     const readAt = global.storage.get(READ_KEY, {})[String(eventId)] || "";
     const user = currentUser();
-    return message.createdAt > readAt && String(message.sender?.id) !== String(user.id);
+    return message.type !== "system" && message.createdAt > readAt && String(message.sender?.id) !== String(user.id);
   }
   function unreadCount(eventId) {
     return (allMessages()[String(eventId)] || []).filter(message => isUnread(eventId, message)).length;

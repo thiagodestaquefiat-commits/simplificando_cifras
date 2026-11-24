@@ -43,4 +43,10 @@ assert.equal(window.eventChat.unreadCount("e1"), 1);
 window.eventChat.markRead("e1");
 assert.equal(window.eventChat.unreadCount("e1"), 0);
 
+const prior=window.eventChat.list('e1',10000);
+values.set('sc_event_messages_v1',{e1:[...prior,...Array.from({length:60},(_,i)=>({id:'legacy-'+i,type:'system',content:'Alterou o tom',sender:{id:'u2'},createdAt:'2099-01-01T00:00:00Z',pending:true}))]});
+assert.equal(window.eventChat.list('e1',40).length,prior.length,'avisos antigos não ocupam a paginação nem aparecem na conversa');
+assert.equal(window.eventChat.unreadCount('e1'),0,'avisos não inflam o contador do chat');
+assert.equal(window.eventChat.sendSystem('e1','Alterou a música'),null);
+assert.equal(values.get('sc_event_messages_v1').e1.length,prior.length+60,'não cria novos avisos nem apaga o histórico local');
 console.log("event-chat.test.js: OK");

@@ -126,8 +126,11 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(event_audio_blueprint)
     app.register_blueprint(bug_reports_blueprint)
     with app.app_context():
+        from .services.song_metadata_migration import register_maintenance, start_background_repair
         # Cria tabelas ausentes e aplica somente extensões aditivas conhecidas.
         db.create_all()
         ensure_additive_collaboration_columns()
+    register_maintenance(app)
+    start_background_repair(app)
     register_error_handlers(app)
     return app

@@ -112,10 +112,10 @@
       return timer !== null;
     }
 
-    function setBpm(value) {
+    function setBpm(value, persist = true) {
       bpm = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(value)));
       displayBpm();
-      if (songKey !== null && options.shouldPersist?.() !== false) {
+      if (persist && songKey !== null && options.shouldPersist?.() !== false) {
         const saved = storage.get(STORAGE_KEY, {});
         storage.set(STORAGE_KEY, { ...saved, [songKey]: bpm });
       }
@@ -136,12 +136,19 @@
       if (timer !== null) { stop(); if (meter) start(); }
     }
 
-    function setSong(songId, userId) {
+    function setSong(songId, userId, originalBpm, sourceResetVersion) {
       stop();
       songKey = `${String(userId || "local")}:${String(songId)}`;
       const saved = storage.get(STORAGE_KEY, {});
+      const resetKey='study-metronome-source-reset-v1', resets=storage.get(resetKey,{});
+      const source=Number(originalBpm);
+      if(sourceResetVersion===1&&!resets[songKey]&&Number.isFinite(source)&&source>=MIN_BPM&&source<=MAX_BPM){
+        saved[songKey]=source;
+        if(storage.set(STORAGE_KEY,saved)!==false)storage.set(resetKey,{...resets,[songKey]:1});
+      }
       const value = Number(saved[songKey]);
-      bpm = Number.isFinite(value) && value >= MIN_BPM && value <= MAX_BPM ? value : 72;
+      const fallback=Number(originalBpm);
+      bpm = Number.isFinite(value) && value >= MIN_BPM && value <= MAX_BPM ? value : Number.isFinite(fallback)&&fallback>=MIN_BPM&&fallback<=MAX_BPM?fallback:72;
       displayBpm();
       setMeter(storage.get(METER_STORAGE_KEY, {})[songKey], false);
     }

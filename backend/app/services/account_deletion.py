@@ -55,6 +55,8 @@ def _refresh_vocal_history(event_ids: list[str]) -> None:
 def delete_account_data(user_id: str) -> dict:
     """Apaga os dados da conta no banco do ROUDY. Não faz commit (quem chama decide)."""
     summary = {}
+    from .song_metadata_migration import purge_account_backups, purge_record_backups
+    repair_backup_targets=purge_account_backups(user_id)
     # Relatos locais de suporte também pertencem à conta. Apague os metadados
     # dependentes antes do relato; cópias já encaminhadas por e-mail são externas.
     from ..routes.bug_reports import BugReport, SupportAttempt
@@ -121,6 +123,7 @@ def delete_account_data(user_id: str) -> dict:
                           (ExternalIdentity, "user_id")):
         _delete(model.query.filter(getattr(model, column) == user_id))
     _delete(CollaborationUser.query.filter_by(id=user_id))
+    purge_record_backups(repair_backup_targets)
     return summary
 
 

@@ -30,7 +30,7 @@
       const song = clone(source);
       // Personal synchronization metadata never belongs in a shared document.
       for (const key of ['librarySync', 'privateSource', 'ownerId', 'accountId', 'accessToken', 'email', 'phone']) delete song[key];
-      return { id: item.id, song, playback: clone(item.playback || {}), notes: item.notes || '' };
+      return { id: item.id, ...(item.bpmResetVersion===1?{bpmResetVersion:1}:{}), song, playback: clone(item.playback || {}), notes: item.notes || '' };
     }) };
   }
   function prepare(before, after) {

@@ -1,4 +1,6 @@
 /* Scoped support screen: decoration never intercepts a form interaction. */
+/* O formulário ocupa a tela inteira; os demais menus mantêm a gaveta lateral. */
+.account-drawer:has(>.bug-report-screen){box-sizing:border-box;width:100%;max-width:none;height:100%;padding:0;background:#050607;box-shadow:none}
 .bug-report-screen{position:relative;isolation:isolate;min-height:100%;background:#050607;color:#f5f5f7}
 .bug-report-screen::before{position:absolute;inset:0;z-index:-1;content:"";background:url('../assets/support-instruments.svg') 12px 20px/280px 320px repeat;opacity:.045;pointer-events:none}
 .bug-report-screen .account-drawer-subheader{background:#050607;border:0}

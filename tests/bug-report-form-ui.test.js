@@ -17,6 +17,22 @@ const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://local
     openAccountDrawerHelpSupport();
   });
   await page.getByRole('button',{name:/Relatar bugs/}).click();
+  for(const size of [{width:390,height:844},{width:320,height:568},{width:844,height:390},{width:1280,height:800}]){
+    await page.setViewportSize(size);
+    const bounds=await page.locator('.account-drawer').boundingBox();
+    assert.equal(bounds.x,0);assert.equal(bounds.y,0);
+    assert.equal(bounds.width,size.width,'relato ocupa toda a largura, sem a faixa da gaveta');
+    assert.equal(bounds.height,size.height);
+    assert.equal(await page.locator('.account-drawer').evaluate(el=>el.scrollWidth<=el.clientWidth),true,'sem rolagem horizontal');
+    await page.getByRole('button',{name:'Enviar relato',exact:true}).scrollIntoViewIfNeeded();
+    assert.equal(await page.getByRole('button',{name:'Enviar relato',exact:true}).isVisible(),true);
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('.account-drawer').evaluate(el=>el.scrollTop=0);
+  if(process.env.SUPPORT_SCREENSHOT)await page.screenshot({path:process.env.SUPPORT_SCREENSHOT});
+  await page.locator('.bug-report-screen .account-drawer-subheader button').click();
+  assert.ok((await page.locator('.account-drawer').boundingBox()).width<390,'voltar restaura a largura da gaveta');
+  await page.getByRole('button',{name:/Relatar bugs/}).click();
   await page.locator('#bug-description').fill('A notificação aparece depois de ler todas.');
   assert.equal(await page.locator('#bug-report-form textarea').count(),1);
   assert.equal(await page.locator('#bug-description').getAttribute('aria-describedby'),'bug-description-help bug-report-privacy');

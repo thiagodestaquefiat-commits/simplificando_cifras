@@ -38,7 +38,8 @@ def _payload(value):
         raise ApiError("musica_muito_grande", "A música excede o limite permitido.", 413)
     if not str(value.get("title") or "").strip():
         raise ApiError("titulo_obrigatorio", "A música precisa de um título.", 400)
-    return value
+    from ..services.song_metadata import repair_tree
+    return repair_tree(value)
 
 
 def _client_id(value):

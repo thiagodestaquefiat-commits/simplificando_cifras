@@ -27,6 +27,10 @@ def _database_uri(value: str) -> str:
 
 
 class Config:
+    SONG_METADATA_AUTO_REPAIR = os.getenv("SONG_METADATA_AUTO_REPAIR", "true").lower() not in {"false","0","off"}
+    SONG_METADATA_REPAIR_BATCH_SIZE = 5
+    SONG_METADATA_REPAIR_DELAY = 5
+    SONG_METADATA_REPAIR_MAX_BACKUP_BYTES = 50_000_000
     BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
     BUG_REPORT_SENDER_EMAIL = os.getenv('BUG_REPORT_SENDER_EMAIL', '')
     BUG_REPORT_SENDER_NAME = os.getenv('BUG_REPORT_SENDER_NAME', 'ROUDY — Suporte')

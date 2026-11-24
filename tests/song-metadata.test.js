@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');global.window={};require('../js/song-metadata.js');
+const input={artist:'',fullChordSheet:{content:'Composição de: Anderson Freire\n[Ritmo Padrão]\n75 bpm\n[Intro]\nC G\nLetra',sections:[{nome:'Intro',linhas:[{letra:'Letra',acordes:[{acorde:'C',posicao:0}]}]}]},playbackSettings:{bpm:90}};
+const repair=window.songMetadata.repair,result=repair(input);
+assert.equal(result.bpm,75);assert.equal(result.composer,'Anderson Freire');assert.equal(result.artist,'');
+assert.equal(result.playbackSettings.bpm,90);assert.equal(result.fullChordSheet.sourceContent,input.fullChordSheet.content);
+assert.equal(result.fullChordSheet.content,'[Intro]\nC G\nLetra');assert.deepEqual(repair(result),result);
+assert.equal(result.bpmSource.evidence,'75 bpm');
+assert.equal(window.songMetadata.trustedBpm({bpm:75,bpmSource:result.bpmSource}),75);
+assert.equal(window.songMetadata.trustedBpm({bpm:140}),null);
+assert.equal(repair({...input,bpm:72}).bpm,72);
+assert.equal(repair({...input,bpm:72}).bpmSource,undefined);
+assert.equal(repair({...input,fullChordSheet:{...input.fullChordSheet,bpmEvidenceText:''}}).bpm,undefined);
+assert.equal(repair({...input,fullChordSheet:{...input.fullChordSheet,sourceContent:'C G\nLetra sem andamento'}}).bpm,undefined);
+assert.equal(repair({...input,fullChordSheet:{...input.fullChordSheet,source:'model_knowledge'}}).bpm,undefined);
+assert.equal(repair({...input,artist:'Versão pessoal',bpm:88}).bpm,88);
+assert.equal(repair({...input,fullChordSheet:{content:'Artista: Aline Barros\n75 bpm\nC G'}}).artist,'Aline Barros');
+assert.equal(repair({...input,fullChordSheet:{content:'BPM: 75\nBPM: 90\nC G'}}).bpm,undefined);
+console.log('song-metadata: OK');
