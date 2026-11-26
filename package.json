@@ -4,7 +4,7 @@
   "private": true,
   "description": "PWA para organizar, estudar e apresentar repertórios musicais.",
   "scripts": {
-    "test:culto": "node -r ./tests/support/browser-env.js tests/culto-path-ui.test.js",
+    "test:culto": "node -r ./tests/support/browser-env.js tests/culto-path-ui.test.js && node -r ./tests/support/browser-env.js tests/large-storage-indexeddb-ui.test.js",
     "test:ui": "node scripts/test-ui.js",
     "test:chat-selection": "node tests/event-chat-selection-ui.test.js && node tests/event-chat-selection-page-ui.test.js && node tests/event-chat.test.js",
     "test:search": "node tests/song-search.test.js && node tests/song-search-sync.test.js && node tests/song-search-ui.test.js && node tests/search-menu-source.test.js && node tests/search-review-functions.test.js",
