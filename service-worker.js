@@ -2,7 +2,7 @@ const NAVIGATION_TIMEOUT_MS = 3000;
 // MANUTENÇÃO: Cache dos arquivos do PWA: instalação, troca de versão e atendimento offline.
 // MANUTENÇÃO: Não é o banco da playlist; mudanças de cache não devem apagar dados pessoais.
 // MANUTENÇÃO: Atualize a versão e os recursos necessários quando mudar arquivos carregados pela interface.
-const CACHE_NAME = "simplificando-cifras-v940-armazenamento-grande";
+const CACHE_NAME = "simplificando-cifras-v941-armazenamento-protegido";
 // Compatibility marker: simplificando-cifras-v645-seletor-artes-evento
 // Compatibility marker: simplificando-cifras-v630-biblioteca-compacta
 // Compatibility marker: simplificando-cifras-v625-catalogo-versoes
@@ -158,6 +158,7 @@ const ASSETS = [
   "./js/storage.js?v=3",
   "./js/storage.js?v=4",
   "./js/storage.js?v=5",
+  "./js/storage.js?v=6",
   "./js/demo-library.js?v=5",
   "./js/library-sync.js?v=22",
   "./js/library-sync.js?v=23",

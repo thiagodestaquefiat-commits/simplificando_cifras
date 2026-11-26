@@ -36,7 +36,7 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
     }, { EVENTS, SONGS });
     assert.ok(sizes.events > 1500000 && sizes.songs > 1500000, 'dados de teste do tamanho real');
     await page.goto(url);
-    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb', null, { timeout: 15000 });
+    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb', null, { timeout: 15000 }); await page.evaluate(() => window.storage.ready);
     const migrated = await page.evaluate(({ EVENTS, SONGS }) => ({
       lsEvents: localStorage.getItem(EVENTS), lsSongs: localStorage.getItem(SONGS), prefs: localStorage.getItem('sc_prefs'),
       events: storage.get(EVENTS, null), songs: storage.get(SONGS, null) }), { EVENTS, SONGS });
@@ -63,10 +63,13 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
       }, { EVENTS, SONGS, data });
       assert.equal(lotado.cabeAntes, false, 'cenário reproduz o aparelho lotado (login não cabe)');
       await other.goto(url);
-      await other.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb', null, { timeout: 15000 });
+      await other.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb', null, { timeout: 15000 }); await other.evaluate(() => window.storage.ready);
       const depois = await other.evaluate(({ EVENTS }) => { let cabe = true; try { localStorage.setItem('sb-teste-auth-token', 'x'.repeat(20000)); localStorage.removeItem('sb-teste-auth-token'); } catch (_) { cabe = false; } return { cabe, eventos: storage.get(EVENTS, {}).owner.length }; }, { EVENTS });
       assert.equal(depois.cabe, true, 'depois da migração o login tem espaço para gravar');
       assert.equal(depois.eventos, 41, 'nenhum evento perdido na migração do aparelho lotado');
+      const usage = await other.evaluate(() => window.storage.measure());
+      assert.equal(usage.mode, 'idb', 'medição registra o armazenamento grande em uso');
+      assert.ok(usage.largeChars > 1500000, 'medição enxerga os caches grandes');
       await full.close();
     }
 
@@ -86,7 +89,7 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
 
     // 3. Recarregar: os dados vêm do IndexedDB, com a música nova.
     await page.reload();
-    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb');
+    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb'); await page.evaluate(() => window.storage.ready);
     const after = await page.evaluate(({ EVENTS, SONGS }) => ({ events: storage.get(EVENTS, {}), songs: storage.get(SONGS, {}), ls: localStorage.getItem(EVENTS) }), { EVENTS, SONGS });
     assert.equal(after.events.owner[0].repertoire.length, 6, 'a música nova continua depois de recarregar');
     assert.equal(after.songs.owner.length, 225);
@@ -95,7 +98,7 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
     // 4. Remover (sair da conta) também vale no IndexedDB.
     await page.evaluate(({ SONGS }) => { storage.remove(SONGS); return storage.flush(); }, { SONGS });
     await page.reload();
-    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb');
+    await page.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb'); await page.evaluate(() => window.storage.ready);
     assert.equal(await page.evaluate(({ SONGS }) => storage.get(SONGS, 'vazio'), { SONGS }), 'vazio', 'remover apaga do armazenamento grande');
     assert.deepEqual(errors, [], 'sem erros de página');
     await context.close();

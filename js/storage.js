@@ -77,6 +77,7 @@
       // Caches que já estão no IndexedDB não precisam mais da cópia antiga no localStorage.
       [...LARGE_KEYS].forEach(key => { if (loaded.has(key)) { try { global.localStorage.removeItem(key); } catch (_error) {} } });
       global.addEventListener?.("pagehide", () => { flushLarge(); });
+      protectAndMeasure();
       global.document?.addEventListener?.("visibilitychange", () => { if (global.document.visibilityState === "hidden") flushLarge(); });
       return "idb";
     } catch (error) {
@@ -89,6 +90,37 @@
       return "local";
     }
   })();
+  // Proteção e medição (26/11): pede ao navegador para não apagar os dados do ROUDY quando o aparelho
+  // fica sem espaço (só no app instalado, para não aparecer pergunta no navegador), e mede o espaço.
+  // Se o armazenamento pequeno passar de 70%, já libera os backups antigos e registra o aviso.
+  const SMALL_LIMIT_CHARS = 5 * 1024 * 1024;
+  let lastUsage = null;
+  function localChars() {
+    let total = 0;
+    try { for (let index = 0; index < global.localStorage.length; index += 1) { const key = global.localStorage.key(index); total += key.length + (global.localStorage.getItem(key) || "").length; } }
+    catch (_error) {}
+    return total;
+  }
+  async function protectAndMeasure() {
+    const manager = global.navigator?.storage;
+    let persisted = null;
+    try {
+      persisted = manager?.persisted ? await manager.persisted() : null;
+      const installed = global.matchMedia?.("(display-mode: standalone)")?.matches || global.navigator?.standalone === true;
+      if (persisted === false && installed && manager?.persist) persisted = await manager.persist();
+    } catch (_error) {}
+    let estimate = null; try { estimate = manager?.estimate ? await manager.estimate() : null; } catch (_error) {}
+    const small = localChars();
+    lastUsage = { smallPercent: Math.round(small / SMALL_LIMIT_CHARS * 100), smallChars: small,
+      largeChars: [...large.texts.values()].reduce((sum, text) => sum + (text ? text.length : 0), 0),
+      usageMB: estimate ? Math.round(estimate.usage / 1048576) : null, quotaMB: estimate ? Math.round(estimate.quota / 1048576) : null, persisted, mode: large.mode };
+    if (lastUsage.smallPercent >= 70) {
+      freeBackupSpace([]);
+      console.warn("[ROUDY] Armazenamento pequeno acima de 70%:", lastUsage);
+    }
+    return lastUsage;
+  }
+
   function largeText(key) {
     if (large.texts.has(key)) return large.texts.get(key);
     return global.localStorage.getItem(key);
@@ -205,5 +237,6 @@
   ready.then(() => { readySettled = true; }, () => { readySettled = true; });
   global.storage = Object.freeze({ get, set, setMany, remove, snapshotRaw, getFailureCount: () => failureCount,
     ready, flush: flushLarge, largeMode: () => large.mode, largeKeys: [...LARGE_KEYS],
+    usage: () => lastUsage, measure: () => protectAndMeasure(),
     subscribeErrors(listener) { listeners.add(listener); return () => listeners.delete(listener); } });
 })(window);
