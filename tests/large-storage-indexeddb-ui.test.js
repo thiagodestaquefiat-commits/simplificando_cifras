@@ -26,7 +26,7 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, route => route.abort());
     // 1. Aparelho antigo: caches da conta no localStorage, do tamanho real (~2,4 MB + ~1,7 MB de texto).
-    await page.goto(url + 'manifest.webmanifest').catch(() => page.goto(url + 'service-worker.js'));
+    await page.goto(url + 'service-worker.js');
     const sizes = await page.evaluate(({ EVENTS, SONGS }) => {
       const song = i => ({ id: 's' + i, title: 'Louvor ' + i, fullChordSheet: { content: 'A E F#m D\n'.repeat(500) + 'Letra da música '.repeat(300) } });
       const events = { owner: Array.from({ length: 41 }, (_, e) => ({ id: 'ev' + e, title: 'Culto ' + e, repertoire: Array.from({ length: 5 }, (_, r) => ({ id: 'r' + r, songId: 's' + r, shared: { songData: song(r) } })) })) };
@@ -46,6 +46,29 @@ const EVENTS = 'sc_personal_event_caches_v1', SONGS = 'sc_personal_song_caches_v
     assert.equal(migrated.events.owner.length, 41, 'os 41 eventos continuam');
     assert.equal(migrated.songs.owner.length, 225, 'as 225 músicas continuam');
     assert.equal(migrated.events.owner[40].repertoire[4].shared.songData.title, 'Louvor 4', 'conteúdo intacto');
+
+    // 1b. Aparelho lotado (como o PC e o celular do Thiago): antes da migração, não cabe nem o "crachá" do
+    //     login. Depois de abrir o app, os caches saem do localStorage e o login volta a ter espaço.
+    {
+      const full = await browser.newContext({ serviceWorkers: 'block' }), other = await full.newPage();
+      await other.route(/^https?:\/\/(?!127\.0\.0\.1)/, route => route.abort());
+      const data = await page.evaluate(({ EVENTS, SONGS }) => ({ events: localStorage.getItem(EVENTS) || JSON.stringify(storage.get(EVENTS, null)), songs: JSON.stringify(storage.get(SONGS, null)) }), { EVENTS, SONGS });
+      await other.goto(url + 'service-worker.js');
+      const lotado = await other.evaluate(({ EVENTS, SONGS, data }) => {
+        localStorage.setItem(EVENTS, data.events); localStorage.setItem(SONGS, data.songs);
+        const chunk = 'y'.repeat(500000); try { for (let k = 0; k < 40; k++) localStorage.setItem('outros_' + k, chunk); } catch (_) {}
+        const small = 'y'.repeat(20000); try { for (let k = 0; k < 400; k++) localStorage.setItem('miudo_' + k, small); } catch (_) {}
+        let cabeAntes = true; try { localStorage.setItem('sb-teste-auth-token', 'x'.repeat(20000)); localStorage.removeItem('sb-teste-auth-token'); } catch (_) { cabeAntes = false; }
+        return { cabeAntes };
+      }, { EVENTS, SONGS, data });
+      assert.equal(lotado.cabeAntes, false, 'cenário reproduz o aparelho lotado (login não cabe)');
+      await other.goto(url);
+      await other.waitForFunction(() => window.storage && window.storage.largeMode() === 'idb', null, { timeout: 15000 });
+      const depois = await other.evaluate(({ EVENTS }) => { let cabe = true; try { localStorage.setItem('sb-teste-auth-token', 'x'.repeat(20000)); localStorage.removeItem('sb-teste-auth-token'); } catch (_) { cabe = false; } return { cabe, eventos: storage.get(EVENTS, {}).owner.length }; }, { EVENTS });
+      assert.equal(depois.cabe, true, 'depois da migração o login tem espaço para gravar');
+      assert.equal(depois.eventos, 41, 'nenhum evento perdido na migração do aparelho lotado');
+      await full.close();
+    }
 
     // 2. Com o localStorage cheio, adicionar música a um evento (gravar o cache) funciona.
     const write = await page.evaluate(({ EVENTS }) => {
