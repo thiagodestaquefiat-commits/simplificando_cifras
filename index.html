@@ -2482,6 +2482,15 @@ function inlineEditSong(songId){
   if(open&&String(open.id)===String(songId))return open;
   return musicas.find(item=>String(item.id)===String(songId))||null;
 }
+// Editar no tom da tela (26/11): a tela mostra os acordes transpostos (Tom, capotraste guardado e o
+// capotraste escolhido). O editor mostra exatamente o que está na tela e, ao salvar, volta para o tom
+// guardado — antes ele mostrava o tom guardado e gravava o que a pessoa digitava como se fosse dele,
+// trocando as notas. Só as linhas de acordes são transpostas; letra nunca.
+function inlineDisplayShift(){return (Number(currentSemitones)||0)+(Number(storedCapo)||0)-(Number(selectedCapo)||0);}
+function shiftInlineChordLines(text,shift){
+  if(!shift)return String(text??'');
+  return String(text??'').split('\n').map(line=>{const clean=songFormat.cleanSheetLine(line).replace(/\s*\(\d+x\)\s*$/i,'');return clean.trim()&&isChordLine(clean)?shiftText(line,shift):line;}).join('\n');
+}
 // Seção no formato atual (editorData ou blocos antigos), na mesma ordem do resumo exibido.
 function inlineEditSection(song,index){return songFormat.fromLegacy(song).sections[index]||null;}
 function inlineSectionToBlock(section){
@@ -2550,7 +2559,7 @@ function openInlineNewBlock(songId,index,position,button){
 }
 function saveInlineNewBlock(songId,insertAt,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
-  const chords=card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),lyrics='';
+  const chords=shiftInlineChordLines(card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),-inlineDisplayShift()),lyrics='';
   if(!chords){showToast('⚠️ Adicione pelo menos um acorde');return;}
   const model=songFormat.fromLegacy(song);if(insertAt<0||insertAt>model.sections.length){showToast('⚠️ A música mudou. Reabra e tente de novo.');renderDetail();return;}
   const parsed=songFormat.fromLegacy({blocos:[{l:lyrics,c:chords}]}).sections[0];
@@ -2571,18 +2580,18 @@ function beginInlineBlockEdit(target){
     target.dataset.editLyricsOnly=String(lyricsOnly);
     target.dataset.editCombined=String(combined);
     target.innerHTML=combined
-      ?`<label class="inline-block-label" for="inline-full-section-${index}">Seção — letra e cifras</label><textarea class="inline-block-textarea inline-block-full inline-block-section-full" id="inline-full-section-${index}">${eventEsc(content)}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineCombinedSectionEdit('${eventEsc(String(songId))}',${index},this)`,'Salvar')}`
-      :`${heading?`<div class="inline-block-section-title">${eventEsc(heading)}</div>`:''}${lyricsOnly?'':`<label class="inline-block-label" for="inline-full-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-full-chords-${index}">${eventEsc(parts.chords)}</textarea>`}<label class="inline-block-label" for="inline-full-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-full-lyrics-${index}">${eventEsc(parts.lyrics)}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineFullSectionEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+      ?`<label class="inline-block-label" for="inline-full-section-${index}">Seção — letra e cifras</label><textarea class="inline-block-textarea inline-block-full inline-block-section-full" id="inline-full-section-${index}">${eventEsc(shiftInlineChordLines(content,inlineDisplayShift()))}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineCombinedSectionEdit('${eventEsc(String(songId))}',${index},this)`,'Salvar')}`
+      :`${heading?`<div class="inline-block-section-title">${eventEsc(heading)}</div>`:''}${lyricsOnly?'':`<label class="inline-block-label" for="inline-full-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-full-chords-${index}">${eventEsc(shiftInlineChordLines(parts.chords,inlineDisplayShift()))}</textarea>`}<label class="inline-block-label" for="inline-full-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-full-lyrics-${index}">${eventEsc(parts.lyrics)}</textarea>${inlineBlockActionMarkup(songId,index,'full-section',`saveInlineFullSectionEdit('${eventEsc(String(songId))}',${index},this)`)}`;
   }else if(section==='full'){
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
     const content=song.fullChordSheet?.content||'';
-    target.innerHTML=`<label class="inline-block-label" for="inline-full-${eventEsc(String(songId))}">Letra e cifra</label><textarea class="inline-block-textarea inline-block-full" id="inline-full-${eventEsc(String(songId))}">${eventEsc(content)}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullEdit('${eventEsc(String(songId))}',this)">Salvar</button></div>`;
+    target.innerHTML=`<label class="inline-block-label" for="inline-full-${eventEsc(String(songId))}">Letra e cifra</label><textarea class="inline-block-textarea inline-block-full" id="inline-full-${eventEsc(String(songId))}">${eventEsc(shiftInlineChordLines(content,inlineDisplayShift()))}</textarea><div class="inline-block-actions"><button type="button" onclick="event.stopPropagation();cancelInlineBlockEdit()">Cancelar</button><button type="button" class="primary" onclick="event.stopPropagation();saveInlineFullEdit('${eventEsc(String(songId))}',this)">Salvar</button></div>`;
   }else{
     const index=Number(section),current=inlineEditSection(song,index);if(!current){renderDetail();return;}
-    const block=inlineSectionToBlock(current);
+    const block=inlineSectionToBlock(current),shownChords=shiftInlineChordLines(block.c,inlineDisplayShift());
     target.dataset.inlineEditing='true';target.removeAttribute('role');target.removeAttribute('tabindex');
-    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(block.c)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockInsertMarkup(songId,index)}${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
-    target.dataset.inlineOriginal=JSON.stringify([block.c,block.l]);
+    target.innerHTML=`<label class="inline-block-label" for="inline-chords-${index}">Cifras</label><textarea class="inline-block-textarea inline-block-chords" id="inline-chords-${index}">${eventEsc(shownChords)}</textarea><label class="inline-block-label" for="inline-lyrics-${index}">Letra / indicação</label><textarea class="inline-block-textarea inline-block-lyrics" id="inline-lyrics-${index}">${eventEsc(block.l)}</textarea>${inlineBlockInsertMarkup(songId,index)}${inlineBlockActionMarkup(songId,index,'summary',`saveInlineBlockEdit('${eventEsc(String(songId))}',${index},this)`)}`;
+    target.dataset.inlineOriginal=JSON.stringify([shownChords,block.l]);
   }
   target.querySelector('textarea')?.focus();
 }
@@ -2631,7 +2640,7 @@ async function commitInlineSongEdit(song,candidate,message){
 }
 function saveInlineBlockEdit(songId,index,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
-  const chords=card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),lyrics=card.querySelector('.inline-block-lyrics').value.trim();
+  const chords=shiftInlineChordLines(card.querySelector('.inline-block-chords').value.replace(/\r\n?/g,'\n').trim(),-inlineDisplayShift()),lyrics=card.querySelector('.inline-block-lyrics').value.trim();
   if(!chords){showToast('⚠️ Adicione pelo menos um acorde');return;}
   const model=songFormat.fromLegacy(song),old=model.sections[index];if(!old){showToast('⚠️ Este bloco mudou. Reabra a música e tente de novo.');renderDetail();return;}
   const parsed=songFormat.fromLegacy({blocos:[{l:lyrics,c:chords}]}).sections[0];
@@ -2643,7 +2652,7 @@ function saveInlineBlockEdit(songId,index,button){
 }
 function saveInlineFullEdit(songId,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
-  const content=card.querySelector('.inline-block-full').value.replace(/\r\n?/g,'\n').trim();if(!content){showToast('⚠️ A cifra não pode ficar vazia');return;}
+  const content=shiftInlineChordLines(card.querySelector('.inline-block-full').value.replace(/\r\n?/g,'\n').trim(),-inlineDisplayShift());if(!content){showToast('⚠️ A cifra não pode ficar vazia');return;}
   const fullChordSheet={...(song.fullChordSheet||{}),content,sections:[]};
   button.disabled=true;
   return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Letra e cifra salvas');
@@ -2651,14 +2660,14 @@ function saveInlineFullEdit(songId,button){
 function saveInlineFullSectionEdit(songId,index,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
   const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){showToast('⚠️ Esta seção mudou. Reabra a música e tente de novo.');renderDetail();return;}
-  const original=editableFullSectionParts(chunks[index]),chords=card.querySelector('.inline-block-chords')?.value??original.chords,lyrics=card.querySelector('.inline-block-lyrics').value,content=mergeEditableFullSection(chunks[index],chords,lyrics);if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
+  const original=editableFullSectionParts(chunks[index]),chords=card.querySelector('.inline-block-chords')?shiftInlineChordLines(card.querySelector('.inline-block-chords').value,-inlineDisplayShift()):original.chords,lyrics=card.querySelector('.inline-block-lyrics').value,content=mergeEditableFullSection(chunks[index],chords,lyrics);if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
   chunks[index]=content;const fullChordSheet={...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]};button.disabled=true;
   return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Seção salva');
 }
 function saveInlineCombinedSectionEdit(songId,index,button){
   const card=button.closest('[data-inline-editing]'),song=inlineEditSong(songId);if(!card||!song)return;
   const chunks=splitFullSheetSections(song.fullChordSheet);if(!chunks[index]){showToast('⚠️ Esta seção mudou. Reabra a música e tente de novo.');renderDetail();return;}
-  const content=card.querySelector('.inline-block-section-full')?.value.replace(/\r\n?/g,'\n').trim();if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
+  const content=shiftInlineChordLines(card.querySelector('.inline-block-section-full')?.value.replace(/\r\n?/g,'\n').trim()||'',-inlineDisplayShift());if(!content){showToast('⚠️ A seção não pode ficar vazia');return;}
   chunks[index]=content;const fullChordSheet={...(song.fullChordSheet||{}),content:chunks.join('\n\n'),sections:[]};button.disabled=true;
   return commitInlineSongEdit(song,{...song,fullChordSheet},'✅ Seção salva');
 }
